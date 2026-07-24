@@ -591,5 +591,28 @@ export const localPurchases = pgTable("local_purchases", {
   deletedAt: timestamp("deleted_at", { withTimezone: true })
 });
 
+// Server & Project Monitoring: append-only event history for the monitoring dashboard.
+// severity: healthy | warning | error | info ; eventType: e.g. deploy, commit, build,
+// restart_app, restart_pm2, health_check, backup, system.
+export const serverMonitorEvents = pgTable(
+  "server_monitor_events",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    eventType: text("event_type").notNull(),
+    severity: text("severity").default("info").notNull(),
+    title: text("title").notNull(),
+    details: jsonb("details"),
+    branch: text("branch"),
+    commitId: text("commit_id"),
+    userId: uuid("user_id"),
+    userName: text("user_name"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull()
+  },
+  (table) => ({
+    createdAtIdx: index("server_monitor_events_created_at_idx").on(table.createdAt),
+    eventTypeIdx: index("server_monitor_events_event_type_idx").on(table.eventType)
+  })
+);
+
 
 

@@ -28,3 +28,18 @@ jobs:
     - name: Build
       run: |
         npm run build
+
+    - name: Record build event (server monitoring)
+      if: ${{ always() }}
+      continue-on-error: true
+      env:
+        DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        GITHUB_ACTOR: ${{ github.actor }}
+        GITHUB_REF_NAME: ${{ github.ref_name }}
+        GITHUB_SHA: ${{ github.sha }}
+      run: |
+        if [ -n "$DATABASE_URL" ]; then
+          node scripts/emit-monitor-event.mjs --type build --title "CI build ${{ job.status }}" --severity "${{ job.status == 'success' && 'healthy' || 'error' }}" --user "${{ github.actor }}"
+        else
+          echo "DATABASE_URL secret not set — skipping monitoring event."
+        fi
