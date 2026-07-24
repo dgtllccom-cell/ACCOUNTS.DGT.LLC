@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { exec } from "node:child_process";
 import { promisify } from "node:util";
-import { requireSession } from "@/lib/auth/session";
+import { requireErpSession } from "@/lib/auth/session";
 import { collectGit } from "@/lib/monitoring/collectors";
 import { getMonitorStatus } from "@/lib/monitoring/status";
 import { recordEnterpriseMultilingualEvent } from "@/lib/services/enterprise-multilingual-service";
@@ -25,7 +25,7 @@ async function runCommand(cmd: string): Promise<string> {
 export async function POST(req: Request) {
   let session;
   try {
-    session = await requireSession();
+    session = await requireErpSession();
   } catch {
     return NextResponse.json({ ok: false, error: { code: "unauthorized", message: "Authentication required" } }, { status: 401 });
   }

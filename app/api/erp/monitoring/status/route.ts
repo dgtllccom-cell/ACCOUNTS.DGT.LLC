@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { requireSession } from "@/lib/auth/session";
+import { requireErpSession } from "@/lib/auth/session";
 import { getMonitorStatus } from "@/lib/monitoring/status";
 
 export const dynamic = "force-dynamic";
@@ -7,7 +7,7 @@ export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    await requireSession();
+    await requireErpSession();
     const status = await getMonitorStatus();
     return NextResponse.json({ ok: true, data: status });
   } catch (error: any) {
