@@ -3,8 +3,8 @@ import postgres from "postgres";
 
 export async function GET() {
   try {
-    const dbUrl = process.env.DATABASE_URL || "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres";
-    const sql = postgres(dbUrl, { prepare: false, idle_timeout: 5, connect_timeout: 10 });
+    const dbUrl = process.env.DATABASE_URL || "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?sslmode=require";
+    const sql = postgres(dbUrl, { prepare: false, idle_timeout: 5, connect_timeout: 10, ssl: "require" });
     
     // Query table counts and live records
     const tablesRes = await sql`

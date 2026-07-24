@@ -15,7 +15,7 @@ cat > /var/www/dgt-nextjs/.env.local << 'ENVEOF'
 NEXT_PUBLIC_SUPABASE_URL=https://csesvyxxjivnkkozgopt.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=sb_publishable_22nhsWCggOvyEf-hYmAcfA_vFo7zk4w
 SUPABASE_SERVICE_ROLE_KEY=sb_publishable_22nhsWCggOvyEf-hYmAcfA_vFo7zk4w
-DATABASE_URL=postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres
+DATABASE_URL=postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?sslmode=require
 ENVEOF
 cp -f /var/www/dgt-nextjs/.env.local /var/www/dgt-nextjs/.env
 cp -f /var/www/dgt-nextjs/.env.local /var/www/env_backups/.env.local.bak
@@ -25,11 +25,11 @@ cd /var/www/dgt-nextjs
 
 if [ ! -d ".git" ]; then
   git init
-  git remote add origin https://github.com/dgtllccom-cell/dht-nextjs.git
+  git remote add origin https://github.com/dgtllccom-cell/ACCOUNTS.DGT.LLC.git
 fi
 
-echo "[3/8] Fetching & Resetting to origin/main (dht-nextjs)..."
-git remote set-url origin https://github.com/dgtllccom-cell/dht-nextjs.git
+echo "[3/8] Fetching & Resetting to origin/main (ACCOUNTS.DGT.LLC)..."
+git remote set-url origin https://github.com/dgtllccom-cell/ACCOUNTS.DGT.LLC.git
 git fetch origin main
 git checkout -B main origin/main
 git reset --hard origin/main
@@ -52,6 +52,9 @@ sudo systemctl reload nginx || systemctl reload nginx || service nginx reload
 echo "[8/8] VERIFYING ENDPOINTS & BACKEND DATA..."
 echo "--- PM2 Status ---"
 pm2 status
+
+echo "\n--- PM2 Logs (30 lines) ---"
+pm2 logs dgt-nextjs --lines 30 --nostream || true
 
 echo "\n--- Port 3000 HTTP Test ---"
 curl -I http://127.0.0.1:3000

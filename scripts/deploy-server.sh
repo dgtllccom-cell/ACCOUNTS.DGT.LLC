@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # =============================================================================
 # Standalone Server Deployment Script for root@72.60.209.121
-# Target Repository: https://github.com/dgtllccom-cell/dht-nextjs.git
+# Target Repository: https://github.com/dgtllccom-cell/ACCOUNTS.DGT.LLC.git
 # =============================================================================
 set -e
 
@@ -17,11 +17,11 @@ cd /var/www/dgt-nextjs
 
 if [ ! -d ".git" ]; then
   git init
-  git remote add origin https://github.com/dgtllccom-cell/dht-nextjs.git
+  git remote add origin https://github.com/dgtllccom-cell/ACCOUNTS.DGT.LLC.git
 fi
 
 echo "[3/6] Fetching and resetting to origin/main..."
-git remote set-url origin https://github.com/dgtllccom-cell/dht-nextjs.git
+git remote set-url origin https://github.com/dgtllccom-cell/ACCOUNTS.DGT.LLC.git
 git fetch origin main
 git checkout -B main origin/main
 git reset --hard origin/main
