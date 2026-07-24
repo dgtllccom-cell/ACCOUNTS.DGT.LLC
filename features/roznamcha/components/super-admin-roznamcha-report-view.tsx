@@ -2584,235 +2584,34 @@ function RoznamchaPrintPreview({
     { key: "index", header: "SR. NO.", width: "40px", align: "center", render: (_, i) => i + 1 },
     { key: "branchName", header: "BRANCH NAME", render: (r) => r.cityBranchName || r.countryBranchName || "-" },
     { key: "branchCode", header: "BRANCH CODE", render: (r) => r.cityBranchCode || r.countryBranchCode || "-" },
-    { key: "transactions", header: "TOTAL TRANSACTIONS", align: "center", render: (r) => "1" },
+    { key: "transactions", header: "TOTAL TRANSACTIONS", align: "center", render: () => "1" },
     { key: "debit", header: "TOTAL DEBIT", align: "right", render: (r) => (r.debit > 0 ? r.debit.toFixed(2) : "0.00") },
     { key: "credit", header: "TOTAL CREDIT", align: "right", render: (r) => (r.credit > 0 ? r.credit.toFixed(2) : "0.00") },
     { key: "balance", header: "BALANCE", align: "right", render: (r) => (r.debit - r.credit).toFixed(2) },
     { key: "status", header: "STATUS", align: "center", render: (r) => r.status || "Active" },
   ] : [
     { key: "index", header: "SR.", width: "30px", align: "center", render: (_, i) => i + 1 },
-    { key: "date", header: "DATE", width: "70px", align: "center", render: (r) => new Date(r.entryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) },
+    { key: "date", header: "DATE", width: "70px", align: "center", render: (r) => new Date(r.entryDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" }) },
     { key: "voucherNo", header: "VOUCHER", align: "center", render: (r) => r.voucherNo },
     { key: "party", header: "ACCOUNT / PARTY", render: (r) => `${r.accountNo ? r.accountNo + " - " : ""}${r.partyName}` },
-          }}
-          onClose={() => setReceiptPrintMode(false)}
-        />,
-        document.body
-      )}
-    </div>
-  );
-}
-
-function BranchJournalGeneralStyleSummary({
-  rows,
-  viewerName,
-  generatedAt,
-  selectedCountryLabel,
-  selectedBranchLabel,
-  totalDebit,
-  totalCredit,
-  onPrint,
-  onPdf,
-  onRefresh
-}: {
-  rows: SuperAdminRoznamchaRow[];
-  viewerName: string;
-  generatedAt: string;
-  selectedCountryLabel: string;
-  selectedBranchLabel: string;
-  totalDebit: number;
-  totalCredit: number;
-  onPrint: () => void;
-  onPdf: () => void;
-  onRefresh: () => void;
-}) {
-  const uniqueCountries = new Set(rows.map((row) => row.countryId || row.countryName).filter(Boolean));
-  const uniqueMainBranches = new Set(rows.map((row) => row.countryBranchId || row.countryBranchName).filter(Boolean));
-  const uniqueCityBranches = new Set(rows.map((row) => row.cityBranchId || row.cityBranchName).filter(Boolean));
-  const activeBranches = new Set(rows.map((row) => row.cityBranchId || row.countryBranchId || row.cityBranchName || row.countryBranchName).filter(Boolean));
-  const currency = rows[0]?.countryCurrency || rows[0]?.currency || "-";
-  const balance = totalDebit - totalCredit;
-  const generated = new Date(generatedAt).toLocaleString();
-
-  const statCards = [
-    { title: "Countries", value: uniqueCountries.size || (selectedCountryLabel === "All" ? 0 : 1), subtitle: "Scoped countries", icon: <Globe className="h-5 w-5" /> },
-    { title: "Main Branches", value: uniqueMainBranches.size || (selectedBranchLabel === "All" ? 0 : 1), subtitle: "Country branches", icon: <Building2 className="h-5 w-5" /> },
-    { title: "City Branches", value: uniqueCityBranches.size, subtitle: "City branch journals", icon: <ChevronDown className="h-5 w-5" /> },
-    { title: "Transactions", value: rows.length, subtitle: "Journal rows", icon: <BookOpen className="h-5 w-5" /> },
-    { title: "Active Branches", value: activeBranches.size, subtitle: "Branches with activity", icon: <FileText className="h-5 w-5" /> }
-  ];
-
-  const infoCards = [
-    { label: "Report Viewer", value: viewerName || "Branch Admin" },
-    { label: "Access Scope", value: "City Branch - journal report" },
-    { label: "Country", value: selectedCountryLabel },
-    { label: "Branch", value: selectedBranchLabel },
-    { label: "Currency", value: currency },
-    { label: "Generated", value: generated }
-  ];
-
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-end gap-2">
-        <Button type="button" variant="outline" size="sm" className="h-9 gap-2 rounded-lg border-slate-200 bg-white text-xs font-bold shadow-sm" onClick={onRefresh}>
-          <RefreshCcw className="h-4 w-4" /> Refresh
-        </Button>
-        <Button type="button" variant="outline" size="sm" className="h-9 gap-2 rounded-lg border-slate-200 bg-white text-xs font-bold shadow-sm" onClick={onPrint}>
-          <Printer className="h-4 w-4" /> Print
-        </Button>
-        <Button type="button" variant="outline" size="sm" className="h-9 gap-2 rounded-lg border-slate-200 bg-white text-xs font-bold shadow-sm" onClick={onPdf}>
-          <DownloadActionIcon className="h-4 w-4" /> PDF
-        </Button>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        {statCards.map((card) => (
-          <div key={card.title} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md">
-            <div className="flex items-center gap-3">
-              <div className="rounded-2xl bg-purple-50 p-3 text-purple-600 ring-1 ring-purple-100">{card.icon}</div>
-              <div>
-                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{card.title}</div>
-                <div className="mt-1 text-2xl font-black text-slate-950">{card.value}</div>
-                <div className="text-[11px] font-semibold text-slate-500">{card.subtitle}</div>
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
-          {infoCards.map((card) => (
-            <div key={card.label} className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-[0_1px_0_rgba(15,23,42,0.03)]">
-              <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{card.label}</div>
-              <div className="mt-1 text-sm font-black text-slate-950">{card.value || "-"}</div>
-            </div>
-          ))}
-        </div>
-        <div className="mt-4 grid gap-3 sm:grid-cols-3">
-          <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3">
-            <div className="text-[10px] font-black uppercase tracking-[0.16em] text-rose-500">Total Debit</div>
-            <div className="mt-1 text-lg font-black text-rose-700">{fmtNumber(totalDebit)}</div>
-          </div>
-          <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-            <div className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-600">Total Credit</div>
-            <div className="mt-1 text-lg font-black text-emerald-700">{fmtNumber(totalCredit)}</div>
-          </div>
-          <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-            <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Balance</div>
-            <div className="mt-1 text-lg font-black text-slate-950">{fmtNumber(balance)}</div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-function SummaryCard({ title, value, tone }: { title: string; value: string; tone: "blue" | "green" | "red" | "amber" | "slate" }) {
-  const toneClass = {
-    blue: "from-blue-50 to-blue-100/50 text-blue-800 border-blue-200 shadow-blue-900/5",
-    green: "from-emerald-50 to-emerald-100/50 text-emerald-800 border-emerald-200 shadow-emerald-900/5",
-    red: "from-rose-50 to-rose-100/50 text-rose-800 border-rose-200 shadow-rose-900/5",
-    amber: "from-amber-50 to-amber-100/50 text-amber-800 border-amber-200 shadow-amber-900/5",
-    slate: "from-slate-50 to-white text-slate-800 border-slate-200 shadow-slate-900/5"
-  }[tone];
-
-  return (
-    <div className={cn("rounded-2xl border bg-gradient-to-br p-4 shadow-sm transition-transform hover:scale-[1.02]", toneClass)}>
-      <div className="text-[11px] font-bold uppercase tracking-widest opacity-60 mb-1">{title}</div>
-      <div className="truncate text-xl font-black tabular-nums">{value}</div>
-    </div>
-  );
-}
-
-function MenuAction({
-  icon,
-  label,
-  onClick,
-  active = false
-}: {
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-  active?: boolean;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50",
-        active ? "bg-emerald-50 text-emerald-700 font-bold" : ""
-      )}
-    >
-      <span className={cn("text-slate-400", active ? "text-emerald-600" : "")}>{icon}</span>
-      <span>{label}</span>
-    </button>
-  );
-}
-
-function MenuDivider() {
-  return <div className="my-1 border-t border-slate-100" />;
-}
-
-function RoznamchaPrintPreview({
-  open,
-  onClose,
-  rows,
-  scope,
-  lang,
-  title,
-  summary,
-  filters
-}: {
-  open: boolean;
-  onClose: () => void;
-  rows: SuperAdminRoznamchaRow[];
-  scope: string;
-  lang: any;
-  title: string;
-  summary: any;
-  filters: any;
-}) {
-  if (!open || typeof document === "undefined") return null;
-
-  const columns: ReportColumn<SuperAdminRoznamchaRow>[] = scope === "country" ? [
-    { key: "index", header: "SR. NO.", width: "40px", align: "center", render: (_, i) => i + 1 },
-    { key: "branchName", header: "BRANCH NAME", render: (r) => r.cityBranchName || r.countryBranchName || "-" },
-    { key: "branchCode", header: "BRANCH CODE", render: (r) => r.cityBranchCode || r.countryBranchCode || "-" },
-    { key: "transactions", header: "TOTAL TRANSACTIONS", align: "center", render: (r) => "1" },
-    { key: "debit", header: "TOTAL DEBIT", align: "right", render: (r) => (r.debit > 0 ? r.debit.toFixed(2) : "0.00") },
-    { key: "credit", header: "TOTAL CREDIT", align: "right", render: (r) => (r.credit > 0 ? r.credit.toFixed(2) : "0.00") },
-    { key: "balance", header: "BALANCE", align: "right", render: (r) => (r.debit - r.credit).toFixed(2) },
-    { key: "status", header: "STATUS", align: "center", render: (r) => r.status || "Active" },
-  ] : [
-    { key: "index", header: "SR.", width: "30px", align: "center", render: (_, i) => i + 1 },
-    { key: "date", header: "DATE", width: "70px", align: "center", render: (r) => new Date(r.entryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) },
-    { key: "voucherNo", header: "VOUCHER", align: "center", render: (r) => r.voucherNo },
-    { key: "party", header: "ACCOUNT / PARTY", render: (r) => `${r.accountNo ? r.accountNo + " - " : ""}${r.partyName}` },
-    { key: "narration", header: "DETAILS", render: (r) => r.narration },
-    { key: "curr", header: "CURR.", align: "center", render: () => "BASE" },
-    { key: "debit", header: "DEBIT", align: "right", render: (r) => (r.debit > 0 ? r.debit.toFixed(2) : "0.00") },
-    { key: "credit", header: "CREDIT", align: "right", render: (r) => (r.credit > 0 ? r.credit.toFixed(2) : "0.00") },
-    { key: "balance", header: "BALANCE", align: "right", render: (r) => r.remainingBalance?.toFixed(2) || "0.00" },
-    { key: "drcr", header: "DR/CR", align: "center", render: (r) => (r.debit > 0 ? "DR" : r.credit > 0 ? "CR" : "-") },
+    { key: "narration", header: "NARRATION", render: (r) => r.narration || "-" },
+    { key: "debit", header: "DEBIT", align: "right", render: (r) => r.debit.toFixed(2) },
+    { key: "credit", header: "CREDIT", align: "right", render: (r) => r.credit.toFixed(2) },
+    { key: "balance", header: "RUNNING BALANCE", align: "right", render: (r) => r.runningBalance.toFixed(2) },
+    { key: "currency", header: "CURRENCY", align: "center", render: (r) => r.currency || r.countryCurrency || "-" },
   ];
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] bg-black/80 flex flex-col">
-      <div className="flex-1 overflow-hidden">
-        <ProfessionalReportViewer
-          lang={lang}
-          title={title}
-          data={rows}
-          columns={columns}
-          summary={summary}
-          filters={filters}
-          rowsPerPage={25}
-          onClose={onClose}
-        />
-      </div>
-    </div>,
+    <ProfessionalReportViewer
+      lang={lang}
+      title={title}
+      subtitle="Roznamcha journal report"
+      data={rows}
+      columns={columns}
+      summary={summary}
+      filters={filters}
+      onClose={onClose}
+    />,
     document.body
   );
 }
-
