@@ -191,3 +191,5 @@ export function openProfessionalReportWindow(html: string, autoPrint = true) {
 }
 
 }
+
+}
