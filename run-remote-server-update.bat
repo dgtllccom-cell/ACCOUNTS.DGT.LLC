@@ -1,11 +1,9 @@
 @echo off
-echo ========================================================
-echo   Running PM2 Update on Production Server (72.60.209.121)
-echo ========================================================
+echo =======================================================================
+echo   Safe Read-Only VPS Inspection (72.60.209.121)
+echo =======================================================================
 echo.
-ssh -o StrictHostKeyChecking=no root@72.60.209.121 "cd /var/www/dgt-nextjs && cp package.json /root/dgt-nextjs-package.json.backup && npm pkg set scripts.start=\"next start -p 3000\" && pm2 delete dgt-nextjs && pm2 start npm --name dgt-nextjs -- start && pm2 save && curl -I http://127.0.0.1:3000"
+ssh -o StrictHostKeyChecking=no root@72.60.209.121 "ls -la /var/www/ && echo '--- PM2 STATUS ---' && pm2 status && echo '--- ENV CONFIG CHECK ---' && grep -E '^(NEXT_PUBLIC_SUPABASE_URL|NEXT_PUBLIC_SUPABASE_ANON_KEY|SUPABASE_SERVICE_ROLE_KEY|DATABASE_URL)' /var/www/dgt-nextjs/.env.local 2>/dev/null | sed 's/=.*/= [CONFIGURED]/'"
 echo.
-echo ========================================================
-echo   Finished!
-echo ========================================================
+echo =======================================================================
 pause

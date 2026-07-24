@@ -23,10 +23,3 @@ export function downloadCsv(filename: string, rows: Array<Array<string>>) {
   downloadTextFile(filename, csv, "text/csv");
 }
 
-}}
-
-}}
-
-}}
-
-}}
