@@ -777,6 +777,201 @@ export function openPurchaseA4ReportWindow(input: {
                   <td style="font-family: monospace; font-weight: bold;">
                     <div>Admin: <span style="color: #2563eb;">${escapeHtml(adminSn)}</span></div>
                     <div>Country: <span style="color: #059669;">${escapeHtml(ctySn)}</span></div>
+          <div class="box-header">📝 Special Remarks & Narration Instructions</div>
+          <div style="padding: 10px; font-size: 8px; line-height: 1.4; color: #334155; min-height: 60px; white-space: pre-line;">
+            ${escapeHtml(form.orderReportRemarks || b.goodsDescription || "Standard purchase order report generated.")}
+          </div>
+        </div>
+        ` : ""}
+
+        <!-- Detailed Goods Specification List Table -->
+        <div class="border-box">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 4%; text-align: center;">SR</th>
+                <th style="width: 14%;">Goods Specification</th>
+                <th style="width: 8%; text-align: center;">Origin</th>
+                <th style="width: 8%; text-align: right;">Quantity</th>
+                <th style="width: 8%; text-align: right;">Net Wt</th>
+                <th style="width: 8%; text-align: center;">Purch Curr</th>
+                <th style="width: 8%; text-align: right;">Rate</th>
+                <th style="width: 10%; text-align: right;">Amount</th>
+                <th style="width: 8%; text-align: center;">Ex. Rate</th>
+                <th style="width: 8%; text-align: center;">Final Curr</th>
+                <th style="width: 10%; text-align: right;">Final Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${items.map(item => `
+                <tr>
+                  <td style="text-align: center;">${item.srNo}</td>
+                  <td style="font-weight: bold; color: #1e3a8a;">${escapeHtml(item.goodsName)}</td>
+                  <td style="text-align: center;">${escapeHtml(item.origin)}</td>
+                  <td style="text-align: right; font-weight: bold;">${formatNumber(item.quantity)} ${item.qtyName}</td>
+                  <td style="text-align: right; font-family: monospace; font-weight: bold;">${formatNumber(item.netWt)} kg</td>
+                  <td style="text-align: center; font-weight: bold;">${escapeHtml(item.purchCurr)}</td>
+                  <td style="text-align: right; font-family: monospace;">${item.rateKg.toFixed(2)}</td>
+                  <td style="text-align: right; font-family: monospace; font-weight: bold;">${formatMoney(item.amountUsd)}</td>
+                  <td style="text-align: center; font-family: monospace;">${item.exRate}</td>
+                  <td style="text-align: center; font-weight: bold; color: #059669;">${escapeHtml(item.finalCurr)}</td>
+                  <td style="text-align: right; font-family: monospace; font-weight: 800; color: #059669;">${formatMoney(item.finalAmountPkr)}</td>
+                </tr>
+              `).join("")}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Totaling Aggregates Panel -->
+        <div class="aggregates-grid">
+          <div class="aggregate-box">
+            <div class="aggregate-lbl">Total Quantity</div>
+            <div class="aggregate-val">${formatNumber(totalQuantity)} Units</div>
+          </div>
+          <div class="aggregate-box">
+            <div class="aggregate-lbl">Total Gross Weight</div>
+            <div class="aggregate-val">${formatNumber(totalGrossWeight)} kg</div>
+          </div>
+          <div class="aggregate-box">
+            <div class="aggregate-lbl">Total Net Weight</div>
+            <div class="aggregate-val">${formatNumber(totalNetWeight)} kg</div>
+          </div>
+          <div class="aggregate-box">
+            <div class="aggregate-lbl" style="color: #ef4444;">Total Deductions</div>
+            <div class="aggregate-val" style="color: #ef4444;">${formatNumber(totalDeductions)} kg</div>
+          </div>
+          <div class="aggregate-box">
+            <div class="aggregate-lbl">Average Rate/KG</div>
+            <div class="aggregate-val">${getCurrencySymbol(items[0]?.purchCurr || "USD")}${avgRateKg.toFixed(2)}</div>
+          </div>
+          <div class="aggregate-box">
+            <div class="aggregate-lbl">Average Rate/Ton</div>
+            <div class="aggregate-val">${getCurrencySymbol(items[0]?.purchCurr || "USD")}${avgRateTon.toFixed(2)}</div>
+          </div>
+          <div class="aggregate-box">
+            <div class="aggregate-lbl" style="color: #2563eb;">Total Purchase (${escapeHtml(items[0]?.purchCurr || "USD")})</div>
+            <div class="aggregate-val font-mono" style="color: #2563eb;">${formatMoney(totalAmountUsd)}</div>
+          </div>
+          <div class="aggregate-box" style="background: #ecfdf5;">
+            <div class="aggregate-lbl" style="color: #059669;">Grand Final (${escapeHtml(items[0]?.finalCurr || "PKR")})</div>
+            <div class="aggregate-val font-mono" style="color: #059669;">${formatMoney(totalAmountPkr)}</div>
+          </div>
+        </div>
+
+        <!-- General Ledger Double Entry details -->
+        <div class="border-box">
+          <div class="box-header">⚙️ General Ledger Double-Entry Posting</div>
+          <table class="data-table">
+            <thead>
+              <tr style="background: #f1f5f9; color: #475569; font-size: 7px; font-weight: 700; border-bottom: 1px solid #cbd5e1;">
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">Debit / Credit</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">Account Code</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">Account Name / Branch Location</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: right;">Debit (Dr)</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: right;">Credit (Cr)</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: center;">Currency</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td style="font-weight: bold; color: #2563eb;">DEBIT (DR)</td>
+                <td style="font-family: monospace; font-weight: bold;">${escapeHtml(b.purchaseAccountNumber || "AE-AC-0001")}</td>
+                <td>
+                  <strong>${escapeHtml(b.purchaseAccountName || "Dubai Purchase Account")} (DR)</strong>
+                  <span style="font-size: 6.5px; color: #64748b; display: block;">${escapeHtml(b.branchName || "Kabul Main Branch")}</span>
+                </td>
+                <td style="text-align: right; font-family: monospace; font-weight: bold; color: #2563eb;">${formatMoney(totalAmountPkr)}</td>
+                <td style="text-align: right; color: #94a3b8;">-</td>
+                <td style="text-align: center; font-weight: bold;">${escapeHtml(items[0]?.finalCurr || "PKR")}</td>
+              </tr>
+              <tr>
+                <td style="font-weight: bold; color: #059669;">CREDIT (CR)</td>
+                <td style="font-family: monospace; font-weight: bold;">${escapeHtml(b.salesAccountNumber || "SA-2001")}</td>
+                <td>
+                  <strong>${escapeHtml(b.salesAccountName || "Damaan Sales Account")} (CR)</strong>
+                  <span style="font-size: 6.5px; color: #64748b; display: block;">${escapeHtml(b.branchName || "Kabul Main Branch")}</span>
+                </td>
+                <td style="text-align: right; color: #94a3b8;">-</td>
+                <td style="text-align: right; font-family: monospace; font-weight: bold; color: #059669;">${formatMoney(totalAmountPkr)}</td>
+                <td style="text-align: center; font-weight: bold;">${escapeHtml(items[0]?.finalCurr || "PKR")}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Payment details and due dates schedule -->
+        <div class="border-box">
+          <div class="box-header">💰 Detailed Payment Terms, Schedules & Due Balances</div>
+          <div style="padding: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 20px; font-size: 7.5px; color: #64748b; font-weight: 500;">
+            <div style="display: flex; flex-direction: column; gap: 4px;">
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px;">
+                <span>Payment Condition / Type:</span><strong style="color: #0f172a;">${escapeHtml(form.paymentType || b.paymentStatus || "Advance Payment")}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px;">
+                <span>Exchange Rate:</span><strong style="color: #0f172a; font-family: monospace;">${exRateVal}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px;">
+                <span>Total Invoice Amount (${escapeHtml(items[0]?.purchCurr || "USD")}):</span><strong style="color: #1e3a8a; font-family: monospace;">${formatMoney(totalAmountUsd)}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px;">
+                <span>Total Invoice Amount (${escapeHtml(items[0]?.finalCurr || "PKR")}):</span><strong style="color: #059669; font-family: monospace;">${formatMoney(totalAmountPkr)}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding-top: 1px;">
+                <span>Payment Method Details:</span><strong style="color: #0f172a; max-w: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${escapeHtml(form.paymentDaysAndMethodDetails || "N/A")}</strong>
+              </div>
+            </div>
+
+            <div style="display: flex; flex-direction: column; gap: 4px; border-left: 1px solid #cbd5e1; padding-left: 16px;">
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px;">
+                <span>Advance % / Ratio:</span><strong style="color: #0f172a;">${advancePercentVal}%</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px;">
+                <span>Advance Amount:</span><strong style="color: #0f172a; font-family: monospace;">${formatMoney(advanceUsd)} ${escapeHtml(items[0]?.purchCurr || "USD")} / ${formatMoney(advancePkr)} ${escapeHtml(items[0]?.finalCurr || "PKR")}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px;">
+                <span>Advance Payment Date:</span><strong style="color: #2563eb; font-family: monospace;">${formatDate(form.advancePaymentDate)}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; border-bottom: 1px solid #f1f5f9; padding-bottom: 2px;">
+                <span>Remaining Balance:</span><strong style="color: #ef4444; font-family: monospace;">${formatMoney(remainingUsd)} ${escapeHtml(items[0]?.purchCurr || "USD")} / ${formatMoney(remainingPkr)} ${escapeHtml(items[0]?.finalCurr || "PKR")}</strong>
+              </div>
+              <div style="display: flex; justify-content: space-between; padding-top: 1px;">
+                <span>Remaining Due Date:</span><strong style="color: #ef4444; font-family: monospace;">${formatDate(form.paymentDate)}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        ${b.paymentHistory && b.paymentHistory.length > 0 ? `
+        <!-- Traceable Payment History -->
+        <div class="border-box" style="margin-top: 10px;">
+          <div class="box-header">💸 Traceable Payment History (Nested Journal Entries)</div>
+          <table class="data-table">
+            <thead>
+              <tr style="background: #f1f5f9; color: #475569; font-size: 7px; font-weight: 700; border-bottom: 1px solid #cbd5e1;">
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">Journal Serials</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">User & Date</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: right;">Paid (Foreign)</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: center;">Ex. Rate</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc; text-align: right;">Paid (Local)</th>
+                <th style="padding: 5px 8px; color: #475569; background: #f8fafc;">Remarks / Narration</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${b.paymentHistory.map((p: any) => {
+                const re = p.roznamcha_entries || {};
+                const adminSn = re.super_admin_serial_number || "—";
+                const ctySn = re.country_serial_number || "—";
+                const user = p.users?.full_name || b.audit?.userName || "Admin";
+                const pDate = p.entry_date || p.created_at;
+                const amtUsd = (Number(p.amount || 0) / Number(p.exchange_rate || 1));
+                const amtLocal = Number(p.amount || 0);
+                const exRate = Number(p.exchange_rate || 1).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 });
+                
+                return `
+                <tr>
+                  <td style="font-family: monospace; font-weight: bold;">
+                    <div>Admin: <span style="color: #2563eb;">${escapeHtml(adminSn)}</span></div>
+                    <div>Country: <span style="color: #059669;">${escapeHtml(ctySn)}</span></div>
                   </td>
                   <td>
                     <strong>${escapeHtml(user)}</strong><br/>
@@ -803,10 +998,4 @@ export function openPurchaseA4ReportWindow(input: {
 
   // Use the new PDF Print Preview Modal instead of window.open
   printStore.openPrint(html, input.title);
-}
-
-}
-
-}
-
 }
