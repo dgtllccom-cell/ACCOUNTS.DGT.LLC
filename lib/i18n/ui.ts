@@ -148,6 +148,7 @@ export type UiKey =
   | "nav.messages_internal"
   | "nav.notification_center"
   | "nav.settings"
+  | "nav.server_monitoring"
   | "nav.management"
   | "nav.location_form"
   | "nav.location_country"
@@ -525,6 +526,7 @@ const en: Dict = {
   "nav.messages_internal": "Internal Message",
   "nav.notification_center": "Notification Center",
   "nav.settings": "Settings",
+  "nav.server_monitoring": "Server Monitoring",
   "nav.management": "Management",
   "nav.master_forms": "Master Forms",
   "nav.form_settings": "Form Settings",
@@ -881,6 +883,7 @@ const ur: Dict = {
   "nav.messages_internal": "اندرونی پیغام",
   "nav.notification_center": "نوٹیفکیشن سینٹر",
   "nav.settings": "سیٹنگز",
+  "nav.server_monitoring": "سرور مانیٹرنگ",
   "nav.management": "مینجمنٹ",
   "nav.location_form": "لوکیشن مینجمنٹ",
   "nav.location_country": "کنٹری ماسٹر",
@@ -1187,6 +1190,7 @@ const ar: Dict = {
   "nav.messages_internal": "رسالة داخلية",
   "nav.notification_center": "مركز الإشعارات",
   "nav.settings": "الإعدادات",
+  "nav.server_monitoring": "مراقبة الخادم",
   "nav.management": "الإدارة",
   "nav.location_form": "إدارة المواقع",
   "nav.location_country": "رئيسي الدولة",
@@ -1453,6 +1457,7 @@ const fa: Dict = {
   "nav.city_journal_report": "گزارش ژورنال شهر",
   "nav.construction_journal_report": "گزارش ژورنال ساخت‌وساز",
   "nav.settings": "تنظیمات",
+  "nav.server_monitoring": "نظارت بر سرور",
   "nav.management": "مدیریت",
   "nav.location_form": "مدیریت مکان‌ها",
   "nav.location_country": "مدیریت کشورها",
@@ -1682,6 +1687,7 @@ const ps: Dict = {
   "nav.city_journal_report": "د ښار جرنل راپور",
   "nav.construction_journal_report": "د ساختماني جرنل راپور",
   "nav.settings": "سیټنګونه",
+  "nav.server_monitoring": "د سرور څارنه",
   "nav.location_form": "د موقعیت مدیریت",
   "nav.location_country": "د هېواد ماسټر",
   "nav.location_state": "د ایالت ماسټر",
