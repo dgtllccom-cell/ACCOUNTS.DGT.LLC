@@ -3600,10 +3600,7 @@ export function PurchaseOrderManagementDashboard() {
                   </div>
 
                   <div className="p-5 space-y-6 flex-1 bg-slate-50/50 dark:bg-slate-900/20">
-                    
-                    {/* User, Branch & Country Info */}
-                    <div className="space-y-3">
-                      <div className="bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+                            <div className="bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
                         <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">User Information</div>
                         <div className="grid grid-cols-2 gap-2 text-xs">
                           <div><span className="text-slate-400 block text-[9px] uppercase">User ID</span><span className="font-bold font-mono">USR-{selected.audit?.userId?.slice(-4) || "101"}</span></div>
@@ -3627,7 +3624,6 @@ export function PurchaseOrderManagementDashboard() {
                       </div>
                     </div>
 
-                    {/* Transfer Information */}
                     <div className="bg-blue-50/50 dark:bg-blue-950/20 p-3 rounded-lg border border-blue-100 dark:border-blue-900/50">
                       <div className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 mb-2">Transfer Information</div>
                       <div className="space-y-2 text-xs">
@@ -3644,11 +3640,8 @@ export function PurchaseOrderManagementDashboard() {
                       </div>
                     </div>
 
-                    {/* Account Verification */}
                     <div>
                       <div className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-3 border-b border-slate-200 dark:border-slate-800 pb-1">Account Verification</div>
-                      
-                      {/* Debit */}
                       <div className="bg-emerald-50/50 dark:bg-emerald-950/20 border-l-2 border-emerald-500 p-3 rounded-r-lg mb-2">
                         <div className="flex justify-between items-center mb-1">
                           <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-wider">Purchase Account (DR)</span>
@@ -3661,12 +3654,10 @@ export function PurchaseOrderManagementDashboard() {
                         </div>
                       </div>
 
-                      {/* Visual separator */}
                       <div className="flex justify-center my-1 text-slate-300">
                         <ChevronDown className="h-4 w-4" />
                       </div>
 
-                      {/* Credit */}
                       <div className="bg-blue-50/50 dark:bg-blue-950/20 border-l-2 border-blue-500 p-3 rounded-r-lg">
                         <div className="flex justify-between items-center mb-1">
                           <span className="text-[9px] font-bold text-blue-700 uppercase tracking-wider">Sales Account (CR)</span>
@@ -3680,7 +3671,6 @@ export function PurchaseOrderManagementDashboard() {
                       </div>
                     </div>
 
-                    {/* Transfer Amount */}
                     <div className="bg-slate-800 dark:bg-slate-900 text-white p-4 rounded-xl text-center shadow-inner">
                       <div className="text-[10px] text-slate-300 uppercase tracking-widest font-black mb-1">Transfer Amount</div>
                       <div className="text-2xl font-black font-mono tracking-tight text-emerald-400">{totalPKRVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-sm text-slate-400">{displayCurrency}</span></div>
@@ -3690,10 +3680,8 @@ export function PurchaseOrderManagementDashboard() {
                         <span className="truncate max-w-[100px]">{selected.salesAccountName || "Sales A/C"}</span>
                       </div>
                     </div>
-
                   </div>
 
-                  {/* Actions Footer */}
                   <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col gap-2 sticky bottom-0">
                     <Button 
                       className={`w-full font-bold uppercase tracking-wider text-[11px] h-12 shadow-md transition-all bg-emerald-600 hover:bg-emerald-700 text-white`}
@@ -3703,9 +3691,7 @@ export function PurchaseOrderManagementDashboard() {
                       {(selected.status === "Posted" || (selected as any).ledgerPostingStatus === "Posted") ? "Refresh Roznamcha Payment" : "Transfer Roznamcha Payment"}
                     </Button>
                   </div>
-
                 </div>
-
               </div>
             );
           })()}
@@ -3714,13 +3700,3 @@ export function PurchaseOrderManagementDashboard() {
     </div>
   );
 }
-
-
-
-}}
-
-}}
-
-}}
-
-}}
