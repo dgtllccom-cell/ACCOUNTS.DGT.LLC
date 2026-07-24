@@ -443,7 +443,7 @@ export function PurchaseTransferErpReportView({
           </div>
         </SectionCard>
 
-        {/* ── 5. LOADING & TRANSPORT ─────────�        {/* ── 6. PAYMENT INFORMATION ───────────────────── */}
+        {/* ── 5. LOADING & TRANSPORT ─────────�        {/* ── 6. PAYMENT INFORMATION ───────────────────── */}
         <SectionCard icon={<CreditCard className="h-4 w-4" />} title="Payment Information" badge={d.paymentStatus || d.status}>
           <div className="grid sm:grid-cols-2 gap-x-8">
             <div>
@@ -655,4 +655,6 @@ export function PurchaseTransferErpReportView({
       `}</style>
     </div>
   );
+}
+
 }

@@ -165,3 +165,5 @@ export function AccountSetup({ accounts, onRefresh, onAdd, onEdit }: Props) {
     </div>
   );
 }
+
+}

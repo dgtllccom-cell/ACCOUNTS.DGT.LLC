@@ -22,3 +22,5 @@ export function downloadCsv(filename: string, rows: Array<Array<string>>) {
   const csv = rows.map((row) => row.map((cell) => csvEscape(cell)).join(",")).join("\r\n");
   downloadTextFile(filename, csv, "text/csv");
 }
+
+}}

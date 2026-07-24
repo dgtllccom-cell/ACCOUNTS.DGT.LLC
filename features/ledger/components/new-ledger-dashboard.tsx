@@ -726,3 +726,5 @@ function InfoRow({
     </div>
   );
 }
+
+}}}

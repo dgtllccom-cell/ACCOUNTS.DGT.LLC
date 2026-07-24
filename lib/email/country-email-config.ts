@@ -140,3 +140,5 @@ export function appendCountryEmailSignature(body: string, config: ResolvedCountr
   if (trimmed.includes(config.signatureText)) return trimmed;
   return `${trimmed}\n\n--\n${config.signatureText}`;
 }
+
+}

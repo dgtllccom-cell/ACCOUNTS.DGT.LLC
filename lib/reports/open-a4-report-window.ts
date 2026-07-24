@@ -726,3 +726,5 @@ export function openA4ReportWindow(input: {
   // Use the new PDF Print Preview Modal instead of window.open
   printStore.openPrint(html, input.title);
 }
+
+}

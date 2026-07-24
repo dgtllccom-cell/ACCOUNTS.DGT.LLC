@@ -440,3 +440,5 @@ export function openAccountA4ReportWindow(input: {
 
   printStore.openPrint(html, input.title);
 }
+
+}

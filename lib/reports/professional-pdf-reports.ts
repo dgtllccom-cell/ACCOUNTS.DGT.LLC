@@ -185,3 +185,5 @@ export function openProfessionalReportWindow(html: string, autoPrint = true) {
     popup.onload = () => popup.print();
   }
 }
+
+}

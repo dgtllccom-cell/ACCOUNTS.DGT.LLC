@@ -557,3 +557,5 @@ export function openTradeDocumentWindow(type: TradeDocType, b: any) {
 
   printStore.openPrint(html, type.toUpperCase() + " DOCUMENT");
 }
+
+}
