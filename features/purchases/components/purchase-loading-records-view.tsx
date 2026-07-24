@@ -1292,7 +1292,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                                     <td className="px-2 py-2 font-bold uppercase truncate max-w-[80px]" title={name}>{name}</td>
                                     <td className="px-2 py-2 text-right font-mono">{poQty.toLocaleString()}</td>
                                     <td className="px-2 py-2 text-right font-mono text-emerald-600 font-bold">{loaded.toLocaleString()}</td>
-                                    <td className={cn("px-2 py-2 text-right font-mono font-bold", bal > 0 ? "text-rose-600" : "text-emerald-650")}>{bal.toLocaleString()}</td>
+                                    <td className={cn("px-2 py-2 text-right font-mono font-bold", (bal > 0) ? "text-rose-600" : "text-emerald-650")}>{bal.toLocaleString()}</td>
                                     <td className="px-2 py-2 text-right font-mono">{rate.toLocaleString()}</td>
                                   </tr>
                                 );
@@ -1307,7 +1307,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           Back
                         </Button>
                         <Button type="button" onClick={() => void saveNewLoading()} disabled={savingNewLoading || !newQuantity || !containerNumberInput} className="rounded-full h-9 bg-emerald-600 px-4 text-xs font-bold text-white hover:bg-emerald-700 shadow-sm transition active:scale-[0.98] disabled:opacity-50">
-                          {savingNewLoading ? "Saving..." : Number(containerCount) > 1 && currentContainerIndex < Number(containerCount) ? `Save & Next Container (${currentContainerIndex + 1}/${containerCount})` : "Save Loading"}
+                          {savingNewLoading ? "Saving..." : (Number(containerCount) > 1 && (currentContainerIndex < Number(containerCount))) ? "Save & Next Container (" + String(currentContainerIndex + 1) + "/" + String(containerCount) + ")" : "Save Loading"}
                         </Button>
                       </div>
 
@@ -2003,6 +2003,14 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                       const poRow = (Array.isArray(record.purchase_orders) ? record.purchase_orders[0] : record.purchase_orders) || {};
                       const finance = calcLoadingFinance(h, poRow, form);
                       const { amountUSD, exRate, amountPKR, currency } = finance;
+
+                      const rowPoAdv = normalizeAdvanceToPurchaseCurrency(Number(poRow.advance_paid || form.advanceAmount || 0), contractPurchaseAmount, exRate || 1);
+                      const rowLoadedAdvUSD = (finance.proRataRatio || 0) * rowPoAdv;
+                      const rowLoadedAdvLocal = Math.min(rowLoadedAdvUSD * (exRate || 1), Math.max(0, amountPKR));
+                      const rowLoadedBalLocal = Math.max(0, amountPKR - rowLoadedAdvLocal);
+
+                      const rowAdvDisp = rowLoadedAdvLocal > 0 ? `${rowLoadedAdvLocal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${localCurrency}` : "-";
+                      const rowBalDisp = rowLoadedBalLocal !== 0 ? `${rowLoadedBalLocal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${localCurrency}` : "-";
                       return (
                         <tr key={h.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition">
                           <td className="px-6 py-3 text-center flex items-center justify-center gap-1">
@@ -2078,21 +2086,10 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           <td className="px-6 py-3 font-mono text-slate-600 dark:text-slate-400 text-right">{exRate > 0 ? exRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : "-"}</td>
                           <td className="px-6 py-3 font-mono font-black text-emerald-650 dark:text-emerald-400 text-right">{amountPKR > 0 ? `${amountPKR.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${localCurrency}` : "-"}</td>
                           <td className="px-6 py-3 font-mono font-bold text-amber-600 dark:text-amber-400 text-right">
-                            {(() => {
-                              const poAdvanceAmt = normalizeAdvanceToPurchaseCurrency(Number(poRow.advance_paid || form.advanceAmount || 0), contractPurchaseAmount, exRate || 1);
-                              const loadedAdvanceUSD = (finance.proRataRatio || 0) * poAdvanceAmt;
-                              const loadedAdvanceLocal = Math.min(loadedAdvanceUSD * exRate, Math.max(0, amountPKR));
-                              return loadedAdvanceLocal > 0 ? `${loadedAdvanceLocal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${localCurrency}` : "-";
-                            })()}
+                            {rowAdvDisp}
                           </td>
                           <td className="px-6 py-3 font-mono font-black text-rose-700 dark:text-rose-500 text-right">
-                            {(() => {
-                              const poAdvanceAmt = normalizeAdvanceToPurchaseCurrency(Number(poRow.advance_paid || form.advanceAmount || 0), contractPurchaseAmount, exRate || 1);
-                              const loadedAdvanceUSD = (finance.proRataRatio || 0) * poAdvanceAmt;
-                              const loadedAdvanceLocal = Math.min(loadedAdvanceUSD * exRate, Math.max(0, amountPKR));
-                              const loadedBalanceLocal = Math.max(0, amountPKR - loadedAdvanceLocal);
-                              return loadedBalanceLocal !== 0 ? `${loadedBalanceLocal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${localCurrency}` : "-";
-                            })()}
+                            {rowBalDisp}
                           </td>
                           <td className="px-6 py-3 font-semibold text-slate-600 dark:text-slate-300">{h.report_payload?.loadingPort || h.loading_location || "-"}</td>
                           <td className="px-6 py-3 font-mono font-semibold text-blue-600 dark:text-blue-400">{h.report_payload?.loadingDate ? new Date(h.report_payload.loadingDate).toLocaleDateString() : (h.loaded_at ? new Date(h.loaded_at).toLocaleDateString() : "-")}</td>

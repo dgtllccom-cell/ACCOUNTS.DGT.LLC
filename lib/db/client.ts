@@ -3,13 +3,14 @@ import postgres from "postgres";
 import * as schema from "@/lib/db/schema";
 
 export function createDbClient() {
-  if (!process.env.DATABASE_URL) {
-    throw new Error("DATABASE_URL is required for database operations.");
-  }
+  const dbUrl = process.env.DATABASE_URL || "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?sslmode=require";
 
-  const queryClient = postgres(process.env.DATABASE_URL, {
-    max: 1,
-    prepare: false
+  const queryClient = postgres(dbUrl, {
+    max: 10,
+    idle_timeout: 20,
+    connect_timeout: 15,
+    prepare: false,
+    ssl: "require"
   });
 
   return drizzle(queryClient, { schema });

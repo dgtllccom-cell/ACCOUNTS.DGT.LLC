@@ -329,3 +329,8 @@ export async function requireErpSession() {
 
   return session;
 }
+
+// Compatibility Aliases
+export const requireSession = requireErpSession;
+export const getSession = getCurrentErpSession;
+

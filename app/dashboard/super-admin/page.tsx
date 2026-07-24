@@ -58,16 +58,10 @@ type SuperAdminDashboardData = {
   error: string | null;
 };
 
+import postgres from "postgres";
+
 function formatMoney(value: number) {
   return `$${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value || 0)}`;
-}
-
-async function countRows(supabase: ReturnType<typeof createSupabaseAdminClient>, table: string, deleted = true) {
-  let query = supabase.from(table).select("id", { count: "exact", head: true });
-  if (deleted) query = query.is("deleted_at", null);
-  const { count, error } = await query;
-  if (error) return 0;
-  return count ?? 0;
 }
 
 async function loadSuperAdminData(): Promise<SuperAdminDashboardData> {
@@ -77,48 +71,64 @@ async function loadSuperAdminData(): Promise<SuperAdminDashboardData> {
   };
 
   try {
-    const supabase = createSupabaseAdminClient();
+    const dbUrl = process.env.DATABASE_URL || "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres";
+    const sql = postgres(dbUrl, { prepare: false, idle_timeout: 5, connect_timeout: 10 });
+
+    const safeCount = async (tableName: string, checkDeleted = true) => {
+      try {
+        const query = checkDeleted 
+          ? sql`SELECT count(*)::int as c FROM ${sql(tableName)} WHERE deleted_at IS NULL;`
+          : sql`SELECT count(*)::int as c FROM ${sql(tableName)};`;
+        const res = await query;
+        return res[0]?.c || 0;
+      } catch {
+        return 0;
+      }
+    };
+
     const [
       countriesCount, countryBranchesCount, cityBranchesCount, usersCount,
       accountsCount, customersCount, suppliersCount, banksCount, paymentsCount, ledgersCount, roznamchaCount, purchasesCount, salesCount,
       shippingCount, activeUsersCount, purchaseRows, salesRows, balanceRows,
       countriesList, mainBranchesList, cityBranchesList
     ] = await Promise.all([
-      countRows(supabase, "countries"),
-      countRows(supabase, "country_branches"),
-      countRows(supabase, "city_branches"),
-      countRows(supabase, "profiles", false),
-      countRows(supabase, "enterprise_accounts"),
-      countRows(supabase, "customers"),
-      countRows(supabase, "companies"),
-      countRows(supabase, "banks"),
-      countRows(supabase, "purchase_order_payments", false),
-      countRows(supabase, "ledgers"),
-      countRows(supabase, "roznamcha_entries"),
-      countRows(supabase, "purchase_orders"),
-      countRows(supabase, "sales_orders"),
-      countRows(supabase, "shipping_line_records"),
-      supabase.from("profiles").select("id", { count: "exact", head: true }).eq("status", "active"),
-      supabase.from("purchase_orders").select("country_id, order_total").is("deleted_at", null),
-      supabase.from("sales_orders").select("country_id, order_total").is("deleted_at", null),
-      supabase.from("ledgers").select("country_id, debit_total, credit_total, current_balance").is("deleted_at", null),
-      supabase.from("countries").select("id, name, currency_code").is("deleted_at", null),
-      supabase.from("country_branches").select("id, country_id").is("deleted_at", null),
-      supabase.from("city_branches").select("id, country_id").is("deleted_at", null)
+      safeCount("countries"),
+      safeCount("country_branches"),
+      safeCount("city_branches"),
+      safeCount("profiles", false),
+      safeCount("enterprise_accounts"),
+      safeCount("customers"),
+      safeCount("companies"),
+      safeCount("banks"),
+      safeCount("purchase_order_payments", false),
+      safeCount("ledgers"),
+      safeCount("roznamcha_entries"),
+      safeCount("purchase_orders"),
+      safeCount("sales_orders"),
+      safeCount("shipping_line_records"),
+      sql`SELECT count(*)::int as c FROM profiles WHERE status = 'active';`.catch(() => [{ c: 0 }]),
+      sql`SELECT country_id, order_total FROM purchase_orders WHERE deleted_at IS NULL;`.catch(() => []),
+      sql`SELECT country_id, order_total FROM sales_orders WHERE deleted_at IS NULL;`.catch(() => []),
+      sql`SELECT country_id, debit_total, credit_total, current_balance FROM ledgers WHERE deleted_at IS NULL;`.catch(() => []),
+      sql`SELECT id, name, currency_code FROM countries WHERE deleted_at IS NULL;`.catch(() => []),
+      sql`SELECT id, country_id FROM country_branches WHERE deleted_at IS NULL;`.catch(() => []),
+      sql`SELECT id, country_id FROM city_branches WHERE deleted_at IS NULL;`.catch(() => [])
     ]);
 
-    const purchaseOrderTotal = (purchaseRows.data ?? []).reduce((sum: number, row: any) => sum + Number(row.order_total || 0), 0);
-    const salesOrderTotal = (salesRows.data ?? []).reduce((sum: number, row: any) => sum + Number(row.order_total || 0), 0);
-    const ledgerDebit = (balanceRows.data ?? []).reduce((sum: number, row: any) => sum + Number(row.debit_total || 0), 0);
-    const ledgerCredit = (balanceRows.data ?? []).reduce((sum: number, row: any) => sum + Number(row.credit_total || 0), 0);
-    const ledgerBalance = (balanceRows.data ?? []).reduce((sum: number, row: any) => sum + Number(row.current_balance || 0), 0);
+    await sql.end().catch(() => {});
+
+    const purchaseOrderTotal = (purchaseRows || []).reduce((sum: number, row: any) => sum + Number(row.order_total || 0), 0);
+    const salesOrderTotal = (salesRows || []).reduce((sum: number, row: any) => sum + Number(row.order_total || 0), 0);
+    const ledgerDebit = (balanceRows || []).reduce((sum: number, row: any) => sum + Number(row.debit_total || 0), 0);
+    const ledgerCredit = (balanceRows || []).reduce((sum: number, row: any) => sum + Number(row.credit_total || 0), 0);
+    const ledgerBalance = (balanceRows || []).reduce((sum: number, row: any) => sum + Number(row.current_balance || 0), 0);
     const purchaseTotal = Math.max(purchaseOrderTotal, ledgerDebit);
     const salesTotal = Math.max(salesOrderTotal, ledgerCredit);
 
     const countrySummaryMap = new Map<string, CountryFinancialSummary>();
-    for (const country of ((countriesList.data ?? []) as any[])) {
-      const mainCount = (mainBranchesList.data ?? []).filter((b: any) => b.country_id === country.id).length;
-      const cityCount = (cityBranchesList.data ?? []).filter((b: any) => b.country_id === country.id).length;
+    for (const country of (countriesList as any[])) {
+      const mainCount = (mainBranchesList as any[]).filter((b: any) => b.country_id === country.id).length;
+      const cityCount = (cityBranchesList as any[]).filter((b: any) => b.country_id === country.id).length;
       countrySummaryMap.set(country.id, {
         id: country.id,
         name: country.name,
@@ -132,15 +142,15 @@ async function loadSuperAdminData(): Promise<SuperAdminDashboardData> {
       });
     }
 
-    for (const row of ((purchaseRows.data ?? []) as any[])) {
+    for (const row of (purchaseRows as any[])) {
       const target = row.country_id ? countrySummaryMap.get(row.country_id) : undefined;
       if (target) target.totalPurchases += Number(row.order_total || 0);
     }
-    for (const row of ((salesRows.data ?? []) as any[])) {
+    for (const row of (salesRows as any[])) {
       const target = row.country_id ? countrySummaryMap.get(row.country_id) : undefined;
       if (target) target.totalSales += Number(row.order_total || 0);
     }
-    for (const row of ((balanceRows.data ?? []) as any[])) {
+    for (const row of (balanceRows as any[])) {
       const target = row.country_id ? countrySummaryMap.get(row.country_id) : undefined;
       if (target) {
         target.totalDebit += Number(row.debit_total || 0);
@@ -175,7 +185,7 @@ async function loadSuperAdminData(): Promise<SuperAdminDashboardData> {
       ledgerDebit,
       ledgerCredit,
       ledgerBalance,
-      activeUsers: activeUsersCount.count ?? 0,
+      activeUsers: activeUsersCount[0]?.c || 0,
       countrySummaries: Array.from(countrySummaryMap.values()),
       databaseReady: true,
       error: null
