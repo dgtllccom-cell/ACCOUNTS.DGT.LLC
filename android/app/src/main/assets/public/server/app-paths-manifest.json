@@ -1,0 +1,14 @@
+{
+  "/manifest.webmanifest/route": "app/manifest.webmanifest/route.js",
+  "/api/erp/auth/session/route": "app/api/erp/auth/session/route.js",
+  "/api/erp/roznamcha/route": "app/api/erp/roznamcha/route.js",
+  "/api/erp/roznamcha/[id]/route": "app/api/erp/roznamcha/[id]/route.js",
+  "/api/erp/accounting/reports/ledger/ledgers/route": "app/api/erp/accounting/reports/ledger/ledgers/route.js",
+  "/api/erp/currency/latest-rate/route": "app/api/erp/currency/latest-rate/route.js",
+  "/dashboard/purchase/purchase-order/page": "app/dashboard/purchase/purchase-order/page.js",
+  "/dashboard/roznamcha/cash-entry/page": "app/dashboard/roznamcha/cash-entry/page.js",
+  "/dashboard/ledger/general-report/page": "app/dashboard/ledger/general-report/page.js",
+  "/dashboard/roznamcha/all/page": "app/dashboard/roznamcha/all/page.js",
+  "/dashboard/ledger/super-admin/detailed/page": "app/dashboard/ledger/super-admin/detailed/page.js",
+  "/dashboard/journal/purchase-order-payment/advance/page": "app/dashboard/journal/purchase-order-payment/advance/page.js"
+}

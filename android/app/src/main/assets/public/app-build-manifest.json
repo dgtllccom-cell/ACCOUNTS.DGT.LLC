@@ -1,0 +1,200 @@
+{
+  "pages": {
+    "/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/css/app/layout.css",
+      "static/chunks/app/layout.js"
+    ],
+    "/auth/login/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/auth/login/page.js"
+    ],
+    "/api/erp/auth/login/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/erp/auth/login/route.js"
+    ],
+    "/dashboard/layout": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/layout.js"
+    ],
+    "/dashboard/super-admin/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/super-admin/page.js"
+    ],
+    "/dashboard/purchase/new-purchase-booking-order/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/purchase/new-purchase-booking-order/page.js"
+    ],
+    "/api/erp/purchases/booking-journal-report/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/erp/purchases/booking-journal-report/route.js"
+    ],
+    "/api/erp/auth/session/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/erp/auth/session/route.js"
+    ],
+    "/api/erp/locations/countries/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/erp/locations/countries/route.js"
+    ],
+    "/api/erp/goods/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/erp/goods/route.js"
+    ],
+    "/api/erp/companies/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/erp/companies/route.js"
+    ],
+    "/api/erp/accounting/accounts/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/erp/accounting/accounts/route.js"
+    ],
+    "/api/erp/ports/loading/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/erp/ports/loading/route.js"
+    ],
+    "/api/erp/ports/received/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/erp/ports/received/route.js"
+    ],
+    "/api/erp/locations/branches/main/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/erp/locations/branches/main/route.js"
+    ],
+    "/dashboard/data/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/data/page.js"
+    ],
+    "/api/erp/purchases/orders/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/erp/purchases/orders/route.js"
+    ],
+    "/dashboard/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/page.js"
+    ],
+    "/api/erp/purchases/orders/[id]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/erp/purchases/orders/[id]/route.js"
+    ],
+    "/dashboard/purchase/purchase-order/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/purchase/purchase-order/page.js"
+    ],
+    "/dashboard/roznamcha/cash-entry/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/roznamcha/cash-entry/page.js"
+    ],
+    "/dashboard/purchase/purchase-booking-journal-report/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/purchase/purchase-booking-journal-report/page.js"
+    ],
+    "/dashboard/journal/purchase-order-payment/advance/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/journal/purchase-order-payment/advance/page.js"
+    ],
+    "/api/erp/accounting/reports/ledger/ledgers/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/erp/accounting/reports/ledger/ledgers/route.js"
+    ],
+    "/api/erp/purchases/orders/[id]/payments/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/erp/purchases/orders/[id]/payments/route.js"
+    ],
+    "/dashboard/city/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/city/page.js"
+    ],
+    "/dashboard/ledger/new/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/ledger/new/page.js"
+    ],
+    "/api/erp/roznamcha/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/erp/roznamcha/route.js"
+    ],
+    "/api/branch-management/country-branches/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/branch-management/country-branches/route.js"
+    ],
+    "/api/branch-management/city-branches/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/branch-management/city-branches/route.js"
+    ],
+    "/api/erp/currency/latest-rate/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/erp/currency/latest-rate/route.js"
+    ],
+    "/dashboard/roznamcha/all/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/roznamcha/all/page.js"
+    ],
+    "/api/erp/roznamcha/[id]/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/erp/roznamcha/[id]/route.js"
+    ],
+    "/api/erp/accounting/reports/ledger/statement/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/erp/accounting/reports/ledger/statement/route.js"
+    ],
+    "/dashboard/ledger/super-admin/detailed/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/ledger/super-admin/detailed/page.js"
+    ],
+    "/dashboard/ledger/general-report/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/ledger/general-report/page.js"
+    ],
+    "/api/erp/accounting/reports/ledger/general/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/erp/accounting/reports/ledger/general/route.js"
+    ],
+    "/manifest.webmanifest/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/manifest.webmanifest/route.js"
+    ],
+    "/api/debug/fix-roznamcha/route": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/api/debug/fix-roznamcha/route.js"
+    ]
+  }
+}

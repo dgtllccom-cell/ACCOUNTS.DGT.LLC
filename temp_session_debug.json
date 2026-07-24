@@ -1,0 +1,17 @@
+{
+  "userId": "7719341b-bfcb-4a31-b852-0f67e8062e95",
+  "email": "superadmin@damaan.com",
+  "fullName": "Super Admin",
+  "preferredLanguage": "en",
+  "roles": [
+    "super_admin"
+  ],
+  "permissions": [
+    "*:*"
+  ],
+  "assignments": [],
+  "countryIds": [],
+  "countryBranchIds": [],
+  "cityBranchIds": [],
+  "isSuperAdmin": true
+}

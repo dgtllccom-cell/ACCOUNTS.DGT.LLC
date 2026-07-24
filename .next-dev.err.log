@@ -1,0 +1,2676 @@
+[dev-single] Port 3000 is already in use on 127.0.0.1. If a dev server is already running, stop it with: npm run dev:stop
+ ⨯ ReferenceError: creditAccountNoInput is not defined
+    at CashEntryForm (webpack-internal:///(ssr)/./features/roznamcha/components/cash-entry-form.tsx:1943:80) {
+  digest: '737487682'
+}
+ ⚠ Server is approaching the used memory threshold, restarting...
+[dev-single] Port 3000 is already in use on 127.0.0.1. If a dev server is already running, stop it with: npm run dev:stop
+ ⨯ ./features/purchases/components/purchase-order-wizard.jsx
+Error:   [31mx[0m Expression expected
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\purchases\components\purchase-order-wizard.jsx[0m:3496:1]
+ [2m3493[0m |                     </div>
+ [2m3494[0m |                   </div>
+ [2m3495[0m | 
+ [2m3496[0m |                   <div className="rounded-lg border border-border bg-muted/20 p-3">
+      : [35;1m                  ^[0m
+ [2m3497[0m |                     <div className="grid grid-cols-1 gap-3">
+ [2m3498[0m |                       <div>
+ [2m3498[0m |                         <label className="block text-[10px] text-muted-foreground mb-1">Purchase Order No</label>
+      `----
+  [31mx[0m Expected '</', got 'className'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\purchases\components\purchase-order-wizard.jsx[0m:3496:1]
+ [2m3493[0m |                     </div>
+ [2m3494[0m |                   </div>
+ [2m3495[0m | 
+ [2m3496[0m |                   <div className="rounded-lg border border-border bg-muted/20 p-3">
+      : [35;1m                       ^^^^^^^^^[0m
+ [2m3497[0m |                     <div className="grid grid-cols-1 gap-3">
+ [2m3498[0m |                       <div>
+ [2m3498[0m |                         <label className="block text-[10px] text-muted-foreground mb-1">Purchase Order No</label>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/purchases/components/purchase-order-wizard.jsx
+./app/dashboard/purchase/new-purchase-booking-order/page.tsx
+ ⨯ ./features/purchases/components/purchase-order-wizard.jsx
+Error:   [31mx[0m Expression expected
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\purchases\components\purchase-order-wizard.jsx[0m:3496:1]
+ [2m3493[0m |                     </div>
+ [2m3494[0m |                   </div>
+ [2m3495[0m | 
+ [2m3496[0m |                   <div className="rounded-lg border border-border bg-muted/20 p-3">
+      : [35;1m                  ^[0m
+ [2m3497[0m |                     <div className="grid grid-cols-1 gap-3">
+ [2m3498[0m |                       <div>
+ [2m3498[0m |                         <label className="block text-[10px] text-muted-foreground mb-1">Purchase Order No</label>
+      `----
+  [31mx[0m Expected '</', got 'className'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\purchases\components\purchase-order-wizard.jsx[0m:3496:1]
+ [2m3493[0m |                     </div>
+ [2m3494[0m |                   </div>
+ [2m3495[0m | 
+ [2m3496[0m |                   <div className="rounded-lg border border-border bg-muted/20 p-3">
+      : [35;1m                       ^^^^^^^^^[0m
+ [2m3497[0m |                     <div className="grid grid-cols-1 gap-3">
+ [2m3498[0m |                       <div>
+ [2m3498[0m |                         <label className="block text-[10px] text-muted-foreground mb-1">Purchase Order No</label>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/purchases/components/purchase-order-wizard.jsx
+./app/dashboard/purchase/new-purchase-booking-order/page.tsx
+ ⨯ ./features/purchases/components/purchase-order-wizard.jsx
+Error:   [31mx[0m Expression expected
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\purchases\components\purchase-order-wizard.jsx[0m:3496:1]
+ [2m3493[0m |                     </div>
+ [2m3494[0m |                   </div>
+ [2m3495[0m | 
+ [2m3496[0m |                   <div className="rounded-lg border border-border bg-muted/20 p-3">
+      : [35;1m                  ^[0m
+ [2m3497[0m |                     <div className="grid grid-cols-1 gap-3">
+ [2m3498[0m |                       <div>
+ [2m3498[0m |                         <label className="block text-[10px] text-muted-foreground mb-1">Purchase Order No</label>
+      `----
+  [31mx[0m Expected '</', got 'className'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\purchases\components\purchase-order-wizard.jsx[0m:3496:1]
+ [2m3493[0m |                     </div>
+ [2m3494[0m |                   </div>
+ [2m3495[0m | 
+ [2m3496[0m |                   <div className="rounded-lg border border-border bg-muted/20 p-3">
+      : [35;1m                       ^^^^^^^^^[0m
+ [2m3497[0m |                     <div className="grid grid-cols-1 gap-3">
+ [2m3498[0m |                       <div>
+ [2m3498[0m |                         <label className="block text-[10px] text-muted-foreground mb-1">Purchase Order No</label>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/purchases/components/purchase-order-wizard.jsx
+./app/dashboard/purchase/new-purchase-booking-order/page.tsx
+ ⨯ ./features/purchases/components/purchase-order-wizard.jsx
+Error:   [31mx[0m Expression expected
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\purchases\components\purchase-order-wizard.jsx[0m:3496:1]
+ [2m3493[0m |                     </div>
+ [2m3494[0m |                   </div>
+ [2m3495[0m | 
+ [2m3496[0m |                   <div className="rounded-lg border border-border bg-muted/20 p-3">
+      : [35;1m                  ^[0m
+ [2m3497[0m |                     <div className="grid grid-cols-1 gap-3">
+ [2m3498[0m |                       <div>
+ [2m3498[0m |                         <label className="block text-[10px] text-muted-foreground mb-1">Purchase Order No</label>
+      `----
+  [31mx[0m Expected '</', got 'className'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\purchases\components\purchase-order-wizard.jsx[0m:3496:1]
+ [2m3493[0m |                     </div>
+ [2m3494[0m |                   </div>
+ [2m3495[0m | 
+ [2m3496[0m |                   <div className="rounded-lg border border-border bg-muted/20 p-3">
+      : [35;1m                       ^^^^^^^^^[0m
+ [2m3497[0m |                     <div className="grid grid-cols-1 gap-3">
+ [2m3498[0m |                       <div>
+ [2m3498[0m |                         <label className="block text-[10px] text-muted-foreground mb-1">Purchase Order No</label>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/purchases/components/purchase-order-wizard.jsx
+./app/dashboard/purchase/new-purchase-booking-order/page.tsx
+ ⨯ ./features/purchases/components/purchase-order-wizard.jsx
+Error:   [31mx[0m Expression expected
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\purchases\components\purchase-order-wizard.jsx[0m:3496:1]
+ [2m3493[0m |                     </div>
+ [2m3494[0m |                   </div>
+ [2m3495[0m | 
+ [2m3496[0m |                   <div className="rounded-lg border border-border bg-muted/20 p-3">
+      : [35;1m                  ^[0m
+ [2m3497[0m |                     <div className="grid grid-cols-1 gap-3">
+ [2m3498[0m |                       <div>
+ [2m3498[0m |                         <label className="block text-[10px] text-muted-foreground mb-1">Purchase Order No</label>
+      `----
+  [31mx[0m Expected '</', got 'className'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\purchases\components\purchase-order-wizard.jsx[0m:3496:1]
+ [2m3493[0m |                     </div>
+ [2m3494[0m |                   </div>
+ [2m3495[0m | 
+ [2m3496[0m |                   <div className="rounded-lg border border-border bg-muted/20 p-3">
+      : [35;1m                       ^^^^^^^^^[0m
+ [2m3497[0m |                     <div className="grid grid-cols-1 gap-3">
+ [2m3498[0m |                       <div>
+ [2m3498[0m |                         <label className="block text-[10px] text-muted-foreground mb-1">Purchase Order No</label>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/purchases/components/purchase-order-wizard.jsx
+./app/dashboard/purchase/new-purchase-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./features/purchases/components/purchase-order-wizard.jsx
+Error:   [31mx[0m Expression expected
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\purchases\components\purchase-order-wizard.jsx[0m:3496:1]
+ [2m3493[0m |                     </div>
+ [2m3494[0m |                   </div>
+ [2m3495[0m | 
+ [2m3496[0m |                   <div className="rounded-lg border border-border bg-muted/20 p-3">
+      : [35;1m                  ^[0m
+ [2m3497[0m |                     <div className="grid grid-cols-1 gap-3">
+ [2m3498[0m |                       <div>
+ [2m3498[0m |                         <label className="block text-[10px] text-muted-foreground mb-1">Purchase Order No</label>
+      `----
+  [31mx[0m Expected '</', got 'className'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\purchases\components\purchase-order-wizard.jsx[0m:3496:1]
+ [2m3493[0m |                     </div>
+ [2m3494[0m |                   </div>
+ [2m3495[0m | 
+ [2m3496[0m |                   <div className="rounded-lg border border-border bg-muted/20 p-3">
+      : [35;1m                       ^^^^^^^^^[0m
+ [2m3497[0m |                     <div className="grid grid-cols-1 gap-3">
+ [2m3498[0m |                       <div>
+ [2m3498[0m |                         <label className="block text-[10px] text-muted-foreground mb-1">Purchase Order No</label>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/purchases/components/purchase-order-wizard.jsx
+./app/dashboard/purchase/new-purchase-booking-order/page.tsx
+ ⨯ ./features/purchases/components/purchase-order-wizard.jsx
+Error:   [31mx[0m Expression expected
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\purchases\components\purchase-order-wizard.jsx[0m:3496:1]
+ [2m3493[0m |                     </div>
+ [2m3494[0m |                   </div>
+ [2m3495[0m | 
+ [2m3496[0m |                   <div className="rounded-lg border border-border bg-muted/20 p-3">
+      : [35;1m                  ^[0m
+ [2m3497[0m |                     <div className="grid grid-cols-1 gap-3">
+ [2m3498[0m |                       <div>
+ [2m3498[0m |                         <label className="block text-[10px] text-muted-foreground mb-1">Purchase Order No</label>
+      `----
+  [31mx[0m Expected '</', got 'className'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\purchases\components\purchase-order-wizard.jsx[0m:3496:1]
+ [2m3493[0m |                     </div>
+ [2m3494[0m |                   </div>
+ [2m3495[0m | 
+ [2m3496[0m |                   <div className="rounded-lg border border-border bg-muted/20 p-3">
+      : [35;1m                       ^^^^^^^^^[0m
+ [2m3497[0m |                     <div className="grid grid-cols-1 gap-3">
+ [2m3498[0m |                       <div>
+ [2m3498[0m |                         <label className="block text-[10px] text-muted-foreground mb-1">Purchase Order No</label>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/purchases/components/purchase-order-wizard.jsx
+./app/dashboard/purchase/new-purchase-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ Error: Authentication is required
+    at requireErpSession (webpack-internal:///(rsc)/./lib/auth/session.ts:158:15)
+    at async NewPurchaseBookingOrderPage (webpack-internal:///(rsc)/./app/dashboard/purchase/new-purchase-booking-order/page.tsx:13:21) {
+  status: 401,
+  digest: '303948165'
+}
+ ⨯ Error: Authentication is required
+    at requireErpSession (webpack-internal:///(rsc)/./lib/auth/session.ts:158:15)
+    at async NewPurchaseBookingOrderPage (webpack-internal:///(rsc)/./app/dashboard/purchase/new-purchase-booking-order/page.tsx:13:21) {
+  status: 401,
+  digest: '1099446822'
+}
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+Error: fetch failed
+    at context.fetch (C:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\web\sandbox\context.js:321:60)
+    at eval (webpack-internal:///(middleware)/./node_modules/@supabase/auth-js/dist/module/lib/helpers.js:121:25)
+    at _handleRequest (webpack-internal:///(middleware)/./node_modules/@supabase/auth-js/dist/module/lib/fetch.js:122:24)
+    at _request (webpack-internal:///(middleware)/./node_modules/@supabase/auth-js/dist/module/lib/fetch.js:112:24)
+    at eval (webpack-internal:///(middleware)/./node_modules/@supabase/auth-js/dist/module/GoTrueClient.js:2512:82)
+    at SupabaseAuthClient._useSession (webpack-internal:///(middleware)/./node_modules/@supabase/auth-js/dist/module/GoTrueClient.js:2329:26)
+    at async SupabaseAuthClient._getUser (webpack-internal:///(middleware)/./node_modules/@supabase/auth-js/dist/module/GoTrueClient.js:2502:20)
+    at async eval (webpack-internal:///(middleware)/./node_modules/@supabase/auth-js/dist/module/GoTrueClient.js:2486:20)
+    at async eval (webpack-internal:///(middleware)/./node_modules/@supabase/auth-js/dist/module/GoTrueClient.js:2274:28) {
+  
+}
+GEMINI_API_KEY is not set. Auto-translation will fallback to copying the original text.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+file:///c:/Users/dgtll/OneDrive/Documents/ACCOUNTS.DGT.LLC/scripts/search_ports.js:1
+const fs = require('fs');
+           ^
+
+ReferenceError: require is not defined in ES module scope, you can use import instead
+This file is being treated as an ES module because it has a '.js' file extension and 'c:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+    at file:///c:/Users/dgtll/OneDrive/Documents/ACCOUNTS.DGT.LLC/scripts/search_ports.js:1:12
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async node:internal/modules/esm/loader:639:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.15.0
+file:///c:/Users/dgtll/OneDrive/Documents/ACCOUNTS.DGT.LLC/scripts/search_ports.js:1
+const fs = require('fs');
+           ^
+
+ReferenceError: require is not defined in ES module scope, you can use import instead
+This file is being treated as an ES module because it has a '.js' file extension and 'c:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\package.json' contains "type": "module". To treat it as a CommonJS script, rename it to use the '.cjs' file extension.
+    at file:///c:/Users/dgtll/OneDrive/Documents/ACCOUNTS.DGT.LLC/scripts/search_ports.js:1:12
+    at ModuleJob.run (node:internal/modules/esm/module_job:437:25)
+    at async node:internal/modules/esm/loader:639:26
+    at async asyncRunEntryPointWithESMLoader (node:internal/modules/run_main:101:5)
+
+Node.js v24.15.0
+GEMINI_API_KEY is not set. Auto-translation will fallback to copying the original text.
+GEMINI_API_KEY is not set. Auto-translation will fallback to copying the original text.
+GEMINI_API_KEY is not set. Auto-translation will fallback to copying the original text.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Server is approaching the used memory threshold, restarting...
+[dev-single] Port 3000 is already in use on 127.0.0.1. If a dev server is already running, stop it with: npm run dev:stop
+[Error: EINVAL: invalid argument, readlink 'C:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\.next\server\chunks'] {
+  errno: -4071,
+  code: 'EINVAL',
+  syscall: 'readlink',
+  path: 'C:\\Users\\dgtll\\OneDrive\\Documents\\ACCOUNTS.DGT.LLC\\.next\\server\\chunks'
+}
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./features/roznamcha/components/cash-entry-form.tsx
+Error:   [31mx[0m Expected '</', got ')'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\roznamcha\components\cash-entry-form.tsx[0m:2921:1]
+ [2m2918[0m |                         </tr>
+ [2m2919[0m |                       );
+ [2m2920[0m |                     })
+ [2m2921[0m |                   )}
+      : [35;1m                  ^[0m
+ [2m2922[0m |                 </tbody>
+ [2m2923[0m |               </table>
+ [2m2924[0m |             </div>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/roznamcha/components/cash-entry-form.tsx
+./app/dashboard/roznamcha/cash-entry/page.tsx
+ ⨯ ./features/roznamcha/components/cash-entry-form.tsx
+Error:   [31mx[0m Expected '</', got ')'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\roznamcha\components\cash-entry-form.tsx[0m:2921:1]
+ [2m2918[0m |                         </tr>
+ [2m2919[0m |                       );
+ [2m2920[0m |                     })
+ [2m2921[0m |                   )}
+      : [35;1m                  ^[0m
+ [2m2922[0m |                 </tbody>
+ [2m2923[0m |               </table>
+ [2m2924[0m |             </div>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/roznamcha/components/cash-entry-form.tsx
+./app/dashboard/roznamcha/cash-entry/page.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./features/roznamcha/components/cash-entry-form.tsx
+Error:   [31mx[0m Expected '</', got ')'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\roznamcha\components\cash-entry-form.tsx[0m:2921:1]
+ [2m2918[0m |                         </tr>
+ [2m2919[0m |                       );
+ [2m2920[0m |                     })
+ [2m2921[0m |                   )}
+      : [35;1m                  ^[0m
+ [2m2922[0m |                 </tbody>
+ [2m2923[0m |               </table>
+ [2m2924[0m |             </div>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/roznamcha/components/cash-entry-form.tsx
+./app/dashboard/roznamcha/cash-entry/page.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./features/roznamcha/components/cash-entry-form.tsx
+Error:   [31mx[0m Expected '</', got ')'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\roznamcha\components\cash-entry-form.tsx[0m:2921:1]
+ [2m2918[0m |                         </tr>
+ [2m2919[0m |                       );
+ [2m2920[0m |                     })
+ [2m2921[0m |                   )}
+      : [35;1m                  ^[0m
+ [2m2922[0m |                 </tbody>
+ [2m2923[0m |               </table>
+ [2m2924[0m |             </div>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/roznamcha/components/cash-entry-form.tsx
+./app/dashboard/roznamcha/cash-entry/page.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./features/roznamcha/components/cash-entry-form.tsx
+Error:   [31mx[0m Expected '</', got ')'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\roznamcha\components\cash-entry-form.tsx[0m:2921:1]
+ [2m2918[0m |                         </tr>
+ [2m2919[0m |                       );
+ [2m2920[0m |                     })
+ [2m2921[0m |                   )}
+      : [35;1m                  ^[0m
+ [2m2922[0m |                 </tbody>
+ [2m2923[0m |               </table>
+ [2m2924[0m |             </div>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/roznamcha/components/cash-entry-form.tsx
+./app/dashboard/roznamcha/cash-entry/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/roznamcha/components/cash-entry-form.tsx
+Error:   [31mx[0m Expected '</', got ';'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\roznamcha\components\cash-entry-form.tsx[0m:2921:1]
+ [2m2918[0m |                         </tr>
+ [2m2919[0m |                       );
+ [2m2920[0m |                     });
+ [2m2921[0m |                       });
+      : [35;1m                        ^[0m
+ [2m2922[0m |                     })
+ [2m2923[0m |                   )}
+ [2m2923[0m |                 </tbody>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/roznamcha/components/cash-entry-form.tsx
+./app/dashboard/roznamcha/cash-entry/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/roznamcha/components/cash-entry-form.tsx
+Error:   [31mx[0m Expected '</', got ';'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\roznamcha\components\cash-entry-form.tsx[0m:2921:1]
+ [2m2918[0m |                         </tr>
+ [2m2919[0m |                       );
+ [2m2920[0m |                     });
+ [2m2921[0m |                       });
+      : [35;1m                        ^[0m
+ [2m2922[0m |                     })
+ [2m2923[0m |                   )}
+ [2m2923[0m |                 </tbody>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/roznamcha/components/cash-entry-form.tsx
+./app/dashboard/roznamcha/cash-entry/page.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ReferenceError: cn is not defined
+    at eval (webpack-internal:///(ssr)/./features/sales/components/sales-order-wizard.tsx:277:44)
+    at Array.map (<anonymous>)
+    at SalesOrderWizard (webpack-internal:///(ssr)/./features/sales/components/sales-order-wizard.tsx:273:19) {
+  digest: '3619603796'
+}
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ReferenceError: cn is not defined
+    at eval (webpack-internal:///(ssr)/./features/sales/components/sales-order-wizard.tsx:277:44)
+    at Array.map (<anonymous>)
+    at SalesOrderWizard (webpack-internal:///(ssr)/./features/sales/components/sales-order-wizard.tsx:273:19) {
+  digest: '3619603796'
+}
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ReferenceError: cn is not defined
+    at eval (webpack-internal:///(ssr)/./features/sales/components/sales-order-wizard.tsx:277:44)
+    at Array.map (<anonymous>)
+    at SalesOrderWizard (webpack-internal:///(ssr)/./features/sales/components/sales-order-wizard.tsx:273:19) {
+  digest: '3619603796'
+}
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ReferenceError: cn is not defined
+    at eval (webpack-internal:///(ssr)/./features/sales/components/sales-order-wizard.tsx:277:44)
+    at Array.map (<anonymous>)
+    at SalesOrderWizard (webpack-internal:///(ssr)/./features/sales/components/sales-order-wizard.tsx:273:19) {
+  digest: '3619603796'
+}
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ReferenceError: cn is not defined
+    at eval (webpack-internal:///(ssr)/./features/sales/components/sales-order-wizard.tsx:277:44)
+    at Array.map (<anonymous>)
+    at SalesOrderWizard (webpack-internal:///(ssr)/./features/sales/components/sales-order-wizard.tsx:273:19) {
+  digest: '3619603796'
+}
+GEMINI_API_KEY is not set. Auto-translation will fallback to copying the original text.
+[API ERROR] {
+  code: 'SERVER_ERROR',
+  message: 'Advance payment is already fully paid (Required: 102900.00, Paid: 102900.00). Duplicate posting is not allowed.',
+  details: undefined,
+  status: 500
+}
+GEMINI_API_KEY is not set. Auto-translation will fallback to copying the original text.
+[API ERROR] {
+  code: 'SERVER_ERROR',
+  message: 'Advance payment is already fully paid (Required: 102900.00, Paid: 102900.00). Duplicate posting is not allowed.',
+  details: undefined,
+  status: 500
+}
+GEMINI_API_KEY is not set. Auto-translation will fallback to copying the original text.
+[API ERROR] {
+  code: 'SERVER_ERROR',
+  message: 'Advance payment is already fully paid (Required: 102900.00, Paid: 102900.00). Duplicate posting is not allowed.',
+  details: undefined,
+  status: 500
+}
+GEMINI_API_KEY is not set. Auto-translation will fallback to copying the original text.
+[API ERROR] {
+  code: 'SERVER_ERROR',
+  message: 'Advance payment is already fully paid (Required: 85750.00, Paid: 85750.00). Duplicate posting is not allowed.',
+  details: undefined,
+  status: 500
+}
+GEMINI_API_KEY is not set. Auto-translation will fallback to copying the original text.
+[API ERROR] {
+  code: 'SERVER_ERROR',
+  message: 'Advance payment is already fully paid (Required: 85750.00, Paid: 85750.00). Duplicate posting is not allowed.',
+  details: undefined,
+  status: 500
+}
+GEMINI_API_KEY is not set. Auto-translation will fallback to copying the original text.
+[API ERROR] {
+  code: 'SERVER_ERROR',
+  message: 'Advance payment is already fully paid (Required: 85750.00, Paid: 85750.00). Duplicate posting is not allowed.',
+  details: undefined,
+  status: 500
+}
+GEMINI_API_KEY is not set. Auto-translation will fallback to copying the original text.
+[API ERROR] {
+  code: 'SERVER_ERROR',
+  message: 'Advance payment is already fully paid (Required: 85750.00, Paid: 85750.00). Duplicate posting is not allowed.',
+  details: undefined,
+  status: 500
+}
+GEMINI_API_KEY is not set. Auto-translation will fallback to copying the original text.
+[API ERROR] {
+  code: 'SERVER_ERROR',
+  message: 'Advance payment is already fully paid (Required: 85750.00, Paid: 85750.00). Duplicate posting is not allowed.',
+  details: undefined,
+  status: 500
+}
+GEMINI_API_KEY is not set. Auto-translation will fallback to copying the original text.
+[API ERROR] {
+  code: 'SERVER_ERROR',
+  message: 'Failed to reverse existing journal entry: Authentication is required',
+  details: undefined,
+  status: 500
+}
+[dev-single] Port 3000 is already in use on 127.0.0.1. If a dev server is already running, stop it with: npm run dev:stop
+ ⨯ ReferenceError: Button is not defined
+    at SuperAdminDashboardPage (webpack-internal:///(rsc)/./app/dashboard/super-admin/page.tsx:300:109) {
+  digest: '2248782591'
+}
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/sales/components/sales-order-wizard.tsx
+Error: 
+
+Caused by:
+    0: Failed to read source code from C:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.tsx
+    1: The system cannot find the file specified. (os error 2)
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.tsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./features/sales/components/sales-order-wizard.tsx
+Error: 
+
+Caused by:
+    0: Failed to read source code from C:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.tsx
+    1: The system cannot find the file specified. (os error 2)
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.tsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.tsx
+Error: 
+
+Caused by:
+    0: Failed to read source code from C:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.tsx
+    1: The system cannot find the file specified. (os error 2)
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.tsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.tsx
+Error: 
+
+Caused by:
+    0: Failed to read source code from C:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.tsx
+    1: The system cannot find the file specified. (os error 2)
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.tsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.tsx
+Error: 
+
+Caused by:
+    0: Failed to read source code from C:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.tsx
+    1: The system cannot find the file specified. (os error 2)
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.tsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.tsx
+Error: 
+
+Caused by:
+    0: Failed to read source code from C:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.tsx
+    1: The system cannot find the file specified. (os error 2)
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.tsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.tsx
+Error: 
+
+Caused by:
+    0: Failed to read source code from C:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.tsx
+    1: The system cannot find the file specified. (os error 2)
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.tsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Found a change in next.config.ts. Restarting the server to apply the changes...
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⨯ Error: Authentication is required
+    at requireErpSession (webpack-internal:///(rsc)/./lib/auth/session.ts:231:15)
+    at async NewSalesBookingOrderPage (webpack-internal:///(rsc)/./app/dashboard/sales/new-sales-booking-order/page.tsx:13:21) {
+  status: 401,
+  digest: '1269963913'
+}
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⚠ ./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+
+./features/sales/components/sales-order-wizard.jsx
+Attempted import error: 'openSalesA4ReportWindow' is not exported from '@/lib/reports/open-purchase-a4-report-window' (imported as 'openSalesA4ReportWindow').
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected ',', got 'const'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:2403:1]
+ [2m2400[0m |         method: savedOrderId ? "PATCH" : "POST",
+ [2m2401[0m |         headers: { "Content-Type": "application/json" },
+ [2m2402[0m |         body: JSON.stringify(transferPayload)
+ [2m2403[0m |       const ledgerStatus = "transferred";
+      : [35;1m      ^^^^^[0m
+ [2m2404[0m |       const nextOrderNo = (form.salesOrderNo || await fetchNextSalesOrderNo()).trim();
+ [2m2405[0m |       const transferPayload = buildSalesOrderPayload(ledgerStatus, nextOrderNo);
+ [2m2405[0m |       const response = await fetch(savedOrderId ? `/api/erp/sales/orders/${savedOrderId}` : "/api/erp/sales/orders", {
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected ',', got 'const'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:2403:1]
+ [2m2400[0m |         method: savedOrderId ? "PATCH" : "POST",
+ [2m2401[0m |         headers: { "Content-Type": "application/json" },
+ [2m2402[0m |         body: JSON.stringify(transferPayload)
+ [2m2403[0m |       const ledgerStatus = "transferred";
+      : [35;1m      ^^^^^[0m
+ [2m2404[0m |       const nextOrderNo = (form.salesOrderNo || await fetchNextSalesOrderNo()).trim();
+ [2m2405[0m |       const transferPayload = buildSalesOrderPayload(ledgerStatus, nextOrderNo);
+ [2m2405[0m |       const response = await fetch(savedOrderId ? `/api/erp/sales/orders/${savedOrderId}` : "/api/erp/sales/orders", {
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected ',', got 'const'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:2242:1]
+ [2m2239[0m |         method: savedOrderId ? "PATCH" : "POST",
+ [2m2240[0m |         headers: { "Content-Type": "application/json" },
+ [2m2241[0m |         body: JSON.stringify(transferPayload)
+ [2m2242[0m |       const ledgerStatus = "transferred";
+      : [35;1m      ^^^^^[0m
+ [2m2243[0m |       const nextOrderNo = (form.salesOrderNo || await fetchNextSalesOrderNo()).trim();
+ [2m2244[0m |       const transferPayload = buildSalesOrderPayload(ledgerStatus, nextOrderNo);
+ [2m2244[0m |       const response = await fetch(savedOrderId ? `/api/erp/sales/orders/${savedOrderId}` : "/api/erp/sales/orders", {
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected ',', got 'const'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:2242:1]
+ [2m2239[0m |         method: savedOrderId ? "PATCH" : "POST",
+ [2m2240[0m |         headers: { "Content-Type": "application/json" },
+ [2m2241[0m |         body: JSON.stringify(transferPayload)
+ [2m2242[0m |       const ledgerStatus = "transferred";
+      : [35;1m      ^^^^^[0m
+ [2m2243[0m |       const nextOrderNo = (form.salesOrderNo || await fetchNextSalesOrderNo()).trim();
+ [2m2244[0m |       const transferPayload = buildSalesOrderPayload(ledgerStatus, nextOrderNo);
+ [2m2244[0m |       const response = await fetch(savedOrderId ? `/api/erp/sales/orders/${savedOrderId}` : "/api/erp/sales/orders", {
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected ',', got 'const'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:2242:1]
+ [2m2239[0m |         method: savedOrderId ? "PATCH" : "POST",
+ [2m2240[0m |         headers: { "Content-Type": "application/json" },
+ [2m2241[0m |         body: JSON.stringify(transferPayload)
+ [2m2242[0m |       const ledgerStatus = "transferred";
+      : [35;1m      ^^^^^[0m
+ [2m2243[0m |       const nextOrderNo = (form.salesOrderNo || await fetchNextSalesOrderNo()).trim();
+ [2m2244[0m |       const transferPayload = buildSalesOrderPayload(ledgerStatus, nextOrderNo);
+ [2m2244[0m |       const response = await fetch(savedOrderId ? `/api/erp/sales/orders/${savedOrderId}` : "/api/erp/sales/orders", {
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected ',', got 'const'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:2242:1]
+ [2m2239[0m |         method: savedOrderId ? "PATCH" : "POST",
+ [2m2240[0m |         headers: { "Content-Type": "application/json" },
+ [2m2241[0m |         body: JSON.stringify(transferPayload)
+ [2m2242[0m |       const ledgerStatus = "transferred";
+      : [35;1m      ^^^^^[0m
+ [2m2243[0m |       const nextOrderNo = (form.salesOrderNo || await fetchNextSalesOrderNo()).trim();
+ [2m2244[0m |       const transferPayload = buildSalesOrderPayload(ledgerStatus, nextOrderNo);
+ [2m2244[0m |       const response = await fetch(savedOrderId ? `/api/erp/sales/orders/${savedOrderId}` : "/api/erp/sales/orders", {
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected ',', got 'const'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:2242:1]
+ [2m2239[0m |         method: savedOrderId ? "PATCH" : "POST",
+ [2m2240[0m |         headers: { "Content-Type": "application/json" },
+ [2m2241[0m |         body: JSON.stringify(transferPayload)
+ [2m2242[0m |       const ledgerStatus = "transferred";
+      : [35;1m      ^^^^^[0m
+ [2m2243[0m |       const nextOrderNo = (form.salesOrderNo || await fetchNextSalesOrderNo()).trim();
+ [2m2244[0m |       const transferPayload = buildSalesOrderPayload(ledgerStatus, nextOrderNo);
+ [2m2244[0m |       const response = await fetch(savedOrderId ? `/api/erp/sales/orders/${savedOrderId}` : "/api/erp/sales/orders", {
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected ',', got 'const'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:2242:1]
+ [2m2239[0m |         method: savedOrderId ? "PATCH" : "POST",
+ [2m2240[0m |         headers: { "Content-Type": "application/json" },
+ [2m2241[0m |         body: JSON.stringify(transferPayload)
+ [2m2242[0m |       const ledgerStatus = "transferred";
+      : [35;1m      ^^^^^[0m
+ [2m2243[0m |       const nextOrderNo = (form.salesOrderNo || await fetchNextSalesOrderNo()).trim();
+ [2m2244[0m |       const transferPayload = buildSalesOrderPayload(ledgerStatus, nextOrderNo);
+ [2m2244[0m |       const response = await fetch(savedOrderId ? `/api/erp/sales/orders/${savedOrderId}` : "/api/erp/sales/orders", {
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected ',', got 'const'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:2242:1]
+ [2m2239[0m |         method: savedOrderId ? "PATCH" : "POST",
+ [2m2240[0m |         headers: { "Content-Type": "application/json" },
+ [2m2241[0m |         body: JSON.stringify(transferPayload)
+ [2m2242[0m |       const ledgerStatus = "transferred";
+      : [35;1m      ^^^^^[0m
+ [2m2243[0m |       const nextOrderNo = (form.salesOrderNo || await fetchNextSalesOrderNo()).trim();
+ [2m2244[0m |       const transferPayload = buildSalesOrderPayload(ledgerStatus, nextOrderNo);
+ [2m2244[0m |       const response = await fetch(savedOrderId ? `/api/erp/sales/orders/${savedOrderId}` : "/api/erp/sales/orders", {
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m                                   )'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:4088:1]
+ [2m4085[0m |                               onChange={(e) => setValue("salesDate", e.target.value)}
+ [2m4086[0m |                               className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8 font-mono"
+ [2m4087[0m |                             />
+ [2m4088[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m                                     </button>
+ [2m4089[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m                                   </div>
+ [2m4090[0m |                                     </td>
+ [2m4091[0m |                                   </tr>
+ [2m4092[0m |                                 ))
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m                                   )'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:4081:1]
+ [2m4078[0m |                               onChange={(e) => setValue("salesDate", e.target.value)}
+ [2m4079[0m |                               className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8 font-mono"
+ [2m4080[0m |                             />
+ [2m4081[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m                                     </button>
+ [2m4082[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m                                   </div>
+ [2m4083[0m |                                     </td>
+ [2m4084[0m |                                   </tr>
+ [2m4085[0m |                                 ))
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m                                   )'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:4089:1]
+ [2m4086[0m |                               onChange={(e) => setValue("salesDate", e.target.value)}
+ [2m4087[0m |                               className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8 font-mono"
+ [2m4088[0m |                             />
+ [2m4089[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m                                     </button>
+ [2m4090[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m                                   </div>
+ [2m4091[0m |                                     </td>
+ [2m4092[0m |                                   </tr>
+ [2m4093[0m |                                 ))
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m                                   )'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:4089:1]
+ [2m4086[0m |                               onChange={(e) => setValue("salesDate", e.target.value)}
+ [2m4087[0m |                               className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8 font-mono"
+ [2m4088[0m |                             />
+ [2m4089[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m                                     </button>
+ [2m4090[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m                                   </div>
+ [2m4091[0m |                                     </td>
+ [2m4092[0m |                                   </tr>
+ [2m4093[0m |                                 ))
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m                                   )'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:4089:1]
+ [2m4086[0m |                               onChange={(e) => setValue("salesDate", e.target.value)}
+ [2m4087[0m |                               className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8 font-mono"
+ [2m4088[0m |                             />
+ [2m4089[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m                                     </button>
+ [2m4090[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m                                   </div>
+ [2m4091[0m |                                     </td>
+ [2m4092[0m |                                   </tr>
+ [2m4093[0m |                                 ))
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m                                   )'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:4089:1]
+ [2m4086[0m |                               onChange={(e) => setValue("salesDate", e.target.value)}
+ [2m4087[0m |                               className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8 font-mono"
+ [2m4088[0m |                             />
+ [2m4089[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m                                     </button>
+ [2m4090[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m                                   </div>
+ [2m4091[0m |                                     </td>
+ [2m4092[0m |                                   </tr>
+ [2m4093[0m |                                 ))
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m                                   )'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:4089:1]
+ [2m4086[0m |                               onChange={(e) => setValue("salesDate", e.target.value)}
+ [2m4087[0m |                               className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8 font-mono"
+ [2m4088[0m |                             />
+ [2m4089[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m                                     </button>
+ [2m4090[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m                                   </div>
+ [2m4091[0m |                                     </td>
+ [2m4092[0m |                                   </tr>
+ [2m4093[0m |                                 ))
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m                                   )'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:4089:1]
+ [2m4086[0m |                               onChange={(e) => setValue("salesDate", e.target.value)}
+ [2m4087[0m |                               className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8 font-mono"
+ [2m4088[0m |                             />
+ [2m4089[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m                                     </button>
+ [2m4090[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m                                   </div>
+ [2m4091[0m |                                     </td>
+ [2m4092[0m |                                   </tr>
+ [2m4093[0m |                                 ))
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m                                   )'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:4089:1]
+ [2m4086[0m |                               onChange={(e) => setValue("salesDate", e.target.value)}
+ [2m4087[0m |                               className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8 font-mono"
+ [2m4088[0m |                             />
+ [2m4089[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m                                     </button>
+ [2m4090[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m                                   </div>
+ [2m4091[0m |                                     </td>
+ [2m4092[0m |                                   </tr>
+ [2m4093[0m |                                 ))
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m                                   )'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:4089:1]
+ [2m4086[0m |                               onChange={(e) => setValue("salesDate", e.target.value)}
+ [2m4087[0m |                               className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8 font-mono"
+ [2m4088[0m |                             />
+ [2m4089[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m                                     </button>
+ [2m4090[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m                                   </div>
+ [2m4091[0m |                                     </td>
+ [2m4092[0m |                                   </tr>
+ [2m4093[0m |                                 ))
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m                                   )'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:4089:1]
+ [2m4086[0m |                               onChange={(e) => setValue("salesDate", e.target.value)}
+ [2m4087[0m |                               className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8 font-mono"
+ [2m4088[0m |                             />
+ [2m4089[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m                                     </button>
+ [2m4090[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m                                   </div>
+ [2m4091[0m |                                     </td>
+ [2m4092[0m |                                   </tr>
+ [2m4093[0m |                                 ))
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m                                     )'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:4073:1]
+ [2m4070[0m |                       <div className="rounded-lg border border-border bg-muted/20 p-3">
+ [2m4071[0m |                         <div className="grid grid-cols-1 gap-3">
+ [2m4072[0m |                           <div>
+ [2m4073[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m                                     </button>
+ [2m4074[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m                                     <button
+ [2m4075[0m |                                           type="button"
+ [2m4076[0m |                                           onClick={() => handleEditGoodsEntry(index)}
+ [2m4077[0m |                                           className="flex items-center gap-1 px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-[9px] font-bold transition-colors shadow-sm border border-blue-200"
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:4094:1]
+ [2m4091[0m |                                 </td>
+ [2m4092[0m |                               </tr>
+ [2m4093[0m |                             ))
+ [2m4094[0m |                           )}
+      : [35;1m                           ^[0m
+ [2m4095[0m |                         </tbody>
+ [2m4096[0m |                       </table>
+ [2m4097[0m |                     </div>
+      `----
+  [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m                             ))
+  [31m|[0m                           )}
+  [31m|[0m                         )'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:4092:1]
+ [2m4089[0m |                                         </button>
+ [2m4090[0m |                                       </div>
+ [2m4091[0m |                                     </td>
+ [2m4092[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m                               </tr>
+ [2m4093[0m | [35;1m|[0m                               ))
+ [2m4094[0m | [35;1m|[0m                             )}
+ [2m4095[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m                         </tbody>
+ [2m4096[0m |                           </table>
+ [2m4097[0m |                         </div>
+ [2m4098[0m |                       </div>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected '</', got 'goodsEntries'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:4041:1]
+ [2m4038[0m |                                     setSalesSearch("");
+ [2m4039[0m |                                   }}
+ [2m4040[0m |                                   className="w-full text-left p-2.5 rounded-xl border border-border/60 hover:border-primary/50 hover:bg-primary/5 transition duration-150 group bg-background/60"
+ [2m4041[0m |                           {goodsEntries.length === 0 ? (
+      : [35;1m                           ^^^^^^^^^^^^[0m
+ [2m4042[0m |                             <tr>
+ [2m4043[0m |                               <td colSpan={13} className="px-3 py-6 text-center text-muted-foreground italic font-semibold text-[10px]">
+ [2m4044[0m |                                 No goods added yet. Add an item above to see it here.
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m                         )'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:4038:1]
+ [2m4035[0m |                                 <th className="px-3 py-2.5 text-center">Ex. Rate</th>
+ [2m4036[0m |                                 <th className="px-3 py-2.5 text-right bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">Final ({form.secondaryCurrency || "PKR"})</th>
+ [2m4037[0m |                                 <th className="px-3 py-2.5 text-center w-10">Action</th>
+ [2m4038[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m                           </tr>
+ [2m4039[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m                         </thead>
+ [2m4040[0m |                             <tbody>
+ [2m4041[0m |                               {goodsEntries.length === 0 ? (
+ [2m4042[0m |                                 <tr>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected '</', got '.'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:4021:1]
+ [2m4018[0m |                         </button>
+ [2m4019[0m |                       </div>
+ [2m4020[0m |                       {salesDropdownOpen && (
+ [2m4021[0m |                                           {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length} found
+      : [35;1m                                                     ^[0m
+ [2m4022[0m |                              </span>
+ [2m4023[0m |                           </div>
+ [2m4024[0m |                           <div className="max-h-64 overflow-y-auto space-y-1.5 pr-0.5">
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expression expected
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:4004:1]
+ [2m4001[0m |                           onFocus={() => {
+ [2m4002[0m |                             setSalesDropdownOpen(true);
+ [2m4003[0m |                             setSalesPinDropdownOpen(false);
+ [2m4004[0m |                       </div>
+      : [35;1m                      ^[0m
+ [2m4005[0m |                       {salesDropdownOpen && (
+ [2m4006[0m |                                           {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length} found
+ [2m4007[0m |                              </span>
+      `----
+  [31mx[0m Unterminated regexp literal
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:4004:1]
+ [2m4001[0m |                           onFocus={() => {
+ [2m4002[0m |                             setSalesDropdownOpen(true);
+ [2m4003[0m |                             setSalesPinDropdownOpen(false);
+ [2m4004[0m |                       </div>
+      : [35;1m                       ^^^^^[0m
+ [2m4005[0m |                       {salesDropdownOpen && (
+ [2m4006[0m |                                           {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length} found
+ [2m4007[0m |                              </span>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected '</', got '.'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:3994:1]
+ [2m3991[0m |                     </div>
+ [2m3992[0m | 
+ [2m3993[0m |                       {salesDropdownOpen && (
+ [2m3994[0m |                                           {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length} found
+      : [35;1m                                                     ^[0m
+ [2m3995[0m |                              </span>
+ [2m3996[0m |                           </div>
+ [2m3997[0m |                           <div className="max-h-64 overflow-y-auto space-y-1.5 pr-0.5">
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unterminated regexp literal
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:3975:1]
+ [2m3972[0m |                                     <div>
+ [2m3973[0m |                                       {acc.manualReferenceNumber && (
+ [2m3974[0m |                                         <div className="mb-0.5"><span className="font-semibold text-foreground/80">Manual A/C:</span> <span className="font-bold text-slate-700 dark:text-slate-300">{acc.manualReferenceNumber}</span></div>
+ [2m3975[0m |                     </div>
+      : [35;1m                     ^^^^^[0m
+ [2m3976[0m | 
+ [2m3977[0m |                       {salesDropdownOpen && (
+ [2m3978[0m |                                           {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length} found
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unterminated regexp literal
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:3975:1]
+ [2m3972[0m |                                     <div>
+ [2m3973[0m |                                       {acc.manualReferenceNumber && (
+ [2m3974[0m |                                         <div className="mb-0.5"><span className="font-semibold text-foreground/80">Manual A/C:</span> <span className="font-bold text-slate-700 dark:text-slate-300">{acc.manualReferenceNumber}</span></div>
+ [2m3975[0m |                     </div>
+      : [35;1m                     ^^^^^[0m
+ [2m3976[0m | 
+ [2m3977[0m |                       {salesDropdownOpen && (
+ [2m3978[0m |                                           {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length} found
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected '</', got '.'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:3974:1]
+ [2m3971[0m |                                     <div><span className="font-semibold text-foreground/80">Branch:</span> {acc.cityBranchName || "Main Branch"}</div>
+ [2m3972[0m |                                     <div>
+ [2m3973[0m |                                       {acc.manualReferenceNumber && (
+ [2m3974[0m |                                       {acc.manualReferenceNumber && (
+      : [35;1m                                          ^[0m
+ [2m3975[0m |                                         <div className="mb-0.5"><span className="font-semibold text-foreground/80">Manual A/C:</span> <span className="font-bold text-slate-700 dark:text-slate-300">{acc.manualReferenceNumber}</span></div>
+ [2m3976[0m |                                       )}
+ [2m3977[0m |                                       <div><span className="font-semibold text-foreground/80">Curr:</span> <span className="font-bold text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "PKR"}</span></div>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected '</', got ')'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:3962:1]
+ [2m3959[0m |                                   onClick={() => {
+ [2m3960[0m |                                     applyAccountMaster("purchase", acc);
+ [2m3961[0m |                                     setPurchaseDropdownOpen(false);
+ [2m3962[0m |                                       )}
+      : [35;1m                                      ^[0m
+ [2m3963[0m |                                       <div><span className="font-semibold text-foreground/80">Curr:</span> <span className="font-bold text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "PKR"}</span></div>
+ [2m3964[0m |                                     </div>
+ [2m3965[0m |                                     <div><span className="font-semibold text-foreground/80">Company:</span> <span className="truncate inline-block max-w-[120px] align-bottom">{compName}</span></div>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expected '</', got ')'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:3962:1]
+ [2m3959[0m |                                   onClick={() => {
+ [2m3960[0m |                                     applyAccountMaster("purchase", acc);
+ [2m3961[0m |                                     setPurchaseDropdownOpen(false);
+ [2m3962[0m |                                       )}
+      : [35;1m                                      ^[0m
+ [2m3963[0m |                                       <div><span className="font-semibold text-foreground/80">Curr:</span> <span className="font-bold text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "PKR"}</span></div>
+ [2m3964[0m |                                     </div>
+ [2m3965[0m |                                     <div><span className="font-semibold text-foreground/80">Company:</span> <span className="truncate inline-block max-w-[120px] align-bottom">{compName}</span></div>
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+     ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:929:1]
+ [2m926[0m |                                   </div>
+ [2m927[0m |                                 </button>
+ [2m928[0m |                               );
+ [2m929[0m |                             })}
+     : [35;1m                            ^[0m
+ [2m930[0m |                             {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, customerSearch)).length === 0 && (
+ [2m931[0m |                               <div className="p-4 text-center text-muted-foreground text-xs italic">
+ [2m932[0m |                                 No matching accounts found. Try searching by Code, Name, Currency, or Phone.
+     `----
+  [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+     ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:929:1]
+ [2m926[0m |                                   </div>
+ [2m927[0m |                                 </button>
+ [2m928[0m |                               );
+ [2m929[0m |                             })}
+     : [35;1m                              ^[0m
+ [2m930[0m |                             {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, customerSearch)).length === 0 && (
+ [2m931[0m |                               <div className="p-4 text-center text-muted-foreground text-xs italic">
+ [2m932[0m |                                 No matching accounts found. Try searching by Code, Name, Currency, or Phone.
+     `----
+  [31mx[0m Unterminated regexp literal
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:1036:1]
+ [2m1033[0m |                         </div>
+ [2m1034[0m |                       )}
+ [2m1035[0m |                     </div>
+ [2m1036[0m |                   </div>
+      : [35;1m                   ^^^^^[0m
+ [2m1037[0m |                 </fieldset>
+ [2m1038[0m |               )}
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expression expected
+     ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:897:1]
+ [2m894[0m |                                   title={c.name}
+ [2m895[0m |                                 >
+ [2m896[0m |                                                          </div>
+ [2m897[0m |                       </div>
+     : [35;1m                      ^[0m
+ [2m898[0m |                     )}
+ [2m899[0m |                   </div>
+ [2m900[0m |  Phone.
+     `----
+  [31mx[0m Unterminated regexp literal
+     ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:897:1]
+ [2m894[0m |                                   title={c.name}
+ [2m895[0m |                                 >
+ [2m896[0m |                                                          </div>
+ [2m897[0m |                       </div>
+     : [35;1m                       ^^^^^[0m
+ [2m898[0m |                     )}
+ [2m899[0m |                   </div>
+ [2m900[0m |  Phone.
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expression expected
+     ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:897:1]
+ [2m894[0m |                                   title={c.name}
+ [2m895[0m |                                 >
+ [2m896[0m |                                                          </div>
+ [2m897[0m |                       </div>
+     : [35;1m                      ^[0m
+ [2m898[0m |                     )}
+ [2m899[0m |                   </div>
+ [2m900[0m |  Phone.
+     `----
+  [31mx[0m Unterminated regexp literal
+     ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:897:1]
+ [2m894[0m |                                   title={c.name}
+ [2m895[0m |                                 >
+ [2m896[0m |                                                          </div>
+ [2m897[0m |                       </div>
+     : [35;1m                       ^^^^^[0m
+ [2m898[0m |                     )}
+ [2m899[0m |                   </div>
+ [2m900[0m |  Phone.
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expression expected
+     ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:897:1]
+ [2m894[0m |                                   title={c.name}
+ [2m895[0m |                                 >
+ [2m896[0m |                                                          </div>
+ [2m897[0m |                       </div>
+     : [35;1m                      ^[0m
+ [2m898[0m |                     )}
+ [2m899[0m |                   </div>
+ [2m900[0m |  Phone.
+     `----
+  [31mx[0m Unterminated regexp literal
+     ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:897:1]
+ [2m894[0m |                                   title={c.name}
+ [2m895[0m |                                 >
+ [2m896[0m |                                                          </div>
+ [2m897[0m |                       </div>
+     : [35;1m                       ^^^^^[0m
+ [2m898[0m |                     )}
+ [2m899[0m |                   </div>
+ [2m900[0m |  Phone.
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expression expected
+     ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:897:1]
+ [2m894[0m |                                   title={c.name}
+ [2m895[0m |                                 >
+ [2m896[0m |                                                          </div>
+ [2m897[0m |                       </div>
+     : [35;1m                      ^[0m
+ [2m898[0m |                     )}
+ [2m899[0m |                   </div>
+ [2m900[0m |  Phone.
+     `----
+  [31mx[0m Unterminated regexp literal
+     ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:897:1]
+ [2m894[0m |                                   title={c.name}
+ [2m895[0m |                                 >
+ [2m896[0m |                                                          </div>
+ [2m897[0m |                       </div>
+     : [35;1m                       ^^^^^[0m
+ [2m898[0m |                     )}
+ [2m899[0m |                   </div>
+ [2m900[0m |  Phone.
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Expression expected
+     ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:897:1]
+ [2m894[0m |                                   title={c.name}
+ [2m895[0m |                                 >
+ [2m896[0m |                                                          </div>
+ [2m897[0m |                       </div>
+     : [35;1m                      ^[0m
+ [2m898[0m |                     )}
+ [2m899[0m |                   </div>
+ [2m900[0m |  Phone.
+     `----
+  [31mx[0m Unterminated regexp literal
+     ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:897:1]
+ [2m894[0m |                                   title={c.name}
+ [2m895[0m |                                 >
+ [2m896[0m |                                                          </div>
+ [2m897[0m |                       </div>
+     : [35;1m                       ^^^^^[0m
+ [2m898[0m |                     )}
+ [2m899[0m |                   </div>
+ [2m900[0m |  Phone.
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unterminated regexp literal
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:1078:1]
+ [2m1075[0m |                         </div>
+ [2m1076[0m |                       )}
+ [2m1077[0m |                     </div>
+ [2m1078[0m |                   </div>
+      : [35;1m                   ^^^^^[0m
+ [2m1079[0m |                 </fieldset>
+ [2m1080[0m |               )}
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unterminated regexp literal
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:1078:1]
+ [2m1075[0m |                         </div>
+ [2m1076[0m |                       )}
+ [2m1077[0m |                     </div>
+ [2m1078[0m |                   </div>
+      : [35;1m                   ^^^^^[0m
+ [2m1079[0m |                 </fieldset>
+ [2m1080[0m |               )}
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unterminated regexp literal
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:1078:1]
+ [2m1075[0m |                         </div>
+ [2m1076[0m |                       )}
+ [2m1077[0m |                     </div>
+ [2m1078[0m |                   </div>
+      : [35;1m                   ^^^^^[0m
+ [2m1079[0m |                 </fieldset>
+ [2m1080[0m |               )}
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unterminated regexp literal
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:1004:1]
+ [2m1001[0m |                       )}
+ [2m1002[0m |                     </div>
+ [2m1003[0m |                   </div>
+ [2m1004[0m |                 </fieldset>
+      : [35;1m                 ^^^^^^^^^^[0m
+ [2m1005[0m |               )}
+ [2m1006[0m | 
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unterminated regexp literal
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:1004:1]
+ [2m1001[0m |                       )}
+ [2m1002[0m |                     </div>
+ [2m1003[0m |                   </div>
+ [2m1004[0m |                 </fieldset>
+      : [35;1m                 ^^^^^^^^^^[0m
+ [2m1005[0m |               )}
+ [2m1006[0m | 
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unterminated regexp literal
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:1004:1]
+ [2m1001[0m |                       )}
+ [2m1002[0m |                     </div>
+ [2m1003[0m |                   </div>
+ [2m1004[0m |                 </fieldset>
+      : [35;1m                 ^^^^^^^^^^[0m
+ [2m1005[0m |               )}
+ [2m1006[0m | 
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unterminated regexp literal
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:1004:1]
+ [2m1001[0m |                       )}
+ [2m1002[0m |                     </div>
+ [2m1003[0m |                   </div>
+ [2m1004[0m |                 </fieldset>
+      : [35;1m                 ^^^^^^^^^^[0m
+ [2m1005[0m |               )}
+ [2m1006[0m | 
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+'wmic' is not recognized as an internal or external command,
+operable program or batch file.
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unterminated regexp literal
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:1004:1]
+ [2m1001[0m |                       )}
+ [2m1002[0m |                     </div>
+ [2m1003[0m |                   </div>
+ [2m1004[0m |                 </fieldset>
+      : [35;1m                 ^^^^^^^^^^[0m
+ [2m1005[0m |               )}
+ [2m1006[0m | 
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unterminated regexp literal
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:1004:1]
+ [2m1001[0m |                       )}
+ [2m1002[0m |                     </div>
+ [2m1003[0m |                   </div>
+ [2m1004[0m |                 </fieldset>
+      : [35;1m                 ^^^^^^^^^^[0m
+ [2m1005[0m |               )}
+ [2m1006[0m | 
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+     ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:972:1]
+ [2m969[0m |                             )}
+ [2m970[0m |                           </div>
+ [2m971[0m |                         </div>
+ [2m972[0m |                       )}
+     : [35;1m                       ^[0m
+ [2m973[0m |                     </div>
+ [2m974[0m | 
+ [2m975[0m |                     <div className="relative" ref={salesDropdownRef}>
+     `----
+  [31mx[0m Expected '</', got 'className'
+     ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:975:1]
+ [2m972[0m |                       )}
+ [2m973[0m |                     </div>
+ [2m974[0m | 
+ [2m975[0m |                     <div className="relative" ref={salesDropdownRef}>
+     : [35;1m                         ^^^^^^^^^[0m
+ [2m976[0m |                       <label className="block text-[10px] font-bold text-foreground mb-1">Sales Account (CR)*</label>
+ [2m977[0m |                       <div className="relative flex items-center">
+ [2m978[0m |                         <input
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+     ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:972:1]
+ [2m969[0m |                             )}
+ [2m970[0m |                           </div>
+ [2m971[0m |                         </div>
+ [2m972[0m |                       )}
+     : [35;1m                       ^[0m
+ [2m973[0m |                     </div>
+ [2m974[0m | 
+ [2m975[0m |                     <div className="relative" ref={salesDropdownRef}>
+     `----
+  [31mx[0m Expected '</', got 'className'
+     ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:975:1]
+ [2m972[0m |                       )}
+ [2m973[0m |                     </div>
+ [2m974[0m | 
+ [2m975[0m |                     <div className="relative" ref={salesDropdownRef}>
+     : [35;1m                         ^^^^^^^^^[0m
+ [2m976[0m |                       <label className="block text-[10px] font-bold text-foreground mb-1">Sales Account (CR)*</label>
+ [2m977[0m |                       <div className="relative flex items-center">
+ [2m978[0m |                         <input
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+     ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:972:1]
+ [2m969[0m |                             )}
+ [2m970[0m |                           </div>
+ [2m971[0m |                         </div>
+ [2m972[0m |                       )}
+     : [35;1m                       ^[0m
+ [2m973[0m |                     </div>
+ [2m974[0m | 
+ [2m975[0m |                     <div className="relative" ref={salesDropdownRef}>
+     `----
+  [31mx[0m Expected '</', got 'className'
+     ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:975:1]
+ [2m972[0m |                       )}
+ [2m973[0m |                     </div>
+ [2m974[0m | 
+ [2m975[0m |                     <div className="relative" ref={salesDropdownRef}>
+     : [35;1m                         ^^^^^^^^^[0m
+ [2m976[0m |                       <label className="block text-[10px] font-bold text-foreground mb-1">Sales Account (CR)*</label>
+ [2m977[0m |                       <div className="relative flex items-center">
+ [2m978[0m |                         <input
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+     ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:972:1]
+ [2m969[0m |                             )}
+ [2m970[0m |                           </div>
+ [2m971[0m |                         </div>
+ [2m972[0m |                       )}
+     : [35;1m                       ^[0m
+ [2m973[0m |                     </div>
+ [2m974[0m | 
+ [2m975[0m |                     <div className="relative" ref={salesDropdownRef}>
+     `----
+  [31mx[0m Expected '</', got 'className'
+     ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:975:1]
+ [2m972[0m |                       )}
+ [2m973[0m |                     </div>
+ [2m974[0m | 
+ [2m975[0m |                     <div className="relative" ref={salesDropdownRef}>
+     : [35;1m                         ^^^^^^^^^[0m
+ [2m976[0m |                       <label className="block text-[10px] font-bold text-foreground mb-1">Sales Account (CR)*</label>
+ [2m977[0m |                       <div className="relative flex items-center">
+ [2m978[0m |                         <input
+     `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:1029:1]
+ [2m1026[0m |                     </div>
+ [2m1027[0m |                   </div>
+ [2m1028[0m |                 </fieldset>
+ [2m1029[0m |               )}
+      : [35;1m               ^[0m
+ [2m1030[0m | 
+ [2m1031[0m | 
+ [2m1032[0m |             <main className="space-y-3 flex flex-col order-1 lg:order-1 mt-0">
+      `----
+  [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m               )}
+  [31m|[0m
+  [31m|[0m
+  [31m|[0m             )'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:1028:1]
+ [2m1025[0m |                           )}
+ [2m1026[0m |                         </div>
+ [2m1027[0m |                       </div>
+ [2m1028[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m                 </fieldset>
+ [2m1029[0m | [35;1m|[0m                 )}
+ [2m1030[0m | [35;1m|[0m   
+ [2m1031[0m | [35;1m|[0m   
+ [2m1032[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m             <main className="space-y-3 flex flex-col order-1 lg:order-1 mt-0">
+ [2m1033[0m |     
+ [2m1034[0m |                   {activeTab === "booking" && (
+ [2m1035[0m |                     <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="space-y-3 order-2 w-full mt-0 rounded-2xl border border-border bg-card p-4 shadow-sm">
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:1029:1]
+ [2m1026[0m |                     </div>
+ [2m1027[0m |                   </div>
+ [2m1028[0m |                 </fieldset>
+ [2m1029[0m |               )}
+      : [35;1m               ^[0m
+ [2m1030[0m | 
+ [2m1031[0m | 
+ [2m1032[0m |             <main className="space-y-3 flex flex-col order-1 lg:order-1 mt-0">
+      `----
+  [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m               )}
+  [31m|[0m
+  [31m|[0m
+  [31m|[0m             )'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:1028:1]
+ [2m1025[0m |                           )}
+ [2m1026[0m |                         </div>
+ [2m1027[0m |                       </div>
+ [2m1028[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m                 </fieldset>
+ [2m1029[0m | [35;1m|[0m                 )}
+ [2m1030[0m | [35;1m|[0m   
+ [2m1031[0m | [35;1m|[0m   
+ [2m1032[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m             <main className="space-y-3 flex flex-col order-1 lg:order-1 mt-0">
+ [2m1033[0m |     
+ [2m1034[0m |                   {activeTab === "booking" && (
+ [2m1035[0m |                     <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="space-y-3 order-2 w-full mt-0 rounded-2xl border border-border bg-card p-4 shadow-sm">
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⚠ Fast Refresh had to perform a full reload due to a runtime error.
+ ⚠ Fast Refresh had to perform a full reload. Read more: https://nextjs.org/docs/messages/fast-refresh-reload
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:1029:1]
+ [2m1026[0m |                     </div>
+ [2m1027[0m |                   </div>
+ [2m1028[0m |                 </fieldset>
+ [2m1029[0m |               )}
+      : [35;1m               ^[0m
+ [2m1030[0m | 
+ [2m1031[0m | 
+ [2m1032[0m |             <main className="space-y-3 flex flex-col order-1 lg:order-1 mt-0">
+      `----
+  [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m               )}
+  [31m|[0m
+  [31m|[0m
+  [31m|[0m             )'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:1028:1]
+ [2m1025[0m |                           )}
+ [2m1026[0m |                         </div>
+ [2m1027[0m |                       </div>
+ [2m1028[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m                 </fieldset>
+ [2m1029[0m | [35;1m|[0m                 )}
+ [2m1030[0m | [35;1m|[0m   
+ [2m1031[0m | [35;1m|[0m   
+ [2m1032[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m             <main className="space-y-3 flex flex-col order-1 lg:order-1 mt-0">
+ [2m1033[0m |     
+ [2m1034[0m |                   {activeTab === "booking" && (
+ [2m1035[0m |                     <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="space-y-3 order-2 w-full mt-0 rounded-2xl border border-border bg-card p-4 shadow-sm">
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ ./features/sales/components/sales-order-wizard.jsx
+Error:   [31mx[0m Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:1029:1]
+ [2m1026[0m |                     </div>
+ [2m1027[0m |                   </div>
+ [2m1028[0m |                 </fieldset>
+ [2m1029[0m |               )}
+      : [35;1m               ^[0m
+ [2m1030[0m | 
+ [2m1031[0m | 
+ [2m1032[0m |             <main className="space-y-3 flex flex-col order-1 lg:order-1 mt-0">
+      `----
+  [31mx[0m Expected '</', got 'jsx text (
+  [31m|[0m               )}
+  [31m|[0m
+  [31m|[0m
+  [31m|[0m             )'
+      ,-[[36;1;4mC:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\features\sales\components\sales-order-wizard.jsx[0m:1028:1]
+ [2m1025[0m |                           )}
+ [2m1026[0m |                         </div>
+ [2m1027[0m |                       </div>
+ [2m1028[0m | [35;1m,[0m[35;1m-[0m[35;1m>[0m                 </fieldset>
+ [2m1029[0m | [35;1m|[0m                 )}
+ [2m1030[0m | [35;1m|[0m   
+ [2m1031[0m | [35;1m|[0m   
+ [2m1032[0m | [35;1m`[0m[35;1m-[0m[35;1m>[0m             <main className="space-y-3 flex flex-col order-1 lg:order-1 mt-0">
+ [2m1033[0m |     
+ [2m1034[0m |                   {activeTab === "booking" && (
+ [2m1035[0m |                     <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="space-y-3 order-2 w-full mt-0 rounded-2xl border border-border bg-card p-4 shadow-sm">
+      `----
+
+Caused by:
+    Syntax Error
+
+Import trace for requested module:
+./features/sales/components/sales-order-wizard.jsx
+./app/dashboard/sales/new-sales-booking-order/page.tsx
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\dgtll\\OneDrive\\Documents\\ACCOUNTS.DGT.LLC\\.next\\routes-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open 'C:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\dgtll\\OneDrive\\Documents\\ACCOUNTS.DGT.LLC\\.next\\routes-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open 'C:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\dgtll\\OneDrive\\Documents\\ACCOUNTS.DGT.LLC\\.next\\routes-manifest.json'
+}
+ ⨯ [Error: ENOENT: no such file or directory, open 'C:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\dgtll\\OneDrive\\Documents\\ACCOUNTS.DGT.LLC\\.next\\routes-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open 'C:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\dgtll\\OneDrive\\Documents\\ACCOUNTS.DGT.LLC\\.next\\routes-manifest.json'
+}
+[Error: ENOENT: no such file or directory, open 'C:\Users\dgtll\OneDrive\Documents\ACCOUNTS.DGT.LLC\.next\routes-manifest.json'] {
+  errno: -4058,
+  code: 'ENOENT',
+  syscall: 'open',
+  path: 'C:\\Users\\dgtll\\OneDrive\\Documents\\ACCOUNTS.DGT.LLC\\.next\\routes-manifest.json'
+}

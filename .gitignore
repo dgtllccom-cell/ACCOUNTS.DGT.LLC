@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+/.pnp
+.pnp.js
+
+# Next.js build & cache
+.next/
+out/
+build/
+dist/
+
+# Android build cache & assets cache
+android/app/src/main/assets/public/cache/
+android/.gradle/
+android/app/build/
+android/build/
+ios/Pods/
+ios/build/
+
+# Backups & Logs
+.codex-backups/
+.codex*
+_codex*
+backups/
+exports/
+*.log
+*.pack
+*.gz
+*.tar
+*.zip
+
+# Environment & Secrets
+.env
+.env.local
+.env.production
+.env.development
+.env*.local
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,0 +1,33 @@
+
+> accounts-dgt-saas@0.1.0 build
+> next build
+
+ ⚠ You are using a non-standard "NODE_ENV" value in your environment. This creates inconsistencies in the project and is strongly advised against. Read more: https://nextjs.org/docs/messages/non-standard-node-env
+ATTEMPTING TO RESTORE FILES...
+FILES RESTORED SUCCESSFULLY!
+   ▲ Next.js 15.5.18
+   - Environments: .env.local
+   - Experiments (use with caution):
+     ⨯ preloadEntriesOnStart
+     ✓ webpackMemoryOptimizations
+
+   Creating an optimized production build ...
+Failed to compile.
+
+./app/api/erp/purchases/orders/[id]/route.ts
+Module parse failed: Identifier 'isAlreadyPosted' has already been declared (148:14)
+File was processed with these loaders:
+ * ./node_modules/next/dist/build/webpack/loaders/next-flight-loader/index.js
+ * ./node_modules/next/dist/build/webpack/loaders/next-swc-loader.js
+You may need an additional loader to handle the result of these loaders.
+|         }
+|         patch.updated_at = new Date().toISOString();
+>         const isAlreadyPosted = before?.ledger_posting_status === "posted";
+|         const shouldPost = patch.ledger_posting_status === "posted" && !isAlreadyPosted || isAlreadyPosted && (body.ledgerPostingStatus === "posted" || body.orderTotal !== undefined || body.formData !== undefined);
+|         // Ledger posting has been removed from Purchase Booking.
+
+Import trace for requested module:
+./app/api/erp/purchases/orders/[id]/route.ts
+
+
+> Build failed because of webpack errors

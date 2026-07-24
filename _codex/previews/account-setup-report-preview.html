@@ -1,0 +1,609 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Account Setup Report Preview</title>
+  <style>
+    :root {
+      --navy: #061f62;
+      --navy-2: #082d88;
+      --blue: #0647bd;
+      --line: #dce6f3;
+      --line-2: #edf2f8;
+      --text: #07152e;
+      --muted: #65728a;
+      --green: #078b3e;
+      --red: #e11d2e;
+      --soft: #f8fbff;
+      --shadow: 0 12px 28px rgba(7, 21, 46, 0.08);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: #f4f7fb;
+      color: var(--text);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .app {
+      min-height: 100vh;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.96), rgba(244,247,251,0.96)),
+        radial-gradient(circle at 10% 0%, rgba(21, 82, 194, 0.10), transparent 26%);
+    }
+
+    .topbar {
+      height: 60px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      padding: 0 22px;
+      color: #fff;
+      background: linear-gradient(90deg, #051849, #07256e 65%, #061a55);
+      box-shadow: 0 2px 10px rgba(6, 31, 98, 0.28);
+    }
+
+    .hamburger {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border: 0;
+      color: #fff;
+      background: transparent;
+      font-size: 28px;
+      line-height: 1;
+    }
+
+    .title {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.1px;
+    }
+
+    .page {
+      padding: 10px 18px 18px;
+    }
+
+    .panel {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+
+    .info-strip {
+      display: grid;
+      grid-template-columns: 1.1fr 0.95fr 1fr 0.95fr 1fr 0.95fr 42px;
+      align-items: center;
+      min-height: 72px;
+      margin-bottom: 10px;
+      border: 1.5px solid #ff1e1e;
+      border-radius: 5px;
+      background: #fff;
+    }
+
+    .info-item {
+      display: grid;
+      grid-template-columns: 42px 1fr;
+      gap: 10px;
+      align-items: center;
+      min-height: 52px;
+      padding: 8px 18px;
+      border-right: 1px solid var(--line);
+    }
+
+    .info-item:last-child { border-right: 0; }
+
+    .icon {
+      width: 27px;
+      height: 27px;
+      color: var(--navy);
+    }
+
+    .info-label {
+      color: #0042b5;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .info-value {
+      margin-top: 3px;
+      color: #050b1c;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .dots {
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      margin: auto;
+      border: 0;
+      border-radius: 4px;
+      background: transparent;
+      color: var(--navy);
+      font-size: 24px;
+    }
+
+    .toolbar {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 15px;
+      border-bottom: 1px solid var(--line);
+      background: linear-gradient(180deg, #fff, #fbfdff);
+    }
+
+    .btn {
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 0 15px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: #fff;
+      color: var(--text);
+      font-weight: 750;
+      cursor: default;
+    }
+
+    .btn.primary {
+      min-width: 138px;
+      border-color: var(--navy);
+      background: linear-gradient(180deg, #06256f, #061f62);
+      color: #fff;
+    }
+
+    .btn.blue {
+      border-color: #0c45b7;
+      background: linear-gradient(180deg, #0d54d8, #0746bd);
+      color: #fff;
+    }
+
+    .btn.light { min-width: 88px; }
+    .btn.square { width: 42px; padding: 0; }
+
+    .select {
+      width: 165px;
+      height: 40px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: #fff;
+      color: var(--text);
+      font-weight: 650;
+    }
+
+    .search {
+      width: min(100%, 295px);
+      height: 40px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: #fff;
+      color: var(--muted);
+    }
+
+    .action-menu {
+      position: absolute;
+      left: 908px;
+      top: 56px;
+      z-index: 5;
+      width: 180px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: 6px;
+      background: #fff;
+      box-shadow: 0 16px 30px rgba(7, 21, 46, 0.16);
+    }
+
+    .action-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      min-height: 40px;
+      padding: 7px 9px;
+      border-radius: 5px;
+      color: #0c1730;
+      font-weight: 650;
+    }
+
+    .action-row:hover { background: #f2f6fd; }
+
+    .table-wrap {
+      padding: 18px 16px 0;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 1450px;
+      border-collapse: separate;
+      border-spacing: 0;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    th {
+      height: 44px;
+      padding: 8px 10px;
+      border-right: 1px solid rgba(255,255,255,0.18);
+      background: linear-gradient(180deg, #06276e, #041b55);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 800;
+      text-align: center;
+      white-space: nowrap;
+    }
+
+    td {
+      height: 51px;
+      padding: 9px 10px;
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      background: #fff;
+      text-align: center;
+      vertical-align: middle;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    tbody tr:nth-child(even) td { background: #fbfdff; }
+    tbody tr:hover td { background: #f3f8ff; }
+    td.left { text-align: left; }
+
+    .status {
+      color: var(--green);
+      font-weight: 900;
+    }
+
+    .inactive {
+      color: var(--red);
+      font-weight: 900;
+    }
+
+    .view {
+      height: 29px;
+      min-width: 58px;
+      border: 0;
+      border-radius: 4px;
+      background: linear-gradient(180deg, #0955d9, #0642ab);
+      color: #fff;
+      font-weight: 800;
+    }
+
+    .check { color: #0aa84f; font-size: 17px; font-weight: 900; }
+    .cross { color: #ff1e24; font-size: 17px; font-weight: 900; }
+    .contact { display: inline-flex; gap: 12px; color: var(--blue); font-size: 17px; }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 16px 12px;
+      color: #0e1830;
+      font-weight: 600;
+    }
+
+    .pager {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .page-btn,
+    .page-size {
+      min-width: 36px;
+      height: 34px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: #fff;
+      color: #0f2142;
+      font-weight: 800;
+    }
+
+    .page-btn.active {
+      border-color: var(--navy);
+      background: var(--navy);
+      color: #fff;
+    }
+
+    .details {
+      margin: 0 16px 10px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .details-head {
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 14px;
+      background: linear-gradient(180deg, #08296f, #061f62);
+      color: #fff;
+      font-size: 16px;
+      font-weight: 850;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1.05fr 1.15fr;
+      gap: 11px;
+      padding: 12px 8px 10px;
+    }
+
+    .detail-card {
+      min-height: 170px;
+      padding: 14px 16px;
+      border: 1px solid var(--line);
+      border-radius: 5px;
+      background: #fff;
+    }
+
+    .detail-title {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      color: #0042b5;
+      font-weight: 850;
+    }
+
+    .kv {
+      display: grid;
+      grid-template-columns: 125px 10px 1fr;
+      gap: 8px;
+      min-height: 27px;
+      align-items: center;
+      font-weight: 600;
+    }
+
+    .kv .value { font-weight: 750; }
+    .kv .green { color: var(--green); font-weight: 900; }
+
+    .subgrid {
+      display: grid;
+      grid-template-columns: 1fr 0.6fr;
+      gap: 11px;
+      margin-top: 10px;
+    }
+
+    .note {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 0 8px 8px;
+      padding: 9px 14px;
+      border: 1px solid #d9e7ff;
+      border-radius: 5px;
+      background: linear-gradient(90deg, #eef6ff, #f8fbff);
+      font-weight: 650;
+    }
+
+    .open-full {
+      height: 36px;
+      padding: 0 20px;
+      border: 0;
+      border-radius: 4px;
+      background: linear-gradient(180deg, #0d55d6, #0643b3);
+      color: #fff;
+      font-weight: 850;
+    }
+
+    svg { display: block; }
+
+    @media (max-width: 1100px) {
+      .info-strip { grid-template-columns: repeat(2, 1fr) 42px; }
+      .toolbar { flex-wrap: wrap; }
+      .action-menu { display: none; }
+      .details-grid { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 720px) {
+      .topbar { height: auto; min-height: 58px; padding: 12px 14px; }
+      .title { font-size: 18px; }
+      .page { padding: 8px; }
+      .info-strip { grid-template-columns: 1fr; }
+      .info-item { border-right: 0; border-bottom: 1px solid var(--line); }
+      .toolbar { padding: 10px; }
+      .btn.primary, .select, .search { width: 100%; }
+      .pagination { align-items: flex-start; flex-direction: column; }
+      .note { align-items: stretch; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <button class="hamburger" aria-label="Menu">☰</button>
+      <div class="title">Account Setup Report (View)</div>
+    </header>
+
+    <main class="page">
+      <section class="info-strip">
+        <div class="info-item">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18"/><path d="M5 21V4h14v17"/><path d="M9 8h1"/><path d="M14 8h1"/><path d="M9 12h1"/><path d="M14 12h1"/><path d="M9 16h1"/><path d="M14 16h1"/></svg>
+          <div><div class="info-label">Branch Name</div><div class="info-value">Dubai Main Branch</div></div>
+        </div>
+        <div class="info-item">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 7h8"/><path d="m9 17 6-10"/><rect x="3" y="5" width="18" height="14" rx="2"/></svg>
+          <div><div class="info-label">Branch Code</div><div class="info-value">BR-001</div></div>
+        </div>
+        <div class="info-item">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></svg>
+          <div><div class="info-label">User Name</div><div class="info-value">Najeeb Ullah</div></div>
+        </div>
+        <div class="info-item">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6"/><path d="M9 11h6"/><path d="M9 15h3"/></svg>
+          <div><div class="info-label">User Code</div><div class="info-value">USR-001</div></div>
+        </div>
+        <div class="info-item">
+          <svg class="icon" viewBox="0 0 24 24" fill="currentColor"><path d="M16 11c1.66 0 3-1.57 3-3.5S17.66 4 16 4s-3 1.57-3 3.5S14.34 11 16 11Zm-8 0c1.66 0 3-1.57 3-3.5S9.66 4 8 4 5 5.57 5 7.5 6.34 11 8 11Zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4Zm8 0c-.31 0-.66.02-1.03.05 1.33.96 2.03 2.17 2.03 3.45V19h7v-2c0-2.66-5.33-4-8-4Z"/></svg>
+          <div><div class="info-label">Team</div><div class="info-value">Accounts Team</div></div>
+        </div>
+        <div class="info-item">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 2v4"/><path d="M16 2v4"/><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M3 10h18"/></svg>
+          <div><div class="info-label">Date</div><div class="info-value">25-Aug-2025</div></div>
+        </div>
+        <button class="dots" aria-label="More">⋮</button>
+      </section>
+
+      <section class="panel">
+        <div class="toolbar">
+          <button class="btn primary">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+            Search
+            <span>⌄</span>
+          </button>
+          <select class="select"><option>Account No</option><option>Account Name</option><option>Branch Code</option></select>
+          <div class="search"><span>Search Account No...</span><span style="margin-left:auto;">⌕</span></div>
+          <button class="btn blue">
+            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 3H2l8 9v7l4 2v-9l8-9z"/></svg>
+            Apply
+          </button>
+          <button class="btn light">↻ Reset</button>
+          <button class="btn square">⋮</button>
+
+          <div class="action-menu">
+            <div class="action-row"><span style="color:#109d48;">▣</span> Export Excel</div>
+            <div class="action-row"><span style="color:#e11d2e;">▣</span> Export PDF</div>
+            <div class="action-row"><span style="color:#0647bd;">▣</span> Print</div>
+            <div class="action-row"><span style="color:#0647bd;">✉</span> Email Report</div>
+            <div class="action-row"><span style="color:#0647bd;">↻</span> Refresh</div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Sr#</th>
+                <th>Account No.</th>
+                <th>Account Name</th>
+                <th>Account Type</th>
+                <th>Sub Type</th>
+                <th>Category</th>
+                <th>Branch Code</th>
+                <th>Branch Name</th>
+                <th>Country</th>
+                <th>Currency</th>
+                <th>Company #</th>
+                <th>Bank #</th>
+                <th>Contacts</th>
+                <th>Status</th>
+                <th>View</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td><td class="left">SUPER-001 / ACC-0001</td><td class="left">Najeebullah</td><td>Customer<br/>Account</td><td>Personal</td><td>Customer</td><td>BR-001</td><td>Dubai Main<br/>Branch</td><td>United Arab<br/>Emirates</td><td>AED</td><td><span class="check">⊙</span></td><td><span class="check">⊙</span></td><td><span class="contact">☎ ✉</span></td><td class="status">Active</td><td><button class="view">View</button></td>
+              </tr>
+              <tr>
+                <td>2</td><td class="left">SUPER-001 / ACC-0002</td><td class="left">Al Noor Traders</td><td>Importer<br/>Account</td><td>Business</td><td>Importer</td><td>BR-001</td><td>Dubai Main<br/>Branch</td><td>United Arab<br/>Emirates</td><td>AED</td><td><span class="check">⊙</span></td><td><span class="check">⊙</span></td><td><span class="contact">☎ ✉</span></td><td class="status">Active</td><td><button class="view">View</button></td>
+              </tr>
+              <tr>
+                <td>3</td><td class="left">SUPER-001 / ACC-0003</td><td class="left">Global Exports LLC</td><td>Exporter<br/>Account</td><td>Business</td><td>Exporter</td><td>BR-001</td><td>Dubai Main<br/>Branch</td><td>United Arab<br/>Emirates</td><td>AED</td><td><span class="cross">⊗</span></td><td><span class="cross">⊗</span></td><td><span class="contact">☎ ✉</span></td><td class="status">Active</td><td><button class="view">View</button></td>
+              </tr>
+              <tr>
+                <td>4</td><td class="left">SUPER-001 / ACC-0004</td><td class="left">Fast Logistics</td><td>Notify Party<br/>Account</td><td>Business</td><td>Notify Party</td><td>BR-001</td><td>Dubai Main<br/>Branch</td><td>United Arab<br/>Emirates</td><td>AED</td><td><span class="cross">⊗</span></td><td><span class="cross">⊗</span></td><td><span class="contact">☎ ✉</span></td><td class="inactive">Inactive</td><td><button class="view">View</button></td>
+              </tr>
+              <tr>
+                <td>5</td><td class="left">SUPER-001 / ACC-0005</td><td class="left">Muhammad Ali</td><td>Customer<br/>Account</td><td>Personal</td><td>Customer</td><td>BR-001</td><td>Dubai Main<br/>Branch</td><td>United Arab<br/>Emirates</td><td>AED</td><td><span class="cross">⊗</span></td><td><span class="check">⊙</span></td><td><span class="contact">☎ ✉</span></td><td class="status">Active</td><td><button class="view">View</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="pagination">
+          <div>Showing 1 to 5 of 125 entries</div>
+          <div class="pager">
+            <select class="page-size"><option>10</option><option>25</option></select>
+            <button class="page-btn">«</button><button class="page-btn">‹</button><button class="page-btn active">1</button><button class="page-btn">2</button><button class="page-btn">3</button><button class="page-btn">...</button><button class="page-btn">13</button><button class="page-btn">›</button><button class="page-btn">»</button>
+          </div>
+        </div>
+
+        <section class="details">
+          <div class="details-head">
+            <span>Account Details : SUPER-001 / ACC-0001</span>
+            <span>×</span>
+          </div>
+          <div class="details-grid">
+            <article class="detail-card">
+              <div class="detail-title">♟ Account Information</div>
+              <div class="kv"><span>Account No.</span><span>:</span><span class="value">SUPER-001 / ACC-0001</span></div>
+              <div class="kv"><span>Account Name</span><span>:</span><span class="value">Najeebullah</span></div>
+              <div class="kv"><span>Account Type</span><span>:</span><span class="value">Customer Account</span></div>
+              <div class="kv"><span>Sub Type</span><span>:</span><span class="value">Personal</span></div>
+              <div class="kv"><span>Category</span><span>:</span><span class="value">Customer</span></div>
+              <div class="kv"><span>Status</span><span>:</span><span class="green">Active</span></div>
+            </article>
+
+            <article class="detail-card">
+              <div class="detail-title">▥ Branch Information</div>
+              <div class="kv"><span>Branch Type</span><span>:</span><span class="value">Dubai Main Branch</span></div>
+              <div class="kv"><span>Branch Code</span><span>:</span><span class="value">BR-001</span></div>
+              <div class="kv"><span>Branch Type</span><span>:</span><span class="value">Main Branch</span></div>
+              <div class="kv"><span>Country</span><span>:</span><span class="value">United Arab Emirates</span></div>
+              <div class="kv"><span>Currency</span><span>:</span><span class="value">AED</span></div>
+            </article>
+
+            <div>
+              <article class="detail-card" style="min-height: 104px;">
+                <div class="detail-title">♙ User Information</div>
+                <div class="kv"><span>User Name</span><span>:</span><span class="value">Najeeb Ullah</span></div>
+                <div class="kv"><span>User Code</span><span>:</span><span class="value">USR-001</span></div>
+                <div class="kv"><span>Team</span><span>:</span><span class="value">Accounts Team</span></div>
+              </article>
+              <div class="subgrid">
+                <article class="detail-card" style="min-height: 86px;">
+                  <div class="detail-title">☎ Contact Information</div>
+                  <div class="kv"><span>Phone</span><span>:</span><span class="value">+971-50-1111111</span></div>
+                  <div class="kv"><span>Email</span><span>:</span><span class="value">najeeb@demo.com</span></div>
+                </article>
+                <article class="detail-card" style="min-height: 86px;">
+                  <div class="detail-title">▣ Entries</div>
+                  <div class="kv"><span>Company #</span><span>:</span><span class="check">⊙</span></div>
+                  <div class="kv"><span>Bank #</span><span>:</span><span class="check">⊙</span></div>
+                </article>
+              </div>
+            </div>
+
+            <article class="detail-card">
+              <div class="detail-title">ⓘ Additional Information</div>
+              <div class="kv"><span>Created By</span><span>:</span><span class="value">Super Admin (SA-S1)</span></div>
+              <div class="kv"><span>Created Date</span><span>:</span><span class="value">20-Aug-2025 10:15 AM</span></div>
+              <div class="kv"><span>Last Updated By</span><span>:</span><span class="value">Najeeb Ullah (USR-001)</span></div>
+              <div class="kv"><span>Last Updated</span><span>:</span><span class="value">25-Aug-2025 11:20 AM</span></div>
+            </article>
+          </div>
+          <div class="note">
+            <div><strong>ⓘ Note:</strong> Click on <strong>View</strong> button to open full account setup form.</div>
+            <button class="open-full">Open Full Form ↗</button>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Digital Dock ERP">
+  <rect width="512" height="512" fill="#0f3ea8"/>
+  <circle cx="256" cy="256" r="214" fill="#123fff"/>
+  <path d="M146 330h220c21 0 38-14 43-34l16-68H303l-27-72h-91l-27 72H90l18 68c5 20 22 34 38 34Z" fill="#f8fbff"/>
+  <path d="M197 205h118M171 254h194M155 292h214" fill="none" stroke="#09327e" stroke-width="22" stroke-linecap="round"/>
+  <path d="M256 101v78M220 121h72" stroke="#fff" stroke-width="28" stroke-linecap="round"/>
+  <path d="M110 377c48 32 96 32 146 0 50 32 98 32 146 0" fill="none" stroke="#5fe3ff" stroke-width="24" stroke-linecap="round"/>
+</svg>
