@@ -727,10 +727,3 @@ export function openA4ReportWindow(input: {
   printStore.openPrint(html, input.title);
 }
 
-}
-
-}
-
-}
-
-}
