@@ -806,3 +806,5 @@ export function openPurchaseA4ReportWindow(input: {
 }
 
 }
+
+}
