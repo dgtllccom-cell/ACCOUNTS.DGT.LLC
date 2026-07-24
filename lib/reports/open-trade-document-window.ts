@@ -559,3 +559,5 @@ export function openTradeDocumentWindow(type: TradeDocType, b: any) {
 }
 
 }
+
+}

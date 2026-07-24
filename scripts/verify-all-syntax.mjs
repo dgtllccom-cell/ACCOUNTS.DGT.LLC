@@ -51,6 +51,16 @@ for (const dir of targetDirs) {
         const missing = '\n' + '}'.repeat(count) + '\n';
         fs.writeFileSync(file, content + missing);
         totalFixed++;
+      } else if (count < 0) {
+        console.log(`Fixing ${Math.abs(count)} extra trailing brace(s) in ${file}`);
+        let trimmed = content.trimEnd();
+        for (let k = 0; k < Math.abs(count); k++) {
+          if (trimmed.endsWith('}')) {
+            trimmed = trimmed.slice(0, -1).trimEnd();
+          }
+        }
+        fs.writeFileSync(file, trimmed + '\n');
+        totalFixed++;
       }
     } catch (e) {}
   }

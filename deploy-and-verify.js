@@ -112,6 +112,7 @@ async function run() {
 
     // Auto-fix syntax / brace imbalance across all project components before committing
     try {
+      execSync('node scripts/restore-and-fix.mjs', { stdio: 'inherit' });
       execSync('node scripts/verify-all-syntax.mjs', { stdio: 'inherit' });
     } catch (e) {
       log(`Syntax audit note: ${e.message}`, 'warn');
