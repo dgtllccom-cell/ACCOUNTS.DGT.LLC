@@ -18,7 +18,7 @@ export default defineConfig({
   out: "./supabase/migrations/drizzle",
   dialect: "postgresql",
   dbCredentials: {
-    url: readDatabaseUrl()
+    url: readDatabaseUrl() || "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres"
   },
   strict: true
 });

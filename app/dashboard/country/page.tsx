@@ -70,7 +70,9 @@ function money(value: number, currency = "USD") {
 
 async function loadCountryData(countryId: string): Promise<CountryDashboardData> {
   try {
-    const supabase = createSupabaseAdminClient() as any;
+    const dbUrl = process.env.DATABASE_URL || "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres";
+    const sql = postgres(dbUrl, { prepare: false, idle_timeout: 5, connect_timeout: 10 });
+
     const [
       countryRes,
       mainBranchesRes,
@@ -81,45 +83,35 @@ async function loadCountryData(countryId: string): Promise<CountryDashboardData>
       purchaseRows,
       salesRows,
       recentRows,
-      productsCountRes,
-      productsListRes
+      productsCountRes
     ] = await Promise.all([
-      supabase.from("countries").select("name, currency_code").eq("id", countryId).maybeSingle(),
-      supabase.from("country_branches").select("id, name, code, local_currency").eq("country_id", countryId).is("deleted_at", null),
-      supabase.from("city_branches").select("id, country_branch_id, name, code, city_name, status, local_currency").eq("country_id", countryId).is("deleted_at", null),
-      supabase.from("user_role_assignments").select("user_id", { count: "exact", head: true }).eq("country_id", countryId).eq("is_active", true).is("deleted_at", null),
-      supabase.from("enterprise_accounts").select("id", { count: "exact", head: true }).eq("country_id", countryId).is("deleted_at", null),
-      supabase.from("ledgers").select("id, country_branch_id, city_branch_id, debit_total, credit_total, current_balance").eq("country_id", countryId).is("deleted_at", null),
-      supabase.from("purchase_orders").select("order_total, country_branch_id, city_branch_id").eq("country_id", countryId).is("deleted_at", null),
-      supabase.from("sales_orders").select("order_total, country_branch_id, city_branch_id").eq("country_id", countryId).is("deleted_at", null),
-      supabase
-        .from("roznamcha_entries")
-        .select(`
-          id, voucher_no, entry_date, type, status, created_at,
-          city_branches(name)
-        `)
-        .eq("country_id", countryId)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false })
-        .limit(8),
-      supabase.from("products").select("id", { count: "exact", head: true }).eq("country_id", countryId).is("deleted_at", null),
-      supabase.from("products").select("product_specifications").eq("country_id", countryId).is("deleted_at", null).limit(1000)
+      sql`SELECT name, currency_code FROM countries WHERE id = ${countryId} LIMIT 1;`.catch(() => []),
+      sql`SELECT id, name, code, local_currency FROM country_branches WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
+      sql`SELECT id, country_branch_id, name, code, city_name, status, local_currency FROM city_branches WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
+      sql`SELECT count(*)::int as c FROM user_role_assignments WHERE country_id = ${countryId} AND is_active = true AND deleted_at IS NULL;`.catch(() => [{ c: 0 }]),
+      sql`SELECT count(*)::int as c FROM enterprise_accounts WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => [{ c: 0 }]),
+      sql`SELECT id, country_branch_id, city_branch_id, debit_total, credit_total, current_balance FROM ledgers WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
+      sql`SELECT order_total, country_branch_id, city_branch_id FROM purchase_orders WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
+      sql`SELECT order_total, country_branch_id, city_branch_id FROM sales_orders WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
+      sql`SELECT id, voucher_no, entry_date, type, status, created_at FROM roznamcha_entries WHERE country_id = ${countryId} ORDER BY created_at DESC LIMIT 5;`.catch(() => []),
+      sql`SELECT count(*)::int as c FROM goods_registry WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => [{ c: 0 }])
     ]);
 
-    const countryName = (countryRes as any).data?.name || "Country Scoped";
-    const currency = (countryRes as any).data?.currency_code || "USD";
-    const branchesCount = (mainBranchesRes.data?.length || 0) + (cityBranchesRes.data?.length || 0);
-    const usersCount = usersRes.count || 0;
-    const accountsCount = accountsRes.count || 0;
-    const ledgersCount = ledgersRes.data?.length || 0;
+    const countryObj = countryRes[0] || {};
+    const countryName = countryObj.name || "Country Scoped";
+    const currency = countryObj.currency_code || "USD";
+    const branchesCount = (mainBranchesRes.length || 0) + (cityBranchesRes.length || 0);
+    const usersCount = usersRes[0]?.c || 0;
+    const accountsCount = accountsRes[0]?.c || 0;
+    const ledgersCount = ledgersRes.length || 0;
 
-    const purchaseTotal = (purchaseRows.data ?? []).reduce((sum: number, row: any) => sum + Number(row.order_total || 0), 0);
-    const salesTotal = (salesRows.data ?? []).reduce((sum: number, row: any) => sum + Number(row.order_total || 0), 0);
-    const ledgerDebit = (ledgersRes.data ?? []).reduce((sum: number, row: any) => sum + Number(row.debit_total || 0), 0);
-    const ledgerCredit = (ledgersRes.data ?? []).reduce((sum: number, row: any) => sum + Number(row.credit_total || 0), 0);
-    const ledgerBalance = (ledgersRes.data ?? []).reduce((sum: number, row: any) => sum + Number(row.current_balance || 0), 0);
+    const purchaseTotal = (purchaseRows || []).reduce((sum: number, row: any) => sum + Number(row.order_total || 0), 0);
+    const salesTotal = (salesRows || []).reduce((sum: number, row: any) => sum + Number(row.order_total || 0), 0);
+    const ledgerDebit = (ledgersRes || []).reduce((sum: number, row: any) => sum + Number(row.debit_total || 0), 0);
+    const ledgerCredit = (ledgersRes || []).reduce((sum: number, row: any) => sum + Number(row.credit_total || 0), 0);
+    const ledgerBalance = (ledgersRes || []).reduce((sum: number, row: any) => sum + Number(row.current_balance || 0), 0);
 
-    const cityBranches: CityBranchData[] = (cityBranchesRes.data ?? []).map((cb: any) => ({
+    const cityBranches: CityBranchData[] = (cityBranchesRes || []).map((cb: any) => ({
       id: cb.id,
       name: cb.name,
       code: cb.code,
@@ -128,7 +120,7 @@ async function loadCountryData(countryId: string): Promise<CountryDashboardData>
     }));
 
     const branchSummaryMap = new Map<string, BranchFinancialSummary>();
-    for (const branch of (mainBranchesRes.data ?? [])) {
+    for (const branch of (mainBranchesRes || [])) {
       branchSummaryMap.set(`main:${branch.id}`, {
         id: branch.id,
         name: branch.name,
@@ -142,7 +134,7 @@ async function loadCountryData(countryId: string): Promise<CountryDashboardData>
         ledgerBalance: 0
       });
     }
-    for (const branch of (cityBranchesRes.data ?? [])) {
+    for (const branch of (cityBranchesRes || [])) {
       branchSummaryMap.set(`city:${branch.id}`, {
         id: branch.id,
         name: branch.name || branch.city_name,
@@ -163,15 +155,15 @@ async function loadCountryData(countryId: string): Promise<CountryDashboardData>
       return undefined;
     };
 
-    for (const row of (purchaseRows.data ?? [])) {
+    for (const row of (purchaseRows || [])) {
       const target = getBranchSummary(row);
       if (target) target.totalPurchase += Number(row.order_total || 0);
     }
-    for (const row of (salesRows.data ?? [])) {
+    for (const row of (salesRows || [])) {
       const target = getBranchSummary(row);
       if (target) target.totalSales += Number(row.order_total || 0);
     }
-    for (const row of (ledgersRes.data ?? [])) {
+    for (const row of (ledgersRes || [])) {
       const target = getBranchSummary(row);
       if (target) {
         target.totalDebit += Number(row.debit_total || 0);
@@ -182,20 +174,12 @@ async function loadCountryData(countryId: string): Promise<CountryDashboardData>
 
     const branchSummaries = Array.from(branchSummaryMap.values());
 
-    const recentRoznamcha: RecentEntry[] = (recentRows.data ?? []).map((row: any) => ({
+    const recentRoznamcha: RecentEntry[] = (recentRows || []).map((row: any) => ({
       id: row.id,
       voucher_no: row.voucher_no,
       entry_date: row.entry_date,
       type: row.type,
       status: row.status,
-      created_at: row.created_at,
-      branch_name: row.city_branches?.name ?? undefined
-    }));
-
-    const productsCount = productsCountRes.count || 0;
-    const productsData = productsListRes.data || [];
-    let stockValueTotal = 0;
-    productsData.forEach((row: any) => {
       const spec = row.product_specifications || {};
       const qty = Number(spec.stockQty || spec.stock_qty || spec.quantity || spec.qty || 0);
       const price = Number(spec.costPrice || spec.cost_price || spec.purchaseRate || spec.purchase_rate || 0);

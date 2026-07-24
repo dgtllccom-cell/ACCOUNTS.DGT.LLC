@@ -1,105 +1,50 @@
 import { NextResponse } from "next/server";
 import postgres from "postgres";
-import fs from "node:fs";
-import path from "node:path";
-
-export const dynamic = "force-dynamic";
 
 export async function GET() {
   try {
-    const databaseUrl = process.env.DATABASE_URL;
-    if (!databaseUrl) {
-      return NextResponse.json({ error: "DATABASE_URL not configured" }, { status: 500 });
-    }
-
-    const sql = postgres(databaseUrl, { max: 1, prepare: false });
-
-    // 1. Create tracking table if not exists
-    await sql.unsafe(`
-      CREATE TABLE IF NOT EXISTS public.local_applied_migrations (
-        id SERIAL PRIMARY KEY,
-        filename TEXT UNIQUE,
-        applied_at TIMESTAMP DEFAULT NOW()
-      );
-    `);
-
-    // 2. Fetch already applied migrations
-    const appliedRows = await sql`
-      SELECT filename FROM public.local_applied_migrations
+    const dbUrl = process.env.DATABASE_URL || "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres";
+    const sql = postgres(dbUrl, { prepare: false, idle_timeout: 5, connect_timeout: 10 });
+    
+    // Query table counts and live records
+    const tablesRes = await sql`
+      SELECT table_name 
+      FROM information_schema.tables 
+      WHERE table_schema = 'public' 
+      ORDER BY table_name;
     `;
-    const appliedSet = new Set(appliedRows.map(r => r.filename));
+    
+    const usersCount = await sql`SELECT count(*)::int as c FROM users;`.catch(() => [{ c: 0 }]);
+    const accountsCount = await sql`SELECT count(*)::int as c FROM accounts;`.catch(() => [{ c: 0 }]);
+    const roznamchaCount = await sql`SELECT count(*)::int as c FROM roznamcha_entries;`.catch(() => [{ c: 0 }]);
+    const ordersCount = await sql`SELECT count(*)::int as c FROM purchase_orders;`.catch(() => [{ c: 0 }]);
 
-    // 3. Scan migrations directory
-    const migrationsDir = path.join(process.cwd(), "supabase/migrations");
-    const migrationFiles = fs.existsSync(migrationsDir)
-      ? fs.readdirSync(migrationsDir).filter(f => f.endsWith(".sql"))
-      : [];
-
-    // Sort files chronologically/alphabetically
-    migrationFiles.sort();
-
-    const results: Array<{ filename: string; status: string; error?: string }> = [];
-
-    // 4. Apply pending migrations in order
-    for (const file of migrationFiles) {
-      // Parse migration number (e.g. "0043" from "0043_purchase_booking_transfer_with_actor.sql")
-      const fileNumber = parseInt(file.split("_")[0] || "0", 10);
-
-      // Migrations < 43 are base migrations already present in the initial DB schema.
-      // We automatically mark them as applied to prevent re-running them.
-      if (fileNumber < 43) {
-        if (!appliedSet.has(file)) {
-          await sql`
-            INSERT INTO public.local_applied_migrations (filename)
-            VALUES (${file})
-            ON CONFLICT (filename) DO NOTHING
-          `;
-        }
-        results.push({ filename: file, status: "skipped_base_migration" });
-        continue;
-      }
-
-      if (appliedSet.has(file)) {
-        results.push({ filename: file, status: "already_applied" });
-        continue;
-      }
-
-      const filePath = path.join(migrationsDir, file);
-      const migrationSql = fs.readFileSync(filePath, "utf8");
-
-      try {
-        // Execute the migration SQL
-        await sql.unsafe(migrationSql);
-
-        // Record successful migration
-        await sql`
-          INSERT INTO public.local_applied_migrations (filename)
-          VALUES (${file})
-        `;
-
-        results.push({ filename: file, status: "success" });
-      } catch (err: any) {
-        results.push({ filename: file, status: "failed", error: err.message });
-        // Halt migration execution on first failure
-        break;
-      }
-    }
-
-    // 5. Verify the function was created
-    const funcs = await sql`
-      SELECT proname, pg_get_function_arguments(oid) as args
-      FROM pg_proc 
-      WHERE proname = 'post_purchase_booking_transfer'
-      AND pronamespace = (SELECT oid FROM pg_namespace WHERE nspname = 'public')
-    `;
+    const sampleUsers = await sql`SELECT id, user_code, full_name, role FROM users LIMIT 3;`.catch(() => []);
+    const sampleAccounts = await sql`SELECT id, account_code, account_name, current_balance FROM accounts LIMIT 3;`.catch(() => []);
 
     await sql.end();
+
     return NextResponse.json({
-      success: true,
-      migrations: results,
-      functions: funcs
+      ok: true,
+      status: "SUCCESSFULLY_CONNECTED",
+      supabase_project_id: "csesvyxxjivnkkozgopt",
+      tables_in_database: tablesRes.map(t => t.table_name),
+      live_record_counts: {
+        users: usersCount[0]?.c || 0,
+        accounts: accountsCount[0]?.c || 0,
+        roznamcha_entries: roznamchaCount[0]?.c || 0,
+        purchase_orders: ordersCount[0]?.c || 0
+      },
+      sample_data: {
+        users: sampleUsers,
+        accounts: sampleAccounts
+      }
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message, stack: error.stack }, { status: 500 });
+  } catch (err: any) {
+    return NextResponse.json({
+      ok: false,
+      status: "CONNECTION_FAILED",
+      error: err.message
+    }, { status: 500 });
   }
 }

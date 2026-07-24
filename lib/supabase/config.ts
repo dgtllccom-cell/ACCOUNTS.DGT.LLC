@@ -1,13 +1,13 @@
 export function getSupabaseUrl() {
-  return process.env.NEXT_PUBLIC_SUPABASE_URL;
+  return process.env.NEXT_PUBLIC_SUPABASE_URL || "https://csesvyxxjivnkkozgopt.supabase.co";
 }
 
 export function getSupabasePublicKey() {
-  return process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  return process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "sb_publishable_22nhsWCggOvyEf-hYmAcfA_vFo7zk4w";
 }
 
 export function getSupabaseSecretKey() {
-  return process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY ?? "sb_publishable_22nhsWCggOvyEf-hYmAcfA_vFo7zk4w";
 }
 
 export function isSupabaseConfigured() {

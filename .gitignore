@@ -36,6 +36,10 @@ exports/
 .env.development
 .env*.local
 
+# Keep environment templates & blueprints tracked
+!env_backups/*.example
+!.env.example
+
 # IDE & OS
 .DS_Store
 Thumbs.db
