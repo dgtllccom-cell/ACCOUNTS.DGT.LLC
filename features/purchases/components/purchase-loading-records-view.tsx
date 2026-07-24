@@ -6,6 +6,8 @@ import { openLoadingRecordsPrintReport } from "@/lib/reports/open-loading-record
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Download, FileText, Link2, MoreVertical, Plus, Printer, RefreshCcw, Search, Ship, Building2, ArrowDownLeft, ArrowUpRight, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
+import { cn } from "@/lib/utils";
+
 
 function CustomDropdown({ record, onLoadDetails }: { record: LoadingRecord, onLoadDetails: (r: LoadingRecord) => void }) {
   return (
@@ -176,7 +178,9 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
       form.quantity ||
       0
   );
+  const contractPurchaseAmount = Number(poRow.order_total || poData.totals?.grandFinal || form.totalAmount || 0);
   const savedLoadedQuantity = Number(
+
     workflow.loadedQuantity ||
       reportPayload.runningLoadedQuantity ||
       reportPayload.loadedQuantity ||
@@ -270,8 +274,10 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
     const grossWeight = Number(hRecord.report_payload?.grossWeight || finance.grossWeight || 0);
     const netWeight = Number(hRecord.report_payload?.netWeight || finance.netWeight || 0);
     const priceRate = Number(hRecord.report_payload?.priceRateC1 || finance.priceRate || 0);
+    const contractPurchaseAmount = Number(poRow?.order_total || poData.totals?.grandFinal || form.totalAmount || 0);
     
     const poAdvanceAmt = normalizeAdvanceToPurchaseCurrency(Number(poRow.advance_paid || form.advanceAmount || 0), contractPurchaseAmount, finance.exRate || 1);
+
     const loadedAdvanceUSD = (finance.proRataRatio || 0) * poAdvanceAmt;
     const loadedAdvanceLocal = Math.min(loadedAdvanceUSD * finance.exRate, Math.max(0, finance.amountPKR));
     const remainingLC = Math.max(0, finance.amountPKR - loadedAdvanceLocal);
