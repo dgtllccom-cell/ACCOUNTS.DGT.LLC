@@ -1,5 +1,6 @@
 import { execSync } from 'child_process';
 import fs from 'fs';
+import path from 'path';
 import http from 'http';
 
 const REPO_URL = "https://github.com/dgtllccom-cell/ACCOUNTS.DGT.LLC.git";
@@ -33,30 +34,50 @@ async function checkServerHealth(url) {
 
 async function run() {
   console.log("=================================================================");
-  console.log("   DIGITAL DOCK ERP - NON-INTERACTIVE AUTOMATED VPS DEPLOYMENT");
+  console.log("   DIGITAL DOCK ERP - MASTER AUTOMATED VPS DEPLOYMENT & VERIFICATION");
   console.log(`   Repository : ${REPO_URL}`);
   console.log(`   Server IP  : ${SERVER_IP}`);
   console.log("=================================================================\n");
 
-  // Step 1: Verify .gitignore
+  const cwd = process.cwd();
+
+  // Step 1: Clean Stale Git Lock Files & Background Processes
+  log("Step 1/7: Cleaning stale Git locks & background processes...");
   try {
-    log("Step 1/7: Verifying .gitignore file for security & size exclusions...");
+    const lockFile = path.join(cwd, '.git', 'index.lock');
+    if (fs.existsSync(lockFile)) {
+      fs.unlinkSync(lockFile);
+      log("Removed stale .git/index.lock file.", 'success');
+    }
+    const rebaseMerge = path.join(cwd, '.git', 'rebase-merge');
+    if (fs.existsSync(rebaseMerge)) {
+      fs.rmSync(rebaseMerge, { recursive: true, force: true });
+      log("Cleaned stale .git/rebase-merge directory.", 'success');
+    }
+  } catch (e) {
+    log(`Lock cleanup note: ${e.message}`, 'warn');
+  }
+
+  // Step 2: Verify .gitignore
+  try {
+    log("\nStep 2/7: Verifying .gitignore rules for security & build cache exclusions...");
     const gitignorePath = '.gitignore';
     const requiredPatterns = [
       'node_modules/',
       '.next/',
       '.env',
-      '.env.*',
-      '!.env.example',
+      '.env.local',
+      '.env.production',
+      '.env.development',
       '.codex-backups/',
       '.codex*',
       '_codex*',
       '*.log',
-      'logs/',
       'backups/',
       'exports/',
-      'dist/',
-      'coverage/',
+      '*.pack',
+      '*.gz',
+      '*.zip',
       '.DS_Store',
       'Thumbs.db'
     ];
@@ -71,58 +92,59 @@ async function run() {
     });
     if (updated) {
       fs.writeFileSync(gitignorePath, content);
-      log(".gitignore updated to exclude secrets, node_modules, and build outputs.", 'success');
+      log(".gitignore updated to exclude secrets and build caches.", 'success');
     } else {
-      log(".gitignore file is fully compliant.", 'success');
+      log(".gitignore rules fully compliant.", 'success');
     }
   } catch (e) {
-    log(`.gitignore check warning: ${e.message}`, 'warn');
+    log(`.gitignore check note: ${e.message}`, 'warn');
   }
 
-  // Step 2: Configure Git Remote
+  // Step 3: Configure Remote & Commit Clean ERP Codebase
+  let commitHash = "";
   try {
-    log("\nStep 2/7: Setting Git remote origin to ACCOUNTS.DGT.LLC repository...");
+    log("\nStep 3/7: Consolidating and committing clean ERP source code...");
     try {
       execSync(`git remote set-url origin ${REPO_URL}`, { stdio: 'pipe' });
     } catch {
       execSync(`git remote add origin ${REPO_URL}`, { stdio: 'pipe' });
     }
-    log(`Git remote origin set to: ${REPO_URL}`, 'success');
-  } catch (e) {
-    log(`Failed to configure Git remote: ${e.message}`, 'error');
-    process.exit(1);
-  }
 
-  // Step 3: Check & Push Local ERP Code
-  let commitHash = "";
-  try {
-    log("\nStep 3/7: Pushing clean ERP codebase to GitHub origin main...");
+    // Untrack any large build directories accidentally staged
     try {
-      execSync('git add -A', { stdio: 'pipe' });
-      execSync('git commit -m "Upload clean Digital Dock ERP production source code"', { stdio: 'pipe' });
-    } catch (e) {}
-    execSync(`git push -u origin main --force`, { stdio: 'inherit' });
+      execSync('git rm -r --cached .codex-backups .next node_modules 2>nul || true', { stdio: 'ignore' });
+    } catch {}
+
+    execSync('git add -A', { stdio: 'pipe' });
+    try {
+      execSync('git commit -m "Clean consolidated ERP source code (large build caches excluded)"', { stdio: 'pipe' });
+    } catch {
+      log("Repository tree is already up to date.", 'info');
+    }
+
+    log("Pushing clean codebase to GitHub origin main...");
+    execSync('git push -u origin main', { stdio: 'inherit' });
     commitHash = execSync('git rev-parse HEAD', { encoding: 'utf8' }).trim();
-    log(`GitHub push verified! Commit Hash: ${commitHash}`, 'success');
+    log(`GitHub push verified! Head Commit: ${commitHash}`, 'success');
   } catch (e) {
-    log(`GitHub push note: ${e.message}`, 'warn');
+    log(`Git commit/push note: ${e.message}`, 'warn');
   }
 
-  // Step 4: Non-Interactive SSH VPS Deployment (Piping commands directly to bash)
+  // Step 4: Non-Interactive Remote Deployment via SSH
   try {
-    log(`\nStep 4/7: Connecting to Hostinger VPS (${SERVER_IP}) & executing non-interactive deployment...`);
+    log(`\nStep 4/7: Connecting to Hostinger VPS (${SERVER_IP}) & running production build...`);
 
     const remoteScript = `
 set -e
 
-echo '=== [1/8] Backing Up Environment Files ==='
+echo '=== [1/7] Backing Up Environment Files ==='
 mkdir -p /var/www/env_backups
 cd ${SERVER_DIR}
-if [ -f .env ]; then cp -f .env /var/www/env_backups/.env.bak || true; fi
 if [ -f .env.local ]; then cp -f .env.local /var/www/env_backups/.env.local.bak || true; fi
-echo 'Environment backup complete at /var/www/env_backups.'
+if [ -f .env ]; then cp -f .env /var/www/env_backups/.env.bak || true; fi
+echo 'Environment backup complete.'
 
-echo '=== [2/8] Fetching Latest Source Code from GitHub ==='
+echo '=== [2/7] Fetching Latest Code from GitHub ==='
 if [ ! -d ".git" ]; then
   git init
   git remote add origin ${REPO_URL}
@@ -131,19 +153,20 @@ else
 fi
 git fetch origin main
 git reset --hard origin/main
-echo 'Server codebase updated to latest GitHub main.'
+echo 'Server repository updated to latest GitHub main.'
 
-echo '=== [3/8] Restoring Environment Files ==='
+echo '=== [3/7] Restoring Environment Configuration ==='
 if [ -f /var/www/env_backups/.env.local.bak ]; then
   cp -f /var/www/env_backups/.env.local.bak .env.local
 fi
 if [ -f /var/www/env_backups/.env.bak ]; then
   cp -f /var/www/env_backups/.env.bak .env
 fi
+chmod 600 .env.local .env 2>/dev/null || true
 
-echo '=== [4/8] Configuring Swap Memory Space ==='
+echo '=== [4/7] Verifying Swap Memory Space ==='
 if [ $(free -m | awk '/Swap:/ {print $2}') -eq 0 ]; then
-  echo 'Creating 2GB swap space to prevent memory build crash...'
+  echo 'Allocating 2GB swap space...'
   fallocate -l 2G /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=2048
   chmod 600 /swapfile
   mkswap /swapfile
@@ -151,19 +174,19 @@ if [ $(free -m | awk '/Swap:/ {print $2}') -eq 0 ]; then
   grep -q '/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab
 fi
 
-echo '=== [5/8] Installing Dependencies (npm install) ==='
+echo '=== [5/7] Installing Production Dependencies ==='
 npm install
 
-echo '=== [6/8] Building Next.js Production Application ==='
-NODE_OPTIONS='--max-old-space-size=2048' npm run build
+echo '=== [6/7] Compiling Next.js Application ==='
+NODE_OPTIONS='--max-old-space-size=4096' npm run build
 echo 'Next.js build completed successfully.'
 
-echo '=== [7/8] Starting PM2 Application & Saving State ==='
-pm2 startOrReload ecosystem.config.cjs || pm2 restart ${PM2_NAME} --update-env
+echo '=== [7/7] Reloading PM2 & Nginx Services ==='
+pm2 delete ${PM2_NAME} 2>/dev/null || true
+pm2 start ecosystem.config.cjs
 pm2 save
 pm2 startup systemd -u root --hp /root 2>&1 || true
 
-echo '=== [8/8] Configuring & Reloading Nginx Proxy ==='
 cat > /etc/nginx/sites-enabled/dgt-nextjs.conf << 'NGINXEOF'
 server {
     listen 80 default_server;
@@ -193,14 +216,15 @@ server {
 NGINXEOF
 rm -f /etc/nginx/sites-enabled/default
 nginx -t && systemctl reload nginx
-echo 'Nginx proxy reloaded successfully.'
+echo 'Nginx proxy reloaded.'
 
-echo '=== PM2 & Port Status Check ==='
+echo '=== Process & Service Verification ==='
 pm2 list
-ss -tlnp | grep ${APP_PORT} || echo 'WARNING: Port ${APP_PORT} not listening yet'
+ss -tlnp | grep ${APP_PORT} || (echo "ERROR: App not listening on port ${APP_PORT}" && exit 1)
+curl -I http://127.0.0.1:${APP_PORT} || (echo "ERROR: Local HTTP check failed" && exit 1)
+echo 'PRODUCTION SERVER VERIFICATION COMPLETED SUCCESSFULLY!'
 `;
 
-    // Execute via piped stdin to prevent interactive shell fallback
     const sshCmd = `ssh -o StrictHostKeyChecking=no root@${SERVER_IP} "bash -s"`;
     execSync(sshCmd, { input: remoteScript, stdio: ['pipe', 'inherit', 'inherit'] });
     log("Server build, PM2 restart, and Nginx reload completed successfully!", 'success');
@@ -209,11 +233,10 @@ ss -tlnp | grep ${APP_PORT} || echo 'WARNING: Port ${APP_PORT} not listening yet
     console.log("\n=================================================================");
     console.log("   ❌ DEPLOYMENT FAILED ON VPS - WEBSITE NOT UPDATED");
     console.log("=================================================================");
-    process.stdin.once('data', () => process.exit(1));
     return;
   }
 
-  // Step 5: HTTP Health Check
+  // Step 5: Live HTTP Health Verification
   log(`\nStep 5/7: Verifying live website status at http://${SERVER_IP} ...`);
   let health = await checkServerHealth(`http://${SERVER_IP}`);
   if (health.statusCode >= 200 && health.statusCode < 400) {
@@ -226,7 +249,6 @@ ss -tlnp | grep ${APP_PORT} || echo 'WARNING: Port ${APP_PORT} not listening yet
     console.log(`   - Application Port : ${APP_PORT}`);
     console.log(`   - VPS Project Dir  : ${SERVER_DIR}`);
     console.log(`   - Nginx Config     : /etc/nginx/sites-enabled/dgt-nextjs.conf`);
-    console.log(`   - Backup Location  : /var/www/env_backups`);
     console.log(`   - Health Check     : HTTP ${health.statusCode} (ONLINE)`);
     console.log(`   - Live Website URL : http://${SERVER_IP}`);
     console.log("=================================================================");
@@ -235,10 +257,8 @@ ss -tlnp | grep ${APP_PORT} || echo 'WARNING: Port ${APP_PORT} not listening yet
     console.log("\n=================================================================");
     console.log("   ❌ DEPLOYMENT INCOMPLETE: Server returned HTTP " + health.statusCode);
     console.log("=================================================================");
-    process.exit(1);
   }
-
-  process.stdin.once('data', () => process.exit(0));
 }
 
 run();
+

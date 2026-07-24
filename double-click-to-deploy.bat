@@ -1,12 +1,13 @@
 @echo off
 cd /d "%~dp0"
 echo ================================================================
-echo   REMOVING LARGE FILES (>100MB) & PUSHING TO ACCOUNTS.DGT.LLC
+echo   DIGITAL DOCK ERP - MASTER AUTOMATED DEPLOYMENT & VERIFICATION
 echo ================================================================
 echo.
-node sync-and-deploy-accounts-dgt.mjs
+node deploy-and-verify.js
 echo.
 echo ================================================================
 echo   Finished. Press any key to close this window.
 echo ================================================================
 pause
+
