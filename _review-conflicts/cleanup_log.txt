@@ -1,0 +1,7 @@
+TEMPORARY SOFT DELETE START
+Found countries: [{"id":"505c41d3-7229-4d5c-8234-cfde05614109","name":"chain","iso2":"CN"}] (Find Error: null)
+Soft deleted countries: null
+Soft deleted country branches: null
+Soft deleted city branches: null
+Found country branches: [] (Find Error: null)
+TEMPORARY SOFT DELETE END

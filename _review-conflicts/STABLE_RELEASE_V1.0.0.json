@@ -1,0 +1,19 @@
+{
+  "releaseTag": "v1.0.0-stable-production",
+  "status": "STABLE_PRODUCTION",
+  "timestamp": "2026-07-23T23:16:00.000Z",
+  "repository": "https://github.com/dgtllccom-cell/vigilant-adventure.git",
+  "branch": "main",
+  "server": "72.60.209.121 (Hostinger VPS - Ubuntu 24.04 LTS)",
+  "pm2App": "dgt-nextjs",
+  "port": 3000,
+  "nginxConfigPath": "/etc/nginx/sites-enabled/dgt-nextjs.conf",
+  "vpsProjectPath": "/var/www/dgt-nextjs",
+  "vpsBackupPath": "/var/www/env_backups",
+  "mode": "TESTING_LOCKOUT_ENABLED",
+  "restoreInstructions": [
+    "1. Git Rollback: git checkout main && git reset --hard origin/main",
+    "2. Server Rollback: ssh root@72.60.209.121 'cd /var/www/dgt-nextjs && git fetch origin main && git reset --hard origin/main && npm install && npm run build && pm2 restart dgt-nextjs'",
+    "3. Environment Restore: cp /var/www/env_backups/.env.bak /var/www/dgt-nextjs/.env"
+  ]
+}

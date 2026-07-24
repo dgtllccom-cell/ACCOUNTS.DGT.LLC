@@ -1,0 +1,16 @@
+{
+  "appId": "com.digitaldock.erp",
+  "appName": "Digital Dock ERP",
+  "webDir": ".next",
+  "server": {
+    "url": "https://erp.dgt.llc",
+    "cleartext": false
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1800,
+      "backgroundColor": "#0f3ea8",
+      "showSpinner": false
+    }
+  }
+}

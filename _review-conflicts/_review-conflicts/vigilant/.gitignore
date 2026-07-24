@@ -1,0 +1,43 @@
+# Dependencies
+node_modules/
+
+# Next.js & Build
+.next/
+dist/
+build/
+*.tsbuildinfo
+.tmp/
+
+# Environment Variables
+.env
+.env.*
+!.env.example
+
+# Codex & Backups
+.codex-backups/
+.codex*
+_codex*
+backups/
+exports/
+
+# Logs & Temporary Files
+*.log
+logs/
+.next-dev.pid
+.next-dev.out.log
+.next-dev.err.log
+
+# Database & Archives
+*.sql
+*.dump
+*.tar.gz
+*.bak
+
+# Testing & Coverage
+coverage/
+playwright-report/
+test-results/
+
+# System Files
+.DS_Store
+Thumbs.db

@@ -1,0 +1,3225 @@
+
+=== COMPARISON DIAGNOSTICS ===
+Time: 2026-07-13T10:03:54.457Z
+
+Direct Postgres:
+- Profiles: 35
+- Countries: 7
+- Orders: 1
+
+Supabase Client:
+- Profiles: 35
+- Countries: 7
+- Orders: 1
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T10:09:30.504Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T10:09:45.771Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T10:10:38.807Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T10:16:51.328Z
+Params: limit=200
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T10:19:06.266Z
+Params: limit=150
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T10:20:08.493Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T10:20:08.496Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T10:20:26.980Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T10:20:27.034Z
+Params: limit=200
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T10:21:06.048Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T10:21:06.050Z
+Params: limit=150
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T10:21:18.083Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T10:21:18.558Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T10:22:29.168Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T10:22:29.779Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T11:46:00.670Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T11:46:01.337Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T11:54:49.889Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T11:59:27.641Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T11:59:27.642Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T11:59:35.041Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T11:59:35.860Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T12:03:45.962Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T12:03:58.191Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T12:06:57.897Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T12:12:44.958Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-13T12:33:34.895Z
+Message: Click Payment Entry. row.id: b9bb56bf-63d9-4ef5-8c16-9ea0ee7695bc
+
+[CLIENT LOG] Time: 2026-07-13T12:33:35.871Z
+Message: Click Show Payment History. row.id: b9bb56bf-63d9-4ef5-8c16-9ea0ee7695bc
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T12:33:54.608Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-13T12:33:55.720Z
+Message: Click Payment Entry. row.id: b9bb56bf-63d9-4ef5-8c16-9ea0ee7695bc
+
+[CLIENT LOG] Time: 2026-07-13T12:34:59.443Z
+Message: Click Payment Entry. row.id: b9bb56bf-63d9-4ef5-8c16-9ea0ee7695bc
+
+[CLIENT LOG] Time: 2026-07-13T12:35:34.199Z
+Message: Click Payment Entry. row.id: 8763b6fe-8546-412a-aaa3-641ef3ddbfe3
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T12:37:54.729Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T12:38:06.954Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T12:38:08.053Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T12:38:27.121Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T12:39:19.426Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T12:39:23.613Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T12:39:23.783Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T12:39:23.784Z
+Params: limit=150
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T12:40:15.825Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T12:41:43.640Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T12:41:43.642Z
+Params: limit=200
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T12:44:33.272Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T12:44:33.277Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T12:44:42.319Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T12:44:43.789Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T12:45:08.297Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T12:45:12.122Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T12:45:54.709Z
+Params: limit=150
+
+[CLIENT LOG] Time: 2026-07-13T12:47:11.966Z
+Message: Click Payment Entry. row.id: 8763b6fe-8546-412a-aaa3-641ef3ddbfe3
+
+[CLIENT LOG] Time: 2026-07-13T12:50:37.134Z
+Message: Click Payment Entry. row.id: 8763b6fe-8546-412a-aaa3-641ef3ddbfe3
+
+[CLIENT LOG] Time: 2026-07-13T12:59:57.890Z
+Message: Click Payment Entry. row.id: 8763b6fe-8546-412a-aaa3-641ef3ddbfe3
+
+[CLIENT LOG] Time: 2026-07-13T13:01:03.009Z
+Message: Click Show Payment History. row.id: 8763b6fe-8546-412a-aaa3-641ef3ddbfe3
+
+[CLIENT LOG] Time: 2026-07-13T13:01:17.341Z
+Message: Click Show Payment History. row.id: 8763b6fe-8546-412a-aaa3-641ef3ddbfe3
+
+[CLIENT LOG] Time: 2026-07-13T13:03:54.025Z
+Message: Click Payment Entry. row.id: 8763b6fe-8546-412a-aaa3-641ef3ddbfe3
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T13:03:56.301Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T13:04:04.171Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T13:04:05.812Z
+Params: limit=150
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T13:04:16.010Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T13:04:23.521Z
+Params: limit=200
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T13:06:51.948Z
+Params: limit=150
+
+[CLIENT LOG] Time: 2026-07-13T13:07:03.578Z
+Message: Click Payment Entry. row.id: 8763b6fe-8546-412a-aaa3-641ef3ddbfe3
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T13:10:13.359Z
+Params: limit=150
+
+[CLIENT LOG] Time: 2026-07-13T13:10:37.615Z
+Message: Click Payment Entry. row.id: b9bb56bf-63d9-4ef5-8c16-9ea0ee7695bc
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T13:12:20.090Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-13T13:13:57.358Z
+Message: Click Show Payment History. row.id: b9bb56bf-63d9-4ef5-8c16-9ea0ee7695bc
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T13:21:26.520Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T13:26:56.033Z
+Params: limit=150
+
+[CLIENT LOG] Time: 2026-07-13T13:27:03.273Z
+Message: Click Show Payment History. row.id: b9bb56bf-63d9-4ef5-8c16-9ea0ee7695bc
+
+[CLIENT LOG] Time: 2026-07-13T13:27:29.718Z
+Message: Click Payment Entry. row.id: b9bb56bf-63d9-4ef5-8c16-9ea0ee7695bc
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T15:34:23.879Z
+Params: limit=150
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T15:35:01.628Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T15:35:01.631Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T15:35:14.808Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T15:39:08.042Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T15:39:13.298Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T15:39:22.489Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-13T15:39:46.663Z
+Message: Click Show Payment History. row.id: 8763b6fe-8546-412a-aaa3-641ef3ddbfe3
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T15:40:10.998Z
+Params: limit=150
+
+[CLIENT LOG] Time: 2026-07-13T15:40:26.430Z
+Message: Click Show Payment History. row.id: 8763b6fe-8546-412a-aaa3-641ef3ddbfe3
+
+[CLIENT LOG] Time: 2026-07-13T15:40:44.080Z
+Message: Click Show Payment History. row.id: 8763b6fe-8546-412a-aaa3-641ef3ddbfe3
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T15:41:33.169Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T15:41:41.438Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T15:41:42.994Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T15:42:27.583Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T15:42:31.856Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T15:42:31.859Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T15:42:31.957Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T15:43:28.912Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T15:43:32.799Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T15:44:29.744Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T15:44:32.196Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T15:44:32.404Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T15:44:32.453Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T15:44:59.531Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T15:45:04.196Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T15:47:23.910Z
+Params: limit=150
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T16:34:57.298Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-13T16:37:09.229Z
+Message: Click Show Payment History. row.id: 8763b6fe-8546-412a-aaa3-641ef3ddbfe3
+
+[CLIENT LOG] Time: 2026-07-13T16:37:28.115Z
+Message: Click Payment Entry. row.id: b9bb56bf-63d9-4ef5-8c16-9ea0ee7695bc
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T16:37:31.253Z
+Params: q=PK-001-0001
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T16:38:18.546Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T16:38:18.550Z
+Params: limit=200
+
+[POST /api/erp/purchases/orders] Time: 2026-07-13T18:08:57.709Z
+Body: {
+  "countryId": "7b757efe-7aea-4e9e-9cc4-34b2e842958f",
+  "countryBranchId": "a7a7f280-825b-4fdd-8205-78e224a17100",
+  "cityBranchId": "18ca382f-928c-42bf-9c4a-4db301679e8b",
+  "supplierCompanyId": "eca6d727-34a2-4d37-aa8f-6e66679f48b8",
+  "purchaseOrderNo": "PO-2026-6528",
+  "purchaseContractNo": "PC-2026-6528",
+  "currencyCode": "USD",
+  "paymentCurrencyCode": "USD",
+  "exchangeRate": 1,
+  "orderTotal": 0,
+  "totalGoodsOriginal": 0,
+  "totalGoodsLocal": 0,
+  "totalGoodsUsd": 0,
+  "items": [],
+  "paymentStatus": "pending",
+  "ledgerPostingStatus": "Pending",
+  "formData": {
+    "form": {
+      "countryId": "7b757efe-7aea-4e9e-9cc4-34b2e842958f",
+      "countryBranchId": "a7a7f280-825b-4fdd-8205-78e224a17100",
+      "cityBranchId": "18ca382f-928c-42bf-9c4a-4db301679e8b",
+      "purchaseAccountNo": "PK-CHM-AC-0002",
+      "purchaseAccountName": "مال خراید اکاؤنٹ",
+      "purchaseAccountBranch": "PAKPKB",
+      "purchaseAccountCurrency": "PKR",
+      "purchaseAccountKind": "income",
+      "purchaseAccountIsControl": false,
+      "purchaseAccountCurrentBalance": 0,
+      "purchaseAccountOpeningBalance": 0,
+      "purchaseAccountStatus": "active",
+      "purchaseAccountSerialNumber": 6,
+      "purchaseAccountCountrySerialNumber": "PAK-000006",
+      "purchaseAccountBranchSerialNumber": "PAK-CHM-000002",
+      "purchaseAccountManualReferenceNumber": "00124",
+      "purchaseAccountMobile": "+92 32283832844",
+      "purchaseAccountWhatsapp": "+923228383284",
+      "salesAccountNo": "PK-CHM-AC-000018",
+      "salesAccountName": "نجیب اللہ شخصی کھاتہ",
+      "salesAccountBranch": "PAK-PKBA-001",
+      "salesAccountCurrency": "PKR",
+      "salesAccountKind": "asset",
+      "salesAccountIsControl": false,
+      "salesAccountCurrentBalance": 0,
+      "salesAccountOpeningBalance": 0,
+      "salesAccountStatus": "active",
+      "salesAccountSerialNumber": 24,
+      "salesAccountCountrySerialNumber": "PAK-000024",
+      "salesAccountBranchSerialNumber": "PAK-CHM-000018",
+      "salesAccountManualReferenceNumber": "AS2025",
+      "salesAccountMobile": "",
+      "salesAccountWhatsapp": "",
+      "salesOrderNo": "SO-2026-6528",
+      "purchaseContractNo": "PC-2026-6528",
+      "purchaseOrderNo": "PO-2026-6528",
+      "billNo": "CH/01-6528",
+      "purchaseContact": "+93 700 000 000",
+      "purchaseDate": "2026-07-13",
+      "currencyType": "USD",
+      "purchaseCurrency": "PKR",
+      "exchangeRate": 1,
+      "branchName": "CH/01",
+      "branchCode": "PAK-PKBA-6528",
+      "branchCity": "Chaman",
+      "branchCountry": "Pakistan",
+      "userName": "ADMIN",
+      "userId": "USR-1001",
+      "paymentType": "Advance Payment",
+      "shipmentType": "By Ship",
+      "shippingMode": "By Sea",
+      "supplierId": "430cb4ec-73c7-46f2-b9ba-b949faf1d8c2",
+      "supplierName": "مال خراید اکاؤنٹ",
+      "customerId": "8c1403b5-54c3-4efc-9ea8-61071e06ecc2",
+      "customerName": "نجیب اللہ شخصی کھاتہ",
+      "salesStatus": "Draft",
+      "remarks": "",
+      "paymentReport": "",
+      "loadingReport": "",
+      "orderReportRemarks": "",
+      "purchaseReportRemarks": "",
+      "purchaseInvoiceRemarks": "",
+      "showRemarksOnA4": true,
+      "advancePercent": 10,
+      "advancePaymentDate": "2026-07-13",
+      "paymentDate": "2026-07-13",
+      "paymentDaysAndMethodDetails": "",
+      "loadingCountry": "",
+      "loadingPort": "",
+      "loadingDate": "",
+      "receivedCountry": "",
+      "receivedPort": "",
+      "receivedDate": "",
+      "loadingBorder": "",
+      "receivedBorder": "",
+      "airportName": "",
+      "receivedPortName": "",
+      "transportAgent": "",
+      "airlineName": "",
+      "receivedAgentName": "",
+      "containerCount": 1,
+      "containerSize": "40 FT",
+      "containerNumbers": "",
+      "vesselName": "",
+      "sealNumber": "",
+      "goodsName": "",
+      "size": "",
+      "brand": "",
+      "origin": "",
+      "hsCode": "",
+      "allotName": "",
+      "qtyName": "BAGS",
+      "qtyNo": 100,
+      "qtyKgs": 50,
+      "emptyKgs": 0.1,
+      "netWeight": 4990,
+      "divideType": "D/KGs",
+      "divideWeight": 1,
+      "priceType": "P/KGs",
+      "coursePrice": 12.5,
+      "secondaryCurrency": "USD",
+      "rate2": 280,
+      "operator": "*",
+      "qualityReport": "Passed",
+      "manualTotalAmount": "",
+      "manualFinalAmount": "",
+      "purchaseCompanyId": "eca6d727-34a2-4d37-aa8f-6e66679f48b8",
+      "purchaseCompanyName": "NAJEEB AND COMPANY",
+      "purchaseCompanyCode": "COM-NAJ",
+      "salesCompanyId": "eca6d727-34a2-4d37-aa8f-6e66679f48b8",
+      "salesCompanyName": "NAJEEB AND COMPANY",
+      "salesCompanyCode": "COM-NAJ"
+    },
+    "totals": {
+      "totalGross": 0,
+      "totalNet": 0,
+      "grandFinal": 0,
+      "grandPrimaryFinal": 0,
+      "totalQty": 0,
+      "totalDeductions": 0
+    },
+    "goodsEntries": [],
+    "reports": [],
+    "workflow": {
+      "currentStep": "Booking Purchase Order",
+      "nextStep": "Booking Confirm",
+      "bookingStatus": "Saved",
+      "confirmationStatus": "Pending",
+      "journalStatus": "Pending",
+      "paymentStatus": "Pending",
+      "containerStatus": "Pending",
+      "inventoryStatus": "Pending",
+      "deliveryStatus": "Pending",
+      "savedAt": "2026-07-13T18:08:44.198Z"
+    },
+    "savedAt": "2026-07-13T18:08:44.198Z"
+  }
+}
+
+[POST /api/erp/purchases/orders] Time: 2026-07-13T19:06:30.876Z
+Body: {
+  "countryId": "3f3820cb-bb36-4ff9-8183-86359b1996d3",
+  "countryBranchId": "13aede91-d589-4df2-9920-ba60f5e38710",
+  "cityBranchId": "a27f94c2-71c4-4ce6-bb31-3088808c9854",
+  "supplierCompanyId": "242c561c-ce46-407d-a85c-a09aac1da669",
+  "purchaseOrderNo": "PO-2026-2133",
+  "purchaseContractNo": "PC-2026-2133",
+  "currencyCode": "USD",
+  "paymentCurrencyCode": "AED",
+  "exchangeRate": 3.675,
+  "orderTotal": 916912.5,
+  "totalGoodsOriginal": 249500,
+  "totalGoodsLocal": 916912.5,
+  "totalGoodsUsd": 249500,
+  "items": [
+    {
+      "goodsName": "CASHEW NUTS (W320)",
+      "hsCode": "CASHEW NUT",
+      "size": "12",
+      "brand": "A",
+      "origin": "India",
+      "quantity": 1000,
+      "unitName": "BAGS",
+      "unitWeight": 1,
+      "grossWeight": 50000,
+      "netWeight": 49900,
+      "rateOriginal": 5,
+      "rateLocal": 18.375,
+      "rateUsd": 5,
+      "totalOriginal": 249500,
+      "totalLocal": 916912.5,
+      "totalUsd": 249500
+    }
+  ],
+  "paymentStatus": "pending",
+  "ledgerPostingStatus": "Pending",
+  "formData": {
+    "form": {
+      "countryId": "3f3820cb-bb36-4ff9-8183-86359b1996d3",
+      "countryBranchId": "13aede91-d589-4df2-9920-ba60f5e38710",
+      "cityBranchId": "a27f94c2-71c4-4ce6-bb31-3088808c9854",
+      "purchaseAccountNo": "AE-DUB-AC-000019",
+      "purchaseAccountName": "RAN PURCHASE/SALES",
+      "purchaseAccountBranch": "ARE-AEDU-001",
+      "purchaseAccountCurrency": "AED",
+      "purchaseAccountKind": "asset",
+      "purchaseAccountIsControl": false,
+      "purchaseAccountCurrentBalance": 0,
+      "purchaseAccountOpeningBalance": 0,
+      "purchaseAccountStatus": "active",
+      "purchaseAccountSerialNumber": 446,
+      "purchaseAccountCountrySerialNumber": "ARE-000019",
+      "purchaseAccountBranchSerialNumber": "ARE-DUB-000019",
+      "purchaseAccountManualReferenceNumber": "D/SC0000119-DUB",
+      "purchaseAccountMobile": "",
+      "purchaseAccountWhatsapp": "",
+      "salesAccountNo": "AE-DUB-AC-000003",
+      "salesAccountName": "MUZAMMIL AKHTAR",
+      "salesAccountBranch": "ARE-AEDU-001",
+      "salesAccountCurrency": "AED",
+      "salesAccountKind": "asset",
+      "salesAccountIsControl": false,
+      "salesAccountCurrentBalance": 0,
+      "salesAccountOpeningBalance": 0,
+      "salesAccountStatus": "active",
+      "salesAccountSerialNumber": 430,
+      "salesAccountCountrySerialNumber": "ARE-000003",
+      "salesAccountBranchSerialNumber": "ARE-DUB-000003",
+      "salesAccountManualReferenceNumber": "D/SC0000103-DUB",
+      "salesAccountMobile": "",
+      "salesAccountWhatsapp": "",
+      "salesOrderNo": "SO-2026-2133",
+      "purchaseContractNo": "PC-2026-2133",
+      "purchaseOrderNo": "PO-2026-2133",
+      "billNo": "DUBAI-2133",
+      "purchaseDate": "2026-07-13",
+      "currencyType": "USD",
+      "purchaseCurrency": "AED",
+      "exchangeRate": 3.675,
+      "branchName": "dubai al ras",
+      "branchCode": "ARE-AEDU-001",
+      "branchCity": "Dubai",
+      "branchCountry": "UAE",
+      "userName": "ADMIN",
+      "userId": "USR-1001",
+      "paymentType": "Advance Payment",
+      "shipmentType": "By Ship",
+      "shippingMode": "By Sea",
+      "supplierId": "d3fbaea1-f01d-42d2-a916-a163c8413d44",
+      "supplierName": "RAN PURCHASE/SALES",
+      "customerId": "8ff2e5eb-9001-49e3-9d91-9abe4d99d74c",
+      "customerName": "MUZAMMIL AKHTAR",
+      "salesStatus": "Draft",
+      "remarks": "KAFNMDVK,BN HRTBLOUHN BJSHRB;OSRVNDSKJFG",
+      "paymentReport": "JKHZVKFB MX BADLIFKBHN.",
+      "loadingReport": "JKHDAFKBNFM,BKJSDFGHNKJRTSHJNJK",
+      "orderReportRemarks": "",
+      "purchaseReportRemarks": "",
+      "purchaseInvoiceRemarks": "",
+      "showRemarksOnA4": true,
+      "advancePercent": 30,
+      "advancePaymentDate": "2026-07-13",
+      "paymentDate": "2026-07-13",
+      "paymentDaysAndMethodDetails": "",
+      "loadingCountry": "chin",
+      "loadingPort": "pot",
+      "loadingDate": "2026-07-16",
+      "receivedCountry": "chin",
+      "receivedPort": "pot",
+      "receivedDate": "2026-07-23",
+      "loadingBorder": "",
+      "receivedBorder": "",
+      "airportName": "",
+      "receivedPortName": "",
+      "transportAgent": "",
+      "airlineName": "",
+      "receivedAgentName": "",
+      "containerCount": 1,
+      "containerSize": "40 FT",
+      "containerNumbers": "GFDDF",
+      "vesselName": "",
+      "sealNumber": "",
+      "goodsName": "",
+      "size": "",
+      "brand": "",
+      "origin": "chin",
+      "hsCode": "",
+      "allotName": "ALT-5396",
+      "qtyName": "BAGS",
+      "qtyNo": 0,
+      "qtyKgs": 0,
+      "emptyKgs": 0,
+      "netWeight": "",
+      "divideType": "D/KGs",
+      "divideWeight": 1,
+      "priceType": "P/KGs",
+      "coursePrice": 0,
+      "secondaryCurrency": "AED",
+      "rate2": 280,
+      "operator": "*",
+      "qualityReport": "Passed",
+      "manualTotalAmount": "",
+      "manualFinalAmount": "",
+      "paymentCurrency": "AED",
+      "salesCompanyId": "242c561c-ce46-407d-a85c-a09aac1da669",
+      "salesCompanyName": "DAMAAN GENERAL TRADING L L C",
+      "salesCompanyCode": "COM-DAM",
+      "purchaseCompanyId": "242c561c-ce46-407d-a85c-a09aac1da669",
+      "purchaseCompanyName": "DAMAAN GENERAL TRADING L L C",
+      "purchaseCompanyCode": "COM-DAM",
+      "originCountry": "chin",
+      "loadingLocation": "pot",
+      "receivingCountry": "chin",
+      "destinationCountry": "chin",
+      "receivingPort": "pot",
+      "destinationPort": "pot"
+    },
+    "totals": {
+      "totalGross": 50000,
+      "totalNet": 49900,
+      "grandFinal": 916912.5,
+      "grandPrimaryFinal": 249500,
+      "totalQty": 1000,
+      "totalDeductions": 100
+    },
+    "goodsEntries": [
+      {
+        "allotName": "898",
+        "goodsName": "CASHEW NUTS (W320)",
+        "size": "12",
+        "brand": "A",
+        "origin": "India",
+        "hsCode": "CASHEW NUT",
+        "qtyName": "BAGS",
+        "qtyNo": 1000,
+        "qtyKgs": 50,
+        "grossWeight": 50000,
+        "emptyKgs": 0.1,
+        "netWeight": 49900,
+        "priceType": "P/KGs",
+        "divideType": "D/KGs",
+        "divideWeight": 1,
+        "coursePrice": 5,
+        "currencyType": "USD",
+        "purchaseCurrency": "AED",
+        "exchangeRate": 3.675,
+        "totalAmount": 249500,
+        "op": "*",
+        "finalAmount": 916912.5
+      }
+    ],
+    "reports": [],
+    "workflow": {
+      "currentStep": "Booking Purchase Order",
+      "nextStep": "Booking Confirm",
+      "bookingStatus": "Saved",
+      "confirmationStatus": "Pending",
+      "journalStatus": "Pending",
+      "paymentStatus": "Pending",
+      "containerStatus": "Pending",
+      "inventoryStatus": "Pending",
+      "deliveryStatus": "Pending",
+      "savedAt": "2026-07-13T19:06:28.789Z"
+    },
+    "savedAt": "2026-07-13T19:06:28.789Z"
+  }
+}
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T19:07:33.067Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-13T19:08:01.093Z
+Message: Click Payment Entry. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T19:20:27.154Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-13T19:25:48.720Z
+Message: Click Payment Entry. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T19:27:51.462Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-13T19:27:59.097Z
+Message: Click Payment Entry. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T19:29:15.599Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-13T19:30:39.124Z
+Message: Click Payment Entry. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T19:32:06.150Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-13T19:32:23.823Z
+Message: Click Show Payment History. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[CLIENT LOG] Time: 2026-07-13T19:38:07.002Z
+Message: Click Payment Entry. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T19:38:54.997Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-13T19:39:06.233Z
+Message: Click Show Payment History. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[CLIENT LOG] Time: 2026-07-13T19:39:09.381Z
+Message: Click Show Payment History. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[CLIENT LOG] Time: 2026-07-13T19:40:06.775Z
+Message: Click Payment Entry. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T19:42:17.667Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-13T19:42:27.119Z
+Message: Click Payment Entry. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[CLIENT LOG] Time: 2026-07-13T19:42:30.891Z
+Message: Click Show Payment History. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[CLIENT LOG] Time: 2026-07-13T19:50:42.258Z
+Message: Click Payment Entry. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T19:51:36.964Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-13T19:51:57.902Z
+Message: Click Show Payment History. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[CLIENT LOG] Time: 2026-07-13T19:52:00.093Z
+Message: Click Payment Entry. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[CLIENT LOG] Time: 2026-07-13T19:52:59.423Z
+Message: Click Show Payment History. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T20:00:51.627Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T20:00:53.200Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T20:00:53.537Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T20:01:10.503Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T20:22:24.711Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T20:23:58.135Z
+Params: limit=150
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T20:24:21.781Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-13T20:25:02.241Z
+Message: Click Payment Entry. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T20:25:20.357Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T20:25:25.105Z
+Params: limit=150
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T20:26:15.375Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T20:26:24.874Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T20:26:27.877Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-13T20:28:00.993Z
+Message: Click Show Payment History. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[CLIENT LOG] Time: 2026-07-13T20:33:00.987Z
+Message: Click Payment Entry. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T21:02:57.379Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T21:03:00.942Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-13T21:06:23.006Z
+Message: Click Show Payment History. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T21:06:31.250Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-13T21:06:39.680Z
+Message: Click Show Payment History. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[CLIENT LOG] Time: 2026-07-13T21:07:09.107Z
+Message: Click Payment Entry. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T21:10:02.856Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T21:10:02.858Z
+Params: limit=200
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T21:10:34.698Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T21:10:34.709Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T21:10:34.715Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T21:10:45.682Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T21:11:10.665Z
+Params: limit=150
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T21:11:23.872Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-13T21:12:31.322Z
+Message: Click Payment Entry. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T21:15:35.071Z
+Params: limit=150
+
+[CLIENT LOG] Time: 2026-07-13T21:16:00.861Z
+Message: Click Payment Entry. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[CLIENT LOG] Time: 2026-07-13T21:25:05.512Z
+Message: Click Payment Entry. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T21:28:39.728Z
+Params: limit=200
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T21:29:14.705Z
+Params: limit=150
+
+[GET /api/erp/purchases/orders] Time: 2026-07-13T21:29:24.912Z
+Params: limit=200
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T21:30:56.263Z
+Params: limit=150
+
+[CLIENT LOG] Time: 2026-07-13T21:31:51.738Z
+Message: Click Payment Entry. row.id: 66e54245-e971-4506-b6e2-f92d9aeabc85
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T21:31:55.190Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T21:32:41.211Z
+Params: limit=150
+
+[GET /api/erp/purchases/loading-records] Time: 2026-07-13T21:32:45.897Z
+Params: limit=150
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T09:52:53.569Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T10:01:24.019Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T10:03:33.904Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T10:04:15.486Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T10:04:45.730Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T10:06:37.837Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T10:21:05.134Z
+Params: limit=200
+
+[POST /api/erp/purchases/orders] Time: 2026-07-14T10:22:37.753Z
+Body: {
+  "countryId": null,
+  "countryBranchId": null,
+  "cityBranchId": null,
+  "supplierCompanyId": "eca6d727-34a2-4d37-aa8f-6e66679f48b8",
+  "purchaseOrderNo": "PO-2026-3147",
+  "purchaseContractNo": "PC-2026-3147",
+  "currencyCode": "USD",
+  "paymentCurrencyCode": "USD",
+  "exchangeRate": 300,
+  "orderTotal": 18712500,
+  "totalGoodsOriginal": 62375,
+  "totalGoodsLocal": 18712500,
+  "totalGoodsUsd": 62375,
+  "items": [
+    {
+      "goodsName": "ASMAT",
+      "hsCode": "000000",
+      "size": "Medium",
+      "brand": "Organic",
+      "origin": "UAE",
+      "quantity": 100,
+      "unitName": "BAGS",
+      "unitWeight": 1,
+      "grossWeight": 5000,
+      "netWeight": 4990,
+      "rateOriginal": 12.5,
+      "rateLocal": 3750,
+      "rateUsd": 12.5,
+      "totalOriginal": 62375,
+      "totalLocal": 18712500,
+      "totalUsd": 62375
+    }
+  ],
+  "paymentStatus": "pending",
+  "ledgerPostingStatus": "Pending",
+  "formData": {
+    "form": {
+      "countryId": "",
+      "countryBranchId": "",
+      "cityBranchId": "",
+      "purchaseAccountNo": "PK-ALR-AC-000019",
+      "purchaseAccountName": "RAN PURCHASE/SALES",
+      "purchaseAccountBranch": "PAK-PKBA-010",
+      "purchaseAccountCurrency": "PKR",
+      "purchaseAccountKind": "asset",
+      "purchaseAccountIsControl": false,
+      "purchaseAccountCurrentBalance": 0,
+      "purchaseAccountOpeningBalance": 0,
+      "purchaseAccountStatus": "active",
+      "purchaseAccountSerialNumber": 390,
+      "purchaseAccountCountrySerialNumber": "PAK-000390",
+      "purchaseAccountBranchSerialNumber": "PAK-ALR-000019",
+      "purchaseAccountManualReferenceNumber": "D/SC0000119",
+      "purchaseAccountMobile": "",
+      "purchaseAccountWhatsapp": "",
+      "salesAccountNo": "PK-ALR-AC-000003",
+      "salesAccountName": "MUZAMMIL AKHTAR",
+      "salesAccountBranch": "PAK-PKBA-010",
+      "salesAccountCurrency": "PKR",
+      "salesAccountKind": "asset",
+      "salesAccountIsControl": false,
+      "salesAccountCurrentBalance": 0,
+      "salesAccountOpeningBalance": 0,
+      "salesAccountStatus": "active",
+      "salesAccountSerialNumber": 374,
+      "salesAccountCountrySerialNumber": "PAK-000374",
+      "salesAccountBranchSerialNumber": "PAK-ALR-000003",
+      "salesAccountManualReferenceNumber": "D/SC0000103",
+      "salesAccountMobile": "",
+      "salesAccountWhatsapp": "",
+      "salesOrderNo": "SO-2026-3147",
+      "purchaseContractNo": "PC-2026-3147",
+      "purchaseOrderNo": "PO-2026-3147",
+      "billNo": "BILL-2026-3147",
+      "purchaseDate": "2026-07-14",
+      "currencyType": "USD",
+      "purchaseCurrency": "PKR",
+      "exchangeRate": 300,
+      "branchName": "Branch Not Selected",
+      "branchCode": "BR-XXXX-000",
+      "branchCity": "",
+      "branchCountry": "",
+      "userName": "ADMIN",
+      "userId": "USR-1001",
+      "paymentType": "Advance Payment",
+      "shipmentType": "By Ship",
+      "shippingMode": "By Sea",
+      "supplierId": "fb293931-ac1b-4dfb-8f1c-6e4963f23166",
+      "supplierName": "RAN PURCHASE/SALES",
+      "customerId": "6cf9ed23-01a8-4260-878f-a2a1c06efb15",
+      "customerName": "MUZAMMIL AKHTAR",
+      "salesStatus": "Draft",
+      "remarks": "",
+      "paymentReport": "",
+      "loadingReport": "",
+      "orderReportRemarks": "",
+      "purchaseReportRemarks": "",
+      "purchaseInvoiceRemarks": "",
+      "showRemarksOnA4": true,
+      "advancePercent": 10,
+      "advancePaymentDate": "2026-07-14",
+      "paymentDate": "2026-07-14",
+      "paymentDaysAndMethodDetails": "",
+      "loadingCountry": "",
+      "loadingPort": "",
+      "loadingDate": "",
+      "receivedCountry": "",
+      "receivedPort": "",
+      "receivedDate": "",
+      "loadingBorder": "",
+      "receivedBorder": "",
+      "airportName": "",
+      "receivedPortName": "",
+      "transportAgent": "",
+      "airlineName": "",
+      "receivedAgentName": "",
+      "containerCount": 1,
+      "containerSize": "40 FT",
+      "containerNumbers": "",
+      "vesselName": "",
+      "sealNumber": "",
+      "goodsName": "",
+      "size": "",
+      "brand": "",
+      "origin": "",
+      "hsCode": "",
+      "allotName": "ALT-5387",
+      "qtyName": "BAGS",
+      "qtyNo": 0,
+      "qtyKgs": 0,
+      "emptyKgs": 0,
+      "netWeight": "",
+      "divideType": "D/KGs",
+      "divideWeight": 1,
+      "priceType": "P/KGs",
+      "coursePrice": 0,
+      "secondaryCurrency": "USD",
+      "rate2": 280,
+      "operator": "*",
+      "qualityReport": "Passed",
+      "manualTotalAmount": "",
+      "manualFinalAmount": "",
+      "purchaseCompanyId": "eca6d727-34a2-4d37-aa8f-6e66679f48b8",
+      "purchaseCompanyName": "NAJEEB AND COMPANY",
+      "purchaseCompanyCode": "COM-NAJ",
+      "salesCompanyId": "eca6d727-34a2-4d37-aa8f-6e66679f48b8",
+      "salesCompanyName": "NAJEEB AND COMPANY",
+      "salesCompanyCode": "COM-NAJ"
+    },
+    "totals": {
+      "totalGross": 5000,
+      "totalNet": 4990,
+      "grandFinal": 18712500,
+      "grandPrimaryFinal": 62375,
+      "totalQty": 100,
+      "totalDeductions": 10
+    },
+    "goodsEntries": [
+      {
+        "allotName": "ALT-7165",
+        "goodsName": "ASMAT",
+        "size": "Medium",
+        "brand": "Organic",
+        "origin": "UAE",
+        "hsCode": "000000",
+        "qtyName": "BAGS",
+        "qtyNo": 100,
+        "qtyKgs": 50,
+        "grossWeight": 5000,
+        "emptyKgs": 0.1,
+        "netWeight": 4990,
+        "priceType": "P/KGs",
+        "divideType": "D/KGs",
+        "divideWeight": 1,
+        "coursePrice": 12.5,
+        "currencyType": "USD",
+        "purchaseCurrency": "PKR",
+        "exchangeRate": 300,
+        "totalAmount": 62375,
+        "op": "*",
+        "finalAmount": 18712500
+      }
+    ],
+    "reports": [],
+    "workflow": {
+      "currentStep": "Booking Purchase Order",
+      "nextStep": "Booking Confirm",
+      "bookingStatus": "Saved",
+      "confirmationStatus": "Pending",
+      "journalStatus": "Pending",
+      "paymentStatus": "Pending",
+      "containerStatus": "Pending",
+      "inventoryStatus": "Pending",
+      "deliveryStatus": "Pending",
+      "savedAt": "2026-07-14T10:22:34.954Z"
+    },
+    "savedAt": "2026-07-14T10:22:34.954Z"
+  }
+}
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T10:23:34.433Z
+Params: limit=200
+
+[POST /api/erp/purchases/orders] Time: 2026-07-14T10:32:04.412Z
+Body: {
+  "countryId": null,
+  "countryBranchId": null,
+  "cityBranchId": null,
+  "supplierCompanyId": "eca6d727-34a2-4d37-aa8f-6e66679f48b8",
+  "purchaseOrderNo": "PO-2026-3052",
+  "purchaseContractNo": "PC-2026-3052",
+  "currencyCode": "AFN",
+  "paymentCurrencyCode": "USD",
+  "exchangeRate": 4.45,
+  "orderTotal": 2775687.5,
+  "totalGoodsOriginal": 623750,
+  "totalGoodsLocal": 2775687.5,
+  "totalGoodsUsd": 623750,
+  "items": [
+    {
+      "goodsName": "SEEDS",
+      "hsCode": "9090-1212",
+      "size": "-",
+      "brand": "DGT",
+      "origin": "Afghanistan",
+      "quantity": 1000,
+      "unitName": "BAGS",
+      "unitWeight": 1,
+      "grossWeight": 50000,
+      "netWeight": 49900,
+      "rateOriginal": 12.5,
+      "rateLocal": 55.625,
+      "rateUsd": 12.5,
+      "totalOriginal": 623750,
+      "totalLocal": 2775687.5,
+      "totalUsd": 623750
+    }
+  ],
+  "paymentStatus": "pending",
+  "ledgerPostingStatus": "Pending",
+  "formData": {
+    "form": {
+      "countryId": "",
+      "countryBranchId": "",
+      "cityBranchId": "",
+      "purchaseAccountNo": "PK-ALR-AC-000019",
+      "purchaseAccountName": "RAN PURCHASE/SALES",
+      "purchaseAccountBranch": "PAK-PKBA-010",
+      "purchaseAccountCurrency": "PKR",
+      "purchaseAccountKind": "asset",
+      "purchaseAccountIsControl": false,
+      "purchaseAccountCurrentBalance": 18712500,
+      "purchaseAccountOpeningBalance": 0,
+      "purchaseAccountStatus": "active",
+      "purchaseAccountSerialNumber": 390,
+      "purchaseAccountCountrySerialNumber": "PAK-000390",
+      "purchaseAccountBranchSerialNumber": "PAK-ALR-000019",
+      "purchaseAccountManualReferenceNumber": "D/SC0000119",
+      "purchaseAccountMobile": "",
+      "purchaseAccountWhatsapp": "",
+      "salesAccountNo": "PK-ALR-AC-000003",
+      "salesAccountName": "MUZAMMIL AKHTAR",
+      "salesAccountBranch": "PAK-PKBA-010",
+      "salesAccountCurrency": "PKR",
+      "salesAccountKind": "asset",
+      "salesAccountIsControl": false,
+      "salesAccountCurrentBalance": -18712500,
+      "salesAccountOpeningBalance": 0,
+      "salesAccountStatus": "active",
+      "salesAccountSerialNumber": 374,
+      "salesAccountCountrySerialNumber": "PAK-000374",
+      "salesAccountBranchSerialNumber": "PAK-ALR-000003",
+      "salesAccountManualReferenceNumber": "D/SC0000103",
+      "salesAccountMobile": "",
+      "salesAccountWhatsapp": "",
+      "salesOrderNo": "SO-2026-3052",
+      "purchaseContractNo": "PC-2026-3052",
+      "purchaseOrderNo": "PO-2026-3052",
+      "billNo": "BILL-2026-3052",
+      "purchaseDate": "2026-07-14",
+      "currencyType": "AFN",
+      "purchaseCurrency": "AFN",
+      "exchangeRate": 4.45,
+      "branchName": "Branch Not Selected",
+      "branchCode": "BR-XXXX-000",
+      "branchCity": "",
+      "branchCountry": "",
+      "userName": "ADMIN",
+      "userId": "USR-1001",
+      "paymentType": "Advance Payment",
+      "shipmentType": "By Road",
+      "shippingMode": "By Road",
+      "supplierId": "fb293931-ac1b-4dfb-8f1c-6e4963f23166",
+      "supplierName": "RAN PURCHASE/SALES",
+      "customerId": "6cf9ed23-01a8-4260-878f-a2a1c06efb15",
+      "customerName": "MUZAMMIL AKHTAR",
+      "salesStatus": "Draft",
+      "remarks": "",
+      "paymentReport": "dscsdc sdfvsdvxczsvdsfsdfsdvc sddf",
+      "loadingReport": "asdgfadfadsvdsvdzvdfagare",
+      "orderReportRemarks": "",
+      "purchaseReportRemarks": "",
+      "purchaseInvoiceRemarks": "",
+      "showRemarksOnA4": true,
+      "advancePercent": 45,
+      "advancePaymentDate": "2026-07-14",
+      "paymentDate": "2026-07-14",
+      "paymentDaysAndMethodDetails": "",
+      "loadingCountry": "Afghanistan",
+      "loadingPort": "Chaman/Spin Boldak (Pakistan)",
+      "loadingDate": "2026-08-08",
+      "receivedCountry": "Pakistan",
+      "receivedPort": "Chaman Border",
+      "receivedDate": "2026-07-30",
+      "loadingBorder": "Chaman/Spin Boldak (Pakistan)",
+      "receivedBorder": "",
+      "airportName": "",
+      "receivedPortName": "",
+      "transportAgent": "",
+      "airlineName": "",
+      "receivedAgentName": "",
+      "containerCount": 1,
+      "containerSize": "Open Top",
+      "containerNumbers": "",
+      "vesselName": "",
+      "sealNumber": "",
+      "goodsName": "",
+      "size": "",
+      "brand": "",
+      "origin": "Afghanistan",
+      "hsCode": "",
+      "allotName": "ALT-4749",
+      "qtyName": "BAGS",
+      "qtyNo": 0,
+      "qtyKgs": 0,
+      "emptyKgs": 0,
+      "netWeight": "",
+      "divideType": "D/KGs",
+      "divideWeight": 1,
+      "priceType": "P/KGs",
+      "coursePrice": 0,
+      "secondaryCurrency": "USD",
+      "rate2": 280,
+      "operator": "*",
+      "qualityReport": "Passed",
+      "manualTotalAmount": "",
+      "manualFinalAmount": "",
+      "purchaseCompanyId": "eca6d727-34a2-4d37-aa8f-6e66679f48b8",
+      "purchaseCompanyName": "NAJEEB AND COMPANY",
+      "purchaseCompanyCode": "COM-NAJ",
+      "salesCompanyId": "eca6d727-34a2-4d37-aa8f-6e66679f48b8",
+      "salesCompanyName": "NAJEEB AND COMPANY",
+      "salesCompanyCode": "COM-NAJ",
+      "originCountry": "Afghanistan",
+      "loadingLocation": "Chaman/Spin Boldak (Pakistan)",
+      "receivingCountry": "Pakistan",
+      "destinationCountry": "Pakistan",
+      "receivingPort": "Chaman Border",
+      "destinationPort": "Chaman Border",
+      "receivingBorder": "Chaman Border"
+    },
+    "totals": {
+      "totalGross": 50000,
+      "totalNet": 49900,
+      "grandFinal": 2775687.5,
+      "grandPrimaryFinal": 623750,
+      "totalQty": 1000,
+      "totalDeductions": 100
+    },
+    "goodsEntries": [
+      {
+        "allotName": "ALT-2501",
+        "goodsName": "SEEDS",
+        "size": "-",
+        "brand": "DGT",
+        "origin": "Afghanistan",
+        "hsCode": "9090-1212",
+        "qtyName": "BAGS",
+        "qtyNo": 1000,
+        "qtyKgs": 50,
+        "grossWeight": 50000,
+        "emptyKgs": 0.1,
+        "netWeight": 49900,
+        "priceType": "P/KGs",
+        "divideType": "D/KGs",
+        "divideWeight": 1,
+        "coursePrice": 12.5,
+        "currencyType": "AFN",
+        "purchaseCurrency": "AFN",
+        "exchangeRate": 4.45,
+        "totalAmount": 623750,
+        "op": "*",
+        "finalAmount": 2775687.5
+      }
+    ],
+    "reports": [],
+    "workflow": {
+      "currentStep": "Booking Purchase Order",
+      "nextStep": "Booking Confirm",
+      "bookingStatus": "Saved",
+      "confirmationStatus": "Pending",
+      "journalStatus": "Pending",
+      "paymentStatus": "Pending",
+      "containerStatus": "Pending",
+      "inventoryStatus": "Pending",
+      "deliveryStatus": "Pending",
+      "savedAt": "2026-07-14T10:31:58.917Z"
+    },
+    "savedAt": "2026-07-14T10:31:58.917Z"
+  }
+}
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T10:32:54.835Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T10:33:52.837Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T10:34:03.072Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T10:34:17.397Z
+Params: limit=200
+
+[POST /api/erp/purchases/orders] Time: 2026-07-14T10:36:24.780Z
+Body: {
+  "countryId": "7b757efe-7aea-4e9e-9cc4-34b2e842958f",
+  "countryBranchId": "a7a7f280-825b-4fdd-8205-78e224a17100",
+  "cityBranchId": null,
+  "supplierCompanyId": "eca6d727-34a2-4d37-aa8f-6e66679f48b8",
+  "purchaseOrderNo": "PO-2026-4942",
+  "purchaseContractNo": "PC-2026-4942",
+  "currencyCode": "USD",
+  "paymentCurrencyCode": "USD",
+  "exchangeRate": 4.45,
+  "orderTotal": 17444000,
+  "totalGoodsOriginal": 3920000,
+  "totalGoodsLocal": 17444000,
+  "totalGoodsUsd": 3920000,
+  "items": [
+    {
+      "goodsName": "SEEDS",
+      "hsCode": "9090-1212",
+      "size": "1987",
+      "brand": "DGT",
+      "origin": "Afghanistan",
+      "quantity": 1000,
+      "unitName": "BAGS",
+      "unitWeight": 1,
+      "grossWeight": 50000,
+      "netWeight": 49000,
+      "rateOriginal": 80,
+      "rateLocal": 356,
+      "rateUsd": 80,
+      "totalOriginal": 3920000,
+      "totalLocal": 17444000,
+      "totalUsd": 3920000
+    }
+  ],
+  "paymentStatus": "pending",
+  "ledgerPostingStatus": "Pending",
+  "formData": {
+    "form": {
+      "countryId": "7b757efe-7aea-4e9e-9cc4-34b2e842958f",
+      "countryBranchId": "a7a7f280-825b-4fdd-8205-78e224a17100",
+      "cityBranchId": "",
+      "purchaseAccountNo": "PK-ALR-AC-000019",
+      "purchaseAccountName": "RAN PURCHASE/SALES",
+      "purchaseAccountBranch": "PAK-PKBA-010",
+      "purchaseAccountCurrency": "PKR",
+      "purchaseAccountKind": "asset",
+      "purchaseAccountIsControl": false,
+      "purchaseAccountCurrentBalance": 21488187.5,
+      "purchaseAccountOpeningBalance": 0,
+      "purchaseAccountStatus": "active",
+      "purchaseAccountSerialNumber": 390,
+      "purchaseAccountCountrySerialNumber": "PAK-000390",
+      "purchaseAccountBranchSerialNumber": "PAK-ALR-000019",
+      "purchaseAccountManualReferenceNumber": "D/SC0000119",
+      "purchaseAccountMobile": "",
+      "purchaseAccountWhatsapp": "",
+      "salesAccountNo": "PK-ALR-AC-000001",
+      "salesAccountName": "NAJEEBULLAH IRAN ACOOUNTS",
+      "salesAccountBranch": "PAK-PKBA-010",
+      "salesAccountCurrency": "PKR",
+      "salesAccountKind": "asset",
+      "salesAccountIsControl": false,
+      "salesAccountCurrentBalance": 0,
+      "salesAccountOpeningBalance": 0,
+      "salesAccountStatus": "active",
+      "salesAccountSerialNumber": 372,
+      "salesAccountCountrySerialNumber": "PAK-000372",
+      "salesAccountBranchSerialNumber": "PAK-ALR-000001",
+      "salesAccountManualReferenceNumber": "D/SC0000101",
+      "salesAccountMobile": "",
+      "salesAccountWhatsapp": "",
+      "salesOrderNo": "SO-2026-4942",
+      "purchaseContractNo": "PC-2026-4942",
+      "purchaseOrderNo": "PO-2026-4942",
+      "billNo": "PAKISTAN-4942",
+      "purchaseDate": "2026-07-14",
+      "currencyType": "USD",
+      "purchaseCurrency": "PKR",
+      "exchangeRate": 4.45,
+      "branchName": "Pakistan Main Branch",
+      "branchCode": "PAK-MAIN",
+      "branchCity": "",
+      "branchCountry": "Pakistan",
+      "userName": "ADMIN",
+      "userId": "USR-1001",
+      "paymentType": "Advance Payment",
+      "shipmentType": "By Ship",
+      "shippingMode": "By Sea",
+      "supplierId": "fb293931-ac1b-4dfb-8f1c-6e4963f23166",
+      "supplierName": "RAN PURCHASE/SALES",
+      "customerId": "18791784-fd04-44f6-a16b-ab5577f6ba00",
+      "customerName": "NAJEEBULLAH IRAN ACOOUNTS",
+      "salesStatus": "Draft",
+      "remarks": "",
+      "paymentReport": "",
+      "loadingReport": "",
+      "orderReportRemarks": "",
+      "purchaseReportRemarks": "",
+      "purchaseInvoiceRemarks": "",
+      "showRemarksOnA4": true,
+      "advancePercent": 10,
+      "advancePaymentDate": "2026-07-14",
+      "paymentDate": "2026-07-14",
+      "paymentDaysAndMethodDetails": "",
+      "loadingCountry": "",
+      "loadingPort": "",
+      "loadingDate": "",
+      "receivedCountry": "",
+      "receivedPort": "",
+      "receivedDate": "",
+      "loadingBorder": "",
+      "receivedBorder": "",
+      "airportName": "",
+      "receivedPortName": "",
+      "transportAgent": "",
+      "airlineName": "",
+      "receivedAgentName": "",
+      "containerCount": 1,
+      "containerSize": "40 FT",
+      "containerNumbers": "",
+      "vesselName": "",
+      "sealNumber": "",
+      "goodsName": "",
+      "size": "",
+      "brand": "",
+      "origin": "",
+      "hsCode": "",
+      "allotName": "ALT-5029",
+      "qtyName": "BAGS",
+      "qtyNo": 0,
+      "qtyKgs": 0,
+      "emptyKgs": 0,
+      "netWeight": "",
+      "divideType": "D/KGs",
+      "divideWeight": 1,
+      "priceType": "P/KGs",
+      "coursePrice": 0,
+      "secondaryCurrency": "USD",
+      "rate2": 280,
+      "operator": "*",
+      "qualityReport": "Passed",
+      "manualTotalAmount": "",
+      "manualFinalAmount": "",
+      "purchaseCompanyId": "eca6d727-34a2-4d37-aa8f-6e66679f48b8",
+      "purchaseCompanyName": "NAJEEB AND COMPANY",
+      "purchaseCompanyCode": "COM-NAJ",
+      "salesCompanyId": "eca6d727-34a2-4d37-aa8f-6e66679f48b8",
+      "salesCompanyName": "NAJEEB AND COMPANY",
+      "salesCompanyCode": "COM-NAJ"
+    },
+    "totals": {
+      "totalGross": 50000,
+      "totalNet": 49000,
+      "grandFinal": 17444000,
+      "grandPrimaryFinal": 3920000,
+      "totalQty": 1000,
+      "totalDeductions": 1000
+    },
+    "goodsEntries": [
+      {
+        "allotName": "ALT-8417",
+        "goodsName": "SEEDS",
+        "size": "1987",
+        "brand": "DGT",
+        "origin": "Afghanistan",
+        "hsCode": "9090-1212",
+        "qtyName": "BAGS",
+        "qtyNo": 1000,
+        "qtyKgs": 50,
+        "grossWeight": 50000,
+        "emptyKgs": 1,
+        "netWeight": 49000,
+        "priceType": "P/KGs",
+        "divideType": "D/KGs",
+        "divideWeight": 1,
+        "coursePrice": 80,
+        "currencyType": "USD",
+        "purchaseCurrency": "PKR",
+        "exchangeRate": 4.45,
+        "totalAmount": 3920000,
+        "op": "*",
+        "finalAmount": 17444000
+      }
+    ],
+    "reports": [],
+    "workflow": {
+      "currentStep": "Booking Purchase Order",
+      "nextStep": "Booking Confirm",
+      "bookingStatus": "Saved",
+      "confirmationStatus": "Pending",
+      "journalStatus": "Pending",
+      "paymentStatus": "Pending",
+      "containerStatus": "Pending",
+      "inventoryStatus": "Pending",
+      "deliveryStatus": "Pending",
+      "savedAt": "2026-07-14T10:36:22.171Z"
+    },
+    "savedAt": "2026-07-14T10:36:22.171Z"
+  }
+}
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T10:37:14.420Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T10:43:22.732Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T17:33:02.744Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T17:33:02.750Z
+Params: limit=200
+
+[POST /api/erp/purchases/orders] Time: 2026-07-14T17:40:33.712Z
+Body: {
+  "countryId": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+  "countryBranchId": "87c2e253-b6c1-482d-a808-272337f3ffda",
+  "cityBranchId": "92355b3f-18c5-4fd4-9f63-64b2ec22e165",
+  "supplierCompanyId": "c1148e39-6aa9-4eb2-a165-0dd871f84587",
+  "purchaseOrderNo": "PO-2026-9313",
+  "purchaseContractNo": "PC-2026-9313",
+  "currencyCode": "USD",
+  "paymentCurrencyCode": "AED",
+  "exchangeRate": 287,
+  "orderTotal": 98441000,
+  "totalGoodsOriginal": 343000,
+  "totalGoodsLocal": 98441000,
+  "totalGoodsUsd": 343000,
+  "items": [
+    {
+      "goodsName": "ASMAT",
+      "hsCode": "00000",
+      "size": "Standard",
+      "brand": "Organic",
+      "origin": "United Arab Emirates",
+      "quantity": 1000,
+      "unitName": "BAGS",
+      "unitWeight": 1,
+      "grossWeight": 50000,
+      "netWeight": 49000,
+      "rateOriginal": 7,
+      "rateLocal": 2009,
+      "rateUsd": 7,
+      "totalOriginal": 343000,
+      "totalLocal": 98441000,
+      "totalUsd": 343000
+    }
+  ],
+  "paymentStatus": "pending",
+  "ledgerPostingStatus": "Pending",
+  "formData": {
+    "form": {
+      "countryId": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+      "countryBranchId": "87c2e253-b6c1-482d-a808-272337f3ffda",
+      "cityBranchId": "92355b3f-18c5-4fd4-9f63-64b2ec22e165",
+      "purchaseAccountNo": "UAE-DEI-AC-0001",
+      "purchaseAccountName": "purch dubai offceaccounts",
+      "purchaseAccountBranch": "ARE000",
+      "purchaseAccountCurrency": "AED",
+      "purchaseAccountKind": "income",
+      "purchaseAccountIsControl": false,
+      "purchaseAccountCurrentBalance": 0,
+      "purchaseAccountOpeningBalance": 0,
+      "purchaseAccountStatus": "active",
+      "purchaseAccountSerialNumber": 3,
+      "purchaseAccountCountrySerialNumber": "UAE-000001",
+      "purchaseAccountBranchSerialNumber": "UAE-DEI-000001",
+      "purchaseAccountManualReferenceNumber": "UC00001",
+      "purchaseAccountMobile": "0092826614073",
+      "purchaseAccountWhatsapp": "+923337764088",
+      "salesAccountNo": "UAE-DEI-AC-0002",
+      "salesAccountName": "khan",
+      "salesAccountBranch": "ARE000",
+      "salesAccountCurrency": "AED",
+      "salesAccountKind": "income",
+      "salesAccountIsControl": false,
+      "salesAccountCurrentBalance": 0,
+      "salesAccountOpeningBalance": 0,
+      "salesAccountStatus": "active",
+      "salesAccountSerialNumber": 4,
+      "salesAccountCountrySerialNumber": "UAE-000002",
+      "salesAccountBranchSerialNumber": "UAE-DEI-000002",
+      "salesAccountManualReferenceNumber": "UC0002",
+      "salesAccountMobile": "971 544816664",
+      "salesAccountWhatsapp": "",
+      "salesOrderNo": "SO-2026-9313",
+      "purchaseContractNo": "PC-2026-9313",
+      "purchaseOrderNo": "PO-2026-9313",
+      "billNo": "AL.RAS-9313",
+      "purchaseDate": "2026-07-14",
+      "currencyType": "USD",
+      "purchaseCurrency": "AED",
+      "exchangeRate": 287,
+      "branchName": "AL.RAS",
+      "branchCode": "ARE-0000-001",
+      "branchCity": "deira",
+      "branchCountry": "United Arab Emirates",
+      "userName": "ADMIN",
+      "userId": "USR-1001",
+      "paymentType": "Advance Payment",
+      "shipmentType": "By Ship",
+      "shippingMode": "By Sea",
+      "supplierId": "88601854-0289-45ed-96a8-ba5ee6b1a8d3",
+      "supplierName": "purch dubai offceaccounts",
+      "customerId": "44b9e2ff-de52-46e6-9a03-8cd453821677",
+      "customerName": "khan",
+      "salesStatus": "Draft",
+      "remarks": "",
+      "paymentReport": "",
+      "loadingReport": "",
+      "orderReportRemarks": "",
+      "purchaseReportRemarks": "",
+      "purchaseInvoiceRemarks": "",
+      "showRemarksOnA4": true,
+      "advancePercent": 25,
+      "advancePaymentDate": "2026-07-14",
+      "paymentDate": "2026-07-14",
+      "paymentDaysAndMethodDetails": "",
+      "loadingCountry": "China",
+      "loadingPort": "pot",
+      "loadingDate": "2026-07-15",
+      "receivedCountry": "United Arab Emirates",
+      "receivedPort": "JASND",
+      "receivedDate": "2026-07-25",
+      "loadingBorder": "",
+      "receivedBorder": "",
+      "airportName": "",
+      "receivedPortName": "",
+      "transportAgent": "",
+      "airlineName": "",
+      "receivedAgentName": "",
+      "containerCount": 1,
+      "containerSize": "40 FT Reefer",
+      "containerNumbers": "12",
+      "vesselName": "",
+      "sealNumber": "",
+      "goodsName": "",
+      "size": "",
+      "brand": "",
+      "origin": "China",
+      "hsCode": "",
+      "allotName": "ALT-4803",
+      "qtyName": "BAGS",
+      "qtyNo": 0,
+      "qtyKgs": 0,
+      "emptyKgs": 0,
+      "netWeight": "",
+      "divideType": "D/KGs",
+      "divideWeight": 1,
+      "priceType": "P/KGs",
+      "coursePrice": 0,
+      "secondaryCurrency": "AED",
+      "rate2": 280,
+      "operator": "*",
+      "qualityReport": "Passed",
+      "manualTotalAmount": "",
+      "manualFinalAmount": "",
+      "paymentCurrency": "AED",
+      "purchaseCompanyId": "c1148e39-6aa9-4eb2-a165-0dd871f84587",
+      "purchaseCompanyName": "DAMAAN GENERAL TRADING L L C",
+      "purchaseCompanyCode": "COM-DAM",
+      "salesCompanyId": "c1148e39-6aa9-4eb2-a165-0dd871f84587",
+      "salesCompanyName": "DAMAAN GENERAL TRADING L L C",
+      "salesCompanyCode": "COM-DAM",
+      "originCountry": "China",
+      "loadingLocation": "pot",
+      "receivingCountry": "United Arab Emirates",
+      "destinationCountry": "United Arab Emirates",
+      "receivingPort": "JASND",
+      "destinationPort": "JASND"
+    },
+    "totals": {
+      "totalGross": 50000,
+      "totalNet": 49000,
+      "grandFinal": 98441000,
+      "grandPrimaryFinal": 343000,
+      "totalQty": 1000,
+      "totalDeductions": 1000
+    },
+    "goodsEntries": [
+      {
+        "allotName": "ALT-7530",
+        "goodsName": "ASMAT",
+        "size": "Standard",
+        "brand": "Organic",
+        "origin": "United Arab Emirates",
+        "hsCode": "00000",
+        "qtyName": "BAGS",
+        "qtyNo": 1000,
+        "qtyKgs": 50,
+        "grossWeight": 50000,
+        "emptyKgs": 1,
+        "netWeight": 49000,
+        "priceType": "P/KGs",
+        "divideType": "D/KGs",
+        "divideWeight": 1,
+        "coursePrice": 7,
+        "currencyType": "USD",
+        "purchaseCurrency": "AED",
+        "exchangeRate": 287,
+        "totalAmount": 343000,
+        "op": "*",
+        "finalAmount": 98441000
+      }
+    ],
+    "reports": [],
+    "workflow": {
+      "currentStep": "Booking Purchase Order",
+      "nextStep": "Booking Confirm",
+      "bookingStatus": "Saved",
+      "confirmationStatus": "Pending",
+      "journalStatus": "Pending",
+      "paymentStatus": "Pending",
+      "containerStatus": "Pending",
+      "inventoryStatus": "Pending",
+      "deliveryStatus": "Pending",
+      "savedAt": "2026-07-14T17:40:31.340Z"
+    },
+    "savedAt": "2026-07-14T17:40:31.340Z"
+  }
+}
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T17:41:20.285Z
+Params: limit=200
+
+[POST /api/erp/purchases/orders] Time: 2026-07-14T17:44:40.613Z
+Body: {
+  "countryId": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+  "countryBranchId": "87c2e253-b6c1-482d-a808-272337f3ffda",
+  "cityBranchId": "92355b3f-18c5-4fd4-9f63-64b2ec22e165",
+  "supplierCompanyId": "c1148e39-6aa9-4eb2-a165-0dd871f84587",
+  "purchaseOrderNo": "PO-2026-6156",
+  "purchaseContractNo": "PC-2026-6156",
+  "currencyCode": "AFN",
+  "paymentCurrencyCode": "AED",
+  "exchangeRate": 4.45,
+  "orderTotal": 1526350,
+  "totalGoodsOriginal": 343000,
+  "totalGoodsLocal": 1526350,
+  "totalGoodsUsd": 343000,
+  "items": [
+    {
+      "goodsName": "ALMONDS",
+      "hsCode": "00000",
+      "size": "Medium",
+      "brand": "ORGANIC",
+      "origin": "Afghanistan",
+      "quantity": 1000,
+      "unitName": "BAGS",
+      "unitWeight": 1,
+      "grossWeight": 50000,
+      "netWeight": 49000,
+      "rateOriginal": 7,
+      "rateLocal": 31.150000000000002,
+      "rateUsd": 7,
+      "totalOriginal": 343000,
+      "totalLocal": 1526350,
+      "totalUsd": 343000
+    }
+  ],
+  "paymentStatus": "pending",
+  "ledgerPostingStatus": "Pending",
+  "formData": {
+    "form": {
+      "countryId": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+      "countryBranchId": "87c2e253-b6c1-482d-a808-272337f3ffda",
+      "cityBranchId": "92355b3f-18c5-4fd4-9f63-64b2ec22e165",
+      "purchaseAccountNo": "UAE-DEI-AC-0001",
+      "purchaseAccountName": "purch dubai offceaccounts",
+      "purchaseAccountBranch": "ARE000",
+      "purchaseAccountCurrency": "AED",
+      "purchaseAccountKind": "income",
+      "purchaseAccountIsControl": false,
+      "purchaseAccountCurrentBalance": 98441000,
+      "purchaseAccountOpeningBalance": 0,
+      "purchaseAccountStatus": "active",
+      "purchaseAccountSerialNumber": 3,
+      "purchaseAccountCountrySerialNumber": "UAE-000001",
+      "purchaseAccountBranchSerialNumber": "UAE-DEI-000001",
+      "purchaseAccountManualReferenceNumber": "UC00001",
+      "purchaseAccountMobile": "0092826614073",
+      "purchaseAccountWhatsapp": "+923337764088",
+      "salesAccountNo": "UAE-DEI-AC-0003",
+      "salesAccountName": "DUBAI OFFICE",
+      "salesAccountBranch": "ARE000",
+      "salesAccountCurrency": "AED",
+      "salesAccountKind": "income",
+      "salesAccountIsControl": false,
+      "salesAccountCurrentBalance": 0,
+      "salesAccountOpeningBalance": 0,
+      "salesAccountStatus": "active",
+      "salesAccountSerialNumber": 5,
+      "salesAccountCountrySerialNumber": "UAE-000003",
+      "salesAccountBranchSerialNumber": "UAE-DEI-000003",
+      "salesAccountManualReferenceNumber": "UC0003",
+      "salesAccountMobile": "+92 3337764088",
+      "salesAccountWhatsapp": "",
+      "salesOrderNo": "SO-2026-6156",
+      "purchaseContractNo": "PC-2026-6156",
+      "purchaseOrderNo": "PO-2026-6156",
+      "billNo": "AL.RAS-6156",
+      "purchaseDate": "2026-07-14",
+      "currencyType": "AFN",
+      "purchaseCurrency": "AFN",
+      "exchangeRate": 4.45,
+      "branchName": "AL.RAS",
+      "branchCode": "ARE-0000-001",
+      "branchCity": "deira",
+      "branchCountry": "United Arab Emirates",
+      "userName": "ADMIN",
+      "userId": "USR-1001",
+      "paymentType": "Advance Payment",
+      "shipmentType": "By Road",
+      "shippingMode": "By Road",
+      "supplierId": "88601854-0289-45ed-96a8-ba5ee6b1a8d3",
+      "supplierName": "purch dubai offceaccounts",
+      "customerId": "fc7afafd-ce96-4c02-80b1-a47c8d3651c0",
+      "customerName": "DUBAI OFFICE",
+      "salesStatus": "Draft",
+      "remarks": "",
+      "paymentReport": "",
+      "loadingReport": "",
+      "orderReportRemarks": "",
+      "purchaseReportRemarks": "",
+      "purchaseInvoiceRemarks": "",
+      "showRemarksOnA4": true,
+      "advancePercent": 30,
+      "advancePaymentDate": "2026-07-20",
+      "paymentDate": "2026-07-14",
+      "paymentDaysAndMethodDetails": "",
+      "loadingCountry": "Afghanistan",
+      "loadingPort": "CHAMAN",
+      "loadingDate": "2026-07-18",
+      "receivedCountry": "Pakistan",
+      "receivedPort": "CHAMAN",
+      "receivedDate": "2026-07-24",
+      "loadingBorder": "CHAMAN",
+      "receivedBorder": "",
+      "airportName": "",
+      "receivedPortName": "",
+      "transportAgent": "",
+      "airlineName": "",
+      "receivedAgentName": "",
+      "containerCount": 1,
+      "containerSize": "40 FT Reefer",
+      "containerNumbers": "6776",
+      "vesselName": "",
+      "sealNumber": "",
+      "goodsName": "",
+      "size": "",
+      "brand": "",
+      "origin": "Afghanistan",
+      "hsCode": "",
+      "allotName": "ALT-4811",
+      "qtyName": "BAGS",
+      "qtyNo": 0,
+      "qtyKgs": 0,
+      "emptyKgs": 0,
+      "netWeight": "",
+      "divideType": "D/KGs",
+      "divideWeight": 1,
+      "priceType": "P/KGs",
+      "coursePrice": 0,
+      "secondaryCurrency": "AED",
+      "rate2": 280,
+      "operator": "*",
+      "qualityReport": "Passed",
+      "manualTotalAmount": "",
+      "manualFinalAmount": "",
+      "paymentCurrency": "AED",
+      "purchaseCompanyId": "c1148e39-6aa9-4eb2-a165-0dd871f84587",
+      "purchaseCompanyName": "DAMAAN GENERAL TRADING L L C",
+      "purchaseCompanyCode": "COM-DAM",
+      "salesCompanyId": "c1148e39-6aa9-4eb2-a165-0dd871f84587",
+      "salesCompanyName": "DAMAAN GENERAL TRADING L L C",
+      "salesCompanyCode": "COM-DAM",
+      "originCountry": "Afghanistan",
+      "loadingLocation": "CHAMAN",
+      "receivingCountry": "Pakistan",
+      "destinationCountry": "Pakistan",
+      "receivingPort": "CHAMAN",
+      "destinationPort": "CHAMAN",
+      "receivingBorder": "CHAMAN"
+    },
+    "totals": {
+      "totalGross": 50000,
+      "totalNet": 49000,
+      "grandFinal": 1526350,
+      "grandPrimaryFinal": 343000,
+      "totalQty": 1000,
+      "totalDeductions": 1000
+    },
+    "goodsEntries": [
+      {
+        "allotName": "ALT",
+        "goodsName": "ALMONDS",
+        "size": "Medium",
+        "brand": "ORGANIC",
+        "origin": "Afghanistan",
+        "hsCode": "00000",
+        "qtyName": "BAGS",
+        "qtyNo": 1000,
+        "qtyKgs": 50,
+        "grossWeight": 50000,
+        "emptyKgs": 1,
+        "netWeight": 49000,
+        "priceType": "P/KGs",
+        "divideType": "D/KGs",
+        "divideWeight": 1,
+        "coursePrice": 7,
+        "currencyType": "AFN",
+        "purchaseCurrency": "AFN",
+        "exchangeRate": 4.45,
+        "totalAmount": 343000,
+        "op": "*",
+        "finalAmount": 1526350
+      }
+    ],
+    "reports": [],
+    "workflow": {
+      "currentStep": "Booking Purchase Order",
+      "nextStep": "Booking Confirm",
+      "bookingStatus": "Saved",
+      "confirmationStatus": "Pending",
+      "journalStatus": "Pending",
+      "paymentStatus": "Pending",
+      "containerStatus": "Pending",
+      "inventoryStatus": "Pending",
+      "deliveryStatus": "Pending",
+      "savedAt": "2026-07-14T17:44:39.566Z"
+    },
+    "savedAt": "2026-07-14T17:44:39.566Z"
+  }
+}
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T17:45:19.094Z
+Params: limit=200
+
+[POST /api/erp/purchases/orders] Time: 2026-07-14T17:49:33.257Z
+Body: {
+  "countryId": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+  "countryBranchId": "87c2e253-b6c1-482d-a808-272337f3ffda",
+  "cityBranchId": "92355b3f-18c5-4fd4-9f63-64b2ec22e165",
+  "supplierCompanyId": "c1148e39-6aa9-4eb2-a165-0dd871f84587",
+  "purchaseOrderNo": "PO-2026-8256",
+  "purchaseContractNo": "PC-2026-8256",
+  "currencyCode": "PKR",
+  "paymentCurrencyCode": "AED",
+  "exchangeRate": 78,
+  "orderTotal": 767692.3076923077,
+  "totalGoodsOriginal": 59880000,
+  "totalGoodsLocal": 767692.3076923077,
+  "totalGoodsUsd": 59880000,
+  "items": [
+    {
+      "goodsName": "HAZELNUTS",
+      "hsCode": "000",
+      "size": "Medium",
+      "brand": "ORGANIC",
+      "origin": "Pakistan",
+      "quantity": 1000,
+      "unitName": "CARTONS",
+      "unitWeight": 1,
+      "grossWeight": 50000,
+      "netWeight": 49900,
+      "rateOriginal": 1200,
+      "rateLocal": 93600,
+      "rateUsd": 1200,
+      "totalOriginal": 59880000,
+      "totalLocal": 767692.3076923077,
+      "totalUsd": 59880000
+    }
+  ],
+  "paymentStatus": "pending",
+  "ledgerPostingStatus": "Pending",
+  "formData": {
+    "form": {
+      "countryId": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+      "countryBranchId": "87c2e253-b6c1-482d-a808-272337f3ffda",
+      "cityBranchId": "92355b3f-18c5-4fd4-9f63-64b2ec22e165",
+      "purchaseAccountNo": "UAE-DEI-AC-0001",
+      "purchaseAccountName": "purch dubai offceaccounts",
+      "purchaseAccountBranch": "ARE000",
+      "purchaseAccountCurrency": "AED",
+      "purchaseAccountKind": "income",
+      "purchaseAccountIsControl": false,
+      "purchaseAccountCurrentBalance": 99967350,
+      "purchaseAccountOpeningBalance": 0,
+      "purchaseAccountStatus": "active",
+      "purchaseAccountSerialNumber": 3,
+      "purchaseAccountCountrySerialNumber": "UAE-000001",
+      "purchaseAccountBranchSerialNumber": "UAE-DEI-000001",
+      "purchaseAccountManualReferenceNumber": "UC00001",
+      "purchaseAccountMobile": "0092826614073",
+      "purchaseAccountWhatsapp": "+923337764088",
+      "salesAccountNo": "UAE-DEI-AC-0003",
+      "salesAccountName": "DUBAI OFFICE",
+      "salesAccountBranch": "ARE000",
+      "salesAccountCurrency": "AED",
+      "salesAccountKind": "income",
+      "salesAccountIsControl": false,
+      "salesAccountCurrentBalance": -1526350,
+      "salesAccountOpeningBalance": 0,
+      "salesAccountStatus": "active",
+      "salesAccountSerialNumber": 5,
+      "salesAccountCountrySerialNumber": "UAE-000003",
+      "salesAccountBranchSerialNumber": "UAE-DEI-000003",
+      "salesAccountManualReferenceNumber": "UC0003",
+      "salesAccountMobile": "+92 3337764088",
+      "salesAccountWhatsapp": "",
+      "salesOrderNo": "SO-2026-8256",
+      "purchaseContractNo": "PC-2026-8256",
+      "purchaseOrderNo": "PO-2026-8256",
+      "billNo": "AL.RAS-8256",
+      "purchaseDate": "2026-07-14",
+      "currencyType": "PKR",
+      "purchaseCurrency": "PKR",
+      "exchangeRate": 78,
+      "branchName": "AL.RAS",
+      "branchCode": "ARE-0000-001",
+      "branchCity": "deira",
+      "branchCountry": "United Arab Emirates",
+      "userName": "ADMIN",
+      "userId": "USR-1001",
+      "paymentType": "Advance Payment",
+      "shipmentType": "By Ship",
+      "shippingMode": "By Sea",
+      "supplierId": "88601854-0289-45ed-96a8-ba5ee6b1a8d3",
+      "supplierName": "purch dubai offceaccounts",
+      "customerId": "fc7afafd-ce96-4c02-80b1-a47c8d3651c0",
+      "customerName": "DUBAI OFFICE",
+      "salesStatus": "Draft",
+      "remarks": "jdmsnf nmdbfmvn,DSMFNBSD,MFBSN KSJMHJGOIRLGD,M ,MXSFJNHOISRJHSLB S,MBNSROILHJSRLMHBXCVM, BSFG.STMNB\nS;FGMSDFLKGBJSKLGHJSRT857Y698576JKGHTRW8S5U7698W45GNSBJIGHJERP08YUW4P;OBN SKLGHJ;RWIOEUTY0WLKSGFMHLKDRJHOEI4LYJHSM\nSFLKGHDJTLHDFJLKFGJHLKFDGJHLKDRTHJOIE45O9TYI",
+      "paymentReport": "XFLGKJSLK BMBNDTRHOIDLRTJKTHSLD, MBS,GJ,SDRLTJHD MBG,G MH.LDRKTJH VBM,DFGJHL.DTRK VMDFG,JHLDTRKH BDFGHJDTRLKHB MDFGNHMTDRLKHJKT GKFJBNLFKGJHLKDGNFMDFMG,DFLKGMGFFJ,MFDDFGNGD,FMNMFD,",
+      "loadingReport": "MDNF, MZDFNM NZMFMB,KJSDNZMBHNSIUU5YTWP89457FBDNM KJSDFBHAREIOBJHGNSLDFNBSDFMNBKAJSNGKA,DSV  Z,DSFBJAOITRJZDM Z,.DMBNA.ERKLNGLA.B MB Z.JBNS;ROIRTHJBZDF BNX.,ZMDFBNSDKLBGHJNSRE;IOGHJAI;SOLH",
+      "orderReportRemarks": "",
+      "purchaseReportRemarks": "",
+      "purchaseInvoiceRemarks": "",
+      "showRemarksOnA4": true,
+      "advancePercent": 30,
+      "advancePaymentDate": "2026-07-31",
+      "paymentDate": "2026-08-08",
+      "paymentDaysAndMethodDetails": "",
+      "loadingCountry": "Pakistan",
+      "loadingPort": "CHAMAN",
+      "loadingDate": "2026-07-17",
+      "receivedCountry": "United Arab Emirates",
+      "receivedPort": "JASND",
+      "receivedDate": "2026-07-31",
+      "loadingBorder": "",
+      "receivedBorder": "",
+      "airportName": "",
+      "receivedPortName": "",
+      "transportAgent": "",
+      "airlineName": "",
+      "receivedAgentName": "",
+      "containerCount": 1,
+      "containerSize": "40 FT",
+      "containerNumbers": "2",
+      "vesselName": "",
+      "sealNumber": "",
+      "goodsName": "",
+      "size": "",
+      "brand": "",
+      "origin": "Pakistan",
+      "hsCode": "",
+      "allotName": "ALT-4962",
+      "qtyName": "CARTONS",
+      "qtyNo": 0,
+      "qtyKgs": 0,
+      "emptyKgs": 0,
+      "netWeight": "",
+      "divideType": "D/KGs",
+      "divideWeight": 1,
+      "priceType": "P/KGs",
+      "coursePrice": 0,
+      "secondaryCurrency": "AED",
+      "rate2": 280,
+      "operator": "/",
+      "qualityReport": "Passed",
+      "manualTotalAmount": "",
+      "manualFinalAmount": "",
+      "paymentCurrency": "AED",
+      "purchaseCompanyId": "c1148e39-6aa9-4eb2-a165-0dd871f84587",
+      "purchaseCompanyName": "DAMAAN GENERAL TRADING L L C",
+      "purchaseCompanyCode": "COM-DAM",
+      "salesCompanyId": "c1148e39-6aa9-4eb2-a165-0dd871f84587",
+      "salesCompanyName": "DAMAAN GENERAL TRADING L L C",
+      "salesCompanyCode": "COM-DAM",
+      "originCountry": "Pakistan",
+      "loadingLocation": "CHAMAN",
+      "receivingCountry": "United Arab Emirates",
+      "destinationCountry": "United Arab Emirates",
+      "receivingPort": "JASND",
+      "destinationPort": "JASND"
+    },
+    "totals": {
+      "totalGross": 50000,
+      "totalNet": 49900,
+      "grandFinal": 767692.3076923077,
+      "grandPrimaryFinal": 59880000,
+      "totalQty": 1000,
+      "totalDeductions": 100
+    },
+    "goodsEntries": [
+      {
+        "allotName": "ALIT",
+        "goodsName": "HAZELNUTS",
+        "size": "Medium",
+        "brand": "ORGANIC",
+        "origin": "Pakistan",
+        "hsCode": "000",
+        "qtyName": "CARTONS",
+        "qtyNo": 1000,
+        "qtyKgs": 50,
+        "grossWeight": 50000,
+        "emptyKgs": 0.1,
+        "netWeight": 49900,
+        "priceType": "P/KGs",
+        "divideType": "D/KGs",
+        "divideWeight": 1,
+        "coursePrice": 1200,
+        "currencyType": "PKR",
+        "purchaseCurrency": "PKR",
+        "exchangeRate": 78,
+        "totalAmount": 59880000,
+        "op": "/",
+        "finalAmount": 767692.3076923077
+      }
+    ],
+    "reports": [],
+    "workflow": {
+      "currentStep": "Booking Purchase Order",
+      "nextStep": "Booking Confirm",
+      "bookingStatus": "Saved",
+      "confirmationStatus": "Pending",
+      "journalStatus": "Pending",
+      "paymentStatus": "Pending",
+      "containerStatus": "Pending",
+      "inventoryStatus": "Pending",
+      "deliveryStatus": "Pending",
+      "savedAt": "2026-07-14T17:49:31.984Z"
+    },
+    "savedAt": "2026-07-14T17:49:31.984Z"
+  }
+}
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T17:50:10.391Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-14T17:53:22.938Z
+Message: Click Payment Entry. row.id: d2b5435a-a0f7-4be9-a743-29f72b5dc345
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T17:54:10.334Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-14T17:54:26.555Z
+Message: Click Show Payment History. row.id: d2b5435a-a0f7-4be9-a743-29f72b5dc345
+
+[CLIENT LOG] Time: 2026-07-14T17:55:35.400Z
+Message: Click Payment Entry. row.id: d2b5435a-a0f7-4be9-a743-29f72b5dc345
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T17:57:54.473Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-14T17:58:06.714Z
+Message: Click Show Payment History. row.id: d2b5435a-a0f7-4be9-a743-29f72b5dc345
+
+[CLIENT LOG] Time: 2026-07-14T17:58:20.592Z
+Message: Click Show Payment History. row.id: d2b5435a-a0f7-4be9-a743-29f72b5dc345
+
+[CLIENT LOG] Time: 2026-07-14T18:00:42.289Z
+Message: Click Payment Entry. row.id: d2b5435a-a0f7-4be9-a743-29f72b5dc345
+
+[GET /api/erp/purchases/orders] Time: 2026-07-14T18:11:56.655Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-14T18:12:12.704Z
+Message: Click Show Payment History. row.id: d2b5435a-a0f7-4be9-a743-29f72b5dc345
+
+[CLIENT LOG] Time: 2026-07-14T18:12:38.339Z
+Message: Click Payment Entry. row.id: d2b5435a-a0f7-4be9-a743-29f72b5dc345
+
+[CLIENT LOG] Time: 2026-07-14T18:20:00.466Z
+Message: Click Show Payment History. row.id: d2b5435a-a0f7-4be9-a743-29f72b5dc345
+
+[GET /api/erp/purchases/orders] Time: 2026-07-16T20:35:40.404Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-16T20:35:47.249Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-16T20:36:04.297Z
+Message: Click Payment Entry. row.id: 4180f9c5-d711-4715-a133-f1c1efdcb035
+
+[CLIENT LOG] Time: 2026-07-16T20:36:16.666Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[CLIENT LOG] Time: 2026-07-16T20:36:45.517Z
+Message: Click Payment Entry. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[CLIENT LOG] Time: 2026-07-16T20:39:49.616Z
+Message: Click Payment Entry. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[CLIENT LOG] Time: 2026-07-16T20:39:52.250Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[CLIENT LOG] Time: 2026-07-16T20:39:55.920Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[CLIENT LOG] Time: 2026-07-16T20:40:00.859Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[CLIENT LOG] Time: 2026-07-16T20:40:05.431Z
+Message: Click Show Payment History. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[CLIENT LOG] Time: 2026-07-16T20:40:20.811Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[CLIENT LOG] Time: 2026-07-16T20:41:08.692Z
+Message: Click Show Payment History. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[GET /api/erp/purchases/orders] Time: 2026-07-16T21:15:00.614Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-16T21:15:04.060Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-16T21:15:15.140Z
+Message: Click Show Payment History. row.id: 4180f9c5-d711-4715-a133-f1c1efdcb035
+
+[GET /api/erp/purchases/orders] Time: 2026-07-16T21:19:38.136Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-16T21:19:39.021Z
+Message: Click Show Payment History. row.id: 4180f9c5-d711-4715-a133-f1c1efdcb035
+
+[CLIENT LOG] Time: 2026-07-16T21:19:53.286Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[CLIENT LOG] Time: 2026-07-16T21:20:09.620Z
+Message: Click Show Payment History. row.id: 4180f9c5-d711-4715-a133-f1c1efdcb035
+
+[CLIENT LOG] Time: 2026-07-16T21:20:14.807Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[GET /api/erp/purchases/orders] Time: 2026-07-16T21:22:50.948Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-16T21:23:12.508Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[GET /api/erp/purchases/orders] Time: 2026-07-16T21:23:48.611Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-16T21:27:32.263Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[GET /api/erp/purchases/orders] Time: 2026-07-16T21:29:56.480Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T06:18:56.790Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T06:30:39.175Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T06:30:39.178Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-17T06:30:57.388Z
+Message: Click Show Payment History. row.id: 4180f9c5-d711-4715-a133-f1c1efdcb035
+
+[CLIENT LOG] Time: 2026-07-17T06:31:07.913Z
+Message: Click Show Payment History. row.id: 4180f9c5-d711-4715-a133-f1c1efdcb035
+
+[CLIENT LOG] Time: 2026-07-17T06:53:32.843Z
+Message: Click Show Payment History. row.id: 4180f9c5-d711-4715-a133-f1c1efdcb035
+
+[CLIENT LOG] Time: 2026-07-17T06:53:49.568Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[CLIENT LOG] Time: 2026-07-17T06:53:51.909Z
+Message: Click Show Payment History. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T07:32:14.761Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T07:32:14.786Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-17T07:32:26.812Z
+Message: Click Show Payment History. row.id: 4180f9c5-d711-4715-a133-f1c1efdcb035
+
+[CLIENT LOG] Time: 2026-07-17T07:32:42.381Z
+Message: Click Show Payment History. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[CLIENT LOG] Time: 2026-07-17T07:32:44.705Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[CLIENT LOG] Time: 2026-07-17T07:33:19.101Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T11:02:27.277Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-17T11:06:51.300Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T13:28:50.801Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-17T13:36:46.827Z
+Message: Click Show Payment History. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T13:39:06.867Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T13:43:37.921Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-17T13:43:41.852Z
+Message: Click Show Payment History. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T13:45:16.380Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-17T13:45:33.541Z
+Message: Click Payment Entry. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[CLIENT LOG] Time: 2026-07-17T13:55:52.431Z
+Message: Click Payment Entry. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[CLIENT LOG] Time: 2026-07-17T13:55:59.235Z
+Message: Click Payment Entry. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[CLIENT LOG] Time: 2026-07-17T14:02:37.765Z
+Message: Click Payment Entry. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[CLIENT LOG] Time: 2026-07-17T14:02:37.768Z
+Message: Click Payment Entry. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[CLIENT LOG] Time: 2026-07-17T14:02:55.100Z
+Message: Click Show Payment History. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[CLIENT LOG] Time: 2026-07-17T14:02:55.697Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[CLIENT LOG] Time: 2026-07-17T14:03:56.861Z
+Message: Click Payment Entry. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[CLIENT LOG] Time: 2026-07-17T14:05:45.404Z
+Message: Click Payment Entry. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[CLIENT LOG] Time: 2026-07-17T14:06:51.971Z
+Message: Click Show Payment History. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[CLIENT LOG] Time: 2026-07-17T14:14:58.365Z
+Message: Click Payment Entry. row.id: 4180f9c5-d711-4715-a133-f1c1efdcb035
+
+[CLIENT LOG] Time: 2026-07-17T14:19:09.397Z
+Message: Click Payment Entry. row.id: 4180f9c5-d711-4715-a133-f1c1efdcb035
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T14:20:55.562Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T14:21:01.447Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-17T14:21:20.942Z
+Message: Click Payment Entry. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T15:51:16.276Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T15:52:27.141Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-17T15:53:14.422Z
+Message: Click Show Payment History. row.id: 4180f9c5-d711-4715-a133-f1c1efdcb035
+
+[CLIENT LOG] Time: 2026-07-17T15:53:47.817Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[CLIENT LOG] Time: 2026-07-17T15:54:26.446Z
+Message: Click Show Payment History. row.id: 4180f9c5-d711-4715-a133-f1c1efdcb035
+
+[CLIENT LOG] Time: 2026-07-17T15:55:14.512Z
+Message: Click Payment Entry. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[CLIENT LOG] Time: 2026-07-17T15:57:46.927Z
+Message: Click Payment Entry. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[CLIENT LOG] Time: 2026-07-17T17:07:53.807Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[CLIENT LOG] Time: 2026-07-17T17:08:31.351Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[CLIENT LOG] Time: 2026-07-17T17:08:45.346Z
+Message: Click Show Payment History. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[CLIENT LOG] Time: 2026-07-17T17:08:51.834Z
+Message: Click Show Payment History. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T18:00:53.624Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-17T18:01:02.596Z
+Message: Click Show Payment History. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T18:03:22.855Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-17T18:03:34.985Z
+Message: Click Show Payment History. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[CLIENT LOG] Time: 2026-07-17T18:03:53.330Z
+Message: Click Payment Entry. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T18:25:16.132Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-17T18:25:52.758Z
+Message: Click Show Payment History. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[CLIENT LOG] Time: 2026-07-17T18:26:27.820Z
+Message: Click Show Payment History. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[CLIENT LOG] Time: 2026-07-17T18:26:34.214Z
+Message: Click Show Payment History. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T18:44:36.149Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-17T18:44:55.011Z
+Message: Click Show Payment History. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[CLIENT LOG] Time: 2026-07-17T18:45:15.264Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T18:54:07.232Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-17T18:54:21.835Z
+Message: Click Show Payment History. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[CLIENT LOG] Time: 2026-07-17T20:02:14.039Z
+Message: Click Show Payment History. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[CLIENT LOG] Time: 2026-07-17T20:02:25.044Z
+Message: Click Show Payment History. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[CLIENT LOG] Time: 2026-07-17T20:02:25.778Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T20:46:44.774Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-17T20:47:14.572Z
+Message: Click Show Payment History. row.id: 4180f9c5-d711-4715-a133-f1c1efdcb035
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T20:56:15.352Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T21:06:46.584Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T21:07:16.984Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T21:07:20.001Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-17T21:10:50.923Z
+Message: Click Show Payment History. row.id: 4180f9c5-d711-4715-a133-f1c1efdcb035
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T21:12:19.910Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-17T21:12:43.643Z
+Message: Click Payment Entry. row.id: 4180f9c5-d711-4715-a133-f1c1efdcb035
+
+[CLIENT LOG] Time: 2026-07-17T21:13:00.265Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T21:16:42.969Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T21:27:04.603Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-17T21:27:18.397Z
+Message: Click Show Payment History. row.id: 4180f9c5-d711-4715-a133-f1c1efdcb035
+
+[CLIENT LOG] Time: 2026-07-17T21:27:26.705Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[CLIENT LOG] Time: 2026-07-17T21:27:44.259Z
+Message: Click Payment Entry. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[CLIENT LOG] Time: 2026-07-17T21:32:35.353Z
+Message: Click Payment Entry. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T21:50:10.311Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-17T22:00:12.500Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-17T22:00:54.417Z
+Message: Click Show Payment History. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[GET /api/erp/purchases/orders] Time: 2026-07-18T21:01:06.146Z
+Params: limit=5
+
+[GET /api/erp/purchases/orders] Time: 2026-07-18T21:01:06.440Z
+Params: limit=5
+
+[GET /api/erp/purchases/orders] Time: 2026-07-19T15:34:36.641Z
+Params: limit=300
+
+[POST /api/erp/purchases/orders] Time: 2026-07-20T13:51:57.130Z
+Body: {
+  "countryId": "fb021716-a2e7-4141-9c1a-bd1ddd92eb14",
+  "countryBranchId": "5269c1cb-92a1-4aa8-aad8-d4c7260badaa",
+  "cityBranchId": "28298258-a0b2-47f8-bad4-43ad5e9e7da4",
+  "supplierCompanyId": null,
+  "purchaseOrderNo": "PO-2026-8944",
+  "purchaseContractNo": "PC-2026-8944",
+  "currencyCode": "USD",
+  "paymentCurrencyCode": "PKR",
+  "exchangeRate": 1,
+  "orderTotal": 0,
+  "totalGoodsOriginal": 0,
+  "totalGoodsLocal": 0,
+  "totalGoodsUsd": 0,
+  "items": [],
+  "paymentStatus": "pending",
+  "ledgerPostingStatus": "Pending",
+  "formData": {
+    "form": {
+      "countryId": "fb021716-a2e7-4141-9c1a-bd1ddd92eb14",
+      "countryBranchId": "5269c1cb-92a1-4aa8-aad8-d4c7260badaa",
+      "cityBranchId": "28298258-a0b2-47f8-bad4-43ad5e9e7da4",
+      "purchaseAccountNo": "",
+      "purchaseAccountName": "",
+      "purchaseAccountBranch": "",
+      "purchaseAccountCurrency": "PKR",
+      "purchaseAccountKind": "",
+      "purchaseAccountIsControl": false,
+      "purchaseAccountCurrentBalance": 0,
+      "purchaseAccountOpeningBalance": 0,
+      "purchaseAccountStatus": "active",
+      "purchaseAccountSerialNumber": "",
+      "purchaseAccountCountrySerialNumber": "",
+      "purchaseAccountBranchSerialNumber": "",
+      "purchaseAccountManualReferenceNumber": "",
+      "purchaseAccountMobile": "",
+      "purchaseAccountWhatsapp": "",
+      "salesAccountNo": "",
+      "salesAccountName": "",
+      "salesAccountBranch": "",
+      "salesAccountCurrency": "PKR",
+      "salesAccountKind": "",
+      "salesAccountIsControl": false,
+      "salesAccountCurrentBalance": 0,
+      "salesAccountOpeningBalance": 0,
+      "salesAccountStatus": "active",
+      "salesAccountSerialNumber": "",
+      "salesAccountCountrySerialNumber": "",
+      "salesAccountBranchSerialNumber": "",
+      "salesAccountManualReferenceNumber": "",
+      "salesAccountMobile": "",
+      "salesAccountWhatsapp": "",
+      "salesOrderNo": "SO-2026-8944",
+      "purchaseContractNo": "PC-2026-8944",
+      "purchaseOrderNo": "PO-2026-8944",
+      "billNo": "CHAMAN-8944",
+      "purchaseDate": "2026-07-20",
+      "currencyType": "USD",
+      "purchaseCurrency": "PKR",
+      "exchangeRate": 1,
+      "branchName": "Chaman City Branch",
+      "branchCode": "PAK-1181-001",
+      "branchCity": "Chaman",
+      "branchCountry": "Pakistan",
+      "userName": "ADMIN",
+      "userId": "USR-1001",
+      "paymentType": "Advance Payment",
+      "shipmentType": "By Ship",
+      "shippingMode": "By Sea",
+      "supplierId": "",
+      "supplierName": "",
+      "customerId": "",
+      "customerName": "",
+      "salesStatus": "Draft",
+      "remarks": "",
+      "paymentReport": "",
+      "loadingReport": "",
+      "orderReportRemarks": "",
+      "purchaseReportRemarks": "",
+      "purchaseInvoiceRemarks": "",
+      "showRemarksOnA4": true,
+      "advancePercent": 10,
+      "advancePaymentDate": "2026-07-20",
+      "paymentDate": "2026-07-20",
+      "paymentDaysAndMethodDetails": "",
+      "loadingCountry": "",
+      "loadingPort": "",
+      "loadingDate": "",
+      "receivedCountry": "",
+      "receivedPort": "",
+      "receivedDate": "",
+      "loadingBorder": "",
+      "receivedBorder": "",
+      "airportName": "",
+      "receivedPortName": "",
+      "transportAgent": "",
+      "airlineName": "",
+      "receivedAgentName": "",
+      "containerCount": 1,
+      "containerSize": "40 FT",
+      "containerNumbers": "",
+      "vesselName": "",
+      "sealNumber": "",
+      "goodsName": "",
+      "size": "",
+      "brand": "",
+      "origin": "",
+      "hsCode": "",
+      "allotName": "",
+      "qtyName": "BAGS",
+      "qtyNo": 100,
+      "qtyKgs": 50,
+      "emptyKgs": 0.1,
+      "netWeight": 4990,
+      "divideType": "D/KGs",
+      "divideWeight": 1,
+      "priceType": "P/KGs",
+      "coursePrice": 12.5,
+      "secondaryCurrency": "PKR",
+      "rate2": 280,
+      "operator": "*",
+      "qualityReport": "Passed",
+      "paymentCurrency": "PKR"
+    },
+    "totals": {
+      "totalGross": 0,
+      "totalNet": 0,
+      "grandFinal": 0,
+      "grandPrimaryFinal": 0,
+      "totalQty": 0,
+      "totalDeductions": 0
+    },
+    "goodsEntries": [],
+    "reports": [],
+    "workflow": {
+      "currentStep": "Booking Purchase Order",
+      "nextStep": "Booking Confirm",
+      "bookingStatus": "Saved",
+      "confirmationStatus": "Pending",
+      "journalStatus": "Pending",
+      "paymentStatus": "Pending",
+      "containerStatus": "Pending",
+      "inventoryStatus": "Pending",
+      "deliveryStatus": "Pending",
+      "savedAt": "2026-07-20T13:51:56.055Z"
+    },
+    "savedAt": "2026-07-20T13:51:56.055Z"
+  }
+}
+
+[GET /api/erp/purchases/orders] Time: 2026-07-20T21:33:04.530Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-20T21:33:19.528Z
+Message: Click Payment Entry. row.id: d2b5435a-a0f7-4be9-a743-29f72b5dc345
+
+[GET /api/erp/purchases/orders] Time: 2026-07-21T10:07:56.304Z
+Params: limit=300
+
+[GET /api/erp/purchases/orders] Time: 2026-07-21T10:07:56.308Z
+Params: limit=300
+
+[GET /api/erp/purchases/orders] Time: 2026-07-21T10:10:22.236Z
+Params: limit=300
+
+[GET /api/erp/purchases/orders] Time: 2026-07-21T10:10:22.781Z
+Params: limit=300
+
+[GET /api/erp/purchases/orders] Time: 2026-07-21T10:10:23.086Z
+Params: limit=300
+
+[GET /api/erp/purchases/orders] Time: 2026-07-21T15:03:40.009Z
+Params: limit=300
+
+[GET /api/erp/purchases/orders] Time: 2026-07-21T15:41:45.791Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-21T16:25:16.349Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-21T16:32:10.603Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-21T17:39:46.731Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-21T19:06:54.278Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-21T19:06:54.288Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-21T19:07:27.590Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-21T19:20:31.102Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-21T19:29:05.130Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-21T19:57:57.816Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-21T19:57:57.820Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-21T19:59:07.604Z
+Message: Click Payment Entry. row.id: d2b5435a-a0f7-4be9-a743-29f72b5dc345
+
+[CLIENT LOG] Time: 2026-07-21T20:00:00.316Z
+Message: Click Payment Entry. row.id: d2b5435a-a0f7-4be9-a743-29f72b5dc345
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T08:21:01.006Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T08:21:01.009Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-22T08:21:36.681Z
+Message: Click Payment Entry. row.id: d2b5435a-a0f7-4be9-a743-29f72b5dc345
+
+[CLIENT LOG] Time: 2026-07-22T08:26:39.777Z
+Message: Click Show Payment History. row.id: d2b5435a-a0f7-4be9-a743-29f72b5dc345
+
+[CLIENT LOG] Time: 2026-07-22T08:26:53.596Z
+Message: Click Payment Entry. row.id: d2b5435a-a0f7-4be9-a743-29f72b5dc345
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T08:27:32.757Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-22T08:31:04.841Z
+Message: Click Payment Entry. row.id: d2b5435a-a0f7-4be9-a743-29f72b5dc345
+
+[CLIENT LOG] Time: 2026-07-22T09:07:37.076Z
+Message: Click Payment Entry. row.id: d2b5435a-a0f7-4be9-a743-29f72b5dc345
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T09:41:15.973Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T09:52:45.010Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T09:52:46.762Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-22T09:54:39.515Z
+Message: Click Payment Entry. row.id: d2b5435a-a0f7-4be9-a743-29f72b5dc345
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T09:57:15.210Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T09:57:15.235Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-22T09:57:22.899Z
+Message: Click Payment Entry. row.id: 234ea776-1a18-4ae5-ac41-cea4dcefa37b
+
+[CLIENT LOG] Time: 2026-07-22T09:58:30.324Z
+Message: Click Payment Entry. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T10:00:33.010Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-22T10:18:05.406Z
+Message: Click Payment Entry. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T10:25:30.384Z
+Params: limit=500
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T10:25:30.388Z
+Params: limit=500
+
+[CLIENT LOG] Time: 2026-07-22T10:27:27.561Z
+Message: Click Payment Entry. row.id: d2b5435a-a0f7-4be9-a743-29f72b5dc345
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T10:28:03.421Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T10:28:03.423Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T10:35:13.583Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-22T10:48:54.710Z
+Message: Click Payment Entry. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[CLIENT LOG] Time: 2026-07-22T10:50:09.294Z
+Message: Click Payment Entry. row.id: d2b5435a-a0f7-4be9-a743-29f72b5dc345
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T10:54:48.303Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T11:18:51.472Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T12:00:16.581Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-22T12:01:11.255Z
+Message: Click Payment Entry. row.id: cc1607f9-623d-4884-b174-e85c09d204c6
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T12:08:40.703Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T12:08:40.711Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T12:11:26.415Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T12:11:26.424Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T12:15:52.770Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T12:19:14.201Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T12:21:11.767Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T12:27:49.883Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T12:27:49.905Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T13:33:22.661Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T13:34:03.073Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T13:37:54.723Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T13:37:54.728Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-22T13:47:06.937Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T07:16:55.670Z
+Params: limit=500
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T07:16:55.672Z
+Params: limit=500
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T07:25:48.194Z
+Params: limit=500
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T07:25:48.961Z
+Params: limit=500
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T07:28:52.321Z
+Params: limit=500
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T07:28:54.091Z
+Params: limit=500
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T07:44:53.278Z
+Params: limit=500
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T07:50:35.587Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T08:12:50.965Z
+Params: limit=500
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T08:13:10.243Z
+Params: limit=300
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T08:13:13.119Z
+Params: limit=300
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T08:14:24.134Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T08:17:18.519Z
+Params: limit=300
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T08:17:33.531Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T08:20:08.355Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T08:23:09.212Z
+Params: limit=300
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T08:24:02.884Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T08:27:39.552Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T09:27:11.304Z
+Params: limit=300
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T09:29:20.910Z
+Params: limit=300
+
+[POST /api/erp/purchases/orders] Time: 2026-07-23T10:52:07.675Z
+Body: {
+  "countryId": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+  "countryBranchId": "87c2e253-b6c1-482d-a808-272337f3ffda",
+  "cityBranchId": "92355b3f-18c5-4fd4-9f63-64b2ec22e165",
+  "supplierCompanyId": "835f7b17-29cd-4663-baf2-9f840cfcabfc",
+  "purchaseOrderNo": "PO-2026-5965",
+  "purchaseContractNo": "PC-2026-5965",
+  "currencyCode": "USD",
+  "paymentCurrencyCode": "USD",
+  "exchangeRate": 3.765,
+  "orderTotal": 4894500,
+  "totalGoodsOriginal": 1300000,
+  "totalGoodsLocal": 4894500,
+  "totalGoodsUsd": 1300000,
+  "items": [
+    {
+      "goodsName": "CASHEW NUTS (W320)",
+      "hsCode": "-",
+      "size": "Medium",
+      "brand": "Organic",
+      "origin": "India",
+      "quantity": 10000,
+      "unitName": "CARTONS",
+      "unitWeight": 1,
+      "grossWeight": 210000,
+      "netWeight": 200000,
+      "rateOriginal": 6.5,
+      "rateLocal": 24.4725,
+      "rateUsd": 6.5,
+      "totalOriginal": 1300000,
+      "totalLocal": 4894500,
+      "totalUsd": 1300000
+    }
+  ],
+  "paymentStatus": "pending",
+  "ledgerPostingStatus": "Pending",
+  "formData": {
+    "form": {
+      "countryId": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+      "countryBranchId": "87c2e253-b6c1-482d-a808-272337f3ffda",
+      "cityBranchId": "92355b3f-18c5-4fd4-9f63-64b2ec22e165",
+      "purchaseAccountNo": "UAE-DEI-AC-0001",
+      "purchaseAccountName": "PURCHASE SALES ACCOUNTS",
+      "purchaseAccountBranch": "ARE000",
+      "purchaseAccountCurrency": "AED",
+      "purchaseAccountKind": "income",
+      "purchaseAccountIsControl": false,
+      "purchaseAccountCurrentBalance": 0,
+      "purchaseAccountOpeningBalance": 0,
+      "purchaseAccountStatus": "active",
+      "purchaseAccountSerialNumber": 1,
+      "purchaseAccountCountrySerialNumber": "UAE-000001",
+      "purchaseAccountBranchSerialNumber": "UAE-DEI-000001",
+      "purchaseAccountManualReferenceNumber": "UC00001",
+      "purchaseAccountMobile": "971 544816664",
+      "purchaseAccountWhatsapp": "",
+      "salesAccountNo": "UAE-DEI-AC-0002",
+      "salesAccountName": "NAJEEB ULLAH DUBAI  ACCOUNT'S",
+      "salesAccountBranch": "ARE000",
+      "salesAccountCurrency": "AED",
+      "salesAccountKind": "income",
+      "salesAccountIsControl": false,
+      "salesAccountCurrentBalance": 0,
+      "salesAccountOpeningBalance": 0,
+      "salesAccountStatus": "active",
+      "salesAccountSerialNumber": 2,
+      "salesAccountCountrySerialNumber": "UAE-000002",
+      "salesAccountBranchSerialNumber": "UAE-DEI-000002",
+      "salesAccountManualReferenceNumber": "UC00002",
+      "salesAccountMobile": "92 3337764088",
+      "salesAccountWhatsapp": "",
+      "salesOrderNo": "SO-2026-5965",
+      "purchaseContractNo": "PC-2026-5965",
+      "purchaseOrderNo": "PO-2026-5965",
+      "billNo": "AL.RAS-5965",
+      "purchaseDate": "2026-07-23",
+      "currencyType": "USD",
+      "purchaseCurrency": "AED",
+      "exchangeRate": 3.765,
+      "branchName": "AL.RAS",
+      "branchCode": "ARE-0000-001",
+      "branchCity": "deira",
+      "branchCountry": "United Arab Emirates",
+      "userName": "ADMIN",
+      "userId": "USR-1001",
+      "paymentType": "Advance Payment",
+      "shipmentType": "By Ship",
+      "shippingMode": "By Sea",
+      "supplierId": "44b9e2ff-de52-46e6-9a03-8cd453821677",
+      "supplierName": "PURCHASE SALES ACCOUNTS",
+      "customerId": "0d9d2564-63a1-4c6d-b59e-9c6bdd600571",
+      "customerName": "NAJEEB ULLAH DUBAI  ACCOUNT'S",
+      "salesStatus": "Draft",
+      "remarks": "asmatullah and company GHSTRNV BFXBSGH FXSNXSHXF  SGHSRTHSHTSRTH",
+      "paymentReport": "ASFDASGFASFASDSFDASFDAFDASD\n\n\n\nDFGGGGGGGGGH",
+      "loadingReport": "DFGHDFGHDFGHFDGHFGXVBSFTHSRT",
+      "orderReportRemarks": "",
+      "purchaseReportRemarks": "",
+      "purchaseInvoiceRemarks": "",
+      "showRemarksOnA4": true,
+      "advancePercent": 20,
+      "advancePaymentDate": "2026-07-23",
+      "paymentDate": "2026-07-23",
+      "paymentDaysAndMethodDetails": "",
+      "loadingCountry": "India",
+      "loadingPort": "12POT",
+      "loadingDate": "2026-07-25",
+      "receivedCountry": "United Arab Emirates",
+      "receivedPort": "JASND",
+      "receivedDate": "2026-08-08",
+      "loadingBorder": "",
+      "receivedBorder": "",
+      "airportName": "",
+      "receivedPortName": "",
+      "transportAgent": "",
+      "airlineName": "",
+      "receivedAgentName": "",
+      "containerCount": 1,
+      "containerSize": "40 FT Reefer",
+      "containerNumbers": "10",
+      "vesselName": "",
+      "sealNumber": "",
+      "goodsName": "",
+      "size": "",
+      "brand": "",
+      "origin": "India",
+      "hsCode": "",
+      "allotName": "ALT-5186",
+      "qtyName": "CARTONS",
+      "qtyNo": 0,
+      "qtyKgs": 0,
+      "emptyKgs": 0,
+      "netWeight": "",
+      "divideType": "D/KGs",
+      "divideWeight": 1,
+      "priceType": "P/KGs",
+      "coursePrice": 0,
+      "secondaryCurrency": "USD",
+      "rate2": 280,
+      "operator": "*",
+      "qualityReport": "Passed",
+      "salesAccountLedgerId": "0d9d2564-63a1-4c6d-b59e-9c6bdd600571",
+      "salesCompanyId": "835f7b17-29cd-4663-baf2-9f840cfcabfc",
+      "salesCompanyName": "DAMAAN Trading Company LLC",
+      "salesCompanyCode": "COM-DAM",
+      "purchaseAccountLedgerId": "44b9e2ff-de52-46e6-9a03-8cd453821677",
+      "purchaseCompanyId": "835f7b17-29cd-4663-baf2-9f840cfcabfc",
+      "purchaseCompanyName": "DAMAAN Trading Company LLC",
+      "purchaseCompanyCode": "COM-DAM",
+      "manualTotalAmount": "",
+      "manualFinalAmount": "",
+      "originCountry": "India",
+      "loadingLocation": "12POT",
+      "receivingCountry": "United Arab Emirates",
+      "destinationCountry": "United Arab Emirates",
+      "receivingPort": "JASND",
+      "destinationPort": "JASND"
+    },
+    "totals": {
+      "totalGross": 210000,
+      "totalNet": 200000,
+      "grandFinal": 4894500,
+      "grandPrimaryFinal": 1300000,
+      "totalQty": 10000,
+      "totalDeductions": 10000
+    },
+    "goodsEntries": [
+      {
+        "allotName": "ALT-4185",
+        "goodsName": "CASHEW NUTS (W320)",
+        "size": "Medium",
+        "brand": "Organic",
+        "origin": "India",
+        "hsCode": "-",
+        "qtyName": "CARTONS",
+        "qtyNo": 10000,
+        "qtyKgs": 21,
+        "grossWeight": 210000,
+        "emptyKgs": 1,
+        "netWeight": 200000,
+        "priceType": "P/KGs",
+        "divideType": "D/KGs",
+        "divideWeight": 1,
+        "coursePrice": 6.5,
+        "currencyType": "USD",
+        "purchaseCurrency": "AED",
+        "exchangeRate": 3.765,
+        "totalAmount": 1300000,
+        "op": "*",
+        "finalAmount": 4894500
+      }
+    ],
+    "reports": [],
+    "workflow": {
+      "currentStep": "Booking Purchase Order",
+      "nextStep": "Booking Confirm",
+      "bookingStatus": "Saved",
+      "confirmationStatus": "Pending",
+      "journalStatus": "Pending",
+      "paymentStatus": "Pending",
+      "containerStatus": "Pending",
+      "inventoryStatus": "Pending",
+      "deliveryStatus": "Pending",
+      "savedAt": "2026-07-23T10:52:05.982Z"
+    },
+    "savedAt": "2026-07-23T10:52:05.982Z"
+  }
+}
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T10:52:43.439Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-23T10:53:09.286Z
+Message: Click Payment Entry. row.id: 16cf7ed5-3e6b-4979-ac35-97a741b8d4d0
+
+[CLIENT LOG] Time: 2026-07-23T10:54:20.432Z
+Message: Click Payment Entry. row.id: 16cf7ed5-3e6b-4979-ac35-97a741b8d4d0
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T10:57:08.788Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T10:57:08.914Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T11:32:42.446Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T11:35:46.905Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T11:35:50.786Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T11:35:51.222Z
+Params: limit=200
+
+[CLIENT LOG] Time: 2026-07-23T11:38:48.512Z
+Message: Click Payment Entry. row.id: 16cf7ed5-3e6b-4979-ac35-97a741b8d4d0
+
+[CLIENT LOG] Time: 2026-07-23T11:39:51.295Z
+Message: Click Payment Entry. row.id: 16cf7ed5-3e6b-4979-ac35-97a741b8d4d0
+
+[CLIENT LOG] Time: 2026-07-23T11:41:15.298Z
+Message: Click Payment Entry. row.id: 16cf7ed5-3e6b-4979-ac35-97a741b8d4d0
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T11:50:14.955Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T13:04:07.210Z
+Params: limit=300
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T13:04:25.031Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T13:04:48.055Z
+Params: limit=200
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T14:28:29.577Z
+Params: limit=300
+
+[GET /api/erp/purchases/orders] Time: 2026-07-23T17:22:54.893Z
+Params: limit=200

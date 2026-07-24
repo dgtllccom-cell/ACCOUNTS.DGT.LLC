@@ -1,0 +1,293 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222 47% 11%;
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222 47% 11%;
+    --primary: 190 83% 28%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 20% 94%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 11 68% 58%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 214 30% 90%;
+    --input: 214 30% 90%;
+    --ring: 190 83% 28%;
+    --radius: 0.75rem;
+  }
+
+  .dark {
+    --background: 222 47% 11%;
+    --foreground: 210 40% 98%;
+    --card: 222 47% 13%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222 47% 11%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 190 83% 40%;
+    --primary-foreground: 222 47% 11%;
+    --secondary: 222 47% 18%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 222 47% 18%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 37 92% 55%;
+    --accent-foreground: 222 47% 11%;
+    --destructive: 0 62% 40%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 190 83% 40%;
+  }
+
+  /* Template Color Variants (applies to both light and dark via CSS variables). */
+  :root.theme-purple {
+    --primary: 262 83% 58%;
+    --ring: 262 83% 58%;
+    --accent: 38 92% 50%;
+  }
+
+  :root.theme-blue {
+    --primary: 221 83% 53%;
+    --ring: 221 83% 53%;
+    --accent: 38 92% 50%;
+  }
+
+  :root.theme-green {
+    --primary: 142 71% 45%;
+    --ring: 142 71% 45%;
+    --accent: 38 92% 50%;
+  }
+
+  :root.theme-gold {
+    --primary: 38 92% 50%;
+    --ring: 38 92% 50%;
+    --accent: 262 83% 58%;
+  }
+
+  :root.theme-cyan {
+    --primary: 190 83% 40%;
+    --ring: 190 83% 40%;
+    --accent: 38 92% 50%;
+  }
+
+  .dark.theme-purple {
+    --primary: 262 83% 70%;
+    --ring: 262 83% 70%;
+    --accent: 38 92% 55%;
+  }
+
+  .dark.theme-blue {
+    --primary: 221 83% 68%;
+    --ring: 221 83% 68%;
+    --accent: 38 92% 55%;
+  }
+
+  .dark.theme-green {
+    --primary: 142 71% 58%;
+    --ring: 142 71% 58%;
+    --accent: 38 92% 55%;
+  }
+
+  .dark.theme-gold {
+    --primary: 38 92% 55%;
+    --ring: 38 92% 55%;
+    --accent: 262 83% 70%;
+  }
+
+  .dark.theme-cyan {
+    --primary: 190 83% 55%;
+    --ring: 190 83% 55%;
+    --accent: 38 92% 55%;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+  }
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
+
+/* Hide Google Translate UI Elements */
+.skiptranslate iframe,
+.goog-te-banner-frame {
+  display: none !important;
+}
+
+body {
+  top: 0 !important;
+}
+
+#goog-gt-tt {
+  display: none !important;
+}
+
+.goog-text-highlight {
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* 2024/2025 Premium Design Tokens */
+.premium-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 6px -1px hsl(var(--primary) / 0.05), 0 2px 4px -2px hsl(var(--primary) / 0.03);
+}
+.premium-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 24px -10px hsl(var(--primary) / 0.12), 0 4px 12px -5px hsl(var(--primary) / 0.06);
+}
+
+/* Glassmorphism utility */
+.premium-glass {
+  background: hsl(var(--background) / 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid hsl(var(--border) / 0.5);
+}
+
+/* Custom modern scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.2);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.35);
+}
+
+/* Smooth active animations */
+.active-nav-item {
+  position: relative;
+}
+.active-nav-item::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 15%;
+  height: 70%;
+  width: 3px;
+  background-color: hsl(var(--primary));
+  border-radius: 0 4px 4px 0;
+}
+[dir="rtl"] .active-nav-item::before {
+  left: auto;
+  right: 0;
+  border-radius: 4px 0 0 4px;
+}
+
+
+/* Enterprise language typography and print foundation */
+html[lang="ur"],
+html[lang="ps"],
+html[lang="fa"],
+html[lang="ar"] {
+  font-family: "Noto Naskh Arabic", "Noto Nastaliq Urdu", "Vazirmatn", "Segoe UI", Tahoma, Arial, sans-serif;
+  letter-spacing: 0;
+}
+
+html[lang="en"],
+html:not([lang]) {
+  font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+  letter-spacing: 0;
+}
+
+html[dir="rtl"] body {
+  text-rendering: optimizeLegibility;
+}
+
+html[dir="rtl"] input,
+html[dir="rtl"] textarea,
+html[dir="rtl"] select {
+  font-family: "Noto Naskh Arabic", "Noto Nastaliq Urdu", "Vazirmatn", "Segoe UI", Tahoma, Arial, sans-serif;
+}
+
+.erp-report-shell {
+  background: white;
+  color: #0f172a;
+}
+
+.erp-print-only {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+
+  body {
+    background: white !important;
+    color: #0f172a !important;
+  }
+
+  body * {
+    box-shadow: none !important;
+  }
+
+  .erp-no-print,
+  .no-print,
+  [data-print-hidden="true"],
+  nav,
+  aside,
+  button:not(.erp-print-keep),
+  [role="menu"],
+  [role="dialog"] .erp-no-print {
+    display: none !important;
+  }
+
+  .erp-print-only {
+    display: block !important;
+  }
+
+  .erp-print-page,
+  .erp-report-shell,
+  [data-print-root="true"] {
+    display: block !important;
+    width: 100% !important;
+    max-width: 190mm !important;
+    margin: 0 auto !important;
+    padding: 0 !important;
+    background: white !important;
+    color: #0f172a !important;
+    page-break-inside: avoid;
+  }
+
+  table {
+    page-break-inside: auto;
+  }
+
+  tr {
+    page-break-inside: avoid;
+    page-break-after: auto;
+  }
+
+  thead {
+    display: table-header-group;
+  }
+
+  tfoot {
+    display: table-footer-group;
+  }
+}

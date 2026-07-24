@@ -1,0 +1,15 @@
+ssh root@72.60.209.121
+
+cd /var/www/dgt-nextjs
+if [ ! -d ".git" ]; then
+  git init
+  git remote add origin https://github.com/dgtllccom-cell/vigilant-adventure.git
+else
+  git remote set-url origin https://github.com/dgtllccom-cell/vigilant-adventure.git
+fi
+git fetch origin main
+git reset --hard origin/main
+git checkout main
+npm install
+npm run build
+pm2 restart dgt-nextjs
