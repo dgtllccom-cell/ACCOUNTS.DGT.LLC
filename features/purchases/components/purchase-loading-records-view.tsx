@@ -178,7 +178,17 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
       form.quantity ||
       0
   );
-  const contractPurchaseAmount = Number(poRow.order_total || poData.totals?.grandFinal || form.totalAmount || 0);
+  const contractPurchaseAmount = Number(
+    poRow.order_total ||
+      poData.totals?.grandFinal ||
+      poData.totals?.totalPurchase ||
+      poData.totals?.totalAmount ||
+      form.totalAmount ||
+      0
+  );
+  const contractPurchaseCurrency = String(
+    form.currency || poRow.currency_code || goods?.[0]?.pricingCurrency || "USD"
+  );
   const savedLoadedQuantity = Number(
 
     workflow.loadedQuantity ||
