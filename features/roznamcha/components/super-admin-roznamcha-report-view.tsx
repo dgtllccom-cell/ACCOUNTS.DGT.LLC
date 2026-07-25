@@ -353,7 +353,7 @@ function buildCurrencyOptions(rows: SuperAdminRoznamchaRow[]): SearchSelectOptio
   const seen = new Set<string>();
   for (const row of rows) {
     if (row.currency) {
-      seen.add(row.currency.toUpperCase());
+      seen.add((row.currency || "").toUpperCase());
     }
   }
   return Array.from(seen).sort().map(cur => ({ value: cur, label: cur, keywords: cur }));
@@ -577,7 +577,7 @@ function filterRows(
       if (filters.voucherType !== "all" && row.type !== filters.voucherType) return false;
       if (filters.fromDate && row.entryDate < filters.fromDate) return false;
       if (filters.toDate && row.entryDate > filters.toDate) return false;
-      if (filters.currency && filters.currency !== "all" && row.currency.toUpperCase() !== filters.currency.toUpperCase()) return false;
+      if (filters.currency && filters.currency !== "all" && (row.currency || "").toUpperCase() !== filters.currency.toUpperCase()) return false;
       if (q && !row.searchText.includes(q)) return false;
       return true;
     })
@@ -1557,7 +1557,7 @@ export function SuperAdminRoznamchaReportView({
     ];
 
     const maxLines = mode === "journal" ? 12 : 6;
-    targetRow.lines.slice(0, maxLines).forEach((line, index) => {
+    (targetRow.lines || []).slice(0, maxLines).forEach((line, index) => {
       const lineRate = getRowRate(line.currency);
       rowsForPrint.push({
         label: `Line ${index + 1}`,
@@ -1724,9 +1724,9 @@ export function SuperAdminRoznamchaReportView({
 
   const showUsd = isSuperAdminOrCountryAdmin && ratesApplied.showUsd === "Yes";
 
-  const pakVal = rows.filter(r => r.countryName.toLowerCase() === "pakistan").reduce((sum, r) => sum + r.debit - r.credit, 0);
-  const uaeVal = rows.filter(r => r.countryName.toLowerCase() === "uae").reduce((sum, r) => sum + r.debit - r.credit, 0);
-  const afgVal = rows.filter(r => r.countryName.toLowerCase() === "afghanistan").reduce((sum, r) => sum + r.debit - r.credit, 0);
+  const pakVal = rows.filter(r => (r.countryName || "").toLowerCase() === "pakistan").reduce((sum, r) => sum + r.debit - r.credit, 0);
+  const uaeVal = rows.filter(r => (r.countryName || "").toLowerCase() === "uae").reduce((sum, r) => sum + r.debit - r.credit, 0);
+  const afgVal = rows.filter(r => (r.countryName || "").toLowerCase() === "afghanistan").reduce((sum, r) => sum + r.debit - r.credit, 0);
 
   const pakStr = formatCompact(Math.abs(pakVal));
   const uaeStr = formatCompact(Math.abs(uaeVal));
