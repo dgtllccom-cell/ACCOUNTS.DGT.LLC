@@ -3845,35 +3845,6 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     };
     return headersMap[h]?.[currentLanguage] || h;
   };
-  const _unused_getTableHeader = (h: string) => {
-    const headersMap: Record<string, Record<LanguageCode, string>> = {
-      "PO No.": { en: "PO Number", ur: "Ø¢Ø±ÚˆØ± Ù†Ù…Ø¨Ø±", ar: "Ø±Ù‚Ù… Ø·Ù„Ø¨ Ø§Ù„Ø´Ø±Ø§Ø¡", fa: "Ø´Ù…Ø§Ø±Ù‡ Ø³ÙØ§Ø±Ø´", ps: "Ø¯ Ø§Ù…Ø± Ø´Ù…ÛŒØ±Ù‡" },
-      "Bill / Date": { en: "Bill & Date", ur: "Ø¨Ù„ Ø§ÙˆØ± ØªØ§Ø±ÛŒØ®", ar: "Ø§Ù„ÙØ§ØªÙˆØ±Ø© ÙˆØ§Ù„ØªØ§Ø±ÙŠØ®", fa: "ØµÙˆØ±ØªØ­Ø³Ø§Ø¨ Ùˆ ØªØ§Ø±ÛŒØ®", ps: "Ø¨Ù„ Ø§Ùˆ Ù†ÛŒÙ¼Ù‡" },
-      "Branch / Country": { en: "Branch & Country", ur: "Ø¨Ø±Ø§Ù†Ú† Ø§ÙˆØ± Ù…Ù„Ú©", ar: "Ø§Ù„ÙØ±Ø¹ ÙˆØ§Ù„Ø¨Ù„Ø¯", fa: "Ø´Ø¹Ø¨Ù‡ Ùˆ Ú©Ø´ÙˆØ±", ps: "Ú…Ø§Ù†Ú«Ù‡ Ø§Ùˆ Ù‡ÛŒÙˆØ§Ø¯" },
-      "Purchase A/C": { en: "Purchase A/C", ur: "Ø®Ø±ÛŒØ¯Ø§Ø±ÛŒ Ø§Ú©Ø§Ø¤Ù†Ù¹", ar: "Ø­Ø³Ø§Ø¨ Ø§Ù„Ø´Ø±Ø§Ø¡", fa: "Ø­Ø³Ø§Ø¨ Ø®Ø±ÛŒØ¯", ps: "Ø¯ Ù¾ÛŒØ±ÙˆØ¯ Ø­Ø³Ø§Ø¨" },
-      "Sales A/C": { en: "Sales A/C", ur: "Ø³ÛŒÙ„Ø² Ø§Ú©Ø§Ø¤Ù†Ù¹", ar: "Ø­Ø³Ø§Ø¨ Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª", fa: "Ø­Ø³Ø§Ø¨ ÙØ±ÙˆØ´", ps: "Ø¯ Ù¾Ù„ÙˆØ± Ø­Ø³Ø§Ø¨" },
-      "Total Purchase": { en: "Total Purchase", ur: "Ú©Ù„ Ø®Ø±ÛŒØ¯Ø§Ø±ÛŒ", ar: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø´Ø±Ø§Ø¡", fa: "Ú©Ù„ Ø®Ø±ÛŒØ¯", ps: "Ù¼ÙˆÙ„ Ù¾ÛŒØ±ÙˆØ¯" },
-      "Paid Advance": { en: "Paid Advance", ur: "Ø§Ø¯Ø§ Ø´Ø¯Û Ø§ÛŒÚˆÙˆØ§Ù†Ø³", ar: "Ø§Ù„Ø¯ÙØ¹Ø© Ø§Ù„Ù…Ù‚Ø¯Ù…Ø© Ø§Ù„Ù…Ø¯ÙÙˆØ¹Ø©", fa: "Ù¾ÛŒØ´ Ù¾Ø±Ø¯Ø§Ø®Øª", ps: "ØªØ§Ø¯ÛŒÙ‡ Ø´ÙˆÛŒ Ù¾Ø±Ù…Ø®ØªÚ«" },
-      "Final Amount": { en: "Final Amount", ur: "Ø­ØªÙ…ÛŒ Ø±Ù‚Ù…", ar: "Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù†Ù‡Ø§Ø¦ÙŠ", fa: "Ù…Ø¨Ù„Øº Ù†Ù‡Ø§ÛŒÛŒ", ps: "ÙˆØ±ÙˆØ³ØªÛŒ Ù…Ù‚Ø¯Ø§Ø±" },
-      "Rem. Advance": { en: "Rem. Advance", ur: "Ø¨Ø§Ù‚ÛŒ Ù…Ø§Ù†Ø¯Û Ø§ÛŒÚˆÙˆØ§Ù†Ø³", ar: "Ø§Ù„Ø¯ÙØ¹Ø© Ø§Ù„Ù…Ù‚Ø¯Ù…Ø© Ø§Ù„Ù…ØªØ¨Ù‚ÙŠØ©", fa: "Ù¾ÛŒØ´ Ù¾Ø±Ø¯Ø§Ø®Øª Ø¨Ø§Ù‚ÛŒÙ…Ø§Ù†Ø¯Ù‡", ps: "Ù¾Ø§ØªÛ Ù¾Ø±Ù…Ø®ØªÚ«" },
-      "Action": { en: "Action", ur: "Ø¹Ù…Ù„", ar: "Ø¥Ø¬Ø±Ø§Ø¡", fa: "Ø¹Ù…Ù„", ps: "Ø¹Ù…Ù„" }
-    };
-    const result = headersMap[h]?.[currentLanguage] || h;
-
-    // Fallbacks for original headers if translation is missing
-    const fallbacks: Record<string, string> = {
-      "Total Purchase": "Cargo / Brand",
-      "Req. Advance": "Cargo Details",
-      "Paid Advance": "Purchase Amount",
-      "Final Amount": "Advance Details",
-      "Rem. Advance": "Outstanding Due"
-    };
-    if (currentLanguage === "en" && fallbacks[h]) {
-      return fallbacks[h];
-    }
-
-    return result;
-  };
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className={cn("flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950", isRtl ? "text-right" : "text-left")}>
