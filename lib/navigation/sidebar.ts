@@ -20,8 +20,7 @@ export type SidebarIconKey =
   | "bell"
   | "palette"
   | "search"
-  | "truck"
-  | "activity";
+  | "truck";
 
 export type SidebarNode = {
   key: string;
@@ -971,13 +970,6 @@ export const sidebarTree: SidebarNode[] = [
         ]
       }
     ]
-  },
-  {
-    key: "server-monitoring",
-    labelKey: "nav.server_monitoring",
-    iconKey: "activity",
-    href: "/dashboard/monitoring" as Route,
-    roles: ["super_admin", "country_admin", "main_branch_admin", "auditor_viewer"]
   }
 ];
 

@@ -2,7 +2,6 @@
 
 import type { LucideIcon } from "lucide-react";
 import {
-  Activity,
   Banknote,
   BarChart3,
   Bell,
@@ -43,8 +42,7 @@ const iconMap: Record<SidebarIconKey, LucideIcon> = {
   bell: Bell,
   palette: Palette,
   search: Search,
-  truck: Truck,
-  activity: Activity
+  truck: Truck
 };
 
 export function SidebarIcon({ name, className }: { name?: SidebarIconKey; className?: string }) {
