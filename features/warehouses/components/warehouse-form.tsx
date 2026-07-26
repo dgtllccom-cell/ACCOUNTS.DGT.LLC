@@ -93,7 +93,7 @@ export function WarehouseForm({
         const phoneIdx = newContracts.findIndex((c) => c.type === "Phone Number" || c.type === "Mobile");
         if (phoneIdx === -1 && newContracts[0].value === "") {
            newContracts[0] = { type: "Phone Number", value: meta.country.phone_code + " " };
-        } else if (phoneIdx >= 0 && !newContracts[phoneIdx].value.trim()) {
+        } else if (phoneIdx >= 0 && !(newContracts[phoneIdx].value || "").trim()) {
            newContracts[phoneIdx].value = meta.country.phone_code + " ";
         }
       }
