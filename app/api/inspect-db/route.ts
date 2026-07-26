@@ -1,50 +1,77 @@
 import { NextResponse } from "next/server";
 import postgres from "postgres";
 
+import { requireErpSession } from "@/lib/auth/session";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+function getSupabaseProjectId() {
+  try {
+    return new URL(process.env.NEXT_PUBLIC_SUPABASE_URL ?? "").hostname.split(".")[0] || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function GET() {
   try {
-    const dbUrl = process.env.DATABASE_URL || "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?sslmode=require";
-    const sql = postgres(dbUrl, { prepare: false, idle_timeout: 5, connect_timeout: 10, ssl: "require" });
-    
-    // Query table counts and live records
-    const tablesRes = await sql`
-      SELECT table_name 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public' 
-      ORDER BY table_name;
-    `;
-    
-    const usersCount = await sql`SELECT count(*)::int as c FROM users;`.catch(() => [{ c: 0 }]);
-    const accountsCount = await sql`SELECT count(*)::int as c FROM accounts;`.catch(() => [{ c: 0 }]);
-    const roznamchaCount = await sql`SELECT count(*)::int as c FROM roznamcha_entries;`.catch(() => [{ c: 0 }]);
-    const ordersCount = await sql`SELECT count(*)::int as c FROM purchase_orders;`.catch(() => [{ c: 0 }]);
+    const session = await requireErpSession();
+    if (!session.isSuperAdmin) {
+      return NextResponse.json({ ok: false, error: "Forbidden" }, { status: 403 });
+    }
 
-    const sampleUsers = await sql`SELECT id, user_code, full_name, role FROM users LIMIT 3;`.catch(() => []);
-    const sampleAccounts = await sql`SELECT id, account_code, account_name, current_balance FROM accounts LIMIT 3;`.catch(() => []);
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl) {
+      throw new Error("DATABASE_URL is not configured");
+    }
 
-    await sql.end();
-
-    return NextResponse.json({
-      ok: true,
-      status: "SUCCESSFULLY_CONNECTED",
-      supabase_project_id: "csesvyxxjivnkkozgopt",
-      tables_in_database: tablesRes.map(t => t.table_name),
-      live_record_counts: {
-        users: usersCount[0]?.c || 0,
-        accounts: accountsCount[0]?.c || 0,
-        roznamcha_entries: roznamchaCount[0]?.c || 0,
-        purchase_orders: ordersCount[0]?.c || 0
-      },
-      sample_data: {
-        users: sampleUsers,
-        accounts: sampleAccounts
-      }
+    const sql = postgres(dbUrl, {
+      prepare: false,
+      idle_timeout: 5,
+      connect_timeout: 10,
+      ssl: "require",
     });
-  } catch (err: any) {
-    return NextResponse.json({
-      ok: false,
-      status: "CONNECTION_FAILED",
-      error: err.message
-    }, { status: 500 });
+
+    try {
+      const tables = await sql`
+        SELECT table_name
+        FROM information_schema.tables
+        WHERE table_schema = 'public'
+        ORDER BY table_name
+      `;
+      const usersCount = await sql`SELECT count(*)::int AS count FROM users`.catch(() => [{ count: 0 }]);
+      const accountsCount = await sql`SELECT count(*)::int AS count FROM accounts`.catch(() => [{ count: 0 }]);
+      const roznamchaCount = await sql`SELECT count(*)::int AS count FROM roznamcha_entries`.catch(() => [{ count: 0 }]);
+      const ordersCount = await sql`SELECT count(*)::int AS count FROM purchase_orders`.catch(() => [{ count: 0 }]);
+
+      return NextResponse.json({
+        ok: true,
+        status: "SUCCESSFULLY_CONNECTED",
+        supabaseProjectId: getSupabaseProjectId(),
+        tableCount: tables.length,
+        recordCounts: {
+          users: usersCount[0]?.count ?? 0,
+          accounts: accountsCount[0]?.count ?? 0,
+          roznamchaEntries: roznamchaCount[0]?.count ?? 0,
+          purchaseOrders: ordersCount[0]?.count ?? 0,
+        },
+      });
+    } finally {
+      await sql.end();
+    }
+  } catch (error: unknown) {
+    const status =
+      typeof error === "object" && error !== null && "status" in error && error.status === 401
+        ? 401
+        : 500;
+    return NextResponse.json(
+      {
+        ok: false,
+        status: "CONNECTION_FAILED",
+        error: error instanceof Error ? error.message : "Database inspection failed",
+      },
+      { status },
+    );
   }
 }

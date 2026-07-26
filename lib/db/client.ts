@@ -3,7 +3,10 @@ import postgres from "postgres";
 import * as schema from "@/lib/db/schema";
 
 export function createDbClient() {
-  const dbUrl = process.env.DATABASE_URL || "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres?sslmode=require";
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) {
+    throw new Error("DATABASE_URL is required for database operations.");
+  }
 
   const queryClient = postgres(dbUrl, {
     max: 10,

@@ -12,7 +12,7 @@ function getDatabaseUrl() {
       }
     }
   }
-  return "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres";
+  throw new Error("DATABASE_URL is not configured in the environment or .env.local");
 }
 
 async function syncMigrations() {
