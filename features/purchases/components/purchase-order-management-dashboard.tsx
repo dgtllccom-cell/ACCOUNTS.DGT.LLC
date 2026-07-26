@@ -3622,7 +3622,6 @@ export function PurchaseOrderManagementDashboard() {
                           <div className="mt-1"><span className="text-slate-400 block text-[9px] uppercase">Code</span><span className="font-bold text-xs font-mono">{selected.countryName ? selected.countryName.slice(0, 3).toUpperCase() : "PAK"}</span></div>
                         </div>
                       </div>
-                    </div>
 
                     <div className="bg-blue-50/50 dark:bg-blue-950/20 p-3 rounded-lg border border-blue-100 dark:border-blue-900/50">
                       <div className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 mb-2">Transfer Information</div>

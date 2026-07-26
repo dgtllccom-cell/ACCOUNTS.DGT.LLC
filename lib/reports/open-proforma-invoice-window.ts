@@ -484,10 +484,6 @@ export function openProformaInvoiceWindow(input: {
   printStore.openPrint(html, "PROFORMA INVOICE");
 }
 
-}
 
-}
 
-}
 
-}

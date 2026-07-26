@@ -1965,10 +1965,6 @@ export function BranchGeneralReportView({
 
 
 
-}}
 
-}}
 
-}}
 
-}}

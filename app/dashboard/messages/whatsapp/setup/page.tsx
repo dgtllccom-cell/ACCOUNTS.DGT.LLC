@@ -188,10 +188,6 @@ export default function WhatsAppSetupPage() {
   );
 }
 
-}
 
-}
 
-}
 
-}

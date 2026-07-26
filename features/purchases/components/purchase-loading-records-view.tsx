@@ -178,7 +178,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
       form.quantity ||
       0
   );
-  const contractPurchaseAmount = Number(poRow.order_total || poData.totals?.grandFinal || form.totalAmount || 0);
+  const contractPurchaseAmount = Number(poRow.order_total || poData.totals?.grandFinal || poData.totals?.totalPurchase || poData.totals?.totalAmount || form.totalAmount || 0);
   const savedLoadedQuantity = Number(
 
     workflow.loadedQuantity ||
@@ -663,14 +663,6 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
   const currentInputEmptyKgs = Number(oneEmptyKgs || 0);
   const currentInputGrossKgs = currentInputQty > 0 && currentInputQtyKgs > 0 ? (currentInputQty * currentInputQtyKgs) : 0;
   const currentInputNetKgs = currentInputQty > 0 && currentInputQtyKgs > 0 ? (currentInputQty * Math.max(0, currentInputQtyKgs - currentInputEmptyKgs)) : 0;
-  const contractPurchaseAmount = Number(
-    poRow.order_total ||
-      poData.totals?.grandFinal ||
-      poData.totals?.totalPurchase ||
-      poData.totals?.totalAmount ||
-      form.totalAmount ||
-      0
-  );
   const contractPurchaseCurrency = String(form.currency || poRow.currency_code || goods?.[0]?.pricingCurrency || "USD");
   const getAdvanceAppliedLocal = (finance: ReturnType<typeof calcLoadingFinance>, loadedQty: number) => {
     const rawAdvance = Number(poRow.advance_paid || form.advanceAmount || 0);
