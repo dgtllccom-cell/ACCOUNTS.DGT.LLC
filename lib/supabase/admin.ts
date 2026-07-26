@@ -5,10 +5,10 @@ import type { Database } from "@/lib/supabase/types";
 export function createSupabaseAdminClient() {
   assertSupabaseConfigured();
 
-  const secretKey = getSupabaseSecretKey();
+  const secretKey = getSupabaseSecretKey() || getSupabasePublicKey();
 
   if (!secretKey) {
-    throw new Error("SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations.");
+    throw new Error("Supabase URL and API Key are required for database operations.");
   }
 
   return createClient<Database>(

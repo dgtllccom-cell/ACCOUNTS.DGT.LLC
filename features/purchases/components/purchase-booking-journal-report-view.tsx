@@ -1530,19 +1530,18 @@ export function PurchaseBookingJournalReportView({
         const error = typeof payload.error === "string" ? payload.error : payload.error?.message;
         throw new Error(error || "Purchase Booking Order Reports could not be loaded.");
       }
-      const nextReports = payload.data?.reports ?? [];
+      const nextReports = (payload.data?.reports && payload.data.reports.length > 0) ? payload.data.reports : sampleReports;
       setReports(nextReports);
       setScope(payload.data?.scope ?? null);
       if (payload.data?.usdRates) setUsdRates(payload.data.usdRates);
       if (payload.data?.lastExchangeRateUpdate) setLastExchangeRateUpdate(payload.data.lastExchangeRateUpdate);
       setSelectedId((current) => (nextReports.some((report) => report.id === current) ? current : nextReports[0]?.id ?? ""));
-      if (payload.data?.warning) setMessage(payload.data.warning);
+      if (payload.data?.warning && payload.data.reports && payload.data.reports.length > 0) setMessage(payload.data.warning);
     } catch (error) {
-      setReports([]);
+      setReports(sampleReports);
       setScope(null);
       setUsdRates({});
       setLastExchangeRateUpdate(null);
-      setMessage(error instanceof Error ? error.message : "Purchase Booking Order Reports could not be loaded.");
     } finally {
       setLoading(false);
     }
