@@ -327,6 +327,7 @@ export function PayrollReportsView() {
         </SimpleModal>
       )}
 
+    </div>
   );
 }
 

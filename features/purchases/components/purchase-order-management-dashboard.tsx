@@ -3692,7 +3692,6 @@ export function PurchaseOrderManagementDashboard() {
                     </Button>
                   </div>
                 </div>
-              </div>
             );
           })()}
         </DetailDrawer>
