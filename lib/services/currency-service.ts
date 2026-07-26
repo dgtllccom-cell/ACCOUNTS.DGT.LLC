@@ -52,3 +52,4 @@ export class CurrencyService {
     
     return false;
   }
+}

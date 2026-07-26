@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
-import { requireSession } from "@/lib/auth/session";
+import { requireErpSession } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { savedReports } from "@/lib/db/schema";
 import { eq, and, or } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: Request) {
   try {
-    const session = await requireSession();
+    const session = await requireErpSession();
     const { searchParams } = new URL(req.url);
     const moduleName = searchParams.get("module");
 
@@ -21,7 +23,7 @@ export async function GET(req: Request) {
         and(
           eq(savedReports.module, moduleName),
           or(
-            eq(savedReports.userId, session.user.id),
+            eq(savedReports.userId, session.userId),
             eq(savedReports.isPublic, true)
           )
         )
@@ -37,7 +39,7 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const session = await requireSession();
+    const session = await requireErpSession();
     const body = await req.json();
     const { name, module, config, isPublic } = body;
 
@@ -48,7 +50,7 @@ export async function POST(req: Request) {
     const [newReport] = await db
       .insert(savedReports)
       .values({
-        userId: session.user.id,
+        userId: session.userId,
         name,
         module,
         config,

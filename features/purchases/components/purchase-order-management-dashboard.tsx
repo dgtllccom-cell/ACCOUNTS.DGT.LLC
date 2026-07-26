@@ -3600,7 +3600,10 @@ export function PurchaseOrderManagementDashboard() {
                   </div>
 
                   <div className="p-5 space-y-6 flex-1 bg-slate-50/50 dark:bg-slate-900/20">
-                            <div className="bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
+
+                    {/* User, Branch & Country Info */}
+                    <div className="space-y-3">
+                      <div className="bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
                         <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">User Information</div>
                         <div className="grid grid-cols-2 gap-2 text-xs">
                           <div><span className="text-slate-400 block text-[9px] uppercase">User ID</span><span className="font-bold font-mono">USR-{selected.audit?.userId?.slice(-4) || "101"}</span></div>

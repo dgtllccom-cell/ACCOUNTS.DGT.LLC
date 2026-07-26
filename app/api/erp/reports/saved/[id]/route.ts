@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
-import { requireSession } from "@/lib/auth/session";
+import { requireErpSession } from "@/lib/auth/session";
 import { db } from "@/lib/db/client";
 import { savedReports } from "@/lib/db/schema";
 import { eq, and } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
-    const session = await requireSession();
+    const session = await requireErpSession();
     const id = params.id;
     const body = await req.json();
     const { name, config, isPublic } = body;
@@ -14,7 +16,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     const [existing] = await db
       .select()
       .from(savedReports)
-      .where(and(eq(savedReports.id, id), eq(savedReports.userId, session.user.id)));
+      .where(and(eq(savedReports.id, id), eq(savedReports.userId, session.userId)));
 
     if (!existing) {
       return NextResponse.json({ error: "Report not found or permission denied" }, { status: 404 });
@@ -40,13 +42,13 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
 
 export async function DELETE(req: Request, { params }: { params: { id: string } }) {
   try {
-    const session = await requireSession();
+    const session = await requireErpSession();
     const id = params.id;
 
     const [existing] = await db
       .select()
       .from(savedReports)
-      .where(and(eq(savedReports.id, id), eq(savedReports.userId, session.user.id)));
+      .where(and(eq(savedReports.id, id), eq(savedReports.userId, session.userId)));
 
     if (!existing) {
       return NextResponse.json({ error: "Report not found or permission denied" }, { status: 404 });

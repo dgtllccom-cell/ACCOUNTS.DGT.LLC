@@ -1960,15 +1960,3 @@ export function BranchGeneralReportView({
     </div>
   );
 }
-
-
-
-
-
-}}
-
-}}
-
-}}
-
-}}

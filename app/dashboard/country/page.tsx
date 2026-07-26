@@ -70,7 +70,8 @@ function money(value: number, currency = "USD") {
 
 async function loadCountryData(countryId: string): Promise<CountryDashboardData> {
   try {
-    const dbUrl = process.env.DATABASE_URL || "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres";
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl) throw new Error("DATABASE_URL is not configured");
     const sql = postgres(dbUrl, { prepare: false, idle_timeout: 5, connect_timeout: 10 });
 
     const [
@@ -94,7 +95,7 @@ async function loadCountryData(countryId: string): Promise<CountryDashboardData>
       sql`SELECT order_total, country_branch_id, city_branch_id FROM purchase_orders WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
       sql`SELECT order_total, country_branch_id, city_branch_id FROM sales_orders WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
       sql`SELECT id, voucher_no, entry_date, type, status, created_at FROM roznamcha_entries WHERE country_id = ${countryId} ORDER BY created_at DESC LIMIT 5;`.catch(() => []),
-      sql`SELECT count(*)::int as c FROM goods_registry WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => [{ c: 0 }])
+      sql`SELECT product_specifications FROM goods_registry WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => [])
     ]);
 
     const countryObj = countryRes[0] || {};
@@ -174,19 +175,23 @@ async function loadCountryData(countryId: string): Promise<CountryDashboardData>
 
     const branchSummaries = Array.from(branchSummaryMap.values());
 
+    const stockValueTotal = (productsCountRes || []).reduce((sum: number, row: any) => {
+      const spec = row.product_specifications || {};
+      const qty = Number(spec.stockQty || spec.stock_qty || spec.quantity || spec.qty || 0);
+      const price = Number(spec.costPrice || spec.cost_price || spec.purchaseRate || spec.purchase_rate || 0);
+      const val = Number(spec.inventoryValue || spec.inventory_value || 0) || (qty * price);
+      return sum + val;
+    }, 0);
+
+    const productsCount = (productsCountRes || []).length;
     const recentRoznamcha: RecentEntry[] = (recentRows || []).map((row: any) => ({
       id: row.id,
       voucher_no: row.voucher_no,
       entry_date: row.entry_date,
       type: row.type,
       status: row.status,
-      const spec = row.product_specifications || {};
-      const qty = Number(spec.stockQty || spec.stock_qty || spec.quantity || spec.qty || 0);
-      const price = Number(spec.costPrice || spec.cost_price || spec.purchaseRate || spec.purchase_rate || 0);
-      const val = Number(spec.inventoryValue || spec.inventory_value || 0) || (qty * price);
-      stockValueTotal += val;
-    });
-
+      created_at: row.created_at
+    }));
     const profitLossTotal = salesTotal - purchaseTotal;
 
     return {

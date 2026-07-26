@@ -9,6 +9,9 @@ import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 function toNumber(value: unknown) {
   const n = typeof value === "number" ? value : Number(value);
   return Number.isFinite(n) ? n : 0;
@@ -534,24 +537,29 @@ export async function GET(request: NextRequest) {
       query = query.eq("country_id", scope.countryId);
     }
     if (scope.countryBranchId) {
-      query = query.or(`country_branch_id.eq.${scope.countryBranchId},city_branch_id.eq.${scope.countryBranchId}`);
+      query = query.eq("country_branch_id", scope.countryBranchId);
     }
     if (scope.cityBranchId) {
-      query = query.or(`city_branch_id.eq.${scope.cityBranchId},country_branch_id.eq.${scope.cityBranchId}`);
+      query = query.eq("city_branch_id", scope.cityBranchId);
     }
 
-    // If not super admin, restrict the query to the user's assigned scopes using OR.
+    // Restrict non-super users by their explicit role assignments, not by the
+    // resolved hierarchy arrays. The resolved arrays intentionally contain
+    // parent context and using them as grants can broaden city-branch access.
     if (!session.isSuperAdmin) {
-      const orConditions: string[] = [];
-      if (session.cityBranchIds?.length) {
-        orConditions.push(`city_branch_id.in.(${session.cityBranchIds.join(",")})`);
-      }
-      if (session.countryBranchIds?.length) {
-        orConditions.push(`country_branch_id.in.(${session.countryBranchIds.join(",")})`);
-      }
-      if (session.countryIds?.length) {
-        orConditions.push(`country_id.in.(${session.countryIds.join(",")})`);
-      }
+      const orConditions = [...new Set(session.assignments.map((assignment) => {
+        if (assignment.cityBranchId) {
+          return `city_branch_id.eq.${assignment.cityBranchId}`;
+        }
+        if (assignment.countryBranchId) {
+          return `country_branch_id.eq.${assignment.countryBranchId}`;
+        }
+        if (assignment.countryId) {
+          return `country_id.eq.${assignment.countryId}`;
+        }
+        return null;
+      }).filter((condition): condition is string => Boolean(condition)))];
+
       if (orConditions.length) {
         query = query.or(orConditions.join(","));
       } else {
@@ -674,6 +682,7 @@ export async function POST(request: NextRequest) {
 
     // Requirement 9 & 11: Real-time Synchronization
     revalidatePath("/dashboard/roznamcha", "layout");
+    revalidatePath("/dashboard/roznamcha/all", "page");
     revalidatePath("/dashboard/reports", "layout");
     revalidatePath("/dashboard/journal", "layout");
 
