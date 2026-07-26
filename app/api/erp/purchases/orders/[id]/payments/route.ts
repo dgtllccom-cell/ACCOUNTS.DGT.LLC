@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
+import { apiCreated, apiOk, apiError, handleApiError } from "@/lib/api/response";
+import { claimIdempotency, completeIdempotency, releaseIdempotency, naturalKey, headerKey } from "@/lib/api/idempotency";
 import { purchaseOrderPaymentPostSchema, uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -149,6 +150,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 }
 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  let __idemKey: string | null = null;
   try {
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
@@ -188,6 +190,27 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       countryBranchId: (order as any)?.country_branch_id ?? null,
       cityBranchId: (order as any)?.city_branch_id ?? null
     });
+
+    // --- Idempotency: block duplicate accounting posts on repeated Save/Post/Transfer clicks ---
+    __idemKey =
+      headerKey(request) ??
+      naturalKey([
+        session.userId,
+        params.id,
+        (body as any).kind,
+        (body as any).amount ?? (body as any).amountLocal ?? (body as any).payloadAmount ?? "",
+        (body as any).currencyCode ?? (body as any).currency ?? "",
+        (body as any).entryDate ?? (body as any).paymentDate ?? ""
+      ]);
+    {
+      const __claim = await claimIdempotency(__idemKey, "purchase_payment", session.userId ?? null);
+      if (__claim.state === "duplicate") {
+        if (__claim.status === "completed" && __claim.response) {
+          return apiOk(__claim.response as any);
+        }
+        return apiError("duplicate_submission", "This payment was already submitted; duplicate posting was prevented.", 409);
+      }
+    }
 
     const orderRow = order as any;
     const form = orderRow.form_data?.form || {};
@@ -506,8 +529,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       console.error("Error in post payment completion check:", err);
     }
 
+    if (__idemKey) await completeIdempotency(__idemKey, { paymentId });
     return apiCreated({ paymentId });
   } catch (error) {
+    if (__idemKey) await releaseIdempotency(__idemKey);
     return handleApiError(error);
   }
 }

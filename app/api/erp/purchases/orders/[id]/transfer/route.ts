@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { apiOk, handleApiError } from "@/lib/api/response";
+import { apiOk, apiError, handleApiError } from "@/lib/api/response";
+import { claimIdempotency, completeIdempotency, releaseIdempotency, naturalKey, headerKey } from "@/lib/api/idempotency";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -92,6 +93,7 @@ async function resolveLedgerOrAccount(adminSupabase: any, term: string | null | 
 }
 
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  let __idemKey: string | null = null;
   try {
     await ensurePurchaseSchemaAndEnums();
     const session = await requireErpSession();
@@ -117,6 +119,18 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       countryBranchId: (order as any)?.country_branch_id ?? null,
       cityBranchId: (order as any)?.city_branch_id ?? null,
     });
+
+    // --- Idempotency: block duplicate transfer/posting on repeated clicks ---
+    __idemKey = headerKey(request) ?? naturalKey([session.userId, params.id, "transfer", JSON.stringify(body ?? {})]);
+    {
+      const __claim = await claimIdempotency(__idemKey, "purchase_transfer", session.userId ?? null);
+      if (__claim.state === "duplicate") {
+        if (__claim.status === "completed" && __claim.response) {
+          return apiOk(__claim.response as any);
+        }
+        return apiError("duplicate_submission", "This transfer was already submitted; duplicate posting was prevented.", 409);
+      }
+    }
 
     const orderRow = order as any;
     const formData = orderRow.form_data || {};
@@ -447,6 +461,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       ipAddress: request.headers.get("x-forwarded-for") ?? null
     });
 
+    if (__idemKey) await completeIdempotency(__idemKey, { transferred: true });
     return apiOk({
       success: true,
       purchaseOrderId: params.id,
@@ -463,6 +478,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       remainingDue: newRemainingDue
     });
   } catch (error) {
+    if (__idemKey) await releaseIdempotency(__idemKey);
     console.error("PURCHASE_TRANSFER_TO_PAYMENT_ERROR:", error);
     return handleApiError(error);
   }
