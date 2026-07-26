@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
@@ -788,10 +788,10 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
         setSealNumberInput("");
         setQuantityNo("");
         setNewLoadingQuantity("");
-        setLoadingMessage(`âœ“ Saved Container ${currentContainerIndex} of ${totalContainers} for B/L ${blNumber || record.purchase_order_no}! Please enter details for Container #${nextIdx}.`);
+        setLoadingMessage(`Saved Container ${currentContainerIndex} of ${totalContainers} for B/L ${blNumber || record.purchase_order_no}. Please enter details for Container #${nextIdx}.`);
       } else {
         setCurrentContainerIndex(1);
-        setLoadingMessage(`âœ“ All ${totalContainers} container(s) saved for B/L ${blNumber || "record"}!`);
+        setLoadingMessage(`All ${totalContainers} container(s) saved for B/L ${blNumber || "record"}.`);
         setFormStep(1);
         setNewLoadingQuantity("");
         setNewLoadingNote("");
@@ -1409,7 +1409,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   </div>
                   <div className="pt-2 pb-1">
                     <div className="text-[10px] text-slate-400 mb-0.5">Account Name:</div>
-                    <div className="text-sm font-bold text-blue-600 dark:text-blue-400 leading-snug">{form.purchaseAccountName || "Ù…Ø§Ù„ Ø®Ø±ÛŒØ¯ Ø§Ú©Ø§Ø¤Ù†Ù¹"}</div>
+                    <div className="text-sm font-bold text-blue-600 dark:text-blue-400 leading-snug">{form.purchaseAccountName || "Purchase Account"}</div>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">Branch:</span>
@@ -1459,11 +1459,11 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   <div className="grid grid-cols-2 gap-4 pt-2">
                     <div>
                        <div className="text-[9px] uppercase tracking-widest text-slate-400">OPENING BAL</div>
-                       <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">â‚¨ 0</div>
+                       <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">0.00</div>
                     </div>
                     <div>
                        <div className="text-[9px] uppercase tracking-widest text-slate-400">CURRENT BAL</div>
-                       <div className="text-[11px] font-bold text-emerald-600">â‚¨ 0</div>
+                       <div className="text-[11px] font-bold text-emerald-600">0.00</div>
                     </div>
                   </div>
                   
@@ -1489,7 +1489,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   </div>
                   <div className="pt-2 pb-1">
                     <div className="text-[10px] text-slate-400 mb-0.5">Account Name:</div>
-                    <div className="text-sm font-bold text-blue-600 dark:text-blue-400 leading-snug">{form.salesAccountName || "Ø¹Ø²Øª Ø§Ù„Ù„Û ØªØ¬Ø±ÛŒ Ú©Ú¾Ø§ØªÛ"}</div>
+                    <div className="text-sm font-bold text-blue-600 dark:text-blue-400 leading-snug">{form.salesAccountName || "Sales Account"}</div>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">Branch:</span>
@@ -1539,11 +1539,11 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   <div className="grid grid-cols-2 gap-4 pt-2">
                     <div>
                        <div className="text-[9px] uppercase tracking-widest text-slate-400">OPENING BAL</div>
-                       <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">â‚¨ 0</div>
+                       <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">0.00</div>
                     </div>
                     <div>
                        <div className="text-[9px] uppercase tracking-widest text-slate-400">CURRENT BAL</div>
-                       <div className="text-[11px] font-bold text-emerald-600">â‚¨ 0</div>
+                       <div className="text-[11px] font-bold text-emerald-600">0.00</div>
                     </div>
                   </div>
               </div>
@@ -1623,7 +1623,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   <p className="text-[10px] text-slate-500 font-semibold">Confirmation summary for loaded goods remaining balance</p>
                 </div>
               </div>
-              <button onClick={() => setTransferConfirmData(null)} className="text-slate-400 hover:text-slate-600 text-sm font-bold">âœ•</button>
+              <button onClick={() => setTransferConfirmData(null)} className="text-slate-400 hover:text-slate-600 text-sm font-bold" aria-label="Close">X</button>
             </div>
 
             <div className="space-y-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl text-xs font-semibold border border-slate-100 dark:border-slate-800">
@@ -2790,13 +2790,13 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                 <span className="rounded font-mono font-black text-xs bg-blue-600 text-white px-2.5 py-0.5">SELECTED PO: {activeInvoiceRecord.purchase_order_no}</span>
                 <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">Approved Invoice & Contract Details (Read-Only Source of Truth)</span>
               </div>
-              <Button size="sm" variant="ghost" onClick={() => setSelectedInvoicePoNo("")} className="h-6 text-[10px] font-bold text-blue-600 hover:text-blue-800">âœ• Clear Selection</Button>
+              <Button size="sm" variant="ghost" onClick={() => setSelectedInvoicePoNo("")} className="h-6 text-[10px] font-bold text-blue-600 hover:text-blue-800">Clear Selection</Button>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3 text-[11px] font-semibold">
               <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Purchase Code</span><span className="font-mono font-bold text-slate-800 dark:text-slate-100">{form.purchaseAccountNumber || form.purchaseAccountNo || "-"}</span></div>
               <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Sales Code</span><span className="font-mono font-bold text-slate-800 dark:text-slate-100">{form.salesAccountNumber || form.salesAccountNo || "-"}</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Supplier</span><span className="font-bold text-slate-800 dark:text-slate-100 truncate block">{form.supplierName || form.purchaseAccountName || "-"}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Supplier</span><span className="font-bold text-slate-800 dark:text-slate-100 truncate block">{form.supplierName || form.purchaseAccountName || "Purchase Account"}</span></div>
               <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Company & Branch</span><span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{form.branchName || "Main Branch"}</span></div>
               <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Goods & Brand</span><span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{form.goodsName || form.itemName || "-"} ({form.brand || "-"})</span></div>
               <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Contract Qty (Bags)</span><span className="font-mono font-black text-slate-800 dark:text-slate-100">{totalPOQty.toLocaleString()}</span></div>
@@ -2841,14 +2841,14 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
 
         const formatMoney = (val: number) => val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const getFlag = (cName: string) => {
-          if (!cName) return 'ðŸ³ï¸';
-          if (cName.toLowerCase().includes('pakistan')) return 'ðŸ‡µðŸ‡°';
-          if (cName.toLowerCase().includes('iran')) return 'ðŸ‡®ðŸ‡·';
-          if (cName.toLowerCase().includes('arab emirates') || cName.toLowerCase().includes('uae')) return 'ðŸ‡¦ðŸ‡ª';
-          if (cName.toLowerCase().includes('afghanistan')) return 'ðŸ‡¦ðŸ‡«';
-          if (cName.toLowerCase().includes('india')) return 'ðŸ‡®ðŸ‡³';
-          if (cName.toLowerCase().includes('china')) return 'ðŸ‡¨ðŸ‡³';
-          return 'ðŸ³ï¸';
+          if (!cName) return '';
+          if (cName.toLowerCase().includes('pakistan')) return 'PK';
+          if (cName.toLowerCase().includes('iran')) return 'IR';
+          if (cName.toLowerCase().includes('arab emirates') || cName.toLowerCase().includes('uae')) return 'AE';
+          if (cName.toLowerCase().includes('afghanistan')) return 'AF';
+          if (cName.toLowerCase().includes('india')) return 'IN';
+          if (cName.toLowerCase().includes('china')) return 'CN';
+          return '';
         };
 
         const now = new Date();
@@ -3372,7 +3372,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                             const blNo = payload.blNumber || "-";
                                             const containerNo = r.container_number || payload.containerNumber || "-";
                                             const vessel = payload.vesselName || r.carrier_name || "-";
-                                            const route = [payload.loadingPort || r.loading_location, payload.receivingPort || r.receiving_location].filter(Boolean).join(" âž” ") || "-";
+                                            const route = [payload.loadingPort || r.loading_location, payload.receivingPort || r.receiving_location].filter(Boolean).join(" to ") || "-";
                                             const loadingDateStr = payload.loadingDate || (r.loaded_at ? new Date(r.loaded_at).toLocaleDateString() : "-");
                                             const poAdvanceAmt = Number(poRow.advance_paid || form.advanceAmount || 0);
                                             const advanceUSD = (finance.proRataRatio || 0) * poAdvanceAmt;
