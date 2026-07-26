@@ -187,11 +187,3 @@ export default function WhatsAppSetupPage() {
     </div>
   );
 }
-
-}
-
-}
-
-}
-
-}
