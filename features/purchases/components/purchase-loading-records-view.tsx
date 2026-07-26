@@ -178,7 +178,6 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
       form.quantity ||
       0
   );
-  const contractPurchaseAmount = Number(poRow.order_total || poData.totals?.grandFinal || form.totalAmount || 0);
   const savedLoadedQuantity = Number(
 
     workflow.loadedQuantity ||

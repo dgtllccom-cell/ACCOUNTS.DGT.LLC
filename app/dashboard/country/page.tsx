@@ -174,17 +174,21 @@ async function loadCountryData(countryId: string): Promise<CountryDashboardData>
 
     const branchSummaries = Array.from(branchSummaryMap.values());
 
-    const recentRoznamcha: RecentEntry[] = (recentRows || []).map((row: any) => ({
-      id: row.id,
-      voucher_no: row.voucher_no,
-      entry_date: row.entry_date,
-      type: row.type,
-      status: row.status,
+    let stockValueTotal = 0;
+    const recentRoznamcha: RecentEntry[] = (recentRows || []).map((row: any) => {
       const spec = row.product_specifications || {};
       const qty = Number(spec.stockQty || spec.stock_qty || spec.quantity || spec.qty || 0);
       const price = Number(spec.costPrice || spec.cost_price || spec.purchaseRate || spec.purchase_rate || 0);
       const val = Number(spec.inventoryValue || spec.inventory_value || 0) || (qty * price);
       stockValueTotal += val;
+      return {
+        id: row.id,
+        voucher_no: row.voucher_no,
+        entry_date: row.entry_date,
+        type: row.type,
+        status: row.status,
+        created_at: row.created_at,
+      };
     });
 
     const profitLossTotal = salesTotal - purchaseTotal;

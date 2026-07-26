@@ -137,6 +137,7 @@ export function PayrollReportsView() {
   const totalNet = records.reduce((sum, r) => sum + Number(r.net_salary || 0), 0);
 
   return (
+    <>
     <div className="space-y-6">
       
       {/* Filters header bar */}
@@ -326,7 +327,7 @@ export function PayrollReportsView() {
           />
         </SimpleModal>
       )}
-
+    </>
   );
 }
 

@@ -2559,50 +2559,6 @@ function MenuDivider() {
   return <div className="my-1 border-t border-slate-100" />;
 }
 
-function RoznamchaPrintPreview({
-  open,
-  onClose,
-  rows,
-  scope,
-  lang,
-  title,
-  summary,
-  filters
-}: {
-  open: boolean;
-  onClose: () => void;
-  rows: SuperAdminRoznamchaRow[];
-  scope: string;
-  lang: any;
-  title: string;
-  summary: any;
-  filters: any;
-}) {
-  if (!open || typeof document === "undefined") return null;
-
-  const columns: ReportColumn<SuperAdminRoznamchaRow>[] = scope === "country" ? [
-    { key: "index", header: "SR. NO.", width: "40px", align: "center", render: (_, i) => i + 1 },
-    { key: "branchName", header: "BRANCH NAME", render: (r) => r.cityBranchName || r.countryBranchName || "-" },
-    { key: "branchCode", header: "BRANCH CODE", render: (r) => r.cityBranchCode || r.countryBranchCode || "-" },
-    { key: "transactions", header: "TOTAL TRANSACTIONS", align: "center", render: (r) => "1" },
-    { key: "debit", header: "TOTAL DEBIT", align: "right", render: (r) => (r.debit > 0 ? r.debit.toFixed(2) : "0.00") },
-    { key: "credit", header: "TOTAL CREDIT", align: "right", render: (r) => (r.credit > 0 ? r.credit.toFixed(2) : "0.00") },
-    { key: "balance", header: "BALANCE", align: "right", render: (r) => (r.debit - r.credit).toFixed(2) },
-    { key: "status", header: "STATUS", align: "center", render: (r) => r.status || "Active" },
-  ] : [
-    { key: "index", header: "SR.", width: "30px", align: "center", render: (_, i) => i + 1 },
-    { key: "date", header: "DATE", width: "70px", align: "center", render: (r) => new Date(r.entryDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: '2-digit' }) },
-    { key: "voucherNo", header: "VOUCHER", align: "center", render: (r) => r.voucherNo },
-    { key: "party", header: "ACCOUNT / PARTY", render: (r) => `${r.accountNo ? r.accountNo + " - " : ""}${r.partyName}` },
-          }}
-          onClose={() => setReceiptPrintMode(false)}
-        />,
-        document.body
-      )}
-    </div>
-  );
-}
-
 function BranchJournalGeneralStyleSummary({
   rows,
   viewerName,
