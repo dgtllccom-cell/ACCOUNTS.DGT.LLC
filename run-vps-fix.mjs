@@ -99,4 +99,5 @@ try {
 } catch (e) {
   console.error("Deployment log/error output:");
   console.error(e.stdout || e.stderr || e.message);
+  process.exit(1);
 }

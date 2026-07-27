@@ -86,6 +86,7 @@ async function syncMigrations() {
 
   } catch (err) {
     console.error("❌ Migration Sync Warning/Error:", err.message);
+    process.exit(1);
   } finally {
     await sql.end();
   }
