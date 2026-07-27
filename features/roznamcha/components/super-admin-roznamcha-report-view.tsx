@@ -625,15 +625,18 @@ function filterRows(
 
 function countryStats(rows: SuperAdminRoznamchaRow[]) {
   const map = new Map<string, { name: string; currency: string; entries: number; debit: number; credit: number; balance: number }>();
-  for (const row of rows) {
+  for (const row of rows || []) {
+    if (!row) continue;
     const name = row.countryName && row.countryName !== "-" ? row.countryName : "Unknown Country";
     const currency = row.countryCurrency && row.countryCurrency !== "-" ? row.countryCurrency : row.currency || "-";
-    const key = `${name.toLowerCase()}::${currency.toUpperCase()}`;
+    const key = `${String(name || "").toLowerCase()}::${String(currency || "").toUpperCase()}`;
     const current = map.get(key) ?? { name, currency, entries: 0, debit: 0, credit: 0, balance: 0 };
+    const debitVal = Number(row.debit || 0);
+    const creditVal = Number(row.credit || 0);
     current.entries += 1;
-    current.debit += row.debit;
-    current.credit += row.credit;
-    current.balance += row.debit - row.credit;
+    current.debit += debitVal;
+    current.credit += creditVal;
+    current.balance += debitVal - creditVal;
     map.set(key, current);
   }
   return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));

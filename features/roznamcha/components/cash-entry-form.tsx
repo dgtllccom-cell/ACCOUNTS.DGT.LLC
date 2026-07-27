@@ -979,13 +979,12 @@ export function CashEntryForm({
   // Load ledgers once the branch scope is selected.
   useEffect(() => {
     let cancelled = false;
-    if (!countryId || !countryBranchId) return;
 
     (async () => {
       setLoadingLedgers(true);
       try {
         const res = await listLedgerReportLedgers({
-          reportScope: cityBranchId ? "branch" : "country",
+          reportScope: (countryId && countryBranchId) ? (cityBranchId ? "branch" : "country") : "super_admin",
           countryId: countryId || null,
           countryBranchId: countryBranchId || null,
           cityBranchId: cityBranchId || null,

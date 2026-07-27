@@ -1331,8 +1331,23 @@ export function PurchaseBookingJournalReportView({
   const [usdRates, setUsdRates] = useState<Record<string, number>>({});
   const [lastExchangeRateUpdate, setLastExchangeRateUpdate] = useState<string | null>(null);
   const [allCountriesExpanded, setAllCountriesExpanded] = useState(false);
-  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
-  const [tableViewMode, setTableViewMode] = useState<"standard" | "detailed">("standard");
+  const [tableViewMode, setTableViewMode] = useState<"standard" | "detailed">("detailed");
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("dgt_purchase_register_view_mode");
+      if (saved === "standard" || saved === "detailed") {
+        setTableViewMode(saved);
+      }
+    }
+  }, []);
+
+  const handleViewModeChange = (mode: "standard" | "detailed") => {
+    setTableViewMode(mode);
+    if (typeof window !== "undefined") {
+      localStorage.setItem("dgt_purchase_register_view_mode", mode);
+    }
+  };
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [pageSize, setPageSize] = useState<number>(10);
 
@@ -1628,7 +1643,8 @@ export function PurchaseBookingJournalReportView({
     const draftStatus = safeTerm(filters.draftStatus);
     const search = safeTerm(searchText);
     const filtered = sourceReports.filter((report) => {
-      if (draftStatus && !report.status.toLowerCase().includes(draftStatus)) return false;
+      if (!report) return false;
+      if (draftStatus && !String(report.status || "").toLowerCase().includes(draftStatus)) return false;
       if (
         search &&
         ![
@@ -1665,11 +1681,11 @@ export function PurchaseBookingJournalReportView({
           ...makeContainers(report).map(c => c.blNo)
         ].some((value) => String(value ?? "").toLowerCase().includes(search))
       ) return false;
-      if (supplier && !report.supplierName.toLowerCase().includes(supplier)) return false;
-      if (branch && !report.branchName.toLowerCase().includes(branch)) return false;
-      if (country && !report.countryName.toLowerCase().includes(country)) return false;
-      if (status && !report.status.toLowerCase().includes(status)) return false;
-      if (currency && report.currency.toLowerCase() !== currency) return false;
+      if (supplier && !String(report.supplierName || "").toLowerCase().includes(supplier)) return false;
+      if (branch && !String(report.branchName || "").toLowerCase().includes(branch)) return false;
+      if (country && !String(report.countryName || "").toLowerCase().includes(country)) return false;
+      if (status && !String(report.status || "").toLowerCase().includes(status)) return false;
+      if (currency && String(report.currency || "").toLowerCase() !== currency) return false;
       return true;
     });
 
@@ -1679,9 +1695,9 @@ export function PurchaseBookingJournalReportView({
         || (a as any).ledger_posting_status === "Posted"
         || (a as any).ledger_posting_status === "posted"
         || (a as any).journalStatus === "Posted"
-        || (a as any).journalStatus?.toLowerCase() === "posted"
+        || String((a as any).journalStatus || "").toLowerCase() === "posted"
         || a.form_data?.workflow?.journalStatus === "Posted"
-        || a.form_data?.workflow?.journalStatus?.toLowerCase() === "posted"
+        || String(a.form_data?.workflow?.journalStatus || "").toLowerCase() === "posted"
         || (a as any).ledger_posting_status === "transferred";
       
       const isPostedB = b.status === "Posted"
@@ -1689,9 +1705,9 @@ export function PurchaseBookingJournalReportView({
         || (b as any).ledger_posting_status === "Posted"
         || (b as any).ledger_posting_status === "posted"
         || (b as any).journalStatus === "Posted"
-        || (b as any).journalStatus?.toLowerCase() === "posted"
+        || String((b as any).journalStatus || "").toLowerCase() === "posted"
         || b.form_data?.workflow?.journalStatus === "Posted"
-        || b.form_data?.workflow?.journalStatus?.toLowerCase() === "posted"
+        || String(b.form_data?.workflow?.journalStatus || "").toLowerCase() === "posted"
         || (b as any).ledger_posting_status === "transferred";
 
       if (isPostedA === isPostedB) return 0;
@@ -1706,9 +1722,10 @@ export function PurchaseBookingJournalReportView({
     const blNo = safeTerm(filters.blNo);
     const confirmation = safeTerm(filters.confirmationStatus);
     return allContainers.filter((row) => {
-      if (containerNo && !row.containerNo.toLowerCase().includes(containerNo)) return false;
-      if (blNo && !row.blNo.toLowerCase().includes(blNo)) return false;
-      if (confirmation && row.status.toLowerCase() !== confirmation) return false;
+      if (!row) return false;
+      if (containerNo && !String(row.containerNo || "").toLowerCase().includes(containerNo)) return false;
+      if (blNo && !String(row.blNo || "").toLowerCase().includes(blNo)) return false;
+      if (confirmation && String(row.status || "").toLowerCase() !== confirmation) return false;
       return true;
     });
   }, [allContainers, filters.blNo, filters.confirmationStatus, filters.containerNo]);
@@ -1717,8 +1734,9 @@ export function PurchaseBookingJournalReportView({
     const supplier = safeTerm(filters.financialSupplier);
     const currency = safeTerm(filters.financialCurrency);
     return registerRows.filter((report) => {
-      if (supplier && !report.supplierName.toLowerCase().includes(supplier)) return false;
-      if (currency && report.currency.toLowerCase() !== currency) return false;
+      if (!report) return false;
+      if (supplier && !String(report.supplierName || "").toLowerCase().includes(supplier)) return false;
+      if (currency && String(report.currency || "").toLowerCase() !== currency) return false;
       return true;
     });
   }, [filters.financialCurrency, filters.financialSupplier, registerRows]);
@@ -2362,7 +2380,7 @@ export function PurchaseBookingJournalReportView({
           <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-slate-200 shadow-sm dark:bg-slate-950 dark:border-slate-800">
             <button
               type="button"
-              onClick={() => setTableViewMode("standard")}
+              onClick={() => handleViewModeChange("standard")}
               className={cn(
                 "px-3 py-1.5 text-[10px] font-extrabold rounded-md transition",
                 tableViewMode === "standard"
@@ -2374,7 +2392,7 @@ export function PurchaseBookingJournalReportView({
             </button>
             <button
               type="button"
-              onClick={() => setTableViewMode("detailed")}
+              onClick={() => handleViewModeChange("detailed")}
               className={cn(
                 "px-3 py-1.5 text-[10px] font-extrabold rounded-md transition",
                 tableViewMode === "detailed"

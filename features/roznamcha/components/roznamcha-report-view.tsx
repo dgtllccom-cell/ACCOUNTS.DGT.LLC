@@ -103,7 +103,7 @@ function buildBranchOption(row: RoznamchaEntryRow): SearchSelectOption | null {
 }
 
 function normalizeQuery(value: string) {
-  return value
+  return String(value || "")
     .toLowerCase()
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
