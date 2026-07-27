@@ -42,6 +42,7 @@ export function UnifiedDetailedLedgerView() {
   // Filters
   const [fromDate, setFromDate] = useState(() => {
     const d = new Date();
+    d.setMonth(0);
     d.setDate(1);
     return d.toISOString().slice(0, 10);
   });
@@ -61,6 +62,31 @@ export function UnifiedDetailedLedgerView() {
 
   // Exchange Rate (only relevant for super admin, but kept in state)
   const [exchangeRate, setExchangeRate] = useState<number>(278.50);
+
+  const loadStatement = async (targetLedgerId?: string | null, fDate?: string, tDate?: string) => {
+    const ledgerToFetch = targetLedgerId !== undefined ? targetLedgerId : selectedLedgerId;
+    if (!ledgerToFetch) return;
+    setLoading(true);
+    try {
+      const res = await getLedgerStatement({
+        ledgerId: ledgerToFetch.split(","),
+        fromDate: fDate || fromDate,
+        toDate: tDate || toDate,
+        limit: 2000
+      });
+      if (res.found) {
+        setHeader(res.header);
+        setLines(res.lines || []);
+      } else {
+        setHeader(null);
+        setLines([]);
+      }
+    } catch (e) {
+      console.error("Failed to load statement", e);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Search ledgers for dropdown
   useEffect(() => {
@@ -87,6 +113,12 @@ export function UnifiedDetailedLedgerView() {
             label: g.label
           }));
           setLedgerOptions(options);
+
+          if (options.length > 0) {
+            const defaultId = options[0].value;
+            setSelectedLedgerId(defaultId);
+            loadStatement(defaultId);
+          }
         }
       } catch (e) {
         console.error("Failed to load ledgers", e);
@@ -97,27 +129,6 @@ export function UnifiedDetailedLedgerView() {
     fetchOptions();
     return () => { active = false; };
   }, [isSuperAdmin]);
-
-  const loadStatement = async () => {
-    if (!selectedLedgerId) return;
-    setLoading(true);
-    try {
-      const res = await getLedgerStatement({
-        ledgerId: selectedLedgerId.split(","),
-        fromDate,
-        toDate,
-        limit: 1000
-      });
-      if (res.found) {
-        setHeader(res.header);
-        setLines(res.lines || []);
-      }
-    } catch (e) {
-      console.error("Failed to load statement", e);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleApply = () => {
     loadStatement();
@@ -209,7 +220,15 @@ export function UnifiedDetailedLedgerView() {
               label=""
               options={ledgerOptions}
               value={selectedLedgerId ?? ""}
-              onValueChange={(v: string) => setSelectedLedgerId(v)}
+              onValueChange={(v: string) => {
+                setSelectedLedgerId(v);
+                if (v) {
+                  loadStatement(v);
+                } else {
+                  setHeader(null);
+                  setLines([]);
+                }
+              }}
               placeholder="Search Account No..."
             />
           </div>

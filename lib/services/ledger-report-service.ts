@@ -489,10 +489,23 @@ export class LedgerReportService {
     const header = headerRows[0] ?? null;
     if (!header) return { header: null, lines: [], openingBalance: 0 };
 
+    let siblingLedgerIds: string[] = [];
+    if (header.accountId) {
+      const { data: siblingLedgers } = await supabase
+        .from("ledgers")
+        .select("id")
+        .or(`account_id.eq.${header.accountId},enterprise_account_id.eq.${header.accountId}`)
+        .is("deleted_at", null);
+      if (siblingLedgers) {
+        siblingLedgerIds = siblingLedgers.map((l: any) => l.id);
+      }
+    }
+
     const targetLedgerIds = unique([
       ...initialLedgerIds,
       header.ledgerId,
-      header.accountId
+      header.accountId,
+      ...siblingLedgerIds
     ].filter(Boolean)) as string[];
 
     const [batchRes, rozRes, jlRes, priorBatchRes, priorRozRes] = await Promise.all([

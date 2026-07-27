@@ -74,6 +74,15 @@ export async function POST(req: NextRequest) {
 
     const supabase = createSupabaseAdminClient() as any;
 
+    // ── Rule 1: Country Scope Validation for Expense Ledgers ──
+    const { validateLedgerCountryScope } = await import("@/lib/api/country-scope-validator");
+    if (header.debitLedgerId) {
+      await validateLedgerCountryScope(session, header.debitLedgerId, null, supabase);
+    }
+    if (header.creditLedgerId) {
+      await validateLedgerCountryScope(session, header.creditLedgerId, null, supabase);
+    }
+
     let billId = header.id;
 
     if (billId) {

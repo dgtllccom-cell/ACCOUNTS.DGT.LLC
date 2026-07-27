@@ -16,8 +16,11 @@ export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
     const language = await getRequestLanguage();
+    const allLedgerIds = request.nextUrl.searchParams.getAll("ledgerId").filter(Boolean);
+    const rawLedgerId = allLedgerIds.length > 0 ? allLedgerIds.join(",") : (request.nextUrl.searchParams.get("ledgerId") ?? "");
+
     const query = querySchema.parse({
-      ledgerId: request.nextUrl.searchParams.get("ledgerId"),
+      ledgerId: rawLedgerId,
       fromDate: request.nextUrl.searchParams.get("fromDate"),
       toDate: request.nextUrl.searchParams.get("toDate"),
       limit: request.nextUrl.searchParams.get("limit") ?? undefined

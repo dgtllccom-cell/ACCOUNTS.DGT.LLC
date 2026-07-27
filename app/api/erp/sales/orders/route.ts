@@ -177,11 +177,39 @@ export async function GET(request: NextRequest) {
   }
 }
 
+import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
+import { validateAccountCountryScope, validateLedgerCountryScope } from "@/lib/api/country-scope-validator";
+
 export async function POST(request: NextRequest) {
+  let idempotencyKey = "";
+  let tenantHash = "";
   try {
     await ensureTableExists();
     const session = await requireErpSession();
-    const body = salesOrderSchema.parse(await request.json());
+    const rawJson = await request.json();
+
+    const lockRes = await acquireIdempotencyLock({
+      req: request,
+      scopeModule: "SALES_ORDER",
+      userId: session.userId,
+      countryId: session.countryId,
+      cityBranchId: session.cityBranchId,
+      businessReference: rawJson?.salesOrderNo || rawJson?.salesContractNo,
+      payload: rawJson
+    });
+
+    if (lockRes.isReplayed) {
+      return buildReplayedResponse(lockRes.responseCode || 201, lockRes.responseBody);
+    }
+
+    if (!lockRes.acquired) {
+      return handleApiError(new Error("A request with this idempotency key is currently being processed or duplicate submission detected. Please wait."));
+    }
+
+    idempotencyKey = lockRes.idempotencyKey;
+    tenantHash = lockRes.tenantHash;
+
+    const body = salesOrderSchema.parse(rawJson);
     const effective = await resolveEffectiveScope({
       session,
       requested: {
@@ -201,6 +229,14 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createApiSupabaseClient();
     const admin = createSupabaseAdminClient() as any;
+
+    // ── Rule 1: Country Scope Validation ──
+    if (body.customerAccountId) {
+      await validateAccountCountryScope(session, body.customerAccountId, effective.countryId, admin);
+    }
+    if (body.customerLedgerId) {
+      await validateLedgerCountryScope(session, body.customerLedgerId, effective.countryId, admin);
+    }
     const recordCurrencyCode = await resolveCountryCurrency(admin, effective.countryId, body.currencyCode);
 
     const superAdminSerialNumber = await nextTransactionSerial(admin, "global", "global", "SA");
@@ -299,8 +335,17 @@ export async function POST(request: NextRequest) {
       ipAddress: request.headers.get("x-forwarded-for") ?? null
     });
 
-    return apiCreated({ salesOrderId: (row as any).id, salesOrderNo: (row as any).sales_order_no });
+    const resData = { salesOrderId: (row as any).id, salesOrderNo: (row as any).sales_order_no };
+
+    if (idempotencyKey && tenantHash) {
+      await commitIdempotencySuccess(idempotencyKey, tenantHash, 201, resData);
+    }
+
+    return apiCreated(resData);
   } catch (error) {
+    if (idempotencyKey && tenantHash) {
+      await releaseIdempotencyLock(idempotencyKey, tenantHash);
+    }
     return handleApiError(error);
   }
 }

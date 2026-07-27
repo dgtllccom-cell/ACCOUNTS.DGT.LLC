@@ -2425,7 +2425,7 @@ export function PurchaseBookingJournalReportView({
               headers={[
                 "Sr.#",
                 "System Bill No.",
-                "Manual Bill No.",
+                "Purchase Contract No.",
                 "Country",
                 "Branch",
                 "Supplier / Party",
@@ -2444,9 +2444,9 @@ export function PurchaseBookingJournalReportView({
                   const srNo = (currentPage - 1) * pageSize + index + 1;
                   const sysBillNo = report.purchaseBookingOrderNumber || "-";
                   const manualBillNo = report.manualBillNumber || report.form_data?.form?.billNo || report.form_data?.form?.manualBillNo || report.form_data?.form?.invoiceNo || "-";
-                  const countryName = report.countryName || "UAE";
+                  const countryName = report.countryName || report.form_data?.form?.countryName || (report as any).country_name || "UAE";
                   const countryFlag = getCountryFlag(countryName);
-                  const branchName = report.branchName || report.form_data?.form?.branchName || "-";
+                  const branchName = report.branchName || report.form_data?.form?.branchName || (report as any).city_branch_name || (report as any).branch_name || "-";
                   const supplierName = report.supplierName || report.form_data?.form?.supplierName || report.form_data?.form?.partyName || "-";
                   const purchaseAcc = report.purchaseAccountNumber || report.form_data?.form?.purchaseAccountNo || (report as any).purchaseAccountCode || "-";
                   const salesAcc = report.salesAccountNumber || report.form_data?.form?.salesAccountNo || (report as any).salesAccountCode || "-";
@@ -2458,6 +2458,7 @@ export function PurchaseBookingJournalReportView({
                     || (report as any).ledger_posting_status === "Posted"
                     || (report as any).ledgerPostingStatus === "Transferred"
                     || (report as any).ledger_posting_status === "Transferred"
+                    || (report as any).is_transferred === true
                     || report.status === "Transferred"
                     || report.status === "transferred";
 
@@ -2474,20 +2475,24 @@ export function PurchaseBookingJournalReportView({
 
                   let statusLabel = "Draft";
                   let statusBadgeClass = "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300";
-                  let rowBgClass = "bg-white text-slate-800 dark:bg-slate-950 dark:text-slate-200";
+                  let rowBgClass = "bg-white text-slate-900 font-semibold dark:bg-slate-950 dark:text-slate-100";
+                  let rowTextColor = "text-slate-900 font-semibold";
 
                   if (isCompleted) {
                     statusLabel = "Completed";
                     statusBadgeClass = "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 font-bold";
-                    rowBgClass = "bg-white text-slate-800 dark:bg-slate-950 dark:text-slate-200";
+                    rowBgClass = "bg-white text-slate-900 font-bold dark:bg-slate-950 dark:text-slate-100";
+                    rowTextColor = "text-slate-900 font-bold";
                   } else if (isPosted) {
                     statusLabel = "Transferred";
                     statusBadgeClass = "bg-slate-900 text-white border-slate-900 dark:bg-slate-100 dark:text-slate-900 font-black";
-                    rowBgClass = "bg-white text-slate-900 font-medium dark:bg-slate-950 dark:text-slate-100";
+                    rowBgClass = "bg-white text-slate-900 font-bold dark:bg-slate-950 dark:text-slate-100";
+                    rowTextColor = "text-slate-900 font-bold";
                   } else if (isAccepted) {
-                    statusLabel = "Accepted";
-                    statusBadgeClass = "bg-red-500 text-white border-red-600 font-black shadow-sm";
-                    rowBgClass = "bg-red-50/50 text-red-600 font-bold dark:bg-red-950/20 dark:text-red-400 border-l-4 border-l-red-500";
+                    statusLabel = "Accepted (Not Transferred)";
+                    statusBadgeClass = "bg-red-600 text-white border-red-700 font-black shadow-sm";
+                    rowBgClass = "bg-red-50/80 text-red-600 font-bold dark:bg-red-950/30 dark:text-red-400 border-l-4 border-l-red-600";
+                    rowTextColor = "text-red-600 font-bold";
                   }
 
                   const userName = report.audit?.userName || (report as any).createdByName || "ADMIN";
@@ -2497,29 +2502,29 @@ export function PurchaseBookingJournalReportView({
                       key={report.id}
                       onClick={() => { setSelectedId(report.id); setIsDrawerOpen(true); }}
                       className={cn(
-                        "cursor-pointer border-b border-slate-200 transition-colors hover:bg-slate-100/80 dark:hover:bg-slate-900/60",
+                        "cursor-pointer border-b border-slate-200 transition-colors hover:bg-slate-100/90 dark:hover:bg-slate-900/60",
                         rowBgClass
                       )}
                     >
-                      <Td center className="font-bold text-[10px]">{srNo}</Td>
-                      <Td center className="font-mono font-bold text-[10px] text-blue-600 dark:text-blue-400">{sysBillNo}</Td>
-                      <Td center className="font-mono text-[10px]">{manualBillNo}</Td>
-                      <Td className="text-[10px] whitespace-nowrap">
+                      <Td center className={cn("font-bold text-[10px]", rowTextColor)}>{srNo}</Td>
+                      <Td center className={cn("font-mono font-bold text-[10px]", isAccepted ? "text-red-600 font-black" : "text-blue-600 dark:text-blue-400")}>{sysBillNo}</Td>
+                      <Td center className={cn("font-mono text-[10px]", rowTextColor)}>{manualBillNo}</Td>
+                      <Td className={cn("text-[10px] whitespace-nowrap", rowTextColor)}>
                         <span className="mr-1.5">{countryFlag}</span>
                         <span className="font-semibold">{countryName}</span>
                       </Td>
-                      <Td className="font-semibold text-[10px] whitespace-nowrap">{branchName}</Td>
-                      <Td className="font-bold text-[10px] whitespace-nowrap">{supplierName}</Td>
-                      <Td className="font-mono text-[10px] whitespace-nowrap">{purchaseAcc}</Td>
-                      <Td className="font-mono text-[10px] whitespace-nowrap">{salesAcc}</Td>
-                      <Td center className="font-semibold whitespace-nowrap text-[10px]">{bookingDateStr}</Td>
-                      <Td right className="font-mono font-bold text-[10px]">{formatMoney(totalAmountNum)}</Td>
+                      <Td className={cn("font-semibold text-[10px] whitespace-nowrap", rowTextColor)}>{branchName}</Td>
+                      <Td className={cn("font-bold text-[10px] whitespace-nowrap", rowTextColor)}>{supplierName}</Td>
+                      <Td className={cn("font-mono text-[10px] whitespace-nowrap", rowTextColor)}>{purchaseAcc}</Td>
+                      <Td className={cn("font-mono text-[10px] whitespace-nowrap", rowTextColor)}>{salesAcc}</Td>
+                      <Td center className={cn("font-semibold whitespace-nowrap text-[10px]", rowTextColor)}>{bookingDateStr}</Td>
+                      <Td right className={cn("font-mono font-bold text-[10px]", isAccepted ? "text-red-600 font-black" : "text-slate-900")}>{formatMoney(totalAmountNum)}</Td>
                       <Td center>
                         <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-[9px] uppercase tracking-wider ${statusBadgeClass}`}>
                           {statusLabel}
                         </span>
                       </Td>
-                      <Td center className="font-bold text-[10px] uppercase text-slate-600 dark:text-slate-400">{userName}</Td>
+                      <Td center className={cn("font-bold text-[10px] uppercase", isAccepted ? "text-red-600 font-black" : "text-slate-700 dark:text-slate-300")}>{userName}</Td>
                       <Td center onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-1">
                           <button
@@ -2801,47 +2806,72 @@ export function PurchaseBookingJournalReportView({
                 const branchSerialNo = (report as any).computedBranchSerial || "-";
                 const purchaseAccCode = report.purchaseAccountNumber || report.form_data?.form?.purchaseAccountNo || "-";
                 const salesAccCode = report.salesAccountNumber || report.form_data?.form?.salesAccountNo || "-";
-                const dateStr = formatShortDate(report.purchaseDate);
+                const dateStr = formatShortDate(report.purchaseDate || report.bookingDate);
                 const goodsName = goods.map((g: any) => g.goodsName).filter(Boolean).join(", ") || report.productName || "-";
+                const ctyName = report.countryName || report.form_data?.form?.countryName || (report as any).country_name || "UAE";
+                const brName = report.branchName || report.form_data?.form?.branchName || (report as any).city_branch_name || (report as any).branch_name || "-";
+
+                const isPosted = report.status === "Posted"
+                  || (report as any).ledgerPostingStatus === "Posted"
+                  || (report as any).ledger_posting_status === "Posted"
+                  || (report as any).ledgerPostingStatus === "Transferred"
+                  || (report as any).ledger_posting_status === "Transferred"
+                  || (report as any).is_transferred === true
+                  || report.status === "Transferred"
+                  || report.status === "transferred";
+
+                const isAccepted = !isPosted && (
+                  report.status === "Accepted"
+                  || report.status === "BOOKING CONFIRMED"
+                  || report.confirmationStatus === "Confirmed"
+                  || report.form_data?.workflow?.confirmationStatus === "Confirmed"
+                  || report.form_data?.workflow?.lifecycleStatus === "Accepted"
+                  || (report.status !== "Draft" && report.status !== "draft" && report.status !== "Open")
+                );
+
+                const rowBgClass = isAccepted
+                  ? "bg-red-50/80 text-red-600 font-bold hover:bg-red-100/90 border-l-4 border-l-red-600"
+                  : "bg-white text-slate-900 font-bold hover:bg-slate-100";
+                const rowTextColor = isAccepted ? "text-red-600 font-bold" : "text-slate-900 font-bold";
 
                 return (
-                  <tr key={report.id} onClick={() => { setSelectedId(report.id); setIsDrawerOpen(true); }} className="cursor-pointer border-b border-slate-200 hover:bg-slate-100">
-                    <Td center className="font-bold text-[10px]">{srNo}</Td>
-                    <Td center className="font-mono text-[10px]">{superSerialNo}</Td>
-                    <Td center className="font-mono text-[10px]">{countrySerialNo}</Td>
-                    <Td center className="font-mono text-[10px]">{branchSerialNo}</Td>
-                    <Td className="text-[10px]">{purchaseAccCode}</Td>
-                    <Td className="text-[10px]">{salesAccCode}</Td>
-                    <Td className="text-[10px]">{report.countryName}</Td>
-                    <Td className="text-[10px]">{report.branchName}</Td>
-                    <Td center className="text-[10px]">{dateStr}</Td>
-                    <Td className="text-[10px]">{report.audit?.userName || "ADMIN"}</Td>
-                    <Td className="text-[10px]">{goodsName}</Td>
-                    <Td center className="text-[10px]">Standard</Td>
-                    <Td center className="text-[10px]">{report.countryName}</Td>
-                    <Td right className="font-mono text-[10px]">{formatNumber(report.quantity || 0)}</Td>
-                    <Td center className="text-[10px]">{report.unit || "KG"}</Td>
-                    <Td right className="font-mono text-[10px]">{formatNumber(report.totalGrossWeight || 0)}</Td>
-                    <Td right className="font-mono text-[10px]">{formatNumber(report.totalNetWeight || 0)}</Td>
-                    <Td center className="text-[10px]">{report.currency || "AED"}</Td>
-                    <Td right className="font-mono text-[10px]">{formatMoney(report.purchaseRate || 0)}</Td>
-                    <Td right className="font-mono font-bold text-[10px]">{formatMoney(report.totalPurchaseAmount || 0)}</Td>
-                    <Td right className="font-mono text-[10px]">0.00</Td>
-                    <Td right className="font-mono text-[10px]">1.00</Td>
-                    <Td center className="text-[10px]">AED</Td>
-                    <Td right className="font-mono font-bold text-[10px]">{formatMoney(report.totalPurchaseAmount || 0)}</Td>
-                    <Td right className="font-mono text-[10px]">0.00</Td>
-                    <Td center className="text-[10px]">100%</Td>
-                    <Td className="text-[10px]">Normal</Td>
-                    <Td center className="text-[10px]">By Road</Td>
-                    <Td className="text-[10px]">{report.countryName}</Td>
-                    <Td className="text-[10px]">Port</Td>
-                    <Td center className="text-[10px]">{dateStr}</Td>
-                    <Td className="text-[10px]">{report.countryName}</Td>
-                    <Td className="text-[10px]">Port</Td>
-                    <Td center className="text-[10px]">{dateStr}</Td>
-                    <Td center><span className="rounded bg-emerald-50 text-emerald-700 px-2 py-0.5 text-[8px] font-bold">YES</span></Td>
-                    <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">Confirmed</span></Td>
+                  <tr key={report.id} onClick={() => { setSelectedId(report.id); setIsDrawerOpen(true); }} className={cn("cursor-pointer border-b border-slate-200 transition-colors", rowBgClass)}>
+                    <Td center className={cn("font-bold text-[10px]", rowTextColor)}>{srNo}</Td>
+                    <Td center className={cn("font-mono text-[10px]", rowTextColor)}>{superSerialNo}</Td>
+                    <Td center className={cn("font-mono text-[10px]", rowTextColor)}>{countrySerialNo}</Td>
+                    <Td center className={cn("font-mono text-[10px]", rowTextColor)}>{branchSerialNo}</Td>
+                    <Td className={cn("text-[10px]", rowTextColor)}>{purchaseAccCode}</Td>
+                    <Td className={cn("text-[10px]", rowTextColor)}>{salesAccCode}</Td>
+                    <Td className={cn("text-[10px] font-semibold", rowTextColor)}>{ctyName}</Td>
+                    <Td className={cn("text-[10px] font-semibold", rowTextColor)}>{brName}</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>{dateStr}</Td>
+                    <Td className={cn("text-[10px] font-semibold", rowTextColor)}>{report.audit?.userName || "ADMIN"}</Td>
+                    <Td className={cn("text-[10px]", rowTextColor)}>{goodsName}</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>Standard</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>{ctyName}</Td>
+                    <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatNumber(report.quantity || 0)}</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>{report.unit || "KG"}</Td>
+                    <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatNumber(report.totalGrossWeight || 0)}</Td>
+                    <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatNumber(report.totalNetWeight || 0)}</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>{report.currency || "AED"}</Td>
+                    <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatMoney(report.purchaseRate || 0)}</Td>
+                    <Td right className={cn("font-mono font-bold text-[10px]", rowTextColor)}>{formatMoney(report.totalPurchaseAmount || 0)}</Td>
+                    <Td right className={cn("font-mono text-[10px]", rowTextColor)}>0.00</Td>
+                    <Td right className={cn("font-mono text-[10px]", rowTextColor)}>1.00</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>AED</Td>
+                    <Td right className={cn("font-mono font-bold text-[10px]", rowTextColor)}>{formatMoney(report.totalPurchaseAmount || 0)}</Td>
+                    <Td right className={cn("font-mono text-[10px]", rowTextColor)}>0.00</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>100%</Td>
+                    <Td className={cn("text-[10px]", rowTextColor)}>Normal</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>By Road</Td>
+                    <Td className={cn("text-[10px]", rowTextColor)}>{ctyName}</Td>
+                    <Td className={cn("text-[10px]", rowTextColor)}>Port</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>{dateStr}</Td>
+                    <Td className={cn("text-[10px]", rowTextColor)}>{ctyName}</Td>
+                    <Td className={cn("text-[10px]", rowTextColor)}>Port</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>{dateStr}</Td>
+                    <Td center><span className={cn("rounded px-2 py-0.5 text-[8px] font-bold", isAccepted ? "bg-red-100 text-red-700 border border-red-300" : "bg-emerald-50 text-emerald-700")}>{isAccepted ? "NO (PENDING)" : "YES"}</span></Td>
+                    <Td center><span className={cn("rounded px-2 py-0.5 text-[8px] font-semibold", isAccepted ? "bg-red-100 text-red-800" : "bg-slate-50 text-slate-700")}>{isAccepted ? "Accepted" : "Confirmed"}</span></Td>
                     <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">Paid</span></Td>
                     <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">Loaded</span></Td>
                     <Td center onClick={(e) => e.stopPropagation()}>

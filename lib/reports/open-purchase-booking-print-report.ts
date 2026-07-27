@@ -86,7 +86,7 @@ export function openPurchaseBookingOrderPrintReport(input: {
         </div>
         <table style="width: 100%; font-size: 7.5px;">
           <tr><td style="color: #64748b;">System Bill No:</td><td style="font-family: monospace; font-weight: 900; color: #1e3a8a;">${escapeHtml(o.systemBillNo)}</td></tr>
-          <tr><td style="color: #64748b;">Manual Bill No:</td><td style="font-family: monospace; font-weight: 800;">${escapeHtml(o.manualBillNo || "-")}</td></tr>
+          <tr><td style="color: #64748b;">Purchase Contract No:</td><td style="font-family: monospace; font-weight: 800;">${escapeHtml(o.manualBillNo || "-")}</td></tr>
           <tr><td style="color: #64748b;">Super S/N:</td><td style="font-family: monospace; color: #0d9488;">${escapeHtml(o.superAdminSerialNo || "-")}</td></tr>
           <tr><td style="color: #64748b;">Country S/N:</td><td style="font-family: monospace; color: #d97706;">${escapeHtml(o.countrySerialNo || "-")}</td></tr>
           <tr><td style="color: #64748b;">Branch S/N:</td><td style="font-family: monospace; color: #0284c7;">${escapeHtml(o.branchSerialNo || "-")}</td></tr>

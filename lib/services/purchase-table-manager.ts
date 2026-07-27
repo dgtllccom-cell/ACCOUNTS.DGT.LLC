@@ -9,6 +9,8 @@ async function ensureTablesAndReloadSchema() {
 
     await sql.unsafe(`
       alter table if exists purchase_orders
+        add column if not exists status text default 'Draft',
+        add column if not exists purchase_contract_no text,
         add column if not exists purchase_currency text not null default 'USD',
         add column if not exists payment_currency text not null default 'USD',
         add column if not exists total_goods_original numeric(18,4) not null default 0,
@@ -23,6 +25,8 @@ async function ensureTablesAndReloadSchema() {
         add column if not exists super_admin_serial_number text,
         add column if not exists country_transaction_serial_number text,
         add column if not exists branch_transaction_serial_number text;
+      
+      notify pgrst, 'reload schema';
 
       create table if not exists purchase_order_items (
         id uuid primary key default gen_random_uuid(),

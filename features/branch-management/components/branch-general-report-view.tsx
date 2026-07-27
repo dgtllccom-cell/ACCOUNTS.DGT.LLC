@@ -20,6 +20,7 @@ import {
   PhoneCall,
   Shield,
   ShieldCheck,
+  UserPlus,
   Users,
   X
 } from "lucide-react";
@@ -322,6 +323,7 @@ function BranchUsersPanel({
               <thead>
                 <tr className="border-b bg-slate-50 text-center font-black uppercase tracking-wide text-slate-500">
                   <th className="border-r p-2">SR.</th>
+                  <th className="border-r p-2 text-left">User ID</th>
                   <th className="border-r p-2">Country</th>
                   <th className="border-r p-2">City</th>
                   <th className="border-r p-2">Branch</th>
@@ -338,6 +340,7 @@ function BranchUsersPanel({
                 {users.map((user, index) => (
                   <tr key={user.id} className="border-b text-center text-slate-700 hover:bg-indigo-50/30">
                     <td className="border-r p-2 font-bold">{index + 1}</td>
+                    <td className="border-r p-2 text-left font-mono font-bold text-indigo-800 bg-indigo-50/50">{user.id?.slice(0, 8).toUpperCase() || `USR-${index + 1}`}</td>
                     <td className="border-r p-2">{user.countryName || "-"}</td>
                     <td className="border-r p-2">{user.cityName || "-"}</td>
                     <td className="border-r p-2">{user.branchName || "-"}</td>
@@ -1740,6 +1743,16 @@ export function BranchGeneralReportView({
                                   label={isExpanded ? "Hide City Branches" : "Show City Branches"}
                                   onClick={() => { toggleCountryRow(country.id); setActiveActionDropdownId(null); setActiveActionAnchorRect(null); }}
                                 />
+                                <ActionItem
+                                  icon={<UserPlus className="h-3.5 w-3.5" />}
+                                  label="Create User for Country"
+                                  color="indigo"
+                                  onClick={() => {
+                                    window.location.href = `/dashboard/settings/users/new?countryId=${encodeURIComponent(country.id)}`;
+                                    setActiveActionDropdownId(null);
+                                    setActiveActionAnchorRect(null);
+                                  }}
+                                />
                                 {mainBranch ? (
                                   <>
                                     <ActionItem
@@ -1883,6 +1896,16 @@ export function BranchGeneralReportView({
                                                     className="rounded border border-indigo-200 bg-white px-2 py-0.5 text-[8px] font-bold text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 shadow-sm transition-all"
                                                   >
                                                     Edit
+                                                  </button>
+                                                  <button
+                                                    onClick={() => {
+                                                      window.location.href = `/dashboard/settings/users/new?cityBranchId=${encodeURIComponent(cityBranch.id)}&countryId=${encodeURIComponent(country.id)}`;
+                                                    }}
+                                                    className="rounded border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[8px] font-bold text-indigo-700 hover:bg-indigo-100 shadow-sm transition-all inline-flex items-center gap-0.5"
+                                                    title={`Create new user for ${cityBranch.name}`}
+                                                  >
+                                                    <UserPlus className="h-2.5 w-2.5" />
+                                                    + User
                                                   </button>
                                                 </div>
                                               </td>

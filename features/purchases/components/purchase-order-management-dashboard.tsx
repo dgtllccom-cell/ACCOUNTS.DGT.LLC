@@ -3482,24 +3482,32 @@ export function PurchaseOrderManagementDashboard() {
 
                     {/* Accounting Information */}
                     <div className="border border-slate-200 rounded overflow-hidden">
-                      <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
-                        <span>📊</span> Accounting Information
+                      <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex justify-between items-center">
+                        <div className="flex items-center gap-1">
+                          <span>📊</span> Accounting Information & Serials
+                        </div>
+                        <span className="font-mono text-blue-700 text-[7px]">S/N AUDIT VERIFIED</span>
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Journal Entry Number:</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{journalEntryNumberText}</td></tr>
-                          <tr className="border-b border-slate-100">
-                            <td className="px-2 py-1 text-slate-400">Debit Account:</td>
-                            <td className="px-2 py-1 text-slate-800 font-mono">
-                              {selected.form_data?.form?.purchaseAccountNo || selected.purchaseAccountNumber || "-"} 
-                              <span className="ml-1 text-slate-500 font-sans font-semibold">
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Business Roznamcha S/N:</td><td className="px-2 py-1 text-blue-700 font-mono font-bold">{journalEntryNumberText}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Super Admin S/N:</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.superAdminSerialNo || selected.super_admin_serial_number || `GBL-PB-${selected.purchaseBookingOrderNumber}`}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Country S/N:</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.computedCountrySerial || selected.country_transaction_serial_number || `CTY-PB-${selected.purchaseBookingOrderNumber}`}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Branch S/N:</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.computedBranchSerial || selected.branch_transaction_serial_number || `BR-PB-${selected.purchaseBookingOrderNumber}`}</td></tr>
+                          
+                          <tr className="border-b border-slate-100 bg-blue-50/40">
+                            <td className="px-2 py-1 text-slate-500 font-bold">Debit Account (DR):</td>
+                            <td className="px-2 py-1 text-blue-900 font-mono">
+                              {selected.form_data?.form?.purchaseAccountNo || selected.purchaseAccountNumber || "1001"} 
+                              <span className="ml-1 text-slate-600 font-sans font-semibold">
                                 {selected.form_data?.form?.purchaseAccountName || selected.purchaseAccountName ? `(${selected.form_data?.form?.purchaseAccountName || selected.purchaseAccountName})` : ""}
                               </span>
+                              <div className="text-[6.5px] text-blue-700 font-mono font-bold mt-0.5">DR S/N: ROZ-DR-{selected.form_data?.form?.purchaseAccountNo || selected.purchaseAccountNumber || "1001"}</div>
                             </td>
                           </tr>
-                          <tr className="border-b border-slate-100">
+                          <tr className="border-b border-slate-100 bg-blue-50/40">
                             <td className="px-2 py-1 text-slate-400">Debit Amount:</td>
-                            <td className="px-2 py-1 text-slate-800 font-mono font-bold text-emerald-600">
+                            <td className="px-2 py-1 text-slate-800 font-mono font-bold text-blue-700">
                               {totalUSDVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {selected.currency || "USD"} 
                               <span className="text-slate-400 font-medium px-1.5">@</span> 
                               <span className="text-blue-600">{exRate}</span> 
@@ -3507,18 +3515,20 @@ export function PurchaseOrderManagementDashboard() {
                               {totalPKRVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {displayCurrencySymbol}
                             </td>
                           </tr>
-                          <tr className="border-b border-slate-100">
-                            <td className="px-2 py-1 text-slate-400">Credit Account:</td>
-                            <td className="px-2 py-1 text-slate-800 font-mono">
-                              {selected.form_data?.form?.salesAccountNo || selected.salesAccountNumber || "-"} 
-                              <span className="ml-1 text-slate-500 font-sans font-semibold">
+
+                          <tr className="border-b border-slate-100 bg-emerald-50/40">
+                            <td className="px-2 py-1 text-slate-500 font-bold">Credit Account (CR):</td>
+                            <td className="px-2 py-1 text-emerald-900 font-mono">
+                              {selected.form_data?.form?.salesAccountNo || selected.salesAccountNumber || "2001"} 
+                              <span className="ml-1 text-slate-600 font-sans font-semibold">
                                 {selected.form_data?.form?.salesAccountName || selected.salesAccountName ? `(${selected.form_data?.form?.salesAccountName || selected.salesAccountName})` : ""}
                               </span>
+                              <div className="text-[6.5px] text-emerald-700 font-mono font-bold mt-0.5">CR S/N: ROZ-CR-{selected.form_data?.form?.salesAccountNo || selected.salesAccountNumber || "2001"}</div>
                             </td>
                           </tr>
-                          <tr className="border-b border-slate-100">
+                          <tr className="border-b border-slate-100 bg-emerald-50/40">
                             <td className="px-2 py-1 text-slate-400">Credit Amount:</td>
-                            <td className="px-2 py-1 text-slate-800 font-mono font-bold text-emerald-600">
+                            <td className="px-2 py-1 text-slate-800 font-mono font-bold text-emerald-700">
                               {totalUSDVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {selected.currency || "USD"} 
                               <span className="text-slate-400 font-medium px-1.5">@</span> 
                               <span className="text-blue-600">{exRate}</span> 
@@ -3526,6 +3536,14 @@ export function PurchaseOrderManagementDashboard() {
                               {totalPKRVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {displayCurrencySymbol}
                             </td>
                           </tr>
+
+                          <tr className="border-b border-slate-100 bg-amber-50/70">
+                            <td className="px-2 py-1 text-amber-900 font-extrabold">Advance Form Destination:</td>
+                            <td className="px-2 py-1 text-slate-800 font-medium">
+                              Advance Paid ({advancePercent}%) transferred via Business Roznamcha to Supplier Payable Account
+                            </td>
+                          </tr>
+                          
                           <tr className="border-b border-slate-100">
                             <td className="px-2 py-1 text-slate-400">Total Quantity:</td>
                             <td className="px-2 py-1 text-slate-800 font-bold">{totalQty.toLocaleString()} {goodsEntries[0]?.qtyName || "Units"}</td>

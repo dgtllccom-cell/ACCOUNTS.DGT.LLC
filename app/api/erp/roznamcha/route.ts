@@ -288,6 +288,7 @@ function createOperationalPostingPlan(body: ReturnType<typeof roznamchaPostingSc
 
 export async function postRoznamchaWithErpSession(input: {
   sessionUserId: string;
+  session?: any;
   body: ReturnType<typeof roznamchaPostingSchema.parse>;
 }) {
   const admin = createSupabaseAdminClient() as any;
@@ -349,8 +350,15 @@ export async function postRoznamchaWithErpSession(input: {
     if (!isLedgerScopeCompatible(body.type, ledger.scope)) {
       throw new Error("Ledger belongs to a different financial scope");
     }
-    // Strict branch/country checks removed to allow inter-branch and inter-country 
-    // ledger postings (e.g. Afghanistan order paid from Pakistan account).
+
+    // ── Rule 1: Country Scope Validation ──
+    const { validateLedgerCountryScope, validateAccountCountryScope } = await import("@/lib/api/country-scope-validator");
+    if (input.session) {
+      await validateLedgerCountryScope(input.session, ledgerId, body.countryId, admin);
+      if (enterpriseAccountId) {
+        await validateAccountCountryScope(input.session, enterpriseAccountId, body.countryId, admin);
+      }
+    }
 
     const { data: currentLedger, error: currentLedgerError } = await admin
       .from("ledgers")
@@ -705,7 +713,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const result = await postRoznamchaWithErpSession({ sessionUserId: session.userId, body });
+    const result = await postRoznamchaWithErpSession({ sessionUserId: session.userId, session, body });
 
     // Requirement 9 & 11: Real-time Synchronization
     revalidatePath("/dashboard/roznamcha", "layout");

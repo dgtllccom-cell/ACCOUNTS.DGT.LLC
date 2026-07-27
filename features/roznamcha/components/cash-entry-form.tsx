@@ -333,9 +333,25 @@ export function CashEntryForm({
     cityBranch?: string | null;
     entrySerial?: string | null;
   } | null>(null);
-  const [branchLocked, setBranchLocked] = useState(true);
 
   const [recentEntries, setRecentEntries] = useState<any[]>([]);
+
+  const liveSerials = useMemo(() => {
+    const nextSeq = recentEntries.length + 1;
+    const cIso = selectedCountry?.iso2 || "GLOBAL";
+    const mCode = selectedMainBranch?.code || "MB";
+    const cityCode = selectedCityBranch?.code || "CB";
+    const bCode = selectedCityBranch?.code || selectedMainBranch?.code || "BR";
+
+    return {
+      superAdmin: `JRN-2026-${String(nextSeq).padStart(4, "0")}`,
+      country: `${cIso}-SR-${String(nextSeq).padStart(4, "0")}`,
+      branch: `${bCode}-SR-${String(nextSeq).padStart(4, "0")}`,
+      mainBranch: `${mCode}-SR-${String(nextSeq).padStart(4, "0")}`,
+      cityBranch: `${cityCode}-SR-${String(nextSeq).padStart(4, "0")}`,
+      entrySerial: `CE-${String(nextSeq).padStart(5, "0")}`
+    };
+  }, [recentEntries.length, selectedCountry, selectedMainBranch, selectedCityBranch]);
   const [loadingEntries, setLoadingEntries] = useState(false);
   const [editEntryId, setEditEntryId] = useState<string | null>(null);
   const [activeRowMenuId, setActiveRowMenuId] = useState<string | null>(null);
@@ -1895,7 +1911,9 @@ export function CashEntryForm({
                   className="bg-transparent border-none p-0 outline-none font-bold text-blue-600 dark:text-blue-400 cursor-pointer appearance-none text-xs hover:underline"
                 >
                   <option value="" className="text-slate-900">
-                    {!isSuperAdmin && (!session?.scopes.countryIds || session.scopes.countryIds.length === 0) 
+                    {isSuperAdmin
+                      ? "All Countries (Super Admin View)"
+                      : (!session?.scopes.countryIds || session.scopes.countryIds.length === 0) 
                       ? "No Country Assigned" 
                       : "Select Country"}
                   </option>
@@ -2042,22 +2060,40 @@ export function CashEntryForm({
           <div className="flex flex-col gap-6">
             <div className="grid grid-cols-[110px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
               <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">Journal Serial</span>
-              <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">{savedSerials?.superAdmin || "Pending Save"}</span>
+              <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
+                {savedSerials?.superAdmin || liveSerials.superAdmin}
+                {!savedSerials?.superAdmin && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">(Next)</span>}
+              </span>
 
               <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">Country Serial</span>
-              <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">{savedSerials?.country || "Pending Save"}</span>
+              <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
+                {savedSerials?.country || liveSerials.country}
+                {!savedSerials?.country && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">(Next)</span>}
+              </span>
 
               <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">Branch Serial</span>
-              <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">{savedSerials?.branch || "Pending Save"}</span>
+              <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
+                {savedSerials?.branch || liveSerials.branch}
+                {!savedSerials?.branch && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">(Next)</span>}
+              </span>
 
               <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">Main Branch Sr</span>
-              <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">{(savedSerials as any)?.mainBranch || "Pending Save"}</span>
+              <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
+                {(savedSerials as any)?.mainBranch || liveSerials.mainBranch}
+                {!(savedSerials as any)?.mainBranch && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">(Next)</span>}
+              </span>
 
               <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">City Branch Sr</span>
-              <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">{(savedSerials as any)?.cityBranch || "Pending Save"}</span>
+              <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
+                {(savedSerials as any)?.cityBranch || liveSerials.cityBranch}
+                {!(savedSerials as any)?.cityBranch && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">(Next)</span>}
+              </span>
 
               <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 text-right">Entry Serial</span>
-              <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">{(savedSerials as any)?.entrySerial || "Pending Save"}</span>
+              <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
+                {(savedSerials as any)?.entrySerial || liveSerials.entrySerial}
+                {!(savedSerials as any)?.entrySerial && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-emerald-500/70 font-sans">(Next)</span>}
+              </span>
             </div>
           </div>
           {/* Group 3: Customer Details */}

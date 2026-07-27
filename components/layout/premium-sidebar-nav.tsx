@@ -93,8 +93,8 @@ function PremiumNodeItem({
     isActive ? "text-white" : branchActive ? "text-[#2563EB]" : "text-slate-500 group-hover:text-[#2563EB] dark:text-slate-400"
   );
   const labelClass =
-    "flex min-w-0 flex-1 items-center gap-2.5 py-2 pe-2 ps-3 transition-transform duration-200 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5";
-  const indentStyle = { paddingInlineStart: depth > 0 ? `${12 + depth * 12}px` : undefined };
+    "flex min-w-0 flex-1 items-center gap-2 py-1.5 pe-1.5 ps-2.5 transition-transform duration-200 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5";
+  const indentStyle = { paddingInlineStart: depth > 0 ? `${8 + depth * 8}px` : undefined };
 
   return (
     <div>
@@ -102,7 +102,7 @@ function PremiumNodeItem({
         {href ? (
           <Link href={href} onClick={onNavigate} className={labelClass} style={indentStyle}>
             <SidebarIcon name={node.iconKey} className={iconClass} />
-            <span className="truncate text-start">{t(lang, node.labelKey)}</span>
+            <span className="min-w-0 flex-1 text-start leading-snug break-words text-[12px]">{t(lang, node.labelKey)}</span>
           </Link>
         ) : (
           <button
@@ -112,7 +112,7 @@ function PremiumNodeItem({
             style={indentStyle}
           >
             <SidebarIcon name={node.iconKey} className={iconClass} />
-            <span className="truncate">{t(lang, node.labelKey)}</span>
+            <span className="min-w-0 flex-1 text-start leading-snug break-words text-[12px]">{t(lang, node.labelKey)}</span>
           </button>
         )}
 

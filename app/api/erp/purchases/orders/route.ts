@@ -182,10 +182,37 @@ export async function GET(request: NextRequest) {
   }
 }
 
+import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
+import { validateAccountCountryScope, validateLedgerCountryScope } from "@/lib/api/country-scope-validator";
+
 export async function POST(request: NextRequest) {
+  let idempotencyKey = "";
+  let tenantHash = "";
   try {
-    const rawBody = await request.json();
     const session = await requireErpSession();
+    const rawBody = await request.json();
+
+    const lockRes = await acquireIdempotencyLock({
+      req: request,
+      scopeModule: "PURCHASE_ORDER",
+      userId: session.userId,
+      countryId: session.countryId,
+      cityBranchId: session.cityBranchId,
+      businessReference: rawBody?.purchaseOrderNo || rawBody?.purchaseContractNo,
+      payload: rawBody
+    });
+
+    if (lockRes.isReplayed) {
+      return buildReplayedResponse(lockRes.responseCode || 201, lockRes.responseBody);
+    }
+
+    if (!lockRes.acquired) {
+      return handleApiError(new Error("A request with this idempotency key is currently being processed or duplicate submission detected. Please wait."));
+    }
+
+    idempotencyKey = lockRes.idempotencyKey;
+    tenantHash = lockRes.tenantHash;
+
     const body = purchaseOrderCreateSchema.parse(rawBody);
 
     const effective = await resolveEffectiveScope({
@@ -204,6 +231,18 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createApiSupabaseClient();
     const adminSupabase = createSupabaseAdminClient() as any;
+
+    // ── Rule 1: Country Scope Validation for Purchase Accounts ──
+    const form = body.formData?.form || {};
+    const purchaseAccountId = form.purchaseAccountId || form.purchaseAccountNo;
+    const salesAccountId = form.salesAccountId || form.salesAccountNo;
+
+    if (purchaseAccountId) {
+      await validateAccountCountryScope(session, purchaseAccountId, effective.countryId, adminSupabase);
+    }
+    if (salesAccountId) {
+      await validateAccountCountryScope(session, salesAccountId, effective.countryId, adminSupabase);
+    }
 
     let countryPrefix = "PK";
     if (effective.countryId) {
@@ -398,11 +437,20 @@ export async function POST(request: NextRequest) {
     revalidatePath("/dashboard/purchases", "layout");
     revalidatePath("/dashboard/reports", "layout");
 
-    return apiCreated({
+    const resData = {
       purchaseOrderId: orderId as string,
       purchaseOrderNo: (inserted as any).purchase_order_no as string
-    });
+    };
+
+    if (idempotencyKey && tenantHash) {
+      await commitIdempotencySuccess(idempotencyKey, tenantHash, 201, resData);
+    }
+
+    return apiCreated(resData);
   } catch (error: any) {
+    if (idempotencyKey && tenantHash) {
+      await releaseIdempotencyLock(idempotencyKey, tenantHash);
+    }
     return handleApiError(error);
   }
 }

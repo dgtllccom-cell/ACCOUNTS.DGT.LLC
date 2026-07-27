@@ -39,7 +39,36 @@ const localTermDictionary: Record<string, Record<SupportedLanguage, string>> = {
   "pine nuts": { en: "Pine Nuts (Chilgoza)", ur: "چلغوزہ", ar: "صنوبر", fa: "چلغوزه", ps: "جلغوزي" },
   "saffron": { en: "Pure Saffron", ur: "زعفران", ar: "زعفران", fa: "زعفران", ps: "زعفران" },
   "figs": { en: "Dried Figs", ur: "انجیر", ar: "تین مجفف", fa: "انجیر خشک", ps: "وچ انځر" },
-  "cashews": { en: "Cashews", ur: "کاجو", ar: "كاجو", fa: "کاجو", ps: "کاجو" }
+  "cashews": { en: "Cashews", ur: "کاجو", ar: "كاجو", fa: "کاجو", ps: "کاجو" },
+
+  // Transaction Statuses
+  "posted": { en: "Posted", ur: "پوسٹ شدہ", ar: "معتمد", fa: "ثبت شده", ps: "ثبت شوی" },
+  "pending": { en: "Pending", ur: "زیرِ التوا", ar: "قيد الانتظار", fa: "در انتظار", ps: "په تمه" },
+  "draft": { en: "Draft", ur: "ڈرافٹ", ar: "مسودة", fa: "پیش‌نویس", ps: "مسوده" },
+  "transferred": { en: "Transferred", ur: "منتقل شدہ", ar: "محول", fa: "منتقل شده", ps: "انتقال شوی" },
+  "completed": { en: "Completed", ur: "مکمل", ar: "مكتمل", fa: "تکمیل شده", ps: "بشپړ شوی" },
+  "paid": { en: "Paid", ur: "ادا شدہ", ar: "مدفوع", fa: "پرداخت شده", ps: "تادیه شوی" },
+  "unpaid": { en: "Unpaid", ur: "غیر ادا شدہ", ar: "غير مدفوع", fa: "پرداخت نشده", ps: "نا تادیه شوی" },
+  "partially_paid": { en: "Partially Paid", ur: "جزوی ادا شدہ", ar: "مدفوع جزئياً", fa: "جزئی پرداخت شده", ps: "جزوي تادیه شوی" },
+
+  // Payment Terms & Methods
+  "advance": { en: "Advance Payment", ur: "پیشگی ادائیگی", ar: "دفعة مقدمة", fa: "پیش‌پرداخت", ps: "مخکینۍ تادیه" },
+  "bank transfer": { en: "Bank Transfer", ur: "بینک ٹرانسفر", ar: "تحويل بنكي", fa: "انتقال بانکی", ps: "بانکي لیږد" },
+  "cash payment": { en: "Cash Payment", ur: "نقد ادائیگی", ar: "دفع نقدي", fa: "پرداخت نقدی", ps: "نغدي تادیه" },
+  "debit": { en: "Debit (DR)", ur: "ڈیبٹ (DR)", ar: "مدين (DR)", fa: "بدهکار (DR)", ps: "ډیبیټ (DR)" },
+  "credit": { en: "Credit (CR)", ur: "کریڈٹ (CR)", ar: "دائن (CR)", fa: "بستانکار (CR)", ps: "کریډیټ (CR)" },
+
+  // Units
+  "kgs": { en: "KGS", ur: "کلو گرام", ar: "كجم", fa: "کیلوگرم", ps: "کیلوګرام" },
+  "bags": { en: "Bags", ur: "بوریاں", ar: "أكياس", fa: "کیسه", ps: "بوجۍ" },
+  "cartons": { en: "Cartons", ur: "کارٹن", ar: "كراتين", fa: "کارتن", ps: "کارتنونه" },
+  "containers": { en: "Containers", ur: "کنٹینرز", ar: "حاويات", fa: "کانتینرها", ps: "کنټینرونه" },
+
+  // Document Titles
+  "purchase booking": { en: "Purchase Booking Order", ur: "خریداری بکنگ آرڈر", ar: "أمر حجز الشراء", fa: "سفارش خرید", ps: "د پیرودلو امر" },
+  "sales order": { en: "Sales Order", ur: "فروخت کا آرڈر", ar: "أمر البيع", fa: "سفارش فروش", ps: "د پلورلو امر" },
+  "customer ledger": { en: "Customer Ledger Report", ur: "کسٹمر لیجر رپورٹ", ar: "تقرير دفتر العميل", fa: "گزارش دفتر مشتری", ps: "د پیرودونکي لیجر راپور" },
+  "roznamcha": { en: "Roznamcha Entry", ur: "روزنامچہ اندراج", ar: "قيد روزنامجة", fa: "ثبت روزنامه", ps: "د روزنامچې لیکل" }
 };
 
 /**

@@ -778,12 +778,12 @@ export function PurchaseOrderWizard({ session }) {
                   <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Purchase Account Details</h4>
                 </div>
                 <div className="space-y-1.5 text-[10px]">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Account Code:</span> <span className="font-bold text-foreground truncate block w-full text-right font-mono" title={form.purchaseAccountNo}>{form.purchaseAccountNo}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Account Code:</span> <span className="font-bold text-foreground truncate block w-full text-right font-mono" title={form.purchaseAccountNo || "Not Selected"}>{form.purchaseAccountNo || "-"}</span></div>
                   <div className="space-y-0.5 pt-1">
                     <span className="text-muted-foreground block text-[9px]">Account Name:</span>
-                    <span className="font-semibold text-foreground block truncate text-xs text-primary" title={form.purchaseAccountName}>{form.purchaseAccountName}</span>
+                    <span className="font-semibold text-foreground block truncate text-xs text-primary" title={form.purchaseAccountName || "Select Purchase Account"}>{form.purchaseAccountName || "Select Purchase Account..."}</span>
                   </div>
-                  <div className="flex justify-between pt-1"><span className="text-muted-foreground">Branch:</span> <span className="font-semibold text-foreground truncate" title={form.purchaseAccountBranch}>{form.purchaseAccountBranch}</span></div>
+                  <div className="flex justify-between pt-1"><span className="text-muted-foreground">Branch:</span> <span className="font-semibold text-foreground truncate" title={form.purchaseAccountBranch || form.branchName || "Main Branch"}>{form.purchaseAccountBranch || form.branchName || "Main Branch"}</span></div>
                   <div className="flex justify-between pt-0.5"><span className="text-muted-foreground">Currency:</span> <span className="font-bold text-foreground">{form.purchaseAccountCurrency || form.purchaseCurrency || form.secondaryCurrency || "-"}</span></div>
                   <div className="flex justify-between items-center pt-0.5 border-t border-border/20 mt-1 relative" ref={purchaseCompanyDropdownRef}>
                     <span className="text-muted-foreground font-semibold">Company:</span>
@@ -939,12 +939,12 @@ export function PurchaseOrderWizard({ session }) {
                   <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Sales Account (CR)</h4>
                 </div>
                 <div className="space-y-1.5 text-[10px]">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Account Code:</span> <span className="font-bold text-foreground truncate block w-full text-right font-mono" title={form.salesAccountNo}>{form.salesAccountNo}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">Account Code:</span> <span className="font-bold text-foreground truncate block w-full text-right font-mono" title={form.salesAccountNo || "Not Selected"}>{form.salesAccountNo || "-"}</span></div>
                   <div className="space-y-0.5 pt-1">
                     <span className="text-muted-foreground block text-[9px]">Account Name:</span>
-                    <span className="font-semibold text-foreground block truncate text-xs text-primary" title={form.salesAccountName}>{form.salesAccountName}</span>
+                    <span className="font-semibold text-foreground block truncate text-xs text-primary" title={form.salesAccountName || "Select Sales Account"}>{form.salesAccountName || "Select Sales Account..."}</span>
                   </div>
-                  <div className="flex justify-between pt-1"><span className="text-muted-foreground">Branch:</span> <span className="font-semibold text-foreground truncate" title={form.salesAccountBranch}>{form.salesAccountBranch}</span></div>
+                  <div className="flex justify-between pt-1"><span className="text-muted-foreground">Branch:</span> <span className="font-semibold text-foreground truncate" title={form.salesAccountBranch || form.branchName || "Main Branch"}>{form.salesAccountBranch || form.branchName || "Main Branch"}</span></div>
                   <div className="flex justify-between pt-0.5"><span className="text-muted-foreground">Currency:</span> <span className="font-bold text-foreground">{form.salesAccountCurrency || form.purchaseCurrency || form.secondaryCurrency || "-"}</span></div>
                   <div className="flex justify-between items-center pt-0.5 border-t border-border/20 mt-1 relative" ref={salesCompanyDropdownRef}>
                     <span className="text-muted-foreground font-semibold">Company:</span>
@@ -1227,15 +1227,25 @@ export function PurchaseOrderWizard({ session }) {
     let cancelled = false;
     async function loadScopedAccounts() {
       try {
-        const params = new URLSearchParams({ limit: "500" });
-        if (form.countryId) params.set("countryId", form.countryId);
+        const params = new URLSearchParams({ limit: "1000" });
+        if (form.countryId && form.countryId !== "All") params.set("countryId", form.countryId);
         if (form.countryBranchId) params.set("countryBranchId", form.countryBranchId);
         if (form.cityBranchId) params.set("cityBranchId", form.cityBranchId);
-        params.set("limit", "1000");
         const response = await fetch(`/api/erp/accounting/accounts?${params.toString()}`, { cache: "no-store" });
         const res = await response.json();
-        if (!cancelled && res?.data?.accounts) {
-          setDbAccounts(res.data.accounts.map(mapEnterpriseAccount));
+        let accounts = [];
+        if (!cancelled && res?.data?.accounts && res.data.accounts.length > 0) {
+          accounts = res.data.accounts.map(mapEnterpriseAccount);
+        }
+        // Fallback to fetch all active accounts if scoped filter returned 0
+        if (accounts.length === 0) {
+          const fallbackRes = await fetch("/api/erp/accounting/accounts?limit=1000", { cache: "no-store" }).then(r => r.json()).catch(() => ({}));
+          if (!cancelled && fallbackRes?.data?.accounts && fallbackRes.data.accounts.length > 0) {
+            accounts = fallbackRes.data.accounts.map(mapEnterpriseAccount);
+          }
+        }
+        if (!cancelled && accounts.length > 0) {
+          setDbAccounts(accounts);
         }
       } catch (err) {
         console.error("Failed to load scoped accounts:", err);
@@ -1300,15 +1310,15 @@ export function PurchaseOrderWizard({ session }) {
     let ports = dbLoadingPorts;
     if (form.loadingCountry) {
       const targetCountry = (form.loadingCountry || "").trim().toLowerCase();
-      ports = ports.filter(p => (p.country?.name || "").trim().toLowerCase() === targetCountry || (p.country_name || "").trim().toLowerCase() === targetCountry);
+      const filtered = ports.filter(p => (p.country?.name || "").trim().toLowerCase() === targetCountry || (p.country_name || "").trim().toLowerCase() === targetCountry || (p.countryName || "").trim().toLowerCase() === targetCountry);
+      if (filtered.length > 0) ports = filtered;
     }
     const mode = form.shippingMode || "By Sea";
-    if (mode === "By Road") {
-      return ports.filter(p => p.transport_type === "road");
-    } else if (mode === "By Air") {
-      return ports.filter(p => p.transport_type === "air");
-    } else if (mode === "By Sea") {
-      return ports.filter(p => p.transport_type === "sea");
+    const modeMap = { "By Road": "road", "By Air": "air", "By Sea": "sea" };
+    const targetType = modeMap[mode];
+    if (targetType) {
+      const typeFiltered = ports.filter(p => p.transport_type === targetType || p.transportType === targetType);
+      if (typeFiltered.length > 0) return typeFiltered;
     }
     return ports;
   }, [dbLoadingPorts, form.loadingCountry, form.shippingMode]);
@@ -1319,15 +1329,15 @@ export function PurchaseOrderWizard({ session }) {
     const recCountry = form.receivingCountry || form.receivedCountry || form.destinationCountry || "";
     if (recCountry) {
       const targetCountry = recCountry.trim().toLowerCase();
-      ports = ports.filter(p => (p.country?.name || "").trim().toLowerCase() === targetCountry || (p.country_name || "").trim().toLowerCase() === targetCountry);
+      const filtered = ports.filter(p => (p.country?.name || "").trim().toLowerCase() === targetCountry || (p.country_name || "").trim().toLowerCase() === targetCountry || (p.countryName || "").trim().toLowerCase() === targetCountry);
+      if (filtered.length > 0) ports = filtered;
     }
     const mode = form.shippingMode || "By Sea";
-    if (mode === "By Road") {
-      return ports.filter(p => p.transport_type === "road");
-    } else if (mode === "By Air") {
-      return ports.filter(p => p.transport_type === "air");
-    } else if (mode === "By Sea") {
-      return ports.filter(p => p.transport_type === "sea");
+    const modeMap = { "By Road": "road", "By Air": "air", "By Sea": "sea" };
+    const targetType = modeMap[mode];
+    if (targetType) {
+      const typeFiltered = ports.filter(p => p.transport_type === targetType || p.transportType === targetType);
+      if (typeFiltered.length > 0) return typeFiltered;
     }
     return ports;
   }, [dbReceivedPorts, form.receivingCountry, form.receivedCountry, form.destinationCountry, form.shippingMode]);
@@ -1620,41 +1630,37 @@ export function PurchaseOrderWizard({ session }) {
     }
   }, [form.countryId, form.countryBranchId, form.cityBranchId, mainBranches, cityBranches, form.purchaseOrderNo, transitCountryOptions]);
 
-  // Auto-select Default Purchase and Sales Accounts for the selected Branch
+  // Auto-select Default Purchase and Sales Accounts for the selected Branch or on initial load
   useEffect(() => {
-    // Only run if we have accounts and a branch is selected
-    if (dbAccounts.length === 0 || !form.countryId) return;
-
-    // Wait until the user has actually selected a branch
-    const branchContextId = form.cityBranchId || form.countryBranchId;
-    if (!branchContextId) return;
+    if (dbAccounts.length === 0) return;
     
-    // Find matching accounts for the current scope
-    const scopedAccounts = dbAccounts.filter(acc => accountMatchesScope(acc));
+    // Find matching accounts for the current scope or fallback to all dbAccounts
+    let scopedAccounts = dbAccounts.filter(acc => accountMatchesScope(acc));
+    if (scopedAccounts.length === 0) {
+      scopedAccounts = dbAccounts;
+    }
 
-    // Try to auto-populate if currently empty OR if current account doesn't belong to the new branch
-    const purchaseNeedsUpdate = !form.purchaseAccountNo || !scopedAccounts.some(a => a.accountCode === form.purchaseAccountNo);
-    const salesNeedsUpdate = !form.salesAccountNo || !scopedAccounts.some(a => a.accountCode === form.salesAccountNo);
+    const purchaseNeedsUpdate = !form.purchaseAccountNo || !dbAccounts.some(a => a.accountCode === form.purchaseAccountNo);
+    const salesNeedsUpdate = !form.salesAccountNo || !dbAccounts.some(a => a.accountCode === form.salesAccountNo);
 
     let newPurchaseAcc = null;
     let newSalesAcc = null;
 
     if (purchaseNeedsUpdate) {
-      newPurchaseAcc = scopedAccounts.find(a => String(a.kind || "").toLowerCase() === "liability" && !a.isControlAccount);
-      if (!newPurchaseAcc) newPurchaseAcc = scopedAccounts.find(a => String(a.kind || "").toLowerCase() === "liability");
+      newPurchaseAcc = scopedAccounts.find(a => String(a.kind || "").toLowerCase() === "liability" && !a.isControlAccount)
+        || scopedAccounts.find(a => String(a.kind || "").toLowerCase() === "liability")
+        || scopedAccounts[0];
     }
     
     if (salesNeedsUpdate) {
-      newSalesAcc = scopedAccounts.find(a => String(a.kind || "").toLowerCase() === "asset" && !a.isControlAccount);
-      if (!newSalesAcc) newSalesAcc = scopedAccounts.find(a => String(a.kind || "").toLowerCase() === "asset");
+      newSalesAcc = scopedAccounts.find(a => String(a.kind || "").toLowerCase() === "asset" && !a.isControlAccount)
+        || scopedAccounts.find(a => String(a.kind || "").toLowerCase() === "asset")
+        || (scopedAccounts.length > 1 ? scopedAccounts[1] : scopedAccounts[0]);
     }
 
-    if (newPurchaseAcc || newSalesAcc) {
-      // applyAccountMaster uses functional updates, so it's safe to call sequentially
-      if (newPurchaseAcc) applyAccountMaster("purchase", newPurchaseAcc);
-      if (newSalesAcc) applyAccountMaster("sales", newSalesAcc);
-    }
-  }, [form.cityBranchId, form.countryBranchId, dbAccounts]);
+    if (newPurchaseAcc) applyAccountMaster("purchase", newPurchaseAcc);
+    if (newSalesAcc) applyAccountMaster("sales", newSalesAcc);
+  }, [form.cityBranchId, form.countryBranchId, form.countryId, dbAccounts]);
 
   // Load latest exchange rate and set currency when country or branch changes
   useEffect(() => {
@@ -1785,11 +1791,8 @@ export function PurchaseOrderWizard({ session }) {
       }
     }
     
-    // Filter by form selected country & branch
-    if (form.countryId && acc.countryId && acc.countryId !== form.countryId) {
-      return false;
-    }
-    if (form.cityBranchId && acc.cityBranchId && acc.cityBranchId !== form.cityBranchId) {
+    // Filter by form selected country & branch - allow global/unassigned accounts
+    if (form.countryId && form.countryId !== "All" && acc.countryId && acc.countryId !== form.countryId) {
       return false;
     }
     
@@ -4787,7 +4790,6 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                 options={currentLoadingPorts.map((p, idx) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
                                 placeholder="Select Port"
                                 addOptionLabel="Add New Port"
-                                disabled={!form.loadingCountry && currentLoadingPorts.length === 0}
                               />
                             </label>
                             <label className="space-y-1">
@@ -4847,7 +4849,6 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                 options={currentReceivedPorts.map((p, idx) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
                                 placeholder="Select Port"
                                 addOptionLabel="Add New Port"
-                                disabled={!(form.receivingCountry || form.destinationCountry || form.receivedCountry) && currentReceivedPorts.length === 0}
                               />
                             </label>
                             <label className="space-y-1">

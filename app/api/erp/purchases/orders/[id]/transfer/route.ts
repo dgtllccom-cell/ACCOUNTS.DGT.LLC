@@ -123,6 +123,28 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     idempotencyKey = lockRes.idempotencyKey;
     tenantHash = lockRes.tenantHash;
 
+    const supabase = await createApiSupabaseClient();
+    const adminSupabase = createSupabaseAdminClient() as any;
+
+    const { data: order, error: orderErr } = await adminSupabase
+      .from("purchase_orders")
+      .select("*")
+      .eq("id", params.id)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (orderErr || !order) {
+      throw new Error(`Purchase order '${params.id}' was not found.`);
+    }
+
+    authorizeApiScope(session, {
+      resource: "purchases",
+      action: "update",
+      countryId: order.country_id,
+      countryBranchId: order.country_branch_id,
+      cityBranchId: order.city_branch_id
+    });
+
     const orderRow = order as any;
     const formData = orderRow.form_data || {};
     const form = formData.form || {};
@@ -152,18 +174,23 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     let creditAccountObj = await resolveLedgerOrAccount(adminSupabase, creditAccountTerm);
 
     if (!debitAccountObj) {
-      const { data: defaultDebit } = await adminSupabase.from("ledgers").select("id, code, name").is("deleted_at", null).limit(1).maybeSingle();
+      const { data: defaultDebit } = await adminSupabase.from("ledgers").select("id, code, name, country_id").is("deleted_at", null).limit(1).maybeSingle();
       debitAccountObj = defaultDebit;
     }
 
     if (!creditAccountObj) {
-      const { data: defaultCredit } = await adminSupabase.from("ledgers").select("id, code, name").is("deleted_at", null).limit(1).maybeSingle();
+      const { data: defaultCredit } = await adminSupabase.from("ledgers").select("id, code, name, country_id").is("deleted_at", null).limit(1).maybeSingle();
       creditAccountObj = defaultCredit;
     }
 
     if (!debitAccountObj || !creditAccountObj) {
       throw new Error("Failed to resolve Purchase Account or Payable Account ledgers in the database.");
     }
+
+    // ── Rule 1: Country Scope Validation ──
+    const { validateLedgerCountryScope } = await import("@/lib/api/country-scope-validator");
+    await validateLedgerCountryScope(session, debitAccountObj.id, orderRow.country_id, adminSupabase);
+    await validateLedgerCountryScope(session, creditAccountObj.id, orderRow.country_id, adminSupabase);
 
     const currencyCode = orderRow.currency_code || form.currencyType || "USD";
     const exRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;

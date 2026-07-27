@@ -100,7 +100,7 @@ export async function getLedgerStatement(params: {
 }) {
   const qp = new URLSearchParams();
   if (Array.isArray(params.ledgerId)) {
-    params.ledgerId.forEach(id => qp.append("ledgerId", id));
+    qp.set("ledgerId", params.ledgerId.join(","));
   } else {
     qp.set("ledgerId", params.ledgerId);
   }
