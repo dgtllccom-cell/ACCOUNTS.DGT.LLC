@@ -1159,6 +1159,25 @@ function SuperAdminRoznamchaReportViewContent({
 
   const [printMode, setPrintMode] = useState(false);
   const [receiptPrintMode, setReceiptPrintMode] = useState(false);
+
+  const isSuperAdminOrCountryAdmin = useMemo(() => {
+    return Boolean(
+      sessionInfo?.scopes?.isSuperAdmin ||
+      sessionInfo?.roles?.some((r) => r === "country_admin" || r === "accountant")
+    );
+  }, [sessionInfo]);
+
+  const canViewConversionColumns = useMemo(() => {
+    const roles = (sessionInfo?.roles ?? []).map((role) => String(role).toLowerCase());
+    return Boolean(sessionInfo?.scopes?.isSuperAdmin || roles.includes("super_admin"));
+  }, [sessionInfo]);
+
+  async function loadReport(rangeFilters: FilterState = appliedFilters) {
+    setRefreshing(true);
+    try {
+      const session = await fetchSessionInfo();
+      setSessionInfo(session);
+
       const selectedCountryId = rangeFilters.countryId !== "all" ? rangeFilters.countryId : null;
       const selectedBranchId = rangeFilters.branchId !== "all" ? rangeFilters.branchId : null;
       const selectedIsCityBranch = selectedBranchId
