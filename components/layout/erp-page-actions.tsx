@@ -124,14 +124,14 @@ export function ErpPageActions() {
   }
 
   return (
-    <section className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200 bg-white/90 px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-900/80">
+    <section className="mb-2.5 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200/80 bg-white/95 px-3 py-1.5 shadow-xs transition-all dark:border-slate-800 dark:bg-slate-900/90">
       <div className="flex min-w-0 items-center gap-2">
         <Button
           type="button"
           variant="outline"
           size="sm"
           onClick={goBack}
-          className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold"
+          className="h-7 gap-1 rounded-lg border-slate-200 bg-slate-50 px-2.5 text-[10px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           aria-label="Back to previous page"
           title="Back"
         >
@@ -141,8 +141,8 @@ export function ErpPageActions() {
         <div id="erp-page-title-slot" className="min-w-0 empty:hidden" />
         <style>{`#erp-page-title-slot:not(:empty) + .default-title { display: none; }`}</style>
         <div className="min-w-0 default-title">
-          <h1 className="truncate text-sm font-black text-slate-900 dark:text-slate-100">{title}</h1>
-          <p className="hidden text-[10px] font-semibold text-slate-400 sm:block">Standard ERP navigation and page actions</p>
+          <h1 className="truncate text-xs font-black tracking-tight text-slate-900 dark:text-slate-100 sm:text-sm">{title}</h1>
+          <p className="hidden text-[9.5px] font-medium text-slate-400 sm:block">Standard ERP navigation and page actions</p>
         </div>
       </div>
 
@@ -154,16 +154,16 @@ export function ErpPageActions() {
             variant="outline"
             size="sm"
             onClick={() => setOpen((current) => !current)}
-            className="h-7 gap-1.5 rounded-lg px-2 text-[10px] font-bold"
+            className="h-7 gap-1 rounded-lg border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
             aria-label="Open page actions menu"
             title="Page actions"
           >
-            <MoreVertical className="h-3.5 w-3.5" aria-hidden />
+            <MoreVertical className="h-3.5 w-3.5 text-slate-500" aria-hidden />
             Actions
           </Button>
 
           {open ? (
-            <div className={cn("absolute right-0 top-full z-40 mt-2 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900")}>
+            <div className={cn("absolute right-0 top-full z-40 mt-1.5 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900")}>
               <button type="button" onClick={() => closeAndRun(() => window.print())} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
                 <Printer className="h-4 w-4" aria-hidden />
                 Print

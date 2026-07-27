@@ -1141,6 +1141,27 @@ function SuperAdminRoznamchaReportViewContent({
   const [reportRibbonOpen, setReportRibbonOpen] = useState(false);
   const [rowMenuOpenId, setRowMenuOpenId] = useState<string | null>(null);
 
+  const [draftFilters, setDraftFilters] = useState<FilterState>({
+    fromDate: "",
+    toDate: "",
+    countryId: "all",
+    branchId: "all",
+    userName: "all",
+    voucherType: "all",
+    partySearch: "",
+    currency: "all"
+  });
+  const [appliedFilters, setAppliedFilters] = useState<FilterState>({
+    fromDate: "",
+    toDate: "",
+    countryId: "all",
+    branchId: "all",
+    userName: "all",
+    voucherType: "all",
+    partySearch: "",
+    currency: "all"
+  });
+
   // Exchange Rates State
   const [ratesDraft, setRatesDraft] = useState({
     pkr: 278.50,

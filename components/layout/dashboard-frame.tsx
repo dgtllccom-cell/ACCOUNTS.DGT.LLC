@@ -314,22 +314,30 @@ export function DashboardFrame({
             {/* Smart Search, Date picker, Bell and Profile controls */}
             <div className="flex items-center gap-4">
               {/* Search trigger filter mockup */}
+              {/* Search trigger filter */}
               <button
                 type="button"
                 onClick={() => setSearchOpen(true)}
                 className="hidden md:flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/80 transition-colors"
               >
                 <Search className="h-3.5 w-3.5" />
-                <span className="font-semibold text-foreground/80">All Countries</span>
-                <svg className="h-3 w-3 text-slate-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
+                <span className="font-semibold text-foreground/80">Search & Filter</span>
+                <kbd className="pointer-events-none hidden h-5 select-none items-center gap-1 rounded border border-border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100 sm:flex">
+                  <span className="text-xs">⌘</span>K
+                </kbd>
               </button>
 
-              {/* Date selector mockup */}
-              <div className="hidden md:flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-foreground/80">
+              {/* Date selector indicator */}
+              <button
+                type="button"
+                onClick={() => setSearchOpen(true)}
+                className="hidden md:flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-foreground/80 hover:bg-muted/80 transition-colors"
+                title="Filter by date range"
+              >
                 <svg className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                <span className="font-semibold">Jul 1 - Jul 14, 2026</span>
+                <span className="font-semibold">All Dates (2026)</span>
                 <svg className="h-3 w-3 text-slate-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
-              </div>
+              </button>
 
               {/* Bell Notification center icon */}
               <button
