@@ -214,27 +214,6 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       cityBranchId: (order as any)?.city_branch_id ?? null
     });
 
-    // --- Idempotency: block duplicate accounting posts on repeated Save/Post/Transfer clicks ---
-    __idemKey =
-      headerKey(request) ??
-      naturalKey([
-        session.userId,
-        params.id,
-        (body as any).kind,
-        (body as any).amount ?? (body as any).amountLocal ?? (body as any).payloadAmount ?? "",
-        (body as any).currencyCode ?? (body as any).currency ?? "",
-        (body as any).entryDate ?? (body as any).paymentDate ?? ""
-      ]);
-    {
-      const __claim = await claimIdempotency(__idemKey, "purchase_payment", session.userId ?? null);
-      if (__claim.state === "duplicate") {
-        if (__claim.status === "completed" && __claim.response) {
-          return apiOk(__claim.response as any);
-        }
-        return apiError("duplicate_submission", "This payment was already submitted; duplicate posting was prevented.", 409);
-      }
-    }
-
     const orderRow = order as any;
     const form = orderRow.form_data?.form || {};
     let exchangeRate = Number(orderRow.exchange_rate || 0);
