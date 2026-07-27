@@ -10,63 +10,61 @@ export async function GET() {
   }
 
   const sql = postgres(dbUrl, { ssl: "require", prepare: false, max: 1 });
+  const errors: string[] = [];
 
   try {
     const countries = await sql`SELECT id, name, iso2, currency_code FROM countries`;
-    const countryBranches = await sql`SELECT id, country_id, name, code FROM country_branches`;
-    const cityBranches = await sql`SELECT id, country_id, country_branch_id, name, code FROM city_branches`;
-
+    const uaeCountry = countries?.find(c => String(c.name || "").toLowerCase().includes("united arab emirates") || c.iso2 === "AE");
+    const pkCountry = countries?.find(c => String(c.name || "").toLowerCase().includes("pakistan") || c.iso2 === "PK");
+    const afgCountry = countries?.find(c => String(c.name || "").toLowerCase().includes("afghanistan") || c.iso2 === "AF");
     const indCountry = countries?.find(c => String(c.name || "").toLowerCase().includes("india") || c.iso2 === "IN");
-    const indCb = countryBranches?.find(cb => cb.country_id === indCountry?.id);
-    const mumbaiCity = cityBranches?.find(c => c.code === "MUM_VASHI" || c.name?.includes("Mumbai"));
 
-    const todayStr = new Date().toISOString();
-    let seeded = 0;
+    // 1. Ensure Country Branches exist for all 4 countries
+    const targetBranches = [
+      { countryId: uaeCountry?.id, name: "United Arab Emirates Main Branch", code: "ARE-MAIN-001", currency: "AED", email: "uae@damaan.com" },
+      { countryId: pkCountry?.id, name: "Pakistan Main Branch", code: "PAK-MAIN-001", currency: "PKR", email: "pk@damaan.com" },
+      { countryId: afgCountry?.id, name: "Afghanistan Main Branch", code: "AFG-MAIN-001", currency: "AFN", email: "afg@damaan.com" },
+      { countryId: indCountry?.id, name: "India Main Branch", code: "IND-MAIN-001", currency: "INR", email: "india@damaan.com" }
+    ];
 
-    if (indCountry && indCb && mumbaiCity) {
-      const list = [
-        { name: "Damandar General Trading Company (Mumbai HQ)", kind: "asset", code: "CO-MUM-01" },
-        { name: "APMC Vashi Dry Fruit Wholesalers Ltd", kind: "liability", code: "PA-MUM-01" },
-        { name: "Navi Mumbai Almond Imports Corp", kind: "liability", code: "PA-MUM-02" },
-        { name: "HDFC Bank - Vashi Market Branch", kind: "asset", code: "BA-MUM-01" },
-        { name: "Mumbai Main Cash Ledger", kind: "asset", code: "CA-MUM-01" },
-        { name: "Vashi Cold Storage & Logistics", kind: "expense", code: "EX-MUM-01" },
-        { name: "JNPT Port Customs Clearing Agent", kind: "liability", code: "PA-MUM-03" },
-        { name: "Maharashtra Goods Freight Agency", kind: "expense", code: "EX-MUM-02" },
-        { name: "Bombay Commodity Sales Account", kind: "income", code: "SA-MUM-01" },
-        { name: "India Import-Export Clearing House", kind: "liability", code: "PA-MUM-04" },
-        ...Array.from({ length: 10 }).map((_, idx) => ({ name: `Vashi Market Merchant ${idx + 1}`, kind: idx % 2 === 0 ? "liability" : "asset", code: `PA-MUM-1${idx}` }))
-      ];
-
-      for (const [idx, item] of list.entries()) {
-        const accNo = `IND-MUM-${String(7000 + idx).padStart(4, "0")}`;
-        const custNo = `CUST-${accNo}`;
-        try {
+    for (const b of targetBranches) {
+      if (!b.countryId) continue;
+      try {
+        const existing = await sql`SELECT id FROM country_branches WHERE country_id = ${b.countryId} LIMIT 1`;
+        if (existing.length === 0) {
           await sql`
-            INSERT INTO enterprise_accounts (
-              account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, branch_code, branch_account_sequence,
-              name, code, kind, currency, scope, country_id, country_branch_id, city_branch_id, status, creation_date
-            ) VALUES (
-              ${accNo}, ${custNo}, ${7000 + idx}, ${`IND-SR-${idx}`}, ${`MUM-BR-${idx}`}, 'MUM_VASHI', ${idx + 1},
-              ${item.name}, ${item.code}, ${item.kind}, 'INR', 'city_branch', ${indCountry.id}, ${indCb.id}, ${mumbaiCity.id}, 'active', ${todayStr}
-            )
-            ON CONFLICT DO NOTHING
+            INSERT INTO country_branches (country_id, name, code, local_currency, email, is_main, status)
+            VALUES (${b.countryId}, ${b.name}, ${b.code}, ${b.currency}, ${b.email}, true, 'active')
           `;
-          seeded++;
-        } catch (e: any) {}
+        }
+      } catch (err: any) {
+        errors.push(`CB err (${b.name}): ${err.message}`);
       }
     }
 
-    const [{ count: totalAcc }] = await sql`SELECT count(*)::int FROM enterprise_accounts`;
-    const [{ count: totalOrders }] = await sql`SELECT count(*)::int FROM purchase_orders`;
+    const countryBranches = await sql`SELECT id, country_id, name, code FROM country_branches`;
+    const indCb = countryBranches?.find(cb => cb.country_id === indCountry?.id);
+
+    // 2. Ensure Mumbai Vashi Market City Branch is linked to India Main Branch
+    if (indCountry && indCb) {
+      try {
+        await sql`
+          UPDATE city_branches
+          SET country_branch_id = ${indCb.id}
+          WHERE country_id = ${indCountry.id} AND (code = 'MUM_VASHI' OR name LIKE '%Mumbai%')
+        `;
+      } catch (err: any) {
+        errors.push(`City update err: ${err.message}`);
+      }
+    }
+
     await sql.end();
 
     return NextResponse.json({
       success: true,
-      message: "Seeded India Mumbai Accounts!",
-      mumbaiAccountsSeeded: seeded,
-      totalAccountsInDatabase: totalAcc,
-      totalPurchaseOrdersInDatabase: totalOrders
+      message: "India Main Branch Created & Linked Successfully!",
+      countryBranchesCount: countryBranches.length,
+      errors
     });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error?.message || String(error) }, { status: 500 });

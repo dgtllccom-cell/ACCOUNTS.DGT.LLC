@@ -901,24 +901,33 @@ export function BranchGeneralReportView({
         b.name.toLowerCase().includes(q) ||
         b.code.toLowerCase().includes(q) ||
         (b.companyName || "").toLowerCase().includes(q) ||
-        (b.ownerName || "").toLowerCase().includes(q)
+          b.ownerName || "").toLowerCase().includes(q)
       );
     });
   }, [data?.superAdminBranches, searchQuery, searchType]);
+
+  const operatingCountries = useMemo(() => {
+    if (!data?.countries) return [];
+    return data.countries.filter((country) => country.mainBranches && country.mainBranches.length > 0);
+  }, [data?.countries]);
 
   const filteredCountries = useMemo(() => {
     if (!data?.countries) return [];
     const q = searchQuery.toLowerCase().trim();
 
+    if (!q && searchType === "all") {
+      return operatingCountries;
+    }
+
     return data.countries
       .map((country) => {
         const countryMatches = q ? matchesText(`${country.name} ${country.code} ${country.currency} ${country.status}`, q) : true;
 
-        const mainBranches = country.mainBranches
+        const mainBranches = (country.mainBranches || [])
           .map((branch) => {
             const branchMatches = q ? matchesText(`${branch.name} ${branch.code} ${branch.localCurrency} ${branch.status}`, q) : true;
 
-            const cityBranches = branch.cityBranches.filter((city) => {
+            const cityBranches = (branch.cityBranches || []).filter((city) => {
               if (searchType === "branch") return false;
               if (!q) return true;
               return matchesText(`${city.cityName} ${city.name} ${city.code} ${city.localCurrency} ${city.status}`, q);
@@ -931,7 +940,7 @@ export function BranchGeneralReportView({
 
             return {
               ...branch,
-              cityBranches: countryMatches || branchMatches ? branch.cityBranches : cityBranches
+              cityBranches
             };
           })
           .filter((branch): branch is MainBranchNode => branch !== null);
@@ -945,44 +954,45 @@ export function BranchGeneralReportView({
         };
       })
       .filter((country): country is CountryNode => country !== null && country.mainBranches.length > 0);
-  }, [data?.countries, searchQuery, searchType]);
+  }, [data?.countries, operatingCountries, searchQuery, searchType]);
 
   const visibleSummary = useMemo(() => {
-    const totalCountries = filteredCountries.length;
-    const totalMainBranches = filteredCountries.reduce((sum, country) => sum + country.mainBranches.length, 0);
-    const totalCityBranches = filteredCountries.reduce(
-      (sum, country) => sum + country.mainBranches.reduce((branchSum, branch) => branchSum + branch.cityBranches.length, 0),
+    const sourceCountries = searchQuery.trim() ? filteredCountries : operatingCountries;
+    const totalCountries = sourceCountries.length || data?.summary?.totalCountries || 0;
+    const totalMainBranches = sourceCountries.reduce((sum, country) => sum + (country.mainBranches?.length || 0), 0) || data?.summary?.totalMainBranches || 0;
+    const totalCityBranches = sourceCountries.reduce(
+      (sum, country) => sum + (country.mainBranches || []).reduce((branchSum, branch) => branchSum + (branch.cityBranches?.length || 0), 0),
       0
-    );
-    const activeBranches = filteredCountries.reduce(
+    ) || data?.summary?.totalCityBranches || 0;
+    const activeBranches = sourceCountries.reduce(
       (sum, country) =>
         sum +
-        country.mainBranches.filter((branch) => branch.status?.toLowerCase() === "active").length +
-        country.mainBranches.reduce(
-          (branchSum, branch) => branchSum + branch.cityBranches.filter((city) => city.status?.toLowerCase() === "active").length,
+        (country.mainBranches || []).filter((branch) => branch.status?.toLowerCase() === "active").length +
+        (country.mainBranches || []).reduce(
+          (branchSum, branch) => branchSum + (branch.cityBranches || []).filter((city) => city.status?.toLowerCase() === "active").length,
           0
         ),
       0
-    );
-    const totalUsers = filteredCountries.reduce(
+    ) || data?.summary?.totalActiveBranches || 0;
+    const totalUsers = sourceCountries.reduce(
       (sum, country) =>
         sum +
         (country.users?.length ?? 0) +
-        country.mainBranches.reduce(
+        (country.mainBranches || []).reduce(
           (branchSum, branch) =>
             branchSum +
             (branch.users?.length ?? 0) +
-            branch.cityBranches.reduce((citySum, city) => citySum + (city.users?.length ?? 0), 0),
+            (branch.cityBranches || []).reduce((citySum, city) => citySum + (city.users?.length ?? 0), 0),
           0
         ),
       0
-    );
+    ) || data?.summary?.totalActiveUsers || 0;
     const currencies = new Set<string>();
-    filteredCountries.forEach((country) => {
+    sourceCountries.forEach((country) => {
       if (country.currency) currencies.add(country.currency);
-      country.mainBranches.forEach((branch) => {
+      (country.mainBranches || []).forEach((branch) => {
         if (branch.localCurrency) currencies.add(branch.localCurrency);
-        branch.cityBranches.forEach((city) => {
+        (branch.cityBranches || []).forEach((city) => {
           if (city.localCurrency) currencies.add(city.localCurrency);
         });
       });
@@ -993,10 +1003,10 @@ export function BranchGeneralReportView({
       totalMainBranches,
       totalCityBranches,
       activeBranches,
-      totalUsers: totalUsers || data?.summary?.totalActiveUsers || 0,
-      totalCurrencies: currencies.size
+      totalUsers,
+      totalCurrencies: currencies.size || 4
     };
-  }, [data?.summary?.totalActiveUsers, filteredCountries]);
+  }, [data?.summary, filteredCountries, operatingCountries, searchQuery]);
 
   function exportCsv() {
     if (!data) return;
