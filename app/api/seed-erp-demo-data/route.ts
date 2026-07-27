@@ -11,135 +11,131 @@ export async function GET() {
 
   const sql = postgres(dbUrl, { ssl: "require", prepare: false, max: 1 });
   const errors: string[] = [];
-  let seededAccountsCount = 0;
-  let seededOrdersCount = 0;
+  let cityBranchesCreated = 0;
+  let accountsSeeded = 0;
 
   try {
     const countries = await sql`SELECT id, name, iso2 FROM countries`;
     const countryBranches = await sql`SELECT id, country_id, name, code FROM country_branches`;
-    const cityBranches = await sql`SELECT id, country_id, country_branch_id, name, code FROM city_branches`;
 
     const uaeCountry = countries?.find(c => String(c.name || "").toLowerCase().includes("united arab emirates") || c.iso2 === "AE") || countries?.[0];
     const pkCountry = countries?.find(c => String(c.name || "").toLowerCase().includes("pakistan") || c.iso2 === "PK") || countries?.[1] || uaeCountry;
+    const afgCountry = countries?.find(c => String(c.name || "").toLowerCase().includes("afghanistan") || c.iso2 === "AF") || countries?.[2] || uaeCountry;
 
     const uaeCb = countryBranches?.find(cb => cb.country_id === uaeCountry?.id) || countryBranches?.[0];
     const pkCb = countryBranches?.find(cb => cb.country_id === pkCountry?.id) || countryBranches?.[1] || uaeCb;
+    const afgCb = countryBranches?.find(cb => cb.country_id === afgCountry?.id) || countryBranches?.[2] || uaeCb;
 
-    const alRasCity = cityBranches?.find(city => String(city.name || "").toLowerCase().includes("al_ras") || String(city.name || "").toLowerCase().includes("al ras")) || cityBranches?.[0];
-    const dubaiMainCity = cityBranches?.find(city => String(city.name || "").toLowerCase().includes("dubai")) || cityBranches?.[1];
-    const chamanCity = cityBranches?.find(city => String(city.name || "").toLowerCase().includes("chaman")) || cityBranches?.[2];
-    const quettaCity = cityBranches?.find(city => String(city.name || "").toLowerCase().includes("quetta")) || cityBranches?.[3];
-
-    // 1. SEED 25 UAE AL_RAS ACCOUNTS
-    for (let i = 1; i <= 25; i++) {
-      const accNo = `UAE-ALRAS-${String(1000 + i).padStart(4, "0")}`;
-      const custNo = `CUST-${accNo}`;
-      const name = i === 1 ? "Al Ras Dry Fruit Traders LLC" : i === 2 ? "Al Ras Foodstuff Trading Co" : i === 3 ? "Dubai Islamic Bank - Al Ras Branch" : i === 4 ? "Al Ras Main Cash Book" : `Al Ras Wholesale Merchant ${i}`;
-      const code = i === 3 ? "BA-2001" : i === 4 ? "CA-3001" : `PA-10${i}`;
-      const kind = i === 3 || i === 4 ? "asset" : "liability";
-      const curr = i % 3 === 0 ? "USD" : "AED";
-
-      try {
-        await sql`
-          INSERT INTO enterprise_accounts (account_number, customer_number, name, code, kind, currency, scope, country_id, country_branch_id, city_branch_id, status)
-          VALUES (${accNo}, ${custNo}, ${name}, ${code}, ${kind}, ${curr}, 'city_branch', ${uaeCountry?.id || null}, ${uaeCb?.id || null}, ${alRasCity?.id || null}, 'active')
-        `;
-        seededAccountsCount++;
-      } catch (err: any) {
-        if (!err.message.includes("unique")) errors.push(`Acc err: ${err.message}`);
-      }
-    }
-
-    // 2. SEED 15 CHAMAN PAKISTAN ACCOUNTS
-    for (let i = 1; i <= 15; i++) {
-      const accNo = `PK-CHM-${String(1000 + i).padStart(4, "0")}`;
-      const custNo = `CUST-${accNo}`;
-      const name = i === 1 ? "Chaman Fruit Market Wholesalers" : i === 2 ? "Meezan Bank - Chaman Branch" : i === 3 ? "Chaman Main Cash Ledger" : `Chaman Mandi Merchant ${i}`;
-      const code = i === 2 ? "BA-CHM-01" : i === 3 ? "CA-CHM-01" : `PA-CHM-${i}`;
-      const kind = i === 2 || i === 3 ? "asset" : "liability";
-
-      try {
-        await sql`
-          INSERT INTO enterprise_accounts (account_number, customer_number, name, code, kind, currency, scope, country_id, country_branch_id, city_branch_id, status)
-          VALUES (${accNo}, ${custNo}, ${name}, ${code}, ${kind}, 'PKR', 'city_branch', ${pkCountry?.id || null}, ${pkCb?.id || null}, ${chamanCity?.id || null}, 'active')
-        `;
-        seededAccountsCount++;
-      } catch (err: any) {
-        if (!err.message.includes("unique")) errors.push(`Acc err: ${err.message}`);
-      }
-    }
-
-    // 3. SEED 15 QUETTA PAKISTAN ACCOUNTS
-    for (let i = 1; i <= 15; i++) {
-      const accNo = `PK-QTA-${String(1000 + i).padStart(4, "0")}`;
-      const custNo = `CUST-${accNo}`;
-      const name = i === 1 ? "Quetta Dry Fruit Commission Agents" : i === 2 ? "Habib Bank Limited - Quetta Branch" : i === 3 ? "Quetta City Main Cash Book" : `Quetta Merchant Account ${i}`;
-      const code = i === 2 ? "BA-QTA-01" : i === 3 ? "CA-QTA-01" : `PA-QTA-${i}`;
-      const kind = i === 2 || i === 3 ? "asset" : "liability";
-
-      try {
-        await sql`
-          INSERT INTO enterprise_accounts (account_number, customer_number, name, code, kind, currency, scope, country_id, country_branch_id, city_branch_id, status)
-          VALUES (${accNo}, ${custNo}, ${name}, ${code}, ${kind}, 'PKR', 'city_branch', ${pkCountry?.id || null}, ${pkCb?.id || null}, ${quettaCity?.id || null}, 'active')
-        `;
-        seededAccountsCount++;
-      } catch (err: any) {
-        if (!err.message.includes("unique")) errors.push(`Acc err: ${err.message}`);
-      }
-    }
-
-    // 4. SEED PURCHASE BOOKING ORDERS
-    const orders = [
-      { no: "PB-2026-0001", manual: "INV-UAE-801", cId: uaeCountry?.id, cbId: uaeCb?.id, citId: alRasCity?.id, cName: "United Arab Emirates", bName: "AL_RAS", sName: "Al Ras Dry Fruit Traders LLC", pName: "Almond Kernels USA Extra No. 1", qty: 1200, unit: "BAGS", amount: 323400, final: 1187686, curr: "USD", fCurr: "AED" },
-      { no: "PB-2026-0002", manual: "INV-UAE-802", cId: uaeCountry?.id, cbId: uaeCb?.id, citId: alRasCity?.id, cName: "United Arab Emirates", bName: "AL_RAS", sName: "Al Ras Foodstuff Trading Co", pName: "Pistachios Roasted Salted Kerman", qty: 800, unit: "BAGS", amount: 360640, final: 1324450, curr: "USD", fCurr: "AED" },
-      { no: "PB-2026-0003", manual: "INV-DXB-901", cId: uaeCountry?.id, cbId: uaeCb?.id, citId: dubaiMainCity?.id, cName: "United Arab Emirates", bName: "Dubai Main Branch", sName: "Gulf Commodities Clearing Agent", pName: "Walnuts In-Shell Chandler", qty: 600, unit: "BAGS", amount: 141120, final: 518263, curr: "USD", fCurr: "AED" },
-      { no: "PB-2026-0004", manual: "INV-PK-CHM-101", cId: pkCountry?.id, cbId: pkCb?.id, citId: chamanCity?.id, cName: "Pakistan", bName: "Chaman Branch", sName: "Chaman Fruit Market Wholesalers", pName: "Green Raisins Sundekhani Grade A", qty: 1500, unit: "BAGS", amount: 235200, final: 65385600, curr: "USD", fCurr: "PKR" },
-      { no: "PB-2026-0005", manual: "INV-PK-QTA-201", cId: pkCountry?.id, cbId: pkCb?.id, citId: quettaCity?.id, cName: "Pakistan", bName: "Quetta Branch", sName: "Quetta Dry Fruit Commission Agents", pName: "Pine Nuts Chilgoza Whole Unshelled", qty: 400, unit: "BAGS", amount: 558600, final: 155290800, curr: "USD", fCurr: "PKR" }
+    // 1. ENSURE CITY BRANCHES EXIST
+    const targetCityBranches = [
+      { countryId: afgCountry?.id, countryBranchId: afgCb?.id, cityName: "Kandahar", name: "Kandahar City Branch", code: "KND", curr: "AFN", email: "kandahar@damaan.com" },
+      { countryId: afgCountry?.id, countryBranchId: afgCb?.id, cityName: "Kabul", name: "Kabul City Branch", code: "KBL", curr: "AFN", email: "kabul@damaan.com" },
+      { countryId: afgCountry?.id, countryBranchId: afgCb?.id, cityName: "Herat", name: "Herat City Branch", code: "HRT", curr: "AFN", email: "herat@damaan.com" },
+      { countryId: pkCountry?.id, countryBranchId: pkCb?.id, cityName: "Chaman", name: "Chaman City Branch", code: "CHM", curr: "PKR", email: "chaman@damaan.com" },
+      { countryId: pkCountry?.id, countryBranchId: pkCb?.id, cityName: "Quetta", name: "Quetta City Branch", code: "QTA", curr: "PKR", email: "quetta@damaan.com" },
+      { countryId: uaeCountry?.id, countryBranchId: uaeCb?.id, cityName: "Al Ras", name: "AL_RAS City Branch", code: "ALRAS", curr: "AED", email: "alras@damaan.com" },
+      { countryId: uaeCountry?.id, countryBranchId: uaeCb?.id, cityName: "Dubai", name: "Dubai Main City Branch", code: "DXB", curr: "AED", email: "dubai@damaan.com" }
     ];
 
-    for (const o of orders) {
-      const formDataJson = JSON.stringify({
-        form: {
-          billNo: o.manual,
-          supplierName: o.sName,
-          countryName: o.cName,
-          branchName: o.bName,
-          purchaseCurrency: o.curr,
-          currencyType: o.curr,
-          advancePercent: 10,
-          advanceAmountFc: o.amount * 0.1,
-          advanceAmountLc: o.final * 0.1,
-          remainingAmountFc: o.amount * 0.9,
-          remainingAmountLc: o.final * 0.9
-        },
-        goodsEntries: [
-          {
-            goodsName: o.pName,
-            qtyNo: o.qty,
-            qtyName: o.unit,
-            qtyKgs: 50,
-            emptyKgs: 1,
-            coursePrice: (o.amount / (o.qty * 49)).toFixed(2),
-            totalAmount: o.amount,
-            finalAmount: o.final,
-            origin: o.cName === "Pakistan" ? "Afghanistan" : "USA"
-          }
-        ]
-      });
-
+    for (const b of targetCityBranches) {
+      if (!b.countryId || !b.countryBranchId) continue;
       try {
-        await sql`
-          INSERT INTO purchase_orders (
-            purchase_order_no, country_id, country_branch_id, city_branch_id,
-            purchase_currency, currency_code, order_total, form_data
-          ) VALUES (
-            ${o.no}, ${o.cId || null}, ${o.cbId || null}, ${o.citId || null},
-            ${o.curr}, ${o.curr}, ${o.amount}, ${formDataJson}
-          )
-        `;
-        seededOrdersCount++;
+        const existing = await sql`SELECT id FROM city_branches WHERE country_id = ${b.countryId} AND (code = ${b.code} OR name = ${b.name}) LIMIT 1`;
+        if (existing.length === 0) {
+          await sql`
+            INSERT INTO city_branches (country_id, country_branch_id, city_name, name, code, local_currency, email, status)
+            VALUES (${b.countryId}, ${b.countryBranchId}, ${b.cityName}, ${b.name}, ${b.code}, ${b.curr}, ${b.email}, 'active')
+          `;
+          cityBranchesCreated++;
+        }
       } catch (err: any) {
-        if (!err.message.includes("unique")) errors.push(`Order err: ${err.message}`);
+        errors.push(`City branch err (${b.name}): ${err.message}`);
+      }
+    }
+
+    // Refetch updated city branches
+    const cityBranches = await sql`SELECT id, country_id, country_branch_id, name, code FROM city_branches`;
+    const kandaharCity = cityBranches?.find(city => String(city.name || "").toLowerCase().includes("kandahar") || city.code === "KND");
+    const chamanCity = cityBranches?.find(city => String(city.name || "").toLowerCase().includes("chaman") || city.code === "CHM");
+    const quettaCity = cityBranches?.find(city => String(city.name || "").toLowerCase().includes("quetta") || city.code === "QTA");
+
+    const todayStr = new Date().toISOString();
+
+    // 2. SEED KANDAHAR AFGHANISTAN ACCOUNTS (15 ACCOUNTS)
+    if (afgCountry && afgCb && kandaharCity) {
+      for (let i = 1; i <= 15; i++) {
+        const accNo = `AFG-KND-${String(1000 + i).padStart(4, "0")}`;
+        const custNo = `CUST-${accNo}`;
+        const name = i === 1 ? "Kandahar Dry Fruit Wholesalers" : i === 2 ? "Da Afghanistan Bank - Kandahar Branch" : i === 3 ? "Kandahar Main Cash Ledger" : `Kandahar Dry Fruit Merchant ${i}`;
+        const code = i === 2 ? "BA-KND-01" : i === 3 ? "CA-KND-01" : `PA-KND-${i}`;
+        const kind = i === 2 || i === 3 ? "asset" : "liability";
+
+        try {
+          await sql`
+            INSERT INTO enterprise_accounts (
+              account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, branch_code, branch_account_sequence,
+              name, code, kind, currency, scope, country_id, country_branch_id, city_branch_id, status, creation_date
+            ) VALUES (
+              ${accNo}, ${custNo}, ${4000 + i}, ${`AFG-SR-${i}`}, ${`KND-SR-${i}`}, 'KND', ${i},
+              ${name}, ${code}, ${kind}, 'AFN', 'city_branch', ${afgCountry.id}, ${afgCb.id}, ${kandaharCity.id}, 'active', ${todayStr}
+            )
+          `;
+          accountsSeeded++;
+        } catch (err: any) {
+          if (!err.message.includes("unique")) errors.push(`KND Acc err (${name}): ${err.message}`);
+        }
+      }
+    }
+
+    // 3. SEED CHAMAN PAKISTAN ACCOUNTS (15 ACCOUNTS)
+    if (pkCountry && pkCb && chamanCity) {
+      for (let i = 1; i <= 15; i++) {
+        const accNo = `PK-CHM-${String(2000 + i).padStart(4, "0")}`;
+        const custNo = `CUST-${accNo}`;
+        const name = i === 1 ? "Chaman Fruit Market Wholesalers" : i === 2 ? "Meezan Bank - Chaman Branch" : i === 3 ? "Chaman Main Cash Ledger" : `Chaman Mandi Merchant ${i}`;
+        const code = i === 2 ? "BA-CHM-01" : i === 3 ? "CA-CHM-01" : `PA-CHM-${i}`;
+        const kind = i === 2 || i === 3 ? "asset" : "liability";
+
+        try {
+          await sql`
+            INSERT INTO enterprise_accounts (
+              account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, branch_code, branch_account_sequence,
+              name, code, kind, currency, scope, country_id, country_branch_id, city_branch_id, status, creation_date
+            ) VALUES (
+              ${accNo}, ${custNo}, ${2000 + i}, ${`PK-SR-${i}`}, ${`CHM-SR-${i}`}, 'CHM', ${i},
+              ${name}, ${code}, ${kind}, 'PKR', 'city_branch', ${pkCountry.id}, ${pkCb.id}, ${chamanCity.id}, 'active', ${todayStr}
+            )
+          `;
+          accountsSeeded++;
+        } catch (err: any) {
+          if (!err.message.includes("unique")) errors.push(`CHM Acc err (${name}): ${err.message}`);
+        }
+      }
+    }
+
+    // 4. SEED QUETTA PAKISTAN ACCOUNTS (15 ACCOUNTS)
+    if (pkCountry && pkCb && quettaCity) {
+      for (let i = 1; i <= 15; i++) {
+        const accNo = `PK-QTA-${String(2000 + i).padStart(4, "0")}`;
+        const custNo = `CUST-${accNo}`;
+        const name = i === 1 ? "Quetta Dry Fruit Commission Agents" : i === 2 ? "Habib Bank Limited - Quetta Branch" : i === 3 ? "Quetta City Main Cash Book" : `Quetta Merchant Account ${i}`;
+        const code = i === 2 ? "BA-QTA-01" : i === 3 ? "CA-QTA-01" : `PA-QTA-${i}`;
+        const kind = i === 2 || i === 3 ? "asset" : "liability";
+
+        try {
+          await sql`
+            INSERT INTO enterprise_accounts (
+              account_number, customer_number, account_serial_number, country_serial_number, branch_serial_number, branch_code, branch_account_sequence,
+              name, code, kind, currency, scope, country_id, country_branch_id, city_branch_id, status, creation_date
+            ) VALUES (
+              ${accNo}, ${custNo}, ${3000 + i}, ${`PK-SR-${i + 100}`}, ${`QTA-SR-${i}`}, 'QTA', ${i},
+              ${name}, ${code}, ${kind}, 'PKR', 'city_branch', ${pkCountry.id}, ${pkCb.id}, ${quettaCity.id}, 'active', ${todayStr}
+            )
+          `;
+          accountsSeeded++;
+        } catch (err: any) {
+          if (!err.message.includes("unique")) errors.push(`QTA Acc err (${name}): ${err.message}`);
+        }
       }
     }
 
@@ -147,10 +143,10 @@ export async function GET() {
 
     return NextResponse.json({
       success: true,
-      message: "Seeding complete!",
+      message: "City Branches & Accounts Seeded Successfully!",
       metrics: {
-        accountsCreatedOrUpdated: seededAccountsCount,
-        purchaseOrdersSeeded: seededOrdersCount
+        cityBranchesCreated,
+        accountsSeeded
       },
       errors: errors.slice(0, 10)
     });
