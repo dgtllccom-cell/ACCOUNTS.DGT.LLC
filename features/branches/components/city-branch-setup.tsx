@@ -186,7 +186,9 @@ function normalizeSearch(value: string) {
     .trim();
 }
 
-export function CityBranchSetup() {
+import { Suspense } from "react";
+
+function CityBranchSetupContent() {
   const searchParams = useSearchParams();
   const editId = searchParams.get("editId") ?? "";
   const [drawerBranchData, setDrawerBranchData] = useState<any>(null);
@@ -2483,6 +2485,14 @@ export function CityBranchSetup() {
         )}
       </DetailDrawer>
     </div>
+  );
+}
+
+export function CityBranchSetup() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading City Branch Setup...</div>}>
+      <CityBranchSetupContent />
+    </Suspense>
   );
 }
 

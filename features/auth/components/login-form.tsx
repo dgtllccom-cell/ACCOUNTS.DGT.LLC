@@ -48,7 +48,7 @@ const TAB_SUBTITLES: Record<LoginTab, string> = {
   agent:       "Field agent access portal.",
 };
 
-// ─── Static Placeholders (replace with API calls when ready) ─────────────────
+// ─── Static Placeholders ─────────────────────────────────────────────────────
 const COUNTRIES = ["Pakistan", "Afghanistan", "UAE", "Saudi Arabia", "United Kingdom"];
 const CITIES: Record<string, string[]> = {
   Pakistan:        ["Quetta", "Karachi", "Lahore", "Islamabad", "Peshawar"],
@@ -75,23 +75,23 @@ function SelectField({
 }) {
   return (
     <div className="space-y-1.5">
-      <label className="block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500">
+      <label className="block text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400">
         {label}
       </label>
       <div className="relative">
-        <Icon className="pointer-events-none absolute left-4 top-3.5 h-4 w-4 text-slate-400" aria-hidden />
+        <Icon className="pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 text-slate-400" aria-hidden />
         <select
           name={name}
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="h-[48px] w-full appearance-none rounded-xl border border-slate-200 bg-white pl-11 pr-10 text-sm font-semibold text-slate-700 shadow-sm outline-none transition-all focus:border-blue-600 focus:ring-4 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-blue-400 dark:focus:ring-blue-950"
+          className="h-[46px] sm:h-[48px] w-full appearance-none rounded-xl border border-slate-200 bg-white pl-10 pr-10 text-xs sm:text-sm font-semibold text-slate-700 shadow-xs outline-none transition-all focus:border-blue-600 focus:ring-4 focus:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:focus:border-blue-400 dark:focus:ring-blue-950"
         >
           <option value="">{placeholder}</option>
           {options.map((o) => (
             <option key={o} value={o}>{o}</option>
           ))}
         </select>
-        <ChevronDown className="pointer-events-none absolute right-3 top-3.5 h-4 w-4 text-slate-400" aria-hidden />
+        <ChevronDown className="pointer-events-none absolute right-3.5 top-3.5 h-4 w-4 text-slate-400" aria-hidden />
       </div>
     </div>
   );
@@ -122,17 +122,17 @@ export function LoginForm({ lang }: { lang: SupportedLanguage }) {
   return (
     <div className="w-full">
       {/* Title */}
-      <div className="mb-5">
-        <h2 className="text-[22px] font-black leading-tight tracking-tight text-[#06122d] dark:text-white">
+      <div className="mb-4 sm:mb-5">
+        <h2 className="text-xl sm:text-[22px] font-black leading-tight tracking-tight text-[#06122d] dark:text-white">
           {TAB_TITLES[activeTab]}
         </h2>
-        <p className="mt-1 text-sm font-medium text-slate-500 dark:text-slate-400">
+        <p className="mt-1 text-xs sm:text-sm font-medium text-slate-500 dark:text-slate-400">
           {TAB_SUBTITLES[activeTab]}
         </p>
       </div>
 
-      {/* ── Tab Pills ── */}
-      <div className="mb-6 flex gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-800/60">
+      {/* ── Tab Pills (Responsive Scrollable Container) ── */}
+      <div className="mb-5 flex overflow-x-auto gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-800/60 no-scrollbar">
         {TABS.map((tab) => (
           <button
             key={tab.id}
@@ -140,9 +140,9 @@ export function LoginForm({ lang }: { lang: SupportedLanguage }) {
             id={`login-tab-${tab.id}`}
             onClick={() => handleTabChange(tab.id)}
             className={cn(
-              "flex-1 rounded-lg px-1 py-2 text-[9.5px] font-black uppercase tracking-wider transition-all duration-200",
+              "shrink-0 flex-1 rounded-lg px-2.5 py-2 text-[9px] sm:text-[9.5px] font-black uppercase tracking-wider transition-all duration-200 text-center whitespace-nowrap",
               activeTab === tab.id
-                ? "bg-[#06122d] text-white shadow-sm dark:bg-white dark:text-[#06122d]"
+                ? "bg-[#06122d] text-white shadow-xs dark:bg-white dark:text-[#06122d]"
                 : "text-slate-500 hover:text-[#06122d] dark:text-slate-400 dark:hover:text-white",
             )}
           >
@@ -211,7 +211,7 @@ export function LoginForm({ lang }: { lang: SupportedLanguage }) {
             {activeTab === "agent" ? (
               <UserCircle2
                 className={cn(
-                  "pointer-events-none absolute left-4 top-3.5 h-4 w-4 transition-colors duration-200",
+                  "pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 transition-colors duration-200",
                   idFocused ? "text-blue-600" : "text-slate-400",
                 )}
                 aria-hidden
@@ -219,7 +219,7 @@ export function LoginForm({ lang }: { lang: SupportedLanguage }) {
             ) : (
               <Mail
                 className={cn(
-                  "pointer-events-none absolute left-4 top-3.5 h-4 w-4 transition-colors duration-200",
+                  "pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 transition-colors duration-200",
                   idFocused ? "text-blue-600" : "text-slate-400",
                 )}
                 aria-hidden
@@ -231,7 +231,7 @@ export function LoginForm({ lang }: { lang: SupportedLanguage }) {
               type="text"
               onFocus={() => setIdFocused(true)}
               onBlur={() => setIdFocused(false)}
-              className="h-[48px] rounded-xl border border-slate-200 bg-white pl-11 text-sm font-semibold shadow-sm placeholder:font-normal placeholder:text-slate-400 transition-all focus-visible:border-blue-600 focus-visible:ring-4 focus-visible:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:focus-visible:border-blue-400 dark:focus-visible:ring-blue-950"
+              className="h-[46px] sm:h-[48px] rounded-xl border border-slate-200 bg-white pl-10 text-xs sm:text-sm font-semibold shadow-xs placeholder:font-normal placeholder:text-slate-400 transition-all focus-visible:border-blue-600 focus-visible:ring-4 focus-visible:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:focus-visible:border-blue-400 dark:focus-visible:ring-blue-950"
               placeholder={
                 activeTab === "super_admin" ? "admin@damaan.com"
                 : activeTab === "agent"     ? "agent-id or email"
@@ -254,7 +254,7 @@ export function LoginForm({ lang }: { lang: SupportedLanguage }) {
             </label>
             <Link
               href={"/auth/forgot-password" as Route}
-              className="text-[11px] font-bold text-blue-700 transition-colors hover:underline dark:text-blue-400"
+              className="text-[10.5px] sm:text-[11px] font-bold text-blue-700 transition-colors hover:underline dark:text-blue-400"
             >
               Forgot Password?
             </Link>
@@ -262,7 +262,7 @@ export function LoginForm({ lang }: { lang: SupportedLanguage }) {
           <div className="relative">
             <LockKeyhole
               className={cn(
-                "pointer-events-none absolute left-4 top-3.5 h-4 w-4 transition-colors duration-200",
+                "pointer-events-none absolute left-3.5 top-3.5 h-4 w-4 transition-colors duration-200",
                 pwFocused ? "text-blue-600" : "text-slate-400",
               )}
               aria-hidden
@@ -273,7 +273,7 @@ export function LoginForm({ lang }: { lang: SupportedLanguage }) {
               type={showPassword ? "text" : "password"}
               onFocus={() => setPwFocused(true)}
               onBlur={() => setPwFocused(false)}
-              className="h-[48px] rounded-xl border border-slate-200 bg-white pl-11 pr-12 text-sm font-semibold shadow-sm placeholder:font-normal placeholder:text-slate-400 transition-all focus-visible:border-blue-600 focus-visible:ring-4 focus-visible:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:focus-visible:border-blue-400 dark:focus-visible:ring-blue-950"
+              className="h-[46px] sm:h-[48px] rounded-xl border border-slate-200 bg-white pl-10 pr-12 text-xs sm:text-sm font-semibold shadow-xs placeholder:font-normal placeholder:text-slate-400 transition-all focus-visible:border-blue-600 focus-visible:ring-4 focus-visible:ring-blue-100 dark:border-slate-700 dark:bg-slate-900 dark:focus-visible:border-blue-400 dark:focus-visible:ring-blue-950"
               placeholder="••••••••••"
               autoComplete="current-password"
               required
@@ -313,7 +313,7 @@ export function LoginForm({ lang }: { lang: SupportedLanguage }) {
         <button
           id="login-submit-btn"
           type="submit"
-          className="mt-1 flex h-[52px] w-full items-center justify-center gap-2 rounded-xl text-sm font-black tracking-wide text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:opacity-90 active:scale-[0.985]"
+          className="mt-2 flex h-[48px] sm:h-[52px] w-full items-center justify-center gap-2 rounded-xl text-xs sm:text-sm font-black tracking-wide text-white shadow-lg transition-all duration-300 hover:shadow-xl hover:opacity-90 active:scale-[0.985]"
           style={{
             background: "linear-gradient(135deg, #06122d 0%, #0a5fa8 55%, #0d9488 100%)",
           }}

@@ -259,7 +259,9 @@ function ChipList({
   );
 }
 
-export function SuperAdminBranchSetup() {
+import { Suspense } from "react";
+
+function SuperAdminBranchSetupContent() {
   const searchParams = useSearchParams();
   const editId = searchParams.get("editId") ?? "";
   const [drawerBranchData, setDrawerBranchData] = useState<any>(null);
@@ -1241,6 +1243,14 @@ export function SuperAdminBranchSetup() {
         )}
       </DetailDrawer>
     </div>
+  );
+}
+
+export function SuperAdminBranchSetup() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading Branch Setup...</div>}>
+      <SuperAdminBranchSetupContent />
+    </Suspense>
   );
 }
 

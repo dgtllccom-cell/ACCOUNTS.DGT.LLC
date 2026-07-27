@@ -11,7 +11,9 @@ import { LoadingSlipViewer } from "@/components/reports/loading-slip-viewer";
 import { createPortal } from "react-dom";
 import { numberToWords } from "@/lib/utils/number-to-words";
 
-export function PurchaseLoadingRecordDetailsView({ recordId }: { recordId: string }) {
+import { Suspense } from "react";
+
+function PurchaseLoadingRecordDetailsViewContent({ recordId }: { recordId: string }) {
   const searchParams = useSearchParams();
   const shouldPrint = searchParams.get("print") === "true";
 
@@ -346,5 +348,13 @@ export function PurchaseLoadingRecordDetailsView({ recordId }: { recordId: strin
         document.body
       )}
     </div>
+  );
+}
+
+export function PurchaseLoadingRecordDetailsView(props: { recordId: string }) {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading Loading Record Details...</div>}>
+      <PurchaseLoadingRecordDetailsViewContent {...props} />
+    </Suspense>
   );
 }

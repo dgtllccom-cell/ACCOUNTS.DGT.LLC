@@ -115,7 +115,9 @@ function reportRow(label: string, value: string, tone: "muted" | "primary" = "mu
   );
 }
 
-export function UserRegistrationWizard({ userIdProp }: { userIdProp?: string } = {}) {
+import { Suspense } from "react";
+
+function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const urlUserId = userIdProp || searchParams.get("userId");
@@ -1082,6 +1084,14 @@ export function UserRegistrationWizard({ userIdProp }: { userIdProp?: string } =
         </div>
       </div>
     </div>
+  );
+}
+
+export function UserRegistrationWizard(props: { userIdProp?: string }) {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading User Registration...</div>}>
+      <UserRegistrationWizardContent {...props} />
+    </Suspense>
   );
 }
 

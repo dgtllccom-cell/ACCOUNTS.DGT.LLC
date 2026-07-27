@@ -1,13 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { PurchaseBookingJournalReportView } from "@/features/purchases/components/purchase-booking-journal-report-view";
 import { PurchaseOrderWizard } from "@/features/purchases/components/purchase-order-wizard.jsx";
 import { Button } from "@/components/ui/button";
 import { Plus, ArrowLeft, Table, FileSpreadsheet, Sparkles } from "lucide-react";
 
-export function PurchaseBookingOrderPageWrapper({ session }: { session: any }) {
+function PurchaseBookingOrderPageWrapperContent({ session }: { session: any }) {
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -111,5 +111,13 @@ export function PurchaseBookingOrderPageWrapper({ session }: { session: any }) {
       {/* Main Journal Register Table */}
       <PurchaseBookingJournalReportView lang="en" />
     </div>
+  );
+}
+
+export function PurchaseBookingOrderPageWrapper(props: { session: any }) {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading Purchase Booking Order...</div>}>
+      <PurchaseBookingOrderPageWrapperContent {...props} />
+    </Suspense>
   );
 }

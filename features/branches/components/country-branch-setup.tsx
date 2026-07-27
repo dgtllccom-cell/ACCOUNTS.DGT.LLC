@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
@@ -162,7 +162,9 @@ function asIso3(country: LocationCountry | null) {
   return iso.slice(0, 3).toUpperCase() || "CTR";
 }
 
-export function CountryBranchSetup() {
+import { Suspense } from "react";
+
+function CountryBranchSetupContent() {
   const searchParams = useSearchParams();
   const editId = searchParams.get("editId") ?? "";
   const [drawerBranchData, setDrawerBranchData] = useState<any>(null);
@@ -1395,6 +1397,14 @@ export function CountryBranchSetup() {
         )}
       </DetailDrawer>
     </div>
+  );
+}
+
+export function CountryBranchSetup() {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading Country Branch Setup...</div>}>
+      <CountryBranchSetupContent />
+    </Suspense>
   );
 }
 

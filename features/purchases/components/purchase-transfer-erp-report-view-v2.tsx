@@ -51,7 +51,9 @@ function fmtDate(value: string | null | undefined) {
   return d.toLocaleDateString("en-GB");
 }
 
-export function PurchaseTransferErpReportView({
+import { useState, useEffect, Suspense } from "react";
+
+function PurchaseTransferErpReportViewContent({
   purchaseData: initialData
 }: {
   purchaseData?: any;
@@ -864,5 +866,13 @@ export function PurchaseTransferErpReportView({
       </div>
 
     </div>
+  );
+}
+
+export function PurchaseTransferErpReportView(props: { purchaseData?: any }) {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading Purchase Verification...</div>}>
+      <PurchaseTransferErpReportViewContent {...props} />
+    </Suspense>
   );
 }

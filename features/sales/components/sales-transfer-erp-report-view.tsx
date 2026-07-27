@@ -112,7 +112,9 @@ type GLEntry = {
 
 /* ─────────────────────── main component ─────────────────────── */
 
-export function SalesTransferErpReportView({
+import { useState, useEffect, Suspense } from "react";
+
+function SalesTransferErpReportViewContent({
   purchaseData: initialData
 }: {
   purchaseData?: any;
@@ -683,5 +685,13 @@ function getCurrencySymbol(c: string) {
         }
       `}</style>
     </div>
+  );
+}
+
+export function SalesTransferErpReportView(props: { purchaseData?: any }) {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading Sales Verification...</div>}>
+      <SalesTransferErpReportViewContent {...props} />
+    </Suspense>
   );
 }

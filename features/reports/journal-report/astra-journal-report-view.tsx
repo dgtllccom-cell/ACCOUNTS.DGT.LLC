@@ -239,7 +239,9 @@ function paymentConfigFor(scope: JournalScope): { postingType: RoznamchaType; sc
   return { postingType: "super_admin", scopeMode: "super_admin" };
 }
 
-export function AstraJournalReportView({ lang, scope }: { lang: SupportedLanguage; scope: JournalScope }) {
+import { Suspense } from "react";
+
+function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguage; scope: JournalScope }) {
   const searchParams = useSearchParams();
   const urlCountry = searchParams?.get("country") || "";
 
@@ -881,5 +883,13 @@ function DateInput({ label, value, onChange }: { label: string; value: string; o
         <CalendarDays className="pointer-events-none absolute right-3 top-2.5 h-4 w-4 text-muted-foreground" />
       </div>
     </label>
+  );
+}
+
+export function AstraJournalReportView(props: { lang: SupportedLanguage; scope: JournalScope }) {
+  return (
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading Journal Report...</div>}>
+      <AstraJournalReportViewContent {...props} />
+    </Suspense>
   );
 }
