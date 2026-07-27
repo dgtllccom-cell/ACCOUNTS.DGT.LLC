@@ -1,7 +1,7 @@
 @echo off
 cd /d "%~dp0"
 echo =======================================================================
-echo   AUTOMATED 1-CLICK DEPLOYMENT & SUPABASE DATABASE SYNCHRONIZATION
+echo   AUTOMATED 1-CLICK DEPLOYMENT ^& SUPABASE DATABASE SYNCHRONIZATION
 echo   Repository : dgtllccom-cell/ACCOUNTS.DGT.LLC
 echo   Server     : 72.60.209.121
 echo =======================================================================
@@ -29,6 +29,6 @@ node run-vps-fix.mjs
 
 echo.
 echo =======================================================================
-echo   DEPLOYMENT & DATABASE SYNC COMPLETE!
+echo   DEPLOYMENT ^& DATABASE SYNC COMPLETE!
 echo =======================================================================
 pause

@@ -1,7 +1,7 @@
 "use client";
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   ArrowLeft,
@@ -50,8 +50,6 @@ function fmtDate(value: string | null | undefined) {
   if (Number.isNaN(d.getTime())) return value;
   return d.toLocaleDateString("en-GB");
 }
-
-import { useState, useEffect, Suspense } from "react";
 
 function PurchaseTransferErpReportViewContent({
   purchaseData: initialData

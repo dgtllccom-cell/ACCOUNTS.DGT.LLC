@@ -2,7 +2,7 @@
 
 import { openRoznamchaVoucherPrintReport } from "@/lib/reports/open-roznamcha-voucher-print-report";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { BookOpen, Download, Eye, FileText, Filter, Link2, Maximize2, MoreVertical, Printer, RefreshCcw, Search, Globe, Building2, ChevronDown } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";

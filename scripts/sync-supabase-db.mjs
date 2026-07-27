@@ -22,7 +22,12 @@ async function syncMigrations() {
   console.log("  Target DB:", dbUrl.replace(/:[^:@]+@/, ':****@'));
   console.log("===============================================================\n");
 
-  const sql = postgres(dbUrl, { prepare: false, idle_timeout: 10, connect_timeout: 15 });
+  const sql = postgres(dbUrl, {
+    prepare: false,
+    idle_timeout: 10,
+    connect_timeout: 30,
+    ssl: { rejectUnauthorized: false }
+  });
 
   try {
     // 1. Create a tracking table for applied migrations if it doesn't exist
