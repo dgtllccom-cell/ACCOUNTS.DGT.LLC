@@ -1031,6 +1031,118 @@ function SuperAdminRoznamchaSummary({
           <div className="p-4 flex flex-col justify-center flex-1 w-full gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
             <p className="leading-relaxed">
               Click to {showAllCountries ? "hide" : "view"} detailed breakdown for <span className="font-black text-slate-800 dark:text-slate-200">{activeCountriesCount}</span> scoped countries and their branches.
+            </p>
+            <div className="mt-2 flex items-center gap-2">
+              <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">Live Updating</span>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* Collapsible Country Dashboard Section */}
+      {showAllCountries && (
+        <div className="country-accordion-content block border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+          <div className="p-4 bg-white dark:bg-slate-950">
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {countryDashboardRows.map((item) => (
+                <details key={item.name} className="group/card overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900">
+                  <summary className="cursor-pointer list-none">
+                    <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-3 text-white flex justify-between items-center">
+                      <span className="font-black tracking-wide text-sm flex items-center gap-2">
+                        <span className="transition-transform group-open/card:rotate-90">
+                          <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                        </span>
+                        {getFlag(item.name)} {item.name === 'Pakistan' ? 'Pakistani' : item.name}
+                      </span>
+                      <span className="bg-white/20 text-[10px] font-bold px-2 py-0.5 rounded-full">{item.entries} Trx</span>
+                    </div>
+                    <div className="p-4 space-y-3 bg-white dark:bg-slate-950">
+                      <div className="flex justify-between items-end border-b border-slate-100 dark:border-slate-800 pb-2">
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Currency</span>
+                        <span className="text-base font-black text-slate-800 dark:text-slate-200">{item.currency}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-bold text-slate-500">Total Debit</span>
+                        <span className="font-black text-rose-600">{formatMoney(item.debit)}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-bold text-slate-500">Total Credit</span>
+                        <span className="font-black text-emerald-600">{formatMoney(item.credit)}</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800">
+                        <span className="text-xs font-bold text-slate-500 uppercase">Balance</span>
+                        <span className="text-lg font-black text-slate-900 dark:text-slate-100">{formatMoney(Math.abs(item.balance))}</span>
+                      </div>
+                      <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+                        <span className="font-semibold text-slate-500">{item.users.size} Users Login</span>
+                        <span className="font-semibold text-slate-500">{item.branches.size} Branches Login</span>
+                      </div>
+                    </div>
+                  </summary>
+
+                  {/* Branch Details Expanded Content */}
+                  <div className="bg-slate-50 dark:bg-slate-900/50 p-3 border-t border-slate-100 dark:border-slate-800 max-h-[300px] overflow-y-auto space-y-2">
+                    <div className="text-[10px] font-bold uppercase text-slate-500 mb-1 pl-1">Branch Breakdown</div>
+                    {Array.from(item.branchData.values()).map((b: any) => (
+                      <div key={b.name} className="bg-white dark:bg-slate-950 rounded-lg p-2.5 border border-slate-200 dark:border-slate-800 shadow-sm">
+                        <div className="flex justify-between items-center mb-2 pb-1.5 border-b border-slate-100 dark:border-slate-800">
+                          <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 uppercase truncate pr-2">{b.name}</span>
+                          <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 rounded">{b.entries} Trx</span>
+                        </div>
+                        <div className="flex justify-between items-center text-[10px] mb-1">
+                          <span className="font-semibold text-slate-500">Debit:</span>
+                          <span className="font-bold text-rose-600">{formatMoney(b.debit)}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-[10px] mb-1">
+                          <span className="font-semibold text-slate-500">Credit:</span>
+                          <span className="font-bold text-emerald-600">{formatMoney(b.credit)}</span>
+                        </div>
+                        <div className="flex justify-between items-center text-[10px] pt-1 mt-1 border-t border-slate-50 dark:border-slate-800/50">
+                          <span className="font-bold text-slate-600 dark:text-slate-400">Balance:</span>
+                          <span className="font-black text-slate-900 dark:text-slate-100">{formatMoney(Math.abs(b.balance))}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SuperAdminRoznamchaReportViewContent({
+  lang,
+  pageTitle,
+  typeFilter,
+  onTypeFilterChange
+}: {
+  lang: SupportedLanguage;
+  pageTitle: string;
+  typeFilter: RoznamchaType;
+  onTypeFilterChange?: (type: RoznamchaType) => void;
+}) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const entryIdParam = searchParams.get("entryId") ?? "";
+
+  const [loading, setLoading] = useState(true);
+  const [activeDrawerEntry, setActiveDrawerEntry] = useState<SuperAdminRoznamchaRow | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+  const [rows, setRows] = useState<SuperAdminRoznamchaRow[]>([]);
+  const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
+  const [selectedId, setSelectedId] = useState<string>("");
+  const [generatedAt, setGeneratedAt] = useState<string>(new Date().toISOString());
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [reportRibbonOpen, setReportRibbonOpen] = useState(false);
+  const [rowMenuOpenId, setRowMenuOpenId] = useState<string | null>(null);
+
+  // Exchange Rates State
+  const [ratesDraft, setRatesDraft] = useState({
     pkr: 278.50,
     aed: 3.6725,
     afn: 72.30,
@@ -1047,27 +1159,6 @@ function SuperAdminRoznamchaSummary({
 
   const [printMode, setPrintMode] = useState(false);
   const [receiptPrintMode, setReceiptPrintMode] = useState(false);
-
-  const isSuperAdminOrCountryAdmin = useMemo(() => {
-    return Boolean(
-      sessionInfo?.scopes?.isSuperAdmin ||
-      sessionInfo?.roles?.some((r) => r === "country_admin" || r === "accountant")
-    );
-  }, [sessionInfo]);
-
-  const canViewConversionColumns = useMemo(() => {
-    const roles = (sessionInfo?.roles ?? []).map((role) => String(role).toLowerCase());
-    return Boolean(sessionInfo?.scopes?.isSuperAdmin || roles.includes("super_admin"));
-  }, [sessionInfo]);
-
-  async function loadReport(rangeFilters: FilterState = appliedFilters) {
-    setRefreshing(true);
-    try {
-      const session = await fetchSessionInfo();
-      setSessionInfo(session);
-
-      // The API enforces every scope assigned to the current user. Passing only
-      // the first assigned branch here hid records from other authorized branches.
       const selectedCountryId = rangeFilters.countryId !== "all" ? rangeFilters.countryId : null;
       const selectedBranchId = rangeFilters.branchId !== "all" ? rangeFilters.branchId : null;
       const selectedIsCityBranch = selectedBranchId
