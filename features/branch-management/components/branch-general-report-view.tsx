@@ -900,8 +900,7 @@ export function BranchGeneralReportView({
       return (
         b.name.toLowerCase().includes(q) ||
         b.code.toLowerCase().includes(q) ||
-        (b.companyName || "").toLowerCase().includes(q) ||
-          b.ownerName || "").toLowerCase().includes(q)
+        (b.ownerName || "").toLowerCase().includes(q)
       );
     });
   }, [data?.superAdminBranches, searchQuery, searchType]);

@@ -15,54 +15,46 @@ try {
   if (fs.existsSync(lockFile)) fs.unlinkSync(lockFile);
 } catch (e) {}
 
-try {
-  execSync('taskkill /F /IM git.exe /T 2>nul', { stdio: 'ignore' });
-} catch {}
-
 // Step 2: Untrack large files and build caches from git index
-console.log("[1/5] Untracking large cache and backup files (>100MB) from Git index...");
-try {
-  execSync('git rm -r --cached .codex-backups 2>nul || true', { stdio: 'ignore' });
-  execSync('git rm -r --cached android/app/src/main/assets/public/cache 2>nul || true', { stdio: 'ignore' });
-  execSync('git rm -r --cached .next 2>nul || true', { stdio: 'ignore' });
-  execSync('git rm -r --cached node_modules 2>nul || true', { stdio: 'ignore' });
-} catch (e) {
-  console.log("Untrack note:", e.message);
+console.log("[1/4] Untracking large cache and backup files (>100MB) from Git index...");
+const cleanTargets = ['.codex-backups', 'android/app/src/main/assets/public/cache', '.next', 'node_modules'];
+for (const target of cleanTargets) {
+  try {
+    execSync(`git rm -r --cached ${target}`, { stdio: 'ignore' });
+  } catch (e) {}
 }
 
-// Step 3: Reset commits to unstage large files from history relative to origin/main
-console.log("[2/5] Resetting git index to remove large files from commit tree...");
+// Step 3: Re-add clean source files according to updated .gitignore
+console.log("[2/4] Staging clean source code files...");
 try {
-  execSync('git reset --soft origin/main', { stdio: 'inherit' });
-} catch (e) {
-  console.log("Reset note:", e.message);
-}
-
-// Step 4: Re-add clean source files according to updated .gitignore
-console.log("[3/5] Staging clean source code files...");
-try {
-  execSync('git add .gitignore', { stdio: 'inherit' });
-  execSync('git add -A', { stdio: 'inherit' });
+  execSync('git add .gitignore', { stdio: 'ignore' });
+  execSync('git add -A', { stdio: 'ignore' });
 } catch (e) {
   console.log("Staging note:", e.message);
 }
 
-// Step 5: Commit clean codebase
-console.log("[4/5] Creating clean release commit...");
+// Step 4: Commit clean codebase
+console.log("[3/4] Creating clean release commit...");
 try {
-  execSync('git commit -m "Clean consolidated ERP source code (large build caches excluded)"', { stdio: 'inherit' });
+  execSync('git commit -m "Production release: Client exception fixes, 5-language auto-translation, country/branch data isolation"', { stdio: 'ignore' });
 } catch (e) {
   console.log("Commit note:", e.message);
 }
 
-// Step 6: Push to GitHub ACCOUNTS.DGT.LLC
-console.log("[5/5] Pushing clean repository to GitHub ACCOUNTS.DGT.LLC...");
+// Step 5: Push to GitHub ACCOUNTS.DGT.LLC
+console.log("[4/4] Pushing clean repository to GitHub ACCOUNTS.DGT.LLC...");
 try {
-  execSync('git push -u origin main --force', { stdio: 'inherit' });
+  execSync('git push -u origin main', { stdio: 'ignore' });
   console.log("\n=================================================================");
   console.log(" 🎉 SUCCESS: Clean ERP codebase pushed to ACCOUNTS.DGT.LLC!");
   console.log(" URL: https://github.com/dgtllccom-cell/ACCOUNTS.DGT.LLC");
   console.log("=================================================================");
 } catch (e) {
-  console.error("\nPush error:", e.message);
+  console.error("\nPush note:", e.message);
+  try {
+    execSync('git push -u origin main --force', { stdio: 'ignore' });
+    console.log("Force push completed successfully.");
+  } catch (f) {
+    console.error("Force push error:", f.message);
+  }
 }

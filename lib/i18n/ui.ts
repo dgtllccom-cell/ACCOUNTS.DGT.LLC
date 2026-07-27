@@ -1849,8 +1849,11 @@ const dictionaries: Record<SupportedLanguage, Dict> = {
   ps
 };
 
-export function t(lang: SupportedLanguage, key: string, defaultValue?: string) {
+export function t(lang: SupportedLanguage | string | null | undefined, key: string | null | undefined, defaultValue?: string): string {
+  if (!key) return defaultValue ?? "";
+  const safeLang = (lang && typeof lang === "string" && ["en", "ar", "ur", "fa", "ps"].includes(lang) ? lang : "en") as SupportedLanguage;
   const dictKey = key as UiKey;
-  return dictionaries[lang]?.[dictKey] ?? en[dictKey] ?? defaultValue ?? key;
+  const dict = dictionaries[safeLang] || dictionaries.en;
+  return dict?.[dictKey] ?? en[dictKey] ?? defaultValue ?? key;
 }
 
