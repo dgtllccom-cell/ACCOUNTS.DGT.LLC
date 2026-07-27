@@ -1,13 +1,18 @@
 export function getSupabaseUrl(): string {
-  return process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+  return (process.env.NEXT_PUBLIC_SUPABASE_URL || "").trim();
 }
 
 export function getSupabasePublicKey(): string {
-  return process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ?? process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "";
+  return key.trim();
 }
 
 export function getSupabaseSecretKey(): string {
-  return process.env.SUPABASE_SECRET_KEY ?? process.env.SUPABASE_SERVICE_ROLE_KEY ?? "";
+  const secret = process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (secret && secret.trim() !== "") {
+    return secret.trim();
+  }
+  return getSupabasePublicKey();
 }
 
 export function isSupabaseConfigured(): boolean {
@@ -19,3 +24,4 @@ export function assertSupabaseConfigured(): void {
     throw new Error("Supabase environment variables are not configured. Please define NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY in your environment or .env.local.");
   }
 }
+

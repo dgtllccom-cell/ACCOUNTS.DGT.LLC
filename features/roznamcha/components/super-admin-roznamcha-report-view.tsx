@@ -1205,16 +1205,21 @@ export function SuperAdminRoznamchaReportView({
       const session = await fetchSessionInfo();
       setSessionInfo(session);
 
-      const scope = session.scopes.isSuperAdmin
-        ? {}
-        : {
-            countryId: session.scopes.countryIds[0] ?? null,
-            countryBranchId: session.scopes.countryBranchIds[0] ?? null,
-            cityBranchId: session.scopes.cityBranchIds[0] ?? null
-          };
+      // The API enforces every scope assigned to the current user. Passing only
+      // the first assigned branch here hid records from other authorized branches.
+      const selectedCountryId = rangeFilters.countryId !== "all" ? rangeFilters.countryId : null;
+      const selectedBranchId = rangeFilters.branchId !== "all" ? rangeFilters.branchId : null;
+      const selectedIsCityBranch = selectedBranchId
+        ? session.scopes.cityBranchIds.includes(selectedBranchId)
+        : false;
+      const selectedIsCountryBranch = selectedBranchId
+        ? session.scopes.countryBranchIds.includes(selectedBranchId)
+        : false;
 
       const response = await listRoznamchaEntries({
-        ...scope,
+        countryId: selectedCountryId,
+        countryBranchId: selectedIsCountryBranch ? selectedBranchId : null,
+        cityBranchId: selectedIsCityBranch ? selectedBranchId : null,
         fromDate: rangeFilters.fromDate,
         toDate: rangeFilters.toDate,
         search: rangeFilters.partySearch,
@@ -1248,20 +1253,6 @@ export function SuperAdminRoznamchaReportView({
         setSelectedId((current) => cleanRows.some((row) => row.id === current) ? current : cleanRows[0]!.id);
       }
 
-      if (!session.scopes.isSuperAdmin) {
-        const nextCountry = session.scopes.countryIds[0] ?? "all";
-        const nextBranch = session.scopes.cityBranchIds[0] ?? session.scopes.countryBranchIds[0] ?? "all";
-        setDraftFilters((current) => ({
-          ...current,
-          countryId: nextCountry,
-          branchId: nextBranch
-        }));
-        setAppliedFilters((current) => ({
-          ...current,
-          countryId: nextCountry,
-          branchId: nextBranch
-        }));
-      }
     } finally {
       setRefreshing(false);
       setLoading(false);
@@ -1274,12 +1265,19 @@ export function SuperAdminRoznamchaReportView({
     const handleSaved = () => {
       void loadReport();
     };
+    const handleVisibilityRefresh = () => {
+      if (document.visibilityState === "visible") void loadReport();
+    };
 
     window.addEventListener("erp:posting-saved", handleSaved);
     window.addEventListener("erp:posting-deleted", handleSaved);
+    window.addEventListener("focus", handleSaved);
+    document.addEventListener("visibilitychange", handleVisibilityRefresh);
     return () => {
       window.removeEventListener("erp:posting-saved", handleSaved);
       window.removeEventListener("erp:posting-deleted", handleSaved);
+      window.removeEventListener("focus", handleSaved);
+      document.removeEventListener("visibilitychange", handleVisibilityRefresh);
     };
   }, []);
 
@@ -2585,19 +2583,19 @@ function RoznamchaPrintPreview({
     { key: "branchName", header: "BRANCH NAME", render: (r) => r.cityBranchName || r.countryBranchName || "-" },
     { key: "branchCode", header: "BRANCH CODE", render: (r) => r.cityBranchCode || r.countryBranchCode || "-" },
     { key: "transactions", header: "TOTAL TRANSACTIONS", align: "center", render: () => "1" },
-    { key: "debit", header: "TOTAL DEBIT", align: "right", render: (r) => (r.debit > 0 ? r.debit.toFixed(2) : "0.00") },
-    { key: "credit", header: "TOTAL CREDIT", align: "right", render: (r) => (r.credit > 0 ? r.credit.toFixed(2) : "0.00") },
-    { key: "balance", header: "BALANCE", align: "right", render: (r) => (r.debit - r.credit).toFixed(2) },
+    { key: "debit", header: "TOTAL DEBIT", align: "right", render: (r) => (Number(r.debit) || 0).toFixed(2) },
+    { key: "credit", header: "TOTAL CREDIT", align: "right", render: (r) => (Number(r.credit) || 0).toFixed(2) },
+    { key: "balance", header: "BALANCE", align: "right", render: (r) => ((Number(r.debit) || 0) - (Number(r.credit) || 0)).toFixed(2) },
     { key: "status", header: "STATUS", align: "center", render: (r) => r.status || "Active" },
   ] : [
     { key: "index", header: "SR.", width: "30px", align: "center", render: (_, i) => i + 1 },
-    { key: "date", header: "DATE", width: "70px", align: "center", render: (r) => new Date(r.entryDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" }) },
-    { key: "voucherNo", header: "VOUCHER", align: "center", render: (r) => r.voucherNo },
-    { key: "party", header: "ACCOUNT / PARTY", render: (r) => `${r.accountNo ? r.accountNo + " - " : ""}${r.partyName}` },
+    { key: "date", header: "DATE", width: "70px", align: "center", render: (r) => r.entryDate ? new Date(r.entryDate).toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "2-digit" }) : "-" },
+    { key: "voucherNo", header: "VOUCHER", align: "center", render: (r) => r.voucherNo || "-" },
+    { key: "party", header: "ACCOUNT / PARTY", render: (r) => `${r.accountNo ? r.accountNo + " - " : ""}${r.partyName || "-"}` },
     { key: "narration", header: "NARRATION", render: (r) => r.narration || "-" },
-    { key: "debit", header: "DEBIT", align: "right", render: (r) => r.debit.toFixed(2) },
-    { key: "credit", header: "CREDIT", align: "right", render: (r) => r.credit.toFixed(2) },
-    { key: "balance", header: "RUNNING BALANCE", align: "right", render: (r) => r.runningBalance.toFixed(2) },
+    { key: "debit", header: "DEBIT", align: "right", render: (r) => (Number(r.debit) || 0).toFixed(2) },
+    { key: "credit", header: "CREDIT", align: "right", render: (r) => (Number(r.credit) || 0).toFixed(2) },
+    { key: "balance", header: "RUNNING BALANCE", align: "right", render: (r) => (Number(r.remainingBalance ?? ((Number(r.debit) || 0) - (Number(r.credit) || 0))) || 0).toFixed(2) },
     { key: "currency", header: "CURRENCY", align: "center", render: (r) => r.currency || r.countryCurrency || "-" },
   ];
 

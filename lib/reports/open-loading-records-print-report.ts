@@ -49,6 +49,10 @@ export function openLoadingRecordsPrintReport(input: {
   const totalLcRemaining = rows.reduce((sum, r) => sum + (r.finalRemainingLc || 0), 0);
   const totalLoadedQty = rows.reduce((sum, r) => sum + (r.loadedQty || 0), 0);
   const totalRemainingToLoad = rows.reduce((sum, r) => sum + (r.remainingToLoad || 0), 0);
+  const fcCurrencies = Array.from(new Set(rows.map((row) => String(row.currencyFc || "USD").toUpperCase())));
+  const lcCurrencies = Array.from(new Set(rows.map((row) => String(row.currencyLc || "LC").toUpperCase())));
+  const reportFcCurrency = fcCurrencies.length === 1 ? fcCurrencies[0] : "FC";
+  const reportLcCurrency = lcCurrencies.length === 1 ? lcCurrencies[0] : "LC";
 
   function getStatusBadge(status: string) {
     const s = status.toLowerCase();
@@ -108,14 +112,14 @@ export function openLoadingRecordsPrintReport(input: {
             <td style="text-align: right;">${formatNumber(r.grossWeight)} KG</td>
             <td style="text-align: right;">${formatNumber(r.tareWeight)} KG</td>
             <td style="text-align: right; font-weight: 800;">${formatNumber(r.netWeight)} KG</td>
-            <td style="text-align: right; font-family: monospace;">${r.purchasePriceRate.toFixed(2)} USD</td>
-            <td style="text-align: right; font-family: monospace; font-weight: 800; color: #2563eb;">${formatMoney(r.totalPurchaseFc, "USD")}</td>
-            <td style="text-align: right; font-family: monospace; color: #059669;">${formatMoney(r.advanceFc, "USD")}</td>
-            <td style="text-align: right; font-family: monospace; color: #dc2626; font-weight: 800;">${formatMoney(r.remainingFc, "USD")}</td>
+            <td style="text-align: right; font-family: monospace;">${Number(r.purchasePriceRate || 0).toFixed(2)} ${escapeHtml(r.currencyFc || reportFcCurrency)}</td>
+            <td style="text-align: right; font-family: monospace; font-weight: 800; color: #2563eb;">${formatMoney(r.totalPurchaseFc, r.currencyFc || reportFcCurrency)}</td>
+            <td style="text-align: right; font-family: monospace; color: #059669;">${formatMoney(r.advanceFc, r.currencyFc || reportFcCurrency)}</td>
+            <td style="text-align: right; font-family: monospace; color: #dc2626; font-weight: 800;">${formatMoney(r.remainingFc, r.currencyFc || reportFcCurrency)}</td>
             <td style="text-align: center; font-family: monospace;">${r.exchangeRate}</td>
-            <td style="text-align: right; font-family: monospace; font-weight: 900; color: #059669;">${formatMoney(r.finalAmountLc, "AED")}</td>
-            <td style="text-align: right; font-family: monospace;">${formatMoney(r.finalAdvanceLc, "AED")}</td>
-            <td style="text-align: right; font-family: monospace; color: #dc2626; font-weight: 900;">${formatMoney(r.finalRemainingLc, "AED")}</td>
+            <td style="text-align: right; font-family: monospace; font-weight: 900; color: #059669;">${formatMoney(r.finalAmountLc, r.currencyLc || reportLcCurrency)}</td>
+            <td style="text-align: right; font-family: monospace;">${formatMoney(r.finalAdvanceLc, r.currencyLc || reportLcCurrency)}</td>
+            <td style="text-align: right; font-family: monospace; color: #dc2626; font-weight: 900;">${formatMoney(r.finalRemainingLc, r.currencyLc || reportLcCurrency)}</td>
             <td style="text-align: right; font-weight: 900; color: #059669;">${formatNumber(r.loadedQty)} KG</td>
             <td style="text-align: right; font-weight: 900; color: #dc2626;">${formatNumber(r.remainingToLoad)} KG</td>
             <td style="text-align: center;">${getStatusBadge(r.loadingStatus)}</td>
@@ -130,13 +134,13 @@ export function openLoadingRecordsPrintReport(input: {
           <td style="text-align: right;">${formatNumber(totalTareWt)} KG</td>
           <td style="text-align: right;">${formatNumber(totalNetWt)} KG</td>
           <td></td>
-          <td style="text-align: right; color: #2563eb;">${formatMoney(totalFcAmount)} USD</td>
-          <td style="text-align: right; color: #059669;">${formatMoney(totalFcAdvance)} USD</td>
-          <td style="text-align: right; color: #dc2626;">${formatMoney(totalFcRemaining)} USD</td>
+          <td style="text-align: right; color: #2563eb;">${formatMoney(totalFcAmount, reportFcCurrency)}</td>
+          <td style="text-align: right; color: #059669;">${formatMoney(totalFcAdvance, reportFcCurrency)}</td>
+          <td style="text-align: right; color: #dc2626;">${formatMoney(totalFcRemaining, reportFcCurrency)}</td>
           <td></td>
-          <td style="text-align: right; color: #059669;">${formatMoney(totalLcAmount)} AED</td>
-          <td style="text-align: right;">${formatMoney(totalLcAdvance)} AED</td>
-          <td style="text-align: right; color: #dc2626;">${formatMoney(totalLcRemaining)} AED</td>
+          <td style="text-align: right; color: #059669;">${formatMoney(totalLcAmount, reportLcCurrency)}</td>
+          <td style="text-align: right;">${formatMoney(totalLcAdvance, reportLcCurrency)}</td>
+          <td style="text-align: right; color: #dc2626;">${formatMoney(totalLcRemaining, reportLcCurrency)}</td>
           <td style="text-align: right; color: #059669;">${formatNumber(totalLoadedQty)} KG</td>
           <td style="text-align: right; color: #dc2626;">${formatNumber(totalRemainingToLoad)} KG</td>
           <td></td>
@@ -146,22 +150,22 @@ export function openLoadingRecordsPrintReport(input: {
   `;
 
   const kpis: ERPKpiCard[] = [
-    { label: "TOTAL PURCHASE (FC)", value: `${formatMoney(totalFcAmount)} USD`, color: "blue" },
-    { label: "TOTAL ADVANCE (FC)", value: `${formatMoney(totalFcAdvance)} USD`, color: "green" },
-    { label: "TOTAL REMAINING (FC)", value: `${formatMoney(totalFcRemaining)} USD`, color: "red" },
-    { label: "TOTAL PURCHASE (LC)", value: `${formatMoney(totalLcAmount)} AED`, color: "blue" },
-    { label: "TOTAL ADVANCE (LC)", value: `${formatMoney(totalLcAdvance)} AED`, color: "green" },
-    { label: "TOTAL REMAINING (LC)", value: `${formatMoney(totalLcRemaining)} AED`, color: "red" },
+    { label: "TOTAL PURCHASE (FC)", value: `${formatMoney(totalFcAmount, reportFcCurrency)}`, color: "blue" },
+    { label: "TOTAL ADVANCE (FC)", value: `${formatMoney(totalFcAdvance, reportFcCurrency)}`, color: "green" },
+    { label: "TOTAL REMAINING (FC)", value: `${formatMoney(totalFcRemaining, reportFcCurrency)}`, color: "red" },
+    { label: "TOTAL PURCHASE (LC)", value: `${formatMoney(totalLcAmount, reportLcCurrency)}`, color: "blue" },
+    { label: "TOTAL ADVANCE (LC)", value: `${formatMoney(totalLcAdvance, reportLcCurrency)}`, color: "green" },
+    { label: "TOTAL REMAINING (LC)", value: `${formatMoney(totalLcRemaining, reportLcCurrency)}`, color: "red" },
     { label: "TOTAL LOADED QTY", value: `${formatNumber(totalLoadedQty)} KG`, color: "green" },
     { label: "REMAINING TO LOAD", value: `${formatNumber(totalRemainingToLoad)} KG`, color: "amber" }
   ];
 
   const legendHtml = `
     <b>LOADING STATUS LEGEND:</b><br />
-    🟢 Completed (100% Loaded)<br />
-    🔵 Almost Complete (75% - 99%)<br />
-    🟡 Partially Loaded (1% - 74%)<br />
-    🔴 Not Loaded (0%)
+    [COMPLETE] Completed (100% Loaded)<br />
+    [ALMOST] Almost Complete (75% - 99%)<br />
+    [PARTIAL] Partially Loaded (1% - 74%)<br />
+    [PENDING] Not Loaded (0%)
   `;
 
   // CSV Data for Export
@@ -178,10 +182,10 @@ export function openLoadingRecordsPrintReport(input: {
     filters: [
       { label: "Country", value: companyInfo.country || "All Countries" },
       { label: "Branch", value: companyInfo.branch || "All Branches" },
-      { label: "Status", value: "All Status" },
-      { label: "Currency (FC)", value: "USD" },
-      { label: "Local Currency (LC)", value: "AED" },
-      { label: "Exchange Rate Type", value: "Daily Rate" }
+      { label: "Currency (FC)", value: reportFcCurrency },
+      { label: "Local Currency (LC)", value: reportLcCurrency },
+      { label: "Exchange Rate Type", value: "Daily Rate" },
+      ...filters
     ],
     kpis,
     mainTableHtml,

@@ -178,36 +178,129 @@ async function resolveHierarchyScopes(
 }
 
 export async function getCurrentErpSession(): Promise<ErpSession | null> {
-  // Temporary local session (for initial Super Admin bootstrapping)
-  const temp = await readTempSession();
-  if (temp) {
-    let resolvedUserId = temp.userId;
-    let adminSupabase: any = null;
-    if (isSupabaseConfigured()) {
-      try {
-        adminSupabase = createSupabaseAdminClient();
-        if (temp.userId.startsWith("00000000-")) {
-          const { data: firstProfile } = await adminSupabase
-            .from("profiles")
-            .select("id")
-            .order("created_at", { ascending: true })
-            .limit(1)
-            .maybeSingle();
-          if (firstProfile?.id) {
-            resolvedUserId = firstProfile.id;
+  try {
+    // Temporary local session (for initial Super Admin bootstrapping)
+    const temp = await readTempSession();
+    if (temp) {
+      let resolvedUserId = temp.userId;
+      let adminSupabase: any = null;
+      if (isSupabaseConfigured()) {
+        try {
+          adminSupabase = createSupabaseAdminClient();
+          if (temp.userId.startsWith("00000000-")) {
+            const { data: firstProfile } = await adminSupabase
+              .from("profiles")
+              .select("id")
+              .order("created_at", { ascending: true })
+              .limit(1)
+              .maybeSingle();
+            if (firstProfile?.id) {
+              resolvedUserId = firstProfile.id;
+            }
           }
+        } catch (e) {
+          console.error("Failed to resolve profile ID for temp session:", e);
         }
-      } catch (e) {
-        console.error("Failed to resolve profile ID for temp session:", e);
       }
+
+      const perms = [...new Set(temp.roles.flatMap((role) => enterpriseRolePermissions[role] ?? []))];
+      const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds } = getAssignmentRoots(temp.assignments);
+      const isSuperAdmin = temp.roles.includes("super_admin");
+
+      const resolvedScopes = await resolveHierarchyScopes(
+        adminSupabase,
+        initialCountryIds,
+        initialCountryBranchIds,
+        initialCityBranchIds,
+        isSuperAdmin
+      );
+
+      return {
+        userId: resolvedUserId,
+        email: temp.email,
+        fullName: temp.fullName,
+        preferredLanguage: temp.preferredLanguage,
+        roles: temp.roles,
+        permissions: perms,
+        assignments: temp.assignments,
+        countryIds: resolvedScopes.countryIds,
+        countryBranchIds: resolvedScopes.countryBranchIds,
+        cityBranchIds: resolvedScopes.cityBranchIds,
+        isSuperAdmin
+      };
     }
 
-    const perms = [...new Set(temp.roles.flatMap((role) => enterpriseRolePermissions[role] ?? []))];
-    const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds } = getAssignmentRoots(temp.assignments);
-    const isSuperAdmin = temp.roles.includes("super_admin");
+    if (!isSupabaseConfigured()) {
+      return null;
+    }
+
+    const supabase = await createServerSupabaseClient();
+    const {
+      data: { user },
+      error
+    } = await supabase.auth.getUser();
+
+    if (error || !user) {
+      return null;
+    }
+
+    const db = supabase as unknown as { from(table: string): LooseQueryBuilder };
+
+    const profileQuery = db.from("profiles").select("full_name, preferred_language_code").eq("id", user.id);
+    const profileResult = await profileQuery.maybeSingle();
+
+    const assignmentsQuery = db
+      .from("user_role_assignments")
+      .select("role, country_id, country_branch_id, city_branch_id")
+      .eq("user_id", user.id)
+      .eq("is_active", true);
+    const assignmentsResult = await assignmentsQuery.is("deleted_at", null);
+
+    if (assignmentsResult.error) {
+      console.error("Role assignments query error:", assignmentsResult.error.message);
+      return null;
+    }
+
+    const assignments = (assignmentsResult.data ?? [])
+      .map((assignment) => {
+        const role = normalizeRole(assignment.role);
+        if (!role) return null;
+
+        return {
+          role,
+          countryId: assignment.country_id,
+          countryBranchId: assignment.country_branch_id,
+          cityBranchId: assignment.city_branch_id
+        };
+      })
+      .filter((assignment): assignment is RoleAssignmentScope => Boolean(assignment));
+
+    const roles = [...new Set(assignments.map((assignment) => assignment.role))];
+
+    // Load explicit permission set if available; else fallback to role-template permissions.
+    let permissions: string[] = [];
+    try {
+      const permQuery = db.from("user_permission_sets").select("permissions").eq("user_id", user.id);
+      const permResult = (await (permQuery as any).maybeSingle()) as { data: PermissionSetRow | null };
+      const explicit = permResult?.data?.permissions ?? null;
+      permissions = explicit && Array.isArray(explicit) ? explicit.filter((p) => typeof p === "string" && p.length > 0) : [];
+    } catch {
+      permissions = [];
+    }
+
+    if (!permissions.length) {
+      permissions = [...new Set(roles.flatMap((role) => enterpriseRolePermissions[role] ?? []))];
+    }
+
+    if (roles.includes("super_admin") && !permissions.includes("*:*")) {
+      permissions = ["*:*", ...permissions];
+    }
+
+    const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds } = getAssignmentRoots(assignments);
+    const isSuperAdmin = roles.includes("super_admin");
 
     const resolvedScopes = await resolveHierarchyScopes(
-      adminSupabase,
+      supabase,
       initialCountryIds,
       initialCountryBranchIds,
       initialCityBranchIds,
@@ -215,109 +308,22 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
     );
 
     return {
-      userId: resolvedUserId,
-      email: temp.email,
-      fullName: temp.fullName,
-      preferredLanguage: temp.preferredLanguage,
-      roles: temp.roles,
-      permissions: perms,
-      assignments: temp.assignments,
+      userId: user.id,
+      email: user.email ?? null,
+      fullName: profileResult.data?.full_name ?? null,
+      preferredLanguage: profileResult.data?.preferred_language_code ?? "en",
+      roles,
+      permissions,
+      assignments,
       countryIds: resolvedScopes.countryIds,
       countryBranchIds: resolvedScopes.countryBranchIds,
       cityBranchIds: resolvedScopes.cityBranchIds,
       isSuperAdmin
     };
-  }
-
-  if (!isSupabaseConfigured()) {
+  } catch (err: any) {
+    console.error("getCurrentErpSession Error:", err);
     return null;
   }
-
-  const supabase = await createServerSupabaseClient();
-  const {
-    data: { user },
-    error
-  } = await supabase.auth.getUser();
-
-  if (error || !user) {
-    return null;
-  }
-
-  const db = supabase as unknown as { from(table: string): LooseQueryBuilder };
-
-  const profileQuery = db.from("profiles").select("full_name, preferred_language_code").eq("id", user.id);
-  const profileResult = await profileQuery.maybeSingle();
-
-  const assignmentsQuery = db
-    .from("user_role_assignments")
-    .select("role, country_id, country_branch_id, city_branch_id")
-    .eq("user_id", user.id)
-    .eq("is_active", true);
-  const assignmentsResult = await assignmentsQuery.is("deleted_at", null);
-
-  if (assignmentsResult.error) {
-    throw new Error(assignmentsResult.error.message);
-  }
-
-  const assignments = (assignmentsResult.data ?? [])
-    .map((assignment) => {
-      const role = normalizeRole(assignment.role);
-      if (!role) return null;
-
-      return {
-        role,
-        countryId: assignment.country_id,
-        countryBranchId: assignment.country_branch_id,
-        cityBranchId: assignment.city_branch_id
-      };
-    })
-    .filter((assignment): assignment is RoleAssignmentScope => Boolean(assignment));
-
-  const roles = [...new Set(assignments.map((assignment) => assignment.role))];
-
-  // Load explicit permission set if available; else fallback to role-template permissions.
-  let permissions: string[] = [];
-  try {
-    const permQuery = db.from("user_permission_sets").select("permissions").eq("user_id", user.id);
-    const permResult = (await (permQuery as any).maybeSingle()) as { data: PermissionSetRow | null };
-    const explicit = permResult?.data?.permissions ?? null;
-    permissions = explicit && Array.isArray(explicit) ? explicit.filter((p) => typeof p === "string" && p.length > 0) : [];
-  } catch {
-    permissions = [];
-  }
-
-  if (!permissions.length) {
-    permissions = [...new Set(roles.flatMap((role) => enterpriseRolePermissions[role] ?? []))];
-  }
-
-  if (roles.includes("super_admin") && !permissions.includes("*:*")) {
-    permissions = ["*:*", ...permissions];
-  }
-
-  const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds } = getAssignmentRoots(assignments);
-  const isSuperAdmin = roles.includes("super_admin");
-
-  const resolvedScopes = await resolveHierarchyScopes(
-    supabase,
-    initialCountryIds,
-    initialCountryBranchIds,
-    initialCityBranchIds,
-    isSuperAdmin
-  );
-
-  return {
-    userId: user.id,
-    email: user.email ?? null,
-    fullName: profileResult.data?.full_name ?? null,
-    preferredLanguage: profileResult.data?.preferred_language_code ?? "en",
-    roles,
-    permissions,
-    assignments,
-    countryIds: resolvedScopes.countryIds,
-    countryBranchIds: resolvedScopes.countryBranchIds,
-    cityBranchIds: resolvedScopes.cityBranchIds,
-    isSuperAdmin
-  };
 }
 
 export async function requireErpSession() {

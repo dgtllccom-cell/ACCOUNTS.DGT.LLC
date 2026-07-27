@@ -70,7 +70,8 @@ function money(value: number, currency = "USD") {
 
 async function loadCountryData(countryId: string): Promise<CountryDashboardData> {
   try {
-    const dbUrl = process.env.DATABASE_URL || "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres";
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl) throw new Error("DATABASE_URL is not configured");
     const sql = postgres(dbUrl, { prepare: false, idle_timeout: 5, connect_timeout: 10 });
 
     const [

@@ -1,7 +1,5 @@
-import { PurchaseOrderWizard } from "@/features/purchases/components/purchase-order-wizard.jsx";
-import { requireErpSession } from "@/lib/auth/session";
+import { PurchaseBookingViewRedesign } from "@/components/purchase-booking-view-redesign";
 
-export default async function PurchaseBookingJournalReportPage() {
-  const session = await requireErpSession();
-  return <PurchaseOrderWizard session={session} initialTab="report" />;
+export default function PurchaseBookingJournalReportPage() {
+  return <PurchaseBookingViewRedesign chrome={false} />;
 }

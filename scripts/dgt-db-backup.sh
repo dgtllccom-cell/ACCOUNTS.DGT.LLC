@@ -1,17 +1,3 @@
-ssh root@72.60.209.121
-
-cd /var/www/dgt-nextjs
-if [ ! -d ".git" ]; then
-  git init
-  git remote add origin https://github.com/dgtllccom-cell/ACCOUNTS.DGT.LLC.git
-fi
-git fetch origin main
-git reset --hard origin/main
-git checkout main
-
-# Create backup script on VPS
-mkdir -p /var/www/dgt-nextjs/scripts
-cat > /var/www/dgt-nextjs/scripts/dgt-db-backup.sh << 'BACKUPEOF'
 #!/usr/bin/env bash
 set -eo pipefail
 
@@ -57,31 +43,3 @@ log "Cleaning up backups older than ${RETENTION_DAYS} days..."
 find "$BACKUP_DIR" -type f -name "dgt_backup_*.sql.gz" -mtime +"${RETENTION_DAYS}" -delete || true
 
 log "Database backup task finished successfully."
-BACKUPEOF
-
-chmod 755 /var/www/dgt-nextjs/scripts/dgt-db-backup.sh
-
-# Install PostgreSQL client & copy backup script to /usr/local/bin
-which pg_dump >/dev/null 2>&1 || (apt-get update && apt-get install -y postgresql-client)
-cp -f /var/www/dgt-nextjs/scripts/dgt-db-backup.sh /usr/local/bin/dgt-db-backup.sh
-chmod 755 /usr/local/bin/dgt-db-backup.sh
-
-# Configure daily cron job
-cat > /etc/cron.d/dgt-db-backup << 'CRONEOF'
-0 2 * * * root /usr/local/bin/dgt-db-backup.sh >> /var/log/dgt-db-backup.log 2>&1
-CRONEOF
-chmod 644 /etc/cron.d/dgt-db-backup
-
-# Build and start/restart PM2
-npm install
-NODE_OPTIONS='--max-old-space-size=4096' npm run build
-pm2 start ecosystem.config.cjs || pm2 restart dgt-nextjs --update-env
-pm2 save
-
-# Execute initial backup and display required terminal proof
-/usr/local/bin/dgt-db-backup.sh
-pm2 status
-ls -l /var/www/dgt-nextjs/scripts/dgt-db-backup.sh
-ls -l /usr/local/bin/dgt-db-backup.sh
-ls -lh /var/backups/dgt-database/
-tail -n 50 /var/log/dgt-db-backup.log

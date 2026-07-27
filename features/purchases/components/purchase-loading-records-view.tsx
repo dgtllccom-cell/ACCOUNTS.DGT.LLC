@@ -7,6 +7,18 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Download, FileText, Link2, MoreVertical, Plus, Printer, RefreshCcw, Search, Ship, Building2, ArrowDownLeft, ArrowUpRight, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { cn } from "@/lib/utils";
+function asRecordArray<T = any>(value: unknown): T[] {
+  if (Array.isArray(value)) return value.filter(Boolean) as T[];
+  if (value && typeof value === "object") {
+    return Object.values(value as Record<string, T>).filter(Boolean);
+  }
+  return [];
+}
+
+function asFiniteNumber(value: unknown, fallback = 0) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
 
 
 function CustomDropdown({ record, onLoadDetails }: { record: LoadingRecord, onLoadDetails: (r: LoadingRecord) => void }) {
@@ -36,7 +48,7 @@ function calcLoadingFinance(h: LoadingRecord, poRow: any = {}, form: any = {}) {
   const reportPayload = h.report_payload || {};
   const qty = Number(reportPayload.loadedQuantity || reportPayload.loadingQuantity || h.loadedQuantity || 0);
   const poData = poRow?.form_data || {};
-  const goods = poData.goodsEntries || [];
+  const goods = asRecordArray<any>(poData.goodsEntries);
 
   // Robust total PO quantity resolution
   const totalQuantity = Number(
@@ -152,7 +164,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
   const poData = (Array.isArray(record.purchase_orders) ? record.purchase_orders[0] : record.purchase_orders)?.form_data || {};
   const poRow = (Array.isArray(record.purchase_orders) ? record.purchase_orders[0] : record.purchase_orders) || {};
   const form = poData.form || {};
-  const goods = poData.goodsEntries || [];
+  const goods = asRecordArray<any>(poData.goodsEntries);
 
   const branchLabel = `${record.country_branches?.name || form.branchName || "-"}${record.country_branches?.code ? ` (${record.country_branches.code})` : ""}`;
   const countryLabel = `${record.countries?.name || form.branchCountry || "-"}${record.countries?.iso2 ? ` (${record.countries.iso2})` : ""}`;
@@ -178,7 +190,17 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
       form.quantity ||
       0
   );
-  const contractPurchaseAmount = Number(poRow.order_total || poData.totals?.grandFinal || form.totalAmount || 0);
+  const contractPurchaseAmount = Number(
+    poRow.order_total ||
+      poData.totals?.grandFinal ||
+      poData.totals?.totalPurchase ||
+      poData.totals?.totalAmount ||
+      form.totalAmount ||
+      0
+  );
+  const contractPurchaseCurrency = String(
+    form.currency || poRow.currency_code || goods?.[0]?.pricingCurrency || "USD"
+  );
   const savedLoadedQuantity = Number(
 
     workflow.loadedQuantity ||
@@ -766,10 +788,10 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
         setSealNumberInput("");
         setQuantityNo("");
         setNewLoadingQuantity("");
-        setLoadingMessage(`✓ Saved Container ${currentContainerIndex} of ${totalContainers} for B/L ${blNumber || record.purchase_order_no}! Please enter details for Container #${nextIdx}.`);
+        setLoadingMessage(`Saved Container ${currentContainerIndex} of ${totalContainers} for B/L ${blNumber || record.purchase_order_no}. Please enter details for Container #${nextIdx}.`);
       } else {
         setCurrentContainerIndex(1);
-        setLoadingMessage(`✓ All ${totalContainers} container(s) saved for B/L ${blNumber || "record"}!`);
+        setLoadingMessage(`All ${totalContainers} container(s) saved for B/L ${blNumber || "record"}.`);
         setFormStep(1);
         setNewLoadingQuantity("");
         setNewLoadingNote("");
@@ -1387,7 +1409,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   </div>
                   <div className="pt-2 pb-1">
                     <div className="text-[10px] text-slate-400 mb-0.5">Account Name:</div>
-                    <div className="text-sm font-bold text-blue-600 dark:text-blue-400 leading-snug">{form.purchaseAccountName || "مال خرید اکاؤنٹ"}</div>
+                    <div className="text-sm font-bold text-blue-600 dark:text-blue-400 leading-snug">{form.purchaseAccountName || "Purchase Account"}</div>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">Branch:</span>
@@ -1437,11 +1459,11 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   <div className="grid grid-cols-2 gap-4 pt-2">
                     <div>
                        <div className="text-[9px] uppercase tracking-widest text-slate-400">OPENING BAL</div>
-                       <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">₨ 0</div>
+                       <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">0.00</div>
                     </div>
                     <div>
                        <div className="text-[9px] uppercase tracking-widest text-slate-400">CURRENT BAL</div>
-                       <div className="text-[11px] font-bold text-emerald-600">₨ 0</div>
+                       <div className="text-[11px] font-bold text-emerald-600">0.00</div>
                     </div>
                   </div>
                   
@@ -1467,7 +1489,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   </div>
                   <div className="pt-2 pb-1">
                     <div className="text-[10px] text-slate-400 mb-0.5">Account Name:</div>
-                    <div className="text-sm font-bold text-blue-600 dark:text-blue-400 leading-snug">{form.salesAccountName || "عزت اللہ تجری کھاتہ"}</div>
+                    <div className="text-sm font-bold text-blue-600 dark:text-blue-400 leading-snug">{form.salesAccountName || "Sales Account"}</div>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
                     <span className="text-slate-500">Branch:</span>
@@ -1517,11 +1539,11 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   <div className="grid grid-cols-2 gap-4 pt-2">
                     <div>
                        <div className="text-[9px] uppercase tracking-widest text-slate-400">OPENING BAL</div>
-                       <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">₨ 0</div>
+                       <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">0.00</div>
                     </div>
                     <div>
                        <div className="text-[9px] uppercase tracking-widest text-slate-400">CURRENT BAL</div>
-                       <div className="text-[11px] font-bold text-emerald-600">₨ 0</div>
+                       <div className="text-[11px] font-bold text-emerald-600">0.00</div>
                     </div>
                   </div>
               </div>
@@ -1601,7 +1623,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   <p className="text-[10px] text-slate-500 font-semibold">Confirmation summary for loaded goods remaining balance</p>
                 </div>
               </div>
-              <button onClick={() => setTransferConfirmData(null)} className="text-slate-400 hover:text-slate-600 text-sm font-bold">✕</button>
+              <button onClick={() => setTransferConfirmData(null)} className="text-slate-400 hover:text-slate-600 text-sm font-bold" aria-label="Close">X</button>
             </div>
 
             <div className="space-y-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl text-xs font-semibold border border-slate-100 dark:border-slate-800">
@@ -2123,7 +2145,7 @@ type LoadingRecord = {
   carrier_name: string | null;
   remarks: string | null;
   created_at: string;
-  countries?: { name?: string | null; iso2?: string | null } | null;
+  countries?: { name?: string | null; iso2?: string | null; currency?: string | null } | null;
   country_branches?: { name?: string | null; code?: string | null } | null;
   city_branches?: { name?: string | null; code?: string | null; city_name?: string | null } | null;
   purchase_orders?: { form_data?: any } | null;
@@ -2253,19 +2275,19 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
     records.forEach(r => {
       const poData = (Array.isArray(r.purchase_orders) ? r.purchase_orders[0] : r.purchase_orders)?.form_data || {};
       const form = poData.form || {};
-      const goods = poData.goodsEntries || [];
+      const goods = asRecordArray<any>(poData.goodsEntries);
 
       const country = String(r.countries?.name || form.branchCountry || "Unknown Country").trim();
       const branch = String(r.country_branches?.name || form.branchName || "Unassigned Branch").trim();
 
       const poQty = goods.length > 0 
-        ? goods.reduce((s: number, g: any) => s + Number(g.qtyNo || g.quantity || 0), 0) 
+        ? goods.reduce((s: number, g: any) => s + Number(g.qtyNo || g.quantity || 0), 0)
         : Number(form.quantity || 0);
 
       const loadedQty = Number(r.report_payload?.loadedQuantity || r.loadedQuantity || 0);
 
       const poTotalUSD = goods.length > 0 
-        ? goods.reduce((s: number, g: any) => s + Number(g.finalAmount || g.totalAmount || 0), 0) 
+        ? goods.reduce((s: number, g: any) => s + Number(g.finalAmount || g.totalAmount || g.amount || 0), 0)
         : Number(form.totalAmount || form.finalAmount || 0);
       const exRate = Number(r.report_payload?.exchangeRatePKR || form.exchangeRate || (poData as any).exchange_rate || 1);
       const poValuePKR = poTotalUSD * exRate;
@@ -2320,16 +2342,16 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
       
       const poData = (Array.isArray(r.purchase_orders) ? r.purchase_orders[0] : r.purchase_orders)?.form_data || {};
       const form = poData.form || {};
-      const goods = poData.goodsEntries || [];
+      const goods = asRecordArray<any>(poData.goodsEntries);
       const country = String(r.countries?.name || form.branchCountry || "Unknown Country").trim();
       const branch = String(r.country_branches?.name || form.branchName || "Unassigned Branch").trim();
 
       const poQty = goods.length > 0 
-        ? goods.reduce((s: number, g: any) => s + Number(g.qtyNo || g.quantity || 0), 0) 
+        ? goods.reduce((s: number, g: any) => s + Number(g.qtyNo || g.quantity || 0), 0)
         : Number(form.quantity || 0);
 
       const poTotalUSD = goods.length > 0 
-        ? goods.reduce((s: number, g: any) => s + Number(g.finalAmount || g.totalAmount || 0), 0) 
+        ? goods.reduce((s: number, g: any) => s + Number(g.finalAmount || g.totalAmount || g.amount || 0), 0)
         : Number(form.totalAmount || form.finalAmount || 0);
       const exRate = Number(r.report_payload?.exchangeRatePKR || form.exchangeRate || (poData as any).exchange_rate || 1);
       const poValuePKR = poTotalUSD * exRate;
@@ -2404,7 +2426,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
         const error = typeof payload.error === "string" ? payload.error : payload.error?.message;
         throw new Error(error || "Purchase Loading Records could not be loaded.");
       }
-      setRecords(payload.data?.records ?? []);
+      setRecords(asRecordArray<LoadingRecord>(payload.data?.records));
       setSummary(payload.data?.summary ?? { total: 0, loaded: 0, pending: 0, received: 0 });
       setSetupMessage(payload.data?.setupMessage ?? null);
       setApiSession(payload.data?.session ?? null);
@@ -2506,6 +2528,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
       poRow: any;
       form: any;
       records: any[];
+      realRecords: any[];
       totalContractQty: number;
       totalContractGrossWeight: number;
       totalContractNetWeight: number;
@@ -2518,7 +2541,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
       const poRow = (Array.isArray(record.purchase_orders) ? record.purchase_orders[0] : record.purchase_orders) || {};
       const poData = poRow.form_data || {};
       const form = poData.form || {};
-      const goods = poData.goodsEntries || [];
+      const goods = asRecordArray<any>(poData.goodsEntries);
 
       const poNo = record.purchase_order_no || poRow.purchase_order_no || "UNKNOWN";
 
@@ -2536,7 +2559,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
           : Number(form.netWeight || 0);
 
         const totalContractAmount = goods.length > 0
-          ? goods.reduce((s: number, g: any) => s + Number(g.totalAmount || 0), 0)
+          ? goods.reduce((s: number, g: any) => s + Number(g.finalAmount || g.totalAmount || g.amount || 0), 0)
           : Number(form.totalAmount || 0);
 
         const currency = form.currencyType || form.currency || record.currency_code || "USD";
@@ -2566,6 +2589,108 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
 
     return Object.entries(map);
   }, [filteredRecords]);
+
+  const loadingPrintRows = useMemo(() => {
+    return poGroups.map(([poNo, group]) => {
+      const firstRecord = group.records[0] as LoadingRecord | undefined;
+      const poRow = group.poRow || {};
+      const form = group.form || {};
+      const goods = asRecordArray<any>(poRow.form_data?.goodsEntries);
+      const firstGood = goods[0] || {};
+      const country = String(firstRecord?.countries?.name || form.branchCountry || "Unassigned Country");
+      const branch = String(
+        firstRecord?.city_branches?.name ||
+        firstRecord?.country_branches?.name ||
+        form.cityBranchName ||
+        form.branchName ||
+        "Unassigned Branch"
+      );
+      const currencyFc = String(group.currency || form.currency || poRow.currency_code || "USD").toUpperCase();
+      const countryKey = country.toLowerCase();
+      const currencyLc = String(
+        form.branchCurrency ||
+        firstRecord?.countries?.currency ||
+        (countryKey.includes("emirate") || countryKey.includes("uae") ? "AED" : "PKR")
+      ).toUpperCase();
+      const exchangeRate = asFiniteNumber(
+        firstRecord?.report_payload?.exchangeRatePKR ||
+        form.exchangeRate ||
+        poRow.exchange_rate ||
+        getDefaultExRate(currencyLc),
+        1
+      );
+      const totalPurchaseFc = asFiniteNumber(
+        group.totalContractAmount ||
+        poRow.order_total ||
+        poRow.form_data?.totals?.grandFinal ||
+        form.totalAmount
+      );
+      const advanceFc = Math.min(
+        normalizeAdvanceToPurchaseCurrency(
+          asFiniteNumber(poRow.advance_paid || form.advanceAmount),
+          totalPurchaseFc,
+          exchangeRate
+        ),
+        Math.max(0, totalPurchaseFc)
+      );
+      const remainingFc = Math.max(0, totalPurchaseFc - advanceFc);
+      const loadedQty = asFiniteNumber(group.totalLoadedQty);
+      const remainingToLoad = Math.max(0, asFiniteNumber(group.totalContractQty) - loadedQty);
+      const loadingPercent = group.totalContractQty > 0 ? (loadedQty / group.totalContractQty) * 100 : 0;
+      const loadingStatus = loadingPercent >= 100
+        ? "Completed"
+        : loadingPercent >= 75
+          ? "Almost Complete"
+          : loadingPercent > 0
+            ? "Partially Loaded"
+            : "Not Loaded";
+
+      return {
+        id: firstRecord?.id || poNo,
+        country,
+        branch,
+        purchaseBookingNo: poNo,
+        salesAccount: String(form.salesAccountName || form.salesAccountNumber || "-"),
+        purchaseAccount: String(form.purchaseAccountName || form.purchaseAccountNumber || "-"),
+        goods: goods.map((good: any) => good.itemName || good.goodsName || good.item).filter(Boolean).join(", ") || String(form.goodsName || "-"),
+        contractQty: asFiniteNumber(group.totalContractQty),
+        grossWeight: asFiniteNumber(group.totalContractGrossWeight),
+        tareWeight: Math.max(0, asFiniteNumber(group.totalContractGrossWeight) - asFiniteNumber(group.totalContractNetWeight)),
+        netWeight: asFiniteNumber(group.totalContractNetWeight),
+        purchasePriceRate: asFiniteNumber(firstGood.coursePrice || firstGood.priceRate || form.purchasePriceRate),
+        totalPurchaseFc,
+        advanceFc,
+        remainingFc,
+        currencyFc,
+        exchangeRate,
+        finalAmountLc: totalPurchaseFc * exchangeRate,
+        finalAdvanceLc: advanceFc * exchangeRate,
+        finalRemainingLc: remainingFc * exchangeRate,
+        currencyLc,
+        loadedQty,
+        remainingToLoad,
+        loadingStatus
+      };
+    });
+  }, [poGroups]);
+
+  const handlePrintReport = () => {
+    const countryNames = Array.from(new Set(loadingPrintRows.map((row) => row.country).filter(Boolean)));
+    const branchNames = Array.from(new Set(loadingPrintRows.map((row) => row.branch).filter(Boolean)));
+    openLoadingRecordsPrintReport({
+      rows: loadingPrintRows,
+      companyInfo: {
+        country: countryNames.length === 1 ? countryNames[0] : "All Authorized Countries",
+        branch: branchNames.length === 1 ? branchNames[0] : "All Authorized Branches",
+        printedBy: apiSession?.fullName || apiSession?.email || "ERP User"
+      },
+      filters: [
+        { label: "Invoice / PO", value: selectedInvoicePoNo || "All Invoices / POs" },
+        { label: "Loading Status", value: status === "all" ? "All Status" : status.toUpperCase() },
+        { label: "Search", value: query.trim() || "All Records" }
+      ]
+    });
+  };
 
   return (
     <div className="w-full max-w-none space-y-4 px-2 py-3 text-slate-900 dark:text-slate-100 sm:px-4">
@@ -2604,7 +2729,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
             <RefreshCcw className={cn("mr-1.5 h-3.5 w-3.5 text-slate-500", loading && "animate-spin")} />
             Apply Filter
           </Button>
-          <Button type="button" size="sm" variant="outline" onClick={() => window.print()} className="h-8 rounded-lg border-slate-200 text-xs font-bold">
+          <Button type="button" size="sm" variant="outline" onClick={handlePrintReport} className="h-8 rounded-lg border-slate-200 text-xs font-bold">
             <Printer className="mr-1.5 h-3.5 w-3.5 text-slate-500" /> Print
           </Button>
           <Button
@@ -2643,7 +2768,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
         const poRow = (Array.isArray(activeInvoiceRecord.purchase_orders) ? activeInvoiceRecord.purchase_orders[0] : activeInvoiceRecord.purchase_orders) || {};
         const formData = poRow.form_data || {};
         const form = formData.form || {};
-        const goods = formData.goodsEntries || [];
+        const goods = asRecordArray<any>(formData.goodsEntries);
         const finance = calcLoadingFinance(activeInvoiceRecord, poRow, form);
         const totalPOQty = finance.totalQuantity || 1;
         const poOrderTotalFC = Number(poRow.order_total || formData.totals?.grandFinal || form.totalAmount || 0);
@@ -2665,13 +2790,13 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                 <span className="rounded font-mono font-black text-xs bg-blue-600 text-white px-2.5 py-0.5">SELECTED PO: {activeInvoiceRecord.purchase_order_no}</span>
                 <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">Approved Invoice & Contract Details (Read-Only Source of Truth)</span>
               </div>
-              <Button size="sm" variant="ghost" onClick={() => setSelectedInvoicePoNo("")} className="h-6 text-[10px] font-bold text-blue-600 hover:text-blue-800">✕ Clear Selection</Button>
+              <Button size="sm" variant="ghost" onClick={() => setSelectedInvoicePoNo("")} className="h-6 text-[10px] font-bold text-blue-600 hover:text-blue-800">Clear Selection</Button>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3 text-[11px] font-semibold">
               <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Purchase Code</span><span className="font-mono font-bold text-slate-800 dark:text-slate-100">{form.purchaseAccountNumber || form.purchaseAccountNo || "-"}</span></div>
               <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Sales Code</span><span className="font-mono font-bold text-slate-800 dark:text-slate-100">{form.salesAccountNumber || form.salesAccountNo || "-"}</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Supplier</span><span className="font-bold text-slate-800 dark:text-slate-100 truncate block">{form.supplierName || form.purchaseAccountName || "-"}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Supplier</span><span className="font-bold text-slate-800 dark:text-slate-100 truncate block">{form.supplierName || form.purchaseAccountName || "Purchase Account"}</span></div>
               <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Company & Branch</span><span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{form.branchName || "Main Branch"}</span></div>
               <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Goods & Brand</span><span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{form.goodsName || form.itemName || "-"} ({form.brand || "-"})</span></div>
               <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Contract Qty (Bags)</span><span className="font-mono font-black text-slate-800 dark:text-slate-100">{totalPOQty.toLocaleString()}</span></div>
@@ -2716,14 +2841,14 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
 
         const formatMoney = (val: number) => val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
         const getFlag = (cName: string) => {
-          if (!cName) return '🏳️';
-          if (cName.toLowerCase().includes('pakistan')) return '🇵🇰';
-          if (cName.toLowerCase().includes('iran')) return '🇮🇷';
-          if (cName.toLowerCase().includes('arab emirates') || cName.toLowerCase().includes('uae')) return '🇦🇪';
-          if (cName.toLowerCase().includes('afghanistan')) return '🇦🇫';
-          if (cName.toLowerCase().includes('india')) return '🇮🇳';
-          if (cName.toLowerCase().includes('china')) return '🇨🇳';
-          return '🏳️';
+          if (!cName) return '';
+          if (cName.toLowerCase().includes('pakistan')) return 'PK';
+          if (cName.toLowerCase().includes('iran')) return 'IR';
+          if (cName.toLowerCase().includes('arab emirates') || cName.toLowerCase().includes('uae')) return 'AE';
+          if (cName.toLowerCase().includes('afghanistan')) return 'AF';
+          if (cName.toLowerCase().includes('india')) return 'IN';
+          if (cName.toLowerCase().includes('china')) return 'CN';
+          return '';
         };
 
         const now = new Date();
@@ -3073,7 +3198,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                       const purchaseAccountNo = form.purchaseAccountNumber || form.purchaseAccountNo || "-";
                       const purchaseAccountName = form.purchaseAccountName || "-";
 
-                      const goods = poRow.form_data?.goodsEntries || [];
+                      const goods = asRecordArray<any>(poRow.form_data?.goodsEntries);
                       const goodsName = goods.map((g: any) => g.goodsName || g.item_name).filter(Boolean).join(", ") || form.itemName || "-";
                       const goodsDetails = goods.map((g: any) => g.brand || g.size || g.item_details).filter(Boolean).join(", ") || form.itemDetails || "-";
                       const combinedGoods = goodsName !== "-" ? `${goodsName}${goodsDetails !== "-" ? ` - ${goodsDetails}` : ""}` : "-";
@@ -3247,7 +3372,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                             const blNo = payload.blNumber || "-";
                                             const containerNo = r.container_number || payload.containerNumber || "-";
                                             const vessel = payload.vesselName || r.carrier_name || "-";
-                                            const route = [payload.loadingPort || r.loading_location, payload.receivingPort || r.receiving_location].filter(Boolean).join(" ➔ ") || "-";
+                                            const route = [payload.loadingPort || r.loading_location, payload.receivingPort || r.receiving_location].filter(Boolean).join(" to ") || "-";
                                             const loadingDateStr = payload.loadingDate || (r.loaded_at ? new Date(r.loaded_at).toLocaleDateString() : "-");
                                             const poAdvanceAmt = Number(poRow.advance_paid || form.advanceAmount || 0);
                                             const advanceUSD = (finance.proRataRatio || 0) * poAdvanceAmt;
@@ -3378,22 +3503,3 @@ function SelectField({ label, value, options, onChange }: { label: string; value
     </label>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

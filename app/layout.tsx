@@ -1,10 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 import { GoogleTranslateScript } from "@/components/layout/google-translate-script";
 import { PdfPreviewModal } from "@/components/ui/pdf-preview-modal";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   applicationName: "Digital Dock ERP",
@@ -71,7 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className={inter.className}>
+      <body>
         <GoogleTranslateScript />
         {children}
         <PdfPreviewModal />

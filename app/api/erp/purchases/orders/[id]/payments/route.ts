@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiCreated, apiOk, apiError, handleApiError } from "@/lib/api/response";
-import { claimIdempotency, completeIdempotency, releaseIdempotency, naturalKey, headerKey } from "@/lib/api/idempotency";
 import { purchaseOrderPaymentPostSchema, uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -149,8 +148,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   }
 }
 
+import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
+
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
-  let __idemKey: string | null = null;
+  let idempotencyKey = "";
+  let tenantHash = "";
   try {
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
@@ -167,6 +169,27 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     } else {
       body = purchaseOrderPaymentPostSchema.parse(await request.json());
     }
+
+    const lockRes = await acquireIdempotencyLock({
+      req: request,
+      scopeModule: "PURCHASE_PAYMENT",
+      userId: session.userId,
+      countryId: session.countryId,
+      cityBranchId: session.cityBranchId,
+      businessReference: params.id || body?.referenceNo || body?.roznamchaNumber,
+      payload: body
+    });
+
+    if (lockRes.isReplayed) {
+      return buildReplayedResponse(lockRes.responseCode || 201, lockRes.responseBody);
+    }
+
+    if (!lockRes.acquired) {
+      return handleApiError(new Error("A request with this idempotency key is currently being processed or duplicate submission detected. Please wait."));
+    }
+
+    idempotencyKey = lockRes.idempotencyKey;
+    tenantHash = lockRes.tenantHash;
 
 
     if (!isSupabaseConfigured()) {
@@ -529,10 +552,15 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       console.error("Error in post payment completion check:", err);
     }
 
-    if (__idemKey) await completeIdempotency(__idemKey, { paymentId });
-    return apiCreated({ paymentId });
+    const resPayload = { paymentId };
+    if (idempotencyKey && tenantHash) {
+      await commitIdempotencySuccess(idempotencyKey, tenantHash, 201, resPayload);
+    }
+    return apiCreated(resPayload);
   } catch (error) {
-    if (__idemKey) await releaseIdempotency(__idemKey);
+    if (idempotencyKey && tenantHash) {
+      await releaseIdempotencyLock(idempotencyKey, tenantHash);
+    }
     return handleApiError(error);
   }
 }

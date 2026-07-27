@@ -23,44 +23,43 @@ export async function updateSession(request: NextRequest) {
     options?: Parameters<typeof supabaseResponse.cookies.set>[2];
   };
 
-  if (!isSupabaseConfigured()) {
-    return supabaseResponse;
-  }
+  try {
+    if (!isSupabaseConfigured()) {
+      return supabaseResponse;
+    }
 
-  // Auth pages must stay available even when Supabase/Auth is slow or unreachable.
-  if (request.nextUrl.pathname.startsWith("/auth")) {
-    return supabaseResponse;
-  }
+    // Auth pages must stay available even when Supabase/Auth is slow or unreachable.
+    if (request.nextUrl.pathname.startsWith("/auth")) {
+      return supabaseResponse;
+    }
 
-  // Avoid calling Supabase Auth on every request when there is no Supabase session cookie.
-  // This keeps dev fast and prevents fetch errors in restricted environments.
-  if (!hasSupabaseSessionCookie(request)) {
-    return supabaseResponse;
-  }
+    // Avoid calling Supabase Auth on every request when there is no Supabase session cookie.
+    if (!hasSupabaseSessionCookie(request)) {
+      return supabaseResponse;
+    }
 
-  const supabase = createServerClient(
-    getSupabaseUrl()!,
-    getSupabasePublicKey()!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet: CookieToSet[]) {
-          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
-          supabaseResponse = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
-          );
+    const supabase = createServerClient(
+      getSupabaseUrl()!,
+      getSupabasePublicKey()!,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(cookiesToSet: CookieToSet[]) {
+            cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+            supabaseResponse = NextResponse.next({ request });
+            cookiesToSet.forEach(({ name, value, options }) =>
+              supabaseResponse.cookies.set(name, value, options)
+            );
+          }
         }
       }
-    }
-  );
+    );
 
-  try {
     await supabase.auth.getUser();
-  } catch {
-    // Do not block local ERP pages when Supabase Auth network refresh times out.
+  } catch (err) {
+    console.error("Middleware Session Error:", err);
     return supabaseResponse;
   }
   return supabaseResponse;

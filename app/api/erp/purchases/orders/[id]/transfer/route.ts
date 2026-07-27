@@ -1,7 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, apiError, handleApiError } from "@/lib/api/response";
-import { claimIdempotency, completeIdempotency, releaseIdempotency, naturalKey, headerKey } from "@/lib/api/idempotency";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
@@ -92,45 +91,37 @@ async function resolveLedgerOrAccount(adminSupabase: any, term: string | null | 
   return null;
 }
 
+import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
+
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
-  let __idemKey: string | null = null;
+  let idempotencyKey = "";
+  let tenantHash = "";
   try {
     await ensurePurchaseSchemaAndEnums();
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
     const body = await request.json().catch(() => ({}));
 
-    const supabase = await createApiSupabaseClient();
-    const adminSupabase = createSupabaseAdminClient();
-
-    const order = await requireSupabaseData(
-      supabase
-        .from("purchase_orders")
-        .select("id, country_id, country_branch_id, city_branch_id, order_total, currency_code, exchange_rate, purchase_order_no, purchase_contract_no, form_data, ledger_posting_status, payment_status, advance_paid, remaining_paid, credit_amount, remaining_due, roznamcha_entry_id, is_edited_since_transfer")
-        .eq("id", params.id)
-        .is("deleted_at", null)
-        .maybeSingle()
-    );
-
-    authorizeApiScope(session, {
-      resource: "purchases",
-      action: "post",
-      countryId: (order as any)?.country_id ?? null,
-      countryBranchId: (order as any)?.country_branch_id ?? null,
-      cityBranchId: (order as any)?.city_branch_id ?? null,
+    const lockRes = await acquireIdempotencyLock({
+      req: request,
+      scopeModule: "PURCHASE_TRANSFER",
+      userId: session.userId,
+      countryId: session.countryId,
+      cityBranchId: session.cityBranchId,
+      businessReference: params.id,
+      payload: body
     });
 
-    // --- Idempotency: block duplicate transfer/posting on repeated clicks ---
-    __idemKey = headerKey(request) ?? naturalKey([session.userId, params.id, "transfer", JSON.stringify(body ?? {})]);
-    {
-      const __claim = await claimIdempotency(__idemKey, "purchase_transfer", session.userId ?? null);
-      if (__claim.state === "duplicate") {
-        if (__claim.status === "completed" && __claim.response) {
-          return apiOk(__claim.response as any);
-        }
-        return apiError("duplicate_submission", "This transfer was already submitted; duplicate posting was prevented.", 409);
-      }
+    if (lockRes.isReplayed) {
+      return buildReplayedResponse(lockRes.responseCode || 200, lockRes.responseBody);
     }
+
+    if (!lockRes.acquired) {
+      return handleApiError(new Error("A request with this idempotency key is currently being processed or duplicate submission detected. Please wait."));
+    }
+
+    idempotencyKey = lockRes.idempotencyKey;
+    tenantHash = lockRes.tenantHash;
 
     const orderRow = order as any;
     const formData = orderRow.form_data || {};
@@ -461,8 +452,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       ipAddress: request.headers.get("x-forwarded-for") ?? null
     });
 
-    if (__idemKey) await completeIdempotency(__idemKey, { transferred: true });
-    return apiOk({
+    const resPayload = {
       success: true,
       purchaseOrderId: params.id,
       purchaseOrderNo: (updatedOrder as any).purchase_order_no,
@@ -476,9 +466,17 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       paymentStatus: newPaymentStatus,
       advancePaid: existingAdvance,
       remainingDue: newRemainingDue
-    });
+    };
+
+    if (idempotencyKey && tenantHash) {
+      await commitIdempotencySuccess(idempotencyKey, tenantHash, 200, resPayload);
+    }
+
+    return apiOk(resPayload);
   } catch (error) {
-    if (__idemKey) await releaseIdempotency(__idemKey);
+    if (idempotencyKey && tenantHash) {
+      await releaseIdempotencyLock(idempotencyKey, tenantHash);
+    }
     console.error("PURCHASE_TRANSFER_TO_PAYMENT_ERROR:", error);
     return handleApiError(error);
   }
