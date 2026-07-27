@@ -5,9 +5,10 @@ import {
   Menu, Building2, Calendar, Globe, Languages, Bell, HelpCircle, ChevronDown,
   Save, Check, ArrowRightLeft, Printer, MoreHorizontal, Pencil, Trash2, Upload,
   X, FileText, LayoutDashboard, ShoppingCart, Package, Users, Wallet, BarChart3,
-  Settings, Warehouse, Truck, Ship, Anchor, Eye, Download, FileDown, ClipboardList,
   Container,
 } from "lucide-react";
+import { FullPurchaseBookingReport } from "./reports/full-purchase-booking-report";
+import { CompactPurchaseBookingOrder } from "./reports/compact-purchase-booking-order";
 
 /* ---------------- types ---------------- */
 
@@ -30,6 +31,7 @@ export interface PurchaseBookingViewRedesignProps {
   paymentSchedule?: PaymentRow[];
   /** Hide the app chrome (sidebar/header) when embedding inside an existing shell. */
   chrome?: boolean;
+  defaultView?: View;
 }
 
 /* ---------------- default seed data (demo only) ---------------- */
@@ -251,8 +253,9 @@ export function PurchaseBookingViewRedesign({
   goods = DEFAULT_GOODS,
   paymentSchedule = DEFAULT_PAYMENTS,
   chrome = true,
+  defaultView = "full",
 }: PurchaseBookingViewRedesignProps = {}) {
-  const [view, setView] = useState<View>("form");
+  const [view, setView] = useState<View>(defaultView);
 
   const handlePrint = (which: "full" | "compact") => {
     setView(which);
@@ -374,8 +377,8 @@ export function PurchaseBookingViewRedesign({
           </div>
 
           {view === "form" && <FormView {...shared} />}
-          {view === "full" && <FullReport {...shared} />}
-          {view === "compact" && <CompactOrder goods={goods} />}
+          {view === "full" && <FullPurchaseBookingReport {...shared} />}
+          {view === "compact" && <CompactPurchaseBookingOrder goods={goods} />}
 
           <footer className="no-print mt-6 text-center text-[11px] text-muted-foreground">
             © 2026 <span className="font-semibold text-foreground">Digital Dock ERP</span> — All Rights Reserved.
@@ -633,296 +636,5 @@ function LoadingTable() {
         </table>
       </div>
     </section>
-  );
-}
-
-/* ================================================================
-   FULL REPORT — Template 1 (A4-ready)
-   ================================================================ */
-
-function FullReport({
-  branchDetails, billDetails, purchaseAccount, salesAccount, goods, paymentSchedule,
-}: Required<Omit<PurchaseBookingViewRedesignProps, "chrome">>) {
-  return (
-    <div className="mx-auto max-w-[900px]">
-      <div className="a4-sheet mx-auto overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
-        <div className="relative border-b-2 border-slate-900 bg-gradient-to-br from-slate-50 to-white px-6 py-5">
-          <div className="flex flex-wrap items-start justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-slate-900 text-white"><FileText className="h-6 w-6" /></div>
-              <div>
-                <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Digital Dock ERP</div>
-                <h2 className="text-lg font-black uppercase tracking-wider text-slate-900">Purchase Booking — Complete Report</h2>
-                <div className="text-[11px] text-muted-foreground">Full detailed report · A4 print ready</div>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-[10px] uppercase tracking-widest text-muted-foreground">Booking No.</div>
-              <div className="text-base font-bold text-slate-900">PB-2026-6789</div>
-              <div className="mt-1 text-[10px] text-muted-foreground">Date: <span className="font-semibold text-foreground">2026-07-23</span></div>
-              <div className="mt-1"><StatusPill>ACCEPTED</StatusPill></div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-0 border-b border-border md:grid-cols-2">
-          <div className="border-b border-border p-5 md:border-b-0 md:border-r">
-            <SectionBadge n="B" label="BRANCH & USER INFO" />
-            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[12px]">
-              {branchDetails.map((r) => (
-                <div key={r.k} className="flex justify-between border-b border-dashed border-border/60 pb-1">
-                  <span className="text-muted-foreground">{r.k}</span><span className="font-semibold">{r.v}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="p-5">
-            <SectionBadge n="I" label="BILL DETAILS" />
-            <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[12px]">
-              {billDetails.map((r) => (
-                <div key={r.k} className="flex justify-between border-b border-dashed border-border/60 pb-1">
-                  <span className="text-muted-foreground">{r.k}</span>
-                  {r.pill ? <StatusPill>{r.v}</StatusPill> : <span className="font-semibold">{r.v}</span>}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-0 border-b border-border md:grid-cols-2">
-          <div className="avoid-break border-b border-border p-5 md:border-b-0 md:border-r">
-            <div className="mb-2 flex items-center justify-between">
-              <SectionBadge n="P" label="PURCHASE ACCOUNT (DR)" /><StatusPill tone="danger">DR</StatusPill>
-            </div>
-            <div className="mt-2 grid grid-cols-1 gap-y-1.5 text-[12px]">
-              {purchaseAccount.map((r) => (
-                <div key={r.k} className="flex justify-between border-b border-dashed border-border/60 pb-1">
-                  <span className="text-muted-foreground">{r.k}</span><span className="font-semibold">{r.v}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="avoid-break p-5">
-            <div className="mb-2 flex items-center justify-between">
-              <SectionBadge n="S" label="SALES ACCOUNT (CR)" /><StatusPill tone="accepted">CR</StatusPill>
-            </div>
-            <div className="mt-2 grid grid-cols-1 gap-y-1.5 text-[12px]">
-              {salesAccount.map((r) => (
-                <div key={r.k} className="flex justify-between border-b border-dashed border-border/60 pb-1">
-                  <span className="text-muted-foreground">{r.k}</span><span className="font-semibold">{r.v}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="avoid-break border-b border-border p-5">
-          <SectionBadge n="G" label="GOODS DETAILS" />
-          <div className="mt-3 overflow-x-auto rounded-lg border border-border">
-            <table className="w-full text-[11.5px]">
-              <thead>
-                <tr className="bg-slate-900 text-[10px] uppercase tracking-widest text-white">
-                  {["#", "Name", "Spec", "Unit", "Qty", "Gross", "Net", "Price", "Amount"].map((h) => (
-                    <th key={h} className="whitespace-nowrap px-2.5 py-2 text-left font-semibold">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {goods.map((g) => (
-                  <tr key={g.sr} className="border-b border-border/40 last:border-0 odd:bg-white even:bg-slate-50/40">
-                    <td className="px-2.5 py-1.5 text-muted-foreground">{g.sr}</td>
-                    <td className="px-2.5 py-1.5 font-semibold">{g.name}</td>
-                    <td className="px-2.5 py-1.5 text-muted-foreground">{g.spec}</td>
-                    <td className="px-2.5 py-1.5">{g.unit}</td>
-                    <td className="px-2.5 py-1.5 tabular-nums">{g.qty}</td>
-                    <td className="px-2.5 py-1.5 tabular-nums">{g.gw}</td>
-                    <td className="px-2.5 py-1.5 tabular-nums">{g.nw}</td>
-                    <td className="px-2.5 py-1.5 tabular-nums">{g.price}</td>
-                    <td className="px-2.5 py-1.5 tabular-nums font-bold text-emerald-700">{g.na}</td>
-                  </tr>
-                ))}
-                <tr className="bg-slate-100 text-[11.5px] font-bold">
-                  <td className="px-2.5 py-2" colSpan={4}>TOTAL</td>
-                  <td className="px-2.5 py-2 tabular-nums">2,500.00</td>
-                  <td className="px-2.5 py-2 tabular-nums">2,615.00</td>
-                  <td className="px-2.5 py-2 tabular-nums">2,500.00</td>
-                  <td className="px-2.5 py-2">AED</td>
-                  <td className="px-2.5 py-2 tabular-nums text-emerald-700">75,500.00</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="avoid-break grid grid-cols-1 gap-0 border-b border-border md:grid-cols-2">
-          <div className="border-b border-border p-5 md:border-b-0 md:border-r">
-            <div className="mb-2 flex items-center gap-2">
-              <Ship className="h-4 w-4 text-amber-600" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-amber-800">Loading / Departure</span>
-            </div>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[12px]">
-              <div className="flex justify-between border-b border-dashed border-border/60 pb-1"><span className="text-muted-foreground">Mode</span><span className="font-semibold">By Sea</span></div>
-              <div className="flex justify-between border-b border-dashed border-border/60 pb-1"><span className="text-muted-foreground">Country</span><span className="font-semibold">UAE</span></div>
-              <div className="flex justify-between border-b border-dashed border-border/60 pb-1"><span className="text-muted-foreground">Port</span><span className="font-semibold">Jebel Ali</span></div>
-              <div className="flex justify-between border-b border-dashed border-border/60 pb-1"><span className="text-muted-foreground">Date</span><span className="font-semibold">2026-07-30</span></div>
-            </div>
-          </div>
-          <div className="p-5">
-            <div className="mb-2 flex items-center gap-2">
-              <Anchor className="h-4 w-4 text-emerald-700" />
-              <span className="text-[11px] font-bold uppercase tracking-widest text-emerald-800">Receiving / Arrival</span>
-            </div>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 text-[12px]">
-              <div className="flex justify-between border-b border-dashed border-border/60 pb-1"><span className="text-muted-foreground">Country</span><span className="font-semibold">Pakistan</span></div>
-              <div className="flex justify-between border-b border-dashed border-border/60 pb-1"><span className="text-muted-foreground">Port</span><span className="font-semibold">Karachi</span></div>
-              <div className="flex justify-between border-b border-dashed border-border/60 pb-1"><span className="text-muted-foreground">Date</span><span className="font-semibold">2026-08-05</span></div>
-              <div className="flex justify-between border-b border-dashed border-border/60 pb-1"><span className="text-muted-foreground">Container</span><span className="font-semibold">40 FT</span></div>
-            </div>
-          </div>
-        </div>
-
-        <div className="avoid-break border-b border-border p-5">
-          <SectionBadge n="Y" label="PAYMENT TERMS" />
-          <div className="mt-3 overflow-x-auto rounded-lg border border-border">
-            <table className="w-full text-[11.5px]">
-              <thead>
-                <tr className="bg-slate-900 text-[10px] uppercase tracking-widest text-white">
-                  {["#", "Term", "%", "Mode", "Bank / ATM", "Amount", "Balance", "Date"].map((h) => (
-                    <th key={h} className="whitespace-nowrap px-2.5 py-2 text-left font-semibold">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {paymentSchedule.map((r) => (
-                  <tr key={r.sr} className="border-b border-border/40 last:border-0 odd:bg-white even:bg-slate-50/40">
-                    <td className="px-2.5 py-1.5 text-muted-foreground">{r.sr}</td>
-                    <td className="px-2.5 py-1.5 font-semibold">{r.term}</td>
-                    <td className="px-2.5 py-1.5 tabular-nums font-bold text-sky-700">{r.pct}</td>
-                    <td className="px-2.5 py-1.5">{r.mode}</td>
-                    <td className="px-2.5 py-1.5 text-muted-foreground">{r.bank}</td>
-                    <td className="px-2.5 py-1.5 tabular-nums font-semibold">{r.amt}</td>
-                    <td className="px-2.5 py-1.5 tabular-nums text-amber-700">{r.bal}</td>
-                    <td className="px-2.5 py-1.5 text-muted-foreground">{r.date}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-0 border-b border-border lg:grid-cols-3">
-          <div className="border-b border-border p-5 lg:col-span-2 lg:border-b-0 lg:border-r">
-            <SectionBadge n="R" label="REMARKS & NARRATION" />
-            <p className="mt-2 rounded-lg border border-border bg-slate-50/60 p-3 text-[12px] leading-6">
-              Purchase booking for dry fruits. Advance payment scheduled per terms. Quality as per agreement.
-              Delivery CIF Karachi. Variance ±2 % acceptable.
-            </p>
-          </div>
-          <div className="avoid-break p-5">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Final Totals</div>
-            <div className="mt-2 space-y-1.5 rounded-lg border border-border p-3 text-[12px]">
-              <div className="flex justify-between"><span className="text-muted-foreground">Items</span><span className="font-semibold">4</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Quantity</span><span className="font-semibold tabular-nums">2,500.00 KG</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Net Weight</span><span className="font-semibold tabular-nums">2,500.00 KG</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Invoice</span><span className="font-semibold tabular-nums">75,500.00</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Paid</span><span className="font-semibold tabular-nums text-emerald-700">0.00</span></div>
-              <div className="mt-1 flex justify-between border-t border-border pt-1.5">
-                <span className="font-bold">Balance (AED)</span>
-                <span className="font-black tabular-nums text-amber-700">75,500.00</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 bg-slate-50/60 px-6 py-6 md:grid-cols-3">
-          {["Buyer's Signature", "Seller's Signature", "Authorised Signatory"].map((s) => (
-            <div key={s} className="text-center">
-              <div className="mx-auto mb-2 h-12 w-40 border-b-2 border-slate-400" />
-              <div className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">{s}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/* ================================================================
-   COMPACT ORDER — Template 2
-   ================================================================ */
-
-function CompactOrder({ goods }: { goods: GoodsRow[] }) {
-  return (
-    <div className="mx-auto max-w-[720px]">
-      <div className="a4-sheet mx-auto overflow-hidden rounded-2xl border border-border bg-white shadow-sm">
-        <div className="bg-slate-900 px-6 py-4 text-white">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <div className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/60">Digital Dock ERP</div>
-              <h2 className="text-lg font-black uppercase tracking-wider">Purchase Booking Order</h2>
-            </div>
-            <div className="text-right">
-              <div className="text-[10px] uppercase tracking-widest text-white/60">Order No.</div>
-              <div className="text-base font-bold">PB-2026-6789</div>
-              <div className="text-[10.5px] text-white/70">2026-07-23</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 gap-0 border-b border-border md:grid-cols-2">
-          <div className="border-b border-border p-4 md:border-b-0 md:border-r">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-rose-600">Purchase A/C (DR)</div>
-            <div className="mt-1 text-[13px] font-bold">FAREDULLAH TRADING LLC</div>
-            <div className="text-[11px] text-muted-foreground">ARE-DET-AC-0003 · AL.RAS · AED</div>
-          </div>
-          <div className="p-4">
-            <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-700">Sales A/C (CR)</div>
-            <div className="mt-1 text-[13px] font-bold">HIGH END TRADING LLC</div>
-            <div className="text-[11px] text-muted-foreground">UAE-DET-AC-0003 · AL.RAS · AED</div>
-          </div>
-        </div>
-
-        <div className="p-4">
-          <div className="overflow-x-auto rounded-lg border border-border">
-            <table className="w-full text-[11.5px]">
-              <thead>
-                <tr className="bg-slate-900 text-[10px] uppercase tracking-widest text-white">
-                  {["#", "Item", "Spec", "Qty", "Price", "Net Amount"].map((h) => (
-                    <th key={h} className="whitespace-nowrap px-2.5 py-2 text-left font-semibold">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {goods.map((g) => (
-                  <tr key={g.sr} className="border-b border-border/40 last:border-0 odd:bg-white even:bg-slate-50/40">
-                    <td className="px-2.5 py-1.5 text-muted-foreground">{g.sr}</td>
-                    <td className="px-2.5 py-1.5 font-semibold">{g.name}</td>
-                    <td className="px-2.5 py-1.5 text-muted-foreground">{g.spec}</td>
-                    <td className="px-2.5 py-1.5 tabular-nums">{g.qty} {g.unit}</td>
-                    <td className="px-2.5 py-1.5 tabular-nums">{g.price}</td>
-                    <td className="px-2.5 py-1.5 tabular-nums font-bold text-emerald-700">{g.na}</td>
-                  </tr>
-                ))}
-                <tr className="bg-slate-100 text-[11.5px] font-bold">
-                  <td className="px-2.5 py-2" colSpan={3}>TOTAL</td>
-                  <td className="px-2.5 py-2 tabular-nums">2,500.00 KG</td>
-                  <td className="px-2.5 py-2">AED</td>
-                  <td className="px-2.5 py-2 tabular-nums text-emerald-700">75,500.00</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-2 gap-4 border-t border-border bg-slate-50/60 px-4 py-3 text-[11.5px]">
-          <div>
-            <span className="text-muted-foreground">Payment Mode:</span> <span className="font-semibold">Bank / Advance 30%</span>
-          </div>
-          <div className="text-right">
-            <span className="text-muted-foreground">Delivery:</span> <span className="font-semibold">Sea Freight (Jebel Ali → Karachi)</span>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }

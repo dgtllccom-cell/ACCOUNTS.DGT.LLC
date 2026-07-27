@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { assertSupabaseConfigured, getSupabaseSecretKey, getSupabaseUrl } from "@/lib/supabase/config";
+import { assertSupabaseConfigured, getSupabasePublicKey, getSupabaseSecretKey, getSupabaseUrl } from "@/lib/supabase/config";
 import type { Database } from "@/lib/supabase/types";
 
 export function createSupabaseAdminClient() {

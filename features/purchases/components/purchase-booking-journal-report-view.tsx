@@ -33,9 +33,10 @@ import {
   ChevronDown,
   ChevronRight,
   ArrowRight,
-  CheckCircle,
   Wallet,
-  Clock
+  Clock,
+  ShieldCheck,
+  Send
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
@@ -2033,126 +2034,55 @@ export function PurchaseBookingJournalReportView({
 
       {actionsSlot && createPortal(
         <div className="flex flex-wrap items-center gap-2">
-          {/* Draft Status box */}
+          {/* Select Country Dropdown */}
           <select
-            value={filters.draftStatus}
-            onChange={(event) => setFilters((previous) => ({ ...previous, draftStatus: event.target.value }))}
-            className="h-8 min-w-[140px] rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-350"
+            disabled={!!lockedCountryName}
+            value={filters.country}
+            onChange={(e) => setFilters(prev => ({ ...prev, country: e.target.value }))}
+            className="h-8 min-w-[130px] rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 disabled:opacity-50"
           >
-            <option value="">Draft Dropdown</option>
-            <option value="open">Open</option>
-            <option value="partial">Partial Confirmed</option>
-            <option value="fully">Fully Confirmed</option>
-            <option value="cancelled">Cancelled</option>
+            <option value="">Select Country (All)</option>
+            {countries.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
+
+          {/* Select Branch Dropdown */}
+          <select
+            disabled={!!lockedBranchName}
+            value={filters.branch}
+            onChange={(e) => setFilters(prev => ({ ...prev, branch: e.target.value }))}
+            className="h-8 min-w-[130px] rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 disabled:opacity-50"
+          >
+            <option value="">Select Branch (All)</option>
+            {branches.map((b) => <option key={b} value={b}>{b}</option>)}
+          </select>
+
+          {/* Status Dropdown */}
+          <select
+            value={filters.status}
+            onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
+            className="h-8 min-w-[120px] rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+          >
+            <option value="">Select Status (All)</option>
+            <option value="Draft">Draft</option>
+            <option value="Accepted">Accepted</option>
+            <option value="Transferred">Transferred</option>
+            <option value="Completed">Completed</option>
+          </select>
+
           {/* Search box input */}
-          <div className="relative min-w-[200px] sm:min-w-[240px]">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+          <div className="relative min-w-[180px] sm:min-w-[220px]">
+            <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
             <input
               value={searchText}
               onChange={(event) => setSearchText(event.target.value)}
               placeholder="Search booking, supplier, branch..."
-              className="h-8 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-[10px] font-semibold text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
+              className="h-8 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2.5 text-[10px] font-semibold text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
             />
           </div>
-          {/* Filter toggle button */}
-          <button
-            onClick={() => setFiltersOpen(!filtersOpen)}
-            className={cn(
-              "flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-600 shadow-sm hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400",
-              filtersOpen && "border-blue-500 bg-blue-50/50 text-blue-700 dark:bg-blue-950/20 dark:text-blue-300"
-            )}
-          >
-            <Filter className="h-3 w-3" />
-            Filter
-          </button>
-          {/* Combined Reset & Refresh Button */}
-          <button
-            onClick={() => {
-              setSearchText("");
-              setFilters((previous) => ({
-                ...previous,
-                supplier: "",
-                branch: "",
-                country: "",
-                status: "",
-                currency: "",
-                bookingNo: "",
-                containerNo: "",
-                blNo: "",
-                confirmationStatus: "",
-                financialSupplier: "",
-                financialCurrency: "",
-                draftStatus: ""
-              }));
-              void loadReport();
-            }}
-            className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-600 shadow-sm hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400"
-          >
-            <RefreshCcw className={loading ? "h-3 w-3 animate-spin text-slate-550" : "h-3 w-3 text-slate-550"} />
-            Reset & Refresh
-          </button>
-          {/* Three-dots menu (now contains export) */}
-          <ReportActions rows={registerRows} />
-          {/* Calendar Date/Time Indicator */}
-          <div className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-semibold text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
-            <CalendarDays className="h-3 w-3 text-slate-400" />
-            <span>{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}</span>
-          </div>
-          {/* New Booking Button */}
-          <button
-            onClick={() => {
-              if (onNewBooking) {
-                onNewBooking();
-              } else {
-                router.push("/dashboard/purchase/new-purchase-booking-order");
-              }
-            }}
-            className="h-8 rounded-lg bg-blue-600 px-3 text-[10px] font-bold text-white hover:bg-blue-700 shadow-sm border-0 flex items-center gap-1.5 transition"
-          >
-            <Plus className="h-3 w-3" /> New Booking
-          </button>
-        </div>,
-        actionsSlot
-      )}
 
-      {/* ── Top Header & Actions Bar ─────────────────────────────── */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-        <div>
-          <div className="flex items-center gap-2 text-[11px] font-semibold text-slate-400">
-            <span>Dashboard</span>
-            <span>›</span>
-            <span>Purchase Management</span>
-            <span>›</span>
-            <span>Purchase Booking</span>
-            <span>›</span>
-            <span className="font-bold text-slate-700 dark:text-slate-200">Purchase Booking Register</span>
-          </div>
-          <h1 className="mt-1 text-xl font-black tracking-tight text-slate-950 dark:text-slate-100 flex items-center gap-2">
-            <ClipboardList className="h-6 w-6 text-blue-600" />
-            Purchase Booking Register
-          </h1>
-          <p className="text-xs font-medium text-slate-500 dark:text-slate-400">View, manage and track all purchase booking bills</p>
-        </div>
-
-        <div className="flex flex-wrap items-center gap-2.5">
-          <Button
+          {/* Print Button */}
+          <button
             type="button"
-            onClick={() => {
-              if (onNewBooking) onNewBooking();
-              else router.push("/dashboard/purchase/new-purchase-booking-order");
-            }}
-            className="h-9 bg-blue-600 hover:bg-blue-700 text-white font-bold px-4 shadow-md transition-all text-xs"
-          >
-            <Plus className="mr-1.5 h-4 w-4" /> New Purchase Booking
-          </Button>
-
-          <ReportActionsMenu rows={registerRows} onExport={() => exportCsv(registerRows, "purchase-booking-register.csv")} />
-
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
             onClick={() => {
               const mappedRows = registerRows.map((r) => {
                 const f = r.form_data?.form || {};
@@ -2191,19 +2121,64 @@ export function PurchaseBookingJournalReportView({
                 companyInfo: {
                   name: "DIGITAL DOCK ERP",
                   branch: "ALL BRANCHES",
-                  printedBy: session?.fullName || session?.email || "asmat (Country Admin)"
+                  printedBy: session?.fullName || session?.email || "Country Admin"
                 }
               });
             }}
-            className="h-9 text-xs font-semibold"
+            className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
           >
-            <Printer className="mr-1.5 h-3.5 w-3.5 text-slate-600" /> Print
-          </Button>
-          <Button type="button" variant="outline" size="sm" onClick={() => void loadReport()} className="h-9 text-xs font-semibold">
-            <RefreshCcw className={cn("mr-1.5 h-3.5 w-3.5 text-slate-600", loading && "animate-spin")} /> More
-          </Button>
-        </div>
-      </div>
+            <Printer className="h-3.5 w-3.5 text-slate-500" />
+            Print
+          </button>
+
+          {/* Combined Reset & Refresh Button */}
+          <button
+            onClick={() => {
+              setSearchText("");
+              setFilters((previous) => ({
+                ...previous,
+                supplier: "",
+                branch: "",
+                country: "",
+                status: "",
+                currency: "",
+                bookingNo: "",
+                containerNo: "",
+                blNo: "",
+                confirmationStatus: "",
+                financialSupplier: "",
+                financialCurrency: "",
+                draftStatus: "",
+                fromDate: "",
+                toDate: ""
+              }));
+              void loadReport();
+            }}
+            className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-600 shadow-sm hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400"
+          >
+            <RefreshCcw className={loading ? "h-3 w-3 animate-spin text-slate-500" : "h-3 w-3 text-slate-500"} />
+            Reset & Refresh
+          </button>
+
+          {/* Three-dots menu */}
+          <ReportActions rows={registerRows} />
+
+          {/* New Booking Button */}
+          <button
+            onClick={() => {
+              if (onNewBooking) {
+                onNewBooking();
+              } else {
+                router.push("/dashboard/purchase/new-purchase-booking-order");
+              }
+            }}
+            className="h-8 rounded-lg bg-blue-600 px-3 text-[10px] font-bold text-white hover:bg-blue-700 shadow-sm border-0 flex items-center gap-1.5 transition"
+          >
+            <Plus className="h-3 w-3" /> New Booking
+          </button>
+        </div>,
+        actionsSlot
+      )}
 
       {/* ── 5 Top Summary KPI Cards Grid ─────────────────────────── */}
       <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
@@ -2362,97 +2337,6 @@ export function PurchaseBookingJournalReportView({
             </div>
           </div>
         </div>
-      </div>
-
-      {/* ── Filter Bar ───────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-2.5 rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-        <select
-          disabled={!!lockedCountryName}
-          value={filters.country}
-          onChange={(e) => setFilters(prev => ({ ...prev, country: e.target.value }))}
-          className="h-9 min-w-[140px] rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 disabled:opacity-50"
-        >
-          <option value="">Select Country (All)</option>
-          {countries.map(c => <option key={c} value={c}>{c}</option>)}
-        </select>
-
-        <select
-          disabled={!!lockedBranchName}
-          value={filters.branch}
-          onChange={(e) => setFilters(prev => ({ ...prev, branch: e.target.value }))}
-          className="h-9 min-w-[140px] rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 disabled:opacity-50"
-        >
-          <option value="">Select Branch (All)</option>
-          {branches.map(b => <option key={b} value={b}>{b}</option>)}
-        </select>
-
-        <div className="relative flex-1 min-w-[220px]">
-          <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-          <input
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            placeholder="Search Bill No, Manual No, Supplier..."
-            className="h-9 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-xs font-medium text-slate-800 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-          />
-        </div>
-
-        <select
-          value={filters.status}
-          onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
-          className="h-9 min-w-[130px] rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-        >
-          <option value="">Select Status (All)</option>
-          <option value="Draft">Draft</option>
-          <option value="Accepted">Accepted</option>
-          <option value="Transferred">Transferred</option>
-          <option value="Completed">Completed</option>
-        </select>
-
-        <input
-          type="date"
-          value={filters.fromDate}
-          onChange={(e) => setFilters(prev => ({ ...prev, fromDate: e.target.value }))}
-          className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-        />
-
-        <input
-          type="date"
-          value={filters.toDate}
-          onChange={(e) => setFilters(prev => ({ ...prev, toDate: e.target.value }))}
-          className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-        />
-
-        <Button variant="outline" size="sm" onClick={() => setFiltersOpen(!filtersOpen)} className="h-9 text-xs">
-          <Filter className="mr-1.5 h-3.5 w-3.5 text-slate-500" /> Filters
-        </Button>
-
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => {
-            setSearchText("");
-            setFilters({
-              supplier: "",
-              branch: "",
-              country: "",
-              status: "",
-              currency: "",
-              fromDate: "",
-              toDate: "",
-              bookingNo: "",
-              containerNo: "",
-              blNo: "",
-              confirmationStatus: "",
-              financialSupplier: "",
-              financialCurrency: "",
-              draftStatus: ""
-            });
-            void loadReport();
-          }}
-          className="h-9 text-xs"
-        >
-          <RefreshCcw className="mr-1.5 h-3.5 w-3.5 text-slate-500" /> Reset
-        </Button>
       </div>
 
       {error && (
@@ -2624,7 +2508,7 @@ export function PurchaseBookingJournalReportView({
                             type="button"
                             onClick={() => { setSelectedId(report.id); setIsDrawerOpen(true); }}
                             className="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition shadow-sm"
-                            title="View Details"
+                            title="Inspect / View Bill Details"
                           >
                             <Eye className="h-3.5 w-3.5" />
                           </button>
@@ -2642,7 +2526,7 @@ export function PurchaseBookingJournalReportView({
                             type="button"
                             onClick={() => { setSelectedId(report.id); handleTransfer(); }}
                             className="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-emerald-600 hover:bg-emerald-50 transition shadow-sm"
-                            title="Transfer/Accept"
+                            title="Transfer / Confirm"
                           >
                             <ArrowRight className="h-3.5 w-3.5" />
                           </button>
@@ -2715,19 +2599,153 @@ export function PurchaseBookingJournalReportView({
                               });
                             }}
                             className="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition shadow-sm"
-                            title="Print Bill"
+                            title="Print Full A4 Bill"
                           >
                             <Printer className="h-3.5 w-3.5" />
                           </button>
-                          <RowActionsMenu
-                            report={report}
-                            onSelect={() => { setSelectedId(report.id); setIsDrawerOpen(true); }}
-                            onEdit={() => { router.push(`/dashboard/purchase/new-purchase-booking-order?id=${encodeURIComponent(report.id)}&purchaseOrderNo=${encodeURIComponent(report.purchaseBookingOrderNumber)}`); }}
-                            onAccept={() => { setSelectedId(report.id); handleAccept(); }}
-                            onTransfer={() => { setSelectedId(report.id); handleTransfer(); }}
-                            isSuperAdmin={isSuperAdmin}
-                            isCountryAdmin={isCountryAdmin}
-                            isBranchAdmin={isBranchAdmin}
+                          
+                          {/* Three Dots (: Actions) Menu with all print & inspection options */}
+                          <UnifiedActionMenu
+                            align="right"
+                            ariaLabel={`Actions for ${report.purchaseBookingOrderNumber}`}
+                            buttonClassName="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition shadow-sm"
+                            onView={() => { setSelectedId(report.id); setIsDrawerOpen(true); }}
+                            onEdit={() => {
+                              router.push(`/dashboard/purchase/new-purchase-booking-order?id=${encodeURIComponent(report.id)}&purchaseOrderNo=${encodeURIComponent(report.purchaseBookingOrderNumber)}`);
+                            }}
+                            onPrint={() => {
+                              const f = report.form_data?.form || {};
+                              const goodsEntries = report.form_data?.goodsEntries || [];
+                              openPurchaseBookingOrderPrintReport({
+                                order: {
+                                  id: report.id,
+                                  systemBillNo: report.purchaseBookingOrderNumber || f.bookingNo || `PB-2026-${report.id.slice(0, 4)}`,
+                                  manualBillNo: f.salesOrderNo || f.billNo || report.purchaseContractNumber,
+                                  superAdminSerialNo: (report as any).super_admin_serial_number || f.superAdminSerialNo,
+                                  countrySerialNo: (report as any).country_transaction_serial_number || f.countrySerialNo,
+                                  branchSerialNo: (report as any).branch_transaction_serial_number || f.branchSerialNo,
+                                  bookingDate: report.bookingDate || report.purchaseDate || new Date().toISOString(),
+                                  supplierName: report.supplierName || f.purchaseAccountName || "SUPPLIER ACCOUNT",
+                                  supplierContact: f.supplierContact,
+                                  buyerName: report.buyerName || f.customerName || "DAMAN GROUP",
+                                  purchaseAccountNo: report.purchaseAccountNumber || f.purchaseAccountNo || "UAE-DET-AC-0003",
+                                  purchaseAccountName: report.purchaseAccountName || f.purchaseAccountName || "Purchase Account",
+                                  salesAccountNo: report.salesAccountNumber || f.salesAccountNo || "UAE-DET-AC-0003",
+                                  salesAccountName: report.salesAccountName || f.salesAccountName || "Sales Account",
+                                  countryName: report.countryName || f.countryName || "UAE",
+                                  branchName: report.branchName || f.branchName || "AL_RAS",
+                                  shippingMode: f.shippingMode || "By Sea",
+                                  containerNumbers: f.containerNumbers || "N/A",
+                                  vesselName: f.vesselName || "N/A",
+                                  loadingCountryPort: f.loadingPort || f.loadingCountry || "N/A",
+                                  receivedCountryPort: f.receivedPort || f.receivedCountry || "N/A",
+                                  goodsItems: goodsEntries.map((g: any, idx: number) => ({
+                                    srNo: idx + 1,
+                                    goodsName: g.goodsName || report.productName || "COMMODITY GOODS",
+                                    grade: g.size || "Standard",
+                                    origin: g.origin || report.countryName || "USA",
+                                    quantity: Number(g.qtyNo || report.quantity || 1),
+                                    unit: g.qtyName || report.unit || "BAGS",
+                                    grossWeight: Number(g.qtyNo * g.qtyKgs || report.totalGrossWeight || 1000),
+                                    tareWeight: Number(g.emptyKgs || 0),
+                                    netWeight: Number(g.qtyNo * (g.qtyKgs - (g.emptyKgs || 0)) || report.totalNetWeight || 1000),
+                                    rateKg: Number(g.coursePrice || report.purchaseRate || 0),
+                                    amountFc: Number(g.totalAmount || report.totalPurchaseAmount || 0),
+                                    currencyFc: g.purchaseCurrency || report.currency || "USD",
+                                    exchangeRate: Number(g.exchangeRate || f.exchangeRate || 3.6725),
+                                    amountLc: Number(g.finalAmount || report.finalAmount || 0),
+                                    currencyLc: report.finalCurrency || "AED"
+                                  })),
+                                  totalPurchaseFc: Number(report.totalPurchaseAmount || 0),
+                                  currencyFc: report.currency || "USD",
+                                  totalPurchaseLc: Number(report.finalAmount || 0),
+                                  currencyLc: "AED",
+                                  advancePercent: Number(f.advancePercent || 10),
+                                  advanceAmountFc: Number(f.advanceAmountFc || 0),
+                                  advanceAmountLc: Number(f.advanceAmountLc || 0),
+                                  remainingAmountFc: Number(f.remainingAmountFc || 0),
+                                  remainingAmountLc: Number(f.remainingAmountLc || 0),
+                                  advancePaymentDate: f.advancePaymentDate,
+                                  remainingDueDate: f.paymentDate,
+                                  paymentType: f.paymentType || report.paymentStatus || "Advance Payment",
+                                  status: report.status || "Accepted",
+                                  remarks: f.orderReportRemarks || report.goodsDescription || "",
+                                  userName: report.audit?.userName || "ADMIN"
+                                },
+                                companyInfo: {
+                                  name: "DIGITAL DOCK ERP",
+                                  branch: report.branchName || "AL_RAS",
+                                  printedBy: session?.fullName || session?.email || "SUPER ADMIN"
+                                }
+                              });
+                            }}
+                            customItems={[
+                              {
+                                key: "transfer-verification-screen",
+                                label: "Purchase Transfer Verification Screen",
+                                icon: <ShieldCheck className="h-4 w-4 text-emerald-600" />,
+                                onClick: () => {
+                                  router.push(`/dashboard/purchase/purchase-transfer-verification?id=${encodeURIComponent(report.id)}`);
+                                }
+                              },
+                              {
+                                key: "print-compact-order",
+                                label: "Print Compact Booking Order",
+                                icon: <FileText className="h-4 w-4 text-indigo-500" />,
+                                onClick: () => {
+                                  router.push(`/dashboard/purchase/purchase-booking-demo?defaultView=compact`);
+                                }
+                              },
+                              {
+                                key: "print-loading-records",
+                                label: "Print Loading Records Report",
+                                icon: <Printer className="h-4 w-4 text-blue-500" />,
+                                onClick: () => {
+                                  const f = report.form_data?.form || {};
+                                  const g = report.form_data?.goodsEntries || [];
+                                  const firstGood = g[0] || {};
+                                  openLoadingRecordsPrintReport({
+                                    rows: [{
+                                      id: report.id,
+                                      country: String(report.countryName || f.countryName || "UAE"),
+                                      branch: String(report.branchName || f.branchName || "AL_RAS"),
+                                      purchaseBookingNo: report.purchaseBookingOrderNumber || f.bookingNo || `PB-2026-${report.id.slice(0, 4)}`,
+                                      salesAccount: report.salesAccountName || f.salesAccountName || "UAE-DET-AC-0003",
+                                      purchaseAccount: report.purchaseAccountName || f.purchaseAccountName || "UAE-DET-AC-0003",
+                                      goods: report.productName || firstGood.goodsName || "Almond Kernel California",
+                                      contractQty: Number(report.quantity || firstGood.qtyNo || 10000),
+                                      grossWeight: Number(report.totalGrossWeight || firstGood.qtyKgs * firstGood.qtyNo || 10500),
+                                      tareWeight: Number(firstGood.emptyKgs || 1000),
+                                      netWeight: Number(report.totalNetWeight || (firstGood.qtyKgs - firstGood.emptyKgs) * firstGood.qtyNo || 9500),
+                                      purchasePriceRate: Number(report.purchaseRate || firstGood.coursePrice || 5.2),
+                                      totalPurchaseFc: Number(report.totalPurchaseAmount || 49400),
+                                      advanceFc: Number(f.advanceAmountFc || 20000),
+                                      remainingFc: Number(f.remainingAmountFc || 29400),
+                                      currencyFc: report.currency || "USD",
+                                      exchangeRate: Number(f.exchangeRate || 3.6725),
+                                      finalAmountLc: Number(report.finalAmount || 181560.5),
+                                      finalAdvanceLc: Number(f.advanceAmountLc || 73450),
+                                      finalRemainingLc: Number(f.remainingAmountLc || 108110.5),
+                                      currencyLc: "AED",
+                                      loadedQty: Number(f.loadedQty || 4000),
+                                      remainingToLoad: Number(f.remainingToLoad || 6000),
+                                      loadingStatus: report.status === "Accepted" ? "Partially Loaded" : report.status === "Transferred" ? "Almost Complete" : report.status === "Completed" ? "Completed" : "Not Loaded"
+                                    }],
+                                    companyInfo: {
+                                      name: "DIGITAL DOCK ERP",
+                                      branch: report.branchName || "AL_RAS",
+                                      printedBy: session?.fullName || session?.email || "Country Admin"
+                                    }
+                                  });
+                                }
+                              },
+                              {
+                                key: "post-roznamcha-transfer",
+                                label: "Post / Transfer to Roznamcha",
+                                icon: <Send className="h-4 w-4 text-purple-600" />,
+                                onClick: () => { setSelectedId(report.id); handleTransfer(); }
+                              }
+                            ]}
                           />
                         </div>
                       </Td>
@@ -2809,9 +2827,148 @@ export function PurchaseBookingJournalReportView({
                     <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">Paid</span></Td>
                     <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">Loaded</span></Td>
                     <Td center onClick={(e) => e.stopPropagation()}>
-                      <button type="button" onClick={() => { setSelectedId(report.id); setIsDrawerOpen(true); }} className="h-7 w-7 rounded border bg-white text-slate-600">
-                        <Eye className="h-3.5 w-3.5" />
-                      </button>
+                      <UnifiedActionMenu
+                        align="right"
+                        ariaLabel={`Actions for ${report.purchaseBookingOrderNumber}`}
+                        buttonClassName="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-slate-700 hover:bg-slate-100 transition shadow-sm"
+                        onView={() => { setSelectedId(report.id); setIsDrawerOpen(true); }}
+                        onEdit={() => {
+                          router.push(`/dashboard/purchase/new-purchase-booking-order?id=${encodeURIComponent(report.id)}&purchaseOrderNo=${encodeURIComponent(report.purchaseBookingOrderNumber)}`);
+                        }}
+                        onPrint={() => {
+                          const f = report.form_data?.form || {};
+                          const goodsEntries = report.form_data?.goodsEntries || [];
+                          openPurchaseBookingOrderPrintReport({
+                            order: {
+                              id: report.id,
+                              systemBillNo: report.purchaseBookingOrderNumber || f.bookingNo || `PB-2026-${report.id.slice(0, 4)}`,
+                              manualBillNo: f.salesOrderNo || f.billNo || report.purchaseContractNumber,
+                              superAdminSerialNo: (report as any).super_admin_serial_number || f.superAdminSerialNo,
+                              countrySerialNo: (report as any).country_transaction_serial_number || f.countrySerialNo,
+                              branchSerialNo: (report as any).branch_transaction_serial_number || f.branchSerialNo,
+                              bookingDate: report.bookingDate || report.purchaseDate || new Date().toISOString(),
+                              supplierName: report.supplierName || f.purchaseAccountName || "SUPPLIER ACCOUNT",
+                              supplierContact: f.supplierContact,
+                              buyerName: report.buyerName || f.customerName || "DAMAN GROUP",
+                              purchaseAccountNo: report.purchaseAccountNumber || f.purchaseAccountNo || "UAE-DET-AC-0003",
+                              purchaseAccountName: report.purchaseAccountName || f.purchaseAccountName || "Purchase Account",
+                              salesAccountNo: report.salesAccountNumber || f.salesAccountNo || "UAE-DET-AC-0003",
+                              salesAccountName: report.salesAccountName || f.salesAccountName || "Sales Account",
+                              countryName: report.countryName || f.countryName || "UAE",
+                              branchName: report.branchName || f.branchName || "AL_RAS",
+                              shippingMode: f.shippingMode || "By Sea",
+                              containerNumbers: f.containerNumbers || "N/A",
+                              vesselName: f.vesselName || "N/A",
+                              loadingCountryPort: f.loadingPort || f.loadingCountry || "N/A",
+                              receivedCountryPort: f.receivedPort || f.receivedCountry || "N/A",
+                              goodsItems: goodsEntries.map((g: any, idx: number) => ({
+                                srNo: idx + 1,
+                                goodsName: g.goodsName || report.productName || "COMMODITY GOODS",
+                                grade: g.size || "Standard",
+                                origin: g.origin || report.countryName || "USA",
+                                quantity: Number(g.qtyNo || report.quantity || 1),
+                                unit: g.qtyName || report.unit || "BAGS",
+                                grossWeight: Number(g.qtyNo * g.qtyKgs || report.totalGrossWeight || 1000),
+                                tareWeight: Number(g.emptyKgs || 0),
+                                netWeight: Number(g.qtyNo * (g.qtyKgs - (g.emptyKgs || 0)) || report.totalNetWeight || 1000),
+                                rateKg: Number(g.coursePrice || report.purchaseRate || 0),
+                                amountFc: Number(g.totalAmount || report.totalPurchaseAmount || 0),
+                                currencyFc: g.purchaseCurrency || report.currency || "USD",
+                                exchangeRate: Number(g.exchangeRate || f.exchangeRate || 3.6725),
+                                amountLc: Number(g.finalAmount || report.finalAmount || 0),
+                                currencyLc: report.finalCurrency || "AED"
+                              })),
+                              totalPurchaseFc: Number(report.totalPurchaseAmount || 0),
+                              currencyFc: report.currency || "USD",
+                              totalPurchaseLc: Number(report.finalAmount || 0),
+                              currencyLc: "AED",
+                              advancePercent: Number(f.advancePercent || 10),
+                              advanceAmountFc: Number(f.advanceAmountFc || 0),
+                              advanceAmountLc: Number(f.advanceAmountLc || 0),
+                              remainingAmountFc: Number(f.remainingAmountFc || 0),
+                              remainingAmountLc: Number(f.remainingAmountLc || 0),
+                              advancePaymentDate: f.advancePaymentDate,
+                              remainingDueDate: f.paymentDate,
+                              paymentType: f.paymentType || report.paymentStatus || "Advance Payment",
+                              status: report.status || "Accepted",
+                              remarks: f.orderReportRemarks || report.goodsDescription || "",
+                              userName: report.audit?.userName || "ADMIN"
+                            },
+                            companyInfo: {
+                              name: "DIGITAL DOCK ERP",
+                              branch: report.branchName || "AL_RAS",
+                              printedBy: session?.fullName || session?.email || "SUPER ADMIN"
+                            }
+                          });
+                        }}
+                        customItems={[
+                          {
+                            key: "transfer-verification-screen",
+                            label: "Purchase Transfer Verification Screen",
+                            icon: <ShieldCheck className="h-4 w-4 text-emerald-600" />,
+                            onClick: () => {
+                              router.push(`/dashboard/purchase/purchase-transfer-verification?id=${encodeURIComponent(report.id)}`);
+                            }
+                          },
+                          {
+                            key: "print-compact-order",
+                            label: "Print Compact Booking Order",
+                            icon: <FileText className="h-4 w-4 text-indigo-500" />,
+                            onClick: () => {
+                              router.push(`/dashboard/purchase/purchase-booking-demo?defaultView=compact`);
+                            }
+                          },
+                          {
+                            key: "print-loading-records",
+                            label: "Print Loading Records Report",
+                            icon: <Printer className="h-4 w-4 text-blue-500" />,
+                            onClick: () => {
+                              const f = report.form_data?.form || {};
+                              const g = report.form_data?.goodsEntries || [];
+                              const firstGood = g[0] || {};
+                              openLoadingRecordsPrintReport({
+                                rows: [{
+                                  id: report.id,
+                                  country: String(report.countryName || f.countryName || "UAE"),
+                                  branch: String(report.branchName || f.branchName || "AL_RAS"),
+                                  purchaseBookingNo: report.purchaseBookingOrderNumber || f.bookingNo || `PB-2026-${report.id.slice(0, 4)}`,
+                                  salesAccount: report.salesAccountName || f.salesAccountName || "UAE-DET-AC-0003",
+                                  purchaseAccount: report.purchaseAccountName || f.purchaseAccountName || "UAE-DET-AC-0003",
+                                  goods: report.productName || firstGood.goodsName || "Almond Kernel California",
+                                  contractQty: Number(report.quantity || firstGood.qtyNo || 10000),
+                                  grossWeight: Number(report.totalGrossWeight || firstGood.qtyKgs * firstGood.qtyNo || 10500),
+                                  tareWeight: Number(firstGood.emptyKgs || 1000),
+                                  netWeight: Number(report.totalNetWeight || (firstGood.qtyKgs - firstGood.emptyKgs) * firstGood.qtyNo || 9500),
+                                  purchasePriceRate: Number(report.purchaseRate || firstGood.coursePrice || 5.2),
+                                  totalPurchaseFc: Number(report.totalPurchaseAmount || 49400),
+                                  advanceFc: Number(f.advanceAmountFc || 20000),
+                                  remainingFc: Number(f.remainingAmountFc || 29400),
+                                  currencyFc: report.currency || "USD",
+                                  exchangeRate: Number(f.exchangeRate || 3.6725),
+                                  finalAmountLc: Number(report.finalAmount || 181560.5),
+                                  finalAdvanceLc: Number(f.advanceAmountLc || 73450),
+                                  finalRemainingLc: Number(f.remainingAmountLc || 108110.5),
+                                  currencyLc: "AED",
+                                  loadedQty: Number(f.loadedQty || 4000),
+                                  remainingToLoad: Number(f.remainingToLoad || 6000),
+                                  loadingStatus: report.status === "Accepted" ? "Partially Loaded" : report.status === "Transferred" ? "Almost Complete" : report.status === "Completed" ? "Completed" : "Not Loaded"
+                                }],
+                                companyInfo: {
+                                  name: "DIGITAL DOCK ERP",
+                                  branch: report.branchName || "AL_RAS",
+                                  printedBy: session?.fullName || session?.email || "Country Admin"
+                                }
+                              });
+                            }
+                          },
+                          {
+                            key: "post-roznamcha-transfer",
+                            label: "Post / Transfer to Roznamcha",
+                            icon: <Send className="h-4 w-4 text-purple-600" />,
+                            onClick: () => { setSelectedId(report.id); handleTransfer(); }
+                          }
+                        ]}
+                      />
                     </Td>
                   </tr>
                 );

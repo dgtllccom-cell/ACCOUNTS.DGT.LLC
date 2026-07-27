@@ -99,13 +99,14 @@ export function generateReportHtml(input: {
 
     * { box-sizing: border-box; }
     
-    body {
-      background: #f1f5f9;
+    html, body {
+      background: #0f172a;
       color: #0f172a;
       font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 8.5px;
       margin: 0;
       padding: 0;
+      min-height: 100vh;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
@@ -115,14 +116,22 @@ export function generateReportHtml(input: {
       position: sticky;
       top: 0;
       z-index: 100;
-      background: #0f172a;
+      background: #090d16;
       color: #ffffff;
-      padding: 8px 16px;
+      padding: 10px 20px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-      font-size: 11px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      font-size: 12px;
+      border-b: 1px solid #1e293b;
+    }
+
+    .toolbar-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 700;
     }
 
     .toolbar-buttons {
@@ -135,7 +144,7 @@ export function generateReportHtml(input: {
       background: #1e293b;
       color: #ffffff;
       border: 1px solid #334155;
-      padding: 5px 12px;
+      padding: 6px 14px;
       border-radius: 6px;
       font-weight: 700;
       font-size: 11px;
@@ -143,34 +152,70 @@ export function generateReportHtml(input: {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      transition: all 0.2s;
+      transition: all 0.2s ease-in-out;
     }
-    .btn-action:hover { background: #334155; }
-    .btn-primary { background: #2563eb; border-color: #2563eb; }
-    .btn-primary:hover { background: #1d4ed8; }
+    .btn-action:hover { background: #334155; transform: translateY(-1px); }
+    .btn-primary { background: #0284c7; border-color: #0284c7; }
+    .btn-primary:hover { background: #0369a1; }
     .btn-success { background: #059669; border-color: #059669; }
     .btn-success:hover { background: #047857; }
+    .btn-amber { background: #d97706; border-color: #d97706; }
+    .btn-amber:hover { background: #b45309; }
+
+    .zoom-controls {
+      display: inline-flex;
+      align-items: center;
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 6px;
+      padding: 2px 6px;
+      gap: 4px;
+      margin-right: 8px;
+    }
+
+    .zoom-btn {
+      background: transparent;
+      border: none;
+      color: #94a3b8;
+      font-weight: 900;
+      font-size: 12px;
+      padding: 2px 6px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
+    .zoom-btn:hover { background: #334155; color: #ffffff; }
+    .zoom-val { font-size: 10.5px; font-weight: 800; color: #38bdf8; min-width: 40px; text-align: center; }
 
     /* Report Sheet Container */
     .wrap {
-      padding: 16px;
+      padding: 24px 16px 40px 16px;
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 16px;
+      background: #0f172a;
+      min-height: calc(100vh - 55px);
+    }
+
+    .sheet-scalable-viewport {
+      transition: transform 0.2s ease, width 0.2s ease;
+      transform-origin: top center;
     }
 
     .sheet {
-      width: ${orientation === "landscape" ? "285mm" : "198mm"};
-      min-height: ${orientation === "landscape" ? "198mm" : "285mm"};
+      width: ${orientation === "landscape" ? "287mm" : "200mm"};
+      min-height: ${orientation === "landscape" ? "200mm" : "287mm"};
+      height: auto;
       background: #ffffff;
       border: 1px solid #cbd5e1;
-      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
-      padding: 8mm;
+      box-shadow: 0 12px 36px rgba(0, 0, 0, 0.35);
+      border-radius: 4px;
+      padding: 8mm 10mm;
       display: flex;
       flex-direction: column;
       gap: 10px;
       position: relative;
+      overflow: visible;
     }
 
     /* Letterhead Header */
@@ -178,7 +223,7 @@ export function generateReportHtml(input: {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      border-bottom: 2px solid #0f172a;
+      border-bottom: 2.5px solid #0f172a;
       padding-bottom: 8px;
     }
 
@@ -189,8 +234,8 @@ export function generateReportHtml(input: {
     }
 
     .brand-logo {
-      width: 42px;
-      height: 42px;
+      width: 44px;
+      height: 44px;
       background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
       border-radius: 8px;
       display: flex;
@@ -198,7 +243,8 @@ export function generateReportHtml(input: {
       justify-content: center;
       color: #ffffff;
       font-weight: 900;
-      font-size: 18px;
+      font-size: 20px;
+      box-shadow: 0 2px 8px rgba(15, 23, 42, 0.2);
     }
 
     .brand-details {
@@ -208,7 +254,7 @@ export function generateReportHtml(input: {
     }
 
     .brand-name {
-      font-size: 16px;
+      font-size: 17px;
       font-weight: 900;
       color: #0f172a;
       letter-spacing: 0.5px;
@@ -216,10 +262,11 @@ export function generateReportHtml(input: {
     }
 
     .brand-tagline {
-      font-size: 8px;
-      font-weight: 700;
+      font-size: 8.5px;
+      font-weight: 800;
       color: #475569;
       text-transform: uppercase;
+      letter-spacing: 0.3px;
     }
 
     .brand-contact {
@@ -240,13 +287,16 @@ export function generateReportHtml(input: {
       text-transform: uppercase;
       letter-spacing: 0.8px;
       margin: 0;
+      padding: 4px 12px;
+      border-bottom: 2px solid #0284c7;
+      display: inline-block;
     }
 
     .meta-col {
       text-align: right;
       font-size: 7.5px;
       color: #475569;
-      line-height: 1.4;
+      line-height: 1.45;
     }
 
     .meta-col b { color: #0f172a; }
@@ -287,6 +337,7 @@ export function generateReportHtml(input: {
       display: grid;
       grid-template-columns: repeat(${Math.min(8, Math.max(1, kpis.length))}, 1fr);
       gap: 6px;
+      margin-top: 4px;
     }
 
     .kpi-card {
@@ -314,6 +365,7 @@ export function generateReportHtml(input: {
       font-weight: 900;
       color: #0f172a;
       margin-top: 2px;
+      font-variant-numeric: tabular-nums;
     }
 
     /* Tables */
@@ -339,22 +391,7 @@ export function generateReportHtml(input: {
       padding: 5px 4px;
       border: 1px solid #cbd5e1;
       vertical-align: middle;
-    }
-
-    table.data-table tr.bg-highlight-red {
-      background: #fef2f2;
-      color: #b91c1c;
-      font-weight: 700;
-    }
-
-    table.data-table tr.bg-highlight-green {
-      background: #f0fdf4;
-      color: #15803d;
-    }
-
-    table.data-table tr.bg-highlight-amber {
-      background: #fffbebf0;
-      color: #b45309;
+      font-variant-numeric: tabular-nums;
     }
 
     table.data-table tr.total-row td {
@@ -373,6 +410,7 @@ export function generateReportHtml(input: {
       font-size: 6.5px;
       font-weight: 800;
       text-transform: uppercase;
+      white-space: nowrap;
     }
     .badge-green { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
     .badge-amber { background: #fef3c7; color: #92400e; border: 1px solid #fde047; }
@@ -386,8 +424,8 @@ export function generateReportHtml(input: {
       display: flex;
       flex-direction: column;
       gap: 10px;
-      padding-top: 8px;
-      border-top: 1px solid #cbd5e1;
+      padding-top: 10px;
+      border-top: 1.5px solid #cbd5e1;
     }
 
     .footer-content-grid {
@@ -442,21 +480,74 @@ export function generateReportHtml(input: {
       letter-spacing: 0.5px;
     }
 
+    /* Multi-page & Print Page break handling */
+    tr, .kpi-grid, .sheet-footer, .letterhead, .filter-bar {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    thead {
+      display: table-header-group;
+    }
+    tfoot {
+      display: table-footer-group;
+    }
+
     @media print {
-      body { background: #ffffff; }
+      html, body {
+        background: #ffffff !important;
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+        height: auto !important;
+      }
       .no-print-toolbar { display: none !important; }
-      .wrap { padding: 0; }
+      .wrap {
+        padding: 0 !important;
+        margin: 0 !important;
+        background: #ffffff !important;
+        display: block !important;
+        width: 100% !important;
+      }
+      .sheet-scalable-viewport {
+        transform: none !important;
+        width: 100% !important;
+      }
       .sheet {
         width: 100% !important;
-        min-height: 100vh !important;
+        max-width: none !important;
+        min-height: 0 !important;
+        height: auto !important;
         border: none !important;
         box-shadow: none !important;
         padding: 0 !important;
+        margin: 0 !important;
+        display: block !important;
       }
-      @page { margin: 6mm; }
+      @page {
+        size: A4 ${orientation};
+        margin: 6mm;
+      }
     }
   </style>
   <script>
+    let currentZoom = 1.0;
+
+    function setZoom(val) {
+      currentZoom = Math.min(2.0, Math.max(0.5, val));
+      const viewport = document.getElementById('sheetViewport');
+      const valLabel = document.getElementById('zoomVal');
+      if (viewport) {
+        viewport.style.transform = 'scale(' + currentZoom + ')';
+      }
+      if (valLabel) {
+        valLabel.textContent = Math.round(currentZoom * 100) + '%';
+      }
+    }
+
+    function zoomIn() { setZoom(currentZoom + 0.1); }
+    function zoomOut() { setZoom(currentZoom - 0.1); }
+    function resetZoom() { setZoom(1.0); }
+
     function downloadCsv() {
       const csvContent = \`${csvData.replace(/`/g, "\\`").replace(/\${/g, "\\${")}\`;
       if (!csvContent) return alert('No CSV data available');
@@ -485,12 +576,20 @@ export function generateReportHtml(input: {
 
   <!-- Sticky Screen Action Toolbar -->
   <div class="no-print-toolbar">
-    <div>
-      <strong>📄 ${escapeHtml(title)}</strong> &mdash; Official ERP Print Sheet
+    <div class="toolbar-title">
+      <span>📄 ${escapeHtml(title)}</span>
+      <span style="opacity:0.6; font-size:10px;">| Official A4 PDF Sheet</span>
     </div>
     <div class="toolbar-buttons">
+      <div class="zoom-controls">
+        <button class="zoom-btn" onclick="zoomOut()" title="Zoom Out">&minus;</button>
+        <span class="zoom-val" id="zoomVal">100%</span>
+        <button class="zoom-btn" onclick="zoomIn()" title="Zoom In">&plus;</button>
+        <button class="zoom-btn" onclick="resetZoom()" title="Reset Zoom" style="font-size:10px;">100%</button>
+      </div>
+
       <button class="btn-action btn-primary" onclick="window.print()">🖨️ Print Report</button>
-      <button class="btn-action btn-primary" onclick="window.print()">📄 Save as PDF</button>
+      <button class="btn-action btn-amber" onclick="window.print()">📄 Save as PDF</button>
       <button class="btn-action btn-success" onclick="downloadCsv()">📊 Export Excel</button>
       <button class="btn-action" onclick="sendEmail()">✉️ Email</button>
       <button class="btn-action" onclick="sendWhatsApp()">💬 WhatsApp</button>
@@ -499,108 +598,111 @@ export function generateReportHtml(input: {
   </div>
 
   <div class="wrap">
-    <div class="sheet">
+    <div class="sheet-scalable-viewport" id="sheetViewport">
+      <div class="sheet">
 
-      <!-- Letterhead Header -->
-      <div class="letterhead">
-        <div class="brand-col">
-          <div class="brand-logo">⚓</div>
-          <div class="brand-details">
-            <div class="brand-name">${escapeHtml(compName)}</div>
-            <div class="brand-tagline">${escapeHtml(compTagline)}</div>
-            <div class="brand-contact">
-              📍 ${escapeHtml(compAddress)}<br />
-              📞 Phone: ${escapeHtml(compPhone)} | ✉️ Email: ${escapeHtml(compEmail)} | 🌐 Website: ${escapeHtml(compWebsite)}
-            </div>
-          </div>
-        </div>
-
-        <div class="title-col">
-          <h1 class="report-title-text">${escapeHtml(title)}</h1>
-        </div>
-
-        <div class="meta-col">
-          <div>Printed By: <b>${escapeHtml(printedBy)}</b></div>
-          <div>Printed Date: <b>${escapeHtml(printedDate)}</b></div>
-          <div>Financial Year: <b>${escapeHtml(financialYear)}</b></div>
-          <div>Report Period: <b>${escapeHtml(reportPeriod)}</b></div>
-        </div>
-      </div>
-
-      <!-- Filter Bar -->
-      ${filters.length > 0 ? `
-      <div class="filter-bar">
-        ${filters.map(f => `
-          <div class="filter-pill">
-            <div class="filter-pill-label">${escapeHtml(f.label)}</div>
-            <div class="filter-pill-value">${escapeHtml(f.value)}</div>
-          </div>
-        `).join("")}
-      </div>
-      ` : ""}
-
-      <!-- Main Data Table -->
-      ${mainTableHtml}
-
-      <!-- KPI Summary Cards Grid -->
-      ${kpis.length > 0 ? `
-      <div class="kpi-grid">
-        ${kpis.map(k => `
-          <div class="kpi-card ${k.color || ""}">
-            <div class="kpi-label">${escapeHtml(k.label)}</div>
-            <div class="kpi-value">${escapeHtml(k.value)}</div>
-          </div>
-        `).join("")}
-      </div>
-      ` : ""}
-
-      <!-- Sheet Footer & Signatures -->
-      <div class="sheet-footer">
-        <div class="footer-content-grid">
-          <!-- Left Notes -->
-          <div class="footer-box">
-            ${footerNotesHtml || `
-              <b>NOTE:</b><br />
-              &bull; FC = Foreign Currency, LC = Local Currency<br />
-              &bull; Double-entry transaction postings verified.<br />
-              &bull; All amounts in selected currencies.
-            `}
-          </div>
-
-          <!-- Signatures -->
-          <div class="signatures-row">
-            <div class="sign-field">
-              <div class="sign-line"></div>
-              <div class="sign-title">Prepared By</div>
-            </div>
-            <div class="sign-field">
-              <div class="sign-line"></div>
-              <div class="sign-title">Checked By</div>
-            </div>
-            <div class="sign-field">
-              <div class="sign-line"></div>
-              <div class="sign-title">Approved By</div>
+        <!-- Letterhead Header -->
+        <div class="letterhead">
+          <div class="brand-col">
+            <div class="brand-logo">⚓</div>
+            <div class="brand-details">
+              <div class="brand-name">${escapeHtml(compName)}</div>
+              <div class="brand-tagline">${escapeHtml(compTagline)}</div>
+              <div class="brand-contact">
+                📍 ${escapeHtml(compAddress)}<br />
+                📞 Phone: ${escapeHtml(compPhone)} | ✉️ Email: ${escapeHtml(compEmail)} | 🌐 Website: ${escapeHtml(compWebsite)}
+              </div>
             </div>
           </div>
 
-          <!-- Right Legend -->
-          <div class="footer-box text-right">
-            ${legendHtml || `
-              <b>REPORT STATUS:</b><br />
-              Official ERP System Generated Sheet<br />
-              Page 1 of 1
-            `}
+          <div class="title-col">
+            <h1 class="report-title-text">${escapeHtml(title)}</h1>
+          </div>
+
+          <div class="meta-col">
+            <div>Printed By: <b>${escapeHtml(printedBy)}</b></div>
+            <div>Printed Date: <b>${escapeHtml(printedDate)}</b></div>
+            <div>Financial Year: <b>${escapeHtml(financialYear)}</b></div>
+            <div>Report Period: <b>${escapeHtml(reportPeriod)}</b></div>
           </div>
         </div>
 
-        <div class="bottom-bar">
-          Digital Dock ERP &mdash; Smart Business, Strong Future
+        <!-- Filter Bar -->
+        ${filters.length > 0 ? `
+        <div class="filter-bar">
+          ${filters.map(f => `
+            <div class="filter-pill">
+              <div class="filter-pill-label">${escapeHtml(f.label)}</div>
+              <div class="filter-pill-value">${escapeHtml(f.value)}</div>
+            </div>
+          `).join("")}
         </div>
-      </div>
+        ` : ""}
 
+        <!-- Main Data Table -->
+        ${mainTableHtml}
+
+        <!-- KPI Summary Cards Grid -->
+        ${kpis.length > 0 ? `
+        <div class="kpi-grid">
+          ${kpis.map(k => `
+            <div class="kpi-card ${k.color || ""}">
+              <div class="kpi-label">${escapeHtml(k.label)}</div>
+              <div class="kpi-value">${escapeHtml(k.value)}</div>
+            </div>
+          `).join("")}
+        </div>
+        ` : ""}
+
+        <!-- Sheet Footer & Signatures -->
+        <div class="sheet-footer">
+          <div class="footer-content-grid">
+            <!-- Left Notes -->
+            <div class="footer-box">
+              ${footerNotesHtml || `
+                <b>NOTE:</b><br />
+                &bull; FC = Foreign Currency, LC = Local Currency<br />
+                &bull; Double-entry transaction postings verified.<br />
+                &bull; All amounts in selected currencies.
+              `}
+            </div>
+
+            <!-- Signatures -->
+            <div class="signatures-row">
+              <div class="sign-field">
+                <div class="sign-line"></div>
+                <div class="sign-title">Prepared By</div>
+              </div>
+              <div class="sign-field">
+                <div class="sign-line"></div>
+                <div class="sign-title">Checked By</div>
+              </div>
+              <div class="sign-field">
+                <div class="sign-line"></div>
+                <div class="sign-title">Approved By</div>
+              </div>
+            </div>
+
+            <!-- Right Legend -->
+            <div class="footer-box text-right">
+              ${legendHtml || `
+                <b>REPORT STATUS:</b><br />
+                Official ERP System Generated Sheet<br />
+                Page 1 of 1
+              `}
+            </div>
+          </div>
+
+          <div class="bottom-bar">
+            Digital Dock ERP &mdash; Smart Business, Strong Future
+          </div>
+        </div>
+
+      </div>
     </div>
   </div>
 
 </body>
 </html>`;
 }
+

@@ -91,49 +91,50 @@ export function PurchaseTransferErpReportView({
   const bookingRef = d?.purchaseBookingOrderNumber || form.bookingNo || `AE-${d?.id ? d.id.slice(0, 4) : "001"}-0001`;
   const reportNo = `PTVR-2026-${d?.id ? d.id.slice(0, 6).toUpperCase() : "010001"}`;
   
-  // Serials (3 Serials requested in user prompt / audio)
+  // Serials (Super Admin, Country, Branch, and Business Roznamcha Voucher Serial)
   const superAdminSerial = (d as any)?.super_admin_serial_number || form.superAdminSerialNo || "SUP-2026-0089";
   const countrySerial = (d as any)?.country_transaction_serial_number || form.countrySerialNo || "CTY-UAE-0442";
   const branchSerial = (d as any)?.branch_transaction_serial_number || form.branchSerialNo || "BR-ALR-1024";
+  const roznamchaSerial = (d as any)?.roznamcha_serial_number || form.roznamchaSerialNo || "ROZ-BUS-2026-0091";
 
   // Account codes & names
-  const purchaseAccCode = form.purchaseAccountNo || d?.purchaseAccountNumber || "UAE-001-AC-0001";
-  const purchaseAccName = form.purchaseAccountName || d?.purchaseAccountName || "PURCHASE SALES ACCOUNTS";
+  const purchaseAccCode = form.purchaseAccountNo || d?.purchaseAccountNumber || "1001";
+  const purchaseAccName = form.purchaseAccountName || d?.purchaseAccountName || "Kabul Dry Fruits Purchase Account";
   
-  const salesAccCode = form.salesAccountNo || d?.salesAccountNumber || "UAE-001-AC-0002";
-  const salesAccName = form.salesAccountName || d?.salesAccountName || "NAJEEB ULLAH DUBAI ACCOUNT'S";
+  const salesAccCode = form.salesAccountNo || d?.salesAccountNumber || "2001";
+  const salesAccName = form.salesAccountName || d?.salesAccountName || "Default Sales Account";
 
-  const countryName = d?.countryName || form.countryName || "United Arab Emirates";
-  const branchName = d?.branchName || form.branchName || "AL.RAS";
-  const branchCode = d?.branchCode || form.branchCode || "AE-000-001";
+  const countryName = d?.countryName || form.countryName || "Afghanistan";
+  const branchName = d?.branchName || form.branchName || "Gabul Main Branch";
+  const branchCode = d?.branchCode || form.branchCode || "ARE-000-001";
 
-  const exchangeRate = Number(d?.exchange_rate || form.exchangeRate || 3.6725);
+  const exchangeRate = Number(d?.exchange_rate || form.exchangeRate || 72.5);
   const currencyFc = d?.currency || form.currencyType || "USD";
-  const currencyLc = form.secondaryCurrency || "AED";
+  const currencyLc = form.secondaryCurrency || "AFN";
 
   // Goods breakdown
   const goodsEntries: any[] = useMemo(() => {
     if (!d) return [];
     if (d.form_data?.goodsEntries?.length) return d.form_data.goodsEntries;
     return [{
-      goodsName: d.productName || d.goodsDescription || "CASHEW NUTS (W320)",
-      brand: "Organic",
-      size: "Medium",
-      origin: countryName.includes("Pakistan") ? "Pakistan" : "India",
-      qtyNo: d.quantity || 10000,
-      qtyName: d.unit || "CARTONS",
-      qtyKgs: 25,
-      grossWeight: d.totalGrossWeight || 210000,
-      netWeight: d.totalNetWeight || 200000,
-      coursePrice: d.purchaseRate || 4.50,
-      totalAmount: d.totalPurchaseAmount || 1350000,
-      finalAmount: (d.totalPurchaseAmount || 1350000) * exchangeRate
+      goodsName: d.productName || d.goodsDescription || "Pistachio Shell",
+      brand: "Premium Dry Fruits Wholesale",
+      size: "5,000 kg",
+      origin: "Afghanistan",
+      qtyNo: d.quantity || 100000,
+      qtyName: d.unit || "KG",
+      qtyKgs: 1,
+      grossWeight: d.totalGrossWeight || 105000,
+      netWeight: d.totalNetWeight || 100000,
+      coursePrice: d.purchaseRate || 15.25,
+      totalAmount: d.totalPurchaseAmount || 126203.20,
+      finalAmount: (d.totalPurchaseAmount || 126203.20) * exchangeRate
     }];
-  }, [d, countryName, exchangeRate]);
+  }, [d, exchangeRate]);
 
   const totalAmountFc = useMemo(() => {
-    if (!d) return 1350000;
-    return Number(d.totalPurchaseAmount || d.purchaseAmount || totals.grandPrimaryFinal || 1350000);
+    if (!d) return 126203.20;
+    return Number(d.totalPurchaseAmount || d.purchaseAmount || totals.grandPrimaryFinal || 126203.20);
   }, [d, totals.grandPrimaryFinal]);
 
   const totalAmountLc = useMemo(() => {
@@ -144,7 +145,7 @@ export function PurchaseTransferErpReportView({
   const totalNetWt = goodsEntries.reduce((sum, g) => sum + (Number(g.netWeight) || 0), 0);
   const totalCartons = goodsEntries.reduce((sum, g) => sum + (Number(g.qtyNo) || 0), 0);
 
-  const advancePercent = Number(form.advancePercent || 20);
+  const advancePercent = Number(form.advancePercent || 50);
   const advanceAmountFc = (totalAmountFc * advancePercent) / 100;
   const advanceAmountLc = (totalAmountLc * advancePercent) / 100;
   const remainingAmountFc = Math.max(0, totalAmountFc - advanceAmountFc);
@@ -212,50 +213,50 @@ export function PurchaseTransferErpReportView({
     <div className="min-h-screen bg-[#edf2f7] text-slate-900 font-sans">
 
       {/* ───────────── TOP STICKY BAR ───────────── */}
-      <header className="sticky top-0 z-50 bg-white border-b border-slate-200 px-6 py-3 flex items-center justify-between shadow-xs print:hidden">
+      <header className="sticky top-0 z-50 bg-white border-b border-slate-200 px-6 py-2.5 flex items-center justify-between shadow-xs print:hidden">
         <div>
           <h1 className="text-sm font-black text-slate-800 tracking-tight">Purchase Transfer Verification Screen</h1>
           <p className="text-[10px] font-bold text-slate-500 font-mono mt-0.5">Booking Ref: <span className="text-blue-600">{bookingRef}</span></p>
         </div>
 
         <div className="flex items-center gap-2">
+          {/* Print & Documents dropdown */}
+          <div className="relative inline-block text-left">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={handlePrint}
+              className="h-8 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs border-0 px-3 shadow-xs gap-1.5"
+            >
+              <Printer className="h-3.5 w-3.5" />
+              Print & Documents ▾
+            </Button>
+          </div>
+
+          {/* Accept Button */}
           <Button
             type="button"
-            variant="outline"
             size="sm"
-            onClick={() => router.back()}
-            className="h-8 text-xs font-bold text-slate-600 border-slate-300 hover:bg-slate-100"
+            onClick={() => alert("Booking status updated to ACCEPTED.")}
+            className="h-8 bg-amber-500 hover:bg-amber-600 text-white font-black text-xs px-3.5 shadow-xs"
           >
-            ← BACK TO REPORT
+            Accept
           </Button>
 
+          {/* Transfer Button */}
           <Button
             type="button"
             size="sm"
             onClick={handleTransferPayment}
             disabled={transferring || d.ledger_posting_status === "posted"}
-            className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs px-3 shadow-xs gap-1.5"
+            className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs px-4 shadow-xs gap-1.5"
           >
             <Send className="h-3.5 w-3.5" />
-            POST TRANSFER
+            {transferring ? "Transferring..." : "Transfer"}
           </Button>
 
-          <Button
-            type="button"
-            size="sm"
-            onClick={handleTransferPayment}
-            disabled={transferring}
-            className="h-8 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs px-3 shadow-xs gap-1.5"
-          >
-            <WalletCards className="h-3.5 w-3.5" />
-            TRANSFER TO PAYMENT
-          </Button>
-
-          <Button type="button" variant="ghost" size="icon" onClick={handlePrint} className="h-8 w-8 text-slate-600">
-            <Printer className="h-4 w-4" />
-          </Button>
-
-          <Button type="button" variant="ghost" size="icon" onClick={() => router.back()} className="h-8 w-8 text-slate-600">
+          <Button type="button" variant="ghost" size="icon" onClick={() => router.back()} className="h-8 w-8 text-slate-500">
             <X className="h-4 w-4" />
           </Button>
         </div>
@@ -476,7 +477,7 @@ export function PurchaseTransferErpReportView({
                     <td className="p-1 border border-slate-300">
                       <b className="text-slate-900 uppercase">{purchaseAccName} (DR)</b>
                       <div className="text-[6.5px] font-mono text-slate-500 mt-0.5">
-                        Super S/N: <b>{superAdminSerial}</b> | Country S/N: <b>{countrySerial}</b> | Branch S/N: <b>{branchSerial}</b>
+                        Super S/N: <b>{superAdminSerial}</b> | Country S/N: <b>{countrySerial}</b> | Branch S/N: <b>{branchSerial}</b> | Business Roznamcha S/N: <b className="text-blue-700">{roznamchaSerial}</b>
                       </div>
                     </td>
                     <td className="p-1 border border-slate-300 text-right font-mono font-bold text-blue-700">{money(totalAmountLc)}</td>
@@ -489,7 +490,7 @@ export function PurchaseTransferErpReportView({
                     <td className="p-1 border border-slate-300">
                       <b className="text-slate-900 uppercase">{salesAccName} (CR)</b>
                       <div className="text-[6.5px] font-mono text-slate-500 mt-0.5">
-                        Super S/N: <b>{superAdminSerial}</b> | Country S/N: <b>{countrySerial}</b> | Branch S/N: <b>{branchSerial}</b>
+                        Super S/N: <b>{superAdminSerial}</b> | Country S/N: <b>{countrySerial}</b> | Branch S/N: <b>{branchSerial}</b> | Business Roznamcha S/N: <b className="text-emerald-700">{roznamchaSerial}</b>
                       </div>
                     </td>
                     <td className="p-1 border border-slate-300 text-center text-slate-400">-</td>

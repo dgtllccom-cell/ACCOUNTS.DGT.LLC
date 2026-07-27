@@ -171,11 +171,36 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   }
 }
 
+import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
+
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  let idempotencyKey = "";
+  let tenantHash = "";
   try {
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
     const body = salesOrderPaymentPostSchema.parse(await request.json());
+
+    const lockRes = await acquireIdempotencyLock({
+      req: request,
+      scopeModule: "SALES_PAYMENT",
+      userId: session.userId,
+      countryId: session.countryId,
+      cityBranchId: session.cityBranchId,
+      businessReference: params.id || body?.referenceNo || body?.roznamchaNumber,
+      payload: body
+    });
+
+    if (lockRes.isReplayed) {
+      return buildReplayedResponse(lockRes.responseCode || 201, lockRes.responseBody);
+    }
+
+    if (!lockRes.acquired) {
+      return handleApiError(new Error("A request with this idempotency key is currently being processed or duplicate submission detected. Please wait."));
+    }
+
+    idempotencyKey = lockRes.idempotencyKey;
+    tenantHash = lockRes.tenantHash;
 
     if (!isSupabaseConfigured()) {
       throw new Error("Supabase is not configured. Sales posting requires a real Supabase login.");
@@ -366,14 +391,23 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         .single()
     );
 
-    return apiCreated({
+    const resPayload = {
       paymentId,
       roznamchaEntryId: paymentRecord.roznamcha_entry_id,
       superAdminSerialNumber: journalRecord.super_admin_serial_number,
       countryTransactionSerialNumber: journalRecord.country_transaction_serial_number,
       branchTransactionSerialNumber: journalRecord.branch_transaction_serial_number
-    });
+    };
+
+    if (idempotencyKey && tenantHash) {
+      await commitIdempotencySuccess(idempotencyKey, tenantHash, 201, resPayload);
+    }
+
+    return apiCreated(resPayload);
   } catch (error) {
+    if (idempotencyKey && tenantHash) {
+      await releaseIdempotencyLock(idempotencyKey, tenantHash);
+    }
     console.error("SALES_PAYMENT_POST_ERROR:", error);
     return handleApiError(error);
   }

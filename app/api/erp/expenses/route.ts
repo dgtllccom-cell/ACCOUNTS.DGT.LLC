@@ -34,7 +34,12 @@ const expensesBillPayloadSchema = z.object({
   entries: z.array(expensesBillLineSchema).min(1)
 });
 
-export async function POST(req: Request) {
+import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
+import { NextRequest } from "next/server";
+
+export async function POST(req: NextRequest) {
+  let idempotencyKey = "";
+  let tenantHash = "";
   try {
     const session = await getCurrentErpSession();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -42,6 +47,30 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsed = expensesBillPayloadSchema.parse(body);
     const { header, entries } = parsed;
+
+    const lockRes = await acquireIdempotencyLock({
+      req,
+      scopeModule: "EXPENSES",
+      userId: session.userId,
+      countryId: session.countryId,
+      cityBranchId: session.cityBranchId || header.branch,
+      businessReference: header.billNo || header.referenceNo,
+      payload: body
+    });
+
+    if (lockRes.isReplayed) {
+      return buildReplayedResponse(lockRes.responseCode || 200, lockRes.responseBody);
+    }
+
+    if (!lockRes.acquired) {
+      return NextResponse.json(
+        { error: "A request with this idempotency key is currently being processed or duplicate submission detected. Please wait." },
+        { status: 409 }
+      );
+    }
+
+    idempotencyKey = lockRes.idempotencyKey;
+    tenantHash = lockRes.tenantHash;
 
     const supabase = createSupabaseAdminClient() as any;
 
@@ -115,8 +144,15 @@ export async function POST(req: Request) {
     const { error: linesError } = await supabase.from("expenses_bill_lines").insert(linesToInsert);
     if (linesError) throw new Error("Failed to insert bill lines: " + linesError.message);
 
-    return NextResponse.json({ success: true, billId });
+    const resPayload = { success: true, billId };
+    if (idempotencyKey && tenantHash) {
+      await commitIdempotencySuccess(idempotencyKey, tenantHash, 200, resPayload);
+    }
+    return NextResponse.json(resPayload);
   } catch (err: any) {
+    if (idempotencyKey && tenantHash) {
+      await releaseIdempotencyLock(idempotencyKey, tenantHash);
+    }
     console.error("Expenses POST Error:", err);
     return NextResponse.json({ error: err.message || "Failed to save expenses bill" }, { status: 500 });
   }

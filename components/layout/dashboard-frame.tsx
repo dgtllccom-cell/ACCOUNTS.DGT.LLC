@@ -10,7 +10,7 @@ import { filterSidebarTree } from "@/lib/navigation/sidebar";
 import { enterpriseRoles, type EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { SidebarNav } from "@/components/layout/sidebar-nav";
+import { PremiumSidebarNav } from "@/components/layout/premium-sidebar-nav";
 import { PreferencesControls } from "@/components/layout/preferences-controls";
 import { ErpPageActions } from "@/components/layout/erp-page-actions";
 import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
@@ -219,7 +219,7 @@ export function DashboardFrame({
           </Button>
         </div>
         <div className="flex-1 overflow-y-auto px-4 py-4">
-          <SidebarNav nodes={filteredNodes} lang={lang} />
+          <PremiumSidebarNav nodes={filteredNodes} lang={lang} />
         </div>
         <div className="border-t border-border/80 p-4">
           <div className="rounded-xl bg-muted/40 p-3.5 border border-border/50">
@@ -275,7 +275,7 @@ export function DashboardFrame({
               </Button>
             </div>
             <div className="flex-1 overflow-y-auto p-4">
-              <SidebarNav nodes={filteredNodes} lang={lang} onNavigate={() => setMobileOpen(false)} />
+              <PremiumSidebarNav nodes={filteredNodes} lang={lang} onNavigate={() => setMobileOpen(false)} />
             </div>
           </div>
         </div>

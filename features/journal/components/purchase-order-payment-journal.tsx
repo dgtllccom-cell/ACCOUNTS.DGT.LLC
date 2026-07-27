@@ -389,12 +389,13 @@ function normalizeCurrency(value: unknown, fallback = "USD") {
 }
 
 function rowForm(row: PurchaseOrderRow) {
-  return row.form_data?.form || {};
+  return row?.form_data?.form || {};
 }
 
 function rowCountryName(row: PurchaseOrderRow) {
+  if (!row) return "Unknown Country";
   const form = rowForm(row);
-  const rawCountry = String(row.countryName || form.branchCountry || form.countryName || form.loadingCountry || form.destinationCountry || form.originCountry || "Unknown Country").trim();
+  const rawCountry = String(row.countryName || (row as any).country_name || form.branchCountry || form.countryName || form.loadingCountry || form.destinationCountry || form.originCountry || "Unknown Country").trim();
   const c = rawCountry.toUpperCase();
   if (c.includes("PAKISTAN") || c === "QUETTA" || c === "CHAMAN" || c === "KARACHI" || c === "ISLAMABAD" || c === "PESHAWAR" || c === "MULTAN" || c === "LAHORE") {
     return "Pakistan";
@@ -402,15 +403,17 @@ function rowCountryName(row: PurchaseOrderRow) {
   if (c.includes("UAE") || c.includes("EMIRATES") || c === "DUBAI" || c === "ABU DHABI" || c === "SHARJAH") {
     return "United Arab Emirates";
   }
-  return rawCountry;
+  return rawCountry || "Unknown Country";
 }
 
 function rowBranchName(row: PurchaseOrderRow) {
+  if (!row) return "Unassigned Branch";
   const form = rowForm(row);
-  return String(form.branchName || form.purchaseAccountBranch || form.salesAccountBranch || "Unassigned Branch");
+  return String((row as any).branchName || (row as any).branch_name || form.branchName || form.purchaseAccountBranch || form.salesAccountBranch || "Unassigned Branch");
 }
 
 function rowCurrency(row: PurchaseOrderRow) {
+  if (!row) return "USD";
   const form = rowForm(row);
   const explicit = normalizeCurrency(
     form.currencyType || 
@@ -423,12 +426,13 @@ function rowCurrency(row: PurchaseOrderRow) {
     ""
   );
   if (explicit) return explicit;
-  const country = rowCountryName(row).toLowerCase();
+  const country = (rowCountryName(row) || "").toLowerCase();
   return COUNTRY_CURRENCY[country] || "USD";
 }
 
 function rowOfficeCurrency(row: PurchaseOrderRow): string {
-  const country = rowCountryName(row).toUpperCase();
+  if (!row) return "USD";
+  const country = (rowCountryName(row) || "").toUpperCase();
   if (country.includes("PAKISTAN")) return "PKR";
   if (country.includes("EMIRATES") || country.includes("UAE") || country.includes("DUBAI")) return "AED";
   if (country.includes("CHINA")) return "CNY";
@@ -953,8 +957,12 @@ function toLedgerOption(row: any): SearchSelectOption {
 }
 
 function getInitialPurchaseOrderNo(): string {
-  if (typeof window === "undefined") return "";
-  return new URLSearchParams(window.location.search).get("purchaseOrderNo") ?? "";
+  if (typeof window === "undefined" || !window.location) return "";
+  try {
+    return new URLSearchParams(window.location.search).get("purchaseOrderNo") ?? "";
+  } catch {
+    return "";
+  }
 }
 
 function FieldBlock({ label, required, children, className }: { label: string; required?: boolean; children: ReactNode; className?: string }) {
@@ -2383,6 +2391,30 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
   const [currencyFilter, setCurrencyFilter] = useState("");
   const [startDateFilter, setStartDateFilter] = useState("");
   const [endDateFilter, setEndDateFilter] = useState("");
+  const reset = () => {
+    setQuery("");
+    setDraftFilter("");
+    setCountryFilter("");
+    setBranchFilter("");
+    setCurrencyFilter("");
+    setStartDateFilter("");
+    setEndDateFilter("");
+    setPageIndex(0);
+  };
+  const recordsTextMap: Record<LanguageCode, string> = {
+    en: "Records",
+    ur: "Records",
+    ar: "Records",
+    fa: "Records",
+    ps: "Records"
+  };
+  const refreshTextMap: Record<LanguageCode, string> = {
+    en: "Refresh",
+    ur: "Refresh",
+    ar: "Refresh",
+    fa: "Refresh",
+    ps: "Refresh"
+  };
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -2692,6 +2724,18 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     return row.exchange_rate || form.exchangeRate || 1;
   }, [liveRates]);
 
+  const [urlParamPurchaseOrderNo, setUrlParamPurchaseOrderNo] = useState("");
+  const [fromLoadingParam, setFromLoadingParam] = useState(false);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const pNo = params.get("purchaseOrderNo") || "";
+      setUrlParamPurchaseOrderNo(pNo);
+      setFromLoadingParam(params.get("fromLoading") === "true");
+    }
+  }, []);
+
   async function loadOrders() {
     setLoading(true);
     setError("");
@@ -2703,7 +2747,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
       const rows = Array.isArray(payload) ? payload : payload.orders ?? [];
       setOrders(rows);
       // Auto-select by URL param
-      const urlOrderNo = getInitialPurchaseOrderNo();
+      const urlOrderNo = urlParamPurchaseOrderNo || (typeof window !== "undefined" ? new URLSearchParams(window.location.search).get("purchaseOrderNo") || "" : "");
       if (urlOrderNo) {
         const match = rows.find((r) => r.purchase_order_no === urlOrderNo);
         if (match) setSelectedId(match.id);
@@ -2736,7 +2780,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     const draft = draftFilter.trim().toLowerCase();
-    const urlOrderNo = getInitialPurchaseOrderNo();
+    const urlOrderNo = urlParamPurchaseOrderNo;
     return orders.filter((row) => {
       if (urlOrderNo && row.purchase_order_no === urlOrderNo) return true;
       const postingStatus = row.ledger_posting_status?.toLowerCase();
@@ -2758,9 +2802,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
       if (branchFilter && rowBranchName(row) !== branchFilter) return false;
       if (currencyFilter && rowCurrency(row) !== currencyFilter) return false;
 
-      const urlParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
-      const urlPurchaseOrderNo = urlParams.get("purchaseOrderNo") || "";
-      const isUrlLoadingScope = activeMode === "remaining" && urlParams.get("fromLoading") === "true" && (!urlPurchaseOrderNo || row.purchase_order_no === urlPurchaseOrderNo);
+      const urlPurchaseOrderNo = urlOrderNo;
+      const isUrlLoadingScope = activeMode === "remaining" && fromLoadingParam && (!urlPurchaseOrderNo || row.purchase_order_no === urlPurchaseOrderNo);
       if (activeMode === "remaining" && urlPurchaseOrderNo && row.purchase_order_no !== urlPurchaseOrderNo) return false;
 
       const form = row.form_data?.form || {};
@@ -3197,21 +3240,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
         group = { country: c, rows: [] };
         groups.push(group);
       }
-      group.rows.push(row);
+    group.rows.push(row);
     }
     return groups;
   }, [pageRows]);
-
-  function reset() {
-    setQuery("");
-    setDraftFilter("");
-    setCountryFilter("");
-    setBranchFilter("");
-    setCurrencyFilter("");
-    setStartDateFilter("");
-    setEndDateFilter("");
-    setPageIndex(0);
-  }
 
   // Derived account info from form_data
   const selectedForm = (selected as any)?.form_data?.form || {};
@@ -3831,7 +3863,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     );
   };
 
-  const _unused_getTableHeader = (h: string) => {
+  const getTableHeader = (h: string) => {
     const headersMap: Record<string, Record<LanguageCode, string>> = {
       "PO No.": { en: "PO Number", ur: "آرڈر نمبر", ar: "رقم طلب الشراء", fa: "شماره سفارش", ps: "د امر شمیره" },
       "Bill / Date": { en: "Bill & Date", ur: "بل اور تاریخ", ar: "الفاتورة والتاريخ", fa: "صورتحساب و تاریخ", ps: "بل او نیټه" },
@@ -3938,7 +3970,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
           )}
 
           {/* Active Filters Clear Button */}
-          {(query || draftFilter || countryFilter || branchFilter || currencyFilter) && (
+          {(query || draftFilter || countryFilter || branchFilter || currencyFilter || startDateFilter || endDateFilter) && (
             <button
               type="button"
               onClick={reset}
@@ -3950,7 +3982,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
           )}
 
           {/* Records count */}
-          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 px-1">{displayRows.length} {recordsTextMap[currentLanguage]}</span>
+          <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 px-1">{filtered.length} {recordsTextMap[currentLanguage]}</span>
 
           {/* Refresh Button */}
           <button id="refresh-btn" type="button" onClick={() => void loadOrders()} className="flex h-7 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-700 shadow-sm hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800 transition">

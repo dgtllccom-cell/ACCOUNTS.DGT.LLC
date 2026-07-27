@@ -29,11 +29,39 @@ const transferSchema = z.object({
  *     request is rejected to prevent duplicate accounting entries.
  *   - Re-transfer after reversal is allowed (status would be reset to 'accepted').
  */
+import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
+
 export async function POST(request: NextRequest) {
+  let idempotencyKey = "";
+  let tenantHash = "";
   try {
     const session = await requireErpSession();
     const body = await request.json();
     const { purchaseId } = transferSchema.parse(body);
+
+    const lockRes = await acquireIdempotencyLock({
+      req: request,
+      scopeModule: "LOCAL_PURCHASE_TRANSFER",
+      userId: session.userId,
+      countryId: session.countryId,
+      cityBranchId: session.cityBranchId,
+      businessReference: purchaseId,
+      payload: body
+    });
+
+    if (lockRes.isReplayed) {
+      return buildReplayedResponse(lockRes.responseCode || 200, lockRes.responseBody);
+    }
+
+    if (!lockRes.acquired) {
+      return NextResponse.json(
+        { ok: false, error: { message: "A request with this idempotency key is currently being processed or duplicate submission detected. Please wait." } },
+        { status: 409 }
+      );
+    }
+
+    idempotencyKey = lockRes.idempotencyKey;
+    tenantHash = lockRes.tenantHash;
 
     const supabase = createSupabaseAdminClient();
 
@@ -316,7 +344,7 @@ export async function POST(request: NextRequest) {
 
     if (finalErr) throw finalErr;
 
-    return NextResponse.json({
+    const resPayload = {
       ok: true,
       data: {
         purchase: finalRecord,
@@ -327,8 +355,17 @@ export async function POST(request: NextRequest) {
           status: "posted",
         }
       }
-    });
+    };
+
+    if (idempotencyKey && tenantHash) {
+      await commitIdempotencySuccess(idempotencyKey, tenantHash, 200, resPayload);
+    }
+
+    return NextResponse.json(resPayload);
   } catch (err: any) {
+    if (idempotencyKey && tenantHash) {
+      await releaseIdempotencyLock(idempotencyKey, tenantHash);
+    }
     console.error("[POST /api/erp/purchases/local-purchase/transfer] Error:", err);
     return NextResponse.json(
       { ok: false, error: { message: err.message || "Failed to transfer local purchase." } },

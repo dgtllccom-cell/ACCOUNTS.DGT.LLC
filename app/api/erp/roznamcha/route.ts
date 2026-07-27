@@ -599,10 +599,37 @@ export async function GET(request: NextRequest) {
   }
 }
 
+import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
+
 export async function POST(request: NextRequest) {
+  let idempotencyKey = "";
+  let tenantHash = "";
   try {
     const session = await requireErpSession();
-    const body = roznamchaPostingSchema.parse(await request.json());
+    const rawJson = await request.json();
+
+    const lockRes = await acquireIdempotencyLock({
+      req: request,
+      scopeModule: "ROZNAMCHA",
+      userId: session.userId,
+      countryId: session.countryId,
+      cityBranchId: session.cityBranchId,
+      businessReference: rawJson?.voucherNumber || rawJson?.referenceNo || rawJson?.sourceTransactionType,
+      payload: rawJson
+    });
+
+    if (lockRes.isReplayed) {
+      return buildReplayedResponse(lockRes.responseCode || 201, lockRes.responseBody);
+    }
+
+    if (!lockRes.acquired) {
+      return handleApiError(new Error("A request with this idempotency key is currently being processed or duplicate submission detected. Please wait."));
+    }
+
+    idempotencyKey = lockRes.idempotencyKey;
+    tenantHash = lockRes.tenantHash;
+
+    const body = roznamchaPostingSchema.parse(rawJson);
 
     // Validate that there are no duplicate ledger IDs across the posting lines
     const ledgerIds = body.lines.map(line => line.ledgerId).filter(Boolean);
@@ -686,14 +713,23 @@ export async function POST(request: NextRequest) {
     revalidatePath("/dashboard/reports", "layout");
     revalidatePath("/dashboard/journal", "layout");
 
-    return apiCreated({
+    const responseBody = {
       mode: body.mode,
       balanced: body.lines.length > 1,
       entryId: result.entryId,
       ...result.transactionSerials,
       postingPlan
-    });
+    };
+
+    if (idempotencyKey && tenantHash) {
+      await commitIdempotencySuccess(idempotencyKey, tenantHash, 201, responseBody);
+    }
+
+    return apiCreated(responseBody);
   } catch (error: any) {
+    if (idempotencyKey && tenantHash) {
+      await releaseIdempotencyLock(idempotencyKey, tenantHash);
+    }
     console.error("ROZNAMCHA_POST_ERROR:", error?.message);
     return handleApiError(error);
   }

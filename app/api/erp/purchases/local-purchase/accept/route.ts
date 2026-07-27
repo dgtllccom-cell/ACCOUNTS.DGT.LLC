@@ -15,11 +15,39 @@ const acceptSchema = z.object({
  * Transitions a local purchase bill from 'draft' → 'accepted'.
  * Generates journal_serial_no, country_serial_no, and branch_serial_no.
  */
+import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
+
 export async function POST(request: NextRequest) {
+  let idempotencyKey = "";
+  let tenantHash = "";
   try {
     const session = await requireErpSession();
     const body = await request.json();
     const { purchaseId } = acceptSchema.parse(body);
+
+    const lockRes = await acquireIdempotencyLock({
+      req: request,
+      scopeModule: "LOCAL_PURCHASE_ACCEPT",
+      userId: session.userId,
+      countryId: session.countryId,
+      cityBranchId: session.cityBranchId,
+      businessReference: purchaseId,
+      payload: body
+    });
+
+    if (lockRes.isReplayed) {
+      return buildReplayedResponse(lockRes.responseCode || 200, lockRes.responseBody);
+    }
+
+    if (!lockRes.acquired) {
+      return NextResponse.json(
+        { ok: false, error: { message: "A request with this idempotency key is currently being processed or duplicate submission detected. Please wait." } },
+        { status: 409 }
+      );
+    }
+
+    idempotencyKey = lockRes.idempotencyKey;
+    tenantHash = lockRes.tenantHash;
 
     const supabase = createSupabaseAdminClient();
 
@@ -137,7 +165,7 @@ export async function POST(request: NextRequest) {
 
     if (updateErr) throw updateErr;
 
-    return NextResponse.json({
+    const resPayload = {
       ok: true,
       data: {
         purchase: updated,
@@ -149,8 +177,17 @@ export async function POST(request: NextRequest) {
           creditJournalSerial
         }
       }
-    });
+    };
+
+    if (idempotencyKey && tenantHash) {
+      await commitIdempotencySuccess(idempotencyKey, tenantHash, 200, resPayload);
+    }
+
+    return NextResponse.json(resPayload);
   } catch (err: any) {
+    if (idempotencyKey && tenantHash) {
+      await releaseIdempotencyLock(idempotencyKey, tenantHash);
+    }
     console.error("[POST /api/erp/purchases/local-purchase/accept] Error:", err);
     return NextResponse.json(
       { ok: false, error: { message: err.message || "Failed to accept local purchase." } },

@@ -39,11 +39,36 @@ function buildSalesGoodsAuditRemark(orderRow: any, fallbackReference?: string | 
   return `Sales Bill: ${billNo} | Goods: ${goodsName} | Qty: ${formatAuditNumber(totalQty)}${unit ? ` ${unit}` : ""} | Gross WT: ${formatAuditNumber(grossWeight)} KG | Net WT: ${formatAuditNumber(netWeight)} KG | Sales Price: ${formatAuditNumber(salesAmount)} ${salesCurrency}`;
 }
 
+import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
+
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
+  let idempotencyKey = "";
+  let tenantHash = "";
   try {
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
     const body = await request.json().catch(() => ({}));
+
+    const lockRes = await acquireIdempotencyLock({
+      req: request,
+      scopeModule: "SALES_TRANSFER",
+      userId: session.userId,
+      countryId: session.countryId,
+      cityBranchId: session.cityBranchId,
+      businessReference: params.id,
+      payload: body
+    });
+
+    if (lockRes.isReplayed) {
+      return buildReplayedResponse(lockRes.responseCode || 200, lockRes.responseBody);
+    }
+
+    if (!lockRes.acquired) {
+      return handleApiError(new Error("A request with this idempotency key is currently being processed or duplicate submission detected. Please wait."));
+    }
+
+    idempotencyKey = lockRes.idempotencyKey;
+    tenantHash = lockRes.tenantHash;
 
     const supabase = await createApiSupabaseClient();
     const order = await requireSupabaseData(
@@ -269,7 +294,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       ipAddress: request.headers.get("x-forwarded-for") ?? null
     });
 
-    return apiOk({
+    const resPayload = {
       success: true,
       salesOrderId: params.id,
       salesOrderNo: (updatedOrder as any).sales_order_no,
@@ -281,8 +306,17 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       paymentStatus: "completed",
       paidAmount: totalSalesAmount,
       remainingAmount: 0
-    });
+    };
+
+    if (idempotencyKey && tenantHash) {
+      await commitIdempotencySuccess(idempotencyKey, tenantHash, 200, resPayload);
+    }
+
+    return apiOk(resPayload);
   } catch (error) {
+    if (idempotencyKey && tenantHash) {
+      await releaseIdempotencyLock(idempotencyKey, tenantHash);
+    }
     console.error("SALES_TRANSFER_TO_PAYMENT_ERROR:", error);
     return handleApiError(error);
   }
