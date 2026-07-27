@@ -10,9 +10,9 @@ export const metadata = {
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams?: { error?: string } | Promise<{ error?: string }>;
 }) {
-  const params = await searchParams;
+  const params = searchParams ? await Promise.resolve(searchParams) : {};
   const lang   = await getRequestLanguage();
 
   return (

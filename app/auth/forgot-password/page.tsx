@@ -7,9 +7,9 @@ import { Input } from "@/components/ui/input";
 export default async function ForgotPasswordPage({
   searchParams
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams?: { error?: string } | Promise<{ error?: string }>;
 }) {
-  const params = await searchParams;
+  const params = searchParams ? await Promise.resolve(searchParams) : {};
 
   return (
     <main className="min-h-screen bg-[#160a3a] text-white">

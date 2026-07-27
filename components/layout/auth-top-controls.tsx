@@ -63,7 +63,7 @@ export function AuthTopControls({ lang }: { lang: SupportedLanguage }) {
           aria-label="Language"
         >
           {languageOptions.map((l) => (
-            <option key={l.code} value={l.code}>
+            <option key={l.code} value={l.code} className="text-slate-900 font-bold bg-white">
               {l.englishName}
             </option>
           ))}

@@ -9,15 +9,14 @@ module.exports = {
       exec_mode: 'fork',
       autorestart: true,
       max_restarts: 100,
-      max_memory_restart: '1800M',
+      max_memory_restart: '2048M',
       restart_delay: 1000,
-      exp_backoff_restart_delay: 200,
       listen_timeout: 15000,
       kill_timeout: 5000,
       env: {
         NODE_ENV: 'production',
         PORT: '3000',
-        NODE_OPTIONS: '--max-old-space-size=2048'
+        NODE_OPTIONS: '--max-old-space-size=4096'
       }
     }
   ]
