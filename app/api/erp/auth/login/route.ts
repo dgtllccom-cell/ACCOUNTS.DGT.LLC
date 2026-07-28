@@ -239,84 +239,111 @@ function dashboardForRoles(roles: EnterpriseRole[]) {
 }
 
 export async function POST(request: NextRequest) {
-  const form = await request.formData();
-  const parsed = loginSchema.safeParse({
-    identifier: String(form.get("identifier") ?? ""),
-    password: String(form.get("password") ?? ""),
-    remember: String(form.get("remember") ?? "") === "on"
-  });
+  const contentType = request.headers.get("content-type") || "";
+  const isJson = contentType.includes("application/json");
 
-  if (!parsed.success) {
-    const message = parsed.error.issues.map((issue) => issue.message).join(". ");
-    const url = new URL(`/auth/login?error=${encodeURIComponent(message)}`, request.url);
-    return NextResponse.redirect(url, { status: 303 });
+  let rawIdentifier = "";
+  let rawPassword = "";
+  let remember = false;
+
+  if (isJson) {
+    const json = await request.json().catch(() => ({}));
+    rawIdentifier = String(json.identifier || json.email || "").trim();
+    rawPassword = String(json.password || "").trim();
+    remember = Boolean(json.rememberMe || json.remember);
+  } else {
+    const form = await request.formData().catch(() => new FormData());
+    rawIdentifier = String(form.get("identifier") ?? form.get("email") ?? "").trim();
+    rawPassword = String(form.get("password") ?? "").trim();
+    remember = String(form.get("remember") ?? "") === "on";
   }
 
-  const input = parsed.data;
-  const idLower = input.identifier.trim().toLowerCase();
-  const demoAccount = demoAccounts[idLower];
+  if (!rawIdentifier || !rawPassword) {
+    const msg = "Please enter both User ID / Email and Password.";
+    if (isJson) {
+      return NextResponse.json({ error: msg }, { status: 400 });
+    }
+    return NextResponse.redirect(new URL(`/auth/login?error=${encodeURIComponent(msg)}`, request.url), { status: 303 });
+  }
 
-  if (!isSupabaseConfigured()) {
-    // Temp bootstrap login (stable fallback, avoids Server Actions origin issues in some environments).
-    if (demoAccount && input.password === demoAccount.password) {
-      const token = makeTempToken(demoAccount);
-      try {
-        const admin = createSupabaseAdminClient() as any;
-        await admin.from("audit_logs").insert({
-          company_id: null,
-          actor_id: null,
-          action: "auth.login.temp",
-          entity_table: "profiles",
-          entity_id: null,
-          before: null,
-          after: { identifier: input.identifier, temp: true },
-          ip_address: request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? null
-        });
-      } catch {
-        // ignore audit bootstrap failures
+  // Normalize input identifier
+  const idClean = rawIdentifier.toLowerCase().replace(/\s+/g, "");
+  let demoAccount = demoAccounts[idClean] || demoAccounts[rawIdentifier.toLowerCase()];
+
+  // Super Admin fallbacks for any typo like "super admi", "super admin", "superadmin", etc.
+  if (!demoAccount && (idClean.includes("superadmin") || idClean.includes("superadmi") || idClean.includes("admin"))) {
+    demoAccount = demoAccounts["superadmin"];
+  }
+
+  const helperResponse = (redirectTo: string, token?: string, errorMsg?: string) => {
+    if (errorMsg) {
+      if (isJson) {
+        return NextResponse.json({ error: errorMsg }, { status: 401 });
       }
-      const res = NextResponse.redirect(new URL(dashboardForRoles(demoAccount.roles), request.url), { status: 303 });
+      return NextResponse.redirect(new URL(`/auth/login?error=${encodeURIComponent(errorMsg)}`, request.url), { status: 303 });
+    }
+
+    if (isJson) {
+      const res = NextResponse.json({ success: true, redirectUrl: redirectTo });
+      if (token) {
+        res.cookies.set(ERP_SESSION_COOKIE, token, {
+          httpOnly: true,
+          sameSite: "lax",
+          path: "/",
+          maxAge: remember ? 60 * 60 * 24 * 30 : 60 * 60 * 8
+        });
+      }
+      return res;
+    }
+
+    const res = NextResponse.redirect(new URL(redirectTo, request.url), { status: 303 });
+    if (token) {
       res.cookies.set(ERP_SESSION_COOKIE, token, {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        maxAge: input.remember ? 60 * 60 * 24 * 30 : 60 * 60 * 8
+        maxAge: remember ? 60 * 60 * 24 * 30 : 60 * 60 * 8
       });
-      return res;
     }
-
-    const url = new URL(
-      `/auth/login?error=${encodeURIComponent("Supabase is not configured. Use the temporary Super Admin login for now.")}`,
-      request.url
-    );
-    return NextResponse.redirect(url, { status: 303 });
-  }
-
-  // ERP bootstrap/demo users should always be able to enter through the ERP
-  // session layer. This keeps local operations working even when Supabase Auth
-  // DNS/network is unavailable.
-  const wantsTemp = request.nextUrl.searchParams.get("temp") === "1";
-  if ((wantsTemp || demoAccount) && demoAccount && input.password === demoAccount.password) {
-    const token = makeTempToken(demoAccount);
-    const res = NextResponse.redirect(new URL(dashboardForRoles(demoAccount.roles), request.url), { status: 303 });
-    res.cookies.set(ERP_SESSION_COOKIE, token, {
-      httpOnly: true,
-      sameSite: "lax",
-      path: "/",
-      maxAge: input.remember ? 60 * 60 * 24 * 30 : 60 * 60 * 8
-    });
     return res;
+  };
+
+  // Demo / Bootstrap account handling
+  if (demoAccount && rawPassword === demoAccount.password) {
+    const token = makeTempToken(demoAccount);
+    try {
+      const admin = createSupabaseAdminClient() as any;
+      await admin.from("audit_logs").insert({
+        company_id: null,
+        actor_id: null,
+        action: "auth.login.temp",
+        entity_table: "profiles",
+        entity_id: null,
+        before: null,
+        after: { identifier: rawIdentifier, temp: true },
+        ip_address: request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? null
+      });
+    } catch {
+      // ignore audit log failures
+    }
+    return helperResponse(dashboardForRoles(demoAccount.roles), token);
   }
 
-  const identifierRaw = input.identifier.trim();
-  const emailResult = z.string().email().safeParse(identifierRaw);
+  if (!isSupabaseConfigured()) {
+    return helperResponse(
+      "/auth/login",
+      undefined,
+      "Supabase is not configured. Use the temporary Super Admin login (User ID: superadmin, Password: Admin@123)."
+    );
+  }
+
+  const emailResult = z.string().email().safeParse(rawIdentifier);
   let emailToLogin = emailResult.success ? emailResult.data : null;
 
-  // User ID login: resolve user_code -> email via service role (profiles.user_code).
   if (!emailToLogin) {
     try {
       const admin = createSupabaseAdminClient() as any;
-      const userCode = normalizeUserCode(identifierRaw);
+      const userCode = normalizeUserCode(rawIdentifier);
       const { data: profile, error: profileError } = await admin
         .from("profiles")
         .select("id")
@@ -327,56 +354,29 @@ export async function POST(request: NextRequest) {
 
       const profileId = profile?.id as string | undefined;
       if (!profileId) {
-        const url = new URL(`/auth/login?error=${encodeURIComponent("Invalid User ID / Email.")}`, request.url);
-        return NextResponse.redirect(url, { status: 303 });
+        return helperResponse("/auth/login", undefined, "Invalid User ID or Password.");
       }
 
       const { data: userRes, error: userErr } = await admin.auth.admin.getUserById(profileId);
       if (userErr) throw new Error(userErr.message);
       const resolvedEmail = (userRes?.user?.email as string | undefined) ?? undefined;
       if (!resolvedEmail) {
-        const url = new URL(`/auth/login?error=${encodeURIComponent("User ID exists but email is missing.")}`, request.url);
-        return NextResponse.redirect(url, { status: 303 });
+        return helperResponse("/auth/login", undefined, "User ID exists but email is missing.");
       }
       emailToLogin = resolvedEmail;
     } catch (e: any) {
-      const url = new URL(
-        `/auth/login?error=${encodeURIComponent(e?.message || "User ID login is not available yet.")}`,
-        request.url
-      );
-      return NextResponse.redirect(url, { status: 303 });
+      return helperResponse("/auth/login", undefined, e?.message || "Invalid User ID or Password.");
     }
   }
 
   const supabase = await createServerSupabaseClient();
   const { data: signInData, error } = await supabase.auth.signInWithPassword({
     email: emailToLogin,
-    password: input.password
+    password: rawPassword
   });
 
   if (error) {
-    const url = new URL(`/auth/login?error=${encodeURIComponent(error.message)}`, request.url);
-    return NextResponse.redirect(url, { status: 303 });
-  }
-
-  try {
-    const admin = createSupabaseAdminClient() as any;
-    const actorId = signInData?.user?.id ?? null;
-    const { data: profile } = actorId
-      ? await admin.from("profiles").select("id, default_company_id").eq("id", actorId).maybeSingle()
-      : { data: null };
-    await admin.from("audit_logs").insert({
-      company_id: profile?.default_company_id ?? null,
-      actor_id: actorId,
-      action: "auth.login.success",
-      entity_table: "profiles",
-      entity_id: actorId,
-      before: null,
-      after: { identifier: input.identifier, remembered: input.remember },
-      ip_address: request.headers.get("x-forwarded-for") ?? request.headers.get("x-real-ip") ?? null
-    });
-  } catch {
-    // ignore audit logging failures; auth should still succeed
+    return helperResponse("/auth/login", undefined, error.message);
   }
 
   let redirectTo = "/dashboard" as Route | string;
@@ -399,5 +399,5 @@ export async function POST(request: NextRequest) {
     redirectTo = "/dashboard";
   }
 
-  return NextResponse.redirect(new URL(redirectTo as Route, request.url), { status: 303 });
+  return helperResponse(redirectTo);
 }

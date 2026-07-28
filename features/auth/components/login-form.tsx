@@ -136,18 +136,15 @@ export function LoginForm({ lang: initialLang }: { lang?: SupportedLanguage }) {
     setLoading(true);
 
     try {
+      const formData = new FormData();
+      formData.append("identifier", identifier.trim());
+      formData.append("password", password.trim());
+      if (rememberMe) formData.append("remember", "on");
+      formData.append("login_type", activeTab);
+
       const res = await fetch("/api/erp/auth/login", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          identifier,
-          password,
-          login_type: activeTab,
-          country: selectedCountry,
-          city: selectedCity,
-          branch: selectedBranch,
-          rememberMe,
-        }),
+        body: formData,
       });
 
       const data = await res.json().catch(() => ({}));
