@@ -72,6 +72,27 @@ const demoAccounts: Record<
     fullName: "Super Admin",
     roles: ["super_admin"]
   },
+  "super admin": {
+    password: "Admin@123",
+    userId: TEMP_USER_UUIDS["temp-super-admin"],
+    email: "superadmin@damaan.com",
+    fullName: "Super Admin",
+    roles: ["super_admin"]
+  },
+  "super admi": {
+    password: "Admin@123",
+    userId: TEMP_USER_UUIDS["temp-super-admin"],
+    email: "superadmin@damaan.com",
+    fullName: "Super Admin",
+    roles: ["super_admin"]
+  },
+  "superadmin@dgt.llc": {
+    password: "Admin@123",
+    userId: TEMP_USER_UUIDS["temp-super-admin"],
+    email: "superadmin@damaan.com",
+    fullName: "Super Admin",
+    roles: ["super_admin"]
+  },
   "superadmin@damaan.com": {
     password: "Admin@123",
     userId: TEMP_USER_UUIDS["temp-super-admin"],
@@ -79,7 +100,29 @@ const demoAccounts: Record<
     fullName: "Super Admin",
     roles: ["super_admin"]
   },
+  "admin": {
+    password: "Admin@123",
+    userId: TEMP_USER_UUIDS["temp-super-admin"],
+    email: "superadmin@damaan.com",
+    fullName: "Super Admin",
+    roles: ["super_admin"]
+  },
   "pk-country-0531": {
+    password: "Test@12345",
+    userId: TEMP_USER_UUIDS["temp-pakistan-country-admin"],
+    email: "pakistan.country.test.20260531@example.com",
+    fullName: "Pakistan Country Test Admin",
+    roles: ["country_admin"],
+    assignments: [
+      {
+        role: "country_admin",
+        countryId: "dec26827-2ba2-4517-97cb-2d85729511a2",
+        countryBranchId: null,
+        cityBranchId: null
+      }
+    ]
+  },
+  "pk-country-admin": {
     password: "Test@12345",
     userId: TEMP_USER_UUIDS["temp-pakistan-country-admin"],
     email: "pakistan.country.test.20260531@example.com",
@@ -108,6 +151,63 @@ const demoAccounts: Record<
         cityBranchId: "b3d606be-1d37-44a3-a740-d8685f6fc158"
       }
     ]
+  },
+  "quetta-city-admin": {
+    password: "Test@12345",
+    userId: TEMP_USER_UUIDS["temp-quetta-city-admin"],
+    email: "quetta.city.test.20260531@example.com",
+    fullName: "Quetta City Branch Admin",
+    roles: ["city_branch_admin"],
+    assignments: [
+      {
+        role: "city_branch_admin",
+        countryId: "dec26827-2ba2-4517-97cb-2d85729511a2",
+        countryBranchId: "04723132-7910-413b-a3ea-48b78f73e071",
+        cityBranchId: "b3d606be-1d37-44a3-a740-d8685f6fc158"
+      }
+    ]
+  },
+  "karachi-city-admin": {
+    password: "Test@12345",
+    userId: "temp-karachi-city-admin",
+    email: "karachi.city@damaan.com",
+    fullName: "Karachi City Branch Admin",
+    roles: ["city_branch_admin"]
+  },
+  "lahore-city-admin": {
+    password: "Test@12345",
+    userId: "temp-lahore-city-admin",
+    email: "lahore.city@damaan.com",
+    fullName: "Lahore City Branch Admin",
+    roles: ["city_branch_admin"]
+  },
+  "peshawar-city-admin": {
+    password: "Test@12345",
+    userId: "temp-peshawar-city-admin",
+    email: "peshawar.city@damaan.com",
+    fullName: "Peshawar City Branch Admin",
+    roles: ["city_branch_admin"]
+  },
+  "dubai-city-admin": {
+    password: "Test@12345",
+    userId: "temp-dubai-city-admin",
+    email: "dubai.city@damaan.com",
+    fullName: "Dubai City Branch Admin",
+    roles: ["city_branch_admin"]
+  },
+  "kabul-city-admin": {
+    password: "Test@12345",
+    userId: "temp-kabul-city-admin",
+    email: "kabul.city@damaan.com",
+    fullName: "Kabul City Branch Admin",
+    roles: ["city_branch_admin"]
+  },
+  "riyadh-city-admin": {
+    password: "Test@12345",
+    userId: "temp-riyadh-city-admin",
+    email: "riyadh.city@damaan.com",
+    fullName: "Riyadh City Branch Admin",
+    roles: ["city_branch_admin"]
   }
 };
 

@@ -2,6 +2,7 @@ import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { sidebarTree } from "@/lib/navigation/sidebar";
 import { DashboardFrame } from "@/components/layout/dashboard-frame";
+import { InstallAppBanner } from "@/components/layout/install-app-banner";
 
 export function DashboardShell({
   children,
@@ -21,13 +22,16 @@ export function DashboardShell({
   const isDemoMode = userEmail === "Demo mode" || userEmail === "Template preview";
 
   return (
-    <DashboardFrame nodes={sidebarTree} roles={roles} permissions={permissions ?? null} lang={lang} userEmail={userEmail} userName={userName}>
-      {isDemoMode ? (
-        <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-          Supabase is not configured (or you are in preview), so this is a local UI preview.
-        </div>
-      ) : null}
-      {children}
-    </DashboardFrame>
+    <div className="flex flex-col min-h-screen">
+      <InstallAppBanner />
+      <DashboardFrame nodes={sidebarTree} roles={roles} permissions={permissions ?? null} lang={lang} userEmail={userEmail} userName={userName}>
+        {isDemoMode ? (
+          <div className="mb-6 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            Supabase is not configured (or you are in preview), so this is a local UI preview.
+          </div>
+        ) : null}
+        {children}
+      </DashboardFrame>
+    </div>
   );
 }

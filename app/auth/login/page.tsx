@@ -1,5 +1,6 @@
 import { LoginForm }       from "@/features/auth/components/login-form";
 import { AuthTopControls } from "@/components/layout/auth-top-controls";
+import { InstallAppBanner } from "@/components/layout/install-app-banner";
 import { getRequestLanguage } from "@/lib/i18n/server";
 
 export const metadata = {
@@ -16,7 +17,9 @@ export default async function LoginPage({
   const lang   = await getRequestLanguage();
 
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-slate-50 flex flex-col justify-center">
+    <div className="min-h-screen flex flex-col">
+      <InstallAppBanner />
+      <main className="flex-1 bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-slate-50 flex flex-col justify-center">
       <div className="grid min-h-screen lg:grid-cols-[1fr_1.1fr]">
 
         {/* ═══════════════════════════════════════════════════════════════
@@ -237,5 +240,6 @@ export default async function LoginPage({
 
       </div>
     </main>
+    </div>
   );
 }
