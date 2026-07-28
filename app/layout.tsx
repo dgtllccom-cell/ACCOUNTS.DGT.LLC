@@ -63,6 +63,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     document.documentElement.lang = lang;
     document.documentElement.dir = rtl.has(lang) ? 'rtl' : 'ltr';
   } catch {}
+  try {
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js').catch(function() {});
+      });
+    }
+  } catch {}
 })();
             `.trim()
           }}

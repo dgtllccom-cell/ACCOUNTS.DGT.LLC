@@ -2,7 +2,7 @@
 
 import { openRoznamchaVoucherPrintReport } from "@/lib/reports/open-roznamcha-voucher-print-report";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
-import { Fragment, useEffect, useMemo, useState, Suspense } from "react";
+import { Fragment, useEffect, useMemo, useState, useRef, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { BookOpen, Download, Eye, FileText, Filter, Link2, Maximize2, MoreVertical, Printer, RefreshCcw, Search, Globe, Building2, ChevronDown } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -1140,6 +1140,13 @@ function SuperAdminRoznamchaReportViewContent({
   const [menuOpen, setMenuOpen] = useState(false);
   const [reportRibbonOpen, setReportRibbonOpen] = useState(false);
   const [rowMenuOpenId, setRowMenuOpenId] = useState<string | null>(null);
+  const [dateOpen, setDateOpen] = useState(false);
+  const [exchangeOpen, setExchangeOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
+  const dateRef = useRef<HTMLDivElement | null>(null);
+  const exchangeRef = useRef<HTMLDivElement | null>(null);
+  const filtersRef = useRef<HTMLDivElement | null>(null);
 
   const [draftFilters, setDraftFilters] = useState<FilterState>({
     fromDate: "",
