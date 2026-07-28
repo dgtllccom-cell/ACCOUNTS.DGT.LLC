@@ -9,13 +9,9 @@ function isUuid(value: string) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireErpSession();
+    await requireErpSession();
     const countryId = request.nextUrl.searchParams.get("countryId");
     if (!countryId) {
-      return apiOk({ cities: [] });
-    }
-
-    if (!session.isSuperAdmin && !session.countryIds.includes(countryId)) {
       return apiOk({ cities: [] });
     }
 

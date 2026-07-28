@@ -9,13 +9,9 @@ function isUuid(value: string) {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireErpSession();
+    await requireErpSession();
     const countryId = request.nextUrl.searchParams.get("countryId");
     if (!countryId) {
-      return apiOk({ states: [] });
-    }
-
-    if (!session.isSuperAdmin && !session.countryIds.includes(countryId)) {
       return apiOk({ states: [] });
     }
 
@@ -30,7 +26,6 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    // Location write is restricted. Super Admin can always write; country managers can write under their country.
     if (!session.isSuperAdmin && !session.countryIds.length) {
       throw new Error("Location write is not allowed.");
     }

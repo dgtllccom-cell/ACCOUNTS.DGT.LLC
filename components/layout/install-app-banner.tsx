@@ -46,6 +46,8 @@ export function InstallAppBanner() {
   // Do not render if running inside installed standalone PWA app or if user dismissed
   if (isStandalone || dismissed) return null;
 
+  const [showDesktopGuide, setShowDesktopGuide] = useState(false);
+
   const handleInstallClick = async () => {
     if (isIOS) {
       setShowIOSGuide(true);
@@ -59,10 +61,7 @@ export function InstallAppBanner() {
         setDeferredPrompt(null);
       }
     } else {
-      // Fallback guide if prompt is not available
-      alert(
-        "To install Digital Dock ERP App:\n\n1. Click your browser menu (⋮ or ⚙️)\n2. Select 'Install Digital Dock ERP' or 'Save to Desktop'."
-      );
+      setShowDesktopGuide(true);
     }
   };
 
@@ -163,6 +162,64 @@ export function InstallAppBanner() {
             <Button
               type="button"
               onClick={() => setShowIOSGuide(false)}
+              className="w-full h-10 bg-blue-600 hover:bg-blue-700 font-bold text-xs"
+            >
+              <CheckCircle2 className="h-4 w-4 mr-1.5" /> GOT IT
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Desktop / Chrome Installation Guide Modal ── */}
+      {showDesktopGuide && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-xs p-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 max-w-sm w-full shadow-2xl border border-slate-200 dark:border-slate-800 space-y-4">
+            <div className="flex items-center justify-between border-b pb-3 dark:border-slate-800">
+              <h3 className="font-black text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <Monitor className="h-4 w-4 text-blue-600" />
+                Install Desktop / Mobile App
+              </h3>
+              <button
+                onClick={() => setShowDesktopGuide(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+              To add the Digital Dock ERP icon to your desktop or mobile home screen:
+            </p>
+
+            <div className="space-y-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800 text-xs">
+              <div className="flex items-start gap-3">
+                <div className="h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold flex items-center justify-center shrink-0">
+                  1
+                </div>
+                <div>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">Open Browser Menu</span>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Click the 3 dots (⋮) or gear icon (⚙️) at the top right of your browser.
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="h-6 w-6 rounded-full bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 font-bold flex items-center justify-center shrink-0">
+                  2
+                </div>
+                <div>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">Select Install App / Save to Desktop</span>
+                  <p className="text-[11px] text-slate-500 mt-0.5">
+                    Click &quot;Install Digital Dock ERP&quot; or &quot;Save &amp; Share ➔ Create Shortcut&quot;.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <Button
+              type="button"
+              onClick={() => setShowDesktopGuide(false)}
               className="w-full h-10 bg-blue-600 hover:bg-blue-700 font-bold text-xs"
             >
               <CheckCircle2 className="h-4 w-4 mr-1.5" /> GOT IT

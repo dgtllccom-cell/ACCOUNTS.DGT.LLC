@@ -208,6 +208,55 @@ const demoAccounts: Record<
     email: "riyadh.city@damaan.com",
     fullName: "Riyadh City Branch Admin",
     roles: ["city_branch_admin"]
+  },
+  "islamabad-city-admin": {
+    password: "Test@12345",
+    userId: "temp-islamabad-city-admin",
+    email: "islamabad.city@damaan.com",
+    fullName: "Islamabad City Branch Admin",
+    roles: ["city_branch_admin"]
+  },
+  "abudhabi-city-admin": {
+    password: "Test@12345",
+    userId: "temp-abudhabi-city-admin",
+    email: "abudhabi.city@damaan.com",
+    fullName: "Abu Dhabi City Branch Admin",
+    roles: ["city_branch_admin"]
+  },
+  "kandahar-city-admin": {
+    password: "Test@12345",
+    userId: "temp-kandahar-city-admin",
+    email: "kandahar.city@damaan.com",
+    fullName: "Kandahar City Branch Admin",
+    roles: ["city_branch_admin"]
+  },
+  "jeddah-city-admin": {
+    password: "Test@12345",
+    userId: "temp-jeddah-city-admin",
+    email: "jeddah.city@damaan.com",
+    fullName: "Jeddah City Branch Admin",
+    roles: ["city_branch_admin"]
+  },
+  "uae-country-admin": {
+    password: "Test@12345",
+    userId: "temp-uae-country-admin",
+    email: "uae.country@damaan.com",
+    fullName: "UAE Country Admin",
+    roles: ["country_admin"]
+  },
+  "afg-country-admin": {
+    password: "Test@12345",
+    userId: "temp-afg-country-admin",
+    email: "afg.country@damaan.com",
+    fullName: "Afghanistan Country Admin",
+    roles: ["country_admin"]
+  },
+  "ksa-country-admin": {
+    password: "Test@12345",
+    userId: "temp-ksa-country-admin",
+    email: "ksa.country@damaan.com",
+    fullName: "Saudi Arabia Country Admin",
+    roles: ["country_admin"]
   }
 };
 
