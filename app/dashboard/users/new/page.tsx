@@ -1,9 +1,9 @@
 import { Suspense } from "react";
 import { UserRegistrationWizard } from "@/features/users/components/user-registration-wizard";
 
-export default function UserRegistrationPage() {
+export default function NewEmployeeMasterPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-slate-400">Loading Wizard...</div>}>
+    <Suspense fallback={<div className="p-8 text-slate-400">Loading Employee Master Form...</div>}>
       <UserRegistrationWizard />
     </Suspense>
   );
@@ -11,7 +11,7 @@ export default function UserRegistrationPage() {
 
 export function generateMetadata() {
   return {
-    title: "New User Registration | ERP",
-    description: "Create and register a new user in the ERP system",
+    title: "New Employee Master Form | Employee Management System",
+    description: "Create and register a new employee record in the ERP system",
   };
 }

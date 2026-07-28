@@ -1,5 +1,5 @@
 @echo off
 cd /d "%~dp0"
-call deployment\double-click-to-deploy.bat
-
-
+echo Executing 1-Click Code Sync & VPS Deployment...
+node deploy-vps-and-local.mjs
+pause

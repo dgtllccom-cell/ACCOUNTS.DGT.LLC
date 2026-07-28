@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Check,
@@ -14,7 +14,23 @@ import {
   ClipboardList,
   Search,
   Building2,
-  Paperclip
+  Paperclip,
+  Briefcase,
+  BadgeDollarSign,
+  UserCheck,
+  Phone,
+  Mail,
+  Calendar,
+  CreditCard,
+  Building,
+  Key,
+  Eye,
+  EyeOff,
+  Printer,
+  FileText,
+  Lock,
+  Sparkles,
+  Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,30 +43,55 @@ import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { enterpriseRolePermissions } from "@/lib/permissions/enterprise-roles";
 import { apiGet, apiPost } from "@/lib/api/client";
 import { normalizeUserCode } from "@/lib/services/user-identity-service";
-import { CompanyPicker, type CompanyRow } from "@/features/companies/components/company-picker";
 import { UserLiveReportPanel } from "./user-live-report-panel";
+import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
 
 type MainBranchRow = { id: string; name: string; code: string; local_currency: string; is_main: boolean; city_id?: string | null };
 type CityBranchRow = { id: string; name: string; code: string; city_name: string; local_currency: string; country_branch_id: string };
 
-type WizardStep = 1 | 2 | 3;
+type WizardStep = 1 | 2 | 3 | 4;
 
 type Banner = { tone: "ok" | "err"; text: string } | null;
-type CompanyContact = { type?: string; value?: string; isPrimary?: boolean };
-
-function getCompanyContact(company: CompanyRow | null, types: string[]) {
-  if (!company?.contacts?.length) return "";
-  const normalized = types.map((type) => type.toLowerCase());
-  const primary = company.contacts.find((contact: CompanyContact) => contact.isPrimary && normalized.includes((contact.type ?? "").toLowerCase()));
-  const match = primary ?? company.contacts.find((contact: CompanyContact) => normalized.includes((contact.type ?? "").toLowerCase()));
-  return match?.value ?? "";
-}
-
-function companyValue(value: string | null | undefined) {
-  return value?.trim() ? value.trim() : "-";
-}
 
 const genderOptions = ["Male", "Female", "Other"] as const;
+
+const employmentTypeOptions = [
+  "Permanent",
+  "Contract",
+  "Probation",
+  "Part-time",
+  "Daily Wage",
+  "Temporary"
+] as const;
+
+const departmentOptions = [
+  "Management & Executive",
+  "Finance & Accounting",
+  "Sales & Marketing",
+  "Warehouse & Inventory",
+  "Operations & Logistics",
+  "HR & Administration",
+  "Transport & Driving",
+  "Field & General Work"
+] as const;
+
+const designationOptions = [
+  "Manager",
+  "Assistant Manager",
+  "Supervisor",
+  "Accountant",
+  "Cashier",
+  "Sales Executive",
+  "Office Staff / Clerk",
+  "Warehouse Keeper",
+  "Logistics Coordinator",
+  "Driver",
+  "General Worker",
+  "Security Officer",
+  "Other Company Staff"
+] as const;
+
+const paymentFrequencyOptions = ["Monthly", "Bi-Weekly", "Weekly", "Daily"] as const;
 
 const branchTypeOptions = [
   { value: "main", label: "Main Branch" },
@@ -61,8 +102,8 @@ const roleOptions: Array<{ value: EnterpriseRole; label: string; help: string }>
   { value: "super_admin", label: "Super Admin User", help: "Global scope (full access)." },
   { value: "country_admin", label: "Country Admin User", help: "Country scope (one country)." },
   { value: "country_user", label: "Country User", help: "Country scope user (one country)." },
-  { value: "main_branch_admin", label: "Main Branch Admin User", help: "Main branch scope (one main branch)." },
-  { value: "city_branch_admin", label: "City/Branch User", help: "City branch scope (one city branch)." },
+  { value: "main_branch_admin", label: "Main Branch Admin User", help: "Main branch scope." },
+  { value: "city_branch_admin", label: "City/Branch User", help: "City branch scope." },
   { value: "accountant", label: "Accountant", help: "Branch scope with accounting permissions." },
   { value: "cashier", label: "Cashier", help: "Branch scope with payment permissions." },
   { value: "agent_user", label: "Agent User", help: "Limited branch access." },
@@ -74,9 +115,9 @@ function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }
 
-function makeAutoRegNo() {
-  const rand = Math.floor(10000 + Math.random() * 89999);
-  return `REG-${rand}`;
+function makeAutoEmployeeCode() {
+  const rand = Math.floor(1000 + Math.random() * 8999);
+  return `EMP-${rand}`;
 }
 
 function toCountryOption(row: LocationCountry): SearchSelectOption {
@@ -86,36 +127,6 @@ function toCountryOption(row: LocationCountry): SearchSelectOption {
     keywords: `${row.name} ${row.iso2 ?? ""} ${row.iso3 ?? ""} ${row.currency_code ?? ""}`
   };
 }
-
-function toSimpleOption(value: string, label = value): SearchSelectOption {
-  return { value, label, keywords: label };
-}
-
-function groupPermissions(perms: string[]) {
-  const groups = new Map<string, string[]>();
-  for (const perm of perms) {
-    const [resource] = perm.split(":");
-    const key = (resource || "other").trim() || "other";
-    const list = groups.get(key) ?? [];
-    list.push(perm);
-    groups.set(key, list);
-  }
-  return [...groups.entries()]
-    .sort((a, b) => a[0].localeCompare(b[0]))
-    .map(([k, v]) => [k, v.sort()] as const);
-}
-
-function reportRow(label: string, value: string, tone: "muted" | "primary" = "muted") {
-  const safe = value?.trim() ? value.trim() : "-";
-  return (
-    <div className="grid grid-cols-[120px_1fr] gap-3 text-sm">
-      <div className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</div>
-      <div className={tone === "primary" ? "font-semibold text-emerald-300" : "font-semibold text-slate-100"}>{safe}</div>
-    </div>
-  );
-}
-
-import { Suspense } from "react";
 
 function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } = {}) {
   const router = useRouter();
@@ -130,83 +141,88 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const [previewImageUrl, setPreviewImageUrl] = useState<string>("");
   const [profileFile, setProfileFile] = useState<File | null>(null);
 
-  // Step 1
-  const [gender, setGender] = useState("");
+  // STEP 1: Personal Information
   const [fullName, setFullName] = useState("");
-  const [selectedCompanyId, setSelectedCompanyId] = useState("");
-  const [selectedCompany, setSelectedCompany] = useState<CompanyRow | null>(null);
-  const [loadingSelectedCompany, setLoadingSelectedCompany] = useState(false);
-  const [accountRegNo, setAccountRegNo] = useState(() => makeAutoRegNo());
+  const [fatherOrSpouseName, setFatherOrSpouseName] = useState("");
+  const [gender, setGender] = useState("Male");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [nationalId, setNationalId] = useState("");
+  const [contactPhone, setContactPhone] = useState("");
+  const [emergencyPhone, setEmergencyPhone] = useState("");
+  const [personalEmail, setPersonalEmail] = useState("");
 
-  // Step 2
+  // STEP 2: Employment & Contract Details
+  const [employeeCode, setEmployeeCode] = useState(() => makeAutoEmployeeCode());
+  const [employmentType, setEmploymentType] = useState<string>("Permanent");
+  const [department, setDepartment] = useState<string>("Operations & Logistics");
+  const [designation, setDesignation] = useState<string>("Office Staff / Clerk");
+  const [joiningDate, setJoiningDate] = useState(() => new Date().toISOString().substring(0, 10));
+  const [probationPeriod, setProbationPeriod] = useState("3 Months");
+  const [contractEndDate, setContractEndDate] = useState("");
+
+  // STEP 3: Location Information
   const [countries, setCountries] = useState<LocationCountry[]>([]);
   const [loadingCountries, setLoadingCountries] = useState(false);
   const [countryId, setCountryId] = useState("");
-  const [branchType, setBranchType] = useState<"" | "main" | "city">("");
-  const [role, setRole] = useState<EnterpriseRole>("city_branch_admin");
-
+  const [branchType, setBranchType] = useState<"" | "main" | "city">("main");
   const [mainBranches, setMainBranches] = useState<MainBranchRow[]>([]);
   const [cityBranches, setCityBranches] = useState<CityBranchRow[]>([]);
   const [cities, setCities] = useState<LocationCity[]>([]);
   const [countryBranchId, setCountryBranchId] = useState("");
   const [cityBranchId, setCityBranchId] = useState("");
+  const [residentialAddress, setResidentialAddress] = useState("");
 
-  // Step 3
-  const [userCode, setUserCode] = useState("");
+  // STEP 4: Job, Salary & Payroll
+  const [baseSalary, setBaseSalary] = useState("0");
+  const [currency, setCurrency] = useState("USD");
+  const [paymentFrequency, setPaymentFrequency] = useState("Monthly");
+  const [bankName, setBankName] = useState("");
+  const [accountOrIban, setAccountOrIban] = useState("");
+
+  // ERP Login Access
+  const [enableErpLogin, setEnableErpLogin] = useState(true);
+  const [role, setRole] = useState<EnterpriseRole>("staff_user");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [activePermGroup, setActivePermGroup] = useState<string>("users");
-  const [permQuery, setPermQuery] = useState("");
-  const [selectedPermissions, setSelectedPermissions] = useState<string[]>(() => {
-    const defaults = enterpriseRolePermissions["city_branch_admin"] ?? [];
-    return [...new Set(defaults.map((p) => p.trim()).filter(Boolean))];
-  });
+  const [showPassword, setShowPassword] = useState(false);
 
-  // Edit list states
-  const [usersList, setUsersList] = useState<any[]>([]);
-  const [usersLoading, setUsersLoading] = useState(false);
-  const [selectedReportUserId, setSelectedReportUserId] = useState("current");
+  // Edit / Employees List State
+  const [employeesList, setEmployeesList] = useState<any[]>([]);
+  const [employeesLoading, setEmployeesLoading] = useState(false);
   const [sidebarFilter, setSidebarFilter] = useState("");
   const [editUserId, setEditUserId] = useState<string | null>(null);
   const [isResettingBranch, setIsResettingBranch] = useState(true);
-  const [shouldDefaultPermissions, setShouldDefaultPermissions] = useState(true);
 
-  async function fetchUsers() {
-    setUsersLoading(true);
+  async function fetchEmployees() {
+    setEmployeesLoading(true);
     try {
       const res = await fetch("/api/erp/users/journal-report?limit=500").then((r) => r.json());
       if (res && res.rows && Array.isArray(res.rows)) {
-        setUsersList(res.rows);
+        setEmployeesList(res.rows);
       }
     } catch (err) {
-      console.error("Failed to load users:", err);
+      console.error("Failed to load employees list", err);
     } finally {
-      setUsersLoading(false);
+      setEmployeesLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchUsers();
+    fetchEmployees();
   }, []);
 
   async function fetchSpecificUser(id: string) {
     try {
-      const res = await fetch(`/api/erp/users?userId=${encodeURIComponent(id)}`);
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data && data.userId) {
-        setBanner(null);
-        setCreatedResult(null);
-        setIsResettingBranch(false);
-        setShouldDefaultPermissions(false);
-
+      const res = await fetch(`/api/erp/users?userId=${encodeURIComponent(id)}`).then((r) => r.json());
+      if (res && res.data) {
+        const data = res.data;
         setEditUserId(data.userId);
-        setFullName(data.fullName);
-        setGender("Male");
-        setUserCode(data.userCode);
-        setRole(data.role);
+        setFullName(data.fullName || "");
+        setEmployeeCode(data.userCode || makeAutoEmployeeCode());
+        setRole(data.role || "staff_user");
         setCountryId(data.countryId || "");
-        setSelectedCompanyId(data.defaultCompanyId || data.companyId || "");
+        if (data.email) setPersonalEmail(data.email);
+        if (data.phone) setContactPhone(data.phone);
 
         if (data.countryBranchId && !data.cityBranchId) {
           setBranchType("main");
@@ -215,118 +231,92 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         } else if (data.cityBranchId) {
           setBranchType("city");
           setCityBranchId(data.cityBranchId);
-        } else {
-          setBranchType("");
-          setCountryBranchId("");
-          setCityBranchId("");
         }
 
-        setPassword("");
-        setConfirmPassword("");
-        setSelectedPermissions(data.permissions || []);
         setStep(1);
-        setSelectedReportUserId(data.userId);
       }
     } catch (err) {
       console.error("Failed to load user for edit", err);
     }
   }
 
-  const loadUserForEditing = (row: any) => {
-    setBanner(null);
-    setCreatedResult(null);
-    setIsResettingBranch(false);
-    setShouldDefaultPermissions(false);
-
-    setEditUserId(row.userId);
-    setFullName(row.fullName);
-    setGender("Male");
-    setUserCode(row.userCode);
-    setRole(row.role);
-    setCountryId(row.countryId || "");
-    setSelectedCompanyId(row.defaultCompanyId || row.companyId || "");
-
-    const isMain = row.branchType === "Main Branch" || row.role === "main_branch_admin";
-    const isCity = row.branchType === "City Branch" && row.role !== "main_branch_admin";
-
-    if (isMain) {
-      setBranchType("main");
-      setCountryBranchId(row.branchId || "");
-      setCityBranchId("");
-    } else if (isCity) {
-      setBranchType("city");
-      setCityBranchId(row.branchId || "");
-    } else {
-      setBranchType("");
-      setCountryBranchId("");
-      setCityBranchId("");
-    }
-
-    setPassword("");
-    setConfirmPassword("");
-    setSelectedPermissions(row.permissions || []);
-    setStep(1);
-    setSelectedReportUserId(row.userId);
-  };
-
   useEffect(() => {
     if (urlUserId && !editUserId) {
       fetchSpecificUser(urlUserId);
     }
   }, [urlUserId, editUserId]);
+
   useEffect(() => {
-    if (!selectedCompanyId) {
-      setSelectedCompany(null);
-      return;
-    }
-
     let cancelled = false;
-    setLoadingSelectedCompany(true);
-    apiGet<{ company: CompanyRow }>(`/api/erp/companies/${encodeURIComponent(selectedCompanyId)}`)
-      .then((res) => {
-        if (cancelled) return;
-        const company = res.company ?? null;
-        setSelectedCompany(company);
-        if (!company) return;
-
-        const ownerOrName = company.owner_name || company.legal_name || company.name || "";
-        if (ownerOrName) setFullName(ownerOrName);
-        if (company.country_id) setCountryId((current) => current || company.country_id || "");
-      })
-      .catch(() => {
-        if (!cancelled) setSelectedCompany(null);
-      })
-      .finally(() => {
-        if (!cancelled) setLoadingSelectedCompany(false);
-      });
-
+    (async () => {
+      setLoadingCountries(true);
+      try {
+        const rows = await listCountries();
+        if (!cancelled) {
+          setCountries(rows);
+          if (rows.length > 0 && !countryId) {
+            const defaultCountry = rows.find((r) => r.name.toLowerCase().includes("pakistan")) || rows[0];
+            if (defaultCountry) setCountryId(defaultCountry.id);
+          }
+        }
+      } finally {
+        if (!cancelled) setLoadingCountries(false);
+      }
+    })();
     return () => {
       cancelled = true;
     };
-  }, [selectedCompanyId]);
+  }, []);
 
+  useEffect(() => {
+    if (isResettingBranch) {
+      setBranchType("main");
+      setCountryBranchId("");
+      setCityBranchId("");
+      setMainBranches([]);
+      setCityBranches([]);
+      setCities([]);
+    } else {
+      setIsResettingBranch(true);
+    }
+
+    if (!countryId) return;
+
+    (async () => {
+      const res = await fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(countryId)}`, { cache: "no-store" });
+      if (!res.ok) return;
+      const json = (await res.json()) as { countryBranches?: MainBranchRow[] };
+      const list = Array.isArray(json.countryBranches) ? json.countryBranches : [];
+      const mains = list.filter((b) => Boolean(b.is_main));
+      setMainBranches(mains);
+      if (mains.length > 0 && !countryBranchId) {
+        setCountryBranchId(mains[0].id);
+        if (mains[0].local_currency) setCurrency(mains[0].local_currency);
+      }
+    })().catch(() => null);
+
+    (async () => {
+      const res = await fetch(`/api/branch-management/city-branches?countryId=${encodeURIComponent(countryId)}`, { cache: "no-store" });
+      if (!res.ok) return;
+      const json = (await res.json()) as { cityBranches?: CityBranchRow[] };
+      setCityBranches(Array.isArray(json.cityBranches) ? json.cityBranches : []);
+    })().catch(() => null);
+
+    (async () => {
+      const rows = await listCities(countryId);
+      setCities(rows);
+    })().catch(() => null);
+  }, [countryId]);
 
   const countryOptions = useMemo(() => countries.map(toCountryOption), [countries]);
   const branchTypeSelectOptions = useMemo(
     () => branchTypeOptions.map((o) => ({ value: o.value, label: o.label, keywords: o.label })),
     []
   );
-  const roleSelectOptions = useMemo(
-    () =>
-      roleOptions.map((o) => ({
-        value: o.value,
-        label: o.label,
-        keywords: `${o.label} ${o.help}`
-      })),
-    []
-  );
 
   const selectedCountry = useMemo(() => countries.find((c) => c.id === countryId) ?? null, [countries, countryId]);
   const selectedMainBranch = useMemo(() => mainBranches.find((b) => b.id === countryBranchId) ?? null, [mainBranches, countryBranchId]);
   const selectedCityBranch = useMemo(() => cityBranches.find((b) => b.id === cityBranchId) ?? null, [cityBranches, cityBranchId]);
-
-  const selectedCompanyEmail = useMemo(() => getCompanyContact(selectedCompany, ["email"]), [selectedCompany]);
-  const selectedCompanyPhone = useMemo(() => getCompanyContact(selectedCompany, ["phone", "mobile", "telephone", "office"]), [selectedCompany]);
 
   const branchCode = useMemo(() => {
     if (branchType === "main") return selectedMainBranch?.code ?? "";
@@ -345,173 +335,48 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     return "";
   }, [branchType, selectedCityBranch, selectedMainBranch, cities]);
 
-  const allPermissions = useMemo(() => {
-    const items = Object.values(enterpriseRolePermissions).flat();
-    return [...new Set(items.map((p) => p.trim()).filter(Boolean))].sort();
-  }, []);
+  const filteredEmployees = useMemo(() => {
+    if (!sidebarFilter.trim()) return employeesList;
+    const q = sidebarFilter.toLowerCase().trim();
+    return employeesList.filter(
+      (u) =>
+        u.fullName?.toLowerCase().includes(q) ||
+        u.userCode?.toLowerCase().includes(q) ||
+        u.branchCode?.toLowerCase().includes(q) ||
+        u.role?.toLowerCase().includes(q)
+    );
+  }, [employeesList, sidebarFilter]);
 
-  const groupedPermissions = useMemo(() => groupPermissions(allPermissions), [allPermissions]);
-
-  const filteredGroups = useMemo(() => {
-    const q = permQuery.trim().toLowerCase();
-    if (!q) return groupedPermissions;
-    return groupedPermissions
-      .map(([group, perms]) => {
-        const next = perms.filter((p) => p.toLowerCase().includes(q));
-        return [group, next] as const;
-      })
-      .filter(([, perms]) => perms.length);
-  }, [groupedPermissions, permQuery]);
-
-  const activeGroupPermissions = useMemo(() => {
-    return filteredGroups.find(([g]) => g === activePermGroup)?.[1] ?? filteredGroups[0]?.[1] ?? [];
-  }, [activePermGroup, filteredGroups]);
-
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      setLoadingCountries(true);
-      try {
-        const rows = await listCountries();
-        if (!cancelled) setCountries(rows);
-      } finally {
-        if (!cancelled) setLoadingCountries(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  useEffect(() => {
-    // When country changes, reset the branch selections.
-    setBanner(null);
-    setCreatedResult(null);
-    if (isResettingBranch) {
-      setBranchType("");
-      setCountryBranchId("");
-      setCityBranchId("");
-      setMainBranches([]);
-      setCityBranches([]);
-      setCities([]);
-    } else {
-      setIsResettingBranch(true);
+  function isStepValid(currentStep: WizardStep) {
+    if (currentStep === 1) {
+      return Boolean(fullName.trim().length >= 2 && gender);
     }
-
-    if (!countryId) return;
-
-    (async () => {
-      const res = await fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(countryId)}`, { cache: "no-store" });
-      if (!res.ok) return;
-      const json = (await res.json()) as { countryBranches?: MainBranchRow[] };
-      const list = Array.isArray(json.countryBranches) ? json.countryBranches : [];
-      setMainBranches(list.filter((b) => Boolean(b.is_main)));
-    })().catch(() => null);
-
-    (async () => {
-      const res = await fetch(`/api/branch-management/city-branches?countryId=${encodeURIComponent(countryId)}`, { cache: "no-store" });
-      if (!res.ok) return;
-      const json = (await res.json()) as { cityBranches?: CityBranchRow[] };
-      const list = Array.isArray(json.cityBranches) ? json.cityBranches : [];
-      setCityBranches(list);
-    })().catch(() => null);
-
-    (async () => {
-      const list = await listCities({ countryId });
-      setCities(list);
-    })().catch(() => null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [countryId]);
-
-  useEffect(() => {
-    // Default permissions for role.
-    setCreatedResult(null);
-    if (shouldDefaultPermissions) {
-      const defaults = enterpriseRolePermissions[role] ?? [];
-      setSelectedPermissions([...new Set(defaults.map((p) => p.trim()).filter(Boolean))]);
-    } else {
-      setShouldDefaultPermissions(true);
+    if (currentStep === 2) {
+      return Boolean(employeeCode && employmentType && department && designation);
     }
-
-    // Scope requirements:
-    if (role === "super_admin") {
-      setCountryId("");
-      setBranchType("");
-      setCountryBranchId("");
-      setCityBranchId("");
-      return;
-    }
-    if (role === "country_admin" || role === "country_user") {
-      setBranchType("");
-      setCountryBranchId("");
-      setCityBranchId("");
-      return;
-    }
-    if (role === "main_branch_admin") {
-      setCityBranchId("");
-      return;
-    }
-  }, [role]);
-
-  async function generateUserCode() {
-    setBanner(null);
-    const qp = new URLSearchParams({ role });
-    if (countryId) qp.set("countryId", countryId);
-
-    try {
-      const res = await fetch(`/api/erp/users/next-code?${qp.toString()}`, { credentials: "include" });
-      const json = (await res.json()) as { code?: string; error?: string };
-      if (!res.ok) throw new Error(json.error || "Failed to issue next User ID.");
-      const code = normalizeUserCode(String(json.code || ""));
-      setUserCode(code);
-      return code;
-    } catch (e: any) {
-      setBanner({ tone: "err", text: e?.message || "Failed to generate User ID." });
-      return null;
-    }
-  }
-
-  useEffect(() => {
-    // Auto-generate user code once role and required country scope is selected.
-    if (!role) return;
-    if (role !== "super_admin" && !isUuid(countryId)) return;
-    if (!userCode) generateUserCode().catch(() => null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [role, countryId]);
-
-  function togglePermission(perm: string) {
-    const p = perm.trim();
-    if (!p) return;
-    setSelectedPermissions((current) => {
-      const has = current.includes(p);
-      if (has) return current.filter((x) => x !== p);
-      return [...current, p];
-    });
-  }
-
-  function canGoNext() {
-    if (step === 1) return Boolean(selectedCompanyId && gender && fullName.trim().length >= 2);
-    if (step === 2) {
+    if (currentStep === 3) {
       if (role === "super_admin") return true;
-      if (!isUuid(countryId)) return false;
-      if (role === "country_admin" || role === "country_user") return true;
-      if (role === "main_branch_admin") return Boolean(branchType === "main" && isUuid(countryBranchId));
-      // Branch-scoped roles:
-      if (branchType === "main") return Boolean(isUuid(countryBranchId));
-      if (branchType === "city") return Boolean(isUuid(cityBranchId));
-      return false;
+      if (!countryId) return false;
+      if (branchType === "main") return Boolean(countryBranchId);
+      if (branchType === "city") return Boolean(cityBranchId);
+      return true;
+    }
+    if (currentStep === 4) {
+      if (enableErpLogin) {
+        if (!editUserId && (!password || password.length < 8)) return false;
+        if (password && password !== confirmPassword) return false;
+      }
+      return true;
     }
     return true;
   }
 
   function next() {
-    if (step === 1) setStep(2);
-    if (step === 2) setStep(3);
+    if (step < 4) setStep((s) => (s + 1) as WizardStep);
   }
 
   function prev() {
-    if (step === 3) setStep(2);
-    if (step === 2) setStep(1);
+    if (step > 1) setStep((s) => (s - 1) as WizardStep);
   }
 
   async function finish() {
@@ -519,39 +384,35 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     setCreatedResult(null);
 
     if (!fullName || fullName.trim().length < 2) {
-      setBanner({ tone: "err", text: "Full Name must be at least 2 characters." });
+      setBanner({ tone: "err", text: "Employee Full Name must be at least 2 characters." });
       return;
     }
 
-    if (!gender) {
-      setBanner({ tone: "err", text: "Gender is required." });
-      return;
-    }
-
-    const issuedCode = normalizeUserCode(userCode || "");
+    const issuedCode = normalizeUserCode(employeeCode || "");
     if (!issuedCode) {
-      setBanner({ tone: "err", text: "User ID is required." });
+      setBanner({ tone: "err", text: "Employee Code / ID is required." });
       return;
     }
 
     const isEdit = Boolean(editUserId);
 
-    if (!isEdit && (!password || password.length < 8)) {
-      setBanner({ tone: "err", text: "Password must be at least 8 characters." });
-      return;
+    if (enableErpLogin) {
+      if (!isEdit && (!password || password.length < 8)) {
+        setBanner({ tone: "err", text: "Password must be at least 8 characters for ERP login." });
+        return;
+      }
+
+      if (password && password.length < 8) {
+        setBanner({ tone: "err", text: "Password must be at least 8 characters." });
+        return;
+      }
+
+      if (password && password !== confirmPassword) {
+        setBanner({ tone: "err", text: "Confirm Password does not match." });
+        return;
+      }
     }
 
-    if (password && password.length < 8) {
-      setBanner({ tone: "err", text: "Password must be at least 8 characters." });
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      setBanner({ tone: "err", text: "Confirm Password does not match." });
-      return;
-    }
-
-    // Resolve scope IDs from the selected branch type.
     let resolvedCountryId: string | null = countryId || null;
     let resolvedCountryBranchId: string | null = null;
     let resolvedCityBranchId: string | null = null;
@@ -561,48 +422,34 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     } else if (role === "country_admin" || role === "country_user") {
       resolvedCountryBranchId = null;
       resolvedCityBranchId = null;
-    } else if (role === "main_branch_admin") {
+    } else if (role === "main_branch_admin" || branchType === "main") {
       resolvedCountryBranchId = countryBranchId || null;
+      resolvedCityBranchId = null;
     } else {
-      // branch roles
-      if (branchType === "main") {
-        resolvedCountryBranchId = countryBranchId || null;
-        resolvedCityBranchId = null;
-      } else {
-        resolvedCityBranchId = cityBranchId || null;
-        resolvedCountryBranchId = selectedCityBranch?.country_branch_id ?? null;
-      }
-    }
-
-    if (role !== "super_admin" && !resolvedCountryId) {
-      setBanner({ tone: "err", text: "Country is required for this role." });
-      return;
+      resolvedCityBranchId = cityBranchId || null;
+      resolvedCountryBranchId = selectedCityBranch?.country_branch_id ?? null;
     }
 
     const preferredLanguage = (localStorage.getItem("erp_lang") || "en").toString();
-
-    // Supabase requires email. We generate a stable internal email and rely on User ID login via profiles.user_code.
-    const email = `${issuedCode.toLowerCase()}@users.damaan.local`;
+    const email = personalEmail.trim() || `${issuedCode.toLowerCase()}@employees.damaan.local`;
 
     setSaving(true);
     try {
       const payload: any = {
-        role,
-        companyId: selectedCompanyId || null,
+        role: enableErpLogin ? role : "staff_user",
         fullName: fullName.trim(),
         userCode: issuedCode,
         countryId: resolvedCountryId,
         countryBranchId: resolvedCountryBranchId,
         cityBranchId: resolvedCityBranchId,
-        permissions: selectedPermissions
+        phone: contactPhone.trim(),
+        permissions: enterpriseRolePermissions[role] || []
       };
 
       let res;
       if (isEdit) {
         payload.userId = editUserId;
-        if (password) {
-          payload.password = password;
-        }
+        if (password) payload.password = password;
 
         const fetchRes = await fetch("/api/erp/users", {
           method: "PATCH",
@@ -610,493 +457,723 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
           body: JSON.stringify(payload)
         });
         const json = await fetchRes.json();
-        if (!fetchRes.ok) throw new Error(json?.error?.message || json?.error || "Failed to update user.");
+        if (!fetchRes.ok) throw new Error(json?.error?.message || json?.error || "Failed to update employee.");
         res = { userId: editUserId!, userCode: issuedCode };
       } else {
         payload.email = email;
-        payload.password = password;
+        payload.password = password || "Emp@123456";
         payload.preferredLanguage = preferredLanguage;
         res = await apiPost<{ userId: string; userCode: string }>("/api/erp/users", payload);
       }
 
-      setBanner({ tone: "ok", text: isEdit ? "User updated successfully." : "User created successfully." });
-      localStorage.setItem("user_journal_dirty", new Date().toISOString());
+      setBanner({ tone: "ok", text: isEdit ? "Employee record updated successfully." : "Employee registered successfully." });
       setCreatedResult({ userId: res.userId, userCode: res.userCode, createdAt: new Date().toISOString() });
-      fetchUsers();
+      fetchEmployees();
     } catch (e: any) {
-      setBanner({ tone: "err", text: e?.message || "User operation failed." });
+      setBanner({ tone: "err", text: e?.message || "Employee operation failed." });
     } finally {
       setSaving(false);
     }
   }
 
-  const steps = useMemo(
-    () => [
-      { number: 1 as const, label: "Personal Information", icon: <UserPlus className="h-4 w-4" aria-hidden /> },
-      { number: 2 as const, label: "Country / Branch / Role", icon: <MapPin className="h-4 w-4" aria-hidden /> },
-      { number: 3 as const, label: "Security & Permissions", icon: <ShieldCheck className="h-4 w-4" aria-hidden /> }
-    ],
-    []
-  );
-
-  const mainBranchOptions: SearchSelectOption[] = useMemo(
-    () => mainBranches.map((b) => ({ value: b.id, label: `${b.name} (${b.code})`, keywords: `${b.name} ${b.code}` })),
-    [mainBranches]
-  );
-
-  const cityBranchOptions: SearchSelectOption[] = useMemo(
-    () =>
-      cityBranches.map((b) => ({
-        value: b.id,
-        label: `${b.name} (${b.code})`,
-        keywords: `${b.name} ${b.code} ${b.city_name}`
-      })),
-    [cityBranches]
-  );
-
-  const filteredSidebarUsers = useMemo(() => {
-    return usersList.filter((u) => {
-      const q = sidebarFilter.toLowerCase().trim();
-      if (!q) return true;
-      return (
-        (u.userCode ?? "").toLowerCase().includes(q) ||
-        (u.fullName ?? "").toLowerCase().includes(q) ||
-        (u.role ?? "").toLowerCase().includes(q)
-      );
-    });
-  }, [usersList, sidebarFilter]);
+  const steps = [
+    { number: 1 as const, label: "Personal Info", icon: <UserPlus className="h-4 w-4" /> },
+    { number: 2 as const, label: "Employment & Contract", icon: <Briefcase className="h-4 w-4" /> },
+    { number: 3 as const, label: "Location & Branch", icon: <MapPin className="h-4 w-4" /> },
+    { number: 4 as const, label: "Salary & ERP Access", icon: <BadgeDollarSign className="h-4 w-4" /> }
+  ];
 
   return (
-    <div className="space-y-4">
-      {/* ── Page Header ──────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-2.5">
+    <div className="space-y-6">
+      {/* Header Bar */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
         <div>
-          <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight">User Registration & Setup</h1>
-            <span className="inline-flex items-center rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700 border border-amber-200">
-              {editUserId ? "Edit Mode" : "New User"}
-            </span>
+          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
+            <Users className="h-4 w-4" />
+            <span>Employee Management System</span>
           </div>
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] text-slate-500 mt-1.5 font-medium">
-            <span><strong>Journal ID:</strong> <span className="font-mono text-slate-700">{accountRegNo}</span></span>
-            <span><strong>Login User ID:</strong> <span className="text-[#1455ff] font-extrabold">{userCode || "-"}</span></span>
-            <span><strong>System ID:</strong> <span className="font-mono text-slate-700">{accountRegNo}</span></span>
-            <span><strong>Registered:</strong> <span className="text-slate-700">{editUserId ? "Active" : "Draft"}</span></span>
-          </div>
+          <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
+            {editUserId ? "Edit Employee Master Record" : "Employee Master Form"}
+          </h1>
+          <p className="text-xs text-slate-500">
+            Register and manage company employees: Managers, Supervisors, Accountants, Sales Staff, Cashiers, Drivers, and Workers.
+          </p>
         </div>
+
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/new-entry/users/journal-report")} className="h-9">
-            <ClipboardList className="mr-1.5 h-4 w-4 text-slate-500" /> User Journal Report
+          {editUserId && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                setEditUserId(null);
+                setFullName("");
+                setEmployeeCode(makeAutoEmployeeCode());
+                setStep(1);
+                setBanner(null);
+              }}
+              className="gap-1.5 text-xs"
+            >
+              <UserPlus className="h-3.5 w-3.5" />
+              <span>+ Register New Employee</span>
+            </Button>
+          )}
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              openUserA4ReportWindow({
+                userId: editUserId || "EMP-PREVIEW",
+                userCode: employeeCode,
+                fullName: fullName || "Employee Name",
+                countryName: selectedCountry?.name || "Pakistan",
+                branchName: (branchType === "main" ? selectedMainBranch?.name : selectedCityBranch?.name) || "Main Branch",
+                branchCode: branchCode || "PK-MAIN-001",
+                branchType: designation || "Company Staff",
+                role: role,
+                registrationDate: joiningDate || new Date().toISOString(),
+                status: "Active",
+                permissions: [],
+                lastActivity: new Date().toISOString(),
+                lastActivityAction: "employee.registered",
+                rawPassword: password || "••••••••",
+                activityCounts: { logins: 1, transactions: 0, roznamcha: 0, purchases: 0, payments: 0, accounts: 0, approvals: 0, edits: 0 }
+              });
+            }}
+            className="gap-1.5 text-xs bg-slate-900 text-white hover:bg-slate-800"
+          >
+            <Printer className="h-3.5 w-3.5 text-emerald-400" />
+            <span>Print Employee A4 Report</span>
           </Button>
         </div>
       </div>
 
-      {/* ── Left Column Form + Right Column Preview ──────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-        {/* Left Side: Direct Single-Page Form */}
-        <div className="lg:col-span-5 space-y-4">
-          {/* Header Banner */}
-          {banner ? (
-            <div
-              className={
-                banner.tone === "ok"
-                  ? "rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2.5 text-xs font-semibold text-emerald-800 animate-fade-in"
-                  : "rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs font-semibold text-amber-800 animate-fade-in"
-              }
+      {/* Progress Steps Header */}
+      <div className="grid gap-2 sm:grid-cols-4">
+        {steps.map((s) => {
+          const isActive = step === s.number;
+          const isDone = step > s.number;
+
+          return (
+            <button
+              key={s.number}
+              type="button"
+              onClick={() => setStep(s.number)}
+              className={`flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${
+                isActive
+                  ? "border-primary bg-primary/5 text-primary shadow-sm ring-1 ring-primary/20"
+                  : isDone
+                  ? "border-emerald-200 bg-emerald-50/50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/20"
+                  : "border-slate-200 bg-card text-slate-500 hover:border-slate-300"
+              }`}
             >
-              {banner.text}
-            </div>
-          ) : null}
-
-          {/* Edit status indicator & cancel edit button */}
-          {editUserId && (
-            <div className="flex justify-between items-center bg-amber-50 border border-amber-200 rounded-lg p-3 text-xs text-amber-800">
-              <span>Currently editing user <b>{userCode}</b>.</span>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="h-7 text-xs text-amber-950 font-bold hover:bg-amber-100"
-                onClick={() => {
-                  setEditUserId(null);
-                  setFullName("");
-                  setSelectedCompanyId("");
-                  setSelectedCompany(null);
-                  setUserCode("");
-                  setCountryId("");
-                  setBranchType("");
-                  setCountryBranchId("");
-                  setCityBranchId("");
-                  setSelectedPermissions([]);
-                  setPassword("");
-                  setConfirmPassword("");
-                  setBanner(null);
-                  setSelectedReportUserId("current");
-                }}
+              <div
+                className={`grid h-8 w-8 place-items-center rounded-lg text-xs font-bold ${
+                  isActive
+                    ? "bg-primary text-white"
+                    : isDone
+                    ? "bg-emerald-600 text-white"
+                    : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                }`}
               >
-                Cancel Edit
-              </Button>
-            </div>
-          )}
+                {isDone ? <Check className="h-4 w-4" /> : s.number}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Step {s.number}</div>
+                <div className="truncate text-xs font-semibold">{s.label}</div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
 
-          {/* Confirmation Message */}
-          {createdResult ? (
-            <Card className="border-emerald-200 bg-emerald-50 shadow-sm">
-              <CardContent className="space-y-2 p-4">
-                <div className="text-sm font-semibold text-emerald-900">Operation Successful</div>
-                <div className="grid gap-1 text-sm text-emerald-900">
-                  <div><b>User ID:</b> {createdResult.userCode}</div>
-                  <div><b>Role:</b> {roleOptions.find((r) => r.value === role)?.label ?? role}</div>
-                  <div><b>Scope:</b> {selectedCountry?.name ?? "-"} {branchCode ? ` / ${branchCode}` : ""} {cityName ? ` / ${cityName}` : ""}</div>
-                </div>
-                <div className="flex flex-wrap gap-2 pt-2">
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={() => {
-                      setCreatedResult(null);
-                      setEditUserId(null);
-                      setStep(1);
-                      setGender("");
-                      setFullName("");
-                      setSelectedCompanyId("");
-                      setSelectedCompany(null);
-                      setAccountRegNo(makeAutoRegNo());
-                      setCountryId("");
-                      setBranchType("");
-                      setCountryBranchId("");
-                      setCityBranchId("");
-                      setUserCode("");
-                      setPassword("");
-                      setConfirmPassword("");
-                      setProfileFile(null);
-                      setPreviewImageUrl("");
-                      setSelectedReportUserId("current");
-                    }}
-                  >
-                    Register New User
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    onClick={() => router.push("/dashboard/new-entry/users/journal-report")}
-                  >
-                    View Journal Report
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ) : null}
+      {/* Banner */}
+      {banner && (
+        <div
+          className={`flex items-center justify-between rounded-lg p-3 text-xs font-medium ${
+            banner.tone === "ok" ? "bg-emerald-50 text-emerald-800 border border-emerald-200" : "bg-red-50 text-red-800 border border-red-200"
+          }`}
+        >
+          <span>{banner.text}</span>
+          <button type="button" onClick={() => setBanner(null)} className="text-slate-500 hover:text-slate-700">
+            ×
+          </button>
+        </div>
+      )}
 
-          {/* Card 1: Personal Info */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
-            <div className="flex items-center gap-2 border-b pb-1.5">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-50 text-[10px] font-bold text-blue-655">1</span>
-              <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Personal Information</h2>
-            </div>
+      {/* Split Screen Layout */}
+      <div className="grid gap-6 lg:grid-cols-12">
+        {/* Left Side (Form Wizard Steps) - 7 cols */}
+        <div className="space-y-4 lg:col-span-7">
+          <Card className="shadow-sm">
+            <CardHeader className="border-b bg-slate-50/50 dark:bg-slate-900/50 py-3.5">
+              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                {steps[step - 1].icon}
+                <span>Step {step}: {steps[step - 1].label}</span>
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="p-5 space-y-4">
+              {/* STEP 1: Personal Information */}
+              {step === 1 && (
+                <div className="space-y-4">
+                  <div className="grid gap-3.5 sm:grid-cols-2">
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Employee Full Name *</Label>
+                      <Input
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="e.g. Muhammad Ali Shah"
+                        className="h-9 text-xs"
+                      />
+                    </div>
 
-            <div className="space-y-2 rounded-lg border border-blue-100 bg-blue-50/40 p-3">
-              <CompanyPicker
-                label="Company / Owner (Master Data) *"
-                value={selectedCompanyId}
-                onValueChange={setSelectedCompanyId}
-                placeholder="Search Company Management records"
-                createButtonPlacement="both"
-              />
-              {selectedCompanyId ? (
-                <div className="rounded-lg border bg-white p-3 text-[10px] shadow-sm">
-                  <div className="mb-2 flex items-center justify-between gap-2 border-b pb-2">
-                    <div className="font-black uppercase tracking-wide text-slate-700">Master Data Profile</div>
-                    <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700">{loadingSelectedCompany ? "Loading" : "Linked"}</span>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Father / Spouse Name</Label>
+                      <Input
+                        value={fatherOrSpouseName}
+                        onChange={(e) => setFatherOrSpouseName(e.target.value)}
+                        placeholder="e.g. Shah Zaman"
+                        className="h-9 text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Gender *</Label>
+                      <select
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-xs shadow-sm"
+                        value={gender}
+                        onChange={(e) => setGender(e.target.value)}
+                      >
+                        {genderOptions.map((g) => (
+                          <option key={g} value={g}>{g}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Date of Birth</Label>
+                      <Input
+                        type="date"
+                        value={dateOfBirth}
+                        onChange={(e) => setDateOfBirth(e.target.value)}
+                        className="h-9 text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">CNIC / Passport / National ID</Label>
+                      <Input
+                        value={nationalId}
+                        onChange={(e) => setNationalId(e.target.value)}
+                        placeholder="e.g. 54400-1234567-1"
+                        className="h-9 text-xs font-mono"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Contact Phone Number *</Label>
+                      <Input
+                        value={contactPhone}
+                        onChange={(e) => setContactPhone(e.target.value)}
+                        placeholder="e.g. +92 300 1234567"
+                        className="h-9 text-xs font-mono"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Emergency Contact Phone</Label>
+                      <Input
+                        value={emergencyPhone}
+                        onChange={(e) => setEmergencyPhone(e.target.value)}
+                        placeholder="e.g. +92 312 9876543"
+                        className="h-9 text-xs font-mono"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Personal Email Address</Label>
+                      <Input
+                        type="email"
+                        value={personalEmail}
+                        onChange={(e) => setPersonalEmail(e.target.value)}
+                        placeholder="e.g. employee@company.com"
+                        className="h-9 text-xs"
+                      />
+                    </div>
                   </div>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <div><span className="text-slate-400">Company:</span> <b>{companyValue(selectedCompany?.name)}</b></div>
-                    <div><span className="text-slate-400">Owner:</span> <b>{companyValue(selectedCompany?.owner_name || selectedCompany?.legal_name)}</b></div>
-                    <div><span className="text-slate-400">Country:</span> <b>{companyValue(selectedCompany?.country_name)}</b></div>
-                    <div><span className="text-slate-400">State / City:</span> <b>{companyValue([selectedCompany?.state_name, selectedCompany?.city_name].filter(Boolean).join(" / "))}</b></div>
-                    <div><span className="text-slate-400">Area:</span> <b>{companyValue(selectedCompany?.area_name)}</b></div>
-                    <div><span className="text-slate-400">ZIP:</span> <b>{companyValue(selectedCompany?.zip_code)}</b></div>
-                    <div><span className="text-slate-400">Email:</span> <b>{companyValue(selectedCompanyEmail)}</b></div>
-                    <div><span className="text-slate-400">Phone:</span> <b>{companyValue(selectedCompanyPhone)}</b></div>
-                    <div className="sm:col-span-2"><span className="text-slate-400">Address:</span> <b>{companyValue(selectedCompany?.address)}</b></div>
-                  </div>
                 </div>
-              ) : (
-                <div className="rounded-lg border border-dashed bg-white/70 px-3 py-2 text-[10px] font-semibold text-slate-500">Select a Company Management record. Company, owner, country, city, address, email, and phone will auto-fill from Master Data.</div>
               )}
-            </div>
 
-            <div className="flex items-center gap-3 rounded-lg border bg-slate-50/50 p-3">
-              <div className="flex h-14 w-14 items-center justify-center overflow-hidden rounded-lg border bg-white shadow-xs shrink-0">
-                {previewImageUrl ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={previewImageUrl} alt="Profile preview" className="h-full w-full object-cover" />
+              {/* STEP 2: Employment & Contract Details */}
+              {step === 2 && (
+                <div className="space-y-4">
+                  <div className="grid gap-3.5 sm:grid-cols-2">
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Employee Master Code / ID (Auto)</Label>
+                      <Input value={employeeCode} readOnly className="bg-slate-100 dark:bg-slate-800 font-mono font-bold h-9 text-xs text-blue-600 dark:text-blue-400" />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Employment Type *</Label>
+                      <select
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-xs shadow-sm"
+                        value={employmentType}
+                        onChange={(e) => setEmploymentType(e.target.value)}
+                      >
+                        {employmentTypeOptions.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Department *</Label>
+                      <select
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-xs shadow-sm"
+                        value={department}
+                        onChange={(e) => setDepartment(e.target.value)}
+                      >
+                        {departmentOptions.map((d) => (
+                          <option key={d} value={d}>{d}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Designation / Job Title *</Label>
+                      <select
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-xs shadow-sm"
+                        value={designation}
+                        onChange={(e) => setDesignation(e.target.value)}
+                      >
+                        {designationOptions.map((des) => (
+                          <option key={des} value={des}>{des}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Date of Joining *</Label>
+                      <Input
+                        type="date"
+                        value={joiningDate}
+                        onChange={(e) => setJoiningDate(e.target.value)}
+                        className="h-9 text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Probation Period</Label>
+                      <select
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-xs shadow-sm"
+                        value={probationPeriod}
+                        onChange={(e) => setProbationPeriod(e.target.value)}
+                      >
+                        <option value="None">None (Direct Confirmed)</option>
+                        <option value="1 Month">1 Month</option>
+                        <option value="3 Months">3 Months</option>
+                        <option value="6 Months">6 Months</option>
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Contract End Date (If Applicable)</Label>
+                      <Input
+                        type="date"
+                        value={contractEndDate}
+                        onChange={(e) => setContractEndDate(e.target.value)}
+                        className="h-9 text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 3: Location Information */}
+              {step === 3 && (
+                <div className="space-y-4">
+                  <div className="grid gap-3.5">
+                    <SearchSelect
+                      label={loadingCountries ? "Assigned Country (Loading...)" : "Assigned Country *"}
+                      value={countryId}
+                      placeholder="Select country from master locations"
+                      options={countryOptions}
+                      disabled={loadingCountries}
+                      onValueChange={setCountryId}
+                    />
+
+                    <SearchSelect
+                      label="Branch Type *"
+                      value={branchType}
+                      placeholder="Select branch type"
+                      options={branchTypeSelectOptions}
+                      onValueChange={(v) => {
+                        setBranchType(v as any);
+                        setCountryBranchId("");
+                        setCityBranchId("");
+                      }}
+                    />
+
+                    {branchType === "main" ? (
+                      <SearchSelect
+                        label="Assigned Main Branch *"
+                        value={countryBranchId}
+                        placeholder="Select country main branch"
+                        options={mainBranches.map((b) => ({ value: b.id, label: `${b.name} (${b.code})`, keywords: b.name }))}
+                        disabled={!countryId}
+                        onValueChange={setCountryBranchId}
+                      />
+                    ) : (
+                      <SearchSelect
+                        label="Assigned City Branch *"
+                        value={cityBranchId}
+                        placeholder="Select city branch"
+                        options={cityBranches.map((b) => ({ value: b.id, label: `${b.cityName} - ${b.name} (${b.code})`, keywords: `${b.name} ${b.cityName}` }))}
+                        disabled={!countryId}
+                        onValueChange={setCityBranchId}
+                      />
+                    )}
+
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Branch Code (Auto)</Label>
+                        <Input value={branchCode} readOnly className="bg-slate-100 dark:bg-slate-800 font-mono font-bold h-9 text-xs text-emerald-600 dark:text-emerald-400" />
+                      </div>
+
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Work City (Auto)</Label>
+                        <Input value={cityName || selectedCountry?.name || "-"} readOnly className="bg-slate-100 dark:bg-slate-800 font-bold h-9 text-xs text-slate-800 dark:text-slate-200" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Residential / Present Address</Label>
+                      <Input
+                        value={residentialAddress}
+                        onChange={(e) => setResidentialAddress(e.target.value)}
+                        placeholder="Street address, City, Area"
+                        className="h-9 text-xs"
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 4: Job, Salary & Payroll */}
+              {step === 4 && (
+                <div className="space-y-4">
+                  <div className="grid gap-3.5 sm:grid-cols-2">
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Base Salary / Rate</Label>
+                      <Input
+                        type="number"
+                        value={baseSalary}
+                        onChange={(e) => setBaseSalary(e.target.value)}
+                        placeholder="0.00"
+                        className="h-9 text-xs font-mono"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Salary Currency</Label>
+                      <Input
+                        value={currency}
+                        onChange={(e) => setCurrency(e.target.value)}
+                        placeholder="USD, PKR, AED..."
+                        className="h-9 text-xs font-bold"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Payment Frequency</Label>
+                      <select
+                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-xs shadow-sm"
+                        value={paymentFrequency}
+                        onChange={(e) => setPaymentFrequency(e.target.value)}
+                      >
+                        {paymentFrequencyOptions.map((pf) => (
+                          <option key={pf} value={pf}>{pf}</option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Bank Name</Label>
+                      <Input
+                        value={bankName}
+                        onChange={(e) => setBankName(e.target.value)}
+                        placeholder="e.g. Meezan Bank / HBL"
+                        className="h-9 text-xs"
+                      />
+                    </div>
+
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Account Number / IBAN</Label>
+                      <Input
+                        value={accountOrIban}
+                        onChange={(e) => setAccountOrIban(e.target.value)}
+                        placeholder="PK36MEZN00010203040506"
+                        className="h-9 text-xs font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  {/* System ERP Login Access Toggle */}
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4 space-y-3 bg-slate-50/60 dark:bg-slate-900/60">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Key className="h-4 w-4 text-emerald-600" />
+                        <div>
+                          <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">Enable System ERP Login Access</h3>
+                          <p className="text-[11px] text-slate-500">Allow this employee to log into the ERP software with assigned role permissions</p>
+                        </div>
+                      </div>
+
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={enableErpLogin}
+                          onChange={(e) => setEnableErpLogin(e.target.checked)}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
+                      </label>
+                    </div>
+
+                    {enableErpLogin && (
+                      <div className="pt-3 border-t grid gap-3 sm:grid-cols-2">
+                        <div className="space-y-1.5 sm:col-span-2">
+                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">System Role Assignment *</Label>
+                          <select
+                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-xs shadow-sm"
+                            value={role}
+                            onChange={(e) => setRole(e.target.value as EnterpriseRole)}
+                          >
+                            {roleOptions.map((r) => (
+                              <option key={r.value} value={r.value}>{r.label} — ({r.help})</option>
+                            ))}
+                          </select>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">ERP System Password *</Label>
+                          <div className="relative">
+                            <Input
+                              type={showPassword ? "text" : "password"}
+                              value={password}
+                              onChange={(e) => setPassword(e.target.value)}
+                              placeholder="••••••••"
+                              className="h-9 text-xs pr-8"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowPassword(!showPassword)}
+                              className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
+                            >
+                              {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                            </button>
+                          </div>
+                        </div>
+
+                        <div className="space-y-1.5">
+                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Confirm Password *</Label>
+                          <Input
+                            type="password"
+                            value={confirmPassword}
+                            onChange={(e) => setConfirmPassword(e.target.value)}
+                            placeholder="••••••••"
+                            className="h-9 text-xs"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Step Navigation Buttons */}
+              <div className="flex items-center justify-between pt-4 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={prev}
+                  disabled={step === 1}
+                  className="gap-1 text-xs"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                  <span>Previous</span>
+                </Button>
+
+                {step < 4 ? (
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={next}
+                    disabled={!isStepValid(step)}
+                    className="gap-1 text-xs bg-primary text-white"
+                  >
+                    <span>Next Step</span>
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
                 ) : (
-                  <Upload className="h-4 w-4 text-slate-400" aria-hidden />
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={finish}
+                    disabled={saving || !isStepValid(step)}
+                    className="gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5"
+                  >
+                    <UserCheck className="h-4 w-4" />
+                    <span>{saving ? "Saving..." : editUserId ? "Update Employee" : "Register Employee"}</span>
+                  </Button>
                 )}
               </div>
-              <div className="flex-1 min-w-0">
-                <div className="text-[10px] font-bold text-slate-700 mb-2">Profile Picture</div>
-                <Label className="cursor-pointer flex w-max items-center justify-center h-8 px-3 rounded-full bg-slate-100 hover:bg-slate-200 border text-slate-500 shadow-sm transition gap-1.5 text-[10px] font-semibold">
-                  <Paperclip className="h-3 w-3" />
-                  <span>Attach</span>
-                  <Input
-                    type="file"
-                    accept="image/*"
-                    onChange={(event) => {
-                      const file = event.target.files?.[0] ?? null;
-                      setProfileFile(file);
-                      if (!file) {
-                        setPreviewImageUrl("");
-                        return;
-                      }
-                      setPreviewImageUrl(URL.createObjectURL(file));
-                    }}
-                    className="hidden"
-                  />
-                </Label>
-              </div>
-            </div>
-
-            <div className="grid gap-3.5 sm:grid-cols-2">
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold">Gender *</Label>
-                <select
-                  className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                  value={gender}
-                  onChange={(e) => setGender(e.target.value)}
-                >
-                  <option value="">Select</option>
-                  {genderOptions.map((g) => (
-                    <option key={g} value={g}>{g}</option>
-                  ))}
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold">Full Name *</Label>
-                <Input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Owner / user name from Company Master" readOnly={Boolean(selectedCompany)} className={`h-9 text-xs ${selectedCompany ? "bg-slate-50 font-semibold" : ""}`} />
-              </div>
-              <div className="space-y-1.5 sm:col-span-2">
-                <Label className="text-[10px] font-bold">Account Registration Number (Auto)</Label>
-                <Input value={accountRegNo} readOnly className="bg-slate-50 font-bold font-mono h-9 text-xs" />
-              </div>
-            </div>
-          </div>
-
-          {/* Card 2: Scope Flow */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
-            <div className="flex items-center gap-2 border-b pb-1.5">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-50 text-[10px] font-bold text-blue-655">2</span>
-              <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Scope & Assignment</h2>
-            </div>
-
-            <div className="grid gap-3.5 md:grid-cols-1">
-              <SearchSelect
-                label={loadingCountries ? "Country (Loading...)" : "Country *"}
-                value={countryId}
-                placeholder="Select country"
-                options={countryOptions}
-                disabled={loadingCountries || role === "super_admin"}
-                onValueChange={setCountryId}
-              />
-
-              <SearchSelect
-                label="Branch Type *"
-                value={branchType}
-                placeholder="Select branch type"
-                options={branchTypeSelectOptions}
-                disabled={role === "super_admin" || role === "country_admin" || role === "country_user"}
-                onValueChange={(v) => {
-                  setBranchType(v as any);
-                  setCountryBranchId("");
-                  setCityBranchId("");
-                }}
-              />
-
-              {branchType === "main" ? (
-                <SearchSelect
-                  label="Branch Name *"
-                  value={countryBranchId}
-                  placeholder="Select main branch"
-                  options={mainBranchOptions}
-                  disabled={role === "super_admin" || role === "country_admin" || role === "country_user" || !countryId}
-                  onValueChange={setCountryBranchId}
-                />
-              ) : branchType === "city" ? (
-                <SearchSelect
-                  label="Branch Name *"
-                  value={cityBranchId}
-                  placeholder="Select city branch"
-                  options={cityBranchOptions}
-                  disabled={role === "super_admin" || role === "country_admin" || role === "country_user" || !countryId}
-                  onValueChange={setCityBranchId}
-                />
-              ) : (
-                <div className="rounded-lg border bg-slate-50/60 p-2.5 text-[10px] font-semibold text-slate-500 text-center">
-                  Select Country & Branch Type above.
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-bold">Branch Code (Auto)</Label>
-                  <Input value={branchCode} readOnly className="bg-slate-50 font-bold font-mono h-9 text-xs text-blue-600" />
-                </div>
-
-                <div className="space-y-1.5">
-                  <Label className="text-[10px] font-bold">City (Auto)</Label>
-                  <Input value={cityName} readOnly className="bg-slate-50 font-bold h-9 text-xs text-slate-800" />
-                </div>
-              </div>
-
-              <SearchSelect
-                label="Role *"
-                value={role}
-                placeholder="Select role"
-                options={roleSelectOptions}
-                onValueChange={(v) => setRole(v as EnterpriseRole)}
-              />
-            </div>
-          </div>
-
-          {/* Card 3: Security & Credentials */}
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm space-y-3">
-            <div className="flex items-center gap-2 border-b pb-1.5">
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-50 text-[10px] font-bold text-blue-660">3</span>
-              <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wide">Credentials & Permissions</h2>
-            </div>
-
-            <div className="grid gap-3.5 md:grid-cols-1">
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold">User ID *</Label>
-                <div className="flex gap-2">
-                  <Input value={userCode} onChange={(e) => setUserCode(e.target.value)} placeholder="User login ID" className="h-9 text-xs" />
-                  <Button type="button" variant="outline" size="icon" aria-label="Regenerate ID" onClick={generateUserCode} className="flex-shrink-0 h-9 w-9">
-                    <RefreshCcw className="h-3.5 w-3.5" aria-hidden />
-                  </Button>
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold">{editUserId ? "Password (leave blank to keep current)" : "Password *"}</Label>
-                <Input value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Password" type="password" className="h-9 text-xs" />
-              </div>
-              <div className="space-y-1.5">
-                <Label className="text-[10px] font-bold">{editUserId ? "Confirm Password" : "Confirm Password *"}</Label>
-                <Input value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} placeholder="Confirm Password" type="password" className="h-9 text-xs" />
-              </div>
-            </div>
-
-            <div className="grid gap-3 grid-cols-1 pt-1.5">
-              {/* Perm groups */}
-              <div className="rounded-lg border bg-slate-50/60 p-3">
-                <div className="mb-2 text-[9px] font-black uppercase tracking-wider text-slate-500">Permission Groups</div>
-                <Input className="h-8 text-xs mb-2 bg-white" value={permQuery} onChange={(e) => setPermQuery(e.target.value)} placeholder="Search group..." />
-                <div className="max-h-[140px] overflow-y-auto rounded-lg border bg-white text-xs">
-                  {filteredGroups.map(([group, perms]) => {
-                    const active = group === activePermGroup;
-                    const count = perms.filter((p) => selectedPermissions.includes(p)).length;
-                    return (
-                      <button
-                        key={group}
-                        type="button"
-                        onClick={() => setActivePermGroup(group)}
-                        className={`flex w-full items-center justify-between gap-2 px-2.5 py-1.5 text-left hover:bg-slate-50 transition-colors border-b last:border-b-0 ${active ? "bg-slate-100/60 font-bold text-slate-900" : "text-slate-600"}`}
-                      >
-                        <span className="truncate">{group}</span>
-                        <span className="text-[10px] font-bold font-mono px-1 bg-slate-200/50 rounded">{count}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Permissions items */}
-              <div className="rounded-lg border bg-slate-50/60 p-3">
-                <div className="mb-2 text-[9px] font-black uppercase tracking-wider text-slate-500">Granted Permissions ({activePermGroup})</div>
-                <div className="max-h-[180px] overflow-y-auto rounded-lg border bg-white p-1.5">
-                  {activeGroupPermissions.length ? (
-                    <div className="space-y-0.5">
-                      {activeGroupPermissions.map((perm) => {
-                        const checked = selectedPermissions.includes(perm);
-                        return (
-                          <label key={perm} className="flex items-center gap-2 rounded px-2 py-1.5 hover:bg-slate-50 cursor-pointer text-xs">
-                            <input
-                              type="checkbox"
-                              className="h-3.5 w-3.5 rounded text-primary"
-                              checked={checked}
-                              onChange={() => togglePermission(perm)}
-                            />
-                            <span className="font-semibold text-slate-700 truncate">{perm}</span>
-                          </label>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <div className="p-3 text-center text-xs text-slate-400">No permissions match filter query.</div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Unified Save & Action Controls */}
-          <div className="flex items-center justify-end gap-3 pt-1">
-            <Button
-              variant="outline"
-              type="button"
-              onClick={() => router.push("/dashboard/new-entry/users/journal-report")}
-              className="h-10 text-xs font-bold border-slate-300"
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={finish}
-              disabled={saving}
-              className="bg-primary hover:bg-primary/95 text-white h-10 px-6 text-xs font-bold shadow-md shadow-blue-100"
-            >
-              {saving ? "Saving..." : editUserId ? "Save Changes" : "Register User"}
-            </Button>
-          </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Right Side: High-fidelity Live Report Preview */}
-        <div className="lg:col-span-7 h-fit lg:sticky lg:top-16 space-y-3">
-          <UserLiveReportPanel
-            fullName={fullName}
-            gender={gender}
-            accountRegNo={accountRegNo}
-            role={role}
-            userCode={userCode || "PK-QUETTA-0531"}
-            hideHeader={true}
-            rawPassword={password || "admin123"}
-            status={editUserId ? "Active" : "Draft"}
-            selectedCountryName={selectedCountry?.name}
-            selectedCountryCode={selectedCountry?.iso2 ?? selectedCountry?.iso3 ?? undefined}
-            selectedBranchName={branchType === "main" ? selectedMainBranch?.name : branchType === "city" ? `${selectedCityBranch?.city_name} - ${selectedCityBranch?.name}` : "Global"}
-            selectedBranchCode={branchCode}
-            selectedBranchType={branchType === "main" ? "Main Branch" : branchType === "city" ? "City Branch" : "Global"}
-            selectedCityName={cityName}
-            selectedPermissions={selectedPermissions}
-            onBack={() => router.push("/dashboard/new-entry/users/journal-report")}
-          />
+        {/* Right Side (Live Real-Time Employee Profile Card & Summary) - 5 cols */}
+        <div className="space-y-4 lg:col-span-5">
+          <Card className="shadow-sm border-slate-200 dark:border-slate-800 bg-slate-900 text-white overflow-hidden">
+            <div className="border-b border-slate-800 px-5 py-4 bg-gradient-to-r from-slate-900 to-slate-850 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="h-4 w-4 text-emerald-400" />
+                <h3 className="font-bold text-sm">Live Employee Profile Preview</h3>
+              </div>
+              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/30">
+                {employeeCode || "EMP-1001"}
+              </span>
+            </div>
+
+            <CardContent className="p-5 space-y-5">
+              {/* Profile Main Header */}
+              <div className="flex items-center gap-4 border-b border-slate-800 pb-4">
+                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-emerald-600 text-white text-xl font-black shadow-inner border border-emerald-400/40">
+                  {fullName ? fullName.substring(0, 2).toUpperCase() : "EM"}
+                </div>
+                <div>
+                  <h4 className="text-base font-bold text-white">{fullName || "Employee Name"}</h4>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs text-emerald-400 font-semibold">{designation}</span>
+                    <span className="text-slate-500">•</span>
+                    <span className="text-xs text-slate-300">{department}</span>
+                  </div>
+                  <div className="mt-1.5 flex items-center gap-2">
+                    <span className="rounded bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-300">
+                      {employmentType}
+                    </span>
+                    <span className="rounded bg-blue-500/20 px-2 py-0.5 text-[10px] font-bold text-blue-300 border border-blue-500/30">
+                      Code: {branchCode || "MAIN-001"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Profile Quick Summary Grid */}
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="rounded-lg bg-slate-800/60 p-2.5 border border-slate-800">
+                  <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Joining Date</span>
+                  <span className="font-semibold text-slate-100 mt-0.5 block">{joiningDate || "-"}</span>
+                </div>
+
+                <div className="rounded-lg bg-slate-800/60 p-2.5 border border-slate-800">
+                  <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Probation</span>
+                  <span className="font-semibold text-slate-100 mt-0.5 block">{probationPeriod}</span>
+                </div>
+
+                <div className="rounded-lg bg-slate-800/60 p-2.5 border border-slate-800">
+                  <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Base Salary</span>
+                  <span className="font-semibold text-emerald-400 mt-0.5 block">{baseSalary} {currency} ({paymentFrequency})</span>
+                </div>
+
+                <div className="rounded-lg bg-slate-800/60 p-2.5 border border-slate-800">
+                  <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">ERP Access</span>
+                  <span className={`font-semibold mt-0.5 block ${enableErpLogin ? "text-emerald-400" : "text-slate-400"}`}>
+                    {enableErpLogin ? `Active (${role})` : "Disabled"}
+                  </span>
+                </div>
+              </div>
+
+              {/* Contact Details */}
+              <div className="space-y-2 border-t border-slate-800 pt-3 text-xs">
+                <div className="flex items-center justify-between text-slate-300">
+                  <span className="text-slate-400">Phone:</span>
+                  <span className="font-mono font-semibold">{contactPhone || "-"}</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-300">
+                  <span className="text-slate-400">Email:</span>
+                  <span className="font-mono">{personalEmail || `${employeeCode.toLowerCase()}@employees.damaan.local`}</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-300">
+                  <span className="text-slate-400">CNIC / ID:</span>
+                  <span className="font-mono">{nationalId || "-"}</span>
+                </div>
+                <div className="flex items-center justify-between text-slate-300">
+                  <span className="text-slate-400">Assigned Branch:</span>
+                  <span className="font-semibold text-emerald-400">{branchCode ? `${branchCode}` : "Main Country Branch"}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Existing Employees Directory Quick List */}
+          <Card className="shadow-sm">
+            <CardHeader className="py-3 px-4 border-b bg-slate-50/50 dark:bg-slate-900/50 flex flex-row items-center justify-between">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5 text-blue-600" />
+                <span>Recent Employees ({employeesList.length})</span>
+              </CardTitle>
+
+              <div className="relative w-36">
+                <Search className="absolute left-2 top-2 h-3 w-3 text-slate-400" />
+                <Input
+                  placeholder="Search..."
+                  value={sidebarFilter}
+                  onChange={(e) => setSidebarFilter(e.target.value)}
+                  className="h-7 text-[11px] pl-7"
+                />
+              </div>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="max-h-[300px] overflow-y-auto divide-y">
+                {employeesLoading ? (
+                  <div className="p-4 text-center text-xs text-slate-400">Loading employees...</div>
+                ) : filteredEmployees.length === 0 ? (
+                  <div className="p-4 text-center text-xs text-slate-400">No employees registered yet.</div>
+                ) : (
+                  filteredEmployees.slice(0, 10).map((emp: any) => (
+                    <div
+                      key={emp.userId || emp.id}
+                      onClick={() => fetchSpecificUser(emp.userId || emp.id)}
+                      className="p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors flex items-center justify-between"
+                    >
+                      <div>
+                        <div className="font-semibold text-xs text-slate-900 dark:text-slate-100">{emp.fullName}</div>
+                        <div className="text-[10px] text-slate-500 font-mono">
+                          {emp.userCode} • <span className="text-emerald-600 font-bold">{emp.branchCode || "MAIN"}</span>
+                        </div>
+                      </div>
+                      <Badge variant="outline" className="text-[10px]">
+                        {emp.role}
+                      </Badge>
+                    </div>
+                  ))
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
   );
 }
 
-export function UserRegistrationWizard(props: { userIdProp?: string }) {
+export function UserRegistrationWizard({ userIdProp }: { userIdProp?: string } = {}) {
   return (
-    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading User Registration...</div>}>
-      <UserRegistrationWizardContent {...props} />
+    <Suspense fallback={<div className="p-8 text-slate-400">Loading Employee Master Form...</div>}>
+      <UserRegistrationWizardContent userIdProp={userIdProp} />
     </Suspense>
   );
 }
-
-
-
-
-
-
