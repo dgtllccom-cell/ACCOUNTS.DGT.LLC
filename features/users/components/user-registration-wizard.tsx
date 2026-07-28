@@ -6,12 +6,10 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
-  RefreshCcw,
   ShieldCheck,
   Upload,
   UserPlus,
   MapPin,
-  ClipboardList,
   Search,
   Building2,
   Paperclip,
@@ -21,16 +19,19 @@ import {
   Phone,
   Mail,
   Calendar,
-  CreditCard,
-  Building,
   Key,
   Eye,
   EyeOff,
   Printer,
   FileText,
-  Lock,
   Sparkles,
-  Users
+  Users,
+  GitBranch,
+  Globe2,
+  CheckCircle2,
+  Lock,
+  Layers,
+  Building
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,9 +42,8 @@ import type { LocationCountry } from "@/features/locations/location-api";
 import { listCities, listCountries, type LocationCity } from "@/features/locations/location-api";
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { enterpriseRolePermissions } from "@/lib/permissions/enterprise-roles";
-import { apiGet, apiPost } from "@/lib/api/client";
+import { apiPost } from "@/lib/api/client";
 import { normalizeUserCode } from "@/lib/services/user-identity-service";
-import { UserLiveReportPanel } from "./user-live-report-panel";
 import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
 
 type MainBranchRow = { id: string; name: string; code: string; local_currency: string; is_main: boolean; city_id?: string | null };
@@ -111,10 +111,6 @@ const roleOptions: Array<{ value: EnterpriseRole; label: string; help: string }>
   { value: "auditor_viewer", label: "Auditor / Viewer", help: "Read-only scope." }
 ];
 
-function isUuid(value: string) {
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-}
-
 function makeAutoEmployeeCode() {
   const rand = Math.floor(1000 + Math.random() * 8999);
   return `EMP-${rand}`;
@@ -136,12 +132,11 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const [banner, setBanner] = useState<Banner>(null);
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState<WizardStep>(1);
-  const [createdResult, setCreatedResult] = useState<null | { userId: string; userCode: string; createdAt: string }>(null);
 
   const [previewImageUrl, setPreviewImageUrl] = useState<string>("");
   const [profileFile, setProfileFile] = useState<File | null>(null);
 
-  // STEP 1: Personal Information
+  // STEP 1: Personal & Identity Information
   const [fullName, setFullName] = useState("");
   const [fatherOrSpouseName, setFatherOrSpouseName] = useState("");
   const [gender, setGender] = useState("Male");
@@ -381,7 +376,6 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
   async function finish() {
     setBanner(null);
-    setCreatedResult(null);
 
     if (!fullName || fullName.trim().length < 2) {
       setBanner({ tone: "err", text: "Employee Full Name must be at least 2 characters." });
@@ -467,7 +461,6 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
       }
 
       setBanner({ tone: "ok", text: isEdit ? "Employee record updated successfully." : "Employee registered successfully." });
-      setCreatedResult({ userId: res.userId, userCode: res.userCode, createdAt: new Date().toISOString() });
       fetchEmployees();
     } catch (e: any) {
       setBanner({ tone: "err", text: e?.message || "Employee operation failed." });
@@ -478,29 +471,29 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
   const steps = [
     { number: 1 as const, label: "Personal Info", icon: <UserPlus className="h-4 w-4" /> },
-    { number: 2 as const, label: "Employment & Contract", icon: <Briefcase className="h-4 w-4" /> },
+    { number: 2 as const, label: "Employment Details", icon: <Briefcase className="h-4 w-4" /> },
     { number: 3 as const, label: "Location & Branch", icon: <MapPin className="h-4 w-4" /> },
     { number: 4 as const, label: "Salary & ERP Access", icon: <BadgeDollarSign className="h-4 w-4" /> }
   ];
 
   return (
     <div className="space-y-6">
-      {/* Header Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-4">
+      {/* Header Bar aligned with ERP theme */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
         <div>
-          <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary">
-            <Users className="h-4 w-4" />
-            <span>Employee Management System</span>
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+            <Users className="h-4 w-4 text-emerald-600" />
+            <span>Employee Management Module</span>
           </div>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             {editUserId ? "Edit Employee Master Record" : "Employee Master Form"}
           </h1>
-          <p className="text-xs text-slate-500">
-            Register and manage company employees: Managers, Supervisors, Accountants, Sales Staff, Cashiers, Drivers, and Workers.
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Comprehensive Employee Management System for Managers, Supervisors, Accountants, Sales Staff, Cashiers, Drivers, and Workers.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {editUserId && (
             <Button
               variant="outline"
@@ -512,15 +505,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                 setStep(1);
                 setBanner(null);
               }}
-              className="gap-1.5 text-xs"
+              className="gap-1.5 text-xs font-semibold"
             >
-              <UserPlus className="h-3.5 w-3.5" />
-              <span>+ Register New Employee</span>
+              <UserPlus className="h-3.5 w-3.5 text-slate-500" />
+              <span>+ New Employee</span>
             </Button>
           )}
 
           <Button
-            variant="outline"
             size="sm"
             onClick={() => {
               openUserA4ReportWindow({
@@ -541,10 +533,10 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                 activityCounts: { logins: 1, transactions: 0, roznamcha: 0, purchases: 0, payments: 0, accounts: 0, approvals: 0, edits: 0 }
               });
             }}
-            className="gap-1.5 text-xs bg-slate-900 text-white hover:bg-slate-800"
+            className="gap-1.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-sm"
           >
             <Printer className="h-3.5 w-3.5 text-emerald-400" />
-            <span>Print Employee A4 Report</span>
+            <span>Print A4 Employee Report</span>
           </Button>
         </div>
       </div>
@@ -562,18 +554,18 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               onClick={() => setStep(s.number)}
               className={`flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${
                 isActive
-                  ? "border-primary bg-primary/5 text-primary shadow-sm ring-1 ring-primary/20"
+                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-sm ring-1 ring-emerald-500/30"
                   : isDone
-                  ? "border-emerald-200 bg-emerald-50/50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/20"
-                  : "border-slate-200 bg-card text-slate-500 hover:border-slate-300"
+                  ? "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300"
+                  : "border-slate-200 dark:border-slate-800 bg-card text-slate-500 hover:border-slate-300"
               }`}
             >
               <div
-                className={`grid h-8 w-8 place-items-center rounded-lg text-xs font-bold ${
+                className={`grid h-8 w-8 place-items-center rounded-lg text-xs font-bold transition-colors ${
                   isActive
-                    ? "bg-primary text-white"
-                    : isDone
                     ? "bg-emerald-600 text-white"
+                    : isDone
+                    ? "bg-slate-900 text-emerald-400 dark:bg-slate-800"
                     : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
                 }`}
               >
@@ -581,55 +573,64 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               </div>
               <div className="min-w-0 flex-1">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Step {s.number}</div>
-                <div className="truncate text-xs font-semibold">{s.label}</div>
+                <div className="truncate text-xs font-bold text-slate-900 dark:text-slate-100">{s.label}</div>
               </div>
             </button>
           );
         })}
       </div>
 
-      {/* Banner */}
+      {/* Banner Notification */}
       {banner && (
         <div
-          className={`flex items-center justify-between rounded-lg p-3 text-xs font-medium ${
-            banner.tone === "ok" ? "bg-emerald-50 text-emerald-800 border border-emerald-200" : "bg-red-50 text-red-800 border border-red-200"
+          className={`flex items-center justify-between rounded-xl p-3.5 text-xs font-semibold ${
+            banner.tone === "ok"
+              ? "bg-emerald-50 text-emerald-900 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-200 dark:border-emerald-800"
+              : "bg-red-50 text-red-900 border border-red-200 dark:bg-red-950/40 dark:text-red-200 dark:border-red-800"
           }`}
         >
-          <span>{banner.text}</span>
-          <button type="button" onClick={() => setBanner(null)} className="text-slate-500 hover:text-slate-700">
+          <div className="flex items-center gap-2">
+            {banner.tone === "ok" ? <CheckCircle2 className="h-4 w-4 text-emerald-600" /> : <Lock className="h-4 w-4 text-red-600" />}
+            <span>{banner.text}</span>
+          </div>
+          <button type="button" onClick={() => setBanner(null)} className="text-slate-400 hover:text-slate-600">
             ×
           </button>
         </div>
       )}
 
-      {/* Split Screen Layout */}
+      {/* Main Split-Screen Section */}
       <div className="grid gap-6 lg:grid-cols-12">
-        {/* Left Side (Form Wizard Steps) - 7 cols */}
+        {/* Left Side Form Wizard (7 Columns) */}
         <div className="space-y-4 lg:col-span-7">
-          <Card className="shadow-sm">
-            <CardHeader className="border-b bg-slate-50/50 dark:bg-slate-900/50 py-3.5">
-              <CardTitle className="text-sm font-semibold flex items-center gap-2">
+          <Card className="rounded-xl border border-slate-200 dark:border-slate-800 bg-card shadow-sm overflow-hidden">
+            <CardHeader className="border-b bg-slate-900 text-white px-5 py-3.5 flex flex-row items-center justify-between">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-slate-100">
                 {steps[step - 1].icon}
                 <span>Step {step}: {steps[step - 1].label}</span>
               </CardTitle>
+              <span className="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
+                {employeeCode}
+              </span>
             </CardHeader>
+
             <CardContent className="p-5 space-y-4">
-              {/* STEP 1: Personal Information */}
+              {/* STEP 1: Personal & Identity Information */}
               {step === 1 && (
                 <div className="space-y-4">
-                  <div className="grid gap-3.5 sm:grid-cols-2">
+                  <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Employee Full Name *</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Employee Full Name *</Label>
                       <Input
                         value={fullName}
                         onChange={(e) => setFullName(e.target.value)}
                         placeholder="e.g. Muhammad Ali Shah"
-                        className="h-9 text-xs"
+                        className="h-9 text-xs font-medium"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Father / Spouse Name</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Father / Spouse Name</Label>
                       <Input
                         value={fatherOrSpouseName}
                         onChange={(e) => setFatherOrSpouseName(e.target.value)}
@@ -639,9 +640,9 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Gender *</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Gender *</Label>
                       <select
-                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-xs shadow-sm"
+                        className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-xs shadow-sm font-medium"
                         value={gender}
                         onChange={(e) => setGender(e.target.value)}
                       >
@@ -652,7 +653,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Date of Birth</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Date of Birth</Label>
                       <Input
                         type="date"
                         value={dateOfBirth}
@@ -662,7 +663,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">CNIC / Passport / National ID</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">CNIC / Passport / National ID</Label>
                       <Input
                         value={nationalId}
                         onChange={(e) => setNationalId(e.target.value)}
@@ -672,7 +673,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Contact Phone Number *</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Contact Phone Number *</Label>
                       <Input
                         value={contactPhone}
                         onChange={(e) => setContactPhone(e.target.value)}
@@ -682,7 +683,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Emergency Contact Phone</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Emergency Contact Phone</Label>
                       <Input
                         value={emergencyPhone}
                         onChange={(e) => setEmergencyPhone(e.target.value)}
@@ -692,7 +693,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Personal Email Address</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Personal Email Address</Label>
                       <Input
                         type="email"
                         value={personalEmail}
@@ -708,16 +709,16 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               {/* STEP 2: Employment & Contract Details */}
               {step === 2 && (
                 <div className="space-y-4">
-                  <div className="grid gap-3.5 sm:grid-cols-2">
+                  <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Employee Master Code / ID (Auto)</Label>
-                      <Input value={employeeCode} readOnly className="bg-slate-100 dark:bg-slate-800 font-mono font-bold h-9 text-xs text-blue-600 dark:text-blue-400" />
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Employee Master Code / ID (Auto)</Label>
+                      <Input value={employeeCode} readOnly className="bg-slate-100 dark:bg-slate-900 font-mono font-bold h-9 text-xs text-emerald-600 dark:text-emerald-400 border-slate-200 dark:border-slate-700" />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Employment Type *</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Employment Type *</Label>
                       <select
-                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-xs shadow-sm"
+                        className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-xs shadow-sm font-medium"
                         value={employmentType}
                         onChange={(e) => setEmploymentType(e.target.value)}
                       >
@@ -728,9 +729,9 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Department *</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Department *</Label>
                       <select
-                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-xs shadow-sm"
+                        className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-xs shadow-sm font-medium"
                         value={department}
                         onChange={(e) => setDepartment(e.target.value)}
                       >
@@ -741,9 +742,9 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Designation / Job Title *</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Designation / Job Title *</Label>
                       <select
-                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-xs shadow-sm"
+                        className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-xs shadow-sm font-medium"
                         value={designation}
                         onChange={(e) => setDesignation(e.target.value)}
                       >
@@ -754,23 +755,23 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Date of Joining *</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Date of Joining *</Label>
                       <Input
                         type="date"
                         value={joiningDate}
                         onChange={(e) => setJoiningDate(e.target.value)}
-                        className="h-9 text-xs"
+                        className="h-9 text-xs font-medium"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Probation Period</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Probation Period</Label>
                       <select
-                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-xs shadow-sm"
+                        className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-xs shadow-sm font-medium"
                         value={probationPeriod}
                         onChange={(e) => setProbationPeriod(e.target.value)}
                       >
-                        <option value="None">None (Direct Confirmed)</option>
+                        <option value="None">None (Confirmed)</option>
                         <option value="1 Month">1 Month</option>
                         <option value="3 Months">3 Months</option>
                         <option value="6 Months">6 Months</option>
@@ -778,7 +779,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Contract End Date (If Applicable)</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Contract End Date (If Contracted)</Label>
                       <Input
                         type="date"
                         value={contractEndDate}
@@ -793,7 +794,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               {/* STEP 3: Location Information */}
               {step === 3 && (
                 <div className="space-y-4">
-                  <div className="grid gap-3.5">
+                  <div className="grid gap-4">
                     <SearchSelect
                       label={loadingCountries ? "Assigned Country (Loading...)" : "Assigned Country *"}
                       value={countryId}
@@ -837,18 +838,18 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
                     <div className="grid grid-cols-2 gap-3">
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Branch Code (Auto)</Label>
-                        <Input value={branchCode} readOnly className="bg-slate-100 dark:bg-slate-800 font-mono font-bold h-9 text-xs text-emerald-600 dark:text-emerald-400" />
+                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Branch Code (Auto)</Label>
+                        <Input value={branchCode} readOnly className="bg-slate-100 dark:bg-slate-900 font-mono font-bold h-9 text-xs text-emerald-600 dark:text-emerald-400 border-slate-200 dark:border-slate-700" />
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Work City (Auto)</Label>
-                        <Input value={cityName || selectedCountry?.name || "-"} readOnly className="bg-slate-100 dark:bg-slate-800 font-bold h-9 text-xs text-slate-800 dark:text-slate-200" />
+                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Work City (Auto)</Label>
+                        <Input value={cityName || selectedCountry?.name || "-"} readOnly className="bg-slate-100 dark:bg-slate-900 font-bold h-9 text-xs text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700" />
                       </div>
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Residential / Present Address</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Residential / Present Address</Label>
                       <Input
                         value={residentialAddress}
                         onChange={(e) => setResidentialAddress(e.target.value)}
@@ -863,20 +864,20 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               {/* STEP 4: Job, Salary & Payroll */}
               {step === 4 && (
                 <div className="space-y-4">
-                  <div className="grid gap-3.5 sm:grid-cols-2">
+                  <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Base Salary / Rate</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Base Salary / Pay Amount</Label>
                       <Input
                         type="number"
                         value={baseSalary}
                         onChange={(e) => setBaseSalary(e.target.value)}
                         placeholder="0.00"
-                        className="h-9 text-xs font-mono"
+                        className="h-9 text-xs font-mono font-bold"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Salary Currency</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Salary Currency</Label>
                       <Input
                         value={currency}
                         onChange={(e) => setCurrency(e.target.value)}
@@ -886,9 +887,9 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Payment Frequency</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Payment Frequency</Label>
                       <select
-                        className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-xs shadow-sm"
+                        className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-xs shadow-sm font-medium"
                         value={paymentFrequency}
                         onChange={(e) => setPaymentFrequency(e.target.value)}
                       >
@@ -899,7 +900,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Bank Name</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Bank Name</Label>
                       <Input
                         value={bankName}
                         onChange={(e) => setBankName(e.target.value)}
@@ -909,7 +910,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Account Number / IBAN</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Account Number / IBAN</Label>
                       <Input
                         value={accountOrIban}
                         onChange={(e) => setAccountOrIban(e.target.value)}
@@ -920,10 +921,10 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                   </div>
 
                   {/* System ERP Login Access Toggle */}
-                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4 space-y-3 bg-slate-50/60 dark:bg-slate-900/60">
+                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4 space-y-3 bg-slate-50/70 dark:bg-slate-900/70">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Key className="h-4 w-4 text-emerald-600" />
+                        <Key className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                         <div>
                           <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">Enable System ERP Login Access</h3>
                           <p className="text-[11px] text-slate-500">Allow this employee to log into the ERP software with assigned role permissions</p>
@@ -942,11 +943,11 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     {enableErpLogin && (
-                      <div className="pt-3 border-t grid gap-3 sm:grid-cols-2">
+                      <div className="pt-3 border-t border-slate-200 dark:border-slate-800 grid gap-3 sm:grid-cols-2">
                         <div className="space-y-1.5 sm:col-span-2">
-                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">System Role Assignment *</Label>
+                          <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">System Role Assignment *</Label>
                           <select
-                            className="flex h-9 w-full rounded-md border border-input bg-background px-3 text-xs shadow-sm"
+                            className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-xs shadow-sm font-medium"
                             value={role}
                             onChange={(e) => setRole(e.target.value as EnterpriseRole)}
                           >
@@ -957,14 +958,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         </div>
 
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">ERP System Password *</Label>
+                          <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">ERP System Password *</Label>
                           <div className="relative">
                             <Input
                               type={showPassword ? "text" : "password"}
                               value={password}
                               onChange={(e) => setPassword(e.target.value)}
                               placeholder="••••••••"
-                              className="h-9 text-xs pr-8"
+                              className="h-9 text-xs pr-8 font-mono"
                             />
                             <button
                               type="button"
@@ -977,13 +978,13 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         </div>
 
                         <div className="space-y-1.5">
-                          <Label className="text-xs font-bold text-slate-700 dark:text-slate-300">Confirm Password *</Label>
+                          <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Confirm Password *</Label>
                           <Input
                             type="password"
                             value={confirmPassword}
                             onChange={(e) => setConfirmPassword(e.target.value)}
                             placeholder="••••••••"
-                            className="h-9 text-xs"
+                            className="h-9 text-xs font-mono"
                           />
                         </div>
                       </div>
@@ -993,17 +994,17 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               )}
 
               {/* Step Navigation Buttons */}
-              <div className="flex items-center justify-between pt-4 border-t">
+              <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={prev}
                   disabled={step === 1}
-                  className="gap-1 text-xs"
+                  className="gap-1 text-xs font-semibold"
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  <span>Previous</span>
+                  <span>Previous Step</span>
                 </Button>
 
                 {step < 4 ? (
@@ -1012,7 +1013,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     size="sm"
                     onClick={next}
                     disabled={!isStepValid(step)}
-                    className="gap-1 text-xs bg-primary text-white"
+                    className="gap-1 text-xs bg-slate-900 hover:bg-slate-800 text-white font-bold px-4"
                   >
                     <span>Next Step</span>
                     <ChevronRight className="h-4 w-4" />
@@ -1023,10 +1024,10 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     size="sm"
                     onClick={finish}
                     disabled={saving || !isStepValid(step)}
-                    className="gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5"
+                    className="gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 shadow-sm"
                   >
                     <UserCheck className="h-4 w-4" />
-                    <span>{saving ? "Saving..." : editUserId ? "Update Employee" : "Register Employee"}</span>
+                    <span>{saving ? "Saving..." : editUserId ? "Update Employee Record" : "Register Employee Master"}</span>
                   </Button>
                 )}
               </div>
@@ -1034,102 +1035,103 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
           </Card>
         </div>
 
-        {/* Right Side (Live Real-Time Employee Profile Card & Summary) - 5 cols */}
+        {/* Right Side Live Employee Profile Card & Summary (5 Columns) */}
         <div className="space-y-4 lg:col-span-5">
-          <Card className="shadow-sm border-slate-200 dark:border-slate-800 bg-slate-900 text-white overflow-hidden">
-            <div className="border-b border-slate-800 px-5 py-4 bg-gradient-to-r from-slate-900 to-slate-850 flex items-center justify-between">
+          <Card className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-950 text-white shadow-md overflow-hidden">
+            {/* Live Profile Header */}
+            <div className="border-b border-slate-800 px-5 py-3.5 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-emerald-400" />
-                <h3 className="font-bold text-sm">Live Employee Profile Preview</h3>
+                <h3 className="font-bold text-xs uppercase tracking-wider text-slate-200">Live Employee Profile</h3>
               </div>
-              <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/30">
+              <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/20 px-2.5 py-0.5 text-xs font-mono font-bold text-emerald-300 border border-emerald-500/30">
                 {employeeCode || "EMP-1001"}
               </span>
             </div>
 
-            <CardContent className="p-5 space-y-5">
-              {/* Profile Main Header */}
-              <div className="flex items-center gap-4 border-b border-slate-800 pb-4">
-                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-emerald-600 text-white text-xl font-black shadow-inner border border-emerald-400/40">
+            <CardContent className="p-5 space-y-4">
+              {/* Profile Avatar Header */}
+              <div className="flex items-center gap-4 border-b border-slate-800/80 pb-4">
+                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white text-xl font-black shadow-inner border border-emerald-400/40 shrink-0">
                   {fullName ? fullName.substring(0, 2).toUpperCase() : "EM"}
                 </div>
-                <div>
-                  <h4 className="text-base font-bold text-white">{fullName || "Employee Name"}</h4>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs text-emerald-400 font-semibold">{designation}</span>
-                    <span className="text-slate-500">•</span>
+                <div className="min-w-0 flex-1">
+                  <h4 className="text-base font-bold text-white truncate">{fullName || "Employee Name"}</h4>
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    <span className="text-xs text-emerald-400 font-bold">{designation}</span>
+                    <span className="text-slate-600">•</span>
                     <span className="text-xs text-slate-300">{department}</span>
                   </div>
-                  <div className="mt-1.5 flex items-center gap-2">
-                    <span className="rounded bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-300">
+                  <div className="mt-2 flex items-center gap-2 flex-wrap">
+                    <span className="rounded bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-300 border border-slate-700">
                       {employmentType}
                     </span>
-                    <span className="rounded bg-blue-500/20 px-2 py-0.5 text-[10px] font-bold text-blue-300 border border-blue-500/30">
-                      Code: {branchCode || "MAIN-001"}
+                    <span className="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/30 font-mono">
+                      Branch: {branchCode || "MAIN-001"}
                     </span>
                   </div>
                 </div>
               </div>
 
-              {/* Profile Quick Summary Grid */}
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="rounded-lg bg-slate-800/60 p-2.5 border border-slate-800">
+              {/* Profile Summary Cards Grid */}
+              <div className="grid grid-cols-2 gap-2.5 text-xs">
+                <div className="rounded-lg bg-slate-900 p-2.5 border border-slate-800">
                   <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Joining Date</span>
                   <span className="font-semibold text-slate-100 mt-0.5 block">{joiningDate || "-"}</span>
                 </div>
 
-                <div className="rounded-lg bg-slate-800/60 p-2.5 border border-slate-800">
+                <div className="rounded-lg bg-slate-900 p-2.5 border border-slate-800">
                   <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Probation</span>
                   <span className="font-semibold text-slate-100 mt-0.5 block">{probationPeriod}</span>
                 </div>
 
-                <div className="rounded-lg bg-slate-800/60 p-2.5 border border-slate-800">
+                <div className="rounded-lg bg-slate-900 p-2.5 border border-slate-800">
                   <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Base Salary</span>
-                  <span className="font-semibold text-emerald-400 mt-0.5 block">{baseSalary} {currency} ({paymentFrequency})</span>
+                  <span className="font-mono font-bold text-emerald-400 mt-0.5 block">{baseSalary} {currency} ({paymentFrequency})</span>
                 </div>
 
-                <div className="rounded-lg bg-slate-800/60 p-2.5 border border-slate-800">
+                <div className="rounded-lg bg-slate-900 p-2.5 border border-slate-800">
                   <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">ERP Access</span>
-                  <span className={`font-semibold mt-0.5 block ${enableErpLogin ? "text-emerald-400" : "text-slate-400"}`}>
+                  <span className={`font-bold mt-0.5 block ${enableErpLogin ? "text-emerald-400" : "text-slate-400"}`}>
                     {enableErpLogin ? `Active (${role})` : "Disabled"}
                   </span>
                 </div>
               </div>
 
-              {/* Contact Details */}
-              <div className="space-y-2 border-t border-slate-800 pt-3 text-xs">
+              {/* Identity & Location Details */}
+              <div className="space-y-2 border-t border-slate-800/80 pt-3 text-xs">
                 <div className="flex items-center justify-between text-slate-300">
-                  <span className="text-slate-400">Phone:</span>
+                  <span className="text-slate-400 font-semibold">Contact Phone:</span>
                   <span className="font-mono font-semibold">{contactPhone || "-"}</span>
                 </div>
                 <div className="flex items-center justify-between text-slate-300">
-                  <span className="text-slate-400">Email:</span>
+                  <span className="text-slate-400 font-semibold">Email:</span>
                   <span className="font-mono">{personalEmail || `${employeeCode.toLowerCase()}@employees.damaan.local`}</span>
                 </div>
                 <div className="flex items-center justify-between text-slate-300">
-                  <span className="text-slate-400">CNIC / ID:</span>
+                  <span className="text-slate-400 font-semibold">CNIC / Passport ID:</span>
                   <span className="font-mono">{nationalId || "-"}</span>
                 </div>
                 <div className="flex items-center justify-between text-slate-300">
-                  <span className="text-slate-400">Assigned Branch:</span>
-                  <span className="font-semibold text-emerald-400">{branchCode ? `${branchCode}` : "Main Country Branch"}</span>
+                  <span className="text-slate-400 font-semibold">Assigned Location:</span>
+                  <span className="font-semibold text-emerald-400">{cityName || selectedCountry?.name || "Main Location"}</span>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Existing Employees Directory Quick List */}
-          <Card className="shadow-sm">
-            <CardHeader className="py-3 px-4 border-b bg-slate-50/50 dark:bg-slate-900/50 flex flex-row items-center justify-between">
-              <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                <Users className="h-3.5 w-3.5 text-blue-600" />
-                <span>Recent Employees ({employeesList.length})</span>
+          {/* Employees Directory List */}
+          <Card className="rounded-xl border border-slate-200 dark:border-slate-800 bg-card shadow-sm">
+            <CardHeader className="py-3 px-4 border-b bg-slate-50 dark:bg-slate-900/50 flex flex-row items-center justify-between">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+                <Users className="h-3.5 w-3.5 text-emerald-600" />
+                <span>Employee Records Directory ({employeesList.length})</span>
               </CardTitle>
 
               <div className="relative w-36">
                 <Search className="absolute left-2 top-2 h-3 w-3 text-slate-400" />
                 <Input
-                  placeholder="Search..."
+                  placeholder="Filter employees..."
                   value={sidebarFilter}
                   onChange={(e) => setSidebarFilter(e.target.value)}
                   className="h-7 text-[11px] pl-7"
@@ -1137,27 +1139,27 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <div className="max-h-[300px] overflow-y-auto divide-y">
+              <div className="max-h-[280px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
                 {employeesLoading ? (
-                  <div className="p-4 text-center text-xs text-slate-400">Loading employees...</div>
+                  <div className="p-4 text-center text-xs text-slate-400">Loading directory...</div>
                 ) : filteredEmployees.length === 0 ? (
-                  <div className="p-4 text-center text-xs text-slate-400">No employees registered yet.</div>
+                  <div className="p-4 text-center text-xs text-slate-400">No matching employees found.</div>
                 ) : (
                   filteredEmployees.slice(0, 10).map((emp: any) => (
                     <div
                       key={emp.userId || emp.id}
                       onClick={() => fetchSpecificUser(emp.userId || emp.id)}
-                      className="p-3 hover:bg-slate-50 dark:hover:bg-slate-800/50 cursor-pointer transition-colors flex items-center justify-between"
+                      className="p-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer transition-colors flex items-center justify-between"
                     >
                       <div>
-                        <div className="font-semibold text-xs text-slate-900 dark:text-slate-100">{emp.fullName}</div>
+                        <div className="font-bold text-xs text-slate-900 dark:text-slate-100">{emp.fullName}</div>
                         <div className="text-[10px] text-slate-500 font-mono">
-                          {emp.userCode} • <span className="text-emerald-600 font-bold">{emp.branchCode || "MAIN"}</span>
+                          {emp.userCode} • <span className="text-emerald-600 dark:text-emerald-400 font-bold">{emp.branchCode || "MAIN"}</span>
                         </div>
                       </div>
-                      <Badge variant="outline" className="text-[10px]">
+                      <span className="rounded bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
                         {emp.role}
-                      </Badge>
+                      </span>
                     </div>
                   ))
                 )}

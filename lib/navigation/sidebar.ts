@@ -582,7 +582,23 @@ export const sidebarTree: SidebarNode[] = [
         labelKey: "Enterprise Reporting Hub" as any,
         iconKey: "bar-chart",
         href: "/dashboard/reports" as Route,
-        roles: ["super_admin", "auditor_viewer", "country_admin", "main_branch_admin"]
+        roles: ["super_admin", "auditor_viewer", "country_admin", "main_branch_admin"],
+        children: [
+          { key: "rep-cash-entry", labelKey: "Cash Entry (Roznamcha)" as any, iconKey: "scroll-text", href: "/dashboard/reports?type=cash-entry" as Route },
+          { key: "rep-receipts", labelKey: "Receipts General Ledger" as any, iconKey: "file-text", href: "/dashboard/reports?type=receipts" as Route },
+          { key: "rep-payments", labelKey: "Payments Ledger" as any, iconKey: "banknote", href: "/dashboard/reports?type=payments" as Route },
+          { key: "rep-customer-accounts", labelKey: "Customer Account Details" as any, iconKey: "users", href: "/dashboard/reports?type=customer-accounts" as Route },
+          { key: "rep-customer-companies", labelKey: "Customer Company Registrations" as any, iconKey: "building-2", href: "/dashboard/reports?type=customer-companies" as Route },
+          { key: "rep-exchange-rates", labelKey: "Pakistan & Global Exchange Rates" as any, iconKey: "globe", href: "/dashboard/reports?type=exchange-rates" as Route },
+          { key: "rep-branch-transactions", labelKey: "Branch Transaction Performance" as any, iconKey: "bar-chart", href: "/dashboard/reports?type=branch-transactions" as Route },
+          { key: "rep-user-activity", labelKey: "User Live Activity Journal" as any, iconKey: "user-check", href: "/dashboard/reports?type=user-activity" as Route },
+          { key: "rep-audit-logs", labelKey: "Audit Trail Logs" as any, iconKey: "shield", href: "/dashboard/reports?type=audit-logs" as Route },
+          { key: "rep-approval-workflows", labelKey: "Approval Workflow States" as any, iconKey: "check-square", href: "/dashboard/reports?type=approval-workflows" as Route },
+          { key: "rep-expenses", labelKey: "Interval Expense Tracking" as any, iconKey: "coins", href: "/dashboard/reports?type=expenses" as Route },
+          { key: "rep-financial-summaries", labelKey: "Financial Balance Summaries" as any, iconKey: "calculator", href: "/dashboard/reports?type=financial-summaries" as Route },
+          { key: "rep-purchase-booking-register", labelKey: "Purchase Booking Register" as any, iconKey: "shopping-bag", href: "/dashboard/reports?type=purchase-booking-register" as Route },
+          { key: "rep-daily-comprehensive", labelKey: "Comprehensive Daily Report" as any, iconKey: "calendar", href: "/dashboard/reports?type=daily-comprehensive" as Route }
+        ]
       },
       {
         key: "print-reports-hub",

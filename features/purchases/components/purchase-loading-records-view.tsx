@@ -6,6 +6,7 @@ import { openLoadingRecordsPrintReport } from "@/lib/reports/open-loading-record
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Download, FileText, Link2, MoreVertical, Plus, Printer, RefreshCcw, Search, Ship, Building2, ArrowDownLeft, ArrowUpRight, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 function asRecordArray<T = any>(value: unknown): T[] {
   if (Array.isArray(value)) return value.filter(Boolean) as T[];

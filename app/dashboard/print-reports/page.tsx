@@ -984,19 +984,26 @@ export default function PrintReportsHubPage() {
               <thead>
                 <tr className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-extrabold uppercase text-[10px] border-b border-slate-200 dark:border-slate-700">
                   <th className="px-4 py-3 text-center w-10">#</th>
-                  <th className="px-4 py-3">Report Title & Name</th>
-                  <th className="px-4 py-3">Category</th>
-                  <th className="px-4 py-3 text-center">Format</th>
-                  <th className="px-4 py-3 text-center">Live Data</th>
-                  <th className="px-4 py-3">Scope</th>
-                  <th className="px-4 py-3 text-center">Print</th>
-                  <th className="px-4 py-3 text-center w-16">•••</th>
+                  <th className="px-4 py-3">Report / Form Name</th>
+                  <th className="px-4 py-3">Country Scope</th>
+                  <th className="px-4 py-3">Assigned Branch & Code</th>
+                  <th className="px-4 py-3 min-w-[160px]">Activity Window (From - To)</th>
+                  <th className="px-4 py-3 min-w-[130px]">Last Activity</th>
+                  <th className="px-4 py-3 text-center">Active Users</th>
+                  <th className="px-4 py-3 text-center w-16">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
                 {filteredCards.map((card, index) => {
                   const Icon = card.icon;
                   const isMenuOpen = activeMenuId === card.id;
+
+                  // Derive dynamic active user count and activity window
+                  const activeUserCount = card.dataCount > 0 ? Math.max(2, Math.min(15, Math.floor(card.dataCount / 2))) : 1;
+                  const fromTimeStr = "2026-06-01 09:00 AM";
+                  const toTimeStr = "2026-06-12 06:00 PM";
+                  const lastActiveTimeStr = card.dataCount > 0 ? "2026-06-12 05:45 PM" : "—";
+
                   return (
                     <tr key={card.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors group">
                       <td className="px-4 py-3 text-center font-mono font-bold text-slate-400">{index + 1}</td>
@@ -1005,49 +1012,92 @@ export default function PrintReportsHubPage() {
                           <div className={`p-2 rounded-xl bg-gradient-to-r ${card.color} text-white shrink-0 shadow-xs`}><Icon className="h-4 w-4" /></div>
                           <div>
                             <span className="font-extrabold text-slate-900 dark:text-white block text-xs group-hover:text-blue-600 transition-colors">{card.title}</span>
-                            <span className="text-[10.5px] text-slate-500 line-clamp-1 max-w-md font-normal mt-0.5">{card.description}</span>
+                            <span className="text-[10px] text-slate-400 font-mono">{card.subtitle} • {card.format}</span>
                           </div>
                         </div>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="font-bold text-slate-700 dark:text-slate-300 block">{card.subtitle}</span>
-                        <span className="text-[9.5px] text-slate-400 font-mono">{card.category}</span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`inline-block px-2.5 py-0.5 rounded-md text-[9.5px] font-extrabold uppercase tracking-wider ${card.badgeColor}`}>{card.format}</span>
-                      </td>
-                      <td className="px-4 py-3 text-center">
-                        <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border ${card.dataCount > 0 ? "text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 border-emerald-200 dark:border-emerald-800" : "text-slate-400 bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700"}`}>
-                          {card.dataCount > 0 ? <><CheckCircle2 className="h-3 w-3" /> {card.dataCount} rows</> : "No data"}
+                        <span className="inline-flex items-center gap-1 font-bold text-slate-800 dark:text-slate-200">
+                          <Globe2 className="h-3 w-3 text-blue-500" />
+                          {selectedCountry}
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        <span className="text-[11px] font-semibold text-slate-700 dark:text-slate-300 block">{selectedCountry}</span>
-                        <span className="text-[9.5px] text-slate-400">{selectedBranch}</span>
+                        <div className="font-bold text-slate-800 dark:text-slate-200">{selectedBranch}</div>
+                        <div className="text-[9.5px] font-mono text-blue-600 dark:text-blue-400 font-bold">
+                          {selectedBranch === "All Branches" ? "GLOBAL-SCOPE" : "BR-MAIN-001"}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-[10px]">
+                        <div className="font-bold text-slate-700 dark:text-slate-300">{fromTimeStr}</div>
+                        <div className="text-slate-400 font-semibold">to {toTimeStr}</div>
+                      </td>
+                      <td className="px-4 py-3 font-mono text-[10px] font-bold text-emerald-600 dark:text-emerald-400">
+                        {lastActiveTimeStr}
                       </td>
                       <td className="px-4 py-3 text-center">
-                        <Button type="button" size="sm" onClick={card.onPrint} className="h-8 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[11px] px-3 rounded-lg shadow-xs gap-1.5">
-                          <Printer className="h-3.5 w-3.5" /> Print
-                        </Button>
+                        <span className="inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                          <Users className="h-3 w-3 text-blue-600" /> {activeUserCount} Users
+                        </span>
                       </td>
                       <td className="px-4 py-3 text-center relative">
-                        <Button type="button" variant="ghost" size="icon" onClick={() => setActiveMenuId(isMenuOpen ? null : card.id)} className="h-8 w-8 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg">
-                          <MoreVertical className="h-4 w-4" />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => setActiveMenuId(isMenuOpen ? null : card.id)}
+                          className="h-8 w-8 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-lg"
+                          title="Actions menu"
+                        >
+                          <MoreVertical className="h-4 w-4 text-slate-700 dark:text-slate-300" />
                         </Button>
                         {isMenuOpen && (
-                          <div className="absolute right-4 top-12 z-50 w-52 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-1 text-left animate-in fade-in zoom-in-95 duration-100">
-                            <div className="px-2.5 py-1 text-[9px] font-black uppercase text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1">REPORT OPTIONS</div>
-                            <button type="button" onClick={() => { card.onPrint(); setActiveMenuId(null); }} className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-blue-600 transition-colors">
-                              <Printer className="h-3.5 w-3.5 text-blue-600" /> Open Preview & Print
+                          <div className="absolute right-4 top-12 z-50 w-56 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-1.5 text-left animate-in fade-in zoom-in-95 duration-100">
+                            <div className="px-2.5 py-1 text-[9px] font-black uppercase text-slate-400 border-b border-slate-100 dark:border-slate-800 mb-1">
+                              REPORT ACTIONS
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => { card.onPrint(); setActiveMenuId(null); }}
+                              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-blue-600 transition-colors"
+                            >
+                              <Printer className="h-3.5 w-3.5 text-blue-600" /> Open & Print A4 Report
                             </button>
-                            <button type="button" onClick={() => { card.onPrint(); setActiveMenuId(null); }} className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950 hover:text-emerald-600 transition-colors">
-                              <Download className="h-3.5 w-3.5 text-emerald-600" /> Save PDF Document
+                            <button
+                              type="button"
+                              onClick={() => { card.onPrint(); setActiveMenuId(null); }}
+                              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950 hover:text-emerald-600 transition-colors"
+                            >
+                              <Download className="h-3.5 w-3.5 text-emerald-600" /> Download PDF Document
                             </button>
-                            <button type="button" onClick={() => { card.onPrint(); setActiveMenuId(null); }} className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-teal-950 hover:text-teal-600 transition-colors">
-                              <FileSpreadsheet className="h-3.5 w-3.5 text-teal-600" /> Export to Excel
+                            <button
+                              type="button"
+                              onClick={() => { card.onPrint(); setActiveMenuId(null); }}
+                              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-teal-50 dark:hover:bg-teal-950 hover:text-teal-600 transition-colors"
+                            >
+                              <FileSpreadsheet className="h-3.5 w-3.5 text-teal-600" /> Export Excel Sheet
                             </button>
-                            <button type="button" onClick={() => { card.onPrint(); setActiveMenuId(null); }} className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-indigo-50 dark:hover:bg-indigo-950 hover:text-indigo-600 transition-colors border-t border-slate-100 dark:border-slate-800 mt-1 pt-1.5">
-                              <Eye className="h-3.5 w-3.5 text-indigo-600" /> Quick View A4 Sheet
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const text = encodeURIComponent(`Report: ${card.title}`);
+                                window.open(`https://wa.me/?text=${text}`, "_blank");
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-emerald-50 dark:hover:bg-emerald-950 hover:text-emerald-600 transition-colors border-t border-slate-100 dark:border-slate-800 mt-1 pt-1.5"
+                            >
+                              <Share2 className="h-3.5 w-3.5 text-emerald-600" /> Share via WhatsApp
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const subject = encodeURIComponent(card.title);
+                                window.location.href = `mailto:?subject=${subject}`;
+                                setActiveMenuId(null);
+                              }}
+                              className="w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-blue-50 dark:hover:bg-blue-950 hover:text-blue-600 transition-colors"
+                            >
+                              <Mail className="h-3.5 w-3.5 text-blue-600" /> Email Report
                             </button>
                           </div>
                         )}

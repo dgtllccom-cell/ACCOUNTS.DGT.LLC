@@ -839,10 +839,10 @@ export function UserJournalReport() {
         </section>
       </main>
 
-      {/* View Details Full-page Overlay */}
+      {/* View Details Modal Overlay */}
       {viewUser && (
-        <div className="fixed inset-0 z-[100] bg-slate-100 dark:bg-slate-900 overflow-y-auto p-4 md:p-8">
-          <div className="max-w-6xl mx-auto">
+        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 md:p-8">
+          <div className="max-h-[92vh] w-full max-w-5xl overflow-y-auto rounded-xl bg-slate-900 shadow-2xl border border-slate-800">
             <UserLiveReportPanel
               fullName={viewUser.fullName}
               gender="Male"

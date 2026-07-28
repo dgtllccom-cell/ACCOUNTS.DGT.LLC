@@ -11,7 +11,7 @@ try {
   console.log("[1/3] Staging and committing all local code changes...");
   execSync('git add -A', { stdio: 'inherit' });
   try {
-    execSync('git commit -m "feat(deploy): Employee Management System, Branch Hierarchy & User Management Updates"', { stdio: 'inherit' });
+    execSync('git commit -m "feat(deploy): Employee Master System, Reports Hub Accordion & Print Hub 3-Dot Actions"', { stdio: 'inherit' });
   } catch (e) {
     console.log("No new changes to commit or commit already up to date.");
   }

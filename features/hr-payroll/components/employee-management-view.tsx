@@ -61,14 +61,14 @@ export function EmployeeManagementView() {
   }
 
   return (
-    <div className="space-y-6 text-slate-100 min-h-screen pb-16">
+    <div className="space-y-6 min-h-screen pb-16">
       
-      {/* Premium Gradient Header */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 rounded-3xl border border-slate-800 p-8 shadow-2xl">
+      {/* Header Banner */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white rounded-3xl border border-slate-800 p-6 md:p-8 shadow-md">
         <div className="relative z-10 flex justify-between items-center flex-wrap gap-4">
           <div>
-            <h2 className="text-3xl font-black tracking-tight text-white mb-2">Master Setup — Employee Management</h2>
-            <p className="text-slate-400 text-sm font-medium max-w-xl">
+            <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white mb-2">Master Setup — Employee Management</h2>
+            <p className="text-slate-300 text-xs md:text-sm font-medium max-w-xl">
               Register employees, structure categories (Manager, Staff, Employee, Other), define currency allowances, and map accounts with General Ledger (GL) integrations.
             </p>
           </div>
@@ -78,33 +78,33 @@ export function EmployeeManagementView() {
                 setSelectedEmployeeId(null);
                 setShowFormModal(true);
               }}
-              className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm px-6 py-3 rounded-2xl shadow-lg shadow-indigo-950 transition-all flex items-center gap-2"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs md:text-sm px-6 py-3 rounded-2xl shadow-md transition-all flex items-center gap-2"
             >
               <span className="text-lg font-black">+</span> Register New Employee
             </Button>
           )}
         </div>
-        <div className="absolute top-0 right-0 w-80 h-80 bg-indigo-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
       </div>
 
       {/* Main Mode Tabs Switcher */}
-      <div className="flex border-b border-slate-800 gap-1 p-1 bg-slate-950/40 max-w-md rounded-2xl border border-slate-850">
+      <div className="flex border border-slate-200 dark:border-slate-800 gap-1 p-1 bg-slate-100 dark:bg-slate-950 max-w-md rounded-2xl">
         <button
           onClick={() => setActiveTab("master")}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+          className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
             activeTab === "master"
-              ? "bg-slate-900 text-white shadow"
-              : "text-slate-400 hover:text-slate-200"
+              ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200 dark:border-slate-700"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
           }`}
         >
           Employees Master Setup
         </button>
         <button
           onClick={() => setActiveTab("payroll")}
-          className={`flex-1 py-2.5 rounded-xl text-sm font-bold transition-all ${
+          className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
             activeTab === "payroll"
-              ? "bg-slate-900 text-white shadow"
-              : "text-slate-400 hover:text-slate-200"
+              ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200 dark:border-slate-700"
+              : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
           }`}
         >
           Payroll Register & Reports
@@ -115,14 +115,14 @@ export function EmployeeManagementView() {
         <div className="space-y-6">
           
           {/* Filters Row */}
-          <div className="bg-slate-900/40 p-4 rounded-2xl border border-slate-800 flex flex-wrap gap-4 items-center">
+          <div className="bg-card p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-wrap gap-4 items-center shadow-sm">
             <div className="flex-1 min-w-[200px]">
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search by Employee Code, Person Name, Passport..."
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white placeholder-slate-600 text-sm focus:outline-none focus:border-indigo-500"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-slate-900 dark:text-slate-100 placeholder-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
             
@@ -130,7 +130,7 @@ export function EmployeeManagementView() {
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
               >
                 <option value="">All Categories</option>
                 <option value="Manager">Manager</option>
@@ -144,7 +144,7 @@ export function EmployeeManagementView() {
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm focus:outline-none focus:border-indigo-500"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
               >
                 <option value="">All Statuses</option>
                 <option value="Active">Active</option>
@@ -156,25 +156,25 @@ export function EmployeeManagementView() {
           </div>
 
           {/* Master Employee Table */}
-          <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/20">
-            <table className="min-w-full text-sm text-left text-slate-350">
-              <thead className="bg-slate-950 text-slate-450 uppercase text-xs font-semibold">
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-card shadow-sm">
+            <table className="min-w-full text-xs text-left text-slate-700 dark:text-slate-300">
+              <thead className="bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-800">
                 <tr>
-                  <th className="px-6 py-4">Emp Code</th>
-                  <th className="px-6 py-4">Employee / Person Name</th>
-                  <th className="px-6 py-4">Category</th>
-                  <th className="px-6 py-4">Designation / Department</th>
-                  <th className="px-6 py-4">Joining Date</th>
-                  <th className="px-6 py-4">Net Payroll</th>
-                  <th className="px-6 py-4">Deductions (Adv/Loan)</th>
-                  <th className="px-6 py-4">Status</th>
-                  <th className="px-6 py-4 text-right">Actions</th>
+                  <th className="px-6 py-3.5">Emp Code</th>
+                  <th className="px-6 py-3.5">Employee / Person Name</th>
+                  <th className="px-6 py-3.5">Category</th>
+                  <th className="px-6 py-3.5">Designation / Department</th>
+                  <th className="px-6 py-3.5">Joining Date</th>
+                  <th className="px-6 py-3.5">Net Payroll</th>
+                  <th className="px-6 py-3.5">Deductions (Adv/Loan)</th>
+                  <th className="px-6 py-3.5">Status</th>
+                  <th className="px-6 py-3.5 text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-850">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                 {loading ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-12 text-center text-slate-400 font-medium">Loading registered employees...</td>
+                    <td colSpan={9} className="px-6 py-12 text-center text-slate-500 font-medium">Loading registered employees...</td>
                   </tr>
                 ) : employees.length === 0 ? (
                   <tr>
@@ -182,66 +182,70 @@ export function EmployeeManagementView() {
                   </tr>
                 ) : (
                   employees.map((emp) => (
-                    <tr key={emp.id} className="hover:bg-slate-900/30">
-                      <td className="px-6 py-4 font-mono font-bold text-white">{emp.employee_code}</td>
+                    <tr key={emp.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="px-6 py-4 font-mono font-bold text-slate-900 dark:text-slate-100">{emp.employee_code}</td>
                       <td className="px-6 py-4">
-                        <div className="font-bold text-white">{emp.person?.customer_name}</div>
-                        <div className="text-xs text-slate-450">{emp.person?.mobile || "-"}</div>
+                        <div className="font-bold text-slate-900 dark:text-slate-100">{emp.person?.customer_name}</div>
+                        <div className="text-[11px] text-slate-500 font-mono">{emp.person?.mobile || "-"}</div>
                       </td>
                       <td className="px-6 py-4">
-                        <span className="px-2 py-0.5 bg-slate-900 border border-slate-800 text-slate-300 rounded font-semibold text-xs uppercase">
+                        <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded font-semibold text-[10px] uppercase">
                           {emp.category}
                         </span>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="font-semibold text-slate-200">{emp.designation || "-"}</div>
-                        <div className="text-xs text-slate-500">{emp.department || "-"}</div>
+                        <div className="font-semibold text-slate-900 dark:text-slate-100">{emp.designation || "-"}</div>
+                        <div className="text-[11px] text-slate-500">{emp.department || "-"}</div>
                       </td>
-                      <td className="px-6 py-4 text-slate-400">{emp.joining_date || "-"}</td>
-                      <td className="px-6 py-4 font-black text-indigo-400">
+                      <td className="px-6 py-4 text-slate-600 dark:text-slate-400 font-medium">{emp.joining_date || "-"}</td>
+                      <td className="px-6 py-4 font-black text-emerald-600 dark:text-emerald-400 font-mono">
                         {emp.net_salary?.toLocaleString()} {emp.salary_currency}
                       </td>
-                      <td className="px-6 py-4 text-red-400 font-semibold">
+                      <td className="px-6 py-4 text-red-600 dark:text-red-400 font-semibold font-mono">
                         -{((emp.advance_deduction || 0) + (emp.loan_deduction || 0))?.toLocaleString()} /mo
                       </td>
                       <td className="px-6 py-4">
-                        <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                           emp.status === "Active" 
-                            ? "bg-emerald-950 text-emerald-400 border border-emerald-900" 
-                            : "bg-slate-900 text-slate-500 border border-slate-800"
+                            ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800" 
+                            : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
                         }`}>
                           {emp.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right space-x-2">
+                      <td className="px-6 py-4 text-right space-x-1.5">
                         <Button
                           variant="outline"
+                          size="sm"
                           onClick={() => {
                             setSelectedEmployeeId(emp.id);
                             setShowFormModal(true);
                           }}
-                          className="bg-transparent border-slate-800 text-slate-300 hover:bg-slate-950 text-xs px-2 py-1 h-auto"
+                          className="h-7 text-xs px-2.5"
                         >
                           Edit
                         </Button>
                         <Button
                           variant="outline"
+                          size="sm"
                           onClick={() => setSelectedEmployeeForLoan(emp)}
-                          className="bg-transparent border-slate-800 text-slate-300 hover:bg-slate-950 text-xs px-2 py-1 h-auto"
+                          className="h-7 text-xs px-2.5"
                         >
                           Loan/Adv
                         </Button>
                         <Button
                           variant="outline"
+                          size="sm"
                           onClick={() => setSelectedEmployeeForHistory(emp)}
-                          className="bg-transparent border-indigo-950 text-indigo-400 hover:bg-slate-950 text-xs px-2 py-1 h-auto"
+                          className="h-7 text-xs px-2.5 text-blue-600 dark:text-blue-400"
                         >
                           Ledger
                         </Button>
                         <Button
                           variant="outline"
+                          size="sm"
                           onClick={() => handleDelete(emp.id)}
-                          className="bg-transparent border-red-950 text-red-500 hover:bg-red-950/20 text-xs px-2 py-1 h-auto"
+                          className="h-7 text-xs px-2.5 text-red-600 hover:text-red-700 dark:text-red-400"
                         >
                           Delete
                         </Button>
@@ -298,12 +302,14 @@ export function EmployeeManagementView() {
         <SimpleModal
           title={`Employee Statement Recovery History — ${selectedEmployeeForHistory?.person?.customer_name}`}
           onClose={() => setSelectedEmployeeForHistory(null)}
-          className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto"
+          className="max-w-5xl w-[95vw]"
         >
-          <EmployeeLedgerPanel employeeId={selectedEmployeeForHistory.id} />
+          <EmployeeLedgerPanel
+            employee={selectedEmployeeForHistory}
+            onClose={() => setSelectedEmployeeForHistory(null)}
+          />
         </SimpleModal>
       )}
-
     </div>
   );
 }

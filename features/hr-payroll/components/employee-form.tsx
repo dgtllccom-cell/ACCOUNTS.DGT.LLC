@@ -127,7 +127,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
     loadBranches();
   }, [countryId]);
 
-  // Fetch city branches when country branch changes
+  // Fetch city branches when main branch changes
   useEffect(() => {
     if (!countryBranchId) {
       setCityBranches([]);
@@ -136,8 +136,10 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
     }
     async function loadCityBranches() {
       try {
-        const res = await apiGet<{ cityBranches: any[] }>(`/api/branch-management/city-branches?countryBranchId=${countryBranchId}`);
-        setCityBranches(res.cityBranches || []);
+        const res = await apiGet<{ ok: boolean; data: { cityBranches: any[] } }>(`/api/erp/locations/branches/city?countryBranchId=${countryBranchId}`);
+        if (res.ok && res.data?.cityBranches) {
+          setCityBranches(res.data.cityBranches);
+        }
       } catch (err) {
         console.error(err);
       }
@@ -145,25 +147,16 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
     loadCityBranches();
   }, [countryBranchId]);
 
-  // Set currency code from selected country
-  useEffect(() => {
-    const selected = countries.find((c) => c.id === countryId);
-    if (selected?.currency_code) {
-      setSalaryCurrency(selected.currency_code);
-    }
-  }, [countryId, countries]);
-
-  // Load employee detail for edit
+  // Fetch employee details if editing
   useEffect(() => {
     if (!employeeId) return;
-
     async function loadEmployee() {
       setLoading(true);
       try {
         const res = await apiGet<{ employee: any }>(`/api/erp/hr-payroll/employees/${employeeId}`);
         if (res.employee) {
           const emp = res.employee;
-          setPersonMasterId(emp.person_master_id || "");
+          setPersonMasterId(emp.person_master_id);
           setCategory(emp.category || "Employee");
           setDesignation(emp.designation || "");
           setDepartment(emp.department || "");
@@ -175,7 +168,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
           setProbationStartDate(emp.probation_start_date || "");
           setProbationEndDate(emp.probation_end_date || "");
           setEmploymentType(emp.employment_type || "Full-time");
-          setJobStatus(emp.job_status || "Active");
+          setJobStatus(emp.job_status || "Probation");
           setWorkingShift(emp.working_shift || "Day Shift");
           setDutyStartTime(emp.duty_start_time || "09:00");
           setDutyEndTime(emp.duty_end_time || "18:00");
@@ -184,9 +177,8 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
           setContractEndDate(emp.contract_end_date || "");
           setStatus(emp.status || "Active");
 
-          // Salary
           setSalaryType(emp.salary_type || "Monthly");
-          setBasicSalary(emp.basic_salary || 0);
+          setBasicSalary(emp.basic_salary || emp.monthly_salary || 0);
           setSalaryCurrency(emp.salary_currency || "USD");
           setAccommodationAllowance(emp.accommodation_allowance || 0);
           setTransportAllowance(emp.transport_allowance || 0);
@@ -196,7 +188,6 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
           setDeduction(emp.deduction || 0);
           setTaxDeduction(emp.tax_deduction || 0);
 
-          // Accounts
           setSalaryExpenseAccountId(emp.salary_expense_account_id || "");
           setEmployeePayableAccountId(emp.employee_payable_account_id || "");
           setCashAccountId(emp.cash_account_id || "");
@@ -221,7 +212,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!personMasterId) {
-      alert("Please select or add a Person Name first.");
+      alert("Please select or add an Employee/Person Name first.");
       return;
     }
 
@@ -291,30 +282,29 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
   }
 
   if (loading) {
-    return <div className="text-center py-12 text-slate-500 font-medium">Loading employee details...</div>;
+    return <div className="text-center py-12 text-slate-500 dark:text-slate-400 font-medium">Loading employee details...</div>;
   }
 
-  // Filter accounts by type/kind
   const expenseAccounts = ledgers;
   const payableAccounts = ledgers;
-  const assetAccounts = ledgers; // cash/bank/advance/loan ledgers
+  const assetAccounts = ledgers;
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 bg-slate-900/50 p-6 rounded-2xl border border-slate-800 text-slate-100">
+    <form onSubmit={handleSubmit} className="space-y-8 bg-card text-card-foreground p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
       
       {/* Employee Category Tabs */}
       <div>
-        <label className="text-sm font-semibold text-slate-400 uppercase tracking-wider block mb-3">Employee Category</label>
-        <div className="grid grid-cols-4 gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
+        <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-2">Employee Category</label>
+        <div className="grid grid-cols-4 gap-2 bg-slate-100 dark:bg-slate-950 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
           {(["Manager", "Normal Staff", "Employee", "Others"] as const).map((cat) => (
             <button
               key={cat}
               type="button"
               onClick={() => setCategory(cat)}
-              className={`py-3 rounded-lg text-sm font-semibold transition-all ${
+              className={`py-2.5 rounded-lg text-xs font-bold transition-all ${
                 category === cat
-                  ? "bg-indigo-600 text-white shadow-md shadow-indigo-950"
-                  : "text-slate-400 hover:text-slate-200 hover:bg-slate-900"
+                  ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200 dark:border-slate-700"
+                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-900"
               }`}
             >
               {cat}
@@ -326,12 +316,12 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
         
         {/* Section 1: General Details */}
-        <div className="space-y-6">
-          <h3 className="text-lg font-bold text-white border-b border-slate-800 pb-2">Employment & Identity Details</h3>
+        <div className="space-y-5">
+          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-800 pb-2">Employment & Identity Details</h3>
 
           <div>
             <PersonPicker
-              label="Select or Add Employee/Person Name"
+              label="Select or Add Employee / Person Name"
               value={personMasterId}
               onValueChange={setPersonMasterId}
               countryId={countryId}
@@ -340,34 +330,34 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Designation</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Designation</label>
               <input
                 type="text"
                 value={designation}
                 onChange={(e) => setDesignation(e.target.value)}
                 placeholder="e.g. Finance Manager"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Department</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Department</label>
               <input
                 type="text"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
                 placeholder="e.g. Accounts"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Country</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Country</label>
               <select
                 value={countryId}
                 onChange={(e) => setCountryId(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-indigo-500"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               >
                 <option value="">Select Country</option>
                 {countries.map((c) => (
@@ -376,12 +366,12 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Main Branch</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Main Branch</label>
               <select
                 value={countryBranchId}
                 onChange={(e) => setCountryBranchId(e.target.value)}
                 disabled={!countryId}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-indigo-500 disabled:opacity-40"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-40"
               >
                 <option value="">Select Branch</option>
                 {branches.map((b) => (
@@ -390,12 +380,12 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">City Branch</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">City Branch</label>
               <select
                 value={cityBranchId}
                 onChange={(e) => setCityBranchId(e.target.value)}
                 disabled={!countryBranchId}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-indigo-500 disabled:opacity-40"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-40"
               >
                 <option value="">Select City Branch</option>
                 {cityBranches.map((cb) => (
@@ -407,21 +397,21 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Joining Date</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Joining Date</label>
               <input
                 type="date"
                 value={joiningDate}
                 onChange={(e) => setJoiningDate(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
             {category !== "Manager" && (
               <div>
-                <label className="block text-sm font-medium text-slate-300 mb-1.5">Reporting Manager</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Reporting Manager</label>
                 <select
                   value={reportingManagerId}
                   onChange={(e) => setReportingManagerId(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 >
                   <option value="">Select Manager</option>
                   {managers.map((m) => (
@@ -434,58 +424,58 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
           {/* Conditional Timelines */}
           {(category === "Normal Staff" || category === "Employee") && (
-            <div className="grid grid-cols-2 gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
+            <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1.5">Probation Start Date</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Probation Start Date</label>
                 <input
                   type="date"
                   value={probationStartDate}
                   onChange={(e) => setProbationStartDate(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white text-sm"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1.5">Probation End Date</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Probation End Date</label>
                 <input
                   type="date"
                   value={probationEndDate}
                   onChange={(e) => setProbationEndDate(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white text-sm"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
                 />
               </div>
             </div>
           )}
 
           {(category === "Employee" || category === "Others") && (
-            <div className="grid grid-cols-2 gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
+            <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1.5">Contract Start Date</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Contract Start Date</label>
                 <input
                   type="date"
                   value={contractStartDate}
                   onChange={(e) => setContractStartDate(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white text-sm"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1.5">Contract End Date</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Contract End Date</label>
                 <input
                   type="date"
                   value={contractEndDate}
                   onChange={(e) => setContractEndDate(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-2 text-white text-sm"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
                 />
               </div>
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Employment Type</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Employment Type</label>
               <select
                 value={employmentType}
                 onChange={(e) => setEmploymentType(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100"
               >
                 <option value="Full-time">Full-time</option>
                 <option value="Part-time">Part-time</option>
@@ -494,20 +484,20 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Duty Shift</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Duty Shift</label>
               <input
                 type="text"
                 value={workingShift}
                 onChange={(e) => setWorkingShift(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Weekly Off Day</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Weekly Off Day</label>
               <select
                 value={weeklyOffDay}
                 onChange={(e) => setWeeklyOffDay(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100"
               >
                 <option value="Sunday">Sunday</option>
                 <option value="Friday">Friday</option>
@@ -519,38 +509,38 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Shift Duty Start Time</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Shift Duty Start Time</label>
               <input
                 type="time"
                 value={dutyStartTime}
                 onChange={(e) => setDutyStartTime(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Shift Duty End Time</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Shift Duty End Time</label>
               <input
                 type="time"
                 value={dutyEndTime}
                 onChange={(e) => setDutyEndTime(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100"
               />
             </div>
           </div>
         </div>
 
         {/* Section 2: Salary and Accounts */}
-        <div className="space-y-6">
-          <h3 className="text-lg font-bold text-white border-b border-slate-800 pb-2">Salary details & Account mapping</h3>
+        <div className="space-y-5">
+          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-800 pb-2">Salary Details & Account Mapping</h3>
 
           {/* Salary Type & Currencies */}
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Salary Basis</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Salary Basis</label>
               <select
                 value={salaryType}
                 onChange={(e) => setSalaryType(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100"
               >
                 <option value="Monthly">Monthly</option>
                 <option value="Daily">Daily</option>
@@ -559,72 +549,72 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               </select>
             </div>
             <div className="col-span-2">
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Basic Salary Rate ({salaryCurrency})</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Basic Salary Rate ({salaryCurrency})</label>
               <div className="relative">
                 <input
                   type="number"
                   value={basicSalary || ""}
                   onChange={(e) => setBasicSalary(Number(e.target.value))}
                   placeholder="0.00"
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-4 pr-16 py-2.5 text-white font-bold"
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl pl-3.5 pr-14 py-2 text-xs font-bold text-slate-900 dark:text-slate-100"
                 />
-                <span className="absolute right-4 top-3 text-sm font-bold text-slate-400">{salaryCurrency}</span>
+                <span className="absolute right-3 top-2 text-xs font-bold text-slate-400">{salaryCurrency}</span>
               </div>
             </div>
           </div>
 
           {/* Allowances */}
           <div>
-            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2">Monthly Allowances</label>
-            <div className="grid grid-cols-2 gap-4 bg-slate-950 p-4 rounded-xl border border-slate-800">
+            <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-2">Monthly Allowances</label>
+            <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Housing</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Housing</label>
                 <input
                   type="number"
                   value={accommodationAllowance || ""}
                   onChange={(e) => setAccommodationAllowance(Number(e.target.value))}
                   placeholder="0"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-white text-sm"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Transport</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Transport</label>
                 <input
                   type="number"
                   value={transportAllowance || ""}
                   onChange={(e) => setTransportAllowance(Number(e.target.value))}
                   placeholder="0"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-white text-sm"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Food</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Food</label>
                 <input
                   type="number"
                   value={foodAllowance || ""}
                   onChange={(e) => setFoodAllowance(Number(e.target.value))}
                   placeholder="0"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-white text-sm"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-slate-400 mb-1">Mobile / Utility</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Mobile / Utility</label>
                 <input
                   type="number"
                   value={mobileAllowance || ""}
                   onChange={(e) => setMobileAllowance(Number(e.target.value))}
                   placeholder="0"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-white text-sm"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
                 />
               </div>
               <div className="col-span-2">
-                <label className="block text-xs font-medium text-slate-400 mb-1">Other Allowances</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Other Allowances</label>
                 <input
                   type="number"
                   value={otherAllowance || ""}
                   onChange={(e) => setOtherAllowance(Number(e.target.value))}
                   placeholder="0"
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 text-white text-sm"
+                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
                 />
               </div>
             </div>
@@ -633,34 +623,34 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
           {/* Deductions */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">General Monthly Deduction</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">General Monthly Deduction</label>
               <input
                 type="number"
                 value={deduction || ""}
                 onChange={(e) => setDeduction(Number(e.target.value))}
                 placeholder="0.00"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-1.5">Tax / Social Security</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tax / Social Security</label>
               <input
                 type="number"
                 value={taxDeduction || ""}
                 onChange={(e) => setTaxDeduction(Number(e.target.value))}
                 placeholder="0.00"
-                className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-white"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100"
               />
             </div>
           </div>
 
           {/* Calculated Net Summary Card */}
-          <div className="bg-indigo-950/40 p-4 rounded-xl border border-indigo-900/50 flex justify-between items-center">
+          <div className="bg-emerald-50 dark:bg-emerald-950/40 p-4 rounded-xl border border-emerald-200 dark:border-emerald-900/60 flex justify-between items-center">
             <div>
-              <span className="text-xs text-indigo-400 uppercase tracking-wider block font-semibold">Estimated Net Payroll</span>
-              <span className="text-2xl font-black text-white">{netSalary.toLocaleString()} {salaryCurrency}</span>
+              <span className="text-[10px] text-emerald-800 dark:text-emerald-300 uppercase tracking-wider block font-bold">Estimated Net Payroll</span>
+              <span className="text-xl font-black text-slate-900 dark:text-white">{netSalary.toLocaleString()} {salaryCurrency}</span>
             </div>
-            <div className="text-right text-xs text-slate-400">
+            <div className="text-right text-[11px] text-slate-600 dark:text-slate-400 font-medium">
               <div>Basic: {basicSalary}</div>
               <div>Allowances: +{totalAllowances}</div>
               <div>Deductions: -{(Number(deduction) + Number(taxDeduction))}</div>
@@ -668,16 +658,16 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
           </div>
 
           {/* Accounts Integration Mapping */}
-          <div className="space-y-4 pt-2">
-            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-2 border-b border-slate-800 pb-1">General Ledger Mapping</label>
+          <div className="space-y-3 pt-2">
+            <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block border-b border-slate-200 dark:border-slate-800 pb-1">General Ledger Mapping</label>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Salary Expense Account</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Salary Expense Account</label>
                 <select
                   value={salaryExpenseAccountId}
                   onChange={(e) => setSalaryExpenseAccountId(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-white text-xs"
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100"
                 >
                   <option value="">Select Ledger</option>
                   {expenseAccounts.map((l) => (
@@ -687,11 +677,11 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Employee Payable Account</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Employee Payable Account</label>
                 <select
                   value={employeePayableAccountId}
                   onChange={(e) => setEmployeePayableAccountId(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-white text-xs"
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100"
                 >
                   <option value="">Select Ledger</option>
                   {payableAccounts.map((l) => (
@@ -701,11 +691,11 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Advance Salary Asset Account</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Advance Salary Asset Account</label>
                 <select
                   value={advanceSalaryAccountId}
                   onChange={(e) => setAdvanceSalaryAccountId(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-white text-xs"
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100"
                 >
                   <option value="">Select Ledger</option>
                   {assetAccounts.map((l) => (
@@ -715,11 +705,11 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-slate-400 mb-1">Employee Loan Asset Account</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Employee Loan Asset Account</label>
                 <select
                   value={loanAccountId}
                   onChange={(e) => setLoanAccountId(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-2 text-white text-xs"
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100"
                 >
                   <option value="">Select Ledger</option>
                   {assetAccounts.map((l) => (
@@ -733,24 +723,23 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
       </div>
 
       {/* Buttons */}
-      <div className="flex justify-end space-x-3 pt-6 border-t border-slate-800">
+      <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200 dark:border-slate-800">
         <Button
           type="button"
           onClick={onCancel}
           variant="outline"
-          className="bg-transparent border-slate-800 text-slate-300 hover:bg-slate-950"
+          className="text-xs font-semibold"
         >
           Cancel
         </Button>
         <Button
           type="submit"
           disabled={saving}
-          className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold"
+          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 shadow-sm"
         >
           {saving ? "Saving..." : "Save Employee Setup"}
         </Button>
       </div>
-
     </form>
   );
 }

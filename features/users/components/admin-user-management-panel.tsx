@@ -338,6 +338,22 @@ export function AdminUserManagementPanel() {
               variant="outline"
               className="h-8 px-2.5 text-xs gap-1 hover:bg-slate-100 dark:hover:bg-slate-800"
               onClick={() => {
+                setSelectedReportUser({
+                  ...u,
+                  countryName: countryNameStr,
+                  branchCode: branchCodeStr
+                });
+              }}
+            >
+              <Eye className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+              <span>View Details</span>
+            </Button>
+
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 px-2.5 text-xs gap-1 hover:bg-slate-100 dark:hover:bg-slate-800"
+              onClick={() => {
                 openUserA4ReportWindow({
                   userId: u.id,
                   userCode: u.id.substring(0, 8),
@@ -367,7 +383,7 @@ export function AdminUserManagementPanel() {
               }}
             >
               <FileText className="h-3.5 w-3.5 text-slate-500" />
-              <span>A4 Live Report</span>
+              <span>A4 Report</span>
             </Button>
 
             <Link href={`/dashboard/users/edit/${u.id}`}>
