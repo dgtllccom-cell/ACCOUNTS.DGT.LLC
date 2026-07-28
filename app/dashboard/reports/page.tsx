@@ -73,15 +73,24 @@ const REPORT_LIST: ReportMeta[] = [
 function ReportsHubContent() {
   const searchParams = useSearchParams();
   const rawType = searchParams.get("type") as ReportType | null;
+  const rawScope = searchParams.get("scope");
 
   const [selectedReport, setSelectedReport] = useState<ReportType>("cash-entry");
+  const [activeScopeBadge, setActiveScopeBadge] = useState<string>("Super Admin Scope");
 
-  // Sync selectedReport when URL query param changes
+  // Sync selectedReport and scope when URL query param changes
   useEffect(() => {
     if (rawType && REPORT_LIST.some((r) => r.type === rawType)) {
       setSelectedReport(rawType);
     }
-  }, [rawType]);
+    if (rawScope === "country") {
+      setActiveScopeBadge("Country Admin Scope");
+    } else if (rawScope === "branch") {
+      setActiveScopeBadge("Branch Admin Scope");
+    } else if (rawScope === "super-admin") {
+      setActiveScopeBadge("Super Admin Scope");
+    }
+  }, [rawType, rawScope]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -282,7 +291,7 @@ function ReportsHubContent() {
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
             <div>
               <span className="inline-flex items-center rounded-full bg-indigo-50 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
-                Active Report Scope
+                {activeScopeBadge}
               </span>
               <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                 {activeMeta.title}

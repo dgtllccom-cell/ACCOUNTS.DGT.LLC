@@ -773,38 +773,177 @@ export const sidebarTree: SidebarNode[] = [
           {
             key: "reports-sales",
             labelKey: "nav.sales_report",
-            href: "/dashboard/reports/sales" as Route
+            iconKey: "credit-card",
+            children: [
+              {
+                key: "rep-sales-super-admin",
+                labelKey: "Super Admin Sales Report" as any,
+                href: "/dashboard/reports?type=branch-transactions&scope=super-admin" as Route,
+                roles: ["super_admin"]
+              },
+              {
+                key: "rep-sales-country",
+                labelKey: "Country Sales Report" as any,
+                href: "/dashboard/reports?type=branch-transactions&scope=country" as Route,
+                roles: ["super_admin", "country_admin", "country_user", "main_branch_admin"]
+              },
+              {
+                key: "rep-sales-branch",
+                labelKey: "Branch Sales Report" as any,
+                href: "/dashboard/reports?type=branch-transactions&scope=branch" as Route,
+                roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "cashier"]
+              }
+            ]
           },
           {
             key: "reports-purchase",
             labelKey: "nav.purchase_report",
-            href: "/dashboard/reports/purchase" as Route
+            iconKey: "shopping-bag",
+            children: [
+              {
+                key: "rep-pur-super-admin",
+                labelKey: "Super Admin Purchase Report" as any,
+                href: "/dashboard/reports?type=purchase-booking-register&scope=super-admin" as Route,
+                roles: ["super_admin"]
+              },
+              {
+                key: "rep-pur-country",
+                labelKey: "Country Purchase Report" as any,
+                href: "/dashboard/reports?type=purchase-booking-register&scope=country" as Route,
+                roles: ["super_admin", "country_admin", "country_user", "main_branch_admin"]
+              },
+              {
+                key: "rep-pur-branch",
+                labelKey: "Branch Purchase Report" as any,
+                href: "/dashboard/reports?type=purchase-booking-register&scope=branch" as Route,
+                roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "cashier"]
+              }
+            ]
           },
           {
             key: "reports-purchase-order",
             labelKey: "nav.purchase_order_report",
-            href: "/dashboard/purchase/purchase-booking-journal-report" as Route
+            iconKey: "file-text",
+            children: [
+              {
+                key: "rep-po-super-admin",
+                labelKey: "Super Admin Purchase Order Report" as any,
+                href: "/dashboard/purchase/purchase-booking-journal-report?scope=super-admin" as Route,
+                roles: ["super_admin"]
+              },
+              {
+                key: "rep-po-country",
+                labelKey: "Country Purchase Order Report" as any,
+                href: "/dashboard/purchase/purchase-booking-journal-report?scope=country" as Route,
+                roles: ["super_admin", "country_admin", "country_user", "main_branch_admin"]
+              },
+              {
+                key: "rep-po-branch",
+                labelKey: "Branch Purchase Order Report" as any,
+                href: "/dashboard/purchase/purchase-booking-journal-report?scope=branch" as Route,
+                roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "cashier"]
+              }
+            ]
           },
           {
             key: "reports-audit",
             labelKey: "nav.audit_report",
-            href: "/dashboard/reports/audit" as Route,
-            roles: ["super_admin", "auditor_viewer"]
+            iconKey: "shield",
+            children: [
+              {
+                key: "rep-audit-super-admin",
+                labelKey: "Super Admin Audit Report" as any,
+                href: "/dashboard/reports?type=audit-logs&scope=super-admin" as Route,
+                roles: ["super_admin", "auditor_viewer"]
+              },
+              {
+                key: "rep-audit-country",
+                labelKey: "Country Audit Report" as any,
+                href: "/dashboard/reports?type=audit-logs&scope=country" as Route,
+                roles: ["super_admin", "auditor_viewer", "country_admin", "main_branch_admin"]
+              },
+              {
+                key: "rep-audit-branch",
+                labelKey: "Branch Audit Report" as any,
+                href: "/dashboard/reports?type=audit-logs&scope=branch" as Route,
+                roles: ["super_admin", "auditor_viewer", "country_admin", "main_branch_admin", "city_branch_admin"]
+              }
+            ]
           },
           {
             key: "reports-pl",
             labelKey: "nav.profit_loss_report",
-            href: "/dashboard/reports/profit-loss" as Route
+            iconKey: "calculator",
+            children: [
+              {
+                key: "rep-pl-super-admin",
+                labelKey: "Super Admin Profit/Loss Report" as any,
+                href: "/dashboard/reports?type=financial-summaries&scope=super-admin" as Route,
+                roles: ["super_admin"]
+              },
+              {
+                key: "rep-pl-country",
+                labelKey: "Country Profit/Loss Report" as any,
+                href: "/dashboard/reports?type=financial-summaries&scope=country" as Route,
+                roles: ["super_admin", "country_admin", "country_user", "main_branch_admin"]
+              },
+              {
+                key: "rep-pl-branch",
+                labelKey: "Branch Profit/Loss Report" as any,
+                href: "/dashboard/reports?type=financial-summaries&scope=branch" as Route,
+                roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
+              }
+            ]
           },
           {
             key: "reports-bs",
             labelKey: "nav.balance_sheet",
-            href: "/dashboard/reports/balance-sheet" as Route
+            iconKey: "file-spreadsheet",
+            children: [
+              {
+                key: "rep-bs-super-admin",
+                labelKey: "Super Admin Balance Sheet" as any,
+                href: "/dashboard/reports?type=financial-summaries&scope=super-admin" as Route,
+                roles: ["super_admin"]
+              },
+              {
+                key: "rep-bs-country",
+                labelKey: "Country Balance Sheet" as any,
+                href: "/dashboard/reports?type=financial-summaries&scope=country" as Route,
+                roles: ["super_admin", "country_admin", "country_user", "main_branch_admin"]
+              },
+              {
+                key: "rep-bs-branch",
+                labelKey: "Branch Balance Sheet" as any,
+                href: "/dashboard/reports?type=financial-summaries&scope=branch" as Route,
+                roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
+              }
+            ]
           },
           {
             key: "reports-tb",
             labelKey: "nav.trial_balance",
-            href: "/dashboard/reports/trial-balance" as Route
+            iconKey: "scale",
+            children: [
+              {
+                key: "rep-tb-super-admin",
+                labelKey: "Super Admin Trial Balance" as any,
+                href: "/dashboard/reports?type=financial-summaries&scope=super-admin" as Route,
+                roles: ["super_admin"]
+              },
+              {
+                key: "rep-tb-country",
+                labelKey: "Country Trial Balance" as any,
+                href: "/dashboard/reports?type=financial-summaries&scope=country" as Route,
+                roles: ["super_admin", "country_admin", "country_user", "main_branch_admin"]
+              },
+              {
+                key: "rep-tb-branch",
+                labelKey: "Branch Trial Balance" as any,
+                href: "/dashboard/reports?type=financial-summaries&scope=branch" as Route,
+                roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
+              }
+            ]
           }
         ]
       }
