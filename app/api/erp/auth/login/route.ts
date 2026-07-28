@@ -257,6 +257,76 @@ const demoAccounts: Record<
     email: "ksa.country@damaan.com",
     fullName: "Saudi Arabia Country Admin",
     roles: ["country_admin"]
+  },
+  "pk-country-user": {
+    password: "Test@12345",
+    userId: "temp-pk-country-user",
+    email: "pk.user@damaan.com",
+    fullName: "Pakistan Country User / Staff",
+    roles: ["country_user"]
+  },
+  "uae-country-user": {
+    password: "Test@12345",
+    userId: "temp-uae-country-user",
+    email: "uae.user@damaan.com",
+    fullName: "UAE Country User / Staff",
+    roles: ["country_user"]
+  },
+  "afg-country-user": {
+    password: "Test@12345",
+    userId: "temp-afg-country-user",
+    email: "afg.user@damaan.com",
+    fullName: "Afghanistan Country User / Staff",
+    roles: ["country_user"]
+  },
+  "ksa-country-user": {
+    password: "Test@12345",
+    userId: "temp-ksa-country-user",
+    email: "ksa.user@damaan.com",
+    fullName: "Saudi Arabia Country User / Staff",
+    roles: ["country_user"]
+  },
+  "quetta-branch-staff": {
+    password: "Test@12345",
+    userId: "temp-quetta-branch-staff",
+    email: "quetta.staff@damaan.com",
+    fullName: "Quetta Branch Staff User",
+    roles: ["city_branch_user"]
+  },
+  "karachi-branch-staff": {
+    password: "Test@12345",
+    userId: "temp-karachi-branch-staff",
+    email: "karachi.staff@damaan.com",
+    fullName: "Karachi Branch Staff User",
+    roles: ["city_branch_user"]
+  },
+  "lahore-branch-staff": {
+    password: "Test@12345",
+    userId: "temp-lahore-branch-staff",
+    email: "lahore.staff@damaan.com",
+    fullName: "Lahore Branch Staff User",
+    roles: ["city_branch_user"]
+  },
+  "dubai-branch-staff": {
+    password: "Test@12345",
+    userId: "temp-dubai-branch-staff",
+    email: "dubai.staff@damaan.com",
+    fullName: "Dubai Branch Staff User",
+    roles: ["city_branch_user"]
+  },
+  "kabul-branch-staff": {
+    password: "Test@12345",
+    userId: "temp-kabul-branch-staff",
+    email: "kabul.staff@damaan.com",
+    fullName: "Kabul Branch Staff User",
+    roles: ["city_branch_user"]
+  },
+  "riyadh-branch-staff": {
+    password: "Test@12345",
+    userId: "temp-riyadh-branch-staff",
+    email: "riyadh.staff@damaan.com",
+    fullName: "Riyadh Branch Staff User",
+    roles: ["city_branch_user"]
   }
 };
 
