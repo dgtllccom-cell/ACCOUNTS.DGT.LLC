@@ -24,6 +24,8 @@ _codex*
 backups/
 exports/
 *.log
+api-error-log.txt
+*-log.txt
 *.pack
 *.gz
 *.tar

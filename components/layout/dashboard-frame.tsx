@@ -180,7 +180,7 @@ export function DashboardFrame({
     <div className="min-h-screen bg-background text-foreground">
       {/* Premium Desktop Sidebar */}
       <aside className={cn(
-        "fixed inset-y-0 inset-s-0 hidden w-64 border-e border-border bg-card lg:flex lg:flex-col transition-all duration-300 shadow-xl z-30 text-card-foreground",
+        "fixed inset-y-0 inset-s-0 hidden w-72 border-e border-border bg-card lg:flex lg:flex-col transition-all duration-300 shadow-xl z-30 text-card-foreground",
         sidebarCollapsed && "lg:hidden"
       )}>
         <div className="border-b border-border/80 px-6 py-5 flex items-center justify-between gap-2">

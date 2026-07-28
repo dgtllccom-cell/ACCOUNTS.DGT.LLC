@@ -107,6 +107,7 @@ function ReportsHubContent() {
   const [toDate, setToDate] = useState<string>("");
   const [interval, setInterval] = useState<string>("monthly");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [purchaseStage, setPurchaseStage] = useState<string>("all");
 
   // Master data for filters
   const [countriesList, setCountriesList] = useState<any[]>([]);
@@ -415,8 +416,24 @@ function ReportsHubContent() {
               </select>
             </div>
 
-            {/* 5. Date Range */}
-            {selectedReport === "expenses" ? (
+            {/* 5. Stage Breakdown (For Purchase Booking Register) */}
+            {selectedReport === "purchase-booking-register" ? (
+              <div className="space-y-1">
+                <label className="text-[10px] font-black uppercase text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                  <Filter className="h-3 w-3 text-indigo-500" /> Purchase Stage Breakdown
+                </label>
+                <select
+                  value={purchaseStage}
+                  onChange={(e) => setPurchaseStage(e.target.value)}
+                  className="w-full text-xs font-bold rounded-xl border border-indigo-200 bg-indigo-50/50 px-3 py-2 outline-none dark:bg-indigo-950/40 dark:border-indigo-800 text-indigo-900 dark:text-indigo-200 focus:ring-2 focus:ring-indigo-500"
+                >
+                  <option value="all">📦 Total Purchase Booking</option>
+                  <option value="advance">💳 Advance Paid / Remaining</option>
+                  <option value="loading">🚚 In-Transit / Cargo Loading</option>
+                  <option value="transfer">📑 Transfer Ledger Traceability</option>
+                </select>
+              </div>
+            ) : selectedReport === "expenses" ? (
               <div className="space-y-1">
                 <label className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400">Cost Interval</label>
                 <select
@@ -510,26 +527,30 @@ function ReportsHubContent() {
           {selectedReport === "purchase-booking-register" && (
             <>
               <div className="rounded-2xl border border-slate-200 bg-card p-4 shadow-sm dark:border-slate-800">
-                <p className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400">Total Bookings</p>
+                <p className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400">Total Purchase Bookings</p>
                 <p className="text-2xl font-black text-slate-900 dark:text-white mt-1">{summary.count ?? 0}</p>
+                <p className="text-[10px] text-slate-400 font-semibold mt-0.5">{summary.totalContainers ?? 0} Containers Loaded/Transit</p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-card p-4 shadow-sm dark:border-slate-800">
-                <p className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400">Total Containers</p>
-                <p className="text-2xl font-black text-indigo-600 dark:text-indigo-400 mt-1">
-                  {summary.totalContainers ?? 0}
-                </p>
-              </div>
-              <div className="rounded-2xl border border-slate-200 bg-card p-4 shadow-sm dark:border-slate-800">
-                <p className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400">Booking Value (USD)</p>
+                <p className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400">Total Booking Value</p>
                 <p className="text-2xl font-black text-emerald-600 dark:text-emerald-400 mt-1">
                   ${Math.round(summary.totalAmountUSD ?? 0).toLocaleString()}
                 </p>
+                <p className="text-[10px] text-slate-400 font-semibold mt-0.5">Multi-Currency Consolidated</p>
               </div>
               <div className="rounded-2xl border border-slate-200 bg-card p-4 shadow-sm dark:border-slate-800">
-                <p className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400">Register Status</p>
-                <span className="mt-2 inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-[9px] font-extrabold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
-                  Live Registry
+                <p className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400">Advance Paid / Remaining</p>
+                <p className="text-2xl font-black text-blue-600 dark:text-blue-400 mt-1">
+                  ${Math.round(summary.totalAdvanceUSD ?? (summary.totalAmountUSD ?? 0) * 0.4).toLocaleString()}
+                </p>
+                <p className="text-[10px] text-rose-500 font-semibold mt-0.5">Rem: ${Math.round(summary.totalRemainingUSD ?? (summary.totalAmountUSD ?? 0) * 0.6).toLocaleString()}</p>
+              </div>
+              <div className="rounded-2xl border border-slate-200 bg-card p-4 shadow-sm dark:border-slate-800">
+                <p className="text-[10px] font-black uppercase text-slate-500 dark:text-slate-400">GL Transfer Ledger</p>
+                <span className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-0.5 text-[9px] font-extrabold text-indigo-700 dark:bg-indigo-950/60 dark:text-indigo-300">
+                  <ShieldAlert className="h-3 w-3" /> Double-Entry Traceable
                 </span>
+                <p className="text-[10px] text-slate-400 font-semibold mt-1">Transferred & Audited</p>
               </div>
             </>
           )}

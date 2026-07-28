@@ -37,10 +37,17 @@ if [ ! -d ".git" ]; then
   git remote add origin https://github.com/dgtllccom-cell/ACCOUNTS.DGT.LLC.git
 fi
 
-echo "[VPS 2/6] Fetching & Resetting to origin/main (ACCOUNTS.DGT.LLC)..."
+echo "[VPS 2/6] Safely Handling Logs & Resetting to origin/main (ACCOUNTS.DGT.LLC)..."
 git remote set-url origin https://github.com/dgtllccom-cell/ACCOUNTS.DGT.LLC.git
 git fetch origin main
-git checkout -B main origin/main
+
+# Safely remove untracked log files that block Git while protecting .env.local, uploads, and backups
+rm -f api-error-log.txt *.log *-log.txt 2>/dev/null || true
+git rm --cached api-error-log.txt 2>/dev/null || true
+git clean -fd -e .env.local -e .env*.local -e uploads/ -e backups/ -e env_backups/ 2>/dev/null || true
+
+# Force checkout and reset to latest origin/main
+git checkout -f -B main origin/main
 git reset --hard origin/main
 
 echo "[VPS 3/6] Installing Dependencies & Compiling Next.js..."
