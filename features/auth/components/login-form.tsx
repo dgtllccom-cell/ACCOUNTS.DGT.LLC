@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 type LoginTab = "super_admin" | "country" | "city" | "branch" | "agent";
