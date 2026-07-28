@@ -13,7 +13,24 @@ export default function DashboardError({
 }) {
   useEffect(() => {
     console.error("Dashboard client-side exception caught:", error);
+    
+    // Auto-recover from chunk loading errors after new deployment builds
+    const msg = error?.message || "";
+    if (msg.includes("Loading chunk") || msg.includes("ChunkLoadError") || msg.includes("failed to fetch")) {
+      const lastReload = sessionStorage.getItem("chunk_reload_timestamp");
+      const now = Date.now();
+      // Reload automatically if not reloaded in the last 10 seconds to prevent infinite loops
+      if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
+        sessionStorage.setItem("chunk_reload_timestamp", String(now));
+        window.location.reload();
+      }
+    }
   }, [error]);
+
+  const handleTryAgain = () => {
+    sessionStorage.removeItem("chunk_reload_timestamp");
+    window.location.reload();
+  };
 
   return (
     <div className="p-6 max-w-xl mx-auto my-12 text-center">
@@ -25,7 +42,7 @@ export default function DashboardError({
           Module Temporary Exception
         </h3>
         <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-          This dashboard module encountered a client-side data error. Click below to reload or return to dashboard summary.
+          This dashboard module encountered a temporary chunk loading error after a system update. Click below to reload fresh assets.
         </p>
         {error?.message && (
           <div className="mt-4 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 text-left font-mono text-[10.5px] text-rose-600 dark:text-rose-400 overflow-x-auto">
@@ -35,10 +52,10 @@ export default function DashboardError({
         <div className="mt-6 flex items-center justify-center gap-3">
           <Button
             type="button"
-            onClick={() => reset()}
+            onClick={handleTryAgain}
             className="h-9 bg-blue-600 hover:bg-blue-700 font-bold text-xs gap-1.5"
           >
-            <RefreshCcw className="h-3.5 w-3.5" /> Try Again
+            <RefreshCcw className="h-3.5 w-3.5" /> Try Again (Reload)
           </Button>
           <Button
             type="button"
