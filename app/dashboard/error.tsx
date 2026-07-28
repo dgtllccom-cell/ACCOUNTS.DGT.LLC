@@ -16,20 +16,20 @@ export default function DashboardError({
     
     // Auto-recover from chunk loading errors after new deployment builds
     const msg = error?.message || "";
-    if (msg.includes("Loading chunk") || msg.includes("ChunkLoadError") || msg.includes("failed to fetch")) {
+    if (msg.includes("Loading chunk") || msg.includes("ChunkLoadError") || msg.includes("failed to fetch") || msg.includes(".js")) {
       const lastReload = sessionStorage.getItem("chunk_reload_timestamp");
       const now = Date.now();
-      // Reload automatically if not reloaded in the last 10 seconds to prevent infinite loops
-      if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
+      if (!lastReload || now - parseInt(lastReload, 10) > 4000) {
         sessionStorage.setItem("chunk_reload_timestamp", String(now));
-        window.location.reload();
+        // Cache-busting reload forces browser to fetch latest HTML and chunk manifests
+        window.location.href = window.location.pathname + "?_t=" + now;
       }
     }
   }, [error]);
 
   const handleTryAgain = () => {
     sessionStorage.removeItem("chunk_reload_timestamp");
-    window.location.reload();
+    window.location.href = window.location.pathname + "?_t=" + Date.now();
   };
 
   return (

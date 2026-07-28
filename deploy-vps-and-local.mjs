@@ -50,12 +50,14 @@ git clean -fd -e .env.local -e .env*.local -e uploads/ -e backups/ -e env_backup
 git checkout -f -B main origin/main
 git reset --hard origin/main
 
-echo "[VPS 3/6] Installing Dependencies & Compiling Next.js..."
+echo "[VPS 3/6] Cleaning Stale Build Cache & Compiling Next.js..."
+rm -rf .next
 npm install
 NODE_OPTIONS='--max-old-space-size=4096' npm run build
 
 echo "[VPS 4/6] Restarting PM2 process (dgt-nextjs)..."
 pm2 delete dgt-nextjs 2>/dev/null || true
+pm2 flush 2>/dev/null || true
 pm2 start ecosystem.config.cjs || pm2 start npm --name "dgt-nextjs" -- start
 pm2 save
 
