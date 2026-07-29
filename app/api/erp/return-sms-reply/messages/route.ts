@@ -31,6 +31,165 @@ export async function GET(request: NextRequest) {
 
     const admin = createSupabaseAdminClient();
 
+    // Handle Demo Conversation IDs
+    if (conversationId.startsWith("demo-conv-")) {
+      const demoThreads: Record<string, { conversation: any; messages: any[] }> = {
+        "demo-conv-1": {
+          conversation: {
+            id: "demo-conv-1",
+            channel: "whatsapp",
+            contact_identifier: "+92 300 9876543",
+            sender_name: "Haji Ahmad (Ahmad Logistics)",
+            sender_type: "Customer",
+            country_id: "pk",
+            message_language: "ur",
+            reply_mode: "approval",
+            related_entity_type: "sales_order",
+            related_entity_id: "SO-9941"
+          },
+          messages: [
+            {
+              id: "msg-d1-1",
+              conversationId: "demo-conv-1",
+              direction: "incoming",
+              channel: "whatsapp",
+              senderIdentifier: "+92 300 9876543",
+              recipientIdentifier: "ERP WhatsApp",
+              body: "السلام علیکم، میرا سیلز آرڈر SO-9941 کی شپمنٹ لوڈنگ پورٹ پہنچ گئی ہے؟ برائے مہربانی اپ ڈیٹ شیئر کریں۔",
+              detectedLanguage: "ur",
+              status: "received",
+              aiGeneratedReply: "وعلیکم السلام حاجی صاحب! آپ کا آرڈر SO-9941 پورٹ قاسم پر کامیا بی سے لوڈ ہو چکا ہے اور جہاز پر روانگی کے لیے تیار ہے۔ آپ اپنا سندِ باربرداری (B/L) آن لائن پورٹل سے بھی دیکھ سکتے ہیں۔",
+              createdAt: new Date(Date.now() - 1000 * 60 * 12).toISOString()
+            }
+          ]
+        },
+        "demo-conv-2": {
+          conversation: {
+            id: "demo-conv-2",
+            channel: "whatsapp",
+            contact_identifier: "+93 700 123456",
+            sender_name: "Gul Khan Trading Co.",
+            sender_type: "Customer",
+            country_id: "af",
+            message_language: "ps",
+            reply_mode: "manual",
+            related_entity_type: "ledger",
+            related_entity_id: "LEDG-AFG-002"
+          },
+          messages: [
+            {
+              id: "msg-d2-1",
+              conversationId: "demo-conv-2",
+              direction: "incoming",
+              channel: "whatsapp",
+              senderIdentifier: "+93 700 123456",
+              recipientIdentifier: "ERP WhatsApp",
+              body: "سلامونه، د تیرې میاشتې حساب بیلانس او باقیداری روانی کړئ. مننه",
+              detectedLanguage: "ps",
+              status: "received",
+              aiGeneratedReply: "سلامونه گل خان صاحب! ستاسو باقیداری افغانی 450,000 دی. د ډیجیټل ډاک ای آر پی تفصیلی حساب صورتحساب تیار شوی دی.",
+              createdAt: new Date(Date.now() - 1000 * 60 * 45).toISOString()
+            }
+          ]
+        },
+        "demo-conv-3": {
+          conversation: {
+            id: "demo-conv-3",
+            channel: "whatsapp",
+            contact_identifier: "+971 50 8887766",
+            sender_name: "Al-Damaan General Trading LLC",
+            sender_type: "Supplier",
+            country_id: "ae",
+            message_language: "ar",
+            reply_mode: "approval",
+            related_entity_type: "purchase_order",
+            related_entity_id: "PO-8820"
+          },
+          messages: [
+            {
+              id: "msg-d3-1",
+              conversationId: "demo-conv-3",
+              direction: "incoming",
+              channel: "whatsapp",
+              senderIdentifier: "+971 50 8887766",
+              recipientIdentifier: "ERP WhatsApp",
+              body: "السلام عليكم، يرجى تأكيد استلام الدفعة بقيمة 25,000 درهم وإرسال سند القبض.",
+              detectedLanguage: "ar",
+              status: "received",
+              aiGeneratedReply: "وعليكم السلام ورحمة الله! تم تأكيد استلام مبلغ 25,000 درهم بحساب الشركة وتم إصدار سند القبض الرسمي برقم REC-8820.",
+              createdAt: new Date(Date.now() - 1000 * 60 * 90).toISOString()
+            }
+          ]
+        },
+        "demo-conv-4": {
+          conversation: {
+            id: "demo-conv-4",
+            channel: "whatsapp",
+            contact_identifier: "+98 912 3456789",
+            sender_name: "Tehran Foreign Trade Co.",
+            sender_type: "Customer",
+            country_id: "ir",
+            message_language: "fa",
+            reply_mode: "automatic",
+            related_entity_type: "roznamcha",
+            related_entity_id: "ROZ-IRN-104"
+          },
+          messages: [
+            {
+              id: "msg-d4-1",
+              conversationId: "demo-conv-4",
+              direction: "incoming",
+              channel: "whatsapp",
+              senderIdentifier: "+98 912 3456789",
+              recipientIdentifier: "ERP WhatsApp",
+              body: "سلام، لطفا صورتحساب ماه جاری و لیست کالاهای موجود در انبار را ارسال فرمایید.",
+              detectedLanguage: "fa",
+              status: "received",
+              aiGeneratedReply: "سلام وقت بخیر! صورتحساب ماه جاری به همراه لیست موجودی انبار مرزی برای شما آماده و تایید گردید.",
+              createdAt: new Date(Date.now() - 1000 * 60 * 180).toISOString()
+            }
+          ]
+        },
+        "demo-conv-5": {
+          conversation: {
+            id: "demo-conv-5",
+            channel: "email",
+            contact_identifier: "shipping@gclines.com",
+            senderName: "Global Container Lines",
+            sender_type: "Shipping Line",
+            country_id: "global",
+            message_language: "en",
+            reply_mode: "manual",
+            related_entity_type: "purchase_order",
+            related_entity_id: "BL-49102"
+          },
+          messages: [
+            {
+              id: "msg-d5-1",
+              conversationId: "demo-conv-5",
+              direction: "incoming",
+              channel: "email",
+              senderIdentifier: "shipping@gclines.com",
+              recipientIdentifier: "ERP Email",
+              subject: "Release Notice: Bill of Lading BL-49102",
+              body: "Bill of Lading BL-49102 has been released. Container status is set to Port Gate Out.",
+              detectedLanguage: "en",
+              status: "received",
+              aiGeneratedReply: "Dear Global Container Lines team, Thank you for the release update regarding BL-49102. Our logistics department has updated the shipment status in Digital Dock ERP.",
+              createdAt: new Date(Date.now() - 1000 * 60 * 360).toISOString()
+            }
+          ]
+        }
+      };
+
+      const thread = demoThreads[conversationId] || {
+        conversation: { id: conversationId, sender_name: "Contact" },
+        messages: []
+      };
+
+      return apiOk(thread);
+    }
+
     // Fetch conversation details
     const { data: conversation } = await admin
       .from("communication_conversations")

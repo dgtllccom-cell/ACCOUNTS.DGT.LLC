@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export default function GlobalError({
   error,
@@ -9,8 +9,10 @@ export default function GlobalError({
   error: Error & { digest?: string };
   reset: () => void;
 }) {
+  const [refId] = useState(() => "ERR-ROOT-" + Math.random().toString(36).substring(2, 8).toUpperCase());
+
   useEffect(() => {
-    console.error("Global Root Error Boundary caught exception:", error);
+    console.error(`[GlobalError ${refId}] Root error boundary caught exception:`, error);
 
     const isChunkErr =
       error?.name === "ChunkLoadError" ||
@@ -21,19 +23,21 @@ export default function GlobalError({
           error.message.includes("ChunkLoadError")));
 
     if (isChunkErr) {
-      const lastReload = sessionStorage.getItem("chunk_reload_attempt");
-      const now = Date.now();
-      if (!lastReload || now - parseInt(lastReload, 10) > 15000) {
-        sessionStorage.setItem("chunk_reload_attempt", now.toString());
-        window.location.reload();
-      }
+      try {
+        const lastReload = sessionStorage.getItem("chunk_reload_attempt");
+        const now = Date.now();
+        if (!lastReload || now - parseInt(lastReload, 10) > 15000) {
+          sessionStorage.setItem("chunk_reload_attempt", now.toString());
+          window.location.reload();
+        }
+      } catch {}
     }
-  }, [error]);
+  }, [error, refId]);
 
   const handleHardReload = () => {
     try {
       if (typeof window !== "undefined") {
-        sessionStorage.removeItem("chunk_reload_attempt");
+        try { sessionStorage.removeItem("chunk_reload_attempt"); } catch {}
         if (typeof window !== "undefined" && window.isSecureContext && "serviceWorker" in navigator) {
           navigator.serviceWorker.getRegistrations().then((regs) => {
             regs.forEach((r) => r.unregister());
@@ -51,17 +55,28 @@ export default function GlobalError({
 
   return (
     <html lang="en">
-      <body style={{ margin: 0, padding: 0, fontFamily: "system-ui, -apple-system, sans-serif", backgroundColor: "#0f172a", color: "#f8fafc", minHeight: "100vh", display: "flex", alignItems: "center", justifyCenter: "center" }}>
-        <div style={{ maxWidth: "420px", margin: "auto", padding: "2rem", backgroundColor: "#1e293b", borderRadius: "1rem", border: "1px solid #334155", textAlign: "center", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5)" }}>
+      <body style={{ margin: 0, padding: 0, fontFamily: "system-ui, -apple-system, sans-serif", backgroundColor: "#0f172a", color: "#f8fafc", minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div style={{ maxWidth: "480px", width: "90%", margin: "auto", padding: "2rem", backgroundColor: "#1e293b", borderRadius: "1rem", border: "1px solid #334155", textAlign: "center", boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.5)" }}>
           <div style={{ width: "48px", height: "48px", margin: "0 auto 1rem", borderRadius: "1rem", backgroundColor: "rgba(245, 158, 11, 0.15)", color: "#f59e0b", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px" }}>
             ⚠️
           </div>
+          <div style={{ fontSize: "11px", fontFamily: "monospace", color: "#94a3b8", marginBottom: "8px" }}>
+            Reference ID: {refId}
+          </div>
           <h2 style={{ fontSize: "1.25rem", fontWeight: 900, marginBottom: "0.5rem" }}>
-            Application Update Needed
+            Application Diagnostic Notice
           </h2>
-          <p style={{ fontSize: "0.85rem", color: "#94a3b8", lineHeight: 1.5, marginBottom: "1.5rem" }}>
-            A new application update or script reload is required. Click below to refresh your session.
+          <p style={{ fontSize: "0.85rem", color: "#94a3b8", lineHeight: 1.5, marginBottom: "1rem" }}>
+            A client-side execution exception occurred. Details:
           </p>
+
+          <div style={{ textAlign: "left", backgroundColor: "#090d16", padding: "12px", borderRadius: "8px", border: "1px solid #1e293b", fontSize: "11px", fontFamily: "monospace", color: "#f87171", marginBottom: "1.5rem", overflowX: "auto", maxHeight: "140px" }}>
+            <strong>{error?.name}: {error?.message}</strong>
+            {error?.stack && (
+              <pre style={{ margin: "8px 0 0 0", fontSize: "10px", opacity: 0.8, whiteSpace: "pre-wrap" }}>{error.stack}</pre>
+            )}
+          </div>
+
           <div style={{ display: "flex", gap: "0.5rem" }}>
             <button
               onClick={handleHardReload}

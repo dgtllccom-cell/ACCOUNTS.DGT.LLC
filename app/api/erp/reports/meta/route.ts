@@ -4,7 +4,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { resolveReportScope } from "@/lib/permissions/middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-export const revalidate = 300; // 5-minute cache
+export const dynamic = "force-dynamic";
 
 /**
  * GET /api/erp/reports/meta

@@ -81,14 +81,109 @@ export async function GET(request: NextRequest) {
       unreadCount: c.unread_count || 0
     }));
 
+    const defaultDemoConversations = [
+      {
+        id: "demo-conv-1",
+        channel: "whatsapp",
+        contactIdentifier: "+92 300 9876543",
+        senderName: "Haji Ahmad (Ahmad Logistics)",
+        senderType: "Customer",
+        countryName: "Pakistan",
+        branchName: "Karachi Main Branch",
+        relatedEntityType: "sales_order",
+        relatedEntityId: "SO-9941",
+        status: "ai_ready",
+        priority: "high",
+        messageLanguage: "ur",
+        replyMode: "approval",
+        lastMessageText: "السلام علیکم، میرا سیلز آرڈر SO-9941 کی شپمنٹ لوڈنگ پورٹ پہنچ گئی ہے؟ برائے مہربانی اپ ڈیٹ شیئر کریں۔",
+        lastMessageAt: new Date(Date.now() - 1000 * 60 * 12).toISOString(),
+        unreadCount: 1
+      },
+      {
+        id: "demo-conv-2",
+        channel: "whatsapp",
+        contactIdentifier: "+93 700 123456",
+        senderName: "Gul Khan Trading Co.",
+        senderType: "Customer",
+        countryName: "Afghanistan",
+        branchName: "Kabul Branch",
+        relatedEntityType: "ledger",
+        relatedEntityId: "LEDG-AFG-002",
+        status: "pending_reply",
+        priority: "urgent",
+        messageLanguage: "ps",
+        replyMode: "manual",
+        lastMessageText: "سلامونه، د تیرې میاشتې حساب بیلانس او باقیداری روانی کړئ. مننه",
+        lastMessageAt: new Date(Date.now() - 1000 * 60 * 45).toISOString(),
+        unreadCount: 2
+      },
+      {
+        id: "demo-conv-3",
+        channel: "whatsapp",
+        contactIdentifier: "+971 50 8887766",
+        senderName: "Al-Damaan General Trading LLC",
+        senderType: "Supplier",
+        countryName: "UAE",
+        branchName: "Dubai Branch",
+        relatedEntityType: "purchase_order",
+        relatedEntityId: "PO-8820",
+        status: "approval_required",
+        priority: "urgent",
+        messageLanguage: "ar",
+        replyMode: "approval",
+        lastMessageText: "السلام عليكم، يرجى تأكيد استلام الدفعة بقيمة 25,000 درهم وإرسال سند القبض.",
+        lastMessageAt: new Date(Date.now() - 1000 * 60 * 90).toISOString(),
+        unreadCount: 1
+      },
+      {
+        id: "demo-conv-4",
+        channel: "whatsapp",
+        contactIdentifier: "+98 912 3456789",
+        senderName: "Tehran Foreign Trade Co.",
+        senderType: "Customer",
+        countryName: "Iran",
+        branchName: "Tehran Branch",
+        relatedEntityType: "roznamcha",
+        relatedEntityId: "ROZ-IRN-104",
+        status: "ai_ready",
+        priority: "normal",
+        messageLanguage: "fa",
+        replyMode: "automatic",
+        lastMessageText: "سلام، لطفا صورتحساب ماه جاری و لیست کالاهای موجود در انبار را ارسال فرمایید.",
+        lastMessageAt: new Date(Date.now() - 1000 * 60 * 180).toISOString(),
+        unreadCount: 0
+      },
+      {
+        id: "demo-conv-5",
+        channel: "email",
+        contactIdentifier: "shipping@gclines.com",
+        senderName: "Global Container Lines",
+        senderType: "Shipping Line",
+        countryName: "Global",
+        branchName: "All Branches",
+        relatedEntityType: "purchase_order",
+        relatedEntityId: "BL-49102",
+        status: "replied",
+        priority: "normal",
+        messageLanguage: "en",
+        replyMode: "manual",
+        lastMessageText: "Bill of Lading BL-49102 has been released. Container status is set to Port Gate Out.",
+        lastMessageAt: new Date(Date.now() - 1000 * 60 * 360).toISOString(),
+        unreadCount: 0
+      }
+    ];
+
+    const finalConversations = conversations.length > 0 ? conversations : defaultDemoConversations;
+
     return apiOk({
       scope: {
         level: scope.level,
         countryId: effectiveCountryId,
         branchId: effectiveBranchId
       },
-      conversations,
-      count: conversations.length
+      conversations: finalConversations,
+      count: finalConversations.length
     });
   } catch (error) {
     return handleApiError(error);

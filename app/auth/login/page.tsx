@@ -1,4 +1,5 @@
 import { LoginForm }       from "@/features/auth/components/login-form";
+import { LoginErrorBoundary } from "@/features/auth/components/login-error-boundary";
 import { AuthTopControls } from "@/components/layout/auth-top-controls";
 import { InstallAppBanner } from "@/components/layout/install-app-banner";
 import { getRequestLanguage } from "@/lib/i18n/server";
@@ -69,7 +70,9 @@ export default async function LoginPage({
               </div>
             )}
 
-            <LoginForm lang={lang} />
+            <LoginErrorBoundary>
+              <LoginForm lang={lang} />
+            </LoginErrorBoundary>
           </div>
 
           {/* ── Footer ── */}

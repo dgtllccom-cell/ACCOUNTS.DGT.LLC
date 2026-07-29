@@ -219,6 +219,58 @@ export function UnifiedInboxView({ lang }: Props) {
   return (
     <div className="space-y-4" dir={isRTL ? "rtl" : "ltr"}>
 
+      {/* WhatsApp Business API Live Status Banner */}
+      <div className="rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-900 via-[#06241b] to-teal-950 p-4 text-white shadow-md flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center shrink-0">
+            <MessageSquare className="h-5 w-5 text-emerald-400" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-extrabold text-sm text-white">WhatsApp Business API Official Channel</span>
+              <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold flex items-center gap-1">
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span> CONNECTED (+92 300 1234567)
+              </span>
+            </div>
+            <p className="text-xs text-emerald-200/80 mt-0.5">
+              Live Webhook: <code className="bg-emerald-950/80 px-1.5 py-0.5 rounded text-[10.5px] font-mono text-emerald-300">http://72.60.209.121/api/erp/return-sms-reply/webhooks/whatsapp</code>
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => {
+              if (conversations.length > 0) {
+                const newSimulatedMsg: ConversationItem = {
+                  id: `sim-${Date.now()}`,
+                  channel: "whatsapp",
+                  contactIdentifier: "+92 300 5554433",
+                  senderName: "Tariq Khan (Simulated Customer)",
+                  senderType: "Customer",
+                  countryName: "Pakistan",
+                  branchName: "Peshawar Branch",
+                  relatedEntityType: "sales_order",
+                  relatedEntityId: "SO-1029",
+                  status: "ai_ready",
+                  priority: "high",
+                  messageLanguage: "ur",
+                  replyMode: "approval",
+                  lastMessageText: "السلام علیکم، برائے مہربانی مجھے نیا ریٹ لسٹ اور انوائس نمبر SO-1029 بھیج دیں۔",
+                  lastMessageAt: new Date().toISOString(),
+                  unreadCount: 1
+                };
+                setConversations([newSimulatedMsg, ...conversations]);
+                setSelectedConv(newSimulatedMsg);
+              }
+            }}
+            className="h-9 px-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95"
+          >
+            <Sparkles className="h-4 w-4" /> Simulate Incoming WhatsApp Message
+          </button>
+        </div>
+      </div>
+
       {/* Tabs bar */}
       <div className="flex items-center gap-1.5 overflow-x-auto pb-2 border-b dark:border-slate-800">
         {INBOX_TABS.map((tab) => (

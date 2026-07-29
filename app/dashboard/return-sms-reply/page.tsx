@@ -3,6 +3,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { resolveReportScope } from "@/lib/permissions/middleware";
 import { ReturnSmsReplyContainer } from "@/features/return-sms-reply/components/return-sms-reply-container";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Return SMS Reply — AI Communication Centre",
   description: "Centralized WhatsApp & Email AI communication center for multi-country, automated business replies and payment reminders."
