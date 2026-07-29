@@ -49,6 +49,46 @@ export function WhatsAppWizardModal({
   const [sendingTest, setSendingTest] = useState(false);
   const [testResult, setTestResult] = useState<any>(null);
 
+  // Meta Admin credentials setup state
+  const [phoneNumberId, setPhoneNumberId] = useState("");
+  const [wabaId, setWabaId] = useState("");
+  const [accessToken, setAccessToken] = useState("");
+  const [verifyingMeta, setVerifyingMeta] = useState(false);
+
+  // Save Meta Admin credentials to server DB
+  async function handleSaveAdminMeta() {
+    if (!phoneNumberId.trim() || !accessToken.trim()) return;
+    setVerifyingMeta(true);
+    setOtpError(null);
+
+    try {
+      const res = await fetch("/api/erp/admin/configure-meta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phoneNumberId: phoneNumberId.trim(),
+          accessToken: accessToken.trim(),
+          wabaId: wabaId.trim() || "WABAID-OFFICIAL",
+          phoneNumber
+        })
+      });
+      const json = await res.json();
+      const data = json.data || json;
+
+      if (data.success) {
+        setOtpError(null);
+        alert(`✅ Meta credentials verified! Official line activated for ${data.displayPhoneNumber || phoneNumber}. Click "Send 6-Digit Code" now.`);
+        handleSendOtp();
+      } else {
+        setOtpError(data.error || "Failed to verify Meta credentials.");
+      }
+    } catch (e: any) {
+      setOtpError(e?.message || "Server configuration error.");
+    } finally {
+      setVerifyingMeta(false);
+    }
+  }
+
   // Handle Branch Scope Selection
   const handleScopeChange = (val: string) => {
     setScope(val);
@@ -369,8 +409,48 @@ export function WhatsAppWizardModal({
               </div>
 
               {otpError && (
-                <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 font-mono text-[11px]">
-                  ❌ {typeof otpError === "string" ? otpError : JSON.stringify(otpError)}
+                <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 font-mono text-[11px] space-y-2">
+                  <p className="font-bold">❌ {typeof otpError === "string" ? otpError : JSON.stringify(otpError)}</p>
+                  
+                  {typeof otpError === "string" && otpError.includes("Administrator Setup Required") && (
+                    <div className="pt-2 border-t border-rose-500/20 space-y-2">
+                      <p className="font-extrabold text-slate-800 dark:text-slate-100 font-sans text-xs">
+                        ⚙️ Super Admin One-Time Meta Configuration:
+                      </p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <input
+                          type="text"
+                          placeholder="Phone Number ID (e.g. 1029384756...)"
+                          value={phoneNumberId}
+                          onChange={(e) => setPhoneNumberId(e.target.value)}
+                          className="font-mono text-[10.5px] p-2 rounded-lg border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none"
+                        />
+                        <input
+                          type="text"
+                          placeholder="WABA ID (e.g. 9876543210...)"
+                          value={wabaId}
+                          onChange={(e) => setWabaId(e.target.value)}
+                          className="font-mono text-[10.5px] p-2 rounded-lg border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none"
+                        />
+                      </div>
+                      <textarea
+                        rows={2}
+                        placeholder="Permanent Access Token (EAAG...)"
+                        value={accessToken}
+                        onChange={(e) => setAccessToken(e.target.value)}
+                        className="w-full font-mono text-[10px] p-2 rounded-lg border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none resize-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSaveAdminMeta}
+                        disabled={verifyingMeta || !phoneNumberId.trim() || !accessToken.trim()}
+                        className="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition-all cursor-pointer disabled:opacity-40 flex items-center justify-center gap-1.5"
+                      >
+                        {verifyingMeta ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5" />}
+                        Verify & Activate Server Meta Credentials
+                      </button>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
