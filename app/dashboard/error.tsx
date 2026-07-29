@@ -44,9 +44,15 @@ export default function DashboardError({
         <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
           This dashboard module encountered a temporary chunk loading error after a system update. Click below to reload fresh assets.
         </p>
-        {error?.message && (
+        {error && (
           <div className="mt-4 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 p-3 text-left font-mono text-[10.5px] text-rose-600 dark:text-rose-400 overflow-x-auto">
-            {error.message}
+            {typeof error.message === "string"
+              ? error.message
+              : typeof error.message === "object" && error.message !== null
+              ? JSON.stringify(error.message)
+              : typeof error === "string"
+              ? error
+              : JSON.stringify(error)}
           </div>
         )}
         <div className="mt-6 flex items-center justify-center gap-3">

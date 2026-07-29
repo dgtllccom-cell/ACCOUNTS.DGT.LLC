@@ -315,7 +315,9 @@ export function WhatsAppWizardModal({
 
               {otpSentStatus && (
                 <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 space-y-1 font-mono text-[11px]">
-                  <p className="font-bold">✓ {otpSentStatus.message}</p>
+                  <p className="font-bold">
+                    ✓ {typeof otpSentStatus.message === "string" ? otpSentStatus.message : JSON.stringify(otpSentStatus.message)}
+                  </p>
                   {otpSentStatus.formattedE164 && (
                     <p>Target Phone: {otpSentStatus.formattedE164}</p>
                   )}
@@ -355,7 +357,7 @@ export function WhatsAppWizardModal({
 
               {otpError && (
                 <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 font-mono text-[11px]">
-                  ❌ {otpError}
+                  ❌ {typeof otpError === "string" ? otpError : JSON.stringify(otpError)}
                 </div>
               )}
             </div>
@@ -466,7 +468,9 @@ export function WhatsAppWizardModal({
                     <p>WAMID: <span className="font-bold">{testResult.wamid}</span></p>
                   )}
                   {testResult.details && (
-                    <p className="text-[10.5px] opacity-90">{testResult.details}</p>
+                    <p className="text-[10.5px] opacity-90">
+                      {typeof testResult.details === "string" ? testResult.details : JSON.stringify(testResult.details)}
+                    </p>
                   )}
                 </div>
               )}
