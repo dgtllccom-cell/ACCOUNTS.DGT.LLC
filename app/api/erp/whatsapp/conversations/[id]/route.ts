@@ -5,13 +5,17 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
+// Uses cookies() via requireErpSession — must be dynamic
+export const dynamic = "force-dynamic";
+
 type Params = { params: Promise<{ id: string }> };
 
 const conversationUpdateSchema = z.object({
   status: z.enum(["open", "assigned", "resolved", "spam"]).optional(),
-  assignedUserId: z.string().uuid().nullable().optional(),
+  assignedUserId: z.string().nullable().optional().transform((v) => (v && v.trim().length > 0 ? v.trim() : null)),
   labels: z.array(z.string()).optional()
 });
+
 
 export async function GET(request: NextRequest, { params }: Params) {
   try {

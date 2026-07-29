@@ -3,6 +3,9 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getOrCreateConversation } from "@/lib/services/return-sms-reply-service";
 import { generateContextualAiReply } from "@/lib/services/ai-reply-generator";
 
+// Webhook handler must always be dynamic — never statically cached
+export const dynamic = "force-dynamic";
+
 /**
  * GET /api/erp/return-sms-reply/webhooks/whatsapp
  * Official Meta WhatsApp Business API webhook verification.

@@ -3,6 +3,10 @@ import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 
+// Uses cookies() via requireErpSession — must be dynamic
+export const dynamic = "force-dynamic";
+
+
 const verifySchema = z.object({
   phoneNumberId: z.string().min(5, "Phone Number ID is required"),
   accessToken: z.string().min(20, "Access Token is required")

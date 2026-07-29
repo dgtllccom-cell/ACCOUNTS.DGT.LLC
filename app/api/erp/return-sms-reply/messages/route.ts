@@ -6,6 +6,9 @@ import { authorize } from "@/lib/permissions/middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { generateContextualAiReply } from "@/lib/services/ai-reply-generator";
 
+// Uses cookies() via requireErpSession — must be dynamic
+export const dynamic = "force-dynamic";
+
 const sendMessageSchema = z.object({
   conversationId: z.string(),
   body: z.string().min(1, "Message content is required"),

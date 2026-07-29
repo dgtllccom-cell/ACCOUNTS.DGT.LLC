@@ -4,6 +4,9 @@ import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
+// Uses cookies() via requireErpSession — must be dynamic
+export const dynamic = "force-dynamic";
+
 const testSendSchema = z.object({
   senderNumber: z.string().min(7, "Sender phone number is required"),
   recipientNumber: z.string().min(7, "Recipient phone number is required"),

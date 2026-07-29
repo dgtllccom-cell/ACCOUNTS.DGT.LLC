@@ -5,6 +5,10 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorize } from "@/lib/permissions/middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
+// Uses cookies() via requireErpSession — must be dynamic
+export const dynamic = "force-dynamic";
+
+
 const templateSchema = z.object({
   id: z.string().optional(),
   code: z.string().min(1, "Template code is required"),

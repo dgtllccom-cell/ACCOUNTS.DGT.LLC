@@ -1,4 +1,6 @@
-begin;
+-- 0068_communication_center.sql
+-- NOTE: Transaction wrappers removed — migration runner executes statements individually.
+-- pgBouncer pooler rejects explicit BEGIN/COMMIT blocks (UNSAFE_TRANSACTION error).
 
 create table if not exists communication_center_profiles (
   id uuid primary key default gen_random_uuid(),
@@ -194,6 +196,4 @@ on conflict (name) do update
 set status = excluded.status,
     applied_at = excluded.applied_at;
 
-commit;
-
-
+-- Migration complete.

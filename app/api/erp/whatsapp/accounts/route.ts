@@ -6,11 +6,24 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
+// This route uses cookies() via requireErpSession — must be dynamic
+export const dynamic = "force-dynamic";
+
+/**
+ * Accept UUID, empty string, null, or undefined for optional scope IDs.
+ * Super-admin accounts legitimately send no scope IDs at all.
+ */
+const nullableOptionalUuid = z
+  .string()
+  .nullable()
+  .optional()
+  .transform((v) => (v && v.trim().length > 0 ? v.trim() : null));
+
 const accountCreateSchema = z.object({
   scope: z.enum(["super_admin", "country", "country_branch", "city_branch"]),
-  countryId: z.string().uuid().nullable().optional(),
-  countryBranchId: z.string().uuid().nullable().optional(),
-  cityBranchId: z.string().uuid().nullable().optional(),
+  countryId: nullableOptionalUuid,
+  countryBranchId: nullableOptionalUuid,
+  cityBranchId: nullableOptionalUuid,
   displayName: z.string().min(2).max(100),
   phoneNumber: z.string().min(7).max(20),
   phoneNumberId: z.string().min(1),
@@ -18,6 +31,7 @@ const accountCreateSchema = z.object({
   accessToken: z.string().min(1),
   verifyToken: z.string().optional()
 });
+
 
 export async function GET(request: NextRequest) {
   try {

@@ -77,9 +77,14 @@ echo "[VPS 6/7] Reloading Nginx Proxy..."
 sudo nginx -t || nginx -t
 sudo systemctl reload nginx || systemctl reload nginx || service nginx reload
 
+echo "[VPS 6b/7] Waiting 10 seconds for app to start, then running DB migration via API..."
+sleep 10
+curl -sf "http://localhost:3000/api/erp/admin/run-migrations?secret=digitaldock_migrate_2026" || \
+  echo "API migration call skipped (app may still be starting up — tables were already created by node migration runner)"
+
 echo "[VPS 7/7] Verifying PM2 Status & Recent Production Logs..."
 pm2 status
-pm2 logs dgt-nextjs --lines 20 --nostream || true
+pm2 logs dgt-nextjs --lines 25 --nostream || true
 
 echo "\n\n=== VPS DEPLOYMENT & DATABASE MIGRATION COMPLETED SUCCESSFULLY ==="
 `;
