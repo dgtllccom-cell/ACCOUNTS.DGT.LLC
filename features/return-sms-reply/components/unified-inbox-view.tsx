@@ -338,9 +338,9 @@ export function UnifiedInboxView({ lang }: Props) {
                     CONNECTED ({whatsappConfig.officialNumber})
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 px-3 py-0.5 text-[10.5px] font-mono font-bold text-rose-300 shadow-xs">
-                    <span className="h-2 w-2 rounded-full bg-rose-400"></span>
-                    NOT CONNECTED — Meta API Credentials Required
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-0.5 text-[10.5px] font-mono font-bold text-amber-300 shadow-xs">
+                    <span className="h-2 w-2 rounded-full bg-amber-400"></span>
+                    NOT CONNECTED — Click Connect Official WhatsApp
                   </span>
                 )}
               </div>
@@ -353,8 +353,8 @@ export function UnifiedInboxView({ lang }: Props) {
                     </code>
                   </>
                 ) : (
-                  <span className="text-amber-300/80">
-                    Connect WhatsApp → Enter your real Meta Phone Number ID, WABA ID, and Access Token
+                  <span className="text-emerald-300/90 font-medium">
+                    Click Connect Official WhatsApp → Enter your branch phone number to receive 6-digit verification code
                   </span>
                 )}
               </p>

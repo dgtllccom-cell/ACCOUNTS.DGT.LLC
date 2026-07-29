@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 const verifyOtpSchema = z.object({
   phoneNumber: z.string().min(7, "Phone number is required"),
   otpCode: z.string().min(4, "Verification code is required"),
-  scope: z.enum(["super_admin", "country", "country_branch", "city_branch"]).default("super_admin"),
+  scope: z.string().default("super_admin"),
   displayName: z.string().optional()
 });
 
@@ -79,10 +79,11 @@ export async function POST(request: NextRequest) {
         })
         .eq("id", accountId);
     } else {
+      const dbScope = ["uae", "pakistan", "afghanistan", "turkey", "country"].includes(parsed.scope) ? "country" : "super_admin";
       const { data: newAccount, error: insErr } = await admin
         .from("whatsapp_accounts")
         .insert({
-          scope: parsed.scope,
+          scope: dbScope,
           display_name: parsed.displayName || `WhatsApp Official (${parsed.phoneNumber})`,
           phone_number: parsed.phoneNumber,
           phone_number_id: phoneNumberId,
