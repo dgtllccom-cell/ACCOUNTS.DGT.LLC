@@ -107,34 +107,50 @@ export function UnifiedInboxView({ lang }: Props) {
   const [selectedBranchScope, setSelectedBranchScope] = useState("global");
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [whatsappConfig, setWhatsappConfig] = useState({
-    officialNumber: "00971544816664",
-    adminNumber: "00971544816664",
-    wbaId: "WBAID-10928374659281",
-    phoneNumberId: "PNID-10827364519283",
-    accountName: "Super Admin Dubai WhatsApp Business (00971544816664)",
+    officialNumber: null as string | null,
+    accountName: null as string | null,
+    wbaId: null as string | null,
+    phoneNumberId: null as string | null,
     webhookUrl: "http://72.60.209.121/api/erp/return-sms-reply/webhooks/whatsapp",
-    isConnected: true
+    isConnected: false // Always false until a real verified account is found in DB
   });
 
-  // Dynamic status verification from verified database records
+  // Fetch real WhatsApp connection status from verified database records only
   const fetchWhatsAppStatus = useCallback(async () => {
     try {
       const res = await fetch("/api/erp/whatsapp/accounts");
       const json = await res.json();
       const accounts = json.data || json || [];
+
       if (Array.isArray(accounts) && accounts.length > 0) {
-        const primary = accounts[0];
-        setWhatsappConfig((prev) => ({
-          ...prev,
-          officialNumber: primary.phone_number || prev.officialNumber,
-          accountName: primary.display_name || prev.accountName,
-          wbaId: primary.waba_id || prev.wbaId,
-          phoneNumberId: primary.phone_number_id || prev.phoneNumberId,
-          isConnected: Boolean(primary.is_active ?? true)
-        }));
+        // Only count as CONNECTED if the account has real (non-placeholder) credentials
+        const realAccount = accounts.find((a: any) => {
+          const pnid = a.phone_number_id || "";
+          const token = a.access_token || "";
+          const isRealPnid = pnid.length > 5 && !pnid.startsWith("PNID-");
+          const isRealToken = token.length > 20 && !token.includes("SECURE_TOKEN");
+          return a.is_active && isRealPnid && isRealToken;
+        });
+
+        if (realAccount) {
+          setWhatsappConfig((prev) => ({
+            ...prev,
+            officialNumber: realAccount.phone_number || null,
+            accountName: realAccount.display_name || null,
+            wbaId: realAccount.waba_id || null,
+            phoneNumberId: realAccount.phone_number_id || null,
+            isConnected: true
+          }));
+        } else {
+          // Accounts exist in DB but have placeholder/fake credentials
+          setWhatsappConfig((prev) => ({ ...prev, isConnected: false }));
+        }
+      } else {
+        setWhatsappConfig((prev) => ({ ...prev, isConnected: false }));
       }
     } catch (e) {
-      console.warn("[WhatsApp Status Verification Notice]:", e);
+      console.warn("[WhatsApp Status Check]:", e);
+      setWhatsappConfig((prev) => ({ ...prev, isConnected: false }));
     }
   }, []);
 
@@ -322,17 +338,25 @@ export function UnifiedInboxView({ lang }: Props) {
                     CONNECTED ({whatsappConfig.officialNumber})
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-500/15 border border-amber-500/30 px-3 py-0.5 text-[10.5px] font-mono font-bold text-amber-300 shadow-xs">
-                    <span className="h-2 w-2 rounded-full bg-amber-400"></span>
-                    DISCONNECTED ({whatsappConfig.officialNumber})
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-rose-500/15 border border-rose-500/30 px-3 py-0.5 text-[10.5px] font-mono font-bold text-rose-300 shadow-xs">
+                    <span className="h-2 w-2 rounded-full bg-rose-400"></span>
+                    NOT CONNECTED — Meta API Credentials Required
                   </span>
                 )}
               </div>
               <p className="text-xs font-medium text-slate-300/80 mt-1 flex items-center gap-1.5 flex-wrap">
-                <span>Live Webhook:</span>
-                <code className="bg-slate-950/80 border border-emerald-500/20 px-2 py-0.5 rounded-lg text-[10.5px] font-mono text-emerald-300">
-                  http://72.60.209.121/api/erp/return-sms-reply/webhooks/whatsapp
-                </code>
+                {whatsappConfig.isConnected ? (
+                  <>
+                    <span>Live Webhook:</span>
+                    <code className="bg-slate-950/80 border border-emerald-500/20 px-2 py-0.5 rounded-lg text-[10.5px] font-mono text-emerald-300">
+                      http://72.60.209.121/api/erp/return-sms-reply/webhooks/whatsapp
+                    </code>
+                  </>
+                ) : (
+                  <span className="text-amber-300/80">
+                    Connect WhatsApp → Enter your real Meta Phone Number ID, WABA ID, and Access Token
+                  </span>
+                )}
               </p>
             </div>
           </div>

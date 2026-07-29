@@ -1,19 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useCallback } from "react";
 import {
   MessageSquare,
-  QrCode,
   CheckCircle2,
   Send,
   Loader2,
-  RefreshCw,
   Globe,
-  Building2,
   ShieldCheck,
-  Smartphone,
   Copy,
-  Check
+  Check,
+  AlertTriangle,
+  ExternalLink,
+  XCircle,
+  RefreshCw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -25,203 +25,145 @@ type Props = {
   onConnected?: (account: any) => void;
 };
 
+type VerifyState = "idle" | "loading" | "success" | "error";
+
 export function WhatsAppWizardModal({
   isOpen,
   onClose,
-  defaultPhoneNumber = "00971544816664",
+  defaultPhoneNumber = "",
   defaultScope = "super_admin",
   onConnected
 }: Props) {
-  const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [scope, setScope] = useState(defaultScope);
-  const [displayName, setDisplayName] = useState("Super Admin Dubai WhatsApp Business");
+  const [displayName, setDisplayName] = useState("");
   const [phoneNumber, setPhoneNumber] = useState(defaultPhoneNumber);
-  const [adminMobile, setAdminMobile] = useState("00971544816664");
-  const [connectionMethod, setConnectionMethod] = useState<"qr" | "meta">("qr");
 
-  // Meta Cloud API inputs
-  const [phoneNumberId, setPhoneNumberId] = useState(`PNID-${Date.now()}`);
-  const [wabaId, setWabaId] = useState(`WBAID-${Date.now()}`);
-  const [accessToken, setAccessToken] = useState(`EAAG_${Date.now()}_SECURE_TOKEN`);
+  // Real Meta Cloud API Credentials — all empty by default, user must fill in
+  const [phoneNumberId, setPhoneNumberId] = useState("");
+  const [wabaId, setWabaId] = useState("");
+  const [accessToken, setAccessToken] = useState("");
+  const [verifyToken, setVerifyToken] = useState("digitaldock_webhook_2026");
 
-  // QR Code & Pairing State
-  const [qrCodeData, setQrCodeData] = useState<any>(null);
-  const [loadingQr, setLoadingQr] = useState(false);
-  const [isPaired, setIsPaired] = useState(false);
-  const [countdown, setCountdown] = useState(60);
-  const [pairingTab, setPairingTab] = useState<"qr" | "code" | "otp">("otp");
-  const [copiedPairingCode, setCopiedPairingCode] = useState(false);
+  // Live verification state
+  const [verifyState, setVerifyState] = useState<VerifyState>("idle");
+  const [verifyResult, setVerifyResult] = useState<any>(null);
 
-  // Test Message State
+  // Test send state
   const [testRecipient, setTestRecipient] = useState(defaultPhoneNumber);
-  const [testMessage, setTestMessage] = useState("Hello from Digital Dock ERP! Your WhatsApp connection is live & verified.");
+  const [testMessage, setTestMessage] = useState("Hello! This is a real test message from Digital Dock ERP.");
   const [sendingTest, setSendingTest] = useState(false);
   const [testResult, setTestResult] = useState<any>(null);
-  const [copiedWebhook, setCopiedWebhook] = useState(false);
 
-  // WhatsApp OTP Verification Code State
-  const [otpCode, setOtpCode] = useState("");
-  const [generatedOtp, setGeneratedOtp] = useState("849201");
-  const [sendingOtp, setSendingOtp] = useState(false);
-  const [otpSentStatus, setOtpSentStatus] = useState<string | null>(null);
-  const [otpError, setOtpError] = useState<string | null>(null);
+  // Save to DB state
+  const [saving, setSaving] = useState(false);
+  const [savedAccountId, setSavedAccountId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (phoneNumber) {
-      setTestRecipient(phoneNumber);
-    }
-  }, [phoneNumber]);
-
-  // Send WhatsApp OTP Code to user's phone number
-  async function handleSendOtp() {
-    setSendingOtp(true);
-    setOtpError(null);
-    setOtpSentStatus(null);
-    const code = String(Math.floor(100000 + Math.random() * 900000));
-    setGeneratedOtp(code);
-    setOtpCode(code); // Auto-fill generated OTP into input box for instant 1-click verification
-
-    try {
-      await fetch("/api/erp/whatsapp/test-send", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          senderNumber: phoneNumber,
-          recipientNumber: phoneNumber,
-          messageText: `🔑 Digital Dock ERP Link Code: ${code}. Enter this 6-digit code on your ERP setup screen to verify & connect your WhatsApp.`,
-          scope
-        })
-      });
-      setOtpSentStatus(`✓ 6-Digit Code (${code}) generated & auto-filled for ${phoneNumber}`);
-    } catch (e) {
-      setOtpSentStatus(`✓ Verification Code (${code}) generated & auto-filled for ${phoneNumber}`);
-    } finally {
-      setSendingOtp(false);
-    }
-  }
-
-  // Verify OTP Code entered by user
-  async function handleVerifyOtp() {
-    const cleanInput = otpCode.trim();
-    if (!cleanInput) {
-      setOtpError("Please enter the 6-digit verification code");
-      return;
-    }
-    if (cleanInput === generatedOtp || cleanInput.length >= 4 || cleanInput === "849201") {
-      setOtpError(null);
-      await handleSimulateScan();
-    } else {
-      setOtpError("Invalid code. Please check your WhatsApp message and try again.");
-    }
-  }
-
-  // Real Scannable QR Code Image Data URL
-  const realQrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=260x260&data=${encodeURIComponent(
-    `https://wa.me/qr/${phoneNumber.replace(/\D/g, "")}?ref=digitaldock_erp_auth_${countdown}`
-  )}`;
-
-  // Official 8-Digit Pairing Code (WhatsApp Link with phone number instead)
-  const eightDigitCode = (() => {
-    const cleanNum = phoneNumber.replace(/\D/g, "") || "93700195439";
-    const seed = Number(cleanNum.slice(-4)) || 1234;
-    const part1 = String(((seed * 37 + 1000) % 9000) + 1000);
-    const part2 = String(((seed * 73 + 1000) % 9000) + 1000);
-    return `${part1}-${part2}`;
-  })();
+  const [copied, setCopied] = useState<string | null>(null);
+  const copyToClipboard = useCallback((text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(key);
+    setTimeout(() => setCopied(null), 2000);
+  }, []);
 
   const webhookUrl = "http://72.60.209.121/api/erp/return-sms-reply/webhooks/whatsapp";
 
-  // Fetch QR Code
-  async function generateQr() {
-    setLoadingQr(true);
-    setIsPaired(false);
+  // ── STEP 2: Verify real Meta credentials live ────────────────────────────
+  async function handleVerifyCredentials() {
+    if (!phoneNumberId.trim() || !accessToken.trim()) {
+      setVerifyState("error");
+      setVerifyResult({ error: { message: "Phone Number ID and Access Token are both required." } });
+      return;
+    }
+    setVerifyState("loading");
+    setVerifyResult(null);
+
     try {
-      const res = await fetch(`/api/erp/whatsapp/qr-code?phoneNumber=${encodeURIComponent(phoneNumber)}&scope=${scope}`);
+      const res = await fetch("/api/erp/whatsapp/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phoneNumberId: phoneNumberId.trim(), accessToken: accessToken.trim() })
+      });
       const json = await res.json();
-      if (json.data) {
-        setQrCodeData(json.data);
-        setCountdown(60);
+      const result = json.data || json;
+
+      if (result.verified) {
+        setVerifyState("success");
+        setVerifyResult(result);
+        // Auto-fill phone number from Meta if user didn't fill it
+        if (!phoneNumber && result.displayPhoneNumber) {
+          setPhoneNumber(result.displayPhoneNumber.replace(/\s/g, ""));
+        }
+        if (!displayName && result.verifiedName) {
+          setDisplayName(result.verifiedName);
+        }
+      } else {
+        setVerifyState("error");
+        setVerifyResult(result);
       }
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoadingQr(false);
+    } catch (e: any) {
+      setVerifyState("error");
+      setVerifyResult({ error: { code: "NETWORK_ERROR", message: e?.message || "Network error" } });
     }
   }
 
-  // Countdown timer for QR refresh
-  useEffect(() => {
-    if (step !== 3 || isPaired) return;
-    const interval = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          generateQr();
-          return 60;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [step, isPaired]);
+  // ── Save verified account to database ─────────────────────────────────────
+  async function handleSaveAccount() {
+    if (verifyState !== "success") return;
+    setSaving(true);
 
-  // Pairing verification & database registration
-  async function handleSimulateScan() {
-    setIsPaired(true);
     try {
       const res = await fetch("/api/erp/whatsapp/accounts", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           scope,
-          displayName,
-          phoneNumber,
-          phoneNumberId: phoneNumberId || `PNID-${Date.now()}`,
-          wabaId: wabaId || `WBAID-${Date.now()}`,
-          accessToken: accessToken || `EAAG_${Date.now()}_SECURE_TOKEN`
+          displayName: displayName || verifyResult?.verifiedName || phoneNumber,
+          phoneNumber: phoneNumber || verifyResult?.displayPhoneNumber || "",
+          phoneNumberId: phoneNumberId.trim(),
+          wabaId: wabaId.trim() || "NOT_PROVIDED",
+          accessToken: accessToken.trim(),
+          verifyToken: verifyToken.trim()
         })
       });
       const json = await res.json();
-      const verifiedAccount = {
-        scope,
-        displayName,
-        phoneNumber,
-        status: "connected",
-        accountId: json.data?.accountId
-      };
+      const result = json.data || json;
 
-      // Auto-trigger test message delivery to the newly connected number
-      try {
-        handleSendTestMessage();
-      } catch {}
-
-      setTimeout(() => {
-        setStep(4);
+      if (result.accountId) {
+        setSavedAccountId(result.accountId);
+        setStep(3);
         if (onConnected) {
-          onConnected(verifiedAccount);
+          onConnected({
+            accountId: result.accountId,
+            phoneNumber,
+            displayName,
+            phoneNumberId,
+            wabaId,
+            verifiedName: verifyResult?.verifiedName
+          });
         }
-      }, 1000);
-    } catch (e) {
-      console.error("[WhatsApp Account Registration Error]:", e);
-      setTimeout(() => {
-        setStep(4);
-        if (onConnected) {
-          onConnected({ scope, displayName, phoneNumber, status: "connected" });
-        }
-      }, 1200);
+      } else {
+        alert("Failed to save account: " + (result.error || JSON.stringify(result)));
+      }
+    } catch (e: any) {
+      alert("Save error: " + e?.message);
+    } finally {
+      setSaving(false);
     }
   }
 
-  // Handle Live Test Send
+  // ── STEP 3: Send real test message ────────────────────────────────────────
   async function handleSendTestMessage() {
     if (!testRecipient.trim()) return;
     setSendingTest(true);
     setTestResult(null);
+
     try {
       const res = await fetch("/api/erp/whatsapp/test-send", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          senderNumber: phoneNumber,
+          senderNumber: phoneNumber || verifyResult?.displayPhoneNumber,
           recipientNumber: testRecipient,
           messageText: testMessage,
           scope
@@ -229,8 +171,8 @@ export function WhatsAppWizardModal({
       });
       const json = await res.json();
       setTestResult(json.data || json);
-    } catch (e) {
-      setTestResult({ error: "Failed to send message" });
+    } catch (e: any) {
+      setTestResult({ success: false, status: "NETWORK_ERROR", details: e?.message });
     } finally {
       setSendingTest(false);
     }
@@ -241,7 +183,7 @@ export function WhatsAppWizardModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/80 backdrop-blur-md p-4 overflow-y-auto">
       <div className="w-full max-w-2xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-6">
-        
+
         {/* Header */}
         <div className="flex items-center justify-between border-b dark:border-slate-800 pb-4">
           <div className="flex items-center gap-3">
@@ -249,543 +191,403 @@ export function WhatsAppWizardModal({
               <MessageSquare className="h-6 w-6" />
             </div>
             <div>
-              <h2 className="font-black text-lg text-slate-900 dark:text-white">
-                📲 Connect WhatsApp (Regular & Business)
+              <h2 className="font-black text-slate-900 dark:text-white text-base flex items-center gap-2">
+                Connect WhatsApp via Meta Cloud API
               </h2>
-              <p className="text-xs text-slate-500">
-                Supports Regular WhatsApp (سادہ واٹس ایپ) & WhatsApp Business for Digital Dock ERP
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Real production integration — requires Meta Business Manager credentials
               </p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600 text-sm font-bold"
+            className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-all cursor-pointer"
           >
             ✕
           </button>
         </div>
 
-        {/* Wizard Steps Progress Bar */}
-        <div className="grid grid-cols-4 gap-2">
+        {/* Step Indicator */}
+        <div className="flex items-center gap-2 text-xs font-bold">
           {[
-            { num: 1, label: "1. Scope & Number" },
-            { num: 2, label: "2. Method" },
-            { num: 3, label: "3. Scan QR Code" },
-            { num: 4, label: "4. Verify & Test" }
+            { n: 1, label: "Scope & Setup" },
+            { n: 2, label: "Verify Credentials" },
+            { n: 3, label: "Test & Confirm" }
           ].map((s) => (
-            <div
-              key={s.num}
-              onClick={() => {
-                if (s.num < step) setStep(s.num as any);
-              }}
-              className={cn(
-                "p-2.5 rounded-xl border text-center text-xs font-bold transition-all cursor-pointer",
-                step === s.num
-                  ? "bg-emerald-600 text-white border-emerald-600 shadow-md"
-                  : step > s.num
-                  ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-400 dark:border-emerald-900"
-                  : "bg-slate-50 text-slate-400 border-slate-200 dark:bg-slate-950 dark:border-slate-800"
-              )}
-            >
-              {s.label}
+            <div key={s.n} className="flex items-center gap-1.5">
+              <div className={cn(
+                "h-6 w-6 rounded-full flex items-center justify-center text-[10px] font-black",
+                step >= s.n ? "bg-emerald-600 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-500"
+              )}>
+                {step > s.n ? <Check className="h-3.5 w-3.5" /> : s.n}
+              </div>
+              <span className={cn(step >= s.n ? "text-emerald-600" : "text-slate-400")}>{s.label}</span>
+              {s.n < 3 && <span className="text-slate-300 dark:text-slate-700">→</span>}
             </div>
           ))}
         </div>
 
-        {/* STEP 1: Scope & Phone Number Selection */}
+        {/* ── STEP 1: Scope & Basic Info ─────────────────────────────────── */}
         {step === 1 && (
           <div className="space-y-4 text-xs">
-            <div className="space-y-1 bg-slate-50 dark:bg-slate-950 p-4 rounded-2xl border border-slate-200 dark:border-slate-800">
-              <label className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 mb-1 text-xs">
-                <Globe className="h-4 w-4 text-blue-500" /> Account Level & Branch Scope
-              </label>
-              <select
-                value={scope}
-                onChange={(e) => {
-                  const val = e.target.value;
-                  setScope(val);
-                  if (val === "super_admin") {
-                    setDisplayName("Super Admin Dubai WhatsApp Business");
-                    setPhoneNumber("00971544816664");
-                  } else if (val === "country") {
-                    setDisplayName("Pakistan Country Admin WhatsApp");
-                    setPhoneNumber("+923009876543");
-                  } else if (val === "country_branch") {
-                    setDisplayName("Dubai UAE Central Branch WhatsApp");
-                    setPhoneNumber("00971544816664");
-                  } else {
-                    setDisplayName("Karachi City Branch WhatsApp");
-                    setPhoneNumber("+923001112233");
-                  }
-                }}
-                className="w-full font-bold p-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 outline-none text-xs"
-              >
-                <option value="super_admin">🌐 Super Admin Dubai Line (UAE - 00971544816664)</option>
-                <option value="country">🇵🇰 Country Level (Country Admin)</option>
-                <option value="country_branch">🇦🇪 Country Branch (Dubai UAE Central - 00971544816664)</option>
-                <option value="city_branch">🏢 City Branch (Karachi / Peshawar Branch)</option>
-              </select>
+            <div className="p-4 rounded-2xl bg-amber-500/8 border border-amber-500/25 space-y-2">
+              <p className="font-black text-amber-800 dark:text-amber-200 flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 shrink-0" />
+                Before you begin — you need these from Meta
+              </p>
+              <ol className="list-decimal list-inside space-y-1 text-slate-600 dark:text-slate-400 pl-1">
+                <li>
+                  <a href="https://developers.facebook.com" target="_blank" rel="noreferrer" className="text-blue-500 underline inline-flex items-center gap-0.5">
+                    developers.facebook.com <ExternalLink className="h-3 w-3" />
+                  </a> → Create App → Add WhatsApp product
+                </li>
+                <li>Add and verify your phone number in WhatsApp → API Setup</li>
+                <li>Copy your <strong>Phone Number ID</strong> and <strong>WABA ID</strong></li>
+                <li>Go to Meta Business Manager → System Users → Generate Permanent Token</li>
+                <li>Permissions required: <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">whatsapp_business_messaging</code> + <code className="bg-slate-100 dark:bg-slate-800 px-1 rounded">whatsapp_business_management</code></li>
+              </ol>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700 dark:text-slate-300">Account Scope</label>
+                <select
+                  value={scope}
+                  onChange={(e) => setScope(e.target.value)}
+                  className="w-full font-bold p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 outline-none text-xs"
+                >
+                  <option value="super_admin">🌐 Super Admin (Global)</option>
+                  <option value="country">🏳️ Country Level</option>
+                  <option value="country_branch">🏢 Country Branch</option>
+                  <option value="city_branch">🏙️ City Branch</option>
+                </select>
+              </div>
+
               <div className="space-y-1">
                 <label className="font-bold text-slate-700 dark:text-slate-300">Account Display Name</label>
                 <input
                   type="text"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
+                  placeholder="e.g. Dubai Main Office WhatsApp"
                   className="w-full font-bold p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 outline-none"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-bold text-slate-700 dark:text-slate-300">Official WhatsApp Mobile Number</label>
-                <input
-                  type="text"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="e.g. 00971544816664"
-                  className="w-full font-mono font-bold p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 outline-none"
                 />
               </div>
             </div>
 
             <div className="space-y-1">
-              <label className="font-bold text-slate-700 dark:text-slate-300">Admin Notification Alert Mobile Number</label>
+              <label className="font-bold text-slate-700 dark:text-slate-300">WhatsApp Phone Number (international format)</label>
               <input
                 type="text"
-                value={adminMobile}
-                onChange={(e) => setAdminMobile(e.target.value)}
-                placeholder="e.g. 00971544816664"
+                value={phoneNumber}
+                onChange={(e) => setPhoneNumber(e.target.value)}
+                placeholder="e.g. +971544816664"
                 className="w-full font-mono font-bold p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 outline-none"
               />
+              <p className="text-[10.5px] text-slate-400">Must match the number registered in your Meta WhatsApp Business Account</p>
             </div>
 
             <div className="flex justify-end pt-2">
               <button
                 onClick={() => setStep(2)}
-                className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold text-xs shadow-md transition-all"
+                className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black shadow-md cursor-pointer transition-all"
               >
-                Next: Select Method →
+                Next: Enter Meta Credentials →
               </button>
             </div>
           </div>
         )}
 
-        {/* STEP 2: Select Connection Method */}
+        {/* ── STEP 2: Real Meta Credentials & Live Verification ─────────────── */}
         {step === 2 && (
           <div className="space-y-4 text-xs">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div
-                onClick={() => setConnectionMethod("qr")}
-                className={cn(
-                  "p-5 rounded-2xl border-2 cursor-pointer transition-all space-y-3",
-                  connectionMethod === "qr"
-                    ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30 shadow-md"
-                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300"
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="p-2.5 rounded-xl bg-emerald-500 text-white">
-                    <QrCode className="h-5 w-5" />
-                  </div>
-                  {connectionMethod === "qr" && <CheckCircle2 className="h-5 w-5 text-emerald-600" />}
-                </div>
-                <div>
-                  <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
-                    📲 Mobile WhatsApp Link (QR Code)
-                  </h4>
-                  <p className="text-slate-500 text-[11px] mt-1 leading-relaxed">
-                    Scan QR code with your mobile WhatsApp Business app (`Linked Devices`). Syncs mobile phone & ERP in 3 seconds.
-                  </p>
-                </div>
-                <span className="inline-block bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 px-2 py-0.5 rounded text-[9.5px] font-bold">
-                  Recommended for Mobile WhatsApp
-                </span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700 dark:text-slate-300">
+                  Phone Number ID <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={phoneNumberId}
+                  onChange={(e) => { setPhoneNumberId(e.target.value); setVerifyState("idle"); setVerifyResult(null); }}
+                  placeholder="e.g. 123456789012345"
+                  className="w-full font-mono p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 outline-none"
+                />
+                <p className="text-[10px] text-slate-400">From Meta App → WhatsApp → API Setup</p>
               </div>
 
-              <div
-                onClick={() => setConnectionMethod("meta")}
-                className={cn(
-                  "p-5 rounded-2xl border-2 cursor-pointer transition-all space-y-3",
-                  connectionMethod === "meta"
-                    ? "border-emerald-500 bg-emerald-50/50 dark:bg-emerald-950/30 shadow-md"
-                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300"
-                )}
-              >
-                <div className="flex items-center justify-between">
-                  <div className="p-2.5 rounded-xl bg-blue-600 text-white">
-                    <ShieldCheck className="h-5 w-5" />
-                  </div>
-                  {connectionMethod === "meta" && <CheckCircle2 className="h-5 w-5 text-emerald-600" />}
-                </div>
-                <div>
-                  <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
-                    🔑 Meta WhatsApp Cloud API
-                  </h4>
-                  <p className="text-slate-500 text-[11px] mt-1 leading-relaxed">
-                    Official Enterprise API with Permanent System Access Token & Webhook Receiver.
-                  </p>
-                </div>
-                <span className="inline-block bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded text-[9.5px] font-bold">
-                  Enterprise Cloud Gateway
-                </span>
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700 dark:text-slate-300">WhatsApp Business Account ID (WABA ID)</label>
+                <input
+                  type="text"
+                  value={wabaId}
+                  onChange={(e) => setWabaId(e.target.value)}
+                  placeholder="e.g. 987654321098765"
+                  className="w-full font-mono p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 outline-none"
+                />
+                <p className="text-[10px] text-slate-400">From WhatsApp Manager → Business Info</p>
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-2 border-t dark:border-slate-800">
-              <button
-                onClick={() => setStep(1)}
-                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 font-bold"
-              >
-                ← Back
-              </button>
-
-              <button
-                onClick={() => {
-                  if (connectionMethod === "meta") {
-                    handleSimulateScan();
-                  } else {
-                    setStep(3);
-                    generateQr();
-                  }
-                }}
-                className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-extrabold shadow-md cursor-pointer transition-all"
-              >
-                {connectionMethod === "meta" ? "⚡ Activate Direct Gateway (No Mobile Scan Required) →" : "Next: Connect & Scan →"}
-              </button>
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 dark:text-slate-300">
+                Permanent System User Access Token <span className="text-rose-500">*</span>
+              </label>
+              <textarea
+                value={accessToken}
+                onChange={(e) => { setAccessToken(e.target.value); setVerifyState("idle"); setVerifyResult(null); }}
+                placeholder="EAAGxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx..."
+                rows={3}
+                className="w-full font-mono text-[10.5px] p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 outline-none resize-none"
+              />
+              <p className="text-[10px] text-slate-400">
+                Generate in Meta Business Manager → System Users → Your System User → Generate Token.
+                Must have <code>whatsapp_business_messaging</code> permission. Use a <strong>Permanent Token</strong>, not a temporary test token.
+              </p>
             </div>
-          </div>
-        )}
 
-        {/* STEP 3: Live QR Code Scanner & Device Pairing */}
-        {step === 3 && (
-          <div className="space-y-4 text-xs">
-            {/* Link Mode Switcher: OTP Code vs QR Code vs 8-Digit Code */}
-            <div className="flex items-center justify-center gap-1.5 p-1 bg-slate-200 dark:bg-slate-800 rounded-2xl w-fit mx-auto flex-wrap">
+            <div className="space-y-1">
+              <label className="font-bold text-slate-700 dark:text-slate-300">Webhook Verify Token</label>
+              <input
+                type="text"
+                value={verifyToken}
+                onChange={(e) => setVerifyToken(e.target.value)}
+                placeholder="e.g. digitaldock_webhook_2026"
+                className="w-full font-mono p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 outline-none"
+              />
+              <p className="text-[10px] text-slate-400">
+                Register this exact string in Meta App → WhatsApp → Configuration → Webhook Verify Token.
+                Also set <code>WHATSAPP_VERIFY_TOKEN=digitaldock_webhook_2026</code> in your VPS <code>.env.local</code>.
+              </p>
+            </div>
+
+            {/* Webhook URL info */}
+            <div className="flex items-center gap-2 p-2.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-slate-600 dark:text-slate-400">Webhook Callback URL (register in Meta)</p>
+                <code className="text-[10.5px] text-emerald-600 dark:text-emerald-400 break-all">{webhookUrl}</code>
+              </div>
               <button
-                type="button"
-                onClick={() => setPairingTab("otp")}
-                className={cn(
-                  "px-3.5 py-2 rounded-xl font-black text-xs transition-all flex items-center gap-1.5 cursor-pointer",
-                  pairingTab === "otp"
-                    ? "bg-emerald-600 text-white shadow-sm"
-                    : "text-slate-700 dark:text-slate-300 hover:text-slate-900"
-                )}
+                onClick={() => copyToClipboard(webhookUrl, "webhook")}
+                className="p-1.5 rounded-lg bg-slate-200 dark:bg-slate-800 shrink-0"
               >
-                <MessageSquare className="h-4 w-4 text-emerald-300" /> 📲 Send Code to My WhatsApp
-              </button>
-              <button
-                type="button"
-                onClick={() => setPairingTab("qr")}
-                className={cn(
-                  "px-3.5 py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer",
-                  pairingTab === "qr"
-                    ? "bg-emerald-600 text-white shadow-sm"
-                    : "text-slate-700 dark:text-slate-300 hover:text-slate-900"
-                )}
-              >
-                <QrCode className="h-4 w-4" /> 📷 Scan QR Code
-              </button>
-              <button
-                type="button"
-                onClick={() => setPairingTab("code")}
-                className={cn(
-                  "px-3.5 py-2 rounded-xl font-bold text-xs transition-all flex items-center gap-1.5 cursor-pointer",
-                  pairingTab === "code"
-                    ? "bg-emerald-600 text-white shadow-sm"
-                    : "text-slate-700 dark:text-slate-300 hover:text-slate-900"
-                )}
-              >
-                <Smartphone className="h-4 w-4" /> 🔢 8-Digit Code
+                {copied === "webhook" ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5 text-slate-500" />}
               </button>
             </div>
 
-            <div className="flex flex-col items-center justify-center p-6 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-4">
-              
-              {pairingTab === "otp" ? (
-                /* WhatsApp 6-Digit Verification Code Sender & Field */
-                <div className="w-full p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-500/40 shadow-xl space-y-4">
-                  <div className="text-center space-y-1">
-                    <h4 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center justify-center gap-2">
-                      <MessageSquare className="h-5 w-5 text-emerald-600" /> Receive Verification Code on WhatsApp
-                    </h4>
-                    <p className="text-xs text-slate-500">
-                      Click below to receive a 6-digit verification code directly on your mobile WhatsApp number <strong className="font-mono text-emerald-600">{phoneNumber}</strong>
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleSendOtp}
-                    disabled={sendingOtp}
-                    className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
-                  >
-                    {sendingOtp ? (
-                      <>
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Transmitting Code to WhatsApp...
-                      </>
-                    ) : (
-                      <>
-                        <Send className="h-4 w-4" />
-                        📲 Send 6-Digit Verification Code to WhatsApp ({phoneNumber})
-                      </>
-                    )}
-                  </button>
-
-                  {otpSentStatus && (
-                    <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 font-mono text-xs text-center font-bold animate-pulse">
-                      {otpSentStatus}
-                    </div>
-                  )}
-
-                  <div className="space-y-2.5 pt-2 border-t dark:border-slate-800">
-                    <label className="font-bold text-slate-700 dark:text-slate-300 block text-center text-xs">
-                      Enter 6-Digit Code Received on Your WhatsApp:
-                    </label>
-                    <div className="flex items-center justify-center gap-2 flex-wrap sm:flex-nowrap">
-                      <input
-                        type="text"
-                        maxLength={6}
-                        value={otpCode}
-                        onChange={(e) => setOtpCode(e.target.value)}
-                        placeholder="e.g. 849201"
-                        className="w-44 font-mono font-black text-center text-2xl tracking-widest p-3 rounded-xl border-2 border-emerald-500/50 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-white outline-none focus:border-emerald-500 shadow-inner"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleVerifyOtp}
-                        className="px-6 py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-lg transition-all active:scale-95 cursor-pointer"
-                      >
-                        ✓ Verify Code & Link WhatsApp
-                      </button>
-                    </div>
-                    {otpError && (
-                      <p className="text-rose-500 font-bold text-xs text-center">{otpError}</p>
-                    )}
-                  </div>
-                </div>
-              ) : pairingTab === "qr" ? (
-                /* Real Scannable QR Code Image Container */
-                <div className="relative p-4 rounded-2xl bg-white border-2 border-emerald-500/50 shadow-2xl flex flex-col items-center">
-                  {loadingQr ? (
-                    <div className="w-52 h-52 flex items-center justify-center">
-                      <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-                    </div>
-                  ) : (
-                    <>
-                      <img
-                        src={realQrImageUrl}
-                        alt="Real Scannable WhatsApp QR Code"
-                        className="w-52 h-52 object-contain rounded-xl border border-slate-100 shadow-sm"
-                      />
-                      <div className="mt-2 text-[10.5px] font-mono font-bold text-slate-700">
-                        Pairing Code: <span className="text-emerald-700">{qrCodeData?.pairingCode || `DIGITALDOCK-WA-${phoneNumber}`}</span>
-                      </div>
-                    </>
-                  )}
-                  <div className="absolute inset-0 rounded-2xl border-2 border-emerald-400 animate-pulse pointer-events-none"></div>
-                </div>
+            {/* Live Verification Button */}
+            <button
+              type="button"
+              onClick={handleVerifyCredentials}
+              disabled={verifyState === "loading" || !phoneNumberId.trim() || !accessToken.trim()}
+              className="w-full py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-black text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
+            >
+              {verifyState === "loading" ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Verifying with Meta Graph API...</>
               ) : (
-                /* Official 8-Digit WhatsApp Pairing Code Box */
-                <div className="w-full p-5 rounded-2xl bg-white dark:bg-slate-900 border-2 border-emerald-500/40 shadow-xl flex flex-col items-center space-y-3 text-center">
-                  <p className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Enter this 8-digit code inside <strong>WhatsApp ➔ Linked Devices ➔ Link with phone number instead</strong>:
-                  </p>
-                  <div className="flex items-center gap-3 bg-emerald-50 dark:bg-emerald-950/70 px-6 py-4 rounded-2xl border border-emerald-400">
-                    <span className="font-mono text-3xl font-black text-emerald-700 dark:text-emerald-300 tracking-widest">
-                      {eightDigitCode}
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        navigator.clipboard.writeText(eightDigitCode);
-                        setCopiedPairingCode(true);
-                        setTimeout(() => setCopiedPairingCode(false), 2500);
-                      }}
-                      className="p-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md active:scale-95"
-                      title="Copy 8-Digit Pairing Code"
-                    >
-                      {copiedPairingCode ? <Check className="h-5 w-5" /> : <Copy className="h-5 w-5" />}
-                    </button>
-                  </div>
-                  {copiedPairingCode && (
-                    <span className="text-[11px] font-extrabold text-emerald-600 animate-bounce">
-                      ✓ 8-Digit Code Copied! Paste into WhatsApp on your phone
-                    </span>
-                  )}
-                </div>
+                <><ShieldCheck className="h-4 w-4" /> Verify Credentials with Meta Graph API</>
               )}
+            </button>
 
-              {/* Status & Countdown */}
-              <div className="text-center space-y-1">
-                <p className="text-xs font-black text-emerald-600 dark:text-emerald-400 flex items-center justify-center gap-1.5">
-                  <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping"></span>
-                  Ready to Link — Pair Mobile Number <span className="font-mono">{phoneNumber}</span>
+            {/* Verification Result */}
+            {verifyState === "success" && verifyResult && (
+              <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-2">
+                <p className="font-black text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5" /> Meta Credentials Verified Successfully
                 </p>
-                <p className="text-[11px] text-slate-500">
-                  Code refreshes in <span className="font-bold text-emerald-600">{countdown}s</span>
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 font-mono text-[11px] text-slate-700 dark:text-slate-300">
+                  <span className="text-slate-500">Display Phone:</span>
+                  <span className="font-bold">{verifyResult.displayPhoneNumber || "—"}</span>
+                  <span className="text-slate-500">Verified Name:</span>
+                  <span className="font-bold">{verifyResult.verifiedName || "—"}</span>
+                  <span className="text-slate-500">Verification Status:</span>
+                  <span className="font-bold text-emerald-600">{verifyResult.verificationStatus || "VERIFIED"}</span>
+                  <span className="text-slate-500">Quality Rating:</span>
+                  <span className="font-bold">{verifyResult.qualityRating || "—"}</span>
+                  <span className="text-slate-500">HTTP Code:</span>
+                  <span className="font-bold text-emerald-600">{verifyResult.httpCode}</span>
+                </div>
+              </div>
+            )}
+
+            {verifyState === "error" && verifyResult && (
+              <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/30 space-y-1.5">
+                <p className="font-black text-rose-700 dark:text-rose-300 flex items-center gap-2">
+                  <XCircle className="h-5 w-5" /> Meta Credential Verification Failed
+                </p>
+                <div className="font-mono text-[11px] text-slate-700 dark:text-slate-300 space-y-0.5">
+                  <p><span className="text-slate-500">HTTP Code:</span> <span className="font-bold text-rose-600">{verifyResult.httpCode || "—"}</span></p>
+                  <p><span className="text-slate-500">Error Code:</span> <span className="font-bold">{verifyResult.error?.code || "—"}</span></p>
+                  <p><span className="text-slate-500">Error Type:</span> <span className="font-bold">{verifyResult.error?.type || "—"}</span></p>
+                  <p><span className="text-slate-500">Message:</span> <span className="font-bold text-rose-600">{verifyResult.error?.message || "Unknown error"}</span></p>
+                </div>
+                <p className="text-[10.5px] text-slate-500 pt-1">
+                  {verifyResult.httpCode === 401 || verifyResult.error?.code === 190
+                    ? "Your Access Token is invalid or expired. Generate a new Permanent System User Token in Meta Business Manager."
+                    : verifyResult.error?.code === 100
+                    ? "The Phone Number ID is incorrect. Copy it exactly from Meta App → WhatsApp → API Setup."
+                    : "Check your Meta Business Manager dashboard for more details."}
                 </p>
               </div>
-
-              {/* Confirm Connection Button */}
-              <button
-                onClick={handleSimulateScan}
-                className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-lg transition-all active:scale-95"
-              >
-                ✓ I Have Scanned QR / Entered Code — Confirm & Register Connection
-              </button>
-            </div>
-
-            {/* Instructions */}
-            <div className="space-y-2 bg-slate-100 dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11.5px]">
-              <h4 className="font-bold text-slate-800 dark:text-slate-200">How to link your WhatsApp Business app on mobile:</h4>
-              <ol className="list-decimal list-inside space-y-1 text-slate-600 dark:text-slate-400">
-                <li>Open <strong>WhatsApp</strong> on your mobile phone (<span className="font-mono font-bold">{phoneNumber}</span>).</li>
-                <li>Tap <strong>Menu (⋮)</strong> on Android or <strong>Settings (⚙️)</strong> on iPhone.</li>
-                <li>Select <strong>Linked Devices</strong> and tap <strong>Link a Device</strong>.</li>
-                <li>Point your phone camera at the <strong>Real QR Code</strong> above, OR select <strong>"Link with phone number instead"</strong> and enter code <strong className="font-mono text-emerald-700">{eightDigitCode}</strong>.</li>
-              </ol>
-            </div>
+            )}
 
             <div className="flex items-center justify-between pt-2 border-t dark:border-slate-800 gap-2 flex-wrap">
               <button
-                onClick={() => setStep(2)}
-                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 font-bold"
+                onClick={() => setStep(1)}
+                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 font-bold text-xs"
               >
                 ← Back
               </button>
 
               <button
-                onClick={handleSimulateScan}
-                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black shadow-lg transition-all active:scale-95 cursor-pointer"
+                onClick={handleSaveAccount}
+                disabled={verifyState !== "success" || saving}
+                className="px-6 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black shadow-lg text-xs transition-all active:scale-95 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                ⚡ Confirm & Activate WhatsApp Connection →
+                {saving ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Saving...</>
+                ) : (
+                  <>✓ Save Verified Account & Activate →</>
+                )}
               </button>
             </div>
+
+            {verifyState !== "success" && (
+              <p className="text-center text-[10.5px] text-slate-400 italic">
+                You must verify your Meta credentials before saving. The Save button is disabled until verification succeeds.
+              </p>
+            )}
           </div>
         )}
 
-        {/* STEP 4: Live Verification & Test Message Sender */}
-        {step === 4 && (
-          <div className="space-y-5 text-xs">
-            
-            {/* Connection Success Banner */}
-            <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900/60 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-emerald-600 text-white">
-                  <CheckCircle2 className="h-6 w-6" />
-                </div>
-                <div>
-                  <h4 className="font-extrabold text-sm text-emerald-900 dark:text-emerald-200">
-                    WhatsApp Connected Successfully!
-                  </h4>
-                  <p className="text-xs text-emerald-700 dark:text-emerald-400">
-                    {displayName} • Active & Synced with Number <span className="font-mono font-bold">{phoneNumber}</span>
-                  </p>
-                </div>
-              </div>
-              <span className="px-3 py-1 bg-emerald-600 text-white font-black text-[10px] rounded-full uppercase tracking-wider">
-                ONLINE
-              </span>
+        {/* ── STEP 3: Test & Confirm Real Message ──────────────────────────── */}
+        {step === 3 && (
+          <div className="space-y-4 text-xs">
+            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-1">
+              <p className="font-black text-emerald-700 dark:text-emerald-300 flex items-center gap-2">
+                <CheckCircle2 className="h-5 w-5" /> WhatsApp Account Saved Successfully
+              </p>
+              <p className="text-slate-600 dark:text-slate-400 text-[11px]">
+                Your Meta credentials have been verified and saved. The status badge will now show{" "}
+                <strong className="text-emerald-600">CONNECTED</strong>.
+              </p>
+              {savedAccountId && (
+                <p className="font-mono text-[10px] text-slate-400">Account DB ID: {savedAccountId}</p>
+              )}
             </div>
 
-            {/* Test Message Form */}
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
-              <h4 className="font-extrabold text-xs text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                <Send className="h-4 w-4 text-emerald-600" /> 🧪 Test WhatsApp Message Delivery
-              </h4>
+            {/* Important: Webhook Registration Reminder */}
+            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 space-y-1.5">
+              <p className="font-extrabold flex items-center gap-1.5"><AlertTriangle className="h-4 w-4" /> Webhook Registration Required in Meta</p>
+              <ol className="list-decimal list-inside space-y-1 text-[11px]">
+                <li>Go to <strong>Meta App → WhatsApp → Configuration → Webhooks</strong></li>
+                <li>Set Callback URL: <code className="bg-amber-100 dark:bg-amber-950/50 px-1 rounded text-[10px]">{webhookUrl}</code></li>
+                <li>Set Verify Token: <code className="bg-amber-100 dark:bg-amber-950/50 px-1 rounded text-[10px]">{verifyToken}</code></li>
+                <li>Subscribe to fields: <code>messages</code>, <code>message_deliveries</code>, <code>message_reads</code></li>
+                <li>Also set <code>WHATSAPP_VERIFY_TOKEN={verifyToken}</code> in your VPS <code>.env.local</code></li>
+              </ol>
+            </div>
 
+            {/* HTTPS warning */}
+            <div className="p-3 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 text-[11px] text-slate-600 dark:text-slate-400">
+              <strong className="text-slate-800 dark:text-slate-200">⚠️ HTTPS Required:</strong> The current webhook URL uses HTTP. Meta requires HTTPS for production webhooks. Configure an SSL certificate (e.g. Let&apos;s Encrypt) and a domain name pointing to your VPS for full production use.
+            </div>
+
+            {/* Send Test Message */}
+            <div className="space-y-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
+              <h4 className="font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
+                <Send className="h-4 w-4 text-emerald-600" /> Send Real Test Message
+              </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-600 dark:text-slate-400">Test Recipient Phone Number</label>
+                  <label className="font-bold text-slate-600 dark:text-slate-400">Send From</label>
+                  <input
+                    type="text"
+                    value={phoneNumber}
+                    readOnly
+                    className="w-full font-mono p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900 text-slate-500 outline-none text-[11px]"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-600 dark:text-slate-400">Recipient WhatsApp Number</label>
                   <input
                     type="text"
                     value={testRecipient}
                     onChange={(e) => setTestRecipient(e.target.value)}
-                    placeholder="e.g. 0093700195439"
-                    className="w-full font-mono font-bold p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 outline-none"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-600 dark:text-slate-400">Test Message Content</label>
-                  <input
-                    type="text"
-                    value={testMessage}
-                    onChange={(e) => setTestMessage(e.target.value)}
-                    className="w-full font-medium p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 outline-none"
+                    placeholder="+971501234567"
+                    className="w-full font-mono p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 outline-none"
                   />
                 </div>
               </div>
 
+              <div className="space-y-1">
+                <label className="font-bold text-slate-600 dark:text-slate-400">Message Text</label>
+                <input
+                  type="text"
+                  value={testMessage}
+                  onChange={(e) => setTestMessage(e.target.value)}
+                  className="w-full p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 outline-none"
+                />
+              </div>
+
               <button
                 onClick={handleSendTestMessage}
-                disabled={sendingTest}
-                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                disabled={sendingTest || !testRecipient.trim()}
+                className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                 {sendingTest ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Transmitting WhatsApp Message...
-                  </>
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Sending via Meta Cloud API...</>
                 ) : (
-                  <>
-                    <Send className="h-4 w-4" />
-                    Send Live Test WhatsApp Message Now
-                  </>
+                  <><Send className="h-4 w-4" /> Send Real WhatsApp Message Now</>
                 )}
               </button>
 
-              {/* Test Delivery Result Payload & Meta API Diagnostics */}
+              {/* Test Result — Real data only, no fake success */}
               {testResult && (
-                <div className="p-3.5 rounded-xl bg-slate-900 text-slate-100 font-mono text-[11px] space-y-1.5 border border-slate-800">
-                  <div className="flex items-center justify-between font-bold">
-                    <span className={testResult.metaSuccess ? "text-emerald-400" : "text-amber-400"}>
-                      {testResult.metaSuccess ? "✓ Meta Network Transmitted" : "⚠️ Local ERP Inbox Synced (Meta Access Token Required)"}
-                    </span>
-                    <span className="text-slate-400">HTTP {testResult.httpCode || 200}</span>
-                  </div>
-                  <p className="text-slate-300">Message ID: {testResult.messageId || "WAMID-2026-X992"}</p>
-                  <p className="text-slate-300">Formatted E.164: +{testResult.formattedE164 || testResult.recipientNumber || "971544816664"}</p>
-                  <p className="text-slate-400 text-[10.5px]">Pipeline Note: {testResult.details || "Message logged in ERP Inbox."}</p>
+                <div className={cn(
+                  "p-3.5 rounded-xl border font-mono text-[11px] space-y-1.5",
+                  testResult.metaSuccess
+                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-800 dark:text-emerald-200"
+                    : "bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-200"
+                )}>
+                  <p className="font-black text-sm">
+                    {testResult.metaSuccess ? "✓ Message Sent via Meta Network" : `✗ ${testResult.status || "FAILED"}`}
+                  </p>
+                  {testResult.wamid && (
+                    <p>Real WAMID: <span className="font-bold">{testResult.wamid}</span></p>
+                  )}
+                  {testResult.formattedE164 && (
+                    <p>Recipient E.164: <span className="font-bold">{testResult.formattedE164}</span></p>
+                  )}
+                  <p className="text-[10.5px] opacity-80">{testResult.details || ""}</p>
                   {testResult.metaError && (
-                    <div className="mt-2 p-2 rounded bg-rose-950/80 border border-rose-800 text-rose-300 space-y-0.5 text-[10px]">
-                      <p className="font-bold text-rose-200">❌ Meta Graph API Error Log:</p>
-                      <p>Code: {testResult.metaError.code || "UNAUTHORIZED"}</p>
-                      <p>Message: {testResult.metaError.message || JSON.stringify(testResult.metaError)}</p>
+                    <div className="mt-2 p-2 rounded bg-rose-950/60 border border-rose-700 space-y-0.5 text-[10px]">
+                      <p className="font-bold">❌ Meta Error Log:</p>
+                      <p>Code: {testResult.metaError.code}</p>
+                      <p>Type: {testResult.metaError.type}</p>
+                      <p>Message: {testResult.metaError.message}</p>
+                      {testResult.action && <p className="text-amber-300 mt-1">💡 {testResult.action}</p>}
                     </div>
+                  )}
+                  {testResult.status === "NO_REAL_CREDENTIALS" && (
+                    <p className="text-amber-700 dark:text-amber-300 mt-1">💡 {testResult.action}</p>
                   )}
                 </div>
               )}
             </div>
 
-            {/* Webhook Endpoint Info */}
-            <div className="p-3.5 rounded-xl bg-slate-100 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 flex items-center justify-between gap-2">
-              <div>
-                <p className="font-bold text-[11px] text-slate-700 dark:text-slate-300">Live Webhook Receiver Endpoint</p>
-                <code className="text-[10.5px] font-mono text-emerald-600 dark:text-emerald-400">{webhookUrl}</code>
-              </div>
+            <div className="flex items-center justify-between pt-2 border-t dark:border-slate-800">
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText(webhookUrl);
-                  setCopiedWebhook(true);
-                  setTimeout(() => setCopiedWebhook(false), 2000);
-                }}
-                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-white font-bold text-[10.5px] flex items-center gap-1"
+                onClick={() => setStep(2)}
+                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 font-bold text-xs"
               >
-                {copiedWebhook ? <Check className="h-3 w-3 text-emerald-400" /> : <Copy className="h-3 w-3" />}
-                {copiedWebhook ? "Copied!" : "Copy URL"}
+                ← Back
               </button>
-            </div>
-
-            <div className="flex justify-end pt-2">
               <button
                 onClick={onClose}
-                className="px-6 py-2.5 rounded-xl bg-slate-900 text-white dark:bg-white dark:text-slate-950 font-black text-xs shadow-md hover:opacity-90"
+                className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md cursor-pointer"
               >
-                Done & Return to Dashboard ✓
+                Done — Close Wizard
               </button>
             </div>
           </div>
