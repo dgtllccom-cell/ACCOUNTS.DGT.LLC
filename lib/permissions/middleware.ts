@@ -77,3 +77,152 @@ export function authorize(session: ErpSession, check: PermissionCheck) {
     throw new ErpPermissionError("Approval access is not allowed for this user");
   }
 }
+
+// ─────────────────────────────────────────────────────────────
+// Report Scope Resolution
+// Used by all report API handlers to enforce data boundaries
+// ─────────────────────────────────────────────────────────────
+
+export type ReportScopeLevel = "global" | "country" | "branch";
+
+export type ReportScope = {
+  /** The access level granted to this user for reports */
+  level: ReportScopeLevel;
+  /** Null = all countries (super admin). Non-null = enforced country filter. */
+  countryId: string | null;
+  /** Null = all branches within allowed scope. Non-null = enforced branch filter. */
+  branchId: string | null;
+  /** The first assigned countryBranchId (main branch) for this user, if any */
+  countryBranchId: string | null;
+  /** Human-readable scope label for UI display */
+  scopeLabel: string;
+};
+
+/**
+ * Resolves what data scope a user is allowed to see in reports.
+ * Called at the top of every report API handler.
+ *
+ * Security contract:
+ *   - super_admin: no restrictions (countryId=null, branchId=null)
+ *   - country_admin / country_user / main_branch_admin: restricted to their country
+ *   - city_branch_admin / accountant / cashier / staff_user: restricted to their branch
+ *   - auditor_viewer: restricted to assigned scope (country or branch)
+ */
+export function resolveReportScope(session: ErpSession): ReportScope {
+  // Super Admin: global access
+  if (session.isSuperAdmin) {
+    return {
+      level: "global",
+      countryId: null,
+      branchId: null,
+      countryBranchId: null,
+      scopeLabel: "Global"
+    };
+  }
+
+  const primaryCountryId = session.countryIds[0] ?? null;
+  const primaryBranchId = session.cityBranchIds[0] ?? null;
+  const primaryCountryBranchId = session.countryBranchIds[0] ?? null;
+
+  const roles = session.roles;
+
+  // Country-level roles: see entire country data, no branch restriction
+  const countryLevelRoles = ["country_admin", "country_user"] as const;
+  if (roles.some((r) => (countryLevelRoles as readonly string[]).includes(r))) {
+    return {
+      level: "country",
+      countryId: primaryCountryId,
+      branchId: null,
+      countryBranchId: primaryCountryBranchId,
+      scopeLabel: "Country"
+    };
+  }
+
+  // Main branch admin: can see entire country (they manage all city branches within a country)
+  if (roles.includes("main_branch_admin")) {
+    return {
+      level: "country",
+      countryId: primaryCountryId,
+      branchId: null,
+      countryBranchId: primaryCountryBranchId,
+      scopeLabel: "Main Branch"
+    };
+  }
+
+  // City branch level roles: restricted to their specific branch
+  const branchLevelRoles = ["city_branch_admin", "accountant", "cashier", "staff_user"] as const;
+  if (roles.some((r) => (branchLevelRoles as readonly string[]).includes(r))) {
+    return {
+      level: "branch",
+      countryId: primaryCountryId,
+      branchId: primaryBranchId,
+      countryBranchId: primaryCountryBranchId,
+      scopeLabel: "Branch"
+    };
+  }
+
+  // Auditor/viewer: use most restrictive scope available
+  if (roles.includes("auditor_viewer")) {
+    if (primaryBranchId) {
+      return {
+        level: "branch",
+        countryId: primaryCountryId,
+        branchId: primaryBranchId,
+        countryBranchId: primaryCountryBranchId,
+        scopeLabel: "Auditor (Branch)"
+      };
+    }
+    return {
+      level: "country",
+      countryId: primaryCountryId,
+      branchId: null,
+      countryBranchId: primaryCountryBranchId,
+      scopeLabel: "Auditor (Country)"
+    };
+  }
+
+  // Fallback: most restrictive
+  return {
+    level: "branch",
+    countryId: primaryCountryId,
+    branchId: primaryBranchId,
+    countryBranchId: primaryCountryBranchId,
+    scopeLabel: "Restricted"
+  };
+}
+
+/**
+ * Given a ReportScope and requested filters from the API query,
+ * returns the effective countryId and branchId to use in DB queries.
+ * Ensures users cannot bypass their scope by passing different IDs in query params.
+ */
+export function enforceScopeFilters(
+  scope: ReportScope,
+  requestedCountryId: string | null,
+  requestedBranchId: string | null
+): { effectiveCountryId: string | null; effectiveBranchId: string | null } {
+  if (scope.level === "global") {
+    // Super admin: use whatever was requested (null = all)
+    return {
+      effectiveCountryId: requestedCountryId,
+      effectiveBranchId: requestedBranchId
+    };
+  }
+
+  if (scope.level === "country") {
+    // Country admin: force their country, allow branch filter within it
+    const effectiveBranchId =
+      requestedBranchId && scope.countryId ? requestedBranchId : null;
+    return {
+      effectiveCountryId: scope.countryId,
+      effectiveBranchId
+    };
+  }
+
+  // Branch level: force both country and branch
+  return {
+    effectiveCountryId: scope.countryId,
+    effectiveBranchId: scope.branchId
+  };
+}
+

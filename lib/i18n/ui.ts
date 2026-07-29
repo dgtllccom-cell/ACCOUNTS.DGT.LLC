@@ -374,7 +374,95 @@ export type UiKey =
   | "form.roznamcha_type"
   | "form.roznamcha_number"
   | "form.roznamcha_category"
-  | "form.currency_type";
+  | "form.currency_type"
+  // ERP Reports System — Dedicated nav entries
+  | "nav.super_admin_reports"
+  | "nav.country_reports"
+  | "nav.branch_reports"
+  | "nav.reports_hub"
+  // ERP Reports System — Report type labels
+  | "report.purchase"
+  | "report.sales"
+  | "report.loading"
+  | "report.transfer"
+  | "report.payment"
+  | "report.remaining"
+  | "report.ledger"
+  | "report.roznamcha"
+  | "report.journal"
+  | "report.cash"
+  | "report.inventory"
+  | "report.daily_comprehensive"
+  | "report.purchase_booking"
+  | "report.user_activity"
+  | "report.audit_log"
+  | "report.exchange_rate"
+  // ERP Reports System — Panel titles
+  | "report.panel_super_admin"
+  | "report.panel_country"
+  | "report.panel_branch"
+  | "report.panel_subtitle_super"
+  | "report.panel_subtitle_country"
+  | "report.panel_subtitle_branch"
+  // ERP Reports System — Filter bar labels
+  | "report.filter_country"
+  | "report.filter_branch"
+  | "report.filter_main_branch"
+  | "report.filter_date_from"
+  | "report.filter_date_to"
+  | "report.filter_currency"
+  | "report.filter_exchange_rate"
+  | "report.filter_user"
+  | "report.filter_report_type"
+  | "report.filter_all_countries"
+  | "report.filter_all_branches"
+  | "report.filter_all_users"
+  | "report.filter_all_currencies"
+  | "report.filter_reset"
+  | "report.filter_apply"
+  | "report.filter_date_range"
+  // ERP Reports System — KPI cards
+  | "report.kpi_total_records"
+  | "report.kpi_total_debit"
+  | "report.kpi_total_credit"
+  | "report.kpi_net_balance"
+  | "report.kpi_total_purchase"
+  | "report.kpi_total_sales"
+  | "report.kpi_total_payment"
+  | "report.kpi_total_remaining"
+  // ERP Reports System — Export toolbar
+  | "report.export_pdf"
+  | "report.export_excel"
+  | "report.export_csv"
+  | "report.print"
+  | "report.share_whatsapp"
+  | "report.share_email"
+  | "report.reload"
+  | "report.search"
+  | "report.search_placeholder"
+  // ERP Reports System — Table
+  | "report.no_data"
+  | "report.loading"
+  | "report.error"
+  | "report.generated_at"
+  | "report.scope_label"
+  | "report.scope_global"
+  | "report.scope_country"
+  | "report.scope_branch"
+  // ERP Reports System — Column headers
+  | "report.col_date"
+  | "report.col_serial"
+  | "report.col_description"
+  | "report.col_debit"
+  | "report.col_credit"
+  | "report.col_balance"
+  | "report.col_currency"
+  | "report.col_status"
+  | "report.col_branch"
+  | "report.col_country"
+  | "report.col_user"
+  | "report.col_amount"
+  | "report.col_reference";
 
 type Dict = Record<UiKey, string>;
 
@@ -735,7 +823,95 @@ const en: Dict = {
   "form.roznamcha_type": "Roznamcha Type",
   "form.roznamcha_number": "Roznamcha Number",
   "form.roznamcha_category": "Roznamcha Category",
-  "form.currency_type": "Currency Type"
+  "form.currency_type": "Currency Type",
+  // ERP Reports System — nav
+  "nav.super_admin_reports": "Super Admin Reports",
+  "nav.country_reports": "Country Reports",
+  "nav.branch_reports": "Branch Reports",
+  "nav.reports_hub": "Reports Hub",
+  // ERP Reports System — report types
+  "report.purchase": "Purchase Report",
+  "report.sales": "Sales Report",
+  "report.loading": "Loading Report",
+  "report.transfer": "Transfer Report",
+  "report.payment": "Payment Report",
+  "report.remaining": "Remaining Balance Report",
+  "report.ledger": "Ledger Report",
+  "report.roznamcha": "Roznamcha Report",
+  "report.journal": "Journal Report",
+  "report.cash": "Cash Report",
+  "report.inventory": "Inventory Report",
+  "report.daily_comprehensive": "Comprehensive Daily Report",
+  "report.purchase_booking": "Purchase Booking Report",
+  "report.user_activity": "User Activity Report",
+  "report.audit_log": "Audit Log Report",
+  "report.exchange_rate": "Exchange Rate Report",
+  // ERP Reports System — panel titles
+  "report.panel_super_admin": "Super Admin Reports Panel",
+  "report.panel_country": "Country Reports Panel",
+  "report.panel_branch": "Branch Reports Panel",
+  "report.panel_subtitle_super": "All Countries, All Branches, All Reports",
+  "report.panel_subtitle_country": "Your Country Reports",
+  "report.panel_subtitle_branch": "Your Branch Reports",
+  // ERP Reports System — filters
+  "report.filter_country": "Country",
+  "report.filter_branch": "Branch",
+  "report.filter_main_branch": "Main Branch",
+  "report.filter_date_from": "From Date",
+  "report.filter_date_to": "To Date",
+  "report.filter_currency": "Currency",
+  "report.filter_exchange_rate": "Exchange Rate",
+  "report.filter_user": "User",
+  "report.filter_report_type": "Report Type",
+  "report.filter_all_countries": "All Countries",
+  "report.filter_all_branches": "All Branches",
+  "report.filter_all_users": "All Users",
+  "report.filter_all_currencies": "All Currencies",
+  "report.filter_reset": "Reset Filters",
+  "report.filter_apply": "Apply",
+  "report.filter_date_range": "Date Range",
+  // ERP Reports System — KPI cards
+  "report.kpi_total_records": "Total Records",
+  "report.kpi_total_debit": "Total Debit",
+  "report.kpi_total_credit": "Total Credit",
+  "report.kpi_net_balance": "Net Balance",
+  "report.kpi_total_purchase": "Total Purchase",
+  "report.kpi_total_sales": "Total Sales",
+  "report.kpi_total_payment": "Total Payment",
+  "report.kpi_total_remaining": "Total Remaining",
+  // ERP Reports System — export toolbar
+  "report.export_pdf": "Export PDF",
+  "report.export_excel": "Export Excel",
+  "report.export_csv": "Export CSV",
+  "report.print": "Print",
+  "report.share_whatsapp": "Share via WhatsApp",
+  "report.share_email": "Share via Email",
+  "report.reload": "Reload",
+  "report.search": "Search",
+  "report.search_placeholder": "Search report data...",
+  // ERP Reports System — table
+  "report.no_data": "No data found",
+  "report.loading": "Loading report...",
+  "report.error": "Error loading report",
+  "report.generated_at": "Generated At",
+  "report.scope_label": "Access Scope",
+  "report.scope_global": "Global",
+  "report.scope_country": "Country",
+  "report.scope_branch": "Branch",
+  // ERP Reports System — columns
+  "report.col_date": "Date",
+  "report.col_serial": "Serial",
+  "report.col_description": "Description",
+  "report.col_debit": "Debit",
+  "report.col_credit": "Credit",
+  "report.col_balance": "Balance",
+  "report.col_currency": "Currency",
+  "report.col_status": "Status",
+  "report.col_branch": "Branch",
+  "report.col_country": "Country",
+  "report.col_user": "User",
+  "report.col_amount": "Amount",
+  "report.col_reference": "Reference"
 };
 
 const ur: Dict = {
@@ -1054,7 +1230,88 @@ const ur: Dict = {
   "form.roznamcha_type": "روزنامچہ کی قسم",
   "form.roznamcha_number": "روزنامچہ نمبر",
   "form.roznamcha_category": "روزنامچہ کیٹیگری",
-  "form.currency_type": "کرنسی کی قسم"
+  "form.currency_type": "کرنسی کی قسم",
+  // ERP Reports — Urdu overrides
+  "nav.super_admin_reports": "سپر ایڈمن رپورٹس",
+  "nav.country_reports": "کنٹری رپورٹس",
+  "nav.branch_reports": "برانچ رپورٹس",
+  "nav.reports_hub": "رپورٹس ہب",
+  "report.purchase": "خریداری رپورٹ",
+  "report.sales": "فروخت رپورٹ",
+  "report.loading": "لوڈنگ رپورٹ",
+  "report.transfer": "ٹرانسفر رپورٹ",
+  "report.payment": "ادائیگی رپورٹ",
+  "report.remaining": "باقی رقم رپورٹ",
+  "report.ledger": "لیجر رپورٹ",
+  "report.roznamcha": "روزنامچہ رپورٹ",
+  "report.journal": "جرنل رپورٹ",
+  "report.cash": "نقد رپورٹ",
+  "report.inventory": "اسٹاک رپورٹ",
+  "report.daily_comprehensive": "یومی جامع رپورٹ",
+  "report.purchase_booking": "خرید بکنگ رپورٹ",
+  "report.user_activity": "یوزر سرگرمی رپورٹ",
+  "report.audit_log": "آڈٹ لاگ رپورٹ",
+  "report.exchange_rate": "ایکسچینج ریٹ رپورٹ",
+  "report.panel_super_admin": "سپر ایڈمن رپورٹ پینل",
+  "report.panel_country": "کنٹری رپورٹ پینل",
+  "report.panel_branch": "برانچ رپورٹ پینل",
+  "report.panel_subtitle_super": "تمام ممالک، تمام برانچز، تمام رپورٹس",
+  "report.panel_subtitle_country": "آپ کے ملک کی رپورٹس",
+  "report.panel_subtitle_branch": "آپ کی برانچ کی رپورٹس",
+  "report.filter_country": "ملک",
+  "report.filter_branch": "برانچ",
+  "report.filter_main_branch": "مین برانچ",
+  "report.filter_date_from": "سے تاریخ",
+  "report.filter_date_to": "تک تاریخ",
+  "report.filter_currency": "کرنسی",
+  "report.filter_exchange_rate": "ایکسچینج ریٹ",
+  "report.filter_user": "یوزر",
+  "report.filter_report_type": "رپورٹ کی قسم",
+  "report.filter_all_countries": "تمام ممالک",
+  "report.filter_all_branches": "تمام برانچز",
+  "report.filter_all_users": "تمام یوزرز",
+  "report.filter_all_currencies": "تمام کرنسیاں",
+  "report.filter_reset": "فلٹر ریسیٹ",
+  "report.filter_apply": "لاگو کریں",
+  "report.filter_date_range": "تاریخ رینج",
+  "report.kpi_total_records": "کل ریکارڈز",
+  "report.kpi_total_debit": "کل ڈیبٹ",
+  "report.kpi_total_credit": "کل کریڈٹ",
+  "report.kpi_net_balance": "نیٹ بیلنس",
+  "report.kpi_total_purchase": "کل خریداری",
+  "report.kpi_total_sales": "کل فروخت",
+  "report.kpi_total_payment": "کل ادائیگی",
+  "report.kpi_total_remaining": "کل باقی رقم",
+  "report.export_pdf": "PDF برآمدگی",
+  "report.export_excel": "Excel برآمدگی",
+  "report.export_csv": "CSV برآمدگی",
+  "report.print": "پرنٹ",
+  "report.share_whatsapp": "واٹس ایپ پر شیئر کریں",
+  "report.share_email": "ای میل پر شیئر کریں",
+  "report.reload": "دوبارہ لوڈ کریں",
+  "report.search": "تلاش",
+  "report.search_placeholder": "رپورٹ دیٹا تلاش کریں...",
+  "report.no_data": "کوئی ڈیٹا نہیں",
+  "report.loading": "رپورٹ لوڈ ہو رہی ہے...",
+  "report.error": "رپورٹ لوڈ کرنے میں خطا",
+  "report.generated_at": "تیار کیا گیا",
+  "report.scope_label": "رسائی کی سطح",
+  "report.scope_global": "گلوبل",
+  "report.scope_country": "ملک",
+  "report.scope_branch": "برانچ",
+  "report.col_date": "تاریخ",
+  "report.col_serial": "سیریل",
+  "report.col_description": "تفصیل",
+  "report.col_debit": "ڈیبٹ",
+  "report.col_credit": "کریڈٹ",
+  "report.col_balance": "بیلنس",
+  "report.col_currency": "کرنسی",
+  "report.col_status": "حیثیت",
+  "report.col_branch": "برانچ",
+  "report.col_country": "ملک",
+  "report.col_user": "یوزر",
+  "report.col_amount": "رقم",
+  "report.col_reference": "حوالہ"
 };
 
 const ar: Dict = {
@@ -1355,7 +1612,88 @@ const ar: Dict = {
   "form.roznamcha_type": "نوع الروزنامجة",
   "form.roznamcha_number": "رقم الروزنامجة",
   "form.roznamcha_category": "فئة الروزنامجة",
-  "form.currency_type": "نوع العملة"
+  "form.currency_type": "نوع العملة",
+  // ERP Reports — Arabic overrides
+  "nav.super_admin_reports": "تقارير المسؤول الأعلى",
+  "nav.country_reports": "تقارير الدولة",
+  "nav.branch_reports": "تقارير الفرع",
+  "nav.reports_hub": "مركز التقارير",
+  "report.purchase": "تقرير المشتريات",
+  "report.sales": "تقرير المبيعات",
+  "report.loading": "تقرير التحميل",
+  "report.transfer": "تقرير التحويل",
+  "report.payment": "تقرير المدفوعات",
+  "report.remaining": "تقرير الرصيد المتبقي",
+  "report.ledger": "تقرير دفتر الأستاذ",
+  "report.roznamcha": "تقرير اليومية",
+  "report.journal": "تقرير دفتر يومية",
+  "report.cash": "تقرير الصندوق",
+  "report.inventory": "تقرير المخزون",
+  "report.daily_comprehensive": "التقرير اليومي الشامل",
+  "report.purchase_booking": "تقرير حجز الشراء",
+  "report.user_activity": "تقرير نشاط المستخدم",
+  "report.audit_log": "تقرير سجل المراجعة",
+  "report.exchange_rate": "تقرير أسعار الصرف",
+  "report.panel_super_admin": "لوحة تقارير المسؤول الأعلى",
+  "report.panel_country": "لوحة تقارير الدولة",
+  "report.panel_branch": "لوحة تقارير الفرع",
+  "report.panel_subtitle_super": "جميع الدول، جميع الفروع، جميع التقارير",
+  "report.panel_subtitle_country": "تقارير دولتك",
+  "report.panel_subtitle_branch": "تقارير فرعك",
+  "report.filter_country": "الدولة",
+  "report.filter_branch": "الفرع",
+  "report.filter_main_branch": "الفرع الرئيسي",
+  "report.filter_date_from": "من تاريخ",
+  "report.filter_date_to": "إلى تاريخ",
+  "report.filter_currency": "العملة",
+  "report.filter_exchange_rate": "سعر الصرف",
+  "report.filter_user": "المستخدم",
+  "report.filter_report_type": "نوع التقرير",
+  "report.filter_all_countries": "جميع الدول",
+  "report.filter_all_branches": "جميع الفروع",
+  "report.filter_all_users": "جميع المستخدمين",
+  "report.filter_all_currencies": "جميع العملات",
+  "report.filter_reset": "إعادة ضبط الفلاتر",
+  "report.filter_apply": "تطبيق",
+  "report.filter_date_range": "نطاق التاريخ",
+  "report.kpi_total_records": "إجمالي السجلات",
+  "report.kpi_total_debit": "إجمالي المدين",
+  "report.kpi_total_credit": "إجمالي الدائن",
+  "report.kpi_net_balance": "صافي الرصيد",
+  "report.kpi_total_purchase": "إجمالي المشتريات",
+  "report.kpi_total_sales": "إجمالي المبيعات",
+  "report.kpi_total_payment": "إجمالي المدفوعات",
+  "report.kpi_total_remaining": "إجمالي المتبقي",
+  "report.export_pdf": "تصدير PDF",
+  "report.export_excel": "تصدير Excel",
+  "report.export_csv": "تصدير CSV",
+  "report.print": "طباعة",
+  "report.share_whatsapp": "مشاركة عبر واتساب",
+  "report.share_email": "مشاركة عبر البريد",
+  "report.reload": "إعادة تحميل",
+  "report.search": "بحث",
+  "report.search_placeholder": "بحث في بيانات التقرير...",
+  "report.no_data": "لا توجد بيانات",
+  "report.loading": "جاري تحميل التقرير...",
+  "report.error": "خطأ في تحميل التقرير",
+  "report.generated_at": "تاريخ الإنشاء",
+  "report.scope_label": "مستوى الوصول",
+  "report.scope_global": "عالمي",
+  "report.scope_country": "الدولة",
+  "report.scope_branch": "الفرع",
+  "report.col_date": "التاريخ",
+  "report.col_serial": "رقم تسلسلي",
+  "report.col_description": "وصف",
+  "report.col_debit": "مدين",
+  "report.col_credit": "دائن",
+  "report.col_balance": "الرصيد",
+  "report.col_currency": "العملة",
+  "report.col_status": "الحالة",
+  "report.col_branch": "الفرع",
+  "report.col_country": "الدولة",
+  "report.col_user": "المستخدم",
+  "report.col_amount": "المبلغ",
+  "report.col_reference": "المرجع"
 };
 
 const fa: Dict = {
@@ -1604,7 +1942,88 @@ const fa: Dict = {
   "form.roznamcha_type": "نوع روزنامچه",
   "form.roznamcha_number": "شماره روزنامچه",
   "form.roznamcha_category": "دسته روزنامچه",
-  "form.currency_type": "نوع ارز"
+  "form.currency_type": "نوع ارز",
+  // ERP Reports — Persian overrides
+  "nav.super_admin_reports": "گزارشات سوپر ادمین",
+  "nav.country_reports": "گزارشات کشور",
+  "nav.branch_reports": "گزارشات شعبه",
+  "nav.reports_hub": "مرکز گزارشات",
+  "report.purchase": "گزارش خرید",
+  "report.sales": "گزارش فروش",
+  "report.loading": "گزارش بارگیری",
+  "report.transfer": "گزارش انتقال",
+  "report.payment": "گزارش پرداخت",
+  "report.remaining": "گزارش مانده",
+  "report.ledger": "گزارش دفتر کل",
+  "report.roznamcha": "گزارش روزنامه",
+  "report.journal": "گزارش دفتر روزنامه",
+  "report.cash": "گزارش صندوق",
+  "report.inventory": "گزارش انبارداری",
+  "report.daily_comprehensive": "گزارش جامع روزانه",
+  "report.purchase_booking": "گزارش رزرو خرید",
+  "report.user_activity": "گزارش فعالیت کاربر",
+  "report.audit_log": "گزارش گزارش حسابرسی",
+  "report.exchange_rate": "گزارش نرخ ارز",
+  "report.panel_super_admin": "پنل گزارشات سوپر ادمین",
+  "report.panel_country": "پنل گزارشات کشور",
+  "report.panel_branch": "پنل گزارشات شعبه",
+  "report.panel_subtitle_super": "همه کشورها، همه شعبه‌ها، همه گزارشات",
+  "report.panel_subtitle_country": "گزارشات کشور شما",
+  "report.panel_subtitle_branch": "گزارشات شعبه شما",
+  "report.filter_country": "کشور",
+  "report.filter_branch": "شعبه",
+  "report.filter_main_branch": "شعبه اصلی",
+  "report.filter_date_from": "از تاریخ",
+  "report.filter_date_to": "تا تاریخ",
+  "report.filter_currency": "ارز",
+  "report.filter_exchange_rate": "نرخ تبدیل",
+  "report.filter_user": "کاربر",
+  "report.filter_report_type": "نوع گزارش",
+  "report.filter_all_countries": "همه کشورها",
+  "report.filter_all_branches": "همه شعبه‌ها",
+  "report.filter_all_users": "همه کاربران",
+  "report.filter_all_currencies": "همه ارزها",
+  "report.filter_reset": "بازنشانی فیلترها",
+  "report.filter_apply": "اعمال",
+  "report.filter_date_range": "بازه تاریخ",
+  "report.kpi_total_records": "کل رکوردها",
+  "report.kpi_total_debit": "کل بدهکار",
+  "report.kpi_total_credit": "کل بستانکار",
+  "report.kpi_net_balance": "مانده خالص",
+  "report.kpi_total_purchase": "کل خرید",
+  "report.kpi_total_sales": "کل فروش",
+  "report.kpi_total_payment": "کل پرداخت",
+  "report.kpi_total_remaining": "کل مانده",
+  "report.export_pdf": "خروجی PDF",
+  "report.export_excel": "خروجی Excel",
+  "report.export_csv": "خروجی CSV",
+  "report.print": "چاپ",
+  "report.share_whatsapp": "اشتراک‌گذاری از طریق واتساپ",
+  "report.share_email": "اشتراک‌گذاری از طریق ایمیل",
+  "report.reload": "بارگذاری مجدد",
+  "report.search": "جستجو",
+  "report.search_placeholder": "جستجو در داده‌های گزارش...",
+  "report.no_data": "داده‌ای یافت نشد",
+  "report.loading": "در حال بارگذاری گزارش...",
+  "report.error": "خطا در بارگذاری گزارش",
+  "report.generated_at": "ساخته شده در",
+  "report.scope_label": "سطح دسترسی",
+  "report.scope_global": "جهانی",
+  "report.scope_country": "کشور",
+  "report.scope_branch": "شعبه",
+  "report.col_date": "تاریخ",
+  "report.col_serial": "شماره",
+  "report.col_description": "توضیح",
+  "report.col_debit": "بدهکار",
+  "report.col_credit": "بستانکار",
+  "report.col_balance": "مانده",
+  "report.col_currency": "ارز",
+  "report.col_status": "وضعیت",
+  "report.col_branch": "شعبه",
+  "report.col_country": "کشور",
+  "report.col_user": "کاربر",
+  "report.col_amount": "مبلغ",
+  "report.col_reference": "مرجع"
 };
 
 const ps: Dict = {
@@ -1838,7 +2257,95 @@ const ps: Dict = {
   "form.roznamcha_type": "د روزنامچې ډول",
   "form.roznamcha_number": "د روزنامچې شمیره",
   "form.roznamcha_category": "د روزنامچې کټګوري",
-  "form.currency_type": "د کرنسۍ ډول"
+  "form.currency_type": "د کرنسۍ ډول",
+  // ERP Reports — nav
+  "nav.super_admin_reports": "د سوپر اډمین راپورونه",
+  "nav.country_reports": "د هیواد راپورونه",
+  "nav.branch_reports": "د شاخې راپورونه",
+  "nav.reports_hub": "د راپورونو مرکز",
+  // ERP Reports — types
+  "report.purchase": "د پیرود راپور",
+  "report.sales": "د پلور راپور",
+  "report.loading": "د بارولو راپور",
+  "report.transfer": "د لیږد راپور",
+  "report.payment": "د تادیې راپور",
+  "report.remaining": "د پاتې رقم راپور",
+  "report.ledger": "د لیجر راپور",
+  "report.roznamcha": "د روزنامچې راپور",
+  "report.journal": "د ژورنال راپور",
+  "report.cash": "د نغدو راپور",
+  "report.inventory": "د ذخیرو راپور",
+  "report.daily_comprehensive": "ورځني جامع راپور",
+  "report.purchase_booking": "د پیرود بکنګ راپور",
+  "report.user_activity": "د کارونکي فعالیت راپور",
+  "report.audit_log": "د پلټنې لاګ راپور",
+  "report.exchange_rate": "د اسعارو نرخ راپور",
+  // ERP Reports — panels
+  "report.panel_super_admin": "د سوپر اډمین راپور پینل",
+  "report.panel_country": "د هیواد راپور پینل",
+  "report.panel_branch": "د شاخې راپور پینل",
+  "report.panel_subtitle_super": "ټول هیوادونه، ټولې شاخې، ټول راپورونه",
+  "report.panel_subtitle_country": "ستاسو د هیواد راپورونه",
+  "report.panel_subtitle_branch": "ستاسو د شاخې راپورونه",
+  // ERP Reports — filters
+  "report.filter_country": "هیواد",
+  "report.filter_branch": "شاخه",
+  "report.filter_main_branch": "اصلي شاخه",
+  "report.filter_date_from": "له نېټې",
+  "report.filter_date_to": "تر نېټې",
+  "report.filter_currency": "کرنسي",
+  "report.filter_exchange_rate": "د تبادلې نرخ",
+  "report.filter_user": "کارونکی",
+  "report.filter_report_type": "د راپور ډول",
+  "report.filter_all_countries": "ټول هیوادونه",
+  "report.filter_all_branches": "ټولې شاخې",
+  "report.filter_all_users": "ټول کارونکي",
+  "report.filter_all_currencies": "ټولې اسعارې",
+  "report.filter_reset": "بیا تنظیمول",
+  "report.filter_apply": "پلي کول",
+  "report.filter_date_range": "د نېټې سلسله",
+  // ERP Reports — KPI
+  "report.kpi_total_records": "ټول ریکارډونه",
+  "report.kpi_total_debit": "ټول ډیبیټ",
+  "report.kpi_total_credit": "ټول کریډیټ",
+  "report.kpi_net_balance": "خالص بیلانس",
+  "report.kpi_total_purchase": "ټول پیرود",
+  "report.kpi_total_sales": "ټول پلور",
+  "report.kpi_total_payment": "ټول تادیه",
+  "report.kpi_total_remaining": "ټول پاتې رقم",
+  // ERP Reports — export
+  "report.export_pdf": "PDF صادرول",
+  "report.export_excel": "Excel صادرول",
+  "report.export_csv": "CSV صادرول",
+  "report.print": "چاپ",
+  "report.share_whatsapp": "واټساپ له لارې شریکول",
+  "report.share_email": "بریښنالیک له لارې شریکول",
+  "report.reload": "بیا ډکول",
+  "report.search": "لټون",
+  "report.search_placeholder": "د راپور ډاټا لټون وکړئ...",
+  // ERP Reports — table
+  "report.no_data": "کوم ډاټا نشته",
+  "report.loading": "راپور ډکیږي...",
+  "report.error": "د راپور بارولو کې خطا",
+  "report.generated_at": "جوړ شو",
+  "report.scope_label": "د لاسرسي کچه",
+  "report.scope_global": "نړیوال",
+  "report.scope_country": "هیواد",
+  "report.scope_branch": "شاخه",
+  // ERP Reports — columns
+  "report.col_date": "نېټه",
+  "report.col_serial": "شمیره",
+  "report.col_description": "تشریح",
+  "report.col_debit": "ډیبیټ",
+  "report.col_credit": "کریډیټ",
+  "report.col_balance": "بیلانس",
+  "report.col_currency": "اسعار",
+  "report.col_status": "حالت",
+  "report.col_branch": "شاخه",
+  "report.col_country": "هیواد",
+  "report.col_user": "کارونکی",
+  "report.col_amount": "مقدار",
+  "report.col_reference": "حواله"
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {
