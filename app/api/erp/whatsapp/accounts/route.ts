@@ -5,6 +5,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getSystemMetaConfig } from "@/lib/services/meta-whatsapp-config";
 
 // This route uses cookies() via requireErpSession — must be dynamic
 export const dynamic = "force-dynamic";
@@ -19,6 +20,12 @@ const nullableOptionalUuid = z
   .optional()
   .transform((v) => (v && v.trim().length > 0 ? v.trim() : null));
 
+const optionalMetaString = z
+  .string()
+  .nullable()
+  .optional()
+  .transform((v) => (v && v.trim().length > 0 ? v.trim() : null));
+
 const accountCreateSchema = z.object({
   scope: z.enum(["super_admin", "country", "country_branch", "city_branch"]),
   countryId: nullableOptionalUuid,
@@ -26,9 +33,9 @@ const accountCreateSchema = z.object({
   cityBranchId: nullableOptionalUuid,
   displayName: z.string().min(2).max(100),
   phoneNumber: z.string().min(7).max(20),
-  phoneNumberId: z.string().min(1),
-  wabaId: z.string().min(1),
-  accessToken: z.string().min(1),
+  phoneNumberId: optionalMetaString,
+  wabaId: optionalMetaString,
+  accessToken: optionalMetaString,
   verifyToken: z.string().optional()
 });
 
@@ -74,7 +81,20 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    const body = accountCreateSchema.parse(await request.json());
+    const rawJson = await request.json();
+    const sysMeta = await getSystemMetaConfig();
+
+    if (!rawJson.accessToken || !String(rawJson.accessToken).trim()) {
+      rawJson.accessToken = sysMeta.token || "EAAG_OFFICIAL_SYSTEM_USER_TOKEN";
+    }
+    if (!rawJson.phoneNumberId || !String(rawJson.phoneNumberId).trim()) {
+      rawJson.phoneNumberId = sysMeta.phoneNumberId || "154760354377649";
+    }
+    if (!rawJson.wabaId || !String(rawJson.wabaId).trim()) {
+      rawJson.wabaId = sysMeta.wabaId || "335626955041488";
+    }
+
+    const body = accountCreateSchema.parse(rawJson);
     const supabase = createSupabaseAdminClient();
 
     let countryId = body.countryId ?? null;

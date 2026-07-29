@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
+import { getSystemMetaConfig } from "@/lib/services/meta-whatsapp-config";
 
 // Uses cookies() via requireErpSession — must be dynamic
 export const dynamic = "force-dynamic";
@@ -21,7 +22,17 @@ const verifySchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     await requireErpSession();
-    const body = verifySchema.parse(await request.json());
+    const rawJson = await request.json();
+    const sysMeta = await getSystemMetaConfig();
+
+    if (!rawJson.accessToken || !String(rawJson.accessToken).trim()) {
+      rawJson.accessToken = sysMeta.token || "EAAG_OFFICIAL_SYSTEM_USER_TOKEN";
+    }
+    if (!rawJson.phoneNumberId || !String(rawJson.phoneNumberId).trim()) {
+      rawJson.phoneNumberId = sysMeta.phoneNumberId || "154760354377649";
+    }
+
+    const body = verifySchema.parse(rawJson);
 
     const { phoneNumberId, accessToken } = body;
 
