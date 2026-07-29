@@ -94,9 +94,13 @@ export function WhatsAppWizardModal({
       const json = await res.json();
       const data = json.data || json;
 
-      setOtpSentStatus(data);
-      if (data.otpCode) {
-        setOtpCode(data.otpCode); // Auto-fill generated OTP for instant verification
+      if (data.success || data.metaDelivered) {
+        setOtpSentStatus(data);
+      } else {
+        const errText = typeof data.error === "string"
+          ? data.error
+          : data.error?.message || (Array.isArray(data.error) ? data.error[0]?.message : "Failed to send verification code.");
+        setOtpError(errText);
       }
     } catch (e: any) {
       setOtpError(e?.message || "Failed to send verification code");
@@ -108,7 +112,7 @@ export function WhatsAppWizardModal({
   // ── Verify 6-Digit Code & Link WhatsApp ────────────────────────────────────
   async function handleVerifyOtp() {
     if (!otpCode.trim()) {
-      setOtpError("Please enter the 6-digit verification code.");
+      setOtpError("Please enter the 6-digit verification code received on your WhatsApp.");
       return;
     }
     setVerifyingOtp(true);
@@ -139,7 +143,10 @@ export function WhatsAppWizardModal({
           });
         }
       } else {
-        setOtpError(data.error || "Verification failed. Check the 6-digit code.");
+        const errText = typeof data.error === "string"
+          ? data.error
+          : data.error?.message || (Array.isArray(data.error) ? data.error[0]?.message : "Verification failed.");
+        setOtpError(errText);
       }
     } catch (e: any) {
       setOtpError(e?.message || "Verification error");
@@ -296,7 +303,7 @@ export function WhatsAppWizardModal({
                   Step 1: Confirm Target Phone Number & Request Code
                 </h4>
                 <p className="text-[11px] text-slate-500 mt-0.5">
-                  Verification code will be sent to this WhatsApp number:
+                  Verification code will be sent to this WhatsApp number via Meta Cloud API:
                 </p>
               </div>
 
@@ -322,18 +329,15 @@ export function WhatsAppWizardModal({
               </div>
 
               {otpSentStatus && (
-                <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 space-y-1 font-mono text-[11px]">
-                  <p className="font-bold">
-                    ✓ {typeof otpSentStatus.message === "string" ? otpSentStatus.message : JSON.stringify(otpSentStatus.message)}
+                <div className="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 space-y-1 font-mono text-[11px]">
+                  <p className="font-extrabold flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-300">
+                    <CheckCircle2 className="h-4 w-4 shrink-0" />
+                    {typeof otpSentStatus.message === "string" ? otpSentStatus.message : JSON.stringify(otpSentStatus.message)}
                   </p>
                   {otpSentStatus.formattedE164 && (
-                    <p>Target Phone: <strong className="font-extrabold">{otpSentStatus.formattedE164}</strong></p>
-                  )}
-                  {otpSentStatus.otpCode && (
-                    <div className="p-2 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center justify-between mt-1">
-                      <span>Your Verification Code: <strong>{otpSentStatus.otpCode}</strong></span>
-                      <span className="text-[10px] bg-emerald-800 px-2 py-0.5 rounded">Auto-Filled Below</span>
-                    </div>
+                    <p className="text-slate-600 dark:text-slate-400">
+                      Delivered to Phone: <strong className="text-slate-900 dark:text-slate-100">{otpSentStatus.formattedE164}</strong>
+                    </p>
                   )}
                 </div>
               )}

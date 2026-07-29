@@ -20,7 +20,7 @@ function toMetaE164(phone: string): string {
 
 /**
  * POST /api/erp/whatsapp/send-otp
- * Dispatches an official Meta WhatsApp 6-Digit verification code to the target phone number.
+ * Dispatches an official Meta WhatsApp 6-Digit verification code directly to the target phone number.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -40,10 +40,10 @@ export async function POST(request: NextRequest) {
 
     const formattedPhone = toMetaE164(parsed.phoneNumber);
 
-    // Look for active Meta credentials in system config or DB
+    // Look for active Meta credentials in DB or system config
     const { data: accounts } = await admin
       .from("whatsapp_accounts")
-      .select("phone_number_id, access_token, waba_id")
+      .select("phone_number_id, access_token, waba_id, phone_number")
       .eq("is_active", true)
       .order("created_at", { ascending: false });
 
@@ -82,9 +82,9 @@ export async function POST(request: NextRequest) {
     const isFakeToken = !token || token.includes("SECURE_TOKEN") || token.length < 20;
     const isFakePnid = !phoneNumberId || phoneNumberId.startsWith("PNID-") || phoneNumberId.length < 5;
 
-    // If real system credentials exist, send via official Meta Cloud API
+    // If Meta Cloud API credentials exist, send via official Meta Graph API to target phone
     if (!isFakeToken && !isFakePnid) {
-      console.log(`[Official Meta OTP Send] Sending code ${otpCode} to +${formattedPhone}`);
+      console.log(`[Official Meta OTP Send] Sending code to +${formattedPhone} via Meta Graph API`);
 
       const metaRes = await fetch(`https://graph.facebook.com/v19.0/${phoneNumberId}/messages`, {
         method: "POST",
@@ -109,30 +109,27 @@ export async function POST(request: NextRequest) {
           success: true,
           metaDelivered: true,
           wamid: metaJson.messages[0].id,
-          otpCode, // also returned for seamless testing/auto-fill if needed
           formattedE164: `+${formattedPhone}`,
-          message: `6-Digit Verification Code sent to WhatsApp (+${formattedPhone}) via official Meta Cloud API.`
+          message: `✓ 6-Digit Verification Code sent directly to your WhatsApp (+${formattedPhone}). Please check your WhatsApp messages.`
         });
       } else {
-        console.warn("[Meta OTP Delivery Warning]:", metaJson);
+        console.warn("[Meta OTP Delivery Error]:", metaJson);
+        const errObj = metaJson?.error || metaJson;
         return apiOk({
-          success: true,
+          success: false,
           metaDelivered: false,
-          otpCode,
-          metaError: metaJson?.error || metaJson,
-          formattedE164: `+${formattedPhone}`,
-          message: `Verification Code (${otpCode}) generated. Note: Meta API returned HTTP ${metaHttpCode}. Check Meta Access Token permissions.`
+          httpCode: metaHttpCode,
+          metaError: errObj,
+          error: `Meta WhatsApp API returned HTTP ${metaHttpCode}: ${errObj?.message || "Delivery rejected"}`
         });
       }
     }
 
-    // Fallback: If Meta Credentials not configured in .env yet, return generated code for ERP system verification
+    // No Meta credentials on server yet
     return apiOk({
-      success: true,
+      success: false,
       metaDelivered: false,
-      otpCode,
-      formattedE164: `+${formattedPhone}`,
-      message: `Verification code generated: ${otpCode}. (Add META_WHATSAPP_TOKEN & META_PHONE_NUMBER_ID in server env for physical phone delivery).`
+      error: "Administrator Setup Required: Meta WhatsApp Cloud API System Access Token & Phone Number ID have not been saved on the server yet."
     });
 
   } catch (error) {
