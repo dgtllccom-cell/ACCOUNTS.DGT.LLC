@@ -995,6 +995,12 @@ export const sidebarTree: SidebarNode[] = [
     href: "/dashboard/return-sms-reply" as Route
   },
   {
+    key: "ai-mobile-reply",
+    labelKey: "nav.ai_mobile_reply",
+    iconKey: "message-square",
+    href: "/mobile" as Route
+  },
+  {
     key: "message-system",
     labelKey: "nav.message_system",
     iconKey: "message-square",

@@ -17,6 +17,10 @@ const nextConfig: NextConfig = {
   // typedRoutes disabled: enabling it creates a .next/types/link.d.ts symlink
   // which OneDrive cannot sync (EINVAL). Disable to keep .next inside the project.
   typedRoutes: false,
+  onDemandEntries: {
+    maxInactiveAge: 60 * 1000,
+    pagesBufferLength: 5,
+  },
   experimental: {
     // Reduces initial memory footprint in dev by avoiding eager preloading of every route entrypoint.
     // This can help prevent dev server restarts caused by high memory usage.
@@ -25,6 +29,12 @@ const nextConfig: NextConfig = {
     webpackMemoryOptimizations: true,
   },
   webpack: (config, { dev }) => {
+    // Extend Webpack chunk loading timeout from default 12s to 60s to prevent script timeout errors
+    config.output = {
+      ...config.output,
+      chunkLoadTimeout: 60000,
+    };
+
     // OneDrive / Windows file locking can cause EPERM rename failures inside `.next/cache/webpack/*pack.gz`.
     // Use in-memory caching during development to avoid filesystem cache writes/renames.
     if (dev) {

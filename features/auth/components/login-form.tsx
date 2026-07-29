@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import type { Route } from "next";
 import {
   ArrowRight,
   Building2,
@@ -328,7 +327,7 @@ export function LoginForm({ lang: initialLang }: { lang?: SupportedLanguage }) {
               Password
             </label>
             <Link
-              href={"/auth/forgot-password" as Route}
+              href="/auth/forgot-password"
               className="text-[11px] font-bold text-blue-600 hover:text-blue-700 transition-colors hover:underline dark:text-blue-400"
             >
               Forgot Password?

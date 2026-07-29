@@ -71,20 +71,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     }
   } catch {}
   try {
-    var handleChunkErr = function(msg) {
-      if (msg && (msg.indexOf('Loading chunk') !== -1 || msg.indexOf('ChunkLoadError') !== -1 || msg.indexOf('failed to fetch') !== -1)) {
-        var last = sessionStorage.getItem('chunk_reload_attempt');
-        var now = Date.now();
-        if (!last || (now - parseInt(last, 10)) > 15000) {
-          sessionStorage.setItem('chunk_reload_attempt', now.toString());
-          window.location.reload();
+    var handleChunkErr = function(err) {
+      try {
+        var str = '';
+        if (typeof err === 'string') str = err;
+        else if (err && typeof err === 'object') str = err.message || err.name || String(err);
+        if (str && (str.indexOf('Loading chunk') !== -1 || str.indexOf('ChunkLoadError') !== -1 || str.indexOf('failed to fetch') !== -1 || str.indexOf('exception has occurred') !== -1)) {
+          var last = sessionStorage.getItem('chunk_reload_attempt');
+          var now = Date.now();
+          if (!last || (now - parseInt(last, 10)) > 15000) {
+            sessionStorage.setItem('chunk_reload_attempt', now.toString());
+            window.location.reload();
+          }
         }
-      }
+      } catch (inner) {}
     };
-    window.addEventListener('error', function(e) { handleChunkErr(e.message); });
-    window.addEventListener('unhandledrejection', function(e) {
-      handleChunkErr(e.reason && (e.reason.message || e.reason.name));
-    });
+    window.addEventListener('error', function(e) { handleChunkErr(e ? (e.message || e.error) : null); });
+    window.addEventListener('unhandledrejection', function(e) { handleChunkErr(e ? e.reason : null); });
   } catch {}
 })();
             `.trim()

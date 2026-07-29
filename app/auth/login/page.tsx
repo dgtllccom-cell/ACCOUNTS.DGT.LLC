@@ -13,8 +13,9 @@ export default async function LoginPage({
 }: {
   searchParams?: { error?: string } | Promise<{ error?: string }>;
 }) {
-  const params = searchParams ? await Promise.resolve(searchParams) : {};
-  const lang   = await getRequestLanguage();
+  const resolvedSearchParams = searchParams ? await searchParams : {};
+  const params = resolvedSearchParams || {};
+  const lang = await getRequestLanguage();
 
   return (
     <div className="min-h-screen flex flex-col">

@@ -20,6 +20,7 @@ export default function GlobalClientError({
         error.message.includes("failed to fetch") ||
         error.message.includes("Failed to fetch dynamically imported module") ||
         error.message.includes("error loading chunk") ||
+        error.message.includes("client-side exception has occurred") ||
         error.message.includes("ChunkLoadError")));
 
   useEffect(() => {

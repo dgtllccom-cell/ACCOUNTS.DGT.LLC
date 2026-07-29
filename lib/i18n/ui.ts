@@ -167,6 +167,7 @@ export type UiKey =
   | "nav.messages_internal"
   | "nav.notification_center"
   | "nav.return_sms_reply"
+  | "nav.ai_mobile_reply"
   | "sms_reply.title"
   | "sms_reply.subtitle"
   | "sms_reply.inbox"
@@ -967,8 +968,9 @@ const en: Dict = {
   "tax.no_taxes_found": "No tax rates configured for this country",
   "tax.saved_successfully": "Tax configuration saved successfully",
   "tax.deleted_successfully": "Tax configuration deleted successfully",
-  // Return SMS Reply Module
+  // Return SMS Reply & Mobile AI Module
   "nav.return_sms_reply": "Return SMS Reply",
+  "nav.ai_mobile_reply": "AI Mobile – Return WhatsApp Reply",
   "sms_reply.title": "Return SMS Reply — AI Communication Centre",
   "sms_reply.subtitle": "Centralized WhatsApp & Email AI communication center for multi-country, automated business replies and payment reminders",
   "sms_reply.inbox": "Unified Inbox",
