@@ -290,18 +290,26 @@ export function WhatsAppWizardModal({
         {step === 2 && (
           <div className="space-y-4 text-xs">
             <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
-              <h4 className="font-extrabold text-slate-800 dark:text-white flex items-center gap-2 text-sm">
-                <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                Step 1: Send Verification Code
-              </h4>
+              <div>
+                <h4 className="font-extrabold text-slate-800 dark:text-white flex items-center gap-2 text-sm">
+                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
+                  Step 1: Confirm Target Phone Number & Request Code
+                </h4>
+                <p className="text-[11px] text-slate-500 mt-0.5">
+                  Verification code will be sent to this WhatsApp number:
+                </p>
+              </div>
 
               <div className="flex items-center gap-3">
-                <input
-                  type="text"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  className="font-mono font-bold p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 flex-1 outline-none text-xs"
-                />
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    placeholder="00971544816664"
+                    className="w-full font-mono font-bold p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none text-xs"
+                  />
+                </div>
                 <button
                   type="button"
                   onClick={handleSendOtp}
@@ -319,18 +327,19 @@ export function WhatsAppWizardModal({
                     ✓ {typeof otpSentStatus.message === "string" ? otpSentStatus.message : JSON.stringify(otpSentStatus.message)}
                   </p>
                   {otpSentStatus.formattedE164 && (
-                    <p>Target Phone: {otpSentStatus.formattedE164}</p>
+                    <p>Target Phone: <strong className="font-extrabold">{otpSentStatus.formattedE164}</strong></p>
                   )}
                   {otpSentStatus.otpCode && (
-                    <p className="text-emerald-600 dark:text-emerald-400 font-extrabold text-xs">
-                      Verification Code: {otpSentStatus.otpCode}
-                    </p>
+                    <div className="p-2 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center justify-between mt-1">
+                      <span>Your Verification Code: <strong>{otpSentStatus.otpCode}</strong></span>
+                      <span className="text-[10px] bg-emerald-800 px-2 py-0.5 rounded">Auto-Filled Below</span>
+                    </div>
                   )}
                 </div>
               )}
 
               {/* Step 2: Enter 6-Digit Code */}
-              <div className="space-y-1.5 pt-2 border-t dark:border-slate-800">
+              <div className="space-y-2 pt-3 border-t dark:border-slate-800">
                 <label className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-2">
                   Step 2: Enter 6-Digit Code Received on WhatsApp
                 </label>
@@ -341,7 +350,7 @@ export function WhatsAppWizardModal({
                     value={otpCode}
                     onChange={(e) => setOtpCode(e.target.value)}
                     placeholder="123456"
-                    className="font-mono text-center text-lg font-black tracking-widest p-2.5 rounded-xl border border-emerald-500/40 bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 w-44 outline-none"
+                    className="font-mono text-center text-lg font-black tracking-widest p-2.5 rounded-xl border-2 border-emerald-500/50 bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 w-44 outline-none focus:ring-2 focus:ring-emerald-400"
                   />
                   <button
                     type="button"

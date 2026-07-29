@@ -20,7 +20,17 @@ const verifyOtpSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    const parsed = verifyOtpSchema.parse(await request.json());
+    const body = await request.json();
+
+    const digitsOnly = String(body?.phoneNumber || "").replace(/\D/g, "");
+    if (digitsOnly.length < 7) {
+      return apiOk({
+        success: false,
+        error: "Please enter your full WhatsApp phone number (e.g. 00971544816664) in the phone input box above, not in the code box."
+      });
+    }
+
+    const parsed = verifyOtpSchema.parse(body);
     const admin = createSupabaseAdminClient();
 
     // Check stored OTP code in communication_contact_preferences

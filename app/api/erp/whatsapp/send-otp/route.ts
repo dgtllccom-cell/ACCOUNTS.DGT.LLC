@@ -25,7 +25,17 @@ function toMetaE164(phone: string): string {
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    const parsed = sendOtpSchema.parse(await request.json());
+    const body = await request.json();
+
+    const digitsOnly = String(body?.phoneNumber || "").replace(/\D/g, "");
+    if (digitsOnly.length < 7) {
+      return apiOk({
+        success: false,
+        error: "Please enter your full WhatsApp phone number (e.g. 00971544816664) in the phone input box above."
+      });
+    }
+
+    const parsed = sendOtpSchema.parse(body);
     const admin = createSupabaseAdminClient();
 
     const formattedPhone = toMetaE164(parsed.phoneNumber);
