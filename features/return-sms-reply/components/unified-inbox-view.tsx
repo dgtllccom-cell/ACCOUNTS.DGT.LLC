@@ -273,7 +273,8 @@ export function UnifiedInboxView({ lang }: Props) {
 
   // Send or Approve Reply
   const handleSendReply = async (action: "send_manual" | "approve_ai") => {
-    if (!selectedConv || !replyInput.trim()) return;
+    const cleanReply = (replyInput || "").trim();
+    if (!selectedConv || !cleanReply) return;
     setIsSending(true);
 
     try {
@@ -282,7 +283,7 @@ export function UnifiedInboxView({ lang }: Props) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           conversationId: selectedConv.id,
-          body: replyInput.trim(),
+          body: cleanReply,
           channel: selectedConv.channel === "email" ? "email" : "whatsapp",
           action
         })
@@ -651,7 +652,7 @@ export function UnifiedInboxView({ lang }: Props) {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleSendReply("approve_ai")}
-                        disabled={isSending || !replyInput.trim()}
+                        disabled={isSending || !(replyInput || "").trim()}
                         className="flex items-center gap-1.5 rounded-xl bg-amber-600 text-white px-4 py-2 text-xs font-bold hover:bg-amber-700 disabled:opacity-40"
                       >
                         <UserCheck className="h-3.5 w-3.5" />
@@ -660,7 +661,7 @@ export function UnifiedInboxView({ lang }: Props) {
 
                       <button
                         onClick={() => handleSendReply("send_manual")}
-                        disabled={isSending || !replyInput.trim()}
+                        disabled={isSending || !(replyInput || "").trim()}
                         className="flex items-center gap-1.5 rounded-xl bg-emerald-600 text-white px-4 py-2 text-xs font-bold hover:bg-emerald-700 disabled:opacity-40 shadow-sm"
                       >
                         <Send className="h-3.5 w-3.5" />

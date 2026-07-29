@@ -36,7 +36,7 @@ export function WhatsAppWizardModal({
   const [step, setStep] = useState<1 | 2>(1);
   const [scope, setScope] = useState(defaultScope);
   const [displayName, setDisplayName] = useState("Super Admin Dubai WhatsApp Business");
-  const [phoneNumber, setPhoneNumber] = useState(defaultPhoneNumber);
+  const [phoneNumber, setPhoneNumber] = useState(defaultPhoneNumber || "00971544816664");
 
   // Live Meta verification state
   const [verifying, setVerifying] = useState(false);
@@ -44,7 +44,7 @@ export function WhatsAppWizardModal({
   const [verifiedData, setVerifiedData] = useState<any>(null);
 
   // Test Send State (Step 2)
-  const [testRecipient, setTestRecipient] = useState(defaultPhoneNumber);
+  const [testRecipient, setTestRecipient] = useState(defaultPhoneNumber || "00971544816664");
   const [testMessage, setTestMessage] = useState("Hello from Digital Dock ERP! Official Meta WhatsApp connection is live.");
   const [sendingTest, setSendingTest] = useState(false);
   const [testResult, setTestResult] = useState<any>(null);
@@ -77,7 +77,8 @@ export function WhatsAppWizardModal({
 
   // ── Verify & Activate Official Meta Line ─────────────────────────────────
   async function handleVerifyAndConnect() {
-    if (!phoneNumber.trim()) {
+    const cleanPhone = (phoneNumber || "").trim();
+    if (!cleanPhone) {
       setVerifyError("Please enter a valid WhatsApp phone number.");
       return;
     }
@@ -90,7 +91,7 @@ export function WhatsAppWizardModal({
       const res = await fetch("/api/erp/whatsapp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phoneNumber: phoneNumber.trim() })
+        body: JSON.stringify({ phoneNumber: cleanPhone })
       });
       const json = await res.json();
       const data = json.data || json;
@@ -102,8 +103,8 @@ export function WhatsAppWizardModal({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             scope,
-            displayName: displayName || data.verified_name || `WhatsApp (${phoneNumber})`,
-            phoneNumber: phoneNumber.trim()
+            displayName: displayName || data.verified_name || `WhatsApp (${cleanPhone})`,
+            phoneNumber: cleanPhone
           })
         });
         const accJson = await accRes.json();
@@ -115,7 +116,7 @@ export function WhatsAppWizardModal({
         if (onConnected) {
           onConnected({
             accountId: accData.accountId,
-            phoneNumber,
+            phoneNumber: cleanPhone,
             displayName,
             status: "CONNECTED"
           });
@@ -135,7 +136,8 @@ export function WhatsAppWizardModal({
 
   // ── Send Live Test Message via Meta Cloud API ────────────────────────────
   async function handleSendTestMessage() {
-    if (!testRecipient.trim()) return;
+    const cleanRecipient = (testRecipient || "").trim();
+    if (!cleanRecipient) return;
     setSendingTest(true);
     setTestResult(null);
 
