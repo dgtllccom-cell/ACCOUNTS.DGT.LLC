@@ -13,8 +13,8 @@ export type MetaConfig = {
  */
 export async function getSystemMetaConfig(): Promise<MetaConfig> {
   let token = process.env.META_WHATSAPP_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN || null;
-  let phoneNumberId = process.env.META_PHONE_NUMBER_ID || process.env.WHATSAPP_PHONE_NUMBER_ID || null;
-  let wabaId = process.env.META_WABA_ID || process.env.WHATSAPP_WABA_ID || "WABAID-OFFICIAL";
+  let phoneNumberId = process.env.META_PHONE_NUMBER_ID || process.env.WHATSAPP_PHONE_NUMBER_ID || "154760354377649";
+  let wabaId = process.env.META_WABA_ID || process.env.WHATSAPP_WABA_ID || "335626955041488";
 
   const isRealToken = (t: string | null) => t && t.length > 20 && !t.includes("SECURE_TOKEN");
   const isRealPnid = (p: string | null) => p && p.length > 5 && !p.startsWith("PNID-");

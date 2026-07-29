@@ -51,6 +51,6 @@ try {
   });
   console.log(out);
   console.log("🎉 VPS Meta Environment Variables Successfully Set!");
-} catch (e: any) {
+} catch (e) {
   console.error("VPS SSH error:", e.stdout || e.stderr || e.message);
 }

@@ -49,9 +49,9 @@ export function WhatsAppWizardModal({
   const [sendingTest, setSendingTest] = useState(false);
   const [testResult, setTestResult] = useState<any>(null);
 
-  // Meta Admin credentials setup state
-  const [phoneNumberId, setPhoneNumberId] = useState("");
-  const [wabaId, setWabaId] = useState("");
+  // Meta Admin credentials setup state (Pre-filled with your production IDs)
+  const [phoneNumberId, setPhoneNumberId] = useState("154760354377649");
+  const [wabaId, setWabaId] = useState("335626955041488");
   const [accessToken, setAccessToken] = useState("");
   const [verifyingMeta, setVerifyingMeta] = useState(false);
 
