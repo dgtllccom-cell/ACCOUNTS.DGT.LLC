@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getSystemMetaConfig } from "@/lib/services/meta-whatsapp-config";
 
 export const dynamic = "force-dynamic";
 
@@ -40,25 +41,8 @@ export async function POST(request: NextRequest) {
 
     const formattedPhone = toMetaE164(parsed.phoneNumber);
 
-    // Look for active Meta credentials in DB or system config
-    const { data: accounts } = await admin
-      .from("whatsapp_accounts")
-      .select("phone_number_id, access_token, waba_id, phone_number")
-      .eq("is_active", true)
-      .order("created_at", { ascending: false });
-
-    let token = process.env.META_WHATSAPP_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN || null;
-    let phoneNumberId = process.env.META_PHONE_NUMBER_ID || process.env.WHATSAPP_PHONE_NUMBER_ID || null;
-    let wabaId = process.env.META_WABA_ID || process.env.WHATSAPP_WABA_ID || "WABAID-OFFICIAL";
-
-    if (accounts && accounts.length > 0) {
-      const activeAcc = accounts.find(a => a.access_token && a.access_token.length > 20 && !a.access_token.includes("SECURE_TOKEN"));
-      if (activeAcc) {
-        token = activeAcc.access_token;
-        phoneNumberId = activeAcc.phone_number_id;
-        wabaId = activeAcc.waba_id || wabaId;
-      }
-    }
+    // Look for system default Meta credentials
+    const { token, phoneNumberId, isConfigured } = await getSystemMetaConfig();
 
     // Generate random 6-digit OTP code
     const otpCode = String(Math.floor(100000 + Math.random() * 900000));

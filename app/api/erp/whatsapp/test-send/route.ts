@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getSystemMetaConfig } from "@/lib/services/meta-whatsapp-config";
 
 // Uses cookies() via requireErpSession — must be dynamic
 export const dynamic = "force-dynamic";
@@ -48,9 +49,10 @@ export async function POST(request: NextRequest) {
       .eq("is_active", true)
       .maybeSingle();
 
-    // Also check environment variables as a fallback for super-admin setup
-    const token = account?.access_token || process.env.META_WHATSAPP_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN || null;
-    const phoneNumberId = account?.phone_number_id || process.env.META_PHONE_NUMBER_ID || process.env.WHATSAPP_PHONE_NUMBER_ID || null;
+    // Also check system default credentials as fallback
+    const { token: sysToken, phoneNumberId: sysPnid } = await getSystemMetaConfig();
+    const token = (account?.access_token && account.access_token.length > 20) ? account.access_token : sysToken;
+    const phoneNumberId = (account?.phone_number_id && account.phone_number_id.length > 5) ? account.phone_number_id : sysPnid;
 
     // Reject if no real credentials exist or if they look like placeholder values
     const isFakeToken = !token || token.includes("SECURE_TOKEN") || token.includes("PNID-") || token.length < 20;

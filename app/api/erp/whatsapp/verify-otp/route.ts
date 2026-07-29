@@ -3,6 +3,7 @@ import { z } from "zod";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getSystemMetaConfig } from "@/lib/services/meta-whatsapp-config";
 
 export const dynamic = "force-dynamic";
 
@@ -66,9 +67,10 @@ export async function POST(request: NextRequest) {
     }
 
     // Retrieve system Meta Cloud API credentials or create active connection record
-    const token = process.env.META_WHATSAPP_TOKEN || process.env.WHATSAPP_ACCESS_TOKEN || "EAAG_OFFICIAL_SYSTEM_USER_TOKEN";
-    const phoneNumberId = process.env.META_PHONE_NUMBER_ID || process.env.WHATSAPP_PHONE_NUMBER_ID || "PNID_OFFICIAL_SYSTEM_LINE";
-    const wabaId = process.env.META_WABA_ID || process.env.WHATSAPP_WABA_ID || "WABAID_OFFICIAL_SYSTEM_LINE";
+    const sysMeta = await getSystemMetaConfig();
+    const token = sysMeta.token || "EAAG_OFFICIAL_SYSTEM_USER_TOKEN";
+    const phoneNumberId = sysMeta.phoneNumberId || "PNID_OFFICIAL_SYSTEM_LINE";
+    const wabaId = sysMeta.wabaId || "WABAID_OFFICIAL_SYSTEM_LINE";
 
     // Upsert into whatsapp_accounts
     const { data: existing } = await admin
