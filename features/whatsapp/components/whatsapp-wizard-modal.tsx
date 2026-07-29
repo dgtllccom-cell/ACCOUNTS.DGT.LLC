@@ -12,7 +12,9 @@ import {
   Building2,
   Globe2,
   FileText,
-  Bot
+  Bot,
+  AlertTriangle,
+  RefreshCw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -31,63 +33,21 @@ export function WhatsAppWizardModal({
   defaultScope = "super_admin",
   onConnected
 }: Props) {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<1 | 2>(1);
   const [scope, setScope] = useState(defaultScope);
   const [displayName, setDisplayName] = useState("Super Admin Dubai WhatsApp Business");
   const [phoneNumber, setPhoneNumber] = useState(defaultPhoneNumber);
 
-  // 6-Digit OTP State
-  const [sendingOtp, setSendingOtp] = useState(false);
-  const [otpSentStatus, setOtpSentStatus] = useState<any>(null);
-  const [otpCode, setOtpCode] = useState("");
-  const [verifyingOtp, setVerifyingOtp] = useState(false);
-  const [otpError, setOtpError] = useState<string | null>(null);
+  // Live Meta verification state
+  const [verifying, setVerifying] = useState(false);
+  const [verifyError, setVerifyError] = useState<string | null>(null);
+  const [verifiedData, setVerifiedData] = useState<any>(null);
 
-  // Test Send State (Step 3)
+  // Test Send State (Step 2)
   const [testRecipient, setTestRecipient] = useState(defaultPhoneNumber);
-  const [testMessage, setTestMessage] = useState("Hello from Digital Dock ERP! Official WhatsApp connection is live.");
+  const [testMessage, setTestMessage] = useState("Hello from Digital Dock ERP! Official Meta WhatsApp connection is live.");
   const [sendingTest, setSendingTest] = useState(false);
   const [testResult, setTestResult] = useState<any>(null);
-
-  // Meta Admin credentials setup state (Pre-filled with your production IDs)
-  const [phoneNumberId, setPhoneNumberId] = useState("154760354377649");
-  const [wabaId, setWabaId] = useState("335626955041488");
-  const [accessToken, setAccessToken] = useState("");
-  const [verifyingMeta, setVerifyingMeta] = useState(false);
-
-  // Save Meta Admin credentials to server DB
-  async function handleSaveAdminMeta() {
-    if (!phoneNumberId.trim() || !accessToken.trim()) return;
-    setVerifyingMeta(true);
-    setOtpError(null);
-
-    try {
-      const res = await fetch("/api/erp/admin/configure-meta", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phoneNumberId: phoneNumberId.trim(),
-          accessToken: accessToken.trim(),
-          wabaId: wabaId.trim() || "WABAID-OFFICIAL",
-          phoneNumber
-        })
-      });
-      const json = await res.json();
-      const data = json.data || json;
-
-      if (data.success) {
-        setOtpError(null);
-        alert(`✅ Meta credentials verified! Official line activated for ${data.displayPhoneNumber || phoneNumber}. Click "Send 6-Digit Code" now.`);
-        handleSendOtp();
-      } else {
-        setOtpError(data.error || "Failed to verify Meta credentials.");
-      }
-    } catch (e: any) {
-      setOtpError(e?.message || "Server configuration error.");
-    } finally {
-      setVerifyingMeta(false);
-    }
-  }
 
   // Handle Branch Scope Selection
   const handleScopeChange = (val: string) => {
@@ -115,68 +75,46 @@ export function WhatsAppWizardModal({
     }
   };
 
-  // ── Send 6-Digit Verification Code ─────────────────────────────────────────
-  async function handleSendOtp() {
+  // ── Verify & Activate Official Meta Line ─────────────────────────────────
+  async function handleVerifyAndConnect() {
     if (!phoneNumber.trim()) {
-      setOtpError("Please enter a valid WhatsApp phone number.");
+      setVerifyError("Please enter a valid WhatsApp phone number.");
       return;
     }
-    setSendingOtp(true);
-    setOtpError(null);
-    setOtpSentStatus(null);
+    setVerifying(true);
+    setVerifyError(null);
+    setVerifiedData(null);
 
     try {
-      const res = await fetch("/api/erp/whatsapp/send-otp", {
+      // Call verify endpoint which tests server Meta credentials against Graph API
+      const res = await fetch("/api/erp/whatsapp/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phoneNumber: phoneNumber.trim(), scope })
+        body: JSON.stringify({ phoneNumber: phoneNumber.trim() })
       });
       const json = await res.json();
       const data = json.data || json;
 
-      if (data.success || data.metaDelivered) {
-        setOtpSentStatus(data);
-      } else {
-        const errText = typeof data.error === "string"
-          ? data.error
-          : data.error?.message || (Array.isArray(data.error) ? data.error[0]?.message : "Failed to send verification code.");
-        setOtpError(errText);
-      }
-    } catch (e: any) {
-      setOtpError(e?.message || "Failed to send verification code");
-    } finally {
-      setSendingOtp(false);
-    }
-  }
+      if (data.verified || data.display_phone_number || data.verified_name) {
+        // Save connected account to DB
+        const accRes = await fetch("/api/erp/whatsapp/accounts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            scope,
+            displayName: displayName || data.verified_name || `WhatsApp (${phoneNumber})`,
+            phoneNumber: phoneNumber.trim()
+          })
+        });
+        const accJson = await accRes.json();
+        const accData = accJson.data || accJson;
 
-  // ── Verify 6-Digit Code & Link WhatsApp ────────────────────────────────────
-  async function handleVerifyOtp() {
-    if (!otpCode.trim()) {
-      setOtpError("Please enter the 6-digit verification code received on your WhatsApp.");
-      return;
-    }
-    setVerifyingOtp(true);
-    setOtpError(null);
+        setVerifiedData(data);
+        setStep(2);
 
-    try {
-      const res = await fetch("/api/erp/whatsapp/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          phoneNumber: phoneNumber.trim(),
-          otpCode: otpCode.trim(),
-          scope,
-          displayName: displayName || `WhatsApp (${phoneNumber})`
-        })
-      });
-      const json = await res.json();
-      const data = json.data || json;
-
-      if (data.success || data.accountId) {
-        setStep(3);
         if (onConnected) {
           onConnected({
-            accountId: data.accountId,
+            accountId: accData.accountId,
             phoneNumber,
             displayName,
             status: "CONNECTED"
@@ -185,17 +123,17 @@ export function WhatsAppWizardModal({
       } else {
         const errText = typeof data.error === "string"
           ? data.error
-          : data.error?.message || (Array.isArray(data.error) ? data.error[0]?.message : "Verification failed.");
-        setOtpError(errText);
+          : data.error?.message || "Server Meta Access Token or Phone Number ID is unverified. Please configure META_WHATSAPP_TOKEN in server env.";
+        setVerifyError(errText);
       }
     } catch (e: any) {
-      setOtpError(e?.message || "Verification error");
+      setVerifyError(e?.message || "Failed to verify Meta WhatsApp connection.");
     } finally {
-      setVerifyingOtp(false);
+      setVerifying(false);
     }
   }
 
-  // ── Send Test Message (Step 3) ─────────────────────────────────────────────
+  // ── Send Live Test Message via Meta Cloud API ────────────────────────────
   async function handleSendTestMessage() {
     if (!testRecipient.trim()) return;
     setSendingTest(true);
@@ -235,10 +173,10 @@ export function WhatsAppWizardModal({
             </div>
             <div>
               <h2 className="font-black text-slate-900 dark:text-white text-base flex items-center gap-2">
-                Connect Official WhatsApp
+                Connect Official Meta WhatsApp
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Official Meta WhatsApp Cloud API — Direct & Secure Connection
+                Direct Cloud API Integration — Multi-Branch Enterprise Connection
               </p>
             </div>
           </div>
@@ -253,9 +191,8 @@ export function WhatsAppWizardModal({
         {/* Step Indicator */}
         <div className="flex items-center gap-2 text-xs font-bold">
           {[
-            { n: 1, label: "Select Branch & Number" },
-            { n: 2, label: "Verification Code" },
-            { n: 3, label: "Live Connection Active" }
+            { n: 1, label: "Select Branch Line & Verify" },
+            { n: 2, label: "Live Connection & Send Test Message" }
           ].map((s) => (
             <div key={s.n} className="flex items-center gap-1.5">
               <div className={cn(
@@ -265,21 +202,21 @@ export function WhatsAppWizardModal({
                 {step > s.n ? <Check className="h-3.5 w-3.5" /> : s.n}
               </div>
               <span className={cn(step >= s.n ? "text-emerald-600 font-extrabold" : "text-slate-400")}>{s.label}</span>
-              {s.n < 3 && <span className="text-slate-300 dark:text-slate-700">→</span>}
+              {s.n < 2 && <span className="text-slate-300 dark:text-slate-700">→</span>}
             </div>
           ))}
         </div>
 
-        {/* ── STEP 1: Select Branch & Phone Number ─────────────────────────── */}
+        {/* ── STEP 1: Select Branch Line & Verify Meta API ────────────────── */}
         {step === 1 && (
           <div className="space-y-4 text-xs">
             <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-1">
               <p className="font-black text-emerald-800 dark:text-emerald-200 flex items-center gap-2 text-sm">
                 <Globe2 className="h-4 w-4 text-emerald-600" />
-                Multi-Branch WhatsApp Integration
+                Multi-Branch Official Meta WhatsApp
               </p>
               <p className="text-slate-600 dark:text-slate-400 text-[11.5px]">
-                Each branch connects its own WhatsApp line independently (UAE, Pakistan, Afghanistan, Turkey). Select your branch line below.
+                Select your branch line below. The system automatically connects directly to the server&apos;s verified Meta Cloud API pipeline.
               </p>
             </div>
 
@@ -322,159 +259,44 @@ export function WhatsAppWizardModal({
               <p className="text-[10.5px] text-slate-400">Enter your branch WhatsApp phone number e.g. 00971544816664</p>
             </div>
 
-            <div className="flex justify-end pt-2">
-              <button
-                onClick={() => setStep(2)}
-                className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black shadow-md cursor-pointer transition-all flex items-center gap-2"
-              >
-                Proceed to Verification Code →
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* ── STEP 2: 6-Digit Code Verification ───────────────────────────── */}
-        {step === 2 && (
-          <div className="space-y-4 text-xs">
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-3">
-              <div>
-                <h4 className="font-extrabold text-slate-800 dark:text-white flex items-center gap-2 text-sm">
-                  <ShieldCheck className="h-4 w-4 text-emerald-600" />
-                  Step 1: Confirm Target Phone Number & Request Code
-                </h4>
-                <p className="text-[11px] text-slate-500 mt-0.5">
-                  Verification code will be sent to this WhatsApp number via Meta Cloud API:
+            {verifyError && (
+              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 font-mono text-[11px] space-y-1">
+                <p className="font-bold flex items-center gap-1.5 text-xs text-rose-700 dark:text-rose-300">
+                  <AlertTriangle className="h-4 w-4 shrink-0 text-rose-500" />
+                  Meta Connection Error:
                 </p>
+                <p>{typeof verifyError === "string" ? verifyError : JSON.stringify(verifyError)}</p>
               </div>
-
-              <div className="flex items-center gap-3">
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    value={phoneNumber}
-                    onChange={(e) => setPhoneNumber(e.target.value)}
-                    placeholder="00971544816664"
-                    className="w-full font-mono font-bold p-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none text-xs"
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={handleSendOtp}
-                  disabled={sendingOtp}
-                  className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer disabled:opacity-50"
-                >
-                  {sendingOtp ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
-                  Send 6-Digit Code
-                </button>
-              </div>
-
-              {otpSentStatus && (
-                <div className="p-3.5 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-800 dark:text-emerald-200 space-y-1 font-mono text-[11px]">
-                  <p className="font-extrabold flex items-center gap-1.5 text-xs text-emerald-700 dark:text-emerald-300">
-                    <CheckCircle2 className="h-4 w-4 shrink-0" />
-                    {typeof otpSentStatus.message === "string" ? otpSentStatus.message : JSON.stringify(otpSentStatus.message)}
-                  </p>
-                  {otpSentStatus.formattedE164 && (
-                    <p className="text-slate-600 dark:text-slate-400">
-                      Delivered to Phone: <strong className="text-slate-900 dark:text-slate-100">{otpSentStatus.formattedE164}</strong>
-                    </p>
-                  )}
-                </div>
-              )}
-
-              {/* Step 2: Enter 6-Digit Code */}
-              <div className="space-y-2 pt-3 border-t dark:border-slate-800">
-                <label className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-2">
-                  Step 2: Enter 6-Digit Code Received on WhatsApp
-                </label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="text"
-                    maxLength={6}
-                    value={otpCode}
-                    onChange={(e) => setOtpCode(e.target.value)}
-                    placeholder="123456"
-                    className="font-mono text-center text-lg font-black tracking-widest p-2.5 rounded-xl border-2 border-emerald-500/50 bg-white dark:bg-slate-900 text-emerald-600 dark:text-emerald-400 w-44 outline-none focus:ring-2 focus:ring-emerald-400"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleVerifyOtp}
-                    disabled={verifyingOtp || !otpCode.trim()}
-                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black shadow-lg transition-all cursor-pointer disabled:opacity-40 flex items-center gap-2"
-                  >
-                    {verifyingOtp ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
-                    Verify Code & Link WhatsApp
-                  </button>
-                </div>
-              </div>
-
-              {otpError && (
-                <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 font-mono text-[11px] space-y-2">
-                  <p className="font-bold">❌ {typeof otpError === "string" ? otpError : JSON.stringify(otpError)}</p>
-                  
-                  {typeof otpError === "string" && otpError.includes("Administrator Setup Required") && (
-                    <div className="pt-2 border-t border-rose-500/20 space-y-2">
-                      <p className="font-extrabold text-slate-800 dark:text-slate-100 font-sans text-xs">
-                        ⚙️ Super Admin One-Time Meta Configuration:
-                      </p>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        <input
-                          type="text"
-                          placeholder="Phone Number ID (e.g. 1029384756...)"
-                          value={phoneNumberId}
-                          onChange={(e) => setPhoneNumberId(e.target.value)}
-                          className="font-mono text-[10.5px] p-2 rounded-lg border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none"
-                        />
-                        <input
-                          type="text"
-                          placeholder="WABA ID (e.g. 9876543210...)"
-                          value={wabaId}
-                          onChange={(e) => setWabaId(e.target.value)}
-                          className="font-mono text-[10.5px] p-2 rounded-lg border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none"
-                        />
-                      </div>
-                      <textarea
-                        rows={2}
-                        placeholder="Permanent Access Token (EAAG...)"
-                        value={accessToken}
-                        onChange={(e) => setAccessToken(e.target.value)}
-                        className="w-full font-mono text-[10px] p-2 rounded-lg border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none resize-none"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleSaveAdminMeta}
-                        disabled={verifyingMeta || !phoneNumberId.trim() || !accessToken.trim()}
-                        className="w-full py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs transition-all cursor-pointer disabled:opacity-40 flex items-center justify-center gap-1.5"
-                      >
-                        {verifyingMeta ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <ShieldCheck className="h-3.5 w-3.5" />}
-                        Verify & Activate Server Meta Credentials
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+            )}
 
             <div className="flex items-center justify-between pt-2 border-t dark:border-slate-800">
+              <p className="text-[10.5px] text-slate-400 flex items-center gap-1">
+                <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" /> Server Meta Credentials Protected
+              </p>
               <button
-                onClick={() => setStep(1)}
-                className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 font-bold text-xs"
+                onClick={handleVerifyAndConnect}
+                disabled={verifying || !phoneNumber.trim()}
+                className="px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black shadow-md cursor-pointer transition-all flex items-center gap-2 disabled:opacity-50"
               >
-                ← Back
+                {verifying ? (
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Verifying Meta Credentials...</>
+                ) : (
+                  <><CheckCircle2 className="h-4 w-4" /> Connect & Verify WhatsApp Line</>
+                )}
               </button>
             </div>
           </div>
         )}
 
-        {/* ── STEP 3: Live Connection Active & ERP Messaging Features ─────── */}
-        {step === 3 && (
+        {/* ── STEP 2: Connection Active & Send Test Message ───────────────── */}
+        {step === 2 && (
           <div className="space-y-4 text-xs">
             <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 space-y-1">
               <p className="font-black text-emerald-700 dark:text-emerald-300 flex items-center gap-2 text-sm">
-                <CheckCircle2 className="h-5 w-5" /> WhatsApp Line Live & Connected!
+                <CheckCircle2 className="h-5 w-5" /> Official Meta WhatsApp Line Connected & Active!
               </p>
               <p className="text-slate-600 dark:text-slate-400 text-[11.5px]">
-                Your branch line (<strong className="text-emerald-600 font-bold">{phoneNumber}</strong>) is active. The ERP can now automatically process messages, AI auto-replies, payment reminders, and PDF reports.
+                Your branch line (<strong className="text-emerald-600 font-bold">{phoneNumber}</strong>) is verified and linked. The ERP can now automatically process messages, AI auto-replies, payment reminders, and PDF reports.
               </p>
             </div>
 
@@ -498,14 +320,14 @@ export function WhatsAppWizardModal({
               </div>
             </div>
 
-            {/* Send Test Message */}
+            {/* Send Live Test Message Panel */}
             <div className="space-y-3 p-4 rounded-2xl bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800">
               <h4 className="font-extrabold text-slate-800 dark:text-white flex items-center gap-2">
-                <Send className="h-4 w-4 text-emerald-600" /> Send Test Message
+                <Send className="h-4 w-4 text-emerald-600" /> Send Live Test WhatsApp Message
               </h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div className="space-y-1">
-                  <label className="font-bold text-slate-600 dark:text-slate-400">Send From Branch Line</label>
+                  <label className="font-bold text-slate-600 dark:text-slate-400">Sender Line</label>
                   <input
                     type="text"
                     value={phoneNumber}
@@ -541,7 +363,7 @@ export function WhatsAppWizardModal({
                 className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md transition-all flex items-center justify-center gap-2 disabled:opacity-50 cursor-pointer"
               >
                 {sendingTest ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> Sending via Official WhatsApp...</>
+                  <><Loader2 className="h-4 w-4 animate-spin" /> Sending via Meta Cloud API...</>
                 ) : (
                   <><Send className="h-4 w-4" /> Send Test Message Now</>
                 )}
@@ -555,10 +377,10 @@ export function WhatsAppWizardModal({
                     : "bg-rose-500/10 border-rose-500/30 text-rose-800 dark:text-rose-200"
                 )}>
                   <p className="font-black text-sm">
-                    {testResult.metaSuccess ? "✓ Message Accepted by Meta Network" : `Result: ${testResult.status || "SENT"}`}
+                    {testResult.metaSuccess ? "✓ Message Delivered to WhatsApp Network" : `Result: ${testResult.status || "SENT"}`}
                   </p>
                   {testResult.wamid && (
-                    <p>WAMID: <span className="font-bold">{testResult.wamid}</span></p>
+                    <p>WAMID: <span className="font-bold text-emerald-600">{testResult.wamid}</span></p>
                   )}
                   {testResult.details && (
                     <p className="text-[10.5px] opacity-90">
@@ -571,16 +393,16 @@ export function WhatsAppWizardModal({
 
             <div className="flex items-center justify-between pt-2 border-t dark:border-slate-800">
               <button
-                onClick={() => setStep(2)}
+                onClick={() => setStep(1)}
                 className="px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-800 font-bold text-xs"
               >
-                ← Back
+                ← Change Line / Branch
               </button>
               <button
                 onClick={onClose}
                 className="px-6 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs shadow-md cursor-pointer"
               >
-                Done — Close Wizard
+                Done — Close Setup
               </button>
             </div>
           </div>
