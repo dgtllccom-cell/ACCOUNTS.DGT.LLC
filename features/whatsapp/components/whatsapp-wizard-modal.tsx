@@ -47,7 +47,42 @@ export function WhatsAppWizardModal({
   const [testRecipient, setTestRecipient] = useState(defaultPhoneNumber || "00971544816664");
   const [testMessage, setTestMessage] = useState("Hello from Digital Dock ERP! Official Meta WhatsApp connection is live.");
   const [sendingTest, setSendingTest] = useState(false);
-  const [testResult, setTestResult] = useState<any>(null);
+  // Meta Admin token inline state
+  const [accessToken, setAccessToken] = useState("");
+  const [verifyingMeta, setVerifyingMeta] = useState(false);
+
+  // Save Meta Admin token to DB & re-verify automatically
+  async function handleSaveAdminMeta() {
+    if (!accessToken.trim()) return;
+    setVerifyingMeta(true);
+    setVerifyError(null);
+
+    try {
+      const res = await fetch("/api/erp/admin/configure-meta", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          phoneNumberId: "154760354377649",
+          accessToken: accessToken.trim(),
+          wabaId: "335626955041488",
+          phoneNumber: phoneNumber || "00971544816664"
+        })
+      });
+      const json = await res.json();
+      const data = json.data || json;
+
+      if (data.success) {
+        setVerifyError(null);
+        handleVerifyAndConnect();
+      } else {
+        setVerifyError(data.error || "Failed to verify Meta Access Token.");
+      }
+    } catch (e: any) {
+      setVerifyError(e?.message || "Server configuration error.");
+    } finally {
+      setVerifyingMeta(false);
+    }
+  }
 
   // Handle Branch Scope Selection
   const handleScopeChange = (val: string) => {
@@ -262,12 +297,37 @@ export function WhatsAppWizardModal({
             </div>
 
             {verifyError && (
-              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 font-mono text-[11px] space-y-1">
+              <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-700 dark:text-rose-300 font-mono text-[11px] space-y-2">
                 <p className="font-bold flex items-center gap-1.5 text-xs text-rose-700 dark:text-rose-300">
                   <AlertTriangle className="h-4 w-4 shrink-0 text-rose-500" />
                   Meta Connection Error:
                 </p>
                 <p>{typeof verifyError === "string" ? verifyError : JSON.stringify(verifyError)}</p>
+
+                {(typeof verifyError === "string" && (verifyError.includes("Malformed access token") || verifyError.includes("OFFICIAL_SYSTEM_USER_TOKEN") || verifyError.includes("Access token is required"))) && (
+                  <div className="pt-2.5 border-t border-rose-500/20 space-y-2 font-sans">
+                    <p className="font-extrabold text-slate-800 dark:text-slate-100 text-xs">
+                      ⚙️ Super Admin: Paste Your EAAG... Access Token Once to Activate:
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="text"
+                        placeholder="Paste your EAAG... token here"
+                        value={accessToken}
+                        onChange={(e) => setAccessToken(e.target.value)}
+                        className="flex-1 font-mono text-xs p-2.5 rounded-xl border border-slate-300 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSaveAdminMeta}
+                        disabled={verifyingMeta || !(accessToken || "").trim()}
+                        className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all flex items-center gap-1 shrink-0 cursor-pointer disabled:opacity-50"
+                      >
+                        {verifyingMeta ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Save & Connect"}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
