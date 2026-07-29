@@ -3,8 +3,9 @@
   "appName": "AI Mobile – Return WhatsApp Reply",
   "webDir": ".next",
   "server": {
-    "url": "https://erp.dgt.llc/mobile",
-    "cleartext": true
+    "url": "http://72.60.209.121",
+    "cleartext": true,
+    "allowNavigation": ["72.60.209.121", "*.dgt.llc"]
   },
   "plugins": {
     "SplashScreen": {

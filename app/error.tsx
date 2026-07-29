@@ -42,7 +42,7 @@ export default function GlobalClientError({
     try {
       if (typeof window !== "undefined") {
         sessionStorage.removeItem("chunk_reload_attempt");
-        if ("serviceWorker" in navigator) {
+        if (typeof window !== "undefined" && window.isSecureContext && "serviceWorker" in navigator) {
           const registrations = await navigator.serviceWorker.getRegistrations();
           for (const reg of registrations) {
             await reg.unregister();

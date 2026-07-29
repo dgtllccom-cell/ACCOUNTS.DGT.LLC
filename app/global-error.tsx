@@ -34,10 +34,10 @@ export default function GlobalError({
     try {
       if (typeof window !== "undefined") {
         sessionStorage.removeItem("chunk_reload_attempt");
-        if ("serviceWorker" in navigator) {
+        if (typeof window !== "undefined" && window.isSecureContext && "serviceWorker" in navigator) {
           navigator.serviceWorker.getRegistrations().then((regs) => {
             regs.forEach((r) => r.unregister());
-          });
+          }).catch(() => {});
         }
         if ("caches" in window) {
           caches.keys().then((keys) => {

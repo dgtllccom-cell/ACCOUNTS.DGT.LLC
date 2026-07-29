@@ -3,7 +3,7 @@ module.exports = {
     {
       name: 'dgt-nextjs',
       script: 'node_modules/next/dist/bin/next',
-      args: 'start -p 3000',
+      args: 'start -p 3000 -H 0.0.0.0',
       cwd: '/var/www/dgt-nextjs',
       instances: 1,
       exec_mode: 'fork',
@@ -16,6 +16,7 @@ module.exports = {
       env: {
         NODE_ENV: 'production',
         PORT: '3000',
+        HOSTNAME: '0.0.0.0',
         NODE_OPTIONS: '--max-old-space-size=4096'
       }
     }

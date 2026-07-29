@@ -64,9 +64,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     document.documentElement.dir = rtl.has(lang) ? 'rtl' : 'ltr';
   } catch {}
   try {
-    if ('serviceWorker' in navigator) {
+    if (window.isSecureContext && 'serviceWorker' in navigator) {
       window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/sw.js').catch(function() {});
+        try {
+          navigator.serviceWorker.register('/sw.js').catch(function() {});
+        } catch(swErr) {}
       });
     }
   } catch {}

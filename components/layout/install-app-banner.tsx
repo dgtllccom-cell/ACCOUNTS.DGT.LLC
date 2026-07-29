@@ -13,9 +13,11 @@ export function InstallAppBanner() {
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    // Register Service Worker if available
-    if (typeof window !== "undefined" && "serviceWorker" in navigator) {
-      navigator.serviceWorker.register("/sw.js").catch(() => {});
+    // Register Service Worker if available on secure contexts (HTTPS or localhost)
+    if (typeof window !== "undefined" && window.isSecureContext && "serviceWorker" in navigator) {
+      try {
+        navigator.serviceWorker.register("/sw.js").catch(() => {});
+      } catch {}
     }
 
     // Check if already running as installed app (standalone)

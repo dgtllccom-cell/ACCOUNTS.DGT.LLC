@@ -29,9 +29,8 @@ async function isPortFree(hostname, port) {
 async function main() {
   const dir = process.cwd();
   const port = Number(process.env.PORT || 3000);
-  // Bind explicitly to IPv4 loopback by default to avoid Windows resolving "localhost" to ::1,
-  // which can cause ERR_CONNECTION_REFUSED in some browsers/environments.
-  const hostname = process.env.HOSTNAME || "127.0.0.1";
+  // Bind to 0.0.0.0 to listen on all network interfaces (IP 72.60.209.121, mobile devices, external computers)
+  const hostname = process.env.HOSTNAME || "0.0.0.0";
 
   process.env.NODE_ENV = process.env.NODE_ENV || "development";
   process.env.NEXT_RUNTIME = process.env.NEXT_RUNTIME || "nodejs";
