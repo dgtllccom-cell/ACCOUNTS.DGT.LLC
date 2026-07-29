@@ -166,6 +166,15 @@ export type UiKey =
   | "nav.whatsapp_setup"
   | "nav.messages_internal"
   | "nav.notification_center"
+  | "nav.return_sms_reply"
+  | "sms_reply.title"
+  | "sms_reply.subtitle"
+  | "sms_reply.inbox"
+  | "sms_reply.reminders"
+  | "sms_reply.templates"
+  | "sms_reply.ai_rules"
+  | "sms_reply.contacts"
+  | "sms_reply.reports"
   | "nav.settings"
   | "nav.management"
   | "nav.master_forms"
@@ -185,7 +194,30 @@ export type UiKey =
   | "nav.loading_port_master"
   | "nav.received_port_master"
   | "nav.port_master"
+  | "nav.tax"
+  | "nav.tax_settings"
   | "nav.chs_products"
+  // Tax UI Keys
+  | "tax.title"
+  | "tax.subtitle"
+  | "tax.select_country"
+  | "tax.add_new_tax"
+  | "tax.edit_tax"
+  | "tax.tax_name"
+  | "tax.tax_code"
+  | "tax.tax_rate"
+  | "tax.trn_number"
+  | "tax.applies_to"
+  | "tax.purchase"
+  | "tax.sales"
+  | "tax.both"
+  | "tax.expense"
+  | "tax.is_default"
+  | "tax.is_active"
+  | "tax.actions"
+  | "tax.no_taxes_found"
+  | "tax.saved_successfully"
+  | "tax.deleted_successfully"
   | "nav.dashboard_settings"
   | "nav.template_color"
   | "nav.template_purple"
@@ -911,7 +943,40 @@ const en: Dict = {
   "report.col_country": "Country",
   "report.col_user": "User",
   "report.col_amount": "Amount",
-  "report.col_reference": "Reference"
+  "report.col_reference": "Reference",
+  // Tax System
+  "nav.tax": "Tax Setup & Rates",
+  "nav.tax_settings": "Country Tax Settings",
+  "tax.title": "Country Tax Management",
+  "tax.subtitle": "Configure multi-country tax rates, VAT/GST registration numbers, and defaults per country",
+  "tax.select_country": "Select Country",
+  "tax.add_new_tax": "Add New Tax Rate",
+  "tax.edit_tax": "Edit Tax Rate",
+  "tax.tax_name": "Tax Name",
+  "tax.tax_code": "Tax Code",
+  "tax.tax_rate": "Tax Rate (%)",
+  "tax.trn_number": "TRN / Tax Reg Number",
+  "tax.applies_to": "Applies To",
+  "tax.purchase": "Purchase Only",
+  "tax.sales": "Sales Only",
+  "tax.both": "Both Purchase & Sales",
+  "tax.expense": "Expenses Only",
+  "tax.is_default": "Set as Country Default Tax",
+  "tax.is_active": "Active Status",
+  "tax.actions": "Actions",
+  "tax.no_taxes_found": "No tax rates configured for this country",
+  "tax.saved_successfully": "Tax configuration saved successfully",
+  "tax.deleted_successfully": "Tax configuration deleted successfully",
+  // Return SMS Reply Module
+  "nav.return_sms_reply": "Return SMS Reply",
+  "sms_reply.title": "Return SMS Reply — AI Communication Centre",
+  "sms_reply.subtitle": "Centralized WhatsApp & Email AI communication center for multi-country, automated business replies and payment reminders",
+  "sms_reply.inbox": "Unified Inbox",
+  "sms_reply.reminders": "Payment Reminders",
+  "sms_reply.templates": "Reply Templates",
+  "sms_reply.ai_rules": "AI & Safety Rules",
+  "sms_reply.contacts": "Contacts & Consent",
+  "sms_reply.reports": "Communication Reports"
 };
 
 const ur: Dict = {
@@ -1311,7 +1376,40 @@ const ur: Dict = {
   "report.col_country": "ملک",
   "report.col_user": "یوزر",
   "report.col_amount": "رقم",
-  "report.col_reference": "حوالہ"
+  "report.col_reference": "حوالہ",
+  // Tax System Urdu
+  "nav.tax": "ٹیکس سیٹ اپ اور شرحیں",
+  "nav.tax_settings": "ملکی ٹیکس سیٹنگز",
+  "tax.title": "ملکی ٹیکس مینجمنٹ",
+  "tax.subtitle": "ملک وار ٹیکس کی شرحیں، VAT/GST رجسٹریشن نمبر، اور طے شدہ ریٹس کی سیٹنگ کریں",
+  "tax.select_country": "ملک منتخب کریں",
+  "tax.add_new_tax": "نیا ٹیکس شامل کریں",
+  "tax.edit_tax": "ٹیکس میں ترمیم کریں",
+  "tax.tax_name": "ٹیکس کا نام",
+  "tax.tax_code": "ٹیکس کوڈ",
+  "tax.tax_rate": "ٹیکس شرح (%)",
+  "tax.trn_number": "TRN / ٹیکس رجسٹریشن نمبر",
+  "tax.applies_to": "لاگو ہوتا ہے",
+  "tax.purchase": "صرف خریداری پر",
+  "tax.sales": "صرف فروخت پر",
+  "tax.both": "خریداری اور فروخت دونوں",
+  "tax.expense": "صرف اخراجات پر",
+  "tax.is_default": "ملکی ڈیفالٹ ٹیکس رکھیں",
+  "tax.is_active": "فعال حیثیت",
+  "tax.actions": "اقدامات",
+  "tax.no_taxes_found": "اس ملک کے لیے کوئی ٹیکس ریٹ قائم نہیں ہے",
+  "tax.saved_successfully": "ٹیکس کی ترتیب کامیابی سے محفوظ ہو گئی",
+  "tax.deleted_successfully": "ٹیکس کی ترتیب ختم ہو گئی",
+  // Return SMS Reply Urdu
+  "nav.return_sms_reply": "Return SMS Reply",
+  "sms_reply.title": "ریٹرن SMS رپلائی — AI مواصلاتی مرکز",
+  "sms_reply.subtitle": "واٹس ایپ اور ای میل کا مرکزی اے آئی مواصلاتی مرکز، برائے خودکار کاروباری جوابات اور ادائیگی یاد دہانیاں",
+  "sms_reply.inbox": "یونیفائیڈ ان باکس",
+  "sms_reply.reminders": "ادائیگی کی یاد دہانیاں",
+  "sms_reply.templates": "جوابی ٹیمپلیٹس",
+  "sms_reply.ai_rules": "اے آئی اور حفاظتی قواعد",
+  "sms_reply.contacts": "رابطے اور رضامندی",
+  "sms_reply.reports": "مواصلاتی رپورٹس"
 };
 
 const ar: Dict = {
@@ -1693,7 +1791,30 @@ const ar: Dict = {
   "report.col_country": "الدولة",
   "report.col_user": "المستخدم",
   "report.col_amount": "المبلغ",
-  "report.col_reference": "المرجع"
+  "report.col_reference": "المرجع",
+  // Tax System Arabic
+  "nav.tax": "إعدادات الضرائب والنسب",
+  "nav.tax_settings": "إعدادات ضرائب الدولة",
+  "tax.title": "إدارة ضرائب الدول",
+  "tax.subtitle": "تهيئة نسب الضرائب وأرقام التسجيل الضريبي VAT/GST لكل دولة",
+  "tax.select_country": "اختر الدولة",
+  "tax.add_new_tax": "إضافة نسبة ضريبية جديدة",
+  "tax.edit_tax": "تعديل النسبة الضريبية",
+  "tax.tax_name": "اسم الضريبة",
+  "tax.tax_code": "رمز الضريبة",
+  "tax.tax_rate": "نسبة الضريبة (%)",
+  "tax.trn_number": "رقم التسجيل الضريبي TRN",
+  "tax.applies_to": "تطبق على",
+  "tax.purchase": "المشتريات فقط",
+  "tax.sales": "المبيعات فقط",
+  "tax.both": "المشتريات والمبيعات",
+  "tax.expense": "المصاريف فقط",
+  "tax.is_default": "تعيين كضريبة افتراضية للدولة",
+  "tax.is_active": "الحالة",
+  "tax.actions": "الإجراءات",
+  "tax.no_taxes_found": "لا توجد نسب ضريبية مضافة لهذه الدولة",
+  "tax.saved_successfully": "تم حفظ إعدادات الضريبة بنجاح",
+  "tax.deleted_successfully": "تم حذف إعدادات الضريبة بنجاح"
 };
 
 const fa: Dict = {

@@ -3,11 +3,11 @@ import { requireErpSession } from "@/lib/auth/session";
 import { CountryTaxManagementView } from "@/features/settings/components/country-tax-management";
 
 export const metadata: Metadata = {
-  title: "Tax Setup & Rates — ERP",
-  description: "Configure multi-country tax rates, VAT/GST registration numbers, and defaults per country."
+  title: "Country Tax Settings — Master Forms",
+  description: "Master form settings for multi-country tax rates and registration numbers."
 };
 
-export default async function TaxPage() {
+export default async function SettingsTaxPage() {
   const session = await requireErpSession();
   const lang = session.preferredLanguage ?? "en";
   const primaryCountryId = session.countryIds[0] ?? undefined;

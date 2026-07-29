@@ -1,4 +1,4 @@
-const CACHE_NAME = "digital-dock-erp-v1";
+const CACHE_NAME = "digital-dock-erp-v2";
 const ASSETS_TO_CACHE = [
   "/",
   "/manifest.webmanifest",
@@ -34,8 +34,22 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
 
-  // Skip API routes and server actions from offline cache
-  if (url.pathname.startsWith("/api/")) return;
+  // Skip API routes, server actions, and dev HMR
+  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/_next/webpack-hmr")) return;
+
+  // For JS chunk files (_next/static/chunks/), fetch network-first.
+  // DO NOT fall back to '/' (index HTML) because HTML causes SyntaxError / ChunkLoadError in JS script tags.
+  if (url.pathname.includes("/_next/static/chunks/")) {
+    event.respondWith(
+      fetch(event.request).catch((err) => {
+        return caches.match(event.request).then((res) => {
+          if (res) return res;
+          throw err;
+        });
+      })
+    );
+    return;
+  }
 
   event.respondWith(
     fetch(event.request).catch(() => {
@@ -45,3 +59,4 @@ self.addEventListener("fetch", (event) => {
     })
   );
 });
+

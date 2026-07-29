@@ -1,10 +1,10 @@
 {
-  "appId": "com.digitaldock.erp",
-  "appName": "Digital Dock ERP",
+  "appId": "com.digitaldock.erp.aimobile",
+  "appName": "AI Mobile – Return WhatsApp Reply",
   "webDir": ".next",
   "server": {
-    "url": "https://erp.dgt.llc",
-    "cleartext": false
+    "url": "https://erp.dgt.llc/mobile",
+    "cleartext": true
   },
   "plugins": {
     "SplashScreen": {

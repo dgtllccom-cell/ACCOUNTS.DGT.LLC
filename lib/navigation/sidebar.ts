@@ -589,6 +589,32 @@ export const sidebarTree: SidebarNode[] = [
     iconKey: "bar-chart",
     href: "/dashboard/reports" as Route,
     children: [
+      // ─── NEW: Dynamic Role-Based Report Panels ──────────────────────
+      {
+        key: "reports-super-admin-panel",
+        labelKey: "nav.super_admin_reports",
+        iconKey: "bar-chart",
+        href: "/dashboard/reports/super-admin" as Route,
+        roles: ["super_admin"],
+        permission: { resource: "reports", action: "read" }
+      },
+      {
+        key: "reports-country-panel",
+        labelKey: "nav.country_reports",
+        iconKey: "bar-chart",
+        href: "/dashboard/reports/country" as Route,
+        roles: ["country_admin", "country_user", "main_branch_admin"],
+        permission: { resource: "reports", action: "read" }
+      },
+      {
+        key: "reports-branch-panel",
+        labelKey: "nav.branch_reports",
+        iconKey: "bar-chart",
+        href: "/dashboard/reports/branch" as Route,
+        roles: ["city_branch_admin", "accountant", "cashier", "staff_user", "auditor_viewer"],
+        permission: { resource: "reports", action: "read" }
+      },
+      // ─── Legacy: Enterprise Reporting Hub ───────────────────────────
       {
         key: "reports-general",
         labelKey: "Enterprise Reporting Hub" as any,
@@ -612,6 +638,7 @@ export const sidebarTree: SidebarNode[] = [
           { key: "rep-daily-comprehensive", labelKey: "Comprehensive Daily Report" as any, iconKey: "calendar", href: "/dashboard/reports?type=daily-comprehensive" as Route }
         ]
       },
+
       {
         key: "print-reports-hub",
         labelKey: "Print Reports Hub (A4 PDF)" as any,
@@ -962,6 +989,12 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
+    key: "return-sms-reply",
+    labelKey: "nav.return_sms_reply",
+    iconKey: "message-square",
+    href: "/dashboard/return-sms-reply" as Route
+  },
+  {
     key: "message-system",
     labelKey: "nav.message_system",
     iconKey: "message-square",
@@ -1077,6 +1110,11 @@ export const sidebarTree: SidebarNode[] = [
             key: "mgmt-port-master",
             labelKey: "nav.port_master",
             href: "/dashboard/settings/ports" as Route
+          },
+          {
+            key: "mgmt-tax-setup",
+            labelKey: "nav.tax_settings",
+            href: "/dashboard/settings/tax" as Route
           }
         ]
       },
