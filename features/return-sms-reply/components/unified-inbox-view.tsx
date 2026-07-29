@@ -107,11 +107,11 @@ export function UnifiedInboxView({ lang }: Props) {
   const [selectedBranchScope, setSelectedBranchScope] = useState("global");
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [whatsappConfig, setWhatsappConfig] = useState({
-    officialNumber: "0093700195439",
-    adminNumber: "0093700195439",
+    officialNumber: "00971544816664",
+    adminNumber: "00971544816664",
     wbaId: "WBAID-10928374659281",
     phoneNumberId: "PNID-10827364519283",
-    accountName: "Super Admin Main WhatsApp (0093700195439)",
+    accountName: "Super Admin Dubai WhatsApp Business (00971544816664)",
     webhookUrl: "http://72.60.209.121/api/erp/return-sms-reply/webhooks/whatsapp",
     isConnected: true
   });

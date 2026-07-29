@@ -11,7 +11,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    const phoneNumber = request.nextUrl.searchParams.get("phoneNumber") || "0093700195439";
+    const phoneNumber = request.nextUrl.searchParams.get("phoneNumber") || "00971544816664";
     const scope = request.nextUrl.searchParams.get("scope") || "super_admin";
     const countryId = request.nextUrl.searchParams.get("countryId") || null;
     const cityBranchId = request.nextUrl.searchParams.get("cityBranchId") || null;
