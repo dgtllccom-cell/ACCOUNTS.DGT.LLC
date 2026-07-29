@@ -638,24 +638,6 @@ export function WhatsAppWizardModal({
               </button>
             </div>
 
-            {/* iPhone Invalid QR Code Bypass Helper Alert */}
-            <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 dark:text-amber-200 flex items-center justify-between gap-3 text-xs">
-              <div>
-                <p className="font-extrabold flex items-center gap-1">
-                  <span>📱 Seeing "Invalid QR code" on mobile phone?</span>
-                </p>
-                <p className="text-[11px] text-amber-800 dark:text-amber-300 mt-0.5">
-                  Click the button to bypass mobile scanning and register your WhatsApp Gateway directly in the ERP.
-                </p>
-              </div>
-              <button
-                onClick={handleSimulateScan}
-                className="px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-black text-xs shrink-0 shadow-sm transition-all active:scale-95 cursor-pointer"
-              >
-                ⚡ Bypass QR Scan & Connect Now
-              </button>
-            </div>
-
             {/* Instructions */}
             <div className="space-y-2 bg-slate-100 dark:bg-slate-950 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 text-[11.5px]">
               <h4 className="font-bold text-slate-800 dark:text-slate-200">How to link your WhatsApp Business app on mobile:</h4>

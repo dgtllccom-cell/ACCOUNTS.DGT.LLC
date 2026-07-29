@@ -355,55 +355,6 @@ export function UnifiedInboxView({ lang }: Props) {
                 </button>
               </>
             )}
-
-            <button
-              onClick={() => {
-                const sampleMsgs = [
-                  {
-                    id: `sim-dubai-${Date.now()}`,
-                    channel: "whatsapp" as const,
-                    contactIdentifier: "+971 54 9988771",
-                    senderName: "Rashid Trading FZE (Dubai UAE)",
-                    senderType: "Customer",
-                    countryName: "UAE",
-                    branchName: "Dubai Branch",
-                    relatedEntityType: "purchase_order",
-                    relatedEntityId: "PO-DUBAI-402",
-                    status: "ai_ready" as const,
-                    priority: "high" as const,
-                    messageLanguage: "en" as const,
-                    replyMode: "approval" as const,
-                    lastMessageText: "Hello Damaan Group, please update status for Dubai shipment PO-DUBAI-402 and send invoice copy.",
-                    lastMessageAt: new Date().toISOString(),
-                    unreadCount: 1
-                  },
-                  {
-                    id: `sim-pk-${Date.now()}`,
-                    channel: "whatsapp" as const,
-                    contactIdentifier: "+92 300 5554433",
-                    senderName: "Tariq Khan (Logistics Manager)",
-                    senderType: "Customer",
-                    countryName: "Pakistan",
-                    branchName: "Peshawar Branch",
-                    relatedEntityType: "sales_order",
-                    relatedEntityId: "SO-1029",
-                    status: "ai_ready" as const,
-                    priority: "high" as const,
-                    messageLanguage: "ur" as const,
-                    replyMode: "approval" as const,
-                    lastMessageText: "السلام علیکم، برائے مہربانی مجھے نیا ریٹ لسٹ اور انوائس نمبر SO-1029 بھیج دیں۔",
-                    lastMessageAt: new Date().toISOString(),
-                    unreadCount: 1
-                  }
-                ];
-                const newSimulatedMsg = sampleMsgs[Math.floor(Math.random() * sampleMsgs.length)];
-                setConversations((prev) => [newSimulatedMsg, ...prev.filter((c) => c.id !== newSimulatedMsg.id)]);
-                setSelectedConv(newSimulatedMsg);
-              }}
-              className="h-10 px-4 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 font-bold text-xs flex items-center gap-2 border border-emerald-500/40 backdrop-blur-md transition-all active:scale-95 cursor-pointer"
-            >
-              <Sparkles className="h-4 w-4 text-amber-300" /> Simulate Dubai / Live WhatsApp Message
-            </button>
           </div>
         </div>
       </div>
