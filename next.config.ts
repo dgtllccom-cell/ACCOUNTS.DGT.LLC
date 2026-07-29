@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  ...(process.env.BUILD_STANDALONE === "true" ? { output: "standalone" } : {}),
   // Keep .next inside the project so Node.js can resolve node_modules from
   // compiled bundle paths. OneDrive-related issues are addressed separately:
   //   • EPERM rename failures in cache/webpack/ → solved by webpack memory cache below

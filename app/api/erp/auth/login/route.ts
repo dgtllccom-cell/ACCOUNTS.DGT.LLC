@@ -359,20 +359,23 @@ function dashboardForRoles(roles: EnterpriseRole[]) {
 
 export async function POST(request: NextRequest) {
   const contentType = request.headers.get("content-type") || "";
-  const isJson = contentType.includes("application/json");
+  const acceptHeader = request.headers.get("accept") || "";
+  const fetchMode = request.headers.get("sec-fetch-mode") || "";
+  const isFetch = fetchMode === "cors" || fetchMode === "same-origin" || request.headers.get("x-requested-with") === "XMLHttpRequest";
+  const isJson = contentType.includes("application/json") || acceptHeader.includes("application/json") || isFetch;
 
   let rawIdentifier = "";
   let rawPassword = "";
   let remember = false;
 
-  if (isJson) {
+  if (contentType.includes("application/json")) {
     const json = await request.json().catch(() => ({}));
-    rawIdentifier = String(json.identifier || json.email || "").trim();
+    rawIdentifier = String(json.identifier || json.email || json.user_id || "").trim();
     rawPassword = String(json.password || "").trim();
     remember = Boolean(json.rememberMe || json.remember);
   } else {
     const form = await request.formData().catch(() => new FormData());
-    rawIdentifier = String(form.get("identifier") ?? form.get("email") ?? "").trim();
+    rawIdentifier = String(form.get("identifier") ?? form.get("email") ?? form.get("user_id") ?? "").trim();
     rawPassword = String(form.get("password") ?? "").trim();
     remember = String(form.get("remember") ?? "") === "on";
   }

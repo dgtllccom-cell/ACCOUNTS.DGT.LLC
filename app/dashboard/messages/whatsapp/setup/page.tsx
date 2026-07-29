@@ -6,6 +6,7 @@ import Link from "next/link";
 import { AccountSetup } from "@/features/whatsapp/components/account-setup";
 import { fetchWhatsAppAccounts, createWhatsAppAccount } from "@/features/whatsapp/api";
 import type { WhatsAppAccount } from "@/features/whatsapp/types";
+import { WhatsAppWizardModal } from "@/features/whatsapp/components/whatsapp-wizard-modal";
 
 type ConnectFormData = {
   scope: string;
@@ -122,7 +123,28 @@ function ConnectAccountModal({ onClose, onSave }: { onClose: () => void; onSave:
 export default function WhatsAppSetupPage() {
   const [accounts, setAccounts] = useState<WhatsAppAccount[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSuperAdmin, setIsSuperAdmin] = useState<boolean | null>(null);
   const [showModal, setShowModal] = useState(false);
+
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        const res = await fetch("/api/erp/auth/session");
+        const json = await res.json();
+        const data = json.data || json;
+        const isSup = Boolean(
+          data?.isSuperAdmin ||
+          data?.scopes?.isSuperAdmin ||
+          data?.roles?.includes("super_admin") ||
+          data?.role === "super_admin"
+        );
+        setIsSuperAdmin(isSup);
+      } catch (e) {
+        setIsSuperAdmin(false);
+      }
+    }
+    checkAuth();
+  }, []);
 
   const loadAccounts = useCallback(async () => {
     setIsLoading(true);
@@ -136,7 +158,24 @@ export default function WhatsAppSetupPage() {
     }
   }, []);
 
-  useEffect(() => { loadAccounts(); }, [loadAccounts]);
+  useEffect(() => {
+    if (isSuperAdmin) {
+      loadAccounts();
+    }
+  }, [isSuperAdmin, loadAccounts]);
+
+  if (isSuperAdmin === false) {
+    return (
+      <div className="mx-auto max-w-xl py-12 text-center space-y-4">
+        <div className="p-4 rounded-2xl bg-rose-50 text-rose-700 dark:bg-rose-950/40 dark:text-rose-400 border border-rose-200 dark:border-rose-900 font-bold text-sm">
+          ⛔ Access Denied — WhatsApp Business Account Configuration is strictly restricted to Super Admin.
+        </div>
+        <Link href="/dashboard/return-sms-reply" className="inline-block px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold">
+          Return to Inbox
+        </Link>
+      </div>
+    );
+  }
 
   async function handleConnect(data: ConnectFormData) {
     await createWhatsAppAccount(data);
@@ -179,9 +218,12 @@ export default function WhatsAppSetupPage() {
       )}
 
       {showModal && (
-        <ConnectAccountModal
+        <WhatsAppWizardModal
+          isOpen={showModal}
           onClose={() => setShowModal(false)}
-          onSave={handleConnect}
+          defaultPhoneNumber="0093700195439"
+          defaultScope="super_admin"
+          onConnected={loadAccounts}
         />
       )}
     </div>

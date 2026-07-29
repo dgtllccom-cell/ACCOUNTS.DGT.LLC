@@ -22,11 +22,13 @@ import {
   Bot,
   UserCheck,
   Ban,
-  CheckCheck
+  CheckCheck,
+  QrCode
 } from "lucide-react";
 import { t, type UiKey } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
+import { WhatsAppWizardModal } from "@/features/whatsapp/components/whatsapp-wizard-modal";
 
 type ConversationItem = {
   id: string;
@@ -97,9 +99,39 @@ export function UnifiedInboxView({ lang }: Props) {
   const [loadingMsgs, setLoadingMsgs] = useState(false);
   const [replyInput, setReplyInput] = useState("");
   const [replyLang, setReplyLang] = useState<"en" | "ur" | "ps" | "fa">("en");
-  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
-  const [aiDraft, setAiDraft] = useState<string | null>(null);
-  const [isSending, setIsSending] = useState(false);
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [selectedBranchScope, setSelectedBranchScope] = useState("global");
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [whatsappConfig, setWhatsappConfig] = useState({
+    officialNumber: "0093700195439",
+    adminNumber: "0093700195439",
+    wbaId: "WBAID-10928374659281",
+    phoneNumberId: "PNID-10827364519283",
+    accountName: "Super Admin Main WhatsApp (0093700195439)",
+    webhookUrl: "http://72.60.209.121/api/erp/return-sms-reply/webhooks/whatsapp"
+  });
+
+  // Check user session for Super Admin role
+  useEffect(() => {
+    async function checkSession() {
+      try {
+        const res = await fetch("/api/erp/auth/session");
+        const json = await res.json();
+        const data = json.data || json;
+        const isSup = Boolean(
+          data?.isSuperAdmin ||
+          data?.scopes?.isSuperAdmin ||
+          data?.roles?.includes("super_admin") ||
+          data?.role === "super_admin"
+        );
+        setIsSuperAdmin(isSup);
+      } catch (e) {
+        setIsSuperAdmin(false);
+      }
+    }
+    checkSession();
+  }, []);
 
   // Fetch Conversations
   const fetchConversations = useCallback(async () => {
@@ -219,6 +251,44 @@ export function UnifiedInboxView({ lang }: Props) {
   return (
     <div className="space-y-4" dir={isRTL ? "rtl" : "ltr"}>
 
+      {/* Top Primary Setup Action Bar — EXCLUSIVELY VISIBLE TO SUPER ADMIN */}
+      {isSuperAdmin && (
+        <div className="rounded-2xl bg-slate-900 text-white p-4 border border-slate-800 shadow-lg flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="p-3 rounded-2xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              <MessageSquare className="h-6 w-6" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h2 className="text-base font-black text-white">WhatsApp Business Connection Wizard</h2>
+                <span className="bg-emerald-500/20 text-emerald-300 text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border border-emerald-500/30">
+                  ACTIVE ({whatsappConfig.officialNumber})
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Connect your real WhatsApp Business account via QR Code or Meta Cloud API for Super Admin, Country Admin & Branches.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => setShowQrModal(true)}
+              className="h-11 px-5 rounded-2xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs sm:text-sm flex items-center gap-2 shadow-xl border border-emerald-300/50 transition-all active:scale-95"
+            >
+              <QrCode className="h-5 w-5 text-slate-950" /> 📲 Connect Official WhatsApp
+            </button>
+
+            <button
+              onClick={() => setShowConfigModal(true)}
+              className="h-11 px-4 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-1.5 border border-white/20 shadow-sm transition-all"
+            >
+              <ShieldAlert className="h-4 w-4 text-amber-300" /> ⚙️ WhatsApp & Admin Number Config
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* WhatsApp Business API Live Status Banner */}
       <div className="rounded-2xl border border-emerald-200 bg-gradient-to-r from-emerald-900 via-[#06241b] to-teal-950 p-4 text-white shadow-md flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -229,7 +299,7 @@ export function UnifiedInboxView({ lang }: Props) {
             <div className="flex items-center gap-2">
               <span className="font-extrabold text-sm text-white">WhatsApp Business API Official Channel</span>
               <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold flex items-center gap-1">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span> CONNECTED (+92 300 1234567)
+                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span> CONNECTED ({whatsappConfig.officialNumber})
               </span>
             </div>
             <p className="text-xs text-emerald-200/80 mt-0.5">
@@ -238,31 +308,47 @@ export function UnifiedInboxView({ lang }: Props) {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          {isSuperAdmin && (
+            <>
+              <button
+                onClick={() => setShowQrModal(true)}
+                className="h-9 px-4 rounded-xl bg-gradient-to-r from-emerald-400 to-emerald-500 hover:from-emerald-300 hover:to-emerald-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-lg border border-emerald-300/40 transition-all active:scale-95"
+              >
+                <QrCode className="h-4 w-4 text-slate-950" /> 📲 Connect Official WhatsApp
+              </button>
+
+              <button
+                onClick={() => setShowConfigModal(true)}
+                className="h-9 px-3.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs flex items-center gap-1.5 border border-white/20 shadow-sm transition-all"
+              >
+                <ShieldAlert className="h-4 w-4 text-amber-300" /> ⚙️ WhatsApp & Admin Number Config
+              </button>
+            </>
+          )}
+
           <button
             onClick={() => {
-              if (conversations.length > 0) {
-                const newSimulatedMsg: ConversationItem = {
-                  id: `sim-${Date.now()}`,
-                  channel: "whatsapp",
-                  contactIdentifier: "+92 300 5554433",
-                  senderName: "Tariq Khan (Simulated Customer)",
-                  senderType: "Customer",
-                  countryName: "Pakistan",
-                  branchName: "Peshawar Branch",
-                  relatedEntityType: "sales_order",
-                  relatedEntityId: "SO-1029",
-                  status: "ai_ready",
-                  priority: "high",
-                  messageLanguage: "ur",
-                  replyMode: "approval",
-                  lastMessageText: "السلام علیکم، برائے مہربانی مجھے نیا ریٹ لسٹ اور انوائس نمبر SO-1029 بھیج دیں۔",
-                  lastMessageAt: new Date().toISOString(),
-                  unreadCount: 1
-                };
-                setConversations([newSimulatedMsg, ...conversations]);
-                setSelectedConv(newSimulatedMsg);
-              }
+              const newSimulatedMsg: ConversationItem = {
+                id: `sim-${Date.now()}`,
+                channel: "whatsapp",
+                contactIdentifier: "+92 300 5554433",
+                senderName: "Tariq Khan (Simulated Customer)",
+                senderType: "Customer",
+                countryName: "Pakistan",
+                branchName: "Peshawar Branch",
+                relatedEntityType: "sales_order",
+                relatedEntityId: "SO-1029",
+                status: "ai_ready",
+                priority: "high",
+                messageLanguage: "ur",
+                replyMode: "approval",
+                lastMessageText: "السلام علیکم، برائے مہربانی مجھے نیا ریٹ لسٹ اور انوائس نمبر SO-1029 بھیج دیں۔",
+                lastMessageAt: new Date().toISOString(),
+                unreadCount: 1
+              };
+              setConversations([newSimulatedMsg, ...conversations]);
+              setSelectedConv(newSimulatedMsg);
             }}
             className="h-9 px-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs flex items-center gap-1.5 shadow-md transition-all active:scale-95"
           >
@@ -435,7 +521,17 @@ export function UnifiedInboxView({ lang }: Props) {
                 {loadingMsgs ? (
                   <div className="py-12 text-center text-xs text-slate-400">Loading messages...</div>
                 ) : messages.length === 0 ? (
-                  <div className="py-12 text-center text-xs text-slate-400">No message history</div>
+                  <div className="flex flex-col max-w-[85%] mr-auto items-start">
+                    <div className="rounded-2xl p-3.5 text-xs leading-relaxed shadow-sm bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-700 rounded-bl-none">
+                      <div className="flex items-center gap-1.5 text-[10px] font-bold text-emerald-600 dark:text-emerald-400 mb-1">
+                        <MessageSquare className="h-3 w-3" /> Incoming Customer Message
+                      </div>
+                      <p className="whitespace-pre-wrap font-medium">{selectedConv.lastMessageText || "Hello, requesting update on order status."}</p>
+                    </div>
+                    <div className="flex items-center gap-1.5 mt-1 text-[9px] text-slate-400">
+                      <span>{selectedConv.lastMessageAt ? new Date(selectedConv.lastMessageAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : "Just now"}</span>
+                    </div>
+                  </div>
                 ) : (
                   messages.map((m) => (
                     <div
@@ -552,6 +648,186 @@ export function UnifiedInboxView({ lang }: Props) {
           )}
         </div>
       </div>
+
+      {/* WhatsApp Connection & Credentials Modal */}
+      {showConfigModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/70 backdrop-blur-sm p-4">
+          <div className="w-full max-w-xl rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-6 shadow-2xl space-y-5">
+            <div className="flex items-center justify-between border-b dark:border-slate-800 pb-3">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30">
+                  <MessageSquare className="h-6 w-6" />
+                </div>
+                <div>
+                  <h3 className="font-black text-base text-slate-900 dark:text-white">
+                    WhatsApp Business API Account & Admin Config
+                  </h3>
+                  <p className="text-xs text-slate-500">Official ERP WhatsApp Channel & Admin Mobile Numbers</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowConfigModal(false)}
+                className="p-1.5 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-600"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div className="space-y-1 bg-slate-50 dark:bg-slate-950 p-3 rounded-2xl border border-slate-200 dark:border-slate-800">
+                <label className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                  <Globe className="h-4 w-4 text-blue-500" /> Select Branch / Country Profile to Configure WhatsApp
+                </label>
+                <select
+                  value={selectedBranchScope}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setSelectedBranchScope(val);
+                    if (val === "karachi") {
+                      setWhatsappConfig({
+                        ...whatsappConfig,
+                        officialNumber: "+92 300 9876543",
+                        adminNumber: "+92 300 1112233",
+                        accountName: "Karachi Main Branch WhatsApp"
+                      });
+                    } else if (val === "kabul") {
+                      setWhatsappConfig({
+                        ...whatsappConfig,
+                        officialNumber: "+93 70 1234567",
+                        adminNumber: "+93 70 2223344",
+                        accountName: "Kabul Central Branch WhatsApp"
+                      });
+                    } else if (val === "dubai") {
+                      setWhatsappConfig({
+                        ...whatsappConfig,
+                        officialNumber: "+971 50 1234567",
+                        adminNumber: "+971 50 3334455",
+                        accountName: "Dubai Branch WhatsApp"
+                      });
+                    } else {
+                      setWhatsappConfig({
+                        ...whatsappConfig,
+                        officialNumber: "+92 300 1234567",
+                        adminNumber: "+92 300 9876543",
+                        accountName: "Super Admin Main WhatsApp"
+                      });
+                    }
+                  }}
+                  className="w-full font-bold p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 outline-none"
+                >
+                  <option value="global">🌐 Super Admin Main Line (Global Oversight)</option>
+                  <option value="karachi">🇵🇰 Pakistan — Karachi Main Branch (+92 300 9876543)</option>
+                  <option value="kabul">🇦🇫 Afghanistan — Kabul Central Branch (+93 70 1234567)</option>
+                  <option value="dubai">🇦🇪 UAE — Dubai Branch (+971 50 1234567)</option>
+                  <option value="tehran">🇮🇷 Iran — Tehran Branch (+98 912 1234567)</option>
+                </select>
+              </div>
+
+              <div className="rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 p-4 border border-emerald-200 dark:border-emerald-900/60 flex items-center justify-between">
+                <div>
+                  <p className="font-extrabold text-emerald-800 dark:text-emerald-300">Live Status: Active & Connected</p>
+                  <p className="text-[11px] text-emerald-700 dark:text-emerald-400 mt-0.5">{whatsappConfig.accountName}</p>
+                </div>
+                <span className="bg-emerald-600 text-white font-black px-3 py-1 rounded-full text-[10px] tracking-wider uppercase">
+                  ONLINE
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700 dark:text-slate-300">Connected Company WhatsApp Number</label>
+                  <input
+                    type="text"
+                    value={whatsappConfig.officialNumber}
+                    onChange={(e) => setWhatsappConfig({ ...whatsappConfig, officialNumber: e.target.value })}
+                    className="w-full font-mono font-bold p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700 dark:text-slate-300">Admin Notification Mobile Number</label>
+                  <input
+                    type="text"
+                    value={whatsappConfig.adminNumber}
+                    onChange={(e) => setWhatsappConfig({ ...whatsappConfig, adminNumber: e.target.value })}
+                    className="w-full font-mono font-bold p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700 dark:text-slate-300">WhatsApp Business Account ID (WBAID)</label>
+                  <input
+                    type="text"
+                    value={whatsappConfig.wbaId}
+                    onChange={(e) => setWhatsappConfig({ ...whatsappConfig, wbaId: e.target.value })}
+                    className="w-full font-mono text-[11px] p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 outline-none"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-slate-700 dark:text-slate-300">Phone Number ID</label>
+                  <input
+                    type="text"
+                    value={whatsappConfig.phoneNumberId}
+                    onChange={(e) => setWhatsappConfig({ ...whatsappConfig, phoneNumberId: e.target.value })}
+                    className="w-full font-mono text-[11px] p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-slate-700 dark:text-slate-300">Live Server Webhook Receiver URL</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    readOnly
+                    value={whatsappConfig.webhookUrl}
+                    className="w-full font-mono text-[10.5px] p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-950 text-slate-600 dark:text-slate-400 outline-none"
+                  />
+                  <button
+                    onClick={() => navigator.clipboard.writeText(whatsappConfig.webhookUrl)}
+                    className="px-3 py-2.5 bg-slate-800 text-white font-bold text-xs rounded-xl hover:bg-slate-700 shrink-0"
+                  >
+                    Copy
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t dark:border-slate-800">
+              <button
+                onClick={() => setShowConfigModal(false)}
+                className="px-4 py-2 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  setShowConfigModal(false);
+                }}
+                className="px-5 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm"
+              >
+                Save Configuration
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* WhatsApp Device Link & Connection Wizard Modal */}
+      <WhatsAppWizardModal
+        isOpen={showQrModal}
+        onClose={() => setShowQrModal(false)}
+        defaultPhoneNumber={whatsappConfig.officialNumber}
+        defaultScope={selectedBranchScope}
+        onConnected={(acc) => {
+          setWhatsappConfig((prev) => ({
+            ...prev,
+            officialNumber: acc.phoneNumber,
+            accountName: acc.displayName
+          }));
+        }}
+      />
     </div>
   );
 }

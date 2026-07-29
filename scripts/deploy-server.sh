@@ -43,6 +43,9 @@ echo "[5.1/6] Installing dependencies and building fresh production bundle..."
 npm install
 NODE_OPTIONS='--max-old-space-size=4096' npm run build
 
+echo "[5.2/6] Setting 755 permissions on build assets..."
+chmod -R 755 .next
+
 echo "[6/6] Starting PM2 and reloading Nginx..."
 pm2 start ecosystem.config.cjs --update-env || pm2 restart dgt-nextjs --update-env
 pm2 save
