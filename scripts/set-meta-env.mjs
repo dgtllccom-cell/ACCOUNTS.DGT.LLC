@@ -4,20 +4,22 @@ const SERVER = "root@72.60.209.121";
 
 /**
  * Script to set Meta Cloud API environment variables directly on the Hostinger VPS (.env.local)
- * Usage: node scripts/set-meta-env.mjs <token> <pnid> <wabaid>
+ * and test physical delivery to +971544816664.
+ * Usage: node scripts/set-meta-env.mjs <token> <pnid> [wabaId]
  */
 const token = process.argv[2];
-const pnid = process.argv[3];
-const wabaId = process.argv[4] || "WABAID-OFFICIAL";
+const pnid = process.argv[3] || "154760354377649";
+const wabaId = process.argv[4] || "335626955041488";
 
-if (!token || !pnid) {
-  console.error("Usage: node scripts/set-meta-env.mjs <token> <pnid> [wabaId]");
+if (!token) {
+  console.error("Usage: node scripts/set-meta-env.mjs <token> [pnid] [wabaId]");
   process.exit(1);
 }
 
 console.log(`Configuring VPS 72.60.209.121 with Meta Credentials...`);
 console.log(`PNID: ${pnid}`);
-console.log(`Token: ${token.substring(0, 10)}...`);
+console.log(`WABA ID: ${wabaId}`);
+console.log(`Token: ${token.substring(0, 15)}...`);
 
 const remoteScript = `
 set -e
@@ -42,6 +44,22 @@ echo "✅ Updated /var/www/dgt-nextjs/.env.local on VPS"
 # Restart PM2
 pm2 restart dgt-nextjs || pm2 restart all
 echo "✅ Restarted PM2 server"
+
+# Test Live Message Dispatch via Meta Cloud API
+echo "📲 Testing Live Physical Message Dispatch to +971544816664..."
+TEST_RES=$(curl -s -X POST "https://graph.facebook.com/v19.0/${pnid}/messages" \
+  -H "Authorization: Bearer ${token}" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "messaging_product": "whatsapp",
+    "recipient_type": "individual",
+    "to": "971544816664",
+    "type": "text",
+    "text": { "body": "🟢 Digital Dock ERP — Official Meta WhatsApp Cloud API Connection Test Successful!" }
+  }')
+
+echo "Meta Graph API Response:"
+echo "$TEST_RES"
 `;
 
 try {
@@ -50,7 +68,7 @@ try {
     encoding: "utf8"
   });
   console.log(out);
-  console.log("🎉 VPS Meta Environment Variables Successfully Set!");
+  console.log("🎉 VPS Meta Environment Variables & Live Message Verification Complete!");
 } catch (e) {
   console.error("VPS SSH error:", e.stdout || e.stderr || e.message);
 }

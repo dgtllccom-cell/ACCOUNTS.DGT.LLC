@@ -82,18 +82,6 @@ export const sidebarTree: SidebarNode[] = [
         iconKey: "users",
         children: [
           {
-            key: "new-user-setup-link",
-            labelKey: "New User Registration" as any,
-            href: "/dashboard/users/new" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin"]
-          },
-          {
-            key: "user-directory-list",
-            labelKey: "User Directory & Users List" as any,
-            href: "/dashboard/users" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin"]
-          },
-          {
             key: "user-registration",
             labelKey: "nav.user_form",
             href: "/dashboard/new-entry/users/registration" as Route,
@@ -163,6 +151,25 @@ export const sidebarTree: SidebarNode[] = [
             roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
           }
         ]
+      }
+    ]
+  },
+  {
+    key: "general-office",
+    labelKey: "General Office Menu" as any,
+    iconKey: "users",
+    children: [
+      {
+        key: "employee-master-form-menu",
+        labelKey: "Employee Master Setup & Registration Form" as any,
+        href: "/dashboard/settings/employees" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "employee-general-office-form",
+        labelKey: "General Office Employee Management" as any,
+        href: "/dashboard/employees" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
       }
     ]
   },

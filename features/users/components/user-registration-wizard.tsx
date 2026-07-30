@@ -483,13 +483,13 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
             <Users className="h-4 w-4 text-emerald-600" />
-            <span>Employee Management Module</span>
+            <span>User Management & Identity Module</span>
           </div>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {editUserId ? "Edit Employee Master Record" : "Employee Master Form"}
+            {editUserId ? "Edit System User Record" : "User Registration Form"}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Comprehensive Employee Management System for Managers, Supervisors, Accountants, Sales Staff, Cashiers, Drivers, and Workers.
+            Comprehensive System User Setup & Role Assignment Form for Super Admins, Country Admins, Branch Admins, Accountants, Cashiers, and Staff.
           </p>
         </div>
 
@@ -508,7 +508,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               className="gap-1.5 text-xs font-semibold"
             >
               <UserPlus className="h-3.5 w-3.5 text-slate-500" />
-              <span>+ New Employee</span>
+              <span>+ New User</span>
             </Button>
           )}
 
@@ -516,9 +516,9 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
             size="sm"
             onClick={() => {
               openUserA4ReportWindow({
-                userId: editUserId || "EMP-PREVIEW",
+                userId: editUserId || "USR-PREVIEW",
                 userCode: employeeCode,
-                fullName: fullName || "Employee Name",
+                fullName: fullName || "User Name",
                 countryName: selectedCountry?.name || "Pakistan",
                 branchName: (branchType === "main" ? selectedMainBranch?.name : selectedCityBranch?.name) || "Main Branch",
                 branchCode: branchCode || "PK-MAIN-001",
@@ -528,7 +528,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                 status: "Active",
                 permissions: [],
                 lastActivity: new Date().toISOString(),
-                lastActivityAction: "employee.registered",
+                lastActivityAction: "user.registered",
                 rawPassword: password || "••••••••",
                 activityCounts: { logins: 1, transactions: 0, roznamcha: 0, purchases: 0, payments: 0, accounts: 0, approvals: 0, edits: 0 }
               });
@@ -536,7 +536,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
             className="gap-1.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-sm"
           >
             <Printer className="h-3.5 w-3.5 text-emerald-400" />
-            <span>Print A4 Employee Report</span>
+            <span>Print A4 User Report</span>
           </Button>
         </div>
       </div>
@@ -1174,7 +1174,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
 export function UserRegistrationWizard({ userIdProp }: { userIdProp?: string } = {}) {
   return (
-    <Suspense fallback={<div className="p-8 text-slate-400">Loading Employee Master Form...</div>}>
+    <Suspense fallback={<div className="p-8 text-slate-400">Loading User Registration Form...</div>}>
       <UserRegistrationWizardContent userIdProp={userIdProp} />
     </Suspense>
   );
