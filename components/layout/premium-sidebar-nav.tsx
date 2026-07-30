@@ -16,6 +16,21 @@ import { t } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
 import { SidebarIcon } from "@/components/layout/sidebar-icon";
 
+/**
+ * TEMPORARY (testing only): menu keys created or modified in this development
+ * phase are highlighted in red so they are easy to spot. Remove this Set + the
+ * `isChanged` usage below to restore normal colors — no other change needed.
+ */
+const CHANGED_KEYS = new Set<string>([
+  "local-purchase-management",
+  "sales-order-management",
+  "local-sales-management",
+  "mgmt-product-units",
+  "mgmt-product-brands",
+  "mgmt-product-categories",
+  "mgmt-warehouses",
+]);
+
 function isPathMatch(href: string, pathname: string) {
   if (!href) return false;
   if (pathname === href) return true;
@@ -72,6 +87,7 @@ function PremiumNodeItem({
   const isActive = href ? isPathMatch(String(href), activePath) : false;
   const branchActive = !isActive && branchHasActive(node, activePath);
   const labelText = t(lang, node.labelKey);
+  const isChanged = CHANGED_KEYS.has(node.key); // TEMPORARY testing highlight
 
   const rowClass = cn(
     "group flex items-center justify-between rounded-xl transition-all duration-200 my-0.5",
@@ -101,7 +117,8 @@ function PremiumNodeItem({
             title={labelText}
           >
             <SidebarIcon name={node.iconKey} className={iconClass} />
-            <span className="min-w-0 flex-1 text-start truncate whitespace-nowrap tracking-tight">{labelText}</span>
+            <span className={cn("min-w-0 flex-1 text-start truncate whitespace-nowrap tracking-tight", isChanged && !isActive && "text-red-600 dark:text-red-400 font-bold")}>{labelText}</span>
+            {isChanged ? <span className="ms-1 shrink-0 rounded bg-red-100 px-1.5 py-0.5 text-[9px] font-black uppercase leading-none text-red-600 dark:bg-red-950/50 dark:text-red-400">new</span> : null}
           </Link>
         ) : (
           <button
@@ -111,7 +128,8 @@ function PremiumNodeItem({
             title={labelText}
           >
             <SidebarIcon name={node.iconKey} className={iconClass} />
-            <span className="min-w-0 flex-1 text-start truncate whitespace-nowrap tracking-tight">{labelText}</span>
+            <span className={cn("min-w-0 flex-1 text-start truncate whitespace-nowrap tracking-tight", isChanged && !isActive && "text-red-600 dark:text-red-400 font-bold")}>{labelText}</span>
+            {isChanged ? <span className="ms-1 shrink-0 rounded bg-red-100 px-1.5 py-0.5 text-[9px] font-black uppercase leading-none text-red-600 dark:bg-red-950/50 dark:text-red-400">new</span> : null}
           </button>
         )}
 
