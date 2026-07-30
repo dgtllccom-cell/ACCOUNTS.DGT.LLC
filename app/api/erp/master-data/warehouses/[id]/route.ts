@@ -4,6 +4,9 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
+const COLS =
+  "id, country_id, state_province_id, district_id, city_id, area_id, owner_name, warehouse_code, warehouse_name, warehouse_type, full_address, contact_number, status, description, is_active, created_at, updated_at";
+
 /** Warehouses master — update + soft-delete (secure-by-default). */
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
@@ -13,15 +16,21 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     const body = await req.json();
 
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
-    if (body.warehouseCode !== undefined) patch.warehouse_code = body.warehouseCode ? String(body.warehouseCode).trim() : null;
-    if (body.warehouseName !== undefined) patch.warehouse_name = String(body.warehouseName).trim();
-    if (body.warehouseType !== undefined) patch.warehouse_type = body.warehouseType ? String(body.warehouseType).trim() : null;
-    if (body.address !== undefined) patch.address = body.address ? String(body.address).trim() : null;
-    if (body.description !== undefined) patch.description = body.description ? String(body.description).trim() : null;
-    if (body.countryId !== undefined) patch.country_id = body.countryId ?? null;
-    if (body.countryBranchId !== undefined) patch.country_branch_id = body.countryBranchId ?? null;
-    if (body.cityBranchId !== undefined) patch.city_branch_id = body.cityBranchId ?? null;
-    if (body.isActive !== undefined) patch.is_active = Boolean(body.isActive);
+    const setStr = (k: string, col: string) => { if (body[k] !== undefined) patch[col] = body[k] ? String(body[k]).trim() : null; };
+    setStr("warehouse_name", "warehouse_name");
+    setStr("owner_name", "owner_name");
+    setStr("warehouse_type", "warehouse_type");
+    setStr("warehouse_code", "warehouse_code");
+    setStr("full_address", "full_address");
+    setStr("description", "description");
+    if (body.contact_number !== undefined) patch.contact_number = body.contact_number ?? null;
+    if (body.status !== undefined) patch.status = body.status ? String(body.status).trim() : "Active";
+    if (body.country_id !== undefined) patch.country_id = body.country_id ?? null;
+    if (body.state_province_id !== undefined) patch.state_province_id = body.state_province_id ?? null;
+    if (body.district_id !== undefined) patch.district_id = body.district_id ?? null;
+    if (body.city_id !== undefined) patch.city_id = body.city_id ?? null;
+    if (body.area_id !== undefined) patch.area_id = body.area_id ?? null;
+    if (body.is_active !== undefined) patch.is_active = Boolean(body.is_active);
 
     const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase
@@ -29,25 +38,14 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
       .update(patch)
       .eq("id", id)
       .is("deleted_at", null)
-      .select("id, country_id, country_branch_id, city_branch_id, warehouse_code, warehouse_name, warehouse_type, address, description, is_active")
+      .select(COLS)
       .single();
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     void translateMasterRecord("warehouses", id, { warehouse_name: data.warehouse_name }, "en", session.userId);
 
-    return NextResponse.json({
-      id: data.id,
-      countryId: data.country_id,
-      countryBranchId: data.country_branch_id,
-      cityBranchId: data.city_branch_id,
-      warehouseCode: data.warehouse_code,
-      warehouseName: data.warehouse_name,
-      warehouseType: data.warehouse_type,
-      address: data.address,
-      description: data.description,
-      isActive: data.is_active,
-    });
+    return NextResponse.json({ warehouse: data });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }

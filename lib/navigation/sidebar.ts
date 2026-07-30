@@ -1197,6 +1197,12 @@ export const sidebarTree: SidebarNode[] = [
             permission: { resource: "product_categories", action: "read" }
           },
           {
+            key: "mgmt-warehouses",
+            labelKey: "nav.warehouses",
+            href: "/dashboard/settings/warehouse" as Route,
+            permission: { resource: "warehouses", action: "read" }
+          },
+          {
             key: "mgmt-port-master",
             labelKey: "nav.port_master",
             href: "/dashboard/settings/ports" as Route

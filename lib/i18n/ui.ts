@@ -44,6 +44,7 @@ export type UiKey =
   | "nav.product_units"
   | "nav.product_brands"
   | "nav.product_categories"
+  | "nav.warehouses"
   | "pc.title"
   | "pc.code"
   | "pc.name"
@@ -590,6 +591,7 @@ const en: Dict = {
   "nav.product_units": "Product Units",
   "nav.product_brands": "Product Brands",
   "nav.product_categories": "Product Categories",
+  "nav.warehouses": "Warehouses",
   "pc.title": "Product Categories",
   "pc.code": "Category Code",
   "pc.name": "Category Name",
@@ -1121,6 +1123,7 @@ const ur: Dict = {
   "nav.product_units": "پروڈکٹ یونٹس",
   "nav.product_brands": "پروڈکٹ برانڈز",
   "nav.product_categories": "پروڈکٹ کیٹگریز",
+  "nav.warehouses": "گودام",
   "pc.title": "پروڈکٹ کیٹگریز",
   "pc.code": "کیٹگری کوڈ",
   "pc.name": "کیٹگری نام",
@@ -1599,6 +1602,7 @@ const ar: Dict = {
   "nav.product_units": "وحدات المنتج",
   "nav.product_brands": "علامات المنتج",
   "nav.product_categories": "فئات المنتج",
+  "nav.warehouses": "المستودعات",
   "pc.title": "فئات المنتج",
   "pc.code": "رمز الفئة",
   "pc.name": "اسم الفئة",
@@ -2053,6 +2057,7 @@ const fa: Dict = {
   "nav.product_units": "واحدهای محصول",
   "nav.product_brands": "برندهای محصول",
   "nav.product_categories": "دسته‌های محصول",
+  "nav.warehouses": "انبارها",
   "pc.title": "دسته‌های محصول",
   "pc.code": "کد دسته",
   "pc.name": "نام دسته",
@@ -2430,6 +2435,7 @@ const ps: Dict = {
   "nav.product_units": "د محصول واحدونه",
   "nav.product_brands": "د محصول برنډونه",
   "nav.product_categories": "د محصول کټګورۍ",
+  "nav.warehouses": "ګودامونه",
   "pc.title": "د محصول کټګورۍ",
   "pc.code": "د کټګورۍ کوډ",
   "pc.name": "د کټګورۍ نوم",

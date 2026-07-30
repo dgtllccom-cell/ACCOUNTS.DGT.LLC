@@ -6,12 +6,17 @@
 create table if not exists warehouses (
   id uuid primary key default gen_random_uuid(),
   country_id uuid references countries(id),
-  country_branch_id uuid references country_branches(id),
-  city_branch_id uuid references city_branches(id),
+  state_province_id uuid references states_provinces(id),
+  district_id uuid references districts(id),
+  city_id uuid references cities(id),
+  area_id uuid references areas_locations(id),
+  owner_name text,
   warehouse_code text,
   warehouse_name text not null,
   warehouse_type text,                       -- e.g. general / bonded / transit
-  address text,
+  full_address text,
+  contact_number text,                       -- JSON-encoded contact list (from WarehouseForm)
+  status text not null default 'Active',
   description text,
   -- Centralized multilingual columns (migration 0078 contract). Added here
   -- because the table did not exist when 0078 ran.
@@ -40,7 +45,7 @@ create unique index if not exists warehouses_code_unique_idx
 
 -- Scope lookups (country/branch)
 create index if not exists warehouses_scope_idx
-  on warehouses (country_id, country_branch_id, city_branch_id)
+  on warehouses (country_id, state_province_id, city_id)
   where deleted_at is null;
 
 comment on table warehouses is 'Central ERP master table. Use one row with name_en/name_ur/name_ar/name_fa/name_ps; do not create module-specific duplicate masters.';
