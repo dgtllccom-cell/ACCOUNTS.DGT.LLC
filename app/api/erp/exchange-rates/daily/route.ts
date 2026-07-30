@@ -7,8 +7,12 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
  * Daily Exchange Rate Management (Super Admin).
  * Reuses the existing `currency_rates` table (per-currency, date-wise, to USD)
  * + `exchange_rate_history` for the audit trail. NO new rate tables.
- * Each currency (USD/AED/PKR/INR/AFN/IRR/TRY/CNY/EUR/...) keeps its own daily
- * rate to USD; history is preserved (one active row per country+currency+date).
+ *
+ * APPEND-ONLY (per business rule): a rate is NEVER overwritten or deleted.
+ * If the rate changes during the day, a NEW row is inserted with its own
+ * effective timestamp (created_at). The "current" rate for a currency is the
+ * most recently entered row; every transaction resolves the rate that was
+ * active at the moment it was created (see lib/services/fx.ts getRateAt).
  */
 export async function GET(req: Request) {
   try {
@@ -16,6 +20,7 @@ export async function GET(req: Request) {
     authorizeApiScope(session, { resource: "currency_rates", action: "read" });
     const { searchParams } = new URL(req.url);
     const date = (searchParams.get("date") || new Date().toISOString().slice(0, 10)).trim();
+    const history = searchParams.get("history") === "true";
 
     const supabase = createSupabaseAdminClient();
     let q = supabase
@@ -23,13 +28,25 @@ export async function GET(req: Request) {
       .select("id, country_id, from_currency, to_currency, rate, effective_date, created_at")
       .is("deleted_at", null)
       .eq("effective_date", date)
-      .order("from_currency", { ascending: true });
+      .order("created_at", { ascending: false });
     if (!session.isSuperAdmin && session.countryIds && session.countryIds.length > 0) {
       q = q.or(`country_id.in.(${session.countryIds.join(",")}),country_id.is.null`);
     }
     const { data, error } = await q;
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json({ date, rates: data || [] });
+
+    const all = data || [];
+    if (history) return NextResponse.json({ date, rates: all }); // full intraday history
+
+    // Latest (current) rate per currency+country — history rows are kept, just not shown here.
+    const seen = new Set<string>();
+    const latest = all.filter((r: any) => {
+      const key = `${r.country_id ?? "-"}::${r.from_currency}`;
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+    return NextResponse.json({ date, rates: latest });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -52,20 +69,18 @@ export async function POST(req: Request) {
 
     const supabase = createSupabaseAdminClient();
 
-    // Find the current active rate (for history old_rate + supersede).
-    let existingQ = supabase
+    // Read the previous latest rate ONLY to record old_rate in history.
+    // APPEND-ONLY: we never update or delete the previous row.
+    let prevQ = supabase
       .from("currency_rates")
       .select("id, rate")
       .is("deleted_at", null)
       .eq("from_currency", fromCurrency)
-      .eq("effective_date", effectiveDate);
-    existingQ = countryId ? existingQ.eq("country_id", countryId) : existingQ.is("country_id", null);
-    const { data: existing } = await existingQ.maybeSingle();
-
-    // Supersede the previous rate for this country+currency+date (keep history).
-    if (existing) {
-      await supabase.from("currency_rates").update({ deleted_at: new Date().toISOString() }).eq("id", existing.id);
-    }
+      .order("created_at", { ascending: false })
+      .limit(1);
+    prevQ = countryId ? prevQ.eq("country_id", countryId) : prevQ.is("country_id", null);
+    const { data: prevRows } = await prevQ;
+    const existing = prevRows && prevRows.length ? prevRows[0] : null;
 
     const { data, error } = await supabase
       .from("currency_rates")
