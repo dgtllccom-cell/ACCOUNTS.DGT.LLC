@@ -42,6 +42,19 @@ export type UiKey =
   | "nav.final_payments_advance_nil"
   | "nav.purchase_order_management"
   | "nav.product_units"
+  | "nav.product_brands"
+  | "pb.title"
+  | "pb.code"
+  | "pb.name"
+  | "pb.description"
+  | "pb.active"
+  | "pb.add"
+  | "pb.edit"
+  | "pb.delete"
+  | "pb.save"
+  | "pb.cancel"
+  | "pb.search"
+  | "pb.empty"
   | "pu.title"
   | "pu.code"
   | "pu.name"
@@ -562,6 +575,19 @@ const en: Dict = {
   "nav.final_payments_advance_nil": "Advance Payment Nil Receipt",
   "nav.purchase_order_management": "Purchase Order Management",
   "nav.product_units": "Product Units",
+  "nav.product_brands": "Product Brands",
+  "pb.title": "Product Brands",
+  "pb.code": "Brand Code",
+  "pb.name": "Brand Name",
+  "pb.description": "Description",
+  "pb.active": "Active",
+  "pb.add": "Add Brand",
+  "pb.edit": "Edit",
+  "pb.delete": "Delete",
+  "pb.save": "Save",
+  "pb.cancel": "Cancel",
+  "pb.search": "Search brands...",
+  "pb.empty": "No brands found",
   "pu.title": "Product Units",
   "pu.code": "Unit Code",
   "pu.name": "Unit Name",
@@ -1067,6 +1093,19 @@ const ur: Dict = {
   "nav.final_payments_advance_nil": "ایڈوانس پیمنٹ نل رسید",
   "nav.purchase_order_management": "Purchase Order Management",
   "nav.product_units": "پروڈکٹ یونٹس",
+  "nav.product_brands": "پروڈکٹ برانڈز",
+  "pb.title": "پروڈکٹ برانڈز",
+  "pb.code": "برانڈ کوڈ",
+  "pb.name": "برانڈ نام",
+  "pb.description": "تفصیل",
+  "pb.active": "فعال",
+  "pb.add": "برانڈ شامل کریں",
+  "pb.edit": "ترمیم",
+  "pb.delete": "حذف",
+  "pb.save": "محفوظ کریں",
+  "pb.cancel": "منسوخ",
+  "pb.search": "برانڈ تلاش کریں...",
+  "pb.empty": "کوئی برانڈ نہیں ملا",
   "pu.title": "پروڈکٹ یونٹس",
   "pu.code": "یونٹ کوڈ",
   "pu.name": "یونٹ نام",
@@ -1519,6 +1558,19 @@ const ar: Dict = {
   "nav.sales_order_payment_history": "سجل المدفوعات",
   "nav.purchase_order_management": "Purchase Order Management",
   "nav.product_units": "وحدات المنتج",
+  "nav.product_brands": "علامات المنتج",
+  "pb.title": "علامات المنتج",
+  "pb.code": "رمز العلامة",
+  "pb.name": "اسم العلامة",
+  "pb.description": "الوصف",
+  "pb.active": "نشط",
+  "pb.add": "إضافة علامة",
+  "pb.edit": "تعديل",
+  "pb.delete": "حذف",
+  "pb.save": "حفظ",
+  "pb.cancel": "إلغاء",
+  "pb.search": "بحث عن العلامات...",
+  "pb.empty": "لا توجد علامات",
   "pu.title": "وحدات المنتج",
   "pu.code": "رمز الوحدة",
   "pu.name": "اسم الوحدة",
@@ -1947,6 +1999,19 @@ const fa: Dict = {
   "nav.sales_order_payment_history": "تاریخچه پرداخت",
   "nav.purchase_order_management": "Purchase Order Management",
   "nav.product_units": "واحدهای محصول",
+  "nav.product_brands": "برندهای محصول",
+  "pb.title": "برندهای محصول",
+  "pb.code": "کد برند",
+  "pb.name": "نام برند",
+  "pb.description": "توضیحات",
+  "pb.active": "فعال",
+  "pb.add": "افزودن برند",
+  "pb.edit": "ویرایش",
+  "pb.delete": "حذف",
+  "pb.save": "ذخیره",
+  "pb.cancel": "لغو",
+  "pb.search": "جستجوی برندها...",
+  "pb.empty": "برندی یافت نشد",
   "pu.title": "واحدهای محصول",
   "pu.code": "کد واحد",
   "pu.name": "نام واحد",
@@ -2298,6 +2363,19 @@ const ps: Dict = {
   "nav.sales_order_payment_history": "د تادیې تاریخ",
   "nav.purchase_order_management": "Purchase Order Management",
   "nav.product_units": "د محصول واحدونه",
+  "nav.product_brands": "د محصول برنډونه",
+  "pb.title": "د محصول برنډونه",
+  "pb.code": "د برنډ کوډ",
+  "pb.name": "د برنډ نوم",
+  "pb.description": "تشریح",
+  "pb.active": "فعال",
+  "pb.add": "برنډ اضافه کړئ",
+  "pb.edit": "سمون",
+  "pb.delete": "ړنګول",
+  "pb.save": "خوندي کول",
+  "pb.cancel": "لغوه کول",
+  "pb.search": "د برنډونو لټون...",
+  "pb.empty": "هیڅ برنډ ونه موندل شو",
   "pu.title": "د محصول واحدونه",
   "pu.code": "د واحد کوډ",
   "pu.name": "د واحد نوم",
