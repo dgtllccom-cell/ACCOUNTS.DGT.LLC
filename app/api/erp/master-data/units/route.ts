@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
@@ -12,7 +13,8 @@ import { translateMasterRecord } from "@/lib/services/translation-trigger-servic
  */
 export async function GET() {
   try {
-    await requireErpSession();
+    const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "product_units", action: "read" });
     const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase
       .from("product_units")
@@ -39,6 +41,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "product_units", action: "create" });
     const body = await req.json();
 
     const unitCode = typeof body.unitCode === "string" ? body.unitCode.trim().toUpperCase() : "";

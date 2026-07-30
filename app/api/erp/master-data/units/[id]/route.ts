@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
@@ -7,6 +8,7 @@ import { translateMasterRecord } from "@/lib/services/translation-trigger-servic
 export async function PATCH(req: Request, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "product_units", action: "update" });
     const { id } = await context.params;
     const body = await req.json();
 
@@ -49,7 +51,8 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
 
 export async function DELETE(_req: Request, context: { params: Promise<{ id: string }> }) {
   try {
-    await requireErpSession();
+    const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "product_units", action: "delete" });
     const { id } = await context.params;
     const supabase = createSupabaseAdminClient();
     const { error } = await supabase

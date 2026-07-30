@@ -1181,12 +1181,14 @@ export const sidebarTree: SidebarNode[] = [
           {
             key: "mgmt-product-units",
             labelKey: "nav.product_units",
-            href: "/dashboard/settings/product-units" as Route
+            href: "/dashboard/settings/product-units" as Route,
+            permission: { resource: "product_units", action: "read" }
           },
           {
             key: "mgmt-product-brands",
             labelKey: "nav.product_brands",
-            href: "/dashboard/settings/product-brands" as Route
+            href: "/dashboard/settings/product-brands" as Route,
+            permission: { resource: "product_brands", action: "read" }
           },
           {
             key: "mgmt-port-master",

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
@@ -12,6 +13,7 @@ import { translateMasterRecord } from "@/lib/services/translation-trigger-servic
 export async function GET() {
   try {
     const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "product_brands", action: "read" });
     const supabase = createSupabaseAdminClient();
     let q = supabase
       .from("product_brands")
@@ -43,6 +45,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "product_brands", action: "create" });
     const body = await req.json();
 
     const brandName = typeof body.brandName === "string" ? body.brandName.trim() : "";
