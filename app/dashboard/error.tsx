@@ -15,26 +15,50 @@ export default function DashboardError({
     console.error("Dashboard client-side exception caught:", error);
     
     const msg = String(error?.message || error || "");
-    if (
+    const isChunkError =
       msg.includes("Loading chunk") ||
       msg.includes("ChunkLoadError") ||
       msg.includes("failed to fetch") ||
       msg.includes(".js") ||
       msg.includes("before initialization") ||
-      msg.includes("Cannot access") ||
-      msg.includes("ReferenceError") ||
-      msg.includes("TypeError")
-    ) {
+      msg.includes("Cannot access");
+
+    if (isChunkError) {
+      try {
+        // Clear all Service Workers & caches to wipe stale chunks
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.getRegistrations().then((regs) => {
+            regs.forEach((reg) => reg.unregister());
+          });
+        }
+        if ("caches" in window) {
+          caches.keys().then((keys) => {
+            keys.forEach((key) => caches.delete(key));
+          });
+        }
+      } catch (e) {}
+
       const lastReload = sessionStorage.getItem("chunk_reload_timestamp");
       const now = Date.now();
-      if (!lastReload || now - parseInt(lastReload, 10) > 3000) {
+      // Auto-reload immediately if not reloaded in the last 10 seconds
+      if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
         sessionStorage.setItem("chunk_reload_timestamp", String(now));
-        window.location.replace(window.location.pathname + "?_t=" + now);
+        window.location.href = window.location.pathname + "?_t=" + now;
       }
     }
   }, [error]);
 
   const handleTryAgain = () => {
+    try {
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          regs.forEach((reg) => reg.unregister());
+        });
+      }
+      if ("caches" in window) {
+        caches.keys().then((keys) => keys.forEach((key) => caches.delete(key)));
+      }
+    } catch (e) {}
     sessionStorage.removeItem("chunk_reload_timestamp");
     window.location.href = window.location.pathname + "?_t=" + Date.now();
   };

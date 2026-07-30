@@ -64,7 +64,7 @@ function SidebarNodeItem({
         className={cn(
           "group flex items-center justify-between rounded-lg text-[12.5px] transition-all duration-200 py-0.5",
           isActive
-            ? "bg-[#0f62fe] text-white font-bold shadow-sm active-nav-item"
+            ? "bg-gradient-to-r from-red-600 via-rose-600 to-red-700 text-white font-black shadow-md shadow-red-500/20 active-nav-item"
             : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/40"
         )}
       >
