@@ -4,7 +4,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const COLS =
-  "id, country_id, country_branch_id, city_branch_id, truck_serial, truck_number, registration_number, registration_country_id, truck_type, make, model, manufacturing_year, color, chassis_number, engine_number, capacity, owner_name, owner_mobile, transport_company, driver_name, driver_mobile, driver_cnic_passport, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date, status, notes, is_active, created_at, updated_at";
+  "id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial, branch_serial, entry_serial, truck_serial, truck_number, registration_number, registration_country_id, truck_type, make, model, manufacturing_year, color, chassis_number, engine_number, capacity, owner_name, owner_mobile, transport_company, driver_name, driver_mobile, driver_cnic_passport, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date, status, notes, is_active, created_at, updated_at";
 
 const TEXT = [
   "truck_serial", "truck_number", "registration_number", "truck_type", "make", "model",

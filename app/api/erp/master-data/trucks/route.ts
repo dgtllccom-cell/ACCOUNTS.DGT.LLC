@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { allocateFormSerials } from "@/lib/services/form-serials";
 
 /**
  * Truck Registration master (Settings -> Truck Management).
@@ -9,7 +10,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
  * Table: trucks (migration 20260801_truck_registration.sql).
  */
 const COLS =
-  "id, country_id, country_branch_id, city_branch_id, truck_serial, truck_number, registration_number, registration_country_id, truck_type, make, model, manufacturing_year, color, chassis_number, engine_number, capacity, owner_name, owner_mobile, transport_company, driver_name, driver_mobile, driver_cnic_passport, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date, status, notes, is_active, created_at, updated_at";
+  "id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial, branch_serial, entry_serial, truck_serial, truck_number, registration_number, registration_country_id, truck_type, make, model, manufacturing_year, color, chassis_number, engine_number, capacity, owner_name, owner_mobile, transport_company, driver_name, driver_mobile, driver_cnic_passport, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date, status, notes, is_active, created_at, updated_at";
 
 const TEXT = [
   "truck_serial", "truck_number", "registration_number", "truck_type", "make", "model",
@@ -68,6 +69,17 @@ export async function POST(req: Request) {
     for (const f of TEXT) if (body[f] !== undefined) row[f] = body[f] === "" ? null : String(body[f]).trim();
     for (const d of DATES) if (body[d] !== undefined) row[d] = body[d] || null;
     row.truck_number = truckNumber;
+
+    // Four independent serials for the Truck Registration form.
+    const serials = await allocateFormSerials("truck", {
+      countryId: row.country_id as string | null,
+      branchKey: (row.country_branch_id as string | null) ?? (row.city_branch_id as string | null),
+    });
+    row.super_admin_serial = serials.superAdminSerial;
+    row.country_serial = serials.countrySerial;
+    row.branch_serial = serials.branchSerial;
+    row.entry_serial = serials.entrySerial;
+    if (!row.truck_serial) row.truck_serial = serials.entrySerial;
 
     const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase.from("trucks").insert(row).select(COLS).single();

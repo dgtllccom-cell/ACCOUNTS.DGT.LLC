@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { allocateFormSerials } from "@/lib/services/form-serials";
 
 /**
  * Clearing Agent — Truck Loading form (secure, scoped CRUD).
@@ -9,7 +10,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
  * Attachments reuse /api/erp/documents (entity_type = 'truck_loading').
  */
 const COLS =
-  "id, country_id, country_branch_id, city_branch_id, loading_date, loading_serial, truck_name, truck_number, driver_name, driver_mobile_1, driver_mobile_2, cnic_passport, truck_owner_name, truck_owner_mobile, vehicle_type, goods_name, quantity, unit, net_weight, gross_weight, destination, remarks, status, is_active, created_at, updated_at";
+  "id, country_id, country_branch_id, city_branch_id, loading_date, loading_serial, super_admin_serial, country_serial, branch_serial, entry_serial, truck_id, truck_name, truck_number, driver_name, driver_mobile_1, driver_mobile_2, cnic_passport, truck_owner_name, truck_owner_mobile, vehicle_type, goods_name, quantity, unit, net_weight, gross_weight, destination, remarks, status, is_active, created_at, updated_at";
 
 export async function GET(req: Request) {
   try {
@@ -35,7 +36,7 @@ export async function GET(req: Request) {
 }
 
 const FIELDS = [
-  "loading_date", "loading_serial", "truck_name", "truck_number", "driver_name",
+  "truck_id", "loading_date", "loading_serial", "truck_name", "truck_number", "driver_name",
   "driver_mobile_1", "driver_mobile_2", "cnic_passport", "truck_owner_name",
   "truck_owner_mobile", "vehicle_type", "goods_name", "unit", "destination", "remarks",
 ];
@@ -62,6 +63,17 @@ export async function POST(req: Request) {
     for (const f of FIELDS) if (body[f] !== undefined) row[f] = body[f] === "" ? null : body[f];
     for (const n of NUM) if (body[n] !== undefined && body[n] !== "" && body[n] !== null) row[n] = Number(body[n]);
     if (!row.loading_date) row.loading_date = new Date().toISOString().slice(0, 10);
+
+    // Four independent serials for THIS form (never mixed with other modules).
+    const serials = await allocateFormSerials("truck_loading", {
+      countryId: row.country_id as string | null,
+      branchKey: (row.country_branch_id as string | null) ?? (row.city_branch_id as string | null),
+    });
+    row.super_admin_serial = serials.superAdminSerial;
+    row.country_serial = serials.countrySerial;
+    row.branch_serial = serials.branchSerial;
+    row.entry_serial = serials.entrySerial;
+    if (!row.loading_serial) row.loading_serial = serials.entrySerial;
 
     const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase.from("truck_loadings").insert(row).select(COLS).single();
