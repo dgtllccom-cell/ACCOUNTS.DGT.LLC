@@ -1,11 +1,14 @@
 "use client";
 
-import { EmployeeManagementView } from "@/features/hr-payroll/components/employee-management-view";
+import React, { Suspense } from "react";
+import { GeneralOfficeDashboardView } from "@/features/general-office/components/general-office-dashboard-view";
 
 export default function GeneralOfficeEmployeePage() {
   return (
-    <div className="container mx-auto px-4 py-8">
-      <EmployeeManagementView />
+    <div className="w-full px-4 sm:px-6 lg:px-8 py-6">
+      <Suspense fallback={<div className="p-8 text-center text-xs text-muted-foreground">Loading General Office Management...</div>}>
+        <GeneralOfficeDashboardView />
+      </Suspense>
     </div>
   );
 }

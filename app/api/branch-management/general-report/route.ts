@@ -126,6 +126,13 @@ type CityBranchPayload = {
   users: BranchUserDetail[];
   mainUsersCount: number;
   totalUsersCount: number;
+  managerName: string;
+  accountsCount: number;
+  address: string | null;
+  ownerName: string | null;
+  email: string | null;
+  phone: string | null;
+  contacts: unknown;
 };
 
 type MainBranchPayload = {
@@ -135,6 +142,12 @@ type MainBranchPayload = {
   currency: string;
   isMain: boolean;
   status: string;
+  companyName: string;
+  ownerName: string | null;
+  email: string | null;
+  accountCode: string;
+  address: string | null;
+  contacts: unknown;
   cityBranches: CityBranchPayload[];
   users: BranchUserDetail[];
   mainUsersCount: number;
@@ -299,6 +312,31 @@ export async function GET() {
       assignments = (assignmentData ?? []) as AssignmentRow[];
     }
 
+    // Fetch enterprise accounts + ledgers for account counts
+    const [enterpriseAccountsRes, ledgersRes] = await Promise.all([
+      admin.from("enterprise_accounts").select("id, scope, country_id, code").is("deleted_at", null).then(r => r.data ?? []).catch(() => []),
+      admin.from("ledgers").select("id, scope, country_id, country_branch_id, city_branch_id, code").is("deleted_at", null).then(r => r.data ?? []).catch(() => [])
+    ]);
+    const totalMainAccounts = (enterpriseAccountsRes as any[]).length;
+
+    // Build ledger counts per city branch
+    const ledgerCountByCityBranch = new Map<string, number>();
+    for (const ledger of (ledgersRes as any[])) {
+      if (ledger.city_branch_id) {
+        ledgerCountByCityBranch.set(ledger.city_branch_id, (ledgerCountByCityBranch.get(ledger.city_branch_id) ?? 0) + 1);
+      }
+    }
+
+    // Fetch companies for name lookup
+    const companyIds = [...new Set([...countryBranches.map(b => b.company_id), ...cityBranches.map(b => b.company_id)].filter(Boolean))] as string[];
+    let companiesById = new Map<string, string>();
+    if (companyIds.length) {
+      const { data: companyData } = await admin.from("companies").select("id, name").in("id", companyIds).is("deleted_at", null);
+      for (const c of (companyData ?? []) as Array<{ id: string; name: string }>) {
+        companiesById.set(c.id, c.name);
+      }
+    }
+
     const [profileRes, permissionRes, authUsersRes] = await Promise.all([
       admin.from("profiles").select("id, full_name, user_code, raw_password, created_at").is("deleted_at", null),
       admin.from("user_permission_sets").select("user_id, permissions").is("deleted_at", null),
@@ -403,6 +441,7 @@ export async function GET() {
 
         const cityBranchesPayload: CityBranchPayload[] = cityBranchRows.map((cityBranch) => {
           const users = assignmentsByCityBranch.get(cityBranch.id) ?? [];
+          const manager = users.find((u) => u.role === "city_branch_admin") || users[0];
           return {
             id: cityBranch.id,
             name: cityBranch.name,
@@ -412,7 +451,14 @@ export async function GET() {
             status: cityBranch.status,
             users,
             mainUsersCount: users.filter((u) => u.mainUser).length,
-            totalUsersCount: users.length
+            totalUsersCount: users.length,
+            managerName: manager?.name || "-",
+            accountsCount: ledgerCountByCityBranch.get(cityBranch.id) ?? 0,
+            address: cityBranch.address,
+            ownerName: cityBranch.owner_name,
+            email: (cityBranch as any).email || null,
+            phone: null,
+            contacts: cityBranch.contacts
           };
         });
 
@@ -427,6 +473,12 @@ export async function GET() {
           currency: cBranch.local_currency,
           isMain: cBranch.is_main,
           status: cBranch.status,
+          companyName: (cBranch.company_id ? companiesById.get(cBranch.company_id) : null) || "Global Group",
+          ownerName: cBranch.owner_name,
+          email: (cBranch as any).email || null,
+          accountCode: `ACC-${cBranch.code || "0000"}`,
+          address: cBranch.address,
+          contacts: cBranch.contacts,
           cityBranches: cityBranchesPayload,
           users: branchUsers,
           mainUsersCount: branchUsers.filter((u) => u.mainUser).length,
@@ -452,6 +504,12 @@ export async function GET() {
       };
     });
 
+    const totalActiveBranches =
+      countryBranches.filter((branch) => branch.status === "active").length +
+      cityBranches.filter((branch) => branch.status === "active").length;
+    const totalAllBranches = countryBranches.length + cityBranches.length;
+    const totalInactiveBranches = totalAllBranches - totalActiveBranches;
+
     return NextResponse.json(
       {
         summary: {
@@ -460,9 +518,9 @@ export async function GET() {
           totalMainBranches: countryBranches.length,
           totalCityBranches: cityBranches.length,
           totalActiveUsers: allUserDetails.length,
-          totalActiveBranches:
-            countryBranches.filter((branch) => branch.status === "active").length +
-            cityBranches.filter((branch) => branch.status === "active").length,
+          totalActiveBranches,
+          totalInactiveBranches,
+          totalMainAccounts: totalMainAccounts,
           users: allUserDetails
         },
         superAdminBranches,

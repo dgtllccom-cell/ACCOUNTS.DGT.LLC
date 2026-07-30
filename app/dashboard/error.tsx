@@ -14,15 +14,22 @@ export default function DashboardError({
   useEffect(() => {
     console.error("Dashboard client-side exception caught:", error);
     
-    // Auto-recover from chunk loading errors after new deployment builds
-    const msg = error?.message || "";
-    if (msg.includes("Loading chunk") || msg.includes("ChunkLoadError") || msg.includes("failed to fetch") || msg.includes(".js")) {
+    const msg = String(error?.message || error || "");
+    if (
+      msg.includes("Loading chunk") ||
+      msg.includes("ChunkLoadError") ||
+      msg.includes("failed to fetch") ||
+      msg.includes(".js") ||
+      msg.includes("before initialization") ||
+      msg.includes("Cannot access") ||
+      msg.includes("ReferenceError") ||
+      msg.includes("TypeError")
+    ) {
       const lastReload = sessionStorage.getItem("chunk_reload_timestamp");
       const now = Date.now();
-      if (!lastReload || now - parseInt(lastReload, 10) > 4000) {
+      if (!lastReload || now - parseInt(lastReload, 10) > 3000) {
         sessionStorage.setItem("chunk_reload_timestamp", String(now));
-        // Cache-busting reload forces browser to fetch latest HTML and chunk manifests
-        window.location.href = window.location.pathname + "?_t=" + now;
+        window.location.replace(window.location.pathname + "?_t=" + now);
       }
     }
   }, [error]);

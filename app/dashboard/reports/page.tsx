@@ -259,6 +259,13 @@ function ReportsHubContent() {
 
         <div className="flex flex-wrap items-center gap-2">
           <a
+            href="/dashboard/reports/all"
+            className="flex items-center gap-1.5 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-black text-white hover:bg-indigo-700 shadow-sm transition-all"
+          >
+            <BarChart3 className="h-4 w-4" />
+            View All Reports Catalog
+          </a>
+          <a
             href="/dashboard/print-reports"
             className="flex items-center gap-1.5 rounded-xl bg-blue-600 px-4 py-2 text-xs font-black text-white hover:bg-blue-700 shadow-sm transition-all"
           >

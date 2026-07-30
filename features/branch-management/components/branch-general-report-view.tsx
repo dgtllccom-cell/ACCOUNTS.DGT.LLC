@@ -4,12 +4,15 @@ import { Fragment, ReactNode, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { 
   Ban,
+  BarChart3,
   ChevronRight, 
   Eye,
   Expand,
   Download,
   FileSpreadsheet, 
+  Info,
   KeyRound,
+  Landmark,
   LogIn,
   Minimize2, 
   MoreHorizontal,
@@ -22,7 +25,8 @@ import {
   ShieldCheck,
   UserPlus,
   Users,
-  X
+  X,
+  XCircle
 } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
@@ -40,6 +44,10 @@ type CityBranchNode = {
   address?: string | null;
   companyId?: string | null;
   ownerName?: string | null;
+  managerName?: string | null;
+  accountsCount?: number;
+  email?: string | null;
+  phone?: string | null;
   contacts?: unknown;
   createdAt?: string | null;
   updatedAt?: string | null;
@@ -56,7 +64,10 @@ type MainBranchNode = {
   isMain: boolean;
   address?: string | null;
   companyId?: string | null;
+  companyName?: string | null;
   ownerName?: string | null;
+  email?: string | null;
+  accountCode?: string | null;
   contacts?: unknown;
   createdAt?: string | null;
   updatedAt?: string | null;
@@ -103,6 +114,8 @@ type BranchGeneralReportResponse = {
     totalCityBranches: number;
     totalActiveUsers: number;
     totalActiveBranches: number;
+    totalInactiveBranches: number;
+    totalMainAccounts: number;
     users?: BranchUserDetail[];
   };
   superAdminBranches: SuperAdminBranchNode[];
@@ -665,6 +678,7 @@ export function BranchGeneralReportView({
   const [activeActionDropdownId, setActiveActionDropdownId] = useState<string | null>(null);
   const [activeActionAnchorRect, setActiveActionAnchorRect] = useState<DOMRect | null>(null);
   const [newMenuOpen, setNewMenuOpen] = useState(false);
+  const [branchDetailModal, setBranchDetailModal] = useState<{ country: CountryNode; branch: MainBranchNode } | null>(null);
 
   function openActionDropdown(id: string, btn: HTMLButtonElement) {
     if (activeActionDropdownId === id) {
@@ -1005,7 +1019,9 @@ export function BranchGeneralReportView({
       totalMainBranches,
       totalCityBranches,
       activeBranches,
+      inactiveBranches: (totalMainBranches + totalCityBranches) - activeBranches,
       totalUsers,
+      totalMainAccounts: data?.summary?.totalMainAccounts ?? 0,
       totalCurrencies: currencies.size || 4
     };
   }, [data?.summary, filteredCountries, operatingCountries, searchQuery]);
@@ -1334,47 +1350,54 @@ export function BranchGeneralReportView({
         <LoginListPanel users={data?.summary?.users ?? []} onClose={() => setExpandedUserScope(null)} />
       ) : null}
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-6">
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-7">
         <ReportMetricCard
-          title="Countries"
+          title="Total Countries"
           value={visibleSummary.totalCountries}
-          subtitle="Filtered country network"
+          subtitle="Operating country network"
           icon={<Shield className="h-5 w-5" />}
           tone="indigo"
         />
         <ReportMetricCard
-          title="Main Branches"
+          title="Total Main Branches"
           value={visibleSummary.totalMainBranches}
-          subtitle="Country-level operating branches"
+          subtitle="Country-level branches"
           icon={<ShieldCheck className="h-5 w-5" />}
           tone="emerald"
         />
         <ReportMetricCard
-          title="City Branches"
+          title="Total City Branches"
           value={visibleSummary.totalCityBranches}
-          subtitle="Local branch hierarchy"
-          icon={<ChevronRight className="h-5 w-5" />}
+          subtitle="City-level branch offices"
+          icon={<Landmark className="h-5 w-5" />}
           tone="sky"
         />
         <ReportMetricCard
-          title="Active Branches"
-          value={visibleSummary.activeBranches}
-          subtitle="Currently active operating units"
-          icon={<ShieldCheck className="h-5 w-5" />}
-          tone="amber"
-        />
-        <ReportMetricCard
-          title="Users"
+          title="Total Users"
           value={visibleSummary.totalUsers}
-          subtitle="Assigned ERP users"
+          subtitle="Active assigned ERP users"
           icon={<Users className="h-5 w-5" />}
           tone="rose"
         />
         <ReportMetricCard
-          title="Currencies"
-          value={visibleSummary.totalCurrencies}
-          subtitle="Branch reporting currencies"
-          icon={<FileSpreadsheet className="h-5 w-5" />}
+          title="Total Main Accounts"
+          value={visibleSummary.totalMainAccounts}
+          subtitle="Enterprise account entries"
+          icon={<BarChart3 className="h-5 w-5" />}
+          tone="amber"
+        />
+        <ReportMetricCard
+          title="Active Branches"
+          value={visibleSummary.activeBranches}
+          subtitle="Currently active units"
+          icon={<ShieldCheck className="h-5 w-5" />}
+          tone="emerald"
+        />
+        <ReportMetricCard
+          title="Inactive Branches"
+          value={visibleSummary.inactiveBranches}
+          subtitle="Suspended or closed"
+          icon={<XCircle className="h-5 w-5" />}
           tone="slate"
         />
       </div>
@@ -1580,19 +1603,20 @@ export function BranchGeneralReportView({
             <table className="w-full min-w-[980px] border-separate border-spacing-0 text-left bg-white">
               <thead>
                 <tr className="sticky top-0 z-10 bg-slate-950 text-white font-black text-[10px] tracking-[0.14em] text-center uppercase shadow-sm">
-                  <th className="p-2.5 border-r border-slate-700/70">Code</th>
-                  <th className="p-2.5 border-r border-slate-200 text-left">Country</th>
+                  <th className="p-2.5 border-r border-slate-700/70">Main Branch Code</th>
+                  <th className="p-2.5 border-r border-slate-200 text-left">Country Name</th>
                   <th className="p-2.5 border-r border-slate-200">SA Code</th>
                   <th className="p-2.5 border-r border-slate-200">Branch Code</th>
                   <th className="p-2.5 border-r border-slate-200 text-left">Branch Name</th>
-                  <th className="p-2.5 border-r border-slate-200">Company</th>
-                  <th className="p-2.5 border-r border-slate-200">Owner</th>
-                  <th className="p-2.5 border-r border-slate-200">Curr</th>
-                  <th className="p-2.5 border-r border-slate-200">Acc</th>
-                  <th className="p-2.5 border-r border-slate-200">City</th>
-                  <th className="p-2.5 border-r border-slate-200">User</th>
-                  <th className="p-2.5 border-r border-slate-200">Contacts</th>
-                  <th className="p-2.5">Action</th>
+                  <th className="p-2.5 border-r border-slate-200">Company Name</th>
+                  <th className="p-2.5 border-r border-slate-200">Owner Name</th>
+                  <th className="p-2.5 border-r border-slate-200">Currency</th>
+                  <th className="p-2.5 border-r border-slate-200">Main Branch Acc</th>
+                  <th className="p-2.5 border-r border-slate-200">City Branches</th>
+                  <th className="p-2.5 border-r border-slate-200">Users</th>
+                  <th className="p-2.5 border-r border-slate-200">Email / WhatsApp</th>
+                  <th className="p-2.5 border-r border-slate-200">Status</th>
+                  <th className="p-2.5">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -1614,9 +1638,9 @@ export function BranchGeneralReportView({
                     return (
                       <Fragment key={country.id}>
                         
-                        {/* Parent Row */}
+                        {/* Parent Row — 14 columns */}
                         <tr className="border-b border-slate-100 text-[10px] text-center text-slate-700 odd:bg-white even:bg-slate-50/60 hover:bg-indigo-50/70 transition-colors">
-                          <td className="p-2 border-r border-slate-200 font-bold text-slate-900">{country.code}</td>
+                          <td className="p-2 border-r border-slate-200 font-bold text-slate-900">{mainBranch?.code || country.code}</td>
                           <td className="p-2 border-r border-slate-200 text-left">
                             <div className="relative popup-trigger inline-block">
                               <div
@@ -1645,12 +1669,10 @@ export function BranchGeneralReportView({
                           <td className="p-2 border-r border-slate-200 text-left font-semibold text-slate-800">
                             {mainBranch?.name || `${country.name} Main Branch`}
                           </td>
-                          <td className="p-2 border-r border-slate-200 font-medium">
-                            {mainBranch ? (mainBranch.companyId ? "ABC Pvt Ltd" : "ABC Pvt Ltd") : "-"}
-                          </td>
-                          <td className="p-2 border-r border-slate-200">{mainBranch?.ownerName || "Mr. Ahmed"}</td>
+                          <td className="p-2 border-r border-slate-200 font-medium">{mainBranch?.companyName || "Global Group"}</td>
+                          <td className="p-2 border-r border-slate-200">{mainBranch?.ownerName || "-"}</td>
                           <td className="p-2 border-r border-slate-200 font-bold text-slate-800">{country.currency}</td>
-                          <td className="p-2 border-r border-slate-200 font-semibold text-slate-500">ACC-2001</td>
+                          <td className="p-2 border-r border-slate-200 font-semibold text-slate-500">{mainBranch?.accountCode || "-"}</td>
                           <td className="p-2 border-r border-slate-200 tabular-nums font-semibold">{country.totalCityBranches}</td>
                           <td className="p-2 border-r border-slate-200 tabular-nums font-semibold">
                             <UserCountButton
@@ -1662,11 +1684,28 @@ export function BranchGeneralReportView({
                           </td>
                           <td className="p-2 border-r border-slate-200">
                             <div className="flex items-center justify-center gap-1.5">
-                              {mainBranch && typeof phoneContact === "string" && phoneContact ? (
+                              {(mainBranch?.email || emailContact) ? (
+                                <div className="relative popup-trigger">
+                                  <button
+                                    onClick={() => setActiveContactPopup(activeContactPopup?.id === country.id && activeContactPopup.type === "email" ? null : { id: country.id, type: "email" })}
+                                    className="w-5 h-5 rounded-full flex items-center justify-center bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-100 transition-colors"
+                                  >
+                                    <Mail className="h-2.5 w-2.5" />
+                                  </button>
+                                  {activeContactPopup?.id === country.id && activeContactPopup.type === "email" && (
+                                    <div className="absolute top-6 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[9px] shadow-lg whitespace-nowrap popup-content font-semibold">
+                                      {mainBranch?.email || emailContact}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : (
+                                <span className="text-[8px] text-slate-400">—</span>
+                              )}
+                              {phoneContact ? (
                                 <div className="relative popup-trigger">
                                   <button
                                     onClick={() => setActiveContactPopup(activeContactPopup?.id === country.id && activeContactPopup.type === "phone" ? null : { id: country.id, type: "phone" })}
-                                    className="w-5 h-5 rounded-full flex items-center justify-center bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-100 transition-colors"
+                                    className="w-5 h-5 rounded-full flex items-center justify-center bg-emerald-50 border border-emerald-100 text-emerald-600 hover:bg-emerald-100 transition-colors"
                                   >
                                     <PhoneCall className="h-2.5 w-2.5" />
                                   </button>
@@ -1676,51 +1715,18 @@ export function BranchGeneralReportView({
                                     </div>
                                   )}
                                 </div>
-                              ) : (
-                                <div className="relative popup-trigger">
-                                  <button
-                                    onClick={() => setActiveContactPopup(activeContactPopup?.id === country.id && activeContactPopup.type === "phone" ? null : { id: country.id, type: "phone" })}
-                                    className="w-5 h-5 rounded-full flex items-center justify-center bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-100 transition-colors"
-                                  >
-                                    <PhoneCall className="h-2.5 w-2.5" />
-                                  </button>
-                                  {activeContactPopup?.id === country.id && activeContactPopup.type === "phone" && (
-                                    <div className="absolute top-6 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[9px] shadow-lg whitespace-nowrap popup-content font-semibold">
-                                      +92-300-1234567
-                                    </div>
-                                  )}
-                                </div>
-                              )}
-                              {mainBranch && typeof emailContact === "string" && emailContact ? (
-                                <div className="relative popup-trigger">
-                                  <button
-                                    onClick={() => setActiveContactPopup(activeContactPopup?.id === country.id && activeContactPopup.type === "email" ? null : { id: country.id, type: "email" })}
-                                    className="w-5 h-5 rounded-full flex items-center justify-center bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-100 transition-colors"
-                                  >
-                                    <Mail className="h-2.5 w-2.5" />
-                                  </button>
-                                  {activeContactPopup?.id === country.id && activeContactPopup.type === "email" && (
-                                    <div className="absolute top-6 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[9px] shadow-lg whitespace-nowrap popup-content font-semibold">
-                                      {emailContact}
-                                    </div>
-                                  )}
-                                </div>
-                              ) : (
-                                <div className="relative popup-trigger">
-                                  <button
-                                    onClick={() => setActiveContactPopup(activeContactPopup?.id === country.id && activeContactPopup.type === "email" ? null : { id: country.id, type: "email" })}
-                                    className="w-5 h-5 rounded-full flex items-center justify-center bg-indigo-50 border border-indigo-100 text-indigo-600 hover:bg-indigo-100 transition-colors"
-                                  >
-                                    <Mail className="h-2.5 w-2.5" />
-                                  </button>
-                                  {activeContactPopup?.id === country.id && activeContactPopup.type === "email" && (
-                                    <div className="absolute top-6 left-0 z-50 bg-slate-900 text-white border border-slate-800 rounded-md p-1.5 text-[9px] shadow-lg whitespace-nowrap popup-content font-semibold">
-                                      main.pk@abc.com
-                                    </div>
-                                  )}
-                                </div>
-                              )}
+                              ) : null}
                             </div>
+                          </td>
+                          <td className="p-2 border-r border-slate-200">
+                            <span className={cn(
+                              "rounded-full px-2 py-0.5 text-[8px] font-black",
+                              (mainBranch?.status || "active").toLowerCase() === "active"
+                                ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                                : "bg-rose-50 text-rose-700 ring-1 ring-rose-100"
+                            )}>
+                              {(mainBranch?.status || "Active").charAt(0).toUpperCase() + (mainBranch?.status || "Active").slice(1)}
+                            </span>
                           </td>
                           <td className="p-2 relative">
                             <div className="flex items-center justify-center">
@@ -1768,6 +1774,12 @@ export function BranchGeneralReportView({
                                       color="indigo"
                                       onClick={() => { openCountryBranchEdit(mainBranch.id); setActiveActionDropdownId(null); setActiveActionAnchorRect(null); }}
                                     />
+                                    <ActionItem
+                                      icon={<Info className="h-3.5 w-3.5" />}
+                                      label="Branch Details"
+                                      color="indigo"
+                                      onClick={() => { setBranchDetailModal({ country, branch: mainBranch }); setActiveActionDropdownId(null); setActiveActionAnchorRect(null); }}
+                                    />
                                   </>
                                 ) : (
                                   <ActionItem
@@ -1785,7 +1797,7 @@ export function BranchGeneralReportView({
 
                         {expandedUserScope === countryUserScopeId ? (
                           <tr className="bg-indigo-50/20">
-                            <td colSpan={13} className="p-3">
+                            <td colSpan={14} className="p-3">
                               <BranchUsersPanel
                                 title={`${country.name} Users`}
                                 hierarchy={[country.name, mainBranch?.name || "Main Branch", "All City Branches", "User List"]}
@@ -1981,7 +1993,7 @@ export function BranchGeneralReportView({
                   })
                 ) : (
                   <tr>
-                    <td colSpan={13} className="p-6 text-center text-slate-400">No country records matched search query.</td>
+                    <td colSpan={14} className="p-6 text-center text-slate-400">No country records matched search query.</td>
                   </tr>
                 )}
               </tbody>
@@ -1989,6 +2001,137 @@ export function BranchGeneralReportView({
           </div>
         </div>
       </div>
+
+      {/* ═══ BRANCH DETAILS MODAL ═══ */}
+      {branchDetailModal && createPortal(
+        <div className="fixed inset-0 z-[9998] flex items-start justify-end">
+          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={() => setBranchDetailModal(null)} />
+          <div className="relative z-10 h-full w-full max-w-4xl overflow-y-auto bg-white shadow-2xl animate-in slide-in-from-right duration-200">
+            <div className="sticky top-0 z-20 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-950 px-6 py-4 shadow-lg">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-[9px] font-black uppercase tracking-[0.24em] text-indigo-300">Branch Details Report</div>
+                  <h2 className="mt-1 text-lg font-black text-white tracking-tight">{branchDetailModal.branch.name}</h2>
+                  <p className="mt-0.5 text-[11px] font-semibold text-slate-400">{branchDetailModal.country.name} &bull; {branchDetailModal.branch.code}</p>
+                </div>
+                <button onClick={() => setBranchDetailModal(null)} className="rounded-xl border border-slate-700 bg-slate-800 p-2 text-slate-400 hover:bg-slate-700 hover:text-white transition-all">
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+            <div className="p-6 space-y-6">
+              {/* Main Branch Summary */}
+              <div className="rounded-2xl border border-slate-200 bg-gradient-to-br from-white to-slate-50 p-5 shadow-sm ring-1 ring-slate-100">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.18em] text-indigo-700 mb-4 flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4" /> Main Branch Information
+                </h3>
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {[
+                    { label: "Branch Name", value: branchDetailModal.branch.name },
+                    { label: "Branch Code", value: branchDetailModal.branch.code },
+                    { label: "Country", value: branchDetailModal.country.name },
+                    { label: "Currency", value: branchDetailModal.country.currency || branchDetailModal.branch.localCurrency },
+                    { label: "Owner Name", value: branchDetailModal.branch.ownerName || "-" },
+                    { label: "Company Name", value: branchDetailModal.branch.companyName || "Global Group" },
+                    { label: "Account Code", value: branchDetailModal.branch.accountCode || "-" },
+                    { label: "Status", value: branchDetailModal.branch.status || "Active" },
+                    { label: "Address", value: branchDetailModal.branch.address || "-" },
+                    { label: "Email", value: branchDetailModal.branch.email || findContactValue(branchDetailModal.branch.contacts, "email") || "-" },
+                    { label: "Phone", value: findContactValue(branchDetailModal.branch.contacts, "phone") || findContactValue(branchDetailModal.branch.contacts, "mobile") || "-" },
+                    { label: "WhatsApp", value: findContactValue(branchDetailModal.branch.contacts, "whatsapp") || "-" },
+                    { label: "Total City Branches", value: String(branchDetailModal.branch.cityBranches?.length ?? 0) },
+                    { label: "Total Users", value: String(branchDetailModal.branch.users?.length ?? branchDetailModal.branch.userCount ?? 0) },
+                    { label: "Created", value: branchDetailModal.branch.createdAt ? new Date(branchDetailModal.branch.createdAt).toLocaleDateString() : "-" },
+                  ].map(({ label, value }) => (
+                    <div key={label} className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+                      <div className="text-[8px] font-black uppercase tracking-wider text-slate-400">{label}</div>
+                      <div className="mt-1 text-[11px] font-bold text-slate-900 break-all">
+                        {label === "Status" ? (
+                          <span className={cn("rounded-full px-2.5 py-0.5 text-[9px] font-black",
+                            (value || "active").toLowerCase() === "active"
+                              ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                              : "bg-rose-50 text-rose-700 ring-1 ring-rose-100"
+                          )}>{value.charAt(0).toUpperCase() + value.slice(1)}</span>
+                        ) : value}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* City Branches Table */}
+              <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.18em] text-sky-700 mb-4 flex items-center gap-2">
+                  <Landmark className="h-4 w-4" /> City Branches ({branchDetailModal.branch.cityBranches?.length ?? 0})
+                </h3>
+                {branchDetailModal.branch.cityBranches?.length ? (
+                  <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white shadow-sm">
+                    <table className="w-full min-w-[900px] border-separate border-spacing-0 text-left bg-white">
+                      <thead>
+                        <tr className="sticky top-0 z-10 bg-slate-900 text-white font-black text-[9px] tracking-[0.14em] text-center uppercase shadow-sm">
+                          <th className="p-2.5 border-r border-slate-700/70">SR.</th>
+                          <th className="p-2.5 border-r border-slate-200">City Branch Code</th>
+                          <th className="p-2.5 border-r border-slate-200 text-left">City Branch Name</th>
+                          <th className="p-2.5 border-r border-slate-200">Manager</th>
+                          <th className="p-2.5 border-r border-slate-200">Users</th>
+                          <th className="p-2.5 border-r border-slate-200">Accounts</th>
+                          <th className="p-2.5 border-r border-slate-200">Status</th>
+                          <th className="p-2.5">Contact Information</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {branchDetailModal.branch.cityBranches.map((cityBranch, idx) => {
+                          const cbPhone = findContactValue(cityBranch.contacts, "phone") || findContactValue(cityBranch.contacts, "mobile") || cityBranch.phone || "";
+                          const cbEmail = findContactValue(cityBranch.contacts, "email") || cityBranch.email || "";
+                          const cbWhatsApp = findContactValue(cityBranch.contacts, "whatsapp") || "";
+                          const managerUser = cityBranch.users?.find(u => u.role === "city_branch_admin") || cityBranch.users?.[0];
+                          return (
+                            <tr key={cityBranch.id} className="border-b border-slate-100 text-[10px] text-center text-slate-700 odd:bg-white even:bg-slate-50/60 hover:bg-sky-50/70 transition-colors">
+                              <td className="p-2.5 border-r border-slate-200 font-bold">{idx + 1}</td>
+                              <td className="p-2.5 border-r border-slate-200 font-mono font-bold text-slate-900">{cityBranch.code}</td>
+                              <td className="p-2.5 border-r border-slate-200 text-left">
+                                <div className="font-bold text-slate-900">{cityBranch.name}</div>
+                                <div className="text-[8px] text-slate-500 font-medium">{cityBranch.cityName}</div>
+                              </td>
+                              <td className="p-2.5 border-r border-slate-200">
+                                <div className="font-bold text-slate-800">{cityBranch.managerName || managerUser?.name || "-"}</div>
+                                {managerUser?.email && <div className="text-[7.5px] text-slate-400 font-mono mt-0.5">{managerUser.email}</div>}
+                              </td>
+                              <td className="p-2.5 border-r border-slate-200 tabular-nums font-bold">{cityBranch.users?.length ?? cityBranch.userCount ?? 0}</td>
+                              <td className="p-2.5 border-r border-slate-200 tabular-nums font-bold">{cityBranch.accountsCount ?? 0}</td>
+                              <td className="p-2.5 border-r border-slate-200">
+                                <span className={cn("rounded-full px-2 py-0.5 text-[8px] font-black",
+                                  (cityBranch.status || "active").toLowerCase() === "active"
+                                    ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                                    : "bg-rose-50 text-rose-700 ring-1 ring-rose-100"
+                                )}>{(cityBranch.status || "Active").charAt(0).toUpperCase() + (cityBranch.status || "Active").slice(1)}</span>
+                              </td>
+                              <td className="p-2.5">
+                                <div className="flex flex-col items-center gap-1 text-[8px]">
+                                  {cbEmail && <div className="flex items-center gap-1 text-indigo-700"><Mail className="h-2.5 w-2.5" /><span className="font-semibold">{cbEmail}</span></div>}
+                                  {cbPhone && <div className="flex items-center gap-1 text-emerald-700"><PhoneCall className="h-2.5 w-2.5" /><span className="font-semibold">{cbPhone}</span></div>}
+                                  {cbWhatsApp && <div className="flex items-center gap-1 text-green-700"><PhoneCall className="h-2.5 w-2.5" /><span className="font-semibold">WA: {cbWhatsApp}</span></div>}
+                                  {!cbEmail && !cbPhone && !cbWhatsApp && <span className="text-slate-400">&mdash;</span>}
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50 p-8 text-center">
+                    <Landmark className="h-8 w-8 text-slate-300 mx-auto mb-2" />
+                    <p className="text-[11px] font-bold text-slate-400">No city branches configured under this main branch.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

@@ -66,6 +66,9 @@ export type UiKey =
   | "nav.journal_stock"
   | "nav.journal_stock_report"
   | "nav.journal_stock_checking_report"
+  | "nav.document_management"
+  | "nav.scanner_integration"
+  | "nav.all_reports_catalog"
   | "nav.journal_bill_checking"
   | "nav.journal_booking_stock"
   | "nav.warehouse_stock"
@@ -569,6 +572,9 @@ const en: Dict = {
   "nav.journal_stock": "Journal Stock",
   "nav.journal_stock_report": "Journal Stock Report",
   "nav.journal_stock_checking_report": "Journal Stock Checking Report",
+  "nav.document_management": "Document Management & Hardware Scanner",
+  "nav.scanner_integration": "Direct Scanner Capture",
+  "nav.all_reports_catalog": "All ERP Reports Catalog",
   "nav.journal_bill_checking": "Journal Bill Checking",
   "nav.journal_booking_stock": "Journal Booking Stock",
   "nav.warehouse_stock": "Warehouse Stock",
@@ -1056,6 +1062,9 @@ const ur: Dict = {
   "nav.journal_stock": "جرنل اسٹاک",
   "nav.journal_stock_report": "جرنل اسٹاک رپورٹ",
   "nav.journal_stock_checking_report": "جرنل اسٹاک چیکنگ رپورٹ",
+  "nav.document_management": "ڈاکیومنٹ مینجمنٹ اور اسکینر",
+  "nav.scanner_integration": "ڈائریکٹ اسکینر کیپچر",
+  "nav.all_reports_catalog": "تمام ای آر پی رپورٹس کیٹلاگ",
   "nav.journal_bill_checking": "جرنل بل چیکنگ",
   "nav.warehouse_stock": "Warehouse Stock",
   "nav.in_transit_stock": "In Transit Stock",
@@ -1491,6 +1500,9 @@ const ar: Dict = {
   "nav.journal_stock": "Journal Stock",
   "nav.journal_stock_report": "Journal Stock Report",
   "nav.journal_stock_checking_report": "Journal Stock Checking Report",
+  "nav.document_management": "د اسنادو مدیریت او سکینر",
+  "nav.scanner_integration": "مباشر سکین کول",
+  "nav.all_reports_catalog": "د ټول راپورونو کټلاګ",
   "nav.warehouse_stock": "Warehouse Stock",
   "nav.in_transit_stock": "In Transit Stock",
   "nav.export_stock": "Export Stock",
@@ -1902,6 +1914,9 @@ const fa: Dict = {
   "nav.journal_stock": "Journal Stock",
   "nav.journal_stock_report": "گزارش ژورنال استاک",
   "nav.journal_stock_checking_report": "گزارش بررسی ژورنال استاک",
+  "nav.document_management": "مدیریت اسناد و اسکنر",
+  "nav.scanner_integration": "اسکن مستقیم اسناد",
+  "nav.all_reports_catalog": "کاتالوگ کامل گزارش‌ها",
   "nav.warehouse_stock": "Warehouse Stock",
   "nav.in_transit_stock": "In Transit Stock",
   "nav.export_stock": "Export Stock",
@@ -2236,6 +2251,9 @@ const ps: Dict = {
   "nav.journal_stock": "Journal Stock",
   "nav.journal_stock_report": "د جرنل سټاک راپور",
   "nav.journal_stock_checking_report": "د جرنل سټاک چک راپور",
+  "nav.document_management": "إدارة المستندات والماسح الضوئي",
+  "nav.scanner_integration": "المسح الضوئي المباشر",
+  "nav.all_reports_catalog": "كتالوج جميع التقارير",
   "nav.warehouse_stock": "Warehouse Stock",
   "nav.in_transit_stock": "In Transit Stock",
   "nav.export_stock": "Export Stock",

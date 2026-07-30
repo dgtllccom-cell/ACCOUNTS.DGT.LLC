@@ -484,14 +484,21 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
-    key: "stock-reports",
-    labelKey: "nav.stock_reports",
-    iconKey: "bar-chart",
+    key: "documents-hub",
+    labelKey: "nav.document_management",
+    iconKey: "file-text",
+    href: "/dashboard/documents" as Route,
+    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
+  },
+  {
+    key: "journal-stock",
+    labelKey: "nav.journal_stock",
+    iconKey: "clipboard-list",
     children: [
       {
         key: "journal-stock-group",
-        labelKey: "nav.journal_stock",
-        iconKey: "clipboard-list",
+        labelKey: "nav.journal_stock_report",
+        iconKey: "bar-chart",
         children: [
           {
             key: "salesman-report",
@@ -512,7 +519,7 @@ export const sidebarTree: SidebarNode[] = [
       },
       {
         key: "journal-bill-checking-group",
-        labelKey: "nav.journal_bill_checking",
+        labelKey: "nav.journal_stock_checking_report",
         iconKey: "file-text",
         children: [
           {
