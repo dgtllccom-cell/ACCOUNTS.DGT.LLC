@@ -7,37 +7,31 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldCheck,
-  Upload,
   UserPlus,
   MapPin,
-  Search,
   Building2,
-  Paperclip,
   Briefcase,
-  BadgeDollarSign,
-  UserCheck,
   Phone,
   Mail,
-  Calendar,
   Key,
   Eye,
   EyeOff,
   Printer,
-  FileText,
-  Sparkles,
   Users,
-  GitBranch,
   Globe2,
   CheckCircle2,
   Lock,
-  Layers,
-  Building
+  Plus,
+  Search,
+  UserCheck
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
+import { SimpleModal } from "@/components/ui/simple-modal";
+import { EmployeeForm } from "@/features/hr-payroll/components/employee-form";
 import type { LocationCountry } from "@/features/locations/location-api";
 import { listCities, listCountries, type LocationCity } from "@/features/locations/location-api";
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
@@ -49,49 +43,9 @@ import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window
 type MainBranchRow = { id: string; name: string; code: string; local_currency: string; is_main: boolean; city_id?: string | null };
 type CityBranchRow = { id: string; name: string; code: string; city_name: string; local_currency: string; country_branch_id: string };
 
-type WizardStep = 1 | 2 | 3 | 4;
+type WizardStep = 1 | 2 | 3;
 
 type Banner = { tone: "ok" | "err"; text: string } | null;
-
-const genderOptions = ["Male", "Female", "Other"] as const;
-
-const employmentTypeOptions = [
-  "Permanent",
-  "Contract",
-  "Probation",
-  "Part-time",
-  "Daily Wage",
-  "Temporary"
-] as const;
-
-const departmentOptions = [
-  "Management & Executive",
-  "Finance & Accounting",
-  "Sales & Marketing",
-  "Warehouse & Inventory",
-  "Operations & Logistics",
-  "HR & Administration",
-  "Transport & Driving",
-  "Field & General Work"
-] as const;
-
-const designationOptions = [
-  "Manager",
-  "Assistant Manager",
-  "Supervisor",
-  "Accountant",
-  "Cashier",
-  "Sales Executive",
-  "Office Staff / Clerk",
-  "Warehouse Keeper",
-  "Logistics Coordinator",
-  "Driver",
-  "General Worker",
-  "Security Officer",
-  "Other Company Staff"
-] as const;
-
-const paymentFrequencyOptions = ["Monthly", "Bi-Weekly", "Weekly", "Daily"] as const;
 
 const branchTypeOptions = [
   { value: "main", label: "Main Branch" },
@@ -111,9 +65,9 @@ const roleOptions: Array<{ value: EnterpriseRole; label: string; help: string }>
   { value: "auditor_viewer", label: "Auditor / Viewer", help: "Read-only scope." }
 ];
 
-function makeAutoEmployeeCode() {
+function makeAutoUserCode() {
   const rand = Math.floor(1000 + Math.random() * 8999);
-  return `EMP-${rand}`;
+  return `USR-${rand}`;
 }
 
 function toCountryOption(row: LocationCountry): SearchSelectOption {
@@ -133,29 +87,23 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState<WizardStep>(1);
 
-  const [previewImageUrl, setPreviewImageUrl] = useState<string>("");
-  const [profileFile, setProfileFile] = useState<File | null>(null);
+  // Modal for creating new employee on the fly
+  const [showEmployeeModal, setShowEmployeeModal] = useState(false);
 
-  // STEP 1: Personal & Identity Information
+  // HR Employees list for Step 1 dropdown
+  const [hrEmployees, setHrEmployees] = useState<any[]>([]);
+  const [hrEmployeesLoading, setHrEmployeesLoading] = useState(false);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
+
+  // User Core State
+  const [userCode, setUserCode] = useState(() => makeAutoUserCode());
   const [fullName, setFullName] = useState("");
-  const [fatherOrSpouseName, setFatherOrSpouseName] = useState("");
-  const [gender, setGender] = useState("Male");
-  const [dateOfBirth, setDateOfBirth] = useState("");
-  const [nationalId, setNationalId] = useState("");
   const [contactPhone, setContactPhone] = useState("");
-  const [emergencyPhone, setEmergencyPhone] = useState("");
   const [personalEmail, setPersonalEmail] = useState("");
+  const [designation, setDesignation] = useState("Staff");
+  const [department, setDepartment] = useState("General Office");
 
-  // STEP 2: Employment & Contract Details
-  const [employeeCode, setEmployeeCode] = useState(() => makeAutoEmployeeCode());
-  const [employmentType, setEmploymentType] = useState<string>("Permanent");
-  const [department, setDepartment] = useState<string>("Operations & Logistics");
-  const [designation, setDesignation] = useState<string>("Office Staff / Clerk");
-  const [joiningDate, setJoiningDate] = useState(() => new Date().toISOString().substring(0, 10));
-  const [probationPeriod, setProbationPeriod] = useState("3 Months");
-  const [contractEndDate, setContractEndDate] = useState("");
-
-  // STEP 3: Location Information
+  // Step 2: Location & Branch
   const [countries, setCountries] = useState<LocationCountry[]>([]);
   const [loadingCountries, setLoadingCountries] = useState(false);
   const [countryId, setCountryId] = useState("");
@@ -165,46 +113,57 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const [cities, setCities] = useState<LocationCity[]>([]);
   const [countryBranchId, setCountryBranchId] = useState("");
   const [cityBranchId, setCityBranchId] = useState("");
-  const [residentialAddress, setResidentialAddress] = useState("");
-
-  // STEP 4: Job, Salary & Payroll
-  const [baseSalary, setBaseSalary] = useState("0");
   const [currency, setCurrency] = useState("USD");
-  const [paymentFrequency, setPaymentFrequency] = useState("Monthly");
-  const [bankName, setBankName] = useState("");
-  const [accountOrIban, setAccountOrIban] = useState("");
 
-  // ERP Login Access
-  const [enableErpLogin, setEnableErpLogin] = useState(true);
+  // Step 3: Login Credentials & Security
   const [role, setRole] = useState<EnterpriseRole>("staff_user");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
-  // Edit / Employees List State
-  const [employeesList, setEmployeesList] = useState<any[]>([]);
-  const [employeesLoading, setEmployeesLoading] = useState(false);
-  const [sidebarFilter, setSidebarFilter] = useState("");
+  // Editing User
   const [editUserId, setEditUserId] = useState<string | null>(null);
   const [isResettingBranch, setIsResettingBranch] = useState(true);
 
-  async function fetchEmployees() {
-    setEmployeesLoading(true);
+  async function fetchHrEmployees() {
+    setHrEmployeesLoading(true);
     try {
-      const res = await fetch("/api/erp/users/journal-report?limit=500").then((r) => r.json());
-      if (res && res.rows && Array.isArray(res.rows)) {
-        setEmployeesList(res.rows);
+      const res = await fetch("/api/erp/hr-payroll/employees").then((r) => r.json());
+      if (res && res.employees && Array.isArray(res.employees)) {
+        setHrEmployees(res.employees);
       }
     } catch (err) {
-      console.error("Failed to load employees list", err);
+      console.error("Failed to load HR employees list", err);
     } finally {
-      setEmployeesLoading(false);
+      setHrEmployeesLoading(false);
     }
   }
 
   useEffect(() => {
-    fetchEmployees();
+    fetchHrEmployees();
   }, []);
+
+  // When Employee is selected from dropdown, populate fields
+  useEffect(() => {
+    if (!selectedEmployeeId) return;
+    const emp = hrEmployees.find((e) => e.id === selectedEmployeeId);
+    if (emp) {
+      const empName = emp.person?.customer_name || emp.name || emp.full_name || "";
+      setFullName(empName);
+      if (emp.person?.mobile) setContactPhone(emp.person.mobile);
+      if (emp.person?.email) setPersonalEmail(emp.person.email);
+      if (emp.designation) setDesignation(emp.designation);
+      if (emp.department) setDepartment(emp.department);
+      if (emp.country_id) setCountryId(emp.country_id);
+      if (emp.country_branch_id) {
+        setBranchType("main");
+        setCountryBranchId(emp.country_branch_id);
+      } else if (emp.city_branch_id) {
+        setBranchType("city");
+        setCityBranchId(emp.city_branch_id);
+      }
+    }
+  }, [selectedEmployeeId, hrEmployees]);
 
   async function fetchSpecificUser(id: string) {
     try {
@@ -213,7 +172,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         const data = res.data;
         setEditUserId(data.userId);
         setFullName(data.fullName || "");
-        setEmployeeCode(data.userCode || makeAutoEmployeeCode());
+        setUserCode(data.userCode || makeAutoUserCode());
         setRole(data.role || "staff_user");
         setCountryId(data.countryId || "");
         if (data.email) setPersonalEmail(data.email);
@@ -309,9 +268,25 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     []
   );
 
+  const employeeOptions = useMemo(
+    () =>
+      hrEmployees.map((emp) => {
+        const empName = emp.person?.customer_name || emp.name || emp.full_name || "Employee";
+        const code = emp.employee_code || "";
+        return {
+          value: emp.id,
+          label: code ? `${code} - ${empName}` : empName,
+          keywords: `${code} ${empName} ${emp.designation || ""} ${emp.department || ""}`
+        };
+      }),
+    [hrEmployees]
+  );
+
   const selectedCountry = useMemo(() => countries.find((c) => c.id === countryId) ?? null, [countries, countryId]);
   const selectedMainBranch = useMemo(() => mainBranches.find((b) => b.id === countryBranchId) ?? null, [mainBranches, countryBranchId]);
   const selectedCityBranch = useMemo(() => cityBranches.find((b) => b.id === cityBranchId) ?? null, [cityBranches, cityBranchId]);
+
+  const selectedEmployeeObj = useMemo(() => hrEmployees.find((e) => e.id === selectedEmployeeId) ?? null, [hrEmployees, selectedEmployeeId]);
 
   const branchCode = useMemo(() => {
     if (branchType === "main") return selectedMainBranch?.code ?? "";
@@ -330,44 +305,27 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     return "";
   }, [branchType, selectedCityBranch, selectedMainBranch, cities]);
 
-  const filteredEmployees = useMemo(() => {
-    if (!sidebarFilter.trim()) return employeesList;
-    const q = sidebarFilter.toLowerCase().trim();
-    return employeesList.filter(
-      (u) =>
-        u.fullName?.toLowerCase().includes(q) ||
-        u.userCode?.toLowerCase().includes(q) ||
-        u.branchCode?.toLowerCase().includes(q) ||
-        u.role?.toLowerCase().includes(q)
-    );
-  }, [employeesList, sidebarFilter]);
-
   function isStepValid(currentStep: WizardStep) {
     if (currentStep === 1) {
-      return Boolean(fullName.trim().length >= 2 && gender);
+      return Boolean(fullName.trim().length >= 2 || selectedEmployeeId);
     }
     if (currentStep === 2) {
-      return Boolean(employeeCode && employmentType && department && designation);
-    }
-    if (currentStep === 3) {
       if (role === "super_admin") return true;
       if (!countryId) return false;
       if (branchType === "main") return Boolean(countryBranchId);
       if (branchType === "city") return Boolean(cityBranchId);
       return true;
     }
-    if (currentStep === 4) {
-      if (enableErpLogin) {
-        if (!editUserId && (!password || password.length < 8)) return false;
-        if (password && password !== confirmPassword) return false;
-      }
-      return true;
+    if (currentStep === 3) {
+      if (!editUserId && (!password || password.length < 8)) return false;
+      if (password && password !== confirmPassword) return false;
+      return Boolean(personalEmail.trim() || userCode.trim());
     }
     return true;
   }
 
   function next() {
-    if (step < 4) setStep((s) => (s + 1) as WizardStep);
+    if (step < 3) setStep((s) => (s + 1) as WizardStep);
   }
 
   function prev() {
@@ -378,33 +336,31 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     setBanner(null);
 
     if (!fullName || fullName.trim().length < 2) {
-      setBanner({ tone: "err", text: "Employee Full Name must be at least 2 characters." });
+      setBanner({ tone: "err", text: "User Full Name / Employee selection is required." });
       return;
     }
 
-    const issuedCode = normalizeUserCode(employeeCode || "");
+    const issuedCode = normalizeUserCode(userCode || "");
     if (!issuedCode) {
-      setBanner({ tone: "err", text: "Employee Code / ID is required." });
+      setBanner({ tone: "err", text: "User ID / Code is required." });
       return;
     }
 
     const isEdit = Boolean(editUserId);
 
-    if (enableErpLogin) {
-      if (!isEdit && (!password || password.length < 8)) {
-        setBanner({ tone: "err", text: "Password must be at least 8 characters for ERP login." });
-        return;
-      }
+    if (!isEdit && (!password || password.length < 8)) {
+      setBanner({ tone: "err", text: "Password must be at least 8 characters for login access." });
+      return;
+    }
 
-      if (password && password.length < 8) {
-        setBanner({ tone: "err", text: "Password must be at least 8 characters." });
-        return;
-      }
+    if (password && password.length < 8) {
+      setBanner({ tone: "err", text: "Password must be at least 8 characters." });
+      return;
+    }
 
-      if (password && password !== confirmPassword) {
-        setBanner({ tone: "err", text: "Confirm Password does not match." });
-        return;
-      }
+    if (password && password !== confirmPassword) {
+      setBanner({ tone: "err", text: "Confirm Password does not match." });
+      return;
     }
 
     let resolvedCountryId: string | null = countryId || null;
@@ -425,12 +381,12 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     }
 
     const preferredLanguage = (localStorage.getItem("erp_lang") || "en").toString();
-    const email = personalEmail.trim() || `${issuedCode.toLowerCase()}@employees.damaan.local`;
+    const email = personalEmail.trim() || `${issuedCode.toLowerCase()}@users.dgt.local`;
 
     setSaving(true);
     try {
       const payload: any = {
-        role: enableErpLogin ? role : "staff_user",
+        role: role,
         fullName: fullName.trim(),
         userCode: issuedCode,
         countryId: resolvedCountryId,
@@ -451,29 +407,27 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
           body: JSON.stringify(payload)
         });
         const json = await fetchRes.json();
-        if (!fetchRes.ok) throw new Error(json?.error?.message || json?.error || "Failed to update employee.");
+        if (!fetchRes.ok) throw new Error(json?.error?.message || json?.error || "Failed to update user.");
         res = { userId: editUserId!, userCode: issuedCode };
       } else {
         payload.email = email;
-        payload.password = password || "Emp@123456";
+        payload.password = password || "User@123456";
         payload.preferredLanguage = preferredLanguage;
         res = await apiPost<{ userId: string; userCode: string }>("/api/erp/users", payload);
       }
 
-      setBanner({ tone: "ok", text: isEdit ? "Employee record updated successfully." : "Employee registered successfully." });
-      fetchEmployees();
+      setBanner({ tone: "ok", text: isEdit ? "User record updated successfully." : "User registered successfully." });
     } catch (e: any) {
-      setBanner({ tone: "err", text: e?.message || "Employee operation failed." });
+      setBanner({ tone: "err", text: e?.message || "User operation failed." });
     } finally {
       setSaving(false);
     }
   }
 
   const steps = [
-    { number: 1 as const, label: "Personal Info", icon: <UserPlus className="h-4 w-4" /> },
-    { number: 2 as const, label: "Employment Details", icon: <Briefcase className="h-4 w-4" /> },
-    { number: 3 as const, label: "Location & Branch", icon: <MapPin className="h-4 w-4" /> },
-    { number: 4 as const, label: "Salary & ERP Access", icon: <BadgeDollarSign className="h-4 w-4" /> }
+    { number: 1 as const, label: "Select Employee", icon: <Users className="h-4 w-4" /> },
+    { number: 2 as const, label: "Branch Access", icon: <MapPin className="h-4 w-4" /> },
+    { number: 3 as const, label: "Login & Security", icon: <Key className="h-4 w-4" /> }
   ];
 
   return (
@@ -489,7 +443,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
             {editUserId ? "Edit System User Record" : "User Registration Form"}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Comprehensive System User Setup & Role Assignment Form for Super Admins, Country Admins, Branch Admins, Accountants, Cashiers, and Staff.
+            Link Employee master records, assign Country & Branch scopes, and issue System Login Credentials.
           </p>
         </div>
 
@@ -501,7 +455,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               onClick={() => {
                 setEditUserId(null);
                 setFullName("");
-                setEmployeeCode(makeAutoEmployeeCode());
+                setSelectedEmployeeId("");
+                setUserCode(makeAutoUserCode());
                 setStep(1);
                 setBanner(null);
               }}
@@ -517,14 +472,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
             onClick={() => {
               openUserA4ReportWindow({
                 userId: editUserId || "USR-PREVIEW",
-                userCode: employeeCode,
+                userCode: userCode,
                 fullName: fullName || "User Name",
                 countryName: selectedCountry?.name || "Pakistan",
                 branchName: (branchType === "main" ? selectedMainBranch?.name : selectedCityBranch?.name) || "Main Branch",
                 branchCode: branchCode || "PK-MAIN-001",
                 branchType: designation || "Company Staff",
                 role: role,
-                registrationDate: joiningDate || new Date().toISOString(),
+                registrationDate: new Date().toISOString(),
                 status: "Active",
                 permissions: [],
                 lastActivity: new Date().toISOString(),
@@ -536,13 +491,13 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
             className="gap-1.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-sm"
           >
             <Printer className="h-3.5 w-3.5 text-emerald-400" />
-            <span>Print A4 User Report</span>
+            <span>Print A4 User Card</span>
           </Button>
         </div>
       </div>
 
       {/* Progress Steps Header */}
-      <div className="grid gap-2 sm:grid-cols-4">
+      <div className="grid gap-2 sm:grid-cols-3">
         {steps.map((s) => {
           const isActive = step === s.number;
           const isDone = step > s.number;
@@ -610,197 +565,112 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                 <span>Step {step}: {steps[step - 1].label}</span>
               </CardTitle>
               <span className="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">
-                {employeeCode}
+                {userCode}
               </span>
             </CardHeader>
 
             <CardContent className="p-5 space-y-4">
-              {/* STEP 1: Personal & Identity Information */}
+              {/* STEP 1: Select & Attach Employee */}
               {step === 1 && (
                 <div className="space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Employee Full Name *</Label>
-                      <Input
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        placeholder="e.g. Muhammad Ali Shah"
-                        className="h-9 text-xs font-medium"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Father / Spouse Name</Label>
-                      <Input
-                        value={fatherOrSpouseName}
-                        onChange={(e) => setFatherOrSpouseName(e.target.value)}
-                        placeholder="e.g. Shah Zaman"
-                        className="h-9 text-xs"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Gender *</Label>
-                      <select
-                        className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-xs shadow-sm font-medium"
-                        value={gender}
-                        onChange={(e) => setGender(e.target.value)}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex items-end gap-2">
+                      <div className="flex-1">
+                        <SearchSelect
+                          label={hrEmployeesLoading ? "Select Employee Record (Loading...)" : "Select Registered Employee *"}
+                          value={selectedEmployeeId}
+                          placeholder="Search employee by code, name, designation..."
+                          options={employeeOptions}
+                          disabled={hrEmployeesLoading}
+                          onValueChange={setSelectedEmployeeId}
+                        />
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={() => setShowEmployeeModal(true)}
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 h-9 rounded-lg gap-1.5 shadow-sm shrink-0"
                       >
-                        {genderOptions.map((g) => (
-                          <option key={g} value={g}>{g}</option>
-                        ))}
-                      </select>
+                        <Plus className="h-4 w-4" />
+                        <span>Add New Employee</span>
+                      </Button>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Date of Birth</Label>
-                      <Input
-                        type="date"
-                        value={dateOfBirth}
-                        onChange={(e) => setDateOfBirth(e.target.value)}
-                        className="h-9 text-xs"
-                      />
+                    <div className="relative my-2">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-slate-200 dark:border-slate-800" />
+                      </div>
+                      <div className="relative flex justify-center text-[10px] uppercase">
+                        <span className="bg-card px-2 text-slate-400 font-bold">Or Enter User Details Directly</span>
+                      </div>
                     </div>
 
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">CNIC / Passport / National ID</Label>
-                      <Input
-                        value={nationalId}
-                        onChange={(e) => setNationalId(e.target.value)}
-                        placeholder="e.g. 54400-1234567-1"
-                        className="h-9 text-xs font-mono"
-                      />
-                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div className="space-y-1.5 sm:col-span-2">
+                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">User Full Name *</Label>
+                        <Input
+                          value={fullName}
+                          onChange={(e) => setFullName(e.target.value)}
+                          placeholder="e.g. Muhammad Ali Shah"
+                          className="h-9 text-xs font-medium"
+                        />
+                      </div>
 
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Contact Phone Number *</Label>
-                      <Input
-                        value={contactPhone}
-                        onChange={(e) => setContactPhone(e.target.value)}
-                        placeholder="e.g. +92 300 1234567"
-                        className="h-9 text-xs font-mono"
-                      />
-                    </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Contact Phone Number</Label>
+                        <Input
+                          value={contactPhone}
+                          onChange={(e) => setContactPhone(e.target.value)}
+                          placeholder="e.g. +92 300 1234567"
+                          className="h-9 text-xs font-mono"
+                        />
+                      </div>
 
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Emergency Contact Phone</Label>
-                      <Input
-                        value={emergencyPhone}
-                        onChange={(e) => setEmergencyPhone(e.target.value)}
-                        placeholder="e.g. +92 312 9876543"
-                        className="h-9 text-xs font-mono"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Personal Email Address</Label>
-                      <Input
-                        type="email"
-                        value={personalEmail}
-                        onChange={(e) => setPersonalEmail(e.target.value)}
-                        placeholder="e.g. employee@company.com"
-                        className="h-9 text-xs"
-                      />
+                      <div className="space-y-1.5">
+                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Personal / Official Email</Label>
+                        <Input
+                          type="email"
+                          value={personalEmail}
+                          onChange={(e) => setPersonalEmail(e.target.value)}
+                          placeholder="e.g. user@company.com"
+                          className="h-9 text-xs"
+                        />
+                      </div>
                     </div>
                   </div>
+
+                  {/* Selected Employee Summary Card */}
+                  {selectedEmployeeObj && (
+                    <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 p-4 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold text-xs">
+                          <UserCheck className="h-4 w-4 text-emerald-600" />
+                          <span>Attached Employee Record</span>
+                        </div>
+                        <span className="font-mono text-[11px] font-bold bg-emerald-200 dark:bg-emerald-800 text-emerald-900 dark:text-emerald-100 px-2 py-0.5 rounded">
+                          {selectedEmployeeObj.employee_code || "EMP"}
+                        </span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-xs text-slate-700 dark:text-slate-300 pt-1 border-t border-emerald-200/60 dark:border-emerald-800/60">
+                        <div><span className="font-semibold text-slate-500">Name:</span> {fullName}</div>
+                        <div><span className="font-semibold text-slate-500">Designation:</span> {designation || "-"}</div>
+                        <div><span className="font-semibold text-slate-500">Department:</span> {department || "-"}</div>
+                        <div><span className="font-semibold text-slate-500">Phone:</span> {contactPhone || "-"}</div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
-              {/* STEP 2: Employment & Contract Details */}
+              {/* STEP 2: Location & Branch Access */}
               {step === 2 && (
-                <div className="space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Employee Master Code / ID (Auto)</Label>
-                      <Input value={employeeCode} readOnly className="bg-slate-100 dark:bg-slate-900 font-mono font-bold h-9 text-xs text-emerald-600 dark:text-emerald-400 border-slate-200 dark:border-slate-700" />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Employment Type *</Label>
-                      <select
-                        className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-xs shadow-sm font-medium"
-                        value={employmentType}
-                        onChange={(e) => setEmploymentType(e.target.value)}
-                      >
-                        {employmentTypeOptions.map((t) => (
-                          <option key={t} value={t}>{t}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Department *</Label>
-                      <select
-                        className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-xs shadow-sm font-medium"
-                        value={department}
-                        onChange={(e) => setDepartment(e.target.value)}
-                      >
-                        {departmentOptions.map((d) => (
-                          <option key={d} value={d}>{d}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Designation / Job Title *</Label>
-                      <select
-                        className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-xs shadow-sm font-medium"
-                        value={designation}
-                        onChange={(e) => setDesignation(e.target.value)}
-                      >
-                        {designationOptions.map((des) => (
-                          <option key={des} value={des}>{des}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Date of Joining *</Label>
-                      <Input
-                        type="date"
-                        value={joiningDate}
-                        onChange={(e) => setJoiningDate(e.target.value)}
-                        className="h-9 text-xs font-medium"
-                      />
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Probation Period</Label>
-                      <select
-                        className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-xs shadow-sm font-medium"
-                        value={probationPeriod}
-                        onChange={(e) => setProbationPeriod(e.target.value)}
-                      >
-                        <option value="None">None (Confirmed)</option>
-                        <option value="1 Month">1 Month</option>
-                        <option value="3 Months">3 Months</option>
-                        <option value="6 Months">6 Months</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Contract End Date (If Contracted)</Label>
-                      <Input
-                        type="date"
-                        value={contractEndDate}
-                        onChange={(e) => setContractEndDate(e.target.value)}
-                        className="h-9 text-xs"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* STEP 3: Location Information */}
-              {step === 3 && (
                 <div className="space-y-4">
                   <div className="grid gap-4">
                     <SearchSelect
                       label={loadingCountries ? "Assigned Country (Loading...)" : "Assigned Country *"}
                       value={countryId}
                       placeholder="Select country from master locations"
-                      options={countryOptions}
                       disabled={loadingCountries}
+                      options={countryOptions}
                       onValueChange={setCountryId}
                     />
 
@@ -843,177 +713,111 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Work City (Auto)</Label>
+                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Work City / Country (Auto)</Label>
                         <Input value={cityName || selectedCountry?.name || "-"} readOnly className="bg-slate-100 dark:bg-slate-900 font-bold h-9 text-xs text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700" />
                       </div>
-                    </div>
-
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Residential / Present Address</Label>
-                      <Input
-                        value={residentialAddress}
-                        onChange={(e) => setResidentialAddress(e.target.value)}
-                        placeholder="Street address, City, Area"
-                        className="h-9 text-xs"
-                      />
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* STEP 4: Job, Salary & Payroll */}
-              {step === 4 && (
+              {/* STEP 3: System Login Credentials & Role Privileges */}
+              {step === 3 && (
                 <div className="space-y-4">
                   <div className="grid gap-4 sm:grid-cols-2">
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Base Salary / Pay Amount</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">User ID / System Code *</Label>
                       <Input
-                        type="number"
-                        value={baseSalary}
-                        onChange={(e) => setBaseSalary(e.target.value)}
-                        placeholder="0.00"
-                        className="h-9 text-xs font-mono font-bold"
+                        value={userCode}
+                        onChange={(e) => setUserCode(e.target.value)}
+                        placeholder="e.g. USR-1001"
+                        className="h-9 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400"
                       />
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Salary Currency</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Login Email / Identifier *</Label>
                       <Input
-                        value={currency}
-                        onChange={(e) => setCurrency(e.target.value)}
-                        placeholder="USD, PKR, AED..."
-                        className="h-9 text-xs font-bold"
+                        type="email"
+                        value={personalEmail}
+                        onChange={(e) => setPersonalEmail(e.target.value)}
+                        placeholder="user@dgt.com"
+                        className="h-9 text-xs font-medium"
                       />
                     </div>
 
-                    <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Payment Frequency</Label>
+                    <div className="space-y-1.5 sm:col-span-2">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">System Role Assignment *</Label>
                       <select
                         className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-xs shadow-sm font-medium"
-                        value={paymentFrequency}
-                        onChange={(e) => setPaymentFrequency(e.target.value)}
+                        value={role}
+                        onChange={(e) => setRole(e.target.value as EnterpriseRole)}
                       >
-                        {paymentFrequencyOptions.map((pf) => (
-                          <option key={pf} value={pf}>{pf}</option>
+                        {roleOptions.map((r) => (
+                          <option key={r.value} value={r.value}>
+                            {r.label} — {r.help}
+                          </option>
                         ))}
                       </select>
                     </div>
 
                     <div className="space-y-1.5">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Bank Name</Label>
-                      <Input
-                        value={bankName}
-                        onChange={(e) => setBankName(e.target.value)}
-                        placeholder="e.g. Meezan Bank / HBL"
-                        className="h-9 text-xs"
-                      />
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                        {editUserId ? "New Password (Leave blank to keep existing)" : "Password *"}
+                      </Label>
+                      <div className="relative">
+                        <Input
+                          type={showPassword ? "text" : "password"}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          placeholder="At least 8 characters"
+                          className="h-9 text-xs font-mono pr-9"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
+                        >
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="space-y-1.5 sm:col-span-2">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Account Number / IBAN</Label>
+                    <div className="space-y-1.5">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Confirm Password</Label>
                       <Input
-                        value={accountOrIban}
-                        onChange={(e) => setAccountOrIban(e.target.value)}
-                        placeholder="PK36MEZN00010203040506"
+                        type={showPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Re-enter password"
                         className="h-9 text-xs font-mono"
                       />
                     </div>
                   </div>
-
-                  {/* System ERP Login Access Toggle */}
-                  <div className="rounded-xl border border-slate-200 dark:border-slate-800 p-4 space-y-3 bg-slate-50/70 dark:bg-slate-900/70">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <Key className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
-                        <div>
-                          <h3 className="text-xs font-bold text-slate-900 dark:text-slate-100">Enable System ERP Login Access</h3>
-                          <p className="text-[11px] text-slate-500">Allow this employee to log into the ERP software with assigned role permissions</p>
-                        </div>
-                      </div>
-
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={enableErpLogin}
-                          onChange={(e) => setEnableErpLogin(e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-600"></div>
-                      </label>
-                    </div>
-
-                    {enableErpLogin && (
-                      <div className="pt-3 border-t border-slate-200 dark:border-slate-800 grid gap-3 sm:grid-cols-2">
-                        <div className="space-y-1.5 sm:col-span-2">
-                          <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">System Role Assignment *</Label>
-                          <select
-                            className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-xs shadow-sm font-medium"
-                            value={role}
-                            onChange={(e) => setRole(e.target.value as EnterpriseRole)}
-                          >
-                            {roleOptions.map((r) => (
-                              <option key={r.value} value={r.value}>{r.label} — ({r.help})</option>
-                            ))}
-                          </select>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">ERP System Password *</Label>
-                          <div className="relative">
-                            <Input
-                              type={showPassword ? "text" : "password"}
-                              value={password}
-                              onChange={(e) => setPassword(e.target.value)}
-                              placeholder="••••••••"
-                              className="h-9 text-xs pr-8 font-mono"
-                            />
-                            <button
-                              type="button"
-                              onClick={() => setShowPassword(!showPassword)}
-                              className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
-                            >
-                              {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                            </button>
-                          </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                          <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Confirm Password *</Label>
-                          <Input
-                            type="password"
-                            value={confirmPassword}
-                            onChange={(e) => setConfirmPassword(e.target.value)}
-                            placeholder="••••••••"
-                            className="h-9 text-xs font-mono"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
                 </div>
               )}
 
-              {/* Step Navigation Buttons */}
+              {/* Step Navigation Controls */}
               <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
+                  disabled={step === 1 || saving}
                   onClick={prev}
-                  disabled={step === 1}
-                  className="gap-1 text-xs font-semibold"
+                  className="gap-1.5 text-xs font-semibold"
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  <span>Previous Step</span>
+                  <span>Previous</span>
                 </Button>
 
-                {step < 4 ? (
+                {step < 3 ? (
                   <Button
                     type="button"
                     size="sm"
+                    disabled={!isStepValid(step) || saving}
                     onClick={next}
-                    disabled={!isStepValid(step)}
-                    className="gap-1 text-xs bg-slate-900 hover:bg-slate-800 text-white font-bold px-4"
+                    className="gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
                   >
                     <span>Next Step</span>
                     <ChevronRight className="h-4 w-4" />
@@ -1022,12 +826,18 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                   <Button
                     type="button"
                     size="sm"
+                    disabled={!isStepValid(3) || saving}
                     onClick={finish}
-                    disabled={saving || !isStepValid(step)}
-                    className="gap-1.5 text-xs bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 shadow-sm"
+                    className="gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-6"
                   >
-                    <UserCheck className="h-4 w-4" />
-                    <span>{saving ? "Saving..." : editUserId ? "Update Employee Record" : "Register Employee Master"}</span>
+                    {saving ? (
+                      <span>Saving User...</span>
+                    ) : (
+                      <>
+                        <ShieldCheck className="h-4 w-4" />
+                        <span>{editUserId ? "Update User" : "Register User Now"}</span>
+                      </>
+                    )}
                   </Button>
                 )}
               </div>
@@ -1035,139 +845,86 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
           </Card>
         </div>
 
-        {/* Right Side Live Employee Profile Card & Summary (5 Columns) */}
+        {/* Right Side User Preview Summary Card (5 Columns) */}
         <div className="space-y-4 lg:col-span-5">
-          <Card className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-950 text-white shadow-md overflow-hidden">
-            {/* Live Profile Header */}
-            <div className="border-b border-slate-800 px-5 py-3.5 bg-gradient-to-r from-slate-950 via-slate-900 to-slate-950 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-emerald-400" />
-                <h3 className="font-bold text-xs uppercase tracking-wider text-slate-200">Live Employee Profile</h3>
-              </div>
-              <span className="inline-flex items-center gap-1 rounded-md bg-emerald-500/20 px-2.5 py-0.5 text-xs font-mono font-bold text-emerald-300 border border-emerald-500/30">
-                {employeeCode || "EMP-1001"}
+          <Card className="rounded-xl border border-slate-200 dark:border-slate-800 bg-card shadow-sm overflow-hidden sticky top-6">
+            <CardHeader className="bg-slate-900 text-white px-5 py-3.5 flex flex-row items-center justify-between">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-slate-100">
+                <UserCheck className="h-4 w-4 text-emerald-400" />
+                <span>User Record Summary</span>
+              </CardTitle>
+              <span className="text-[11px] font-mono font-bold text-emerald-400">
+                {role}
               </span>
-            </div>
+            </CardHeader>
 
-            <CardContent className="p-5 space-y-4">
-              {/* Profile Avatar Header */}
-              <div className="flex items-center gap-4 border-b border-slate-800/80 pb-4">
-                <div className="grid h-14 w-14 place-items-center rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-700 text-white text-xl font-black shadow-inner border border-emerald-400/40 shrink-0">
-                  {fullName ? fullName.substring(0, 2).toUpperCase() : "EM"}
+            <CardContent className="p-5 space-y-4 text-xs">
+              <div className="rounded-lg bg-slate-50 dark:bg-slate-900/60 p-3.5 border border-slate-200 dark:border-slate-800 space-y-2">
+                <div className="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-slate-800">
+                  <span className="text-slate-500 font-semibold">User ID:</span>
+                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{userCode}</span>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <h4 className="text-base font-bold text-white truncate">{fullName || "Employee Name"}</h4>
-                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-                    <span className="text-xs text-emerald-400 font-bold">{designation}</span>
-                    <span className="text-slate-600">•</span>
-                    <span className="text-xs text-slate-300">{department}</span>
-                  </div>
-                  <div className="mt-2 flex items-center gap-2 flex-wrap">
-                    <span className="rounded bg-slate-800 px-2 py-0.5 text-[10px] font-bold text-slate-300 border border-slate-700">
-                      {employmentType}
-                    </span>
-                    <span className="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-bold text-emerald-300 border border-emerald-500/30 font-mono">
-                      Branch: {branchCode || "MAIN-001"}
-                    </span>
-                  </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 font-semibold">Full Name:</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100">{fullName || "Not Specified"}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 font-semibold">Phone:</span>
+                  <span className="font-mono">{contactPhone || "-"}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 font-semibold">Email:</span>
+                  <span className="truncate max-w-[180px] text-slate-700 dark:text-slate-300">{personalEmail || "-"}</span>
                 </div>
               </div>
 
-              {/* Profile Summary Cards Grid */}
-              <div className="grid grid-cols-2 gap-2.5 text-xs">
-                <div className="rounded-lg bg-slate-900 p-2.5 border border-slate-800">
-                  <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Joining Date</span>
-                  <span className="font-semibold text-slate-100 mt-0.5 block">{joiningDate || "-"}</span>
+              <div className="rounded-lg bg-slate-50 dark:bg-slate-900/60 p-3.5 border border-slate-200 dark:border-slate-800 space-y-2">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 font-semibold">Country:</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{selectedCountry?.name || "-"}</span>
                 </div>
-
-                <div className="rounded-lg bg-slate-900 p-2.5 border border-slate-800">
-                  <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Probation</span>
-                  <span className="font-semibold text-slate-100 mt-0.5 block">{probationPeriod}</span>
-                </div>
-
-                <div className="rounded-lg bg-slate-900 p-2.5 border border-slate-800">
-                  <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">Base Salary</span>
-                  <span className="font-mono font-bold text-emerald-400 mt-0.5 block">{baseSalary} {currency} ({paymentFrequency})</span>
-                </div>
-
-                <div className="rounded-lg bg-slate-900 p-2.5 border border-slate-800">
-                  <span className="text-[10px] uppercase tracking-wider text-slate-400 font-bold block">ERP Access</span>
-                  <span className={`font-bold mt-0.5 block ${enableErpLogin ? "text-emerald-400" : "text-slate-400"}`}>
-                    {enableErpLogin ? `Active (${role})` : "Disabled"}
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 font-semibold">Branch:</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">
+                    {(branchType === "main" ? selectedMainBranch?.name : selectedCityBranch?.name) || "-"}
                   </span>
                 </div>
-              </div>
-
-              {/* Identity & Location Details */}
-              <div className="space-y-2 border-t border-slate-800/80 pt-3 text-xs">
-                <div className="flex items-center justify-between text-slate-300">
-                  <span className="text-slate-400 font-semibold">Contact Phone:</span>
-                  <span className="font-mono font-semibold">{contactPhone || "-"}</span>
-                </div>
-                <div className="flex items-center justify-between text-slate-300">
-                  <span className="text-slate-400 font-semibold">Email:</span>
-                  <span className="font-mono">{personalEmail || `${employeeCode.toLowerCase()}@employees.damaan.local`}</span>
-                </div>
-                <div className="flex items-center justify-between text-slate-300">
-                  <span className="text-slate-400 font-semibold">CNIC / Passport ID:</span>
-                  <span className="font-mono">{nationalId || "-"}</span>
-                </div>
-                <div className="flex items-center justify-between text-slate-300">
-                  <span className="text-slate-400 font-semibold">Assigned Location:</span>
-                  <span className="font-semibold text-emerald-400">{cityName || selectedCountry?.name || "Main Location"}</span>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500 font-semibold">Branch Code:</span>
+                  <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">{branchCode || "-"}</span>
                 </div>
               </div>
-            </CardContent>
-          </Card>
 
-          {/* Employees Directory List */}
-          <Card className="rounded-xl border border-slate-200 dark:border-slate-800 bg-card shadow-sm">
-            <CardHeader className="py-3 px-4 border-b bg-slate-50 dark:bg-slate-900/50 flex flex-row items-center justify-between">
-              <CardTitle className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-                <Users className="h-3.5 w-3.5 text-emerald-600" />
-                <span>Employee Records Directory ({employeesList.length})</span>
-              </CardTitle>
-
-              <div className="relative w-36">
-                <Search className="absolute left-2 top-2 h-3 w-3 text-slate-400" />
-                <Input
-                  placeholder="Filter employees..."
-                  value={sidebarFilter}
-                  onChange={(e) => setSidebarFilter(e.target.value)}
-                  className="h-7 text-[11px] pl-7"
-                />
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="max-h-[280px] overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800">
-                {employeesLoading ? (
-                  <div className="p-4 text-center text-xs text-slate-400">Loading directory...</div>
-                ) : filteredEmployees.length === 0 ? (
-                  <div className="p-4 text-center text-xs text-slate-400">No matching employees found.</div>
-                ) : (
-                  filteredEmployees.slice(0, 10).map((emp: any) => (
-                    <div
-                      key={emp.userId || emp.id}
-                      onClick={() => fetchSpecificUser(emp.userId || emp.id)}
-                      className="p-3 hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer transition-colors flex items-center justify-between"
-                    >
-                      <div>
-                        <div className="font-bold text-xs text-slate-900 dark:text-slate-100">{emp.fullName}</div>
-                        <div className="text-[10px] text-slate-500 font-mono">
-                          {emp.userCode} • <span className="text-emerald-600 dark:text-emerald-400 font-bold">{emp.branchCode || "MAIN"}</span>
-                        </div>
-                      </div>
-                      <span className="rounded bg-slate-100 dark:bg-slate-800 px-2 py-0.5 text-[10px] font-semibold text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                        {emp.role}
-                      </span>
-                    </div>
-                  ))
-                )}
+              <div className="rounded-lg bg-slate-900 text-slate-100 p-3.5 space-y-2">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Assigned System Role</div>
+                <div className="font-bold text-emerald-400 text-sm">
+                  {roleOptions.find((r) => r.value === role)?.label || role}
+                </div>
+                <p className="text-[11px] text-slate-400">
+                  {roleOptions.find((r) => r.value === role)?.help}
+                </p>
               </div>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Modal for creating a new Employee directly from User Registration Form */}
+      {showEmployeeModal && (
+        <SimpleModal
+          title="Register New Employee Master Record"
+          onClose={() => setShowEmployeeModal(false)}
+          className="max-w-4xl"
+        >
+          <EmployeeForm
+            onSave={() => {
+              setShowEmployeeModal(false);
+              fetchHrEmployees();
+            }}
+            onCancel={() => setShowEmployeeModal(false)}
+          />
+        </SimpleModal>
+      )}
     </div>
   );
 }
