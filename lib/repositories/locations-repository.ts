@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
 export type CountryRow = {
   id: string;
@@ -155,6 +156,7 @@ export class LocationsRepository {
       .select("id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number")
       .single();
     if (error) throw new Error(error.message);
+    void translateMasterRecord("countries", data.id, { name: data.name }, "en");
     return data as CountryRow;
   }
 
@@ -190,6 +192,7 @@ export class LocationsRepository {
       .select("id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number")
       .single();
     if (error) throw new Error(error.message);
+    void translateMasterRecord("countries", data.id, { name: data.name }, "en");
     return data as CountryRow;
   }
 
@@ -469,6 +472,7 @@ export class LocationsRepository {
       }
       throw new Error(error.message);
     }
+    void translateMasterRecord("states_provinces", data.id, { name: data.name }, "en");
     return data as StateRow;
   }
 
@@ -487,6 +491,7 @@ export class LocationsRepository {
       .select("id, country_id, name, code, postal_code, phone_area_code, is_active")
       .single();
     if (error) throw new Error(error.message);
+    void translateMasterRecord("states_provinces", data.id, { name: data.name }, "en");
     return data as StateRow;
   }
 
@@ -552,6 +557,7 @@ export class LocationsRepository {
       }
       throw new Error(error.message);
     }
+    void translateMasterRecord("districts", data.id, { name: data.name }, "en");
     return data as DistrictRow;
   }
 
@@ -564,6 +570,7 @@ export class LocationsRepository {
       .is("deleted_at", null)
       .single();
     if (error) throw new Error(error.message);
+    void translateMasterRecord("districts", data.id, { name: data.name }, "en");
     return data as DistrictRow;
   }
 
@@ -582,6 +589,7 @@ export class LocationsRepository {
       .select("id, country_id, state_province_id, name, code, postal_code, phone_area_code, is_active")
       .single();
     if (error) throw new Error(error.message);
+    void translateMasterRecord("districts", data.id, { name: data.name }, "en");
     return data as DistrictRow;
   }
 
@@ -649,6 +657,7 @@ export class LocationsRepository {
       .select("id, country_id, state_province_id, district_id, name, code, zip_code, phone_area_code, is_active")
       .single();
     if (error) throw new Error(error.message);
+    void translateMasterRecord("cities", data.id, { name: data.name }, "en");
     return data as CityRow;
   }
 
@@ -736,6 +745,7 @@ export class LocationsRepository {
       .select("id, country_id, state_province_id, district_id, name, code, zip_code, phone_area_code, is_active")
       .single();
     if (error) throw new Error(error.message);
+    void translateMasterRecord("cities", data.id, { name: data.name }, "en");
     return data as CityRow;
   }
 
@@ -768,6 +778,7 @@ export class LocationsRepository {
       .select("id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active")
       .single();
     if (error) throw new Error(error.message);
+    void translateMasterRecord("areas_locations", data.id, { name: data.name }, "en");
     return data as AreaRow;
   }
 
@@ -787,6 +798,7 @@ export class LocationsRepository {
       .select("id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active")
       .single();
     if (error) throw new Error(error.message);
+    void translateMasterRecord("areas_locations", data.id, { name: data.name }, "en");
     return data as AreaRow;
   }
 
