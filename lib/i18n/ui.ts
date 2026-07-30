@@ -41,6 +41,20 @@ export type UiKey =
   | "nav.final_payments"
   | "nav.final_payments_advance_nil"
   | "nav.purchase_order_management"
+  | "nav.product_units"
+  | "pu.title"
+  | "pu.code"
+  | "pu.name"
+  | "pu.base"
+  | "pu.factor"
+  | "pu.active"
+  | "pu.add"
+  | "pu.edit"
+  | "pu.delete"
+  | "pu.save"
+  | "pu.cancel"
+  | "pu.search"
+  | "pu.empty"
   | "nav.local_purchase_management"
   | "nav.sales_order_management"
   | "nav.local_sales_management"
@@ -547,6 +561,20 @@ const en: Dict = {
   "nav.final_payments": "Final Payments",
   "nav.final_payments_advance_nil": "Advance Payment Nil Receipt",
   "nav.purchase_order_management": "Purchase Order Management",
+  "nav.product_units": "Product Units",
+  "pu.title": "Product Units",
+  "pu.code": "Unit Code",
+  "pu.name": "Unit Name",
+  "pu.base": "Base Unit",
+  "pu.factor": "Conversion Factor",
+  "pu.active": "Active",
+  "pu.add": "Add Unit",
+  "pu.edit": "Edit",
+  "pu.delete": "Delete",
+  "pu.save": "Save",
+  "pu.cancel": "Cancel",
+  "pu.search": "Search units...",
+  "pu.empty": "No units found",
   "nav.local_purchase_management": "Local Purchase Management",
   "nav.sales_order_management": "Sales Order Management",
   "nav.local_sales_management": "Local Sales Management",
@@ -1038,6 +1066,20 @@ const ur: Dict = {
   "nav.final_payments": "فائنل پیمنٹس",
   "nav.final_payments_advance_nil": "ایڈوانس پیمنٹ نل رسید",
   "nav.purchase_order_management": "Purchase Order Management",
+  "nav.product_units": "پروڈکٹ یونٹس",
+  "pu.title": "پروڈکٹ یونٹس",
+  "pu.code": "یونٹ کوڈ",
+  "pu.name": "یونٹ نام",
+  "pu.base": "بنیادی یونٹ",
+  "pu.factor": "کنورژن فیکٹر",
+  "pu.active": "فعال",
+  "pu.add": "یونٹ شامل کریں",
+  "pu.edit": "ترمیم",
+  "pu.delete": "حذف",
+  "pu.save": "محفوظ کریں",
+  "pu.cancel": "منسوخ",
+  "pu.search": "یونٹ تلاش کریں...",
+  "pu.empty": "کوئی یونٹ نہیں ملا",
   "nav.local_purchase_management": "لوکل پرچیز مینجمنٹ",
   "nav.sales_order_management": "سیلز آرڈر مینجمنٹ",
   "nav.local_sales_management": "لوکل سیلز مینجمنٹ",
@@ -1476,6 +1518,20 @@ const ar: Dict = {
   "nav.sales_order_payment_charges": "رصيد نهائي",
   "nav.sales_order_payment_history": "سجل المدفوعات",
   "nav.purchase_order_management": "Purchase Order Management",
+  "nav.product_units": "وحدات المنتج",
+  "pu.title": "وحدات المنتج",
+  "pu.code": "رمز الوحدة",
+  "pu.name": "اسم الوحدة",
+  "pu.base": "الوحدة الأساسية",
+  "pu.factor": "معامل التحويل",
+  "pu.active": "نشط",
+  "pu.add": "إضافة وحدة",
+  "pu.edit": "تعديل",
+  "pu.delete": "حذف",
+  "pu.save": "حفظ",
+  "pu.cancel": "إلغاء",
+  "pu.search": "بحث عن الوحدات...",
+  "pu.empty": "لا توجد وحدات",
   "nav.local_purchase_management": "إدارة المشتريات المحلية",
   "nav.sales_order_management": "إدارة أوامر المبيعات",
   "nav.local_sales_management": "إدارة المبيعات المحلية",
@@ -1890,6 +1946,20 @@ const fa: Dict = {
   "nav.sales_order_payment_charges": "اعتبار نهایی",
   "nav.sales_order_payment_history": "تاریخچه پرداخت",
   "nav.purchase_order_management": "Purchase Order Management",
+  "nav.product_units": "واحدهای محصول",
+  "pu.title": "واحدهای محصول",
+  "pu.code": "کد واحد",
+  "pu.name": "نام واحد",
+  "pu.base": "واحد پایه",
+  "pu.factor": "ضریب تبدیل",
+  "pu.active": "فعال",
+  "pu.add": "افزودن واحد",
+  "pu.edit": "ویرایش",
+  "pu.delete": "حذف",
+  "pu.save": "ذخیره",
+  "pu.cancel": "لغو",
+  "pu.search": "جستجوی واحدها...",
+  "pu.empty": "واحدی یافت نشد",
   "nav.local_purchase_management": "مدیریت خرید محلی",
   "nav.sales_order_management": "مدیریت سفارش فروش",
   "nav.local_sales_management": "مدیریت فروش محلی",
@@ -2227,6 +2297,20 @@ const ps: Dict = {
   "nav.sales_order_payment_charges": "وروستی کریډیټ",
   "nav.sales_order_payment_history": "د تادیې تاریخ",
   "nav.purchase_order_management": "Purchase Order Management",
+  "nav.product_units": "د محصول واحدونه",
+  "pu.title": "د محصول واحدونه",
+  "pu.code": "د واحد کوډ",
+  "pu.name": "د واحد نوم",
+  "pu.base": "بنسټیز واحد",
+  "pu.factor": "د بدلون فکتور",
+  "pu.active": "فعال",
+  "pu.add": "واحد اضافه کړئ",
+  "pu.edit": "سمون",
+  "pu.delete": "ړنګول",
+  "pu.save": "خوندي کول",
+  "pu.cancel": "لغوه کول",
+  "pu.search": "د واحدونو لټون...",
+  "pu.empty": "هیڅ واحد ونه موندل شو",
   "nav.local_purchase_management": "د محلي پیرودو مدیریت",
   "nav.sales_order_management": "د پلور د امر مدیریت",
   "nav.local_sales_management": "د محلي پلور مدیریت",

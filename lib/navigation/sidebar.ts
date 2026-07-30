@@ -1179,6 +1179,11 @@ export const sidebarTree: SidebarNode[] = [
             href: "/dashboard/settings/management/goods" as Route
           },
           {
+            key: "mgmt-product-units",
+            labelKey: "nav.product_units",
+            href: "/dashboard/settings/product-units" as Route
+          },
+          {
             key: "mgmt-port-master",
             labelKey: "nav.port_master",
             href: "/dashboard/settings/ports" as Route
