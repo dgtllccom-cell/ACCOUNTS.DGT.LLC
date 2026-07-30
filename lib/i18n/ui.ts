@@ -41,6 +41,9 @@ export type UiKey =
   | "nav.final_payments"
   | "nav.final_payments_advance_nil"
   | "nav.purchase_order_management"
+  | "nav.local_purchase_management"
+  | "nav.sales_order_management"
+  | "nav.local_sales_management"
   | "nav.new_purchase_order"
   | "nav.booking_purchase_orders"
   | "nav.booking_confirm"
@@ -61,6 +64,8 @@ export type UiKey =
   | "nav.confirmed_stock"
   | "nav.import_stock"
   | "nav.journal_stock"
+  | "nav.journal_stock_report"
+  | "nav.journal_stock_checking_report"
   | "nav.journal_bill_checking"
   | "nav.journal_booking_stock"
   | "nav.warehouse_stock"
@@ -539,6 +544,9 @@ const en: Dict = {
   "nav.final_payments": "Final Payments",
   "nav.final_payments_advance_nil": "Advance Payment Nil Receipt",
   "nav.purchase_order_management": "Purchase Order Management",
+  "nav.local_purchase_management": "Local Purchase Management",
+  "nav.sales_order_management": "Sales Order Management",
+  "nav.local_sales_management": "Local Sales Management",
   "nav.new_purchase_order": "New Purchase Booking Order",
   "nav.booking_purchase_orders": "Booking Purchase Orders",
   "nav.booking_confirm": "Booking Confirm",
@@ -559,6 +567,8 @@ const en: Dict = {
   "nav.confirmed_stock": "Confirmed Stock",
   "nav.import_stock": "Import Stock",
   "nav.journal_stock": "Journal Stock",
+  "nav.journal_stock_report": "Journal Stock Report",
+  "nav.journal_stock_checking_report": "Journal Stock Checking Report",
   "nav.journal_bill_checking": "Journal Bill Checking",
   "nav.journal_booking_stock": "Journal Booking Stock",
   "nav.warehouse_stock": "Warehouse Stock",
@@ -1022,6 +1032,9 @@ const ur: Dict = {
   "nav.final_payments": "فائنل پیمنٹس",
   "nav.final_payments_advance_nil": "ایڈوانس پیمنٹ نل رسید",
   "nav.purchase_order_management": "Purchase Order Management",
+  "nav.local_purchase_management": "لوکل پرچیز مینجمنٹ",
+  "nav.sales_order_management": "سیلز آرڈر مینجمنٹ",
+  "nav.local_sales_management": "لوکل سیلز مینجمنٹ",
   "nav.new_purchase_order": "New Purchase Booking Order",
   "nav.booking_purchase_orders": "Booking Purchase Orders",
   "nav.booking_confirm": "Booking Confirm",
@@ -1041,6 +1054,8 @@ const ur: Dict = {
   "nav.confirmed_stock": "Confirmed Stock",
   "nav.import_stock": "Import Stock",
   "nav.journal_stock": "جرنل اسٹاک",
+  "nav.journal_stock_report": "جرنل اسٹاک رپورٹ",
+  "nav.journal_stock_checking_report": "جرنل اسٹاک چیکنگ رپورٹ",
   "nav.journal_bill_checking": "جرنل بل چیکنگ",
   "nav.warehouse_stock": "Warehouse Stock",
   "nav.in_transit_stock": "In Transit Stock",
@@ -1452,6 +1467,9 @@ const ar: Dict = {
   "nav.sales_order_payment_charges": "رصيد نهائي",
   "nav.sales_order_payment_history": "سجل المدفوعات",
   "nav.purchase_order_management": "Purchase Order Management",
+  "nav.local_purchase_management": "إدارة المشتريات المحلية",
+  "nav.sales_order_management": "إدارة أوامر المبيعات",
+  "nav.local_sales_management": "إدارة المبيعات المحلية",
   "nav.new_purchase_order": "New Purchase Booking Order",
   "nav.booking_purchase_orders": "Booking Purchase Orders",
   "nav.booking_confirm": "Booking Confirm",
@@ -1471,6 +1489,8 @@ const ar: Dict = {
   "nav.confirmed_stock": "Confirmed Stock",
   "nav.import_stock": "Import Stock",
   "nav.journal_stock": "Journal Stock",
+  "nav.journal_stock_report": "Journal Stock Report",
+  "nav.journal_stock_checking_report": "Journal Stock Checking Report",
   "nav.warehouse_stock": "Warehouse Stock",
   "nav.in_transit_stock": "In Transit Stock",
   "nav.export_stock": "Export Stock",
@@ -1858,6 +1878,9 @@ const fa: Dict = {
   "nav.sales_order_payment_charges": "اعتبار نهایی",
   "nav.sales_order_payment_history": "تاریخچه پرداخت",
   "nav.purchase_order_management": "Purchase Order Management",
+  "nav.local_purchase_management": "مدیریت خرید محلی",
+  "nav.sales_order_management": "مدیریت سفارش فروش",
+  "nav.local_sales_management": "مدیریت فروش محلی",
   "nav.new_purchase_order": "New Purchase Booking Order",
   "nav.booking_purchase_orders": "Booking Purchase Orders",
   "nav.booking_confirm": "Booking Confirm",
@@ -1877,6 +1900,8 @@ const fa: Dict = {
   "nav.confirmed_stock": "Confirmed Stock",
   "nav.import_stock": "Import Stock",
   "nav.journal_stock": "Journal Stock",
+  "nav.journal_stock_report": "گزارش ژورنال استاک",
+  "nav.journal_stock_checking_report": "گزارش بررسی ژورنال استاک",
   "nav.warehouse_stock": "Warehouse Stock",
   "nav.in_transit_stock": "In Transit Stock",
   "nav.export_stock": "Export Stock",
@@ -2187,6 +2212,9 @@ const ps: Dict = {
   "nav.sales_order_payment_charges": "وروستی کریډیټ",
   "nav.sales_order_payment_history": "د تادیې تاریخ",
   "nav.purchase_order_management": "Purchase Order Management",
+  "nav.local_purchase_management": "د محلي پیرودو مدیریت",
+  "nav.sales_order_management": "د پلور د امر مدیریت",
+  "nav.local_sales_management": "د محلي پلور مدیریت",
   "nav.new_purchase_order": "New Purchase Booking Order",
   "nav.booking_purchase_orders": "Booking Purchase Orders",
   "nav.booking_confirm": "Booking Confirm",
@@ -2206,6 +2234,8 @@ const ps: Dict = {
   "nav.confirmed_stock": "Confirmed Stock",
   "nav.import_stock": "Import Stock",
   "nav.journal_stock": "Journal Stock",
+  "nav.journal_stock_report": "د جرنل سټاک راپور",
+  "nav.journal_stock_checking_report": "د جرنل سټاک چک راپور",
   "nav.warehouse_stock": "Warehouse Stock",
   "nav.in_transit_stock": "In Transit Stock",
   "nav.export_stock": "Export Stock",

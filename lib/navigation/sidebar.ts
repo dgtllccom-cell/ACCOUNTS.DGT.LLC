@@ -389,24 +389,31 @@ export const sidebarTree: SidebarNode[] = [
         ]
       },
       {
-        key: "local-purchase",
-        labelKey: "nav.local_purchase",
-        href: "/dashboard/purchase/local-purchase" as Route
-      },
-      {
-        key: "local-purchase-journal-report",
-        labelKey: "Local Purchase Journal Report" as any,
-        href: "/dashboard/purchase/local-purchase-journal-report" as Route
-      },
-      {
-        key: "local-purchase-transfer-payment",
-        labelKey: "Local Purchase Transfer Payment" as any,
-        href: "/dashboard/purchase/local-purchase-transfer-payment" as Route
-      },
-      {
-        key: "local-goods-received",
-        labelKey: "Local Goods Received" as any,
-        href: "/dashboard/purchase/local-goods-received" as Route
+        key: "local-purchase-management",
+        labelKey: "nav.local_purchase_management",
+        iconKey: "clipboard-list",
+        children: [
+          {
+            key: "local-purchase",
+            labelKey: "nav.local_purchase",
+            href: "/dashboard/purchase/local-purchase" as Route
+          },
+          {
+            key: "local-purchase-journal-report",
+            labelKey: "Local Purchase Journal Report" as any,
+            href: "/dashboard/purchase/local-purchase-journal-report" as Route
+          },
+          {
+            key: "local-purchase-transfer-payment",
+            labelKey: "Local Purchase Transfer Payment" as any,
+            href: "/dashboard/purchase/local-purchase-transfer-payment" as Route
+          },
+          {
+            key: "local-goods-received",
+            labelKey: "Local Goods Received" as any,
+            href: "/dashboard/purchase/local-goods-received" as Route
+          }
+        ]
       }
     ]
   },
@@ -416,30 +423,64 @@ export const sidebarTree: SidebarNode[] = [
     iconKey: "gantt",
     children: [
       {
-        key: "sales-new-booking",
-        labelKey: "New Sales Booking" as any,
-        href: "/dashboard/sales/new-sales-booking-order" as Route
+        key: "sales-order-management",
+        labelKey: "nav.sales_order_management",
+        iconKey: "clipboard-list",
+        children: [
+          {
+            key: "sales-new-booking",
+            labelKey: "New Sales Booking" as any,
+            href: "/dashboard/sales/new-sales-booking-order" as Route
+          },
+          {
+            key: "sales-order",
+            labelKey: "Sales Transfer Payment" as any,
+            href: "/dashboard/sales/sales-order" as Route
+          },
+          {
+            key: "sales-confirm",
+            labelKey: "Confirmed Sales" as any,
+            href: "/dashboard/sales/sales-confirm" as Route
+          },
+          {
+            key: "sales-booking-register",
+            labelKey: "Sales Booking Register" as any,
+            href: "/dashboard/sales/sales-booking-journal-report" as Route
+          }
+        ]
       },
       {
-        key: "sales-order",
-        labelKey: "Sales Transfer Payment" as any,
-        href: "/dashboard/sales/sales-order" as Route
-      },
-      {
-        key: "sales-confirm",
-        labelKey: "Confirmed Sales" as any,
-        href: "/dashboard/sales/sales-confirm" as Route
-      },
-      {
-        key: "sales-booking-register",
-        labelKey: "Sales Booking Register" as any,
-        href: "/dashboard/sales/sales-booking-journal-report" as Route
-      },
-      {
-        key: "sales-local",
-        labelKey: "nav.local_sales",
-        href: "/dashboard/sales/local-sales" as Route
+        key: "local-sales-management",
+        labelKey: "nav.local_sales_management",
+        iconKey: "clipboard-list",
+        children: [
+          {
+            key: "sales-local",
+            labelKey: "nav.local_sales",
+            href: "/dashboard/sales/local-sales" as Route
+          }
+        ]
       }
+    ]
+  },
+  {
+    key: "general-office",
+    labelKey: "nav.general_office_management" as any,
+    iconKey: "users",
+    href: "/dashboard/general-office/employees" as Route,
+    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"],
+    children: [
+      { key: "go-master-setup", labelKey: "nav.employee_master_setup" as any, iconKey: "users", href: "/dashboard/general-office/employees?tab=master-setup" as Route },
+      { key: "go-emp-mgmt", labelKey: "nav.employee_management" as any, iconKey: "users", href: "/dashboard/general-office/employees?tab=management" as Route },
+      { key: "go-departments", labelKey: "nav.departments" as any, iconKey: "building-2", href: "/dashboard/general-office/employees?tab=departments" as Route },
+      { key: "go-designations", labelKey: "nav.designations" as any, iconKey: "scroll-text", href: "/dashboard/general-office/employees?tab=designations" as Route },
+      { key: "go-attendance", labelKey: "nav.attendance" as any, iconKey: "clock", href: "/dashboard/general-office/employees?tab=attendance" as Route },
+      { key: "go-leave", labelKey: "nav.leave_management" as any, iconKey: "calendar", href: "/dashboard/general-office/employees?tab=leave" as Route },
+      { key: "go-payroll", labelKey: "nav.payroll_salary" as any, iconKey: "banknote", href: "/dashboard/general-office/employees?tab=payroll" as Route },
+      { key: "go-assets", labelKey: "nav.office_assets" as any, iconKey: "clipboard-list", href: "/dashboard/general-office/employees?tab=assets" as Route },
+      { key: "go-documents", labelKey: "nav.office_documents" as any, iconKey: "file-text", href: "/dashboard/general-office/employees?tab=documents" as Route },
+      { key: "go-id-cards", labelKey: "nav.employee_id_cards" as any, iconKey: "badge", href: "/dashboard/general-office/employees?tab=id-cards" as Route },
+      { key: "go-reports", labelKey: "nav.employee_reports" as any, iconKey: "bar-chart", href: "/dashboard/general-office/employees?tab=reports" as Route }
     ]
   },
   {
