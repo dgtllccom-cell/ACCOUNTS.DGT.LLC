@@ -79,6 +79,14 @@ const settingsItems = [
     badge: "Hostinger Titan"
   },
   {
+    title: "Dashboard System & Module Manager",
+    description: "Super Admin dashboard allotment, screen visibility toggles, and form alert controls per role.",
+    href: "/dashboard/settings/dashboard-settings" as Route,
+    icon: LayoutDashboard,
+    category: "System & Security",
+    badge: "Super Admin"
+  },
+  {
     title: "Local Translation Management",
     description: "Super Admin offline 5-language dictionary manager (English, Urdu, Pashto, Farsi, Arabic).",
     href: "/dashboard/settings/translations" as Route,

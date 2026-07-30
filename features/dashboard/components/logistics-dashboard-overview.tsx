@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
+  Activity,
   AlertTriangle,
   BarChart3,
   Bell,
@@ -111,15 +112,15 @@ function KpiCard({ title, value, caption, icon: Icon, tone }: {
   tone: string;
 }) {
   return (
-    <div className="bg-card text-card-foreground border border-border hover:border-border/80 p-4 rounded-2xl flex items-center justify-between shadow-lg transition-transform hover:-translate-y-0.5 duration-200">
-      <div className="flex items-start justify-between gap-3">
+    <div className="bg-card text-card-foreground border border-border/60 hover:border-cyan-500/40 p-4 rounded-2xl flex items-center justify-between shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5 duration-200">
+      <div className="flex items-start justify-between gap-3 w-full">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{title}</p>
-          <p className="mt-2.5 text-xl font-black text-foreground">{value}</p>
+          <p className="mt-2 text-2xl font-black text-foreground">{value}</p>
           <p className="mt-1 text-[10px] font-semibold text-muted-foreground">{caption}</p>
         </div>
-        <span className={`grid h-9 w-9 place-items-center rounded-xl border border-border bg-muted shrink-0 ${tone}`}>
-          <Icon className="h-4.5 w-4.5" />
+        <span className={`grid h-10 w-10 place-items-center rounded-xl border border-border/50 bg-muted/40 shrink-0 ${tone}`}>
+          <Icon className="h-5 w-5" />
         </span>
       </div>
     </div>

@@ -56,13 +56,13 @@ type ShippingRecord = {
 };
 
 const shipmentStatuses = [
-  { value: "draft", label: "Draft", color: "bg-slate-900 text-slate-400 border-slate-800" },
-  { value: "booked", label: "Booked", color: "bg-indigo-950 text-indigo-400 border-indigo-900" },
-  { value: "in_transit", label: "In Transit", color: "bg-blue-950 text-blue-400 border-blue-900" },
-  { value: "arrived", label: "Arrived", color: "bg-amber-950 text-amber-400 border-amber-900" },
-  { value: "cleared", label: "Cleared", color: "bg-cyan-950 text-cyan-400 border-cyan-900" },
-  { value: "delivered", label: "Delivered", color: "bg-emerald-950 text-emerald-400 border-emerald-900" },
-  { value: "cancelled", label: "Cancelled", color: "bg-red-950 text-red-400 border-red-900" }
+  { value: "draft", label: "Draft", color: "bg-slate-100 text-slate-700 border-slate-200 dark:bg-slate-900/60 dark:text-slate-400 dark:border-slate-800" },
+  { value: "booked", label: "Booked", color: "bg-indigo-50 text-indigo-700 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300 dark:border-indigo-800/60" },
+  { value: "in_transit", label: "In Transit", color: "bg-blue-50 text-blue-700 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300 dark:border-blue-800/60" },
+  { value: "arrived", label: "Arrived", color: "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-800/60" },
+  { value: "cleared", label: "Cleared", color: "bg-cyan-50 text-cyan-700 border-cyan-200 dark:bg-cyan-950/60 dark:text-cyan-300 dark:border-cyan-800/60" },
+  { value: "delivered", label: "Delivered", color: "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300 dark:border-emerald-800/60" },
+  { value: "cancelled", label: "Cancelled", color: "bg-rose-50 text-rose-700 border-rose-200 dark:bg-rose-950/60 dark:text-rose-300 dark:border-rose-800/60" }
 ];
 
 export function ShippingLineStagePage({
@@ -238,19 +238,22 @@ export function ShippingLineStagePage({
   }
 
   return (
-    <div className="mx-auto max-w-[1680px] space-y-4 text-slate-100 p-3">
+    <div className="mx-auto max-w-[1680px] space-y-6 text-foreground p-4 lg:p-6">
       
       {/* Header bar */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between border-b border-slate-800 pb-4 gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between border-b border-border/60 pb-5 gap-4">
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.35em] text-cyan-400">{eyebrow}</p>
-          <h1 className="text-3xl font-black tracking-tight text-white mt-1">{title}</h1>
-          <p className="text-xs text-slate-400 mt-1">{description}</p>
+          <div className="flex items-center gap-2">
+            <span className="h-2 w-2 rounded-full bg-cyan-500 animate-pulse" />
+            <p className="text-[10px] font-bold uppercase tracking-widest text-cyan-600 dark:text-cyan-400">{eyebrow}</p>
+          </div>
+          <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight text-foreground mt-1.5">{title}</h1>
+          <p className="text-xs text-muted-foreground mt-1 max-w-2xl">{description}</p>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="relative w-64">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+        <div className="flex flex-wrap items-center gap-2.5">
+          <div className="relative w-64 md:w-72">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
               value={query}
@@ -259,84 +262,107 @@ export function ShippingLineStagePage({
                 if (e.key === "Enter") void loadRecords(query);
               }}
               placeholder="Search B/L, vessel, container..."
-              className="w-full bg-slate-950 border border-slate-850 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:border-cyan-500 text-white placeholder-slate-600"
+              className="w-full bg-card/80 border border-border/80 rounded-xl pl-9 pr-4 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 text-foreground placeholder:text-muted-foreground shadow-sm transition-all"
             />
           </div>
           <Button
             onClick={() => void loadRecords(query)}
             disabled={loading}
             variant="outline"
-            className="border-slate-850 bg-slate-900/60 hover:bg-slate-950 text-white h-9 px-3"
+            className="border-border/80 bg-card hover:bg-muted text-foreground h-9 px-3 rounded-xl shadow-sm"
           >
-            <RefreshCcw className={cn("h-4 w-4", loading ? "animate-spin" : "")} />
+            <RefreshCcw className={cn("h-4 w-4", loading ? "animate-spin text-cyan-600" : "")} />
           </Button>
           {activeStage === "report" && (
             <>
               <Button
                 onClick={() => window.print()}
                 variant="outline"
-                className="border-slate-850 bg-slate-900/60 hover:bg-slate-950 text-white h-9"
+                className="border-border/80 bg-card hover:bg-muted text-foreground h-9 rounded-xl shadow-sm"
               >
-                <Printer className="h-4 w-4 mr-2" /> Print
+                <Printer className="h-4 w-4 mr-2 text-muted-foreground" /> Print
               </Button>
               <Button
                 onClick={exportCsv}
                 disabled={records.length === 0}
                 variant="outline"
-                className="border-slate-850 bg-slate-900/60 hover:bg-slate-950 text-white h-9"
+                className="border-border/80 bg-card hover:bg-muted text-foreground h-9 rounded-xl shadow-sm"
               >
-                <Download className="h-4 w-4 mr-2" /> Export
+                <Download className="h-4 w-4 mr-2 text-muted-foreground" /> Export
               </Button>
             </>
           )}
         </div>
       </div>
 
-      {/* Aggregate metrics grid */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-850 flex items-center space-x-3.5">
-          <FileText className="h-8 w-8 text-cyan-400" />
-          <div>
-            <span className="text-[10px] uppercase font-bold text-slate-500 block">Total Shipments</span>
-            <span className="text-lg font-black text-white">{stats.total}</span>
+      {/* Aggregate metrics grid - Sleek cards with gradient top border */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="relative overflow-hidden bg-card text-card-foreground p-4 rounded-2xl border border-border/60 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-cyan-500 to-blue-500" />
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">Total Shipments</span>
+              <span className="text-2xl font-black text-foreground mt-1 block">{stats.total}</span>
+            </div>
+            <div className="h-10 w-10 rounded-xl bg-cyan-500/10 dark:bg-cyan-500/20 text-cyan-600 dark:text-cyan-400 flex items-center justify-center shrink-0">
+              <FileText className="h-5 w-5" />
+            </div>
           </div>
         </div>
-        <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-850 flex items-center space-x-3.5">
-          <Truck className="h-8 w-8 text-blue-400" />
-          <div>
-            <span className="text-[10px] uppercase font-bold text-slate-500 block">In Transit</span>
-            <span className="text-lg font-black text-white">{stats.inTransit}</span>
+
+        <div className="relative overflow-hidden bg-card text-card-foreground p-4 rounded-2xl border border-border/60 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">In Transit</span>
+              <span className="text-2xl font-black text-foreground mt-1 block">{stats.inTransit}</span>
+            </div>
+            <div className="h-10 w-10 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+              <Truck className="h-5 w-5" />
+            </div>
           </div>
         </div>
-        <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-850 flex items-center space-x-3.5">
-          <Clock className="h-8 w-8 text-amber-400" />
-          <div>
-            <span className="text-[10px] uppercase font-bold text-slate-500 block">Arrived at Port</span>
-            <span className="text-lg font-black text-white">{stats.arrived}</span>
+
+        <div className="relative overflow-hidden bg-card text-card-foreground p-4 rounded-2xl border border-border/60 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-amber-500 to-orange-500" />
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">Arrived at Port</span>
+              <span className="text-2xl font-black text-foreground mt-1 block">{stats.arrived}</span>
+            </div>
+            <div className="h-10 w-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
+              <Clock className="h-5 w-5" />
+            </div>
           </div>
         </div>
-        <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-850 flex items-center space-x-3.5">
-          <CheckCircle className="h-8 w-8 text-emerald-400" />
-          <div>
-            <span className="text-[10px] uppercase font-bold text-slate-500 block">Delivered</span>
-            <span className="text-lg font-black text-white">{stats.delivered}</span>
+
+        <div className="relative overflow-hidden bg-card text-card-foreground p-4 rounded-2xl border border-border/60 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5">
+          <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-emerald-500 to-teal-500" />
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground block">Delivered</span>
+              <span className="text-2xl font-black text-foreground mt-1 block">{stats.delivered}</span>
+            </div>
+            <div className="h-10 w-10 rounded-xl bg-emerald-500/10 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+              <CheckCircle className="h-5 w-5" />
+            </div>
           </div>
         </div>
       </div>
 
       {activeStage === "shipment" ? (
         /* STAGE: SHIPMENT DETAILS INPUT */
-        <div className="grid gap-4 xl:grid-cols-[380px_minmax(0,1fr)]">
+        <div className="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
           
           {/* Left panel: B/L selection list */}
-          <Card className="bg-slate-900/40 border-slate-850">
-            <CardHeader className="border-b border-slate-850/80 py-3.5">
-              <CardTitle className="text-sm font-black uppercase text-cyan-400 flex items-center gap-2">
-                <Ship className="h-4 w-4" /> Select Shipment B/L
+          <Card className="bg-card text-card-foreground border-border/60 shadow-sm rounded-2xl overflow-hidden">
+            <CardHeader className="border-b border-border/60 bg-muted/30 px-5 py-4">
+              <CardTitle className="text-sm font-bold tracking-tight text-foreground flex items-center gap-2">
+                <Ship className="h-4 w-4 text-cyan-600 dark:text-cyan-400" /> Select Shipment B/L
               </CardTitle>
-              <CardDescription className="text-xs text-slate-500">Choose a Bill of Lading record to input details.</CardDescription>
+              <CardDescription className="text-xs text-muted-foreground">Choose a Bill of Lading record to edit tracking matrix.</CardDescription>
             </CardHeader>
-            <CardContent className="p-3 space-y-4">
+            <CardContent className="p-4 space-y-4">
               <SearchSelect
                 label="Search B/L Registry"
                 value={selectedRecord?.id || ""}
@@ -348,183 +374,244 @@ export function ShippingLineStagePage({
                 }}
               />
 
-              <div className="border-t border-slate-850/60 pt-3">
-                <span className="text-[10px] font-bold text-slate-450 uppercase block mb-2">Available Shipments</span>
-                <div className="space-y-1.5 max-h-[400px] overflow-y-auto pr-1">
-                  {records.map((r) => (
-                    <button
-                      key={r.id}
-                      type="button"
-                      onClick={() => setSelectedRecord(r)}
-                      className={cn(
-                        "w-full text-left p-2.5 rounded-xl border text-xs transition-all block",
-                        selectedRecord?.id === r.id
-                          ? "bg-cyan-950/40 border-cyan-700 text-white font-bold"
-                          : "bg-slate-950/20 border-slate-850 text-slate-400 hover:border-slate-800 hover:text-slate-350"
-                      )}
-                    >
-                      <div className="flex justify-between">
-                        <span className="font-mono text-white">{r.bl_number}</span>
-                        <span className="text-[10px] font-semibold text-slate-450 uppercase">{r.shipment_status}</span>
-                      </div>
-                      <div className="text-[10px] text-slate-500 mt-1 truncate">
-                        Line: {r.shipping_line_name} {r.vessel_name ? `• ${r.vessel_name}` : ""}
-                      </div>
-                    </button>
-                  ))}
+              <div className="pt-2">
+                <div className="flex items-center justify-between mb-2.5">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Available Registry</span>
+                  <span className="text-[10px] font-bold text-cyan-600 dark:text-cyan-400">{records.length} records</span>
+                </div>
+                <div className="space-y-2 max-h-[440px] overflow-y-auto pr-1">
+                  {records.map((r) => {
+                    const isSelected = selectedRecord?.id === r.id;
+                    return (
+                      <button
+                        key={r.id}
+                        type="button"
+                        onClick={() => setSelectedRecord(r)}
+                        className={cn(
+                          "w-full text-left p-3 rounded-xl border text-xs transition-all relative overflow-hidden group",
+                          isSelected
+                            ? "bg-cyan-500/10 border-cyan-500/40 text-foreground font-semibold shadow-sm"
+                            : "bg-card hover:bg-muted/50 border-border/60 text-muted-foreground hover:text-foreground"
+                        )}
+                      >
+                        {isSelected && (
+                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-cyan-500" />
+                        )}
+                        <div className="flex items-center justify-between">
+                          <span className="font-mono font-bold text-foreground text-xs">{r.bl_number}</span>
+                          <span className={cn(
+                            "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border",
+                            shipmentStatuses.find(st => st.value === r.shipment_status)?.color
+                          )}>
+                            {r.shipment_status.replace(/_/g, " ")}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-muted-foreground mt-1.5 flex items-center justify-between">
+                          <span className="truncate max-w-[190px]">{r.shipping_line_name}</span>
+                          {r.vessel_name && <span className="font-medium text-foreground/80 shrink-0">{r.vessel_name}</span>}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Right panel: Tracking inputs */}
-          <Card className="bg-slate-900/40 border-slate-850">
-            <CardHeader className="border-b border-slate-850/80 py-3.5">
-              <CardTitle className="text-sm font-black uppercase text-cyan-400 flex items-center gap-2">
-                <Edit3 className="h-4 w-4" /> Shipment Details & Tracking Matrix
-              </CardTitle>
+          {/* Right panel: Tracking inputs form */}
+          <Card className="bg-card text-card-foreground border-border/60 shadow-sm rounded-2xl overflow-hidden">
+            <CardHeader className="border-b border-border/60 bg-muted/30 px-6 py-4 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-sm font-bold tracking-tight text-foreground flex items-center gap-2">
+                  <Edit3 className="h-4 w-4 text-cyan-600 dark:text-cyan-400" /> Shipment Details & Tracking Matrix
+                </CardTitle>
+                <CardDescription className="text-xs text-muted-foreground mt-0.5">
+                  Update logistics parameters, port schedules, vessel details and carrier notes.
+                </CardDescription>
+              </div>
+              {selectedRecord && (
+                <div className="px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-700 dark:text-cyan-300 font-mono text-xs font-bold">
+                  B/L: {selectedRecord.bl_number}
+                </div>
+              )}
             </CardHeader>
-            <CardContent className="p-5">
+            <CardContent className="p-6">
               {selectedRecord ? (
                 <form onSubmit={handleUpdateTracking} className="space-y-6">
                   {message && (
                     <div className={cn(
-                      "px-4 py-3 rounded-xl text-sm border font-medium",
+                      "px-4 py-3 rounded-xl text-xs font-semibold border flex items-center gap-2",
                       message.startsWith("✅")
-                        ? "bg-emerald-950/60 border-emerald-900 text-emerald-300"
-                        : "bg-red-950/60 border-red-900 text-red-300"
+                        ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-700 dark:text-emerald-300"
+                        : "bg-rose-500/10 border-rose-500/20 text-rose-700 dark:text-rose-300"
                     )}>
                       {message}
                     </div>
                   )}
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-slate-300">Shipping Line Name</Label>
-                      <Input
-                        value={shippingLineName}
-                        onChange={(e) => setShippingLineName(e.target.value)}
-                        className="bg-slate-950 border-slate-850 text-white mt-1.5 h-10"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-slate-300">Bill of Lading (B/L) Number</Label>
-                      <Input
-                        value={blNumber}
-                        onChange={(e) => setBlNumber(e.target.value)}
-                        className="bg-slate-950 border-slate-850 text-white mt-1.5 h-10 font-mono font-bold"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <Label className="text-slate-300">Vessel Name</Label>
-                      <Input
-                        value={vesselName}
-                        onChange={(e) => setVesselName(e.target.value)}
-                        placeholder="e.g. MSC DUBAI"
-                        className="bg-slate-950 border-slate-850 text-white mt-1.5 h-10"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-slate-300">Voyage Number</Label>
-                      <Input
-                        value={voyageNumber}
-                        onChange={(e) => setVoyageNumber(e.target.value)}
-                        placeholder="e.g. V-7890"
-                        className="bg-slate-950 border-slate-850 text-white mt-1.5 h-10"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-slate-300">Container Number</Label>
-                      <Input
-                        value={containerNumber}
-                        onChange={(e) => setContainerNumber(e.target.value)}
-                        placeholder="e.g. MSCO-4455"
-                        className="bg-slate-950 border-slate-850 text-white mt-1.5 h-10 font-mono"
-                      />
+                  {/* Section 1: Carrier & Document */}
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-1">
+                      1. Carrier & Identification
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-xs font-semibold text-foreground">Shipping Line Name</Label>
+                        <Input
+                          value={shippingLineName}
+                          onChange={(e) => setShippingLineName(e.target.value)}
+                          placeholder="e.g. MAERSK / MSC / COSCO"
+                          className="bg-background border-border/80 text-foreground mt-1.5 h-10 rounded-xl focus:border-cyan-500 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-semibold text-foreground">Bill of Lading (B/L) Number</Label>
+                        <Input
+                          value={blNumber}
+                          onChange={(e) => setBlNumber(e.target.value)}
+                          className="bg-background border-border/80 text-foreground mt-1.5 h-10 font-mono font-bold rounded-xl focus:border-cyan-500 text-xs"
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <Label className="text-slate-300 flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-cyan-400" /> Loading Port</Label>
-                      <Input
-                        value={loadingPort}
-                        onChange={(e) => setLoadingPort(e.target.value)}
-                        placeholder="e.g. Karachi Port (PK)"
-                        className="bg-slate-950 border-slate-850 text-white mt-1.5 h-10"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-slate-300 flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5 text-amber-400" /> Discharge Port</Label>
-                      <Input
-                        value={dischargePort}
-                        onChange={(e) => setDischargePort(e.target.value)}
-                        placeholder="e.g. Jebel Ali Port (AE)"
-                        className="bg-slate-950 border-slate-850 text-white mt-1.5 h-10"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <Label className="text-slate-300 flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-cyan-450" /> ETD Date</Label>
-                      <Input
-                        type="date"
-                        value={etd}
-                        onChange={(e) => setEtd(e.target.value)}
-                        className="bg-slate-950 border-slate-850 text-white mt-1.5 h-10"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-slate-300 flex items-center gap-1.5"><Calendar className="h-3.5 w-3.5 text-amber-450" /> ETA Date</Label>
-                      <Input
-                        type="date"
-                        value={eta}
-                        onChange={(e) => setEta(e.target.value)}
-                        className="bg-slate-950 border-slate-850 text-white mt-1.5 h-10"
-                      />
-                    </div>
-                    <div>
-                      <Label className="text-slate-300 flex items-center gap-1.5"><Anchor className="h-3.5 w-3.5 text-indigo-400" /> Shipment Status</Label>
-                      <select
-                        value={shipmentStatus}
-                        onChange={(e) => setShipmentStatus(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-850 rounded-xl px-3 py-2.5 mt-1.5 h-10 text-white text-sm focus:outline-none focus:border-cyan-500"
-                      >
-                        {shipmentStatuses.map((st) => (
-                          <option key={st.value} value={st.value}>{st.label}</option>
-                        ))}
-                      </select>
+                  {/* Section 2: Vessel & Container */}
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-1">
+                      2. Vessel & Equipment Details
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <Label className="text-xs font-semibold text-foreground">Vessel Name</Label>
+                        <Input
+                          value={vesselName}
+                          onChange={(e) => setVesselName(e.target.value)}
+                          placeholder="e.g. MSC DUBAI"
+                          className="bg-background border-border/80 text-foreground mt-1.5 h-10 rounded-xl focus:border-cyan-500 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-semibold text-foreground">Voyage Number</Label>
+                        <Input
+                          value={voyageNumber}
+                          onChange={(e) => setVoyageNumber(e.target.value)}
+                          placeholder="e.g. V-7890"
+                          className="bg-background border-border/80 text-foreground mt-1.5 h-10 rounded-xl focus:border-cyan-500 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-semibold text-foreground">Container Number</Label>
+                        <Input
+                          value={containerNumber}
+                          onChange={(e) => setContainerNumber(e.target.value)}
+                          placeholder="e.g. MSCO-4455"
+                          className="bg-background border-border/80 text-foreground mt-1.5 h-10 font-mono rounded-xl focus:border-cyan-500 text-xs"
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  <div>
-                    <Label className="text-slate-300">Carrier Remarks / Transit Info</Label>
+                  {/* Section 3: Ports & Dates */}
+                  <div className="space-y-3">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/40 pb-1">
+                      3. Route & Schedule Matrix
+                    </p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                          <MapPin className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" /> Loading Port (POL)
+                        </Label>
+                        <Input
+                          value={loadingPort}
+                          onChange={(e) => setLoadingPort(e.target.value)}
+                          placeholder="e.g. Karachi Port (PK)"
+                          className="bg-background border-border/80 text-foreground mt-1.5 h-10 rounded-xl focus:border-cyan-500 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                          <MapPin className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" /> Discharge Port (POD)
+                        </Label>
+                        <Input
+                          value={dischargePort}
+                          onChange={(e) => setDischargePort(e.target.value)}
+                          placeholder="e.g. Jebel Ali Port (AE)"
+                          className="bg-background border-border/80 text-foreground mt-1.5 h-10 rounded-xl focus:border-cyan-500 text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+                      <div>
+                        <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400" /> ETD Date
+                        </Label>
+                        <Input
+                          type="date"
+                          value={etd}
+                          onChange={(e) => setEtd(e.target.value)}
+                          className="bg-background border-border/80 text-foreground mt-1.5 h-10 rounded-xl focus:border-cyan-500 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                          <Calendar className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" /> ETA Date
+                        </Label>
+                        <Input
+                          type="date"
+                          value={eta}
+                          onChange={(e) => setEta(e.target.value)}
+                          className="bg-background border-border/80 text-foreground mt-1.5 h-10 rounded-xl focus:border-cyan-500 text-xs"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                          <Anchor className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" /> Shipment Status
+                        </Label>
+                        <select
+                          value={shipmentStatus}
+                          onChange={(e) => setShipmentStatus(e.target.value)}
+                          className="w-full bg-background border border-border/80 rounded-xl px-3 py-2.5 mt-1.5 h-10 text-foreground text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 font-semibold"
+                        >
+                          {shipmentStatuses.map((st) => (
+                            <option key={st.value} value={st.value}>{st.label}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Section 4: Carrier Remarks */}
+                  <div className="space-y-2">
+                    <Label className="text-xs font-semibold text-foreground">Carrier Remarks & Transshipment Info</Label>
                     <textarea
                       rows={3}
                       value={remarks}
                       onChange={(e) => setRemarks(e.target.value)}
                       placeholder="Enter carrier remarks, transshipment details, container loading notes..."
-                      className="w-full bg-slate-950 border border-slate-850 rounded-xl px-4 py-2 text-white text-sm placeholder-slate-650 mt-1.5 focus:outline-none focus:border-cyan-500"
+                      className="w-full bg-background border border-border/80 rounded-xl px-4 py-2.5 text-foreground text-xs placeholder:text-muted-foreground mt-1 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500 transition-all"
                     />
                   </div>
 
-                  <div className="flex justify-end pt-4 border-t border-slate-850/60">
+                  <div className="flex items-center justify-end gap-3 pt-4 border-t border-border/60">
                     <Button
                       type="submit"
                       disabled={saving}
-                      className="bg-cyan-600 hover:bg-cyan-500 text-white font-bold px-8 h-11 rounded-xl shadow-lg shadow-cyan-950 transition-all"
+                      className="bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold px-8 h-11 rounded-xl shadow-md transition-all hover:shadow-lg"
                     >
                       {saving ? "Saving Tracking Details..." : "Update Tracking Matrix"}
                     </Button>
                   </div>
                 </form>
               ) : (
-                <div className="text-center py-20 text-slate-500 font-medium">
-                  Select a Shipment B/L record from the left panel to update its tracking stages.
+                <div className="text-center py-24 px-4">
+                  <div className="mx-auto h-12 w-12 rounded-2xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center mb-3">
+                    <Ship className="h-6 w-6" />
+                  </div>
+                  <h3 className="text-sm font-bold text-foreground">No B/L Record Selected</h3>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-sm mx-auto">
+                    Select a Shipment B/L record from the left panel to edit its tracking stages, dates, and port details.
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -532,62 +619,64 @@ export function ShippingLineStagePage({
         </div>
       ) : (
         /* STAGE: SHIPMENT DETAILS REPORT */
-        <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950/20">
-          <table className="min-w-full text-sm text-left text-slate-300">
-            <thead className="bg-slate-950 text-slate-450 uppercase text-xs font-semibold">
-              <tr>
-                <th className="px-6 py-4">B/L Number</th>
-                <th className="px-6 py-4">Shipping Line</th>
-                <th className="px-6 py-4">Vessel / Voyage</th>
-                <th className="px-6 py-4">Container No</th>
-                <th className="px-6 py-4">Loading Port</th>
-                <th className="px-6 py-4">Discharge Port</th>
-                <th className="px-6 py-4">ETD</th>
-                <th className="px-6 py-4">ETA</th>
-                <th className="px-6 py-4">Status</th>
-                <th className="px-6 py-4">Remarks</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-850">
-              {loading ? (
+        <Card className="bg-card text-card-foreground border-border/60 shadow-sm rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-xs text-left text-foreground">
+              <thead className="bg-muted/40 text-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-border/60">
                 <tr>
-                  <td colSpan={10} className="px-6 py-12 text-center text-slate-400 font-medium">Loading shipment report...</td>
+                  <th className="px-5 py-4">B/L Number</th>
+                  <th className="px-5 py-4">Shipping Line</th>
+                  <th className="px-5 py-4">Vessel / Voyage</th>
+                  <th className="px-5 py-4">Container No</th>
+                  <th className="px-5 py-4">Loading Port</th>
+                  <th className="px-5 py-4">Discharge Port</th>
+                  <th className="px-5 py-4">ETD</th>
+                  <th className="px-5 py-4">ETA</th>
+                  <th className="px-5 py-4">Status</th>
+                  <th className="px-5 py-4">Remarks</th>
                 </tr>
-              ) : records.length === 0 ? (
-                <tr>
-                  <td colSpan={10} className="px-6 py-12 text-center text-slate-500">No shipment tracking records found.</td>
-                </tr>
-              ) : (
-                records.map((r) => {
-                  const statusObj = shipmentStatuses.find(st => st.value === r.shipment_status);
-                  return (
-                    <tr key={r.id} className="hover:bg-slate-900/30">
-                      <td className="px-6 py-4 font-mono font-bold text-white">{r.bl_number}</td>
-                      <td className="px-6 py-4 text-slate-200">{r.shipping_line_name}</td>
-                      <td className="px-6 py-4">
-                        <div className="font-semibold text-slate-300">{r.vessel_name ?? "-"}</div>
-                        <div className="text-xs text-slate-500">{r.voyage_number ? `Voyage: ${r.voyage_number}` : ""}</div>
-                      </td>
-                      <td className="px-6 py-4 font-mono text-slate-350">{r.container_number ?? "-"}</td>
-                      <td className="px-6 py-4 text-slate-400">{r.loading_port ?? "-"}</td>
-                      <td className="px-6 py-4 text-slate-400">{r.discharge_port ?? "-"}</td>
-                      <td className="px-6 py-4 text-slate-400">{r.etd ?? "-"}</td>
-                      <td className="px-6 py-4 text-slate-400">{r.eta ?? "-"}</td>
-                      <td className="px-6 py-4">
-                        <span className={cn("px-2.5 py-0.5 rounded-full text-xs font-bold border", statusObj?.color)}>
-                          {statusObj?.label ?? r.shipment_status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-xs text-slate-450 max-w-xs truncate" title={r.report_payload?.carrierRemarks || ""}>
-                        {r.report_payload?.carrierRemarks || "-"}
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody className="divide-y divide-border/40">
+                {loading ? (
+                  <tr>
+                    <td colSpan={10} className="px-6 py-12 text-center text-muted-foreground font-medium">Loading shipment report...</td>
+                  </tr>
+                ) : records.length === 0 ? (
+                  <tr>
+                    <td colSpan={10} className="px-6 py-12 text-center text-muted-foreground">No shipment tracking records found.</td>
+                  </tr>
+                ) : (
+                  records.map((r) => {
+                    const statusObj = shipmentStatuses.find(st => st.value === r.shipment_status);
+                    return (
+                      <tr key={r.id} className="hover:bg-muted/30 transition-colors">
+                        <td className="px-5 py-3.5 font-mono font-bold text-cyan-600 dark:text-cyan-400">{r.bl_number}</td>
+                        <td className="px-5 py-3.5 font-medium text-foreground">{r.shipping_line_name}</td>
+                        <td className="px-5 py-3.5">
+                          <div className="font-semibold text-foreground">{r.vessel_name ?? "-"}</div>
+                          <div className="text-[10px] text-muted-foreground">{r.voyage_number ? `Voyage: ${r.voyage_number}` : ""}</div>
+                        </td>
+                        <td className="px-5 py-3.5 font-mono text-muted-foreground">{r.container_number ?? "-"}</td>
+                        <td className="px-5 py-3.5 text-muted-foreground">{r.loading_port ?? "-"}</td>
+                        <td className="px-5 py-3.5 text-muted-foreground">{r.discharge_port ?? "-"}</td>
+                        <td className="px-5 py-3.5 text-muted-foreground">{r.etd ?? "-"}</td>
+                        <td className="px-5 py-3.5 text-muted-foreground">{r.eta ?? "-"}</td>
+                        <td className="px-5 py-3.5">
+                          <span className={cn("px-2.5 py-0.5 rounded-full text-[10px] font-bold border", statusObj?.color)}>
+                            {statusObj?.label ?? r.shipment_status}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5 text-[11px] text-muted-foreground max-w-xs truncate" title={r.report_payload?.carrierRemarks || ""}>
+                          {r.report_payload?.carrierRemarks || "-"}
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+        </Card>
       )}
 
     </div>
