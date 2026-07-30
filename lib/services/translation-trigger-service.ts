@@ -51,12 +51,13 @@ const TRANSLATABLE_FIELDS: Record<string, string[]> = {
   cities: ["name"],
   areas_locations: ["name"],
 
-  // Products & inventory (extended coverage)
-  products: ["name", "product_name"],
-  product_brands: ["name"],
-  product_categories: ["name"],
-  product_units: ["name"],
-  warehouses: ["name"],
+  // Products & inventory (extended coverage — field names aligned with
+  // lib/master-data/central-master-tables.ts legacyNameColumns)
+  products: ["name", "product_name", "goods_name"],
+  product_brands: ["name", "brand_name"],
+  product_categories: ["name", "category_name"],
+  product_units: ["name", "unit_name", "symbol"],
+  warehouses: ["name", "warehouse_name"],
 
   // Banking & HR (extended coverage)
   banks: ["bank_name", "short_name", "branch_name"],
