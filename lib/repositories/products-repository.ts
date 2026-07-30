@@ -1,5 +1,6 @@
 import type { ErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
 export type ProductTranslationInput = {
   languageCode: string;
@@ -204,6 +205,7 @@ export class ProductsRepository {
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+    void translateMasterRecord("products", data.id as string, { product_name: input.productName }, "en");
     return data.id as string;
   }
 
@@ -255,6 +257,7 @@ export class ProductsRepository {
 
     const { error } = await supabase.from("products").update(patch).eq("id", id).is("deleted_at", null);
     if (error) throw new Error(error.message);
+    void translateMasterRecord("products", id, { product_name: input.productName }, "en");
   }
 
   async softDelete(id: string) {

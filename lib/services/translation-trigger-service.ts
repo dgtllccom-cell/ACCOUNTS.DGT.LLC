@@ -59,7 +59,7 @@ const TRANSLATABLE_FIELDS: Record<string, string[]> = {
   warehouses: ["name"],
 
   // Banking & HR (extended coverage)
-  banks: ["name"],
+  banks: ["bank_name", "short_name", "branch_name"],
   employees: ["name", "full_name"],
 };
 

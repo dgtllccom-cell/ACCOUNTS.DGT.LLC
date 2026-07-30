@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
 export type BankRow = {
   id: string;
@@ -143,6 +144,7 @@ export class BanksRepository {
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+    void translateMasterRecord("banks", (data as { id: string }).id, { bank_name: input.bankName, short_name: input.shortName, branch_name: input.branchName }, "en");
     return (data as { id: string }).id;
   }
 
@@ -199,6 +201,7 @@ export class BanksRepository {
 
     const { error } = await supabase.from("banks").update(patch).eq("id", id).is("deleted_at", null);
     if (error) throw new Error(error.message);
+    void translateMasterRecord("banks", id, { bank_name: input.bankName, short_name: input.shortName, branch_name: input.branchName }, "en");
   }
 
   async softDelete(id: string) {

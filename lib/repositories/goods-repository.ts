@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
 export type GoodsVariationRow = {
   id: string;
@@ -197,6 +198,7 @@ export class GoodsRepository {
       .single();
 
     if (error) throw new Error(error.message);
+    void translateMasterRecord("goods", data.id as string, { goods_name: input.goodsName }, "en");
     return data.id as string;
   }
 
@@ -226,6 +228,7 @@ export class GoodsRepository {
       .is("deleted_at", null);
 
     if (error) throw new Error(error.message);
+    void translateMasterRecord("goods", id, { goods_name: input.goodsName }, "en");
   }
 
   async softDelete(id: string) {
