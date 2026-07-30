@@ -25,7 +25,7 @@ export async function GET(req: Request) {
     const supabase = createSupabaseAdminClient();
     let q = supabase
       .from("currency_rates")
-      .select("id, country_id, from_currency, to_currency, rate, effective_date, created_at")
+      .select("id, country_id, from_currency, to_currency, rate, credit_rate, debit_rate, effective_date, created_at")
       .is("deleted_at", null)
       .eq("effective_date", date)
       .order("created_at", { ascending: false });
@@ -59,13 +59,16 @@ export async function POST(req: Request) {
     const body = await req.json();
 
     const fromCurrency = typeof body.fromCurrency === "string" ? body.fromCurrency.trim().toUpperCase() : "";
-    const rate = Number(body.rate);
+    // Two accounting rates: Credit + Debit (entered by the Country Admin each morning).
+    const creditRate = Number(body.creditRate ?? body.rate);
+    const debitRate = Number(body.debitRate ?? body.rate);
     const effectiveDate = (body.effectiveDate || new Date().toISOString().slice(0, 10)).slice(0, 10);
     // Country: super admins may target any country; others are scoped to their own.
     const countryId = body.countryId ?? (session.isSuperAdmin ? null : session.countryIds?.[0] ?? null);
 
     if (!fromCurrency) return NextResponse.json({ error: "fromCurrency is required" }, { status: 400 });
-    if (!(rate > 0)) return NextResponse.json({ error: "rate must be greater than 0" }, { status: 400 });
+    if (!(creditRate > 0)) return NextResponse.json({ error: "creditRate must be greater than 0" }, { status: 400 });
+    if (!(debitRate > 0)) return NextResponse.json({ error: "debitRate must be greater than 0" }, { status: 400 });
 
     const supabase = createSupabaseAdminClient();
 
@@ -88,11 +91,13 @@ export async function POST(req: Request) {
         country_id: countryId,
         from_currency: fromCurrency,
         to_currency: "USD",
-        rate,
+        rate: creditRate, // primary (NOT NULL) — kept in sync with credit_rate
+        credit_rate: creditRate,
+        debit_rate: debitRate,
         effective_date: effectiveDate,
         created_by: session.userId,
       })
-      .select("id, country_id, from_currency, to_currency, rate, effective_date, created_at")
+      .select("id, country_id, from_currency, to_currency, rate, credit_rate, debit_rate, effective_date, created_at")
       .single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
@@ -103,10 +108,10 @@ export async function POST(req: Request) {
         from_currency: fromCurrency,
         to_currency: "USD",
         old_rate: existing?.rate ?? null,
-        new_rate: rate,
+        new_rate: creditRate,
         effective_date: effectiveDate,
         changed_by: session.userId,
-        reason: body.reason ?? "Daily rate update",
+        reason: body.reason ?? `Daily accounting rate (credit ${creditRate} / debit ${debitRate})`,
       });
     } catch { /* history is best-effort */ }
 
