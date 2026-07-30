@@ -44,6 +44,23 @@ const TRANSLATABLE_FIELDS: Record<string, string[]> = {
 
   // Company
   companies: ["name", "legal_name"],
+
+  // Location detail (extended coverage)
+  states_provinces: ["name"],
+  districts: ["name"],
+  cities: ["name"],
+  areas_locations: ["name"],
+
+  // Products & inventory (extended coverage)
+  products: ["name", "product_name"],
+  product_brands: ["name"],
+  product_categories: ["name"],
+  product_units: ["name"],
+  warehouses: ["name"],
+
+  // Banking & HR (extended coverage)
+  banks: ["name"],
+  employees: ["name", "full_name"],
 };
 
 /**
