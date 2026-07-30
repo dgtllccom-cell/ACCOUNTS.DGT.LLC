@@ -3,6 +3,7 @@ import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { erpDocuments, erpDocumentVersions, auditLogs } from "@/lib/db/schema";
 import { requireErpSession } from "@/lib/auth/session";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { apiOk, handleApiError, apiError } from "@/lib/api/response";
 
@@ -14,6 +15,7 @@ export async function POST(
 ) {
   try {
     const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "attachments", action: "create" });
     const { id } = await params;
 
     const doc = await db.query.erpDocuments.findFirst({

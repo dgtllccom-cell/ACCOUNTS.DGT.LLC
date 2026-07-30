@@ -3,6 +3,7 @@ import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { erpDocuments, erpDocumentVersions, auditLogs } from "@/lib/db/schema";
 import { requireErpSession } from "@/lib/auth/session";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { apiOk, handleApiError, apiError } from "@/lib/api/response";
 
@@ -12,6 +13,7 @@ export async function DELETE(
 ) {
   try {
     const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "attachments", action: "delete" });
     const { id } = await params;
 
     // Fetch the document and its versions
