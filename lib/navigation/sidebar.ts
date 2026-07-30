@@ -996,18 +996,6 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
-    key: "return-sms-reply",
-    labelKey: "nav.return_sms_reply",
-    iconKey: "message-square",
-    href: "/dashboard/return-sms-reply" as Route
-  },
-  {
-    key: "ai-mobile-reply",
-    labelKey: "nav.ai_mobile_reply",
-    iconKey: "message-square",
-    href: "/mobile" as Route
-  },
-  {
     key: "message-system",
     labelKey: "nav.message_system",
     iconKey: "message-square",
@@ -1016,7 +1004,18 @@ export const sidebarTree: SidebarNode[] = [
         key: "msg-email",
         labelKey: "nav.messages_email",
         iconKey: "mail",
-        href: "/dashboard/messages/email" as Route
+        children: [
+          {
+            key: "msg-email-inbox",
+            labelKey: "Email Inbox & Sent (ان باکس)" as any,
+            href: "/dashboard/messages/email" as Route
+          },
+          {
+            key: "msg-email-setup",
+            labelKey: "Official Branch Email Setup (Titan SMTP)" as any,
+            href: "/dashboard/settings/email-accounts" as Route
+          }
+        ]
       },
       {
         key: "msg-whatsapp",
@@ -1037,6 +1036,18 @@ export const sidebarTree: SidebarNode[] = [
             permission: { resource: "whatsapp", action: "delete" }
           }
         ]
+      },
+      {
+        key: "msg-return-sms",
+        labelKey: "nav.return_sms_reply",
+        iconKey: "message-square",
+        href: "/dashboard/return-sms-reply" as Route
+      },
+      {
+        key: "msg-ai-mobile",
+        labelKey: "nav.ai_mobile_reply",
+        iconKey: "message-square",
+        href: "/mobile" as Route
       },
       {
         key: "msg-internal",
@@ -1141,6 +1152,13 @@ export const sidebarTree: SidebarNode[] = [
             labelKey: "nav.dashboard_settings",
             href: "/dashboard/settings/dashboard-settings" as Route,
             roles: ["super_admin"]
+          },
+          {
+            key: "settings-email-accounts",
+            labelKey: "Official Email Accounts (Titan SMTP)" as any,
+            iconKey: "mail",
+            href: "/dashboard/settings/email-accounts" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin"]
           },
           {
             key: "settings-database-cleanup",

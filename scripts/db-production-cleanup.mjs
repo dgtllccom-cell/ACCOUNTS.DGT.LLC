@@ -282,6 +282,23 @@ async function cleanup(client) {
     await client`select pg_advisory_xact_lock(72420260730)`;
   }
 
+  if (apply) {
+  for (const [code, userId] of Object.entries(MAIN_BRANCH_ADMINS)) {
+    const country = targets.countryByCode.get(code);
+    const branch = targets.branchByCode.get(code);
+    await client`
+      update user_role_assignments
+      set role = 'main_branch_admin',
+          country_id = ${country.id},
+          country_branch_id = ${branch.id},
+          city_branch_id = null,
+          is_active = true
+      where user_id = ${userId}
+        and role = 'city_branch_admin'
+    `;
+  }
+  }
+
   report.detachedReferences.cityBranches = await detachReferences(
     client,
     "city_branches",
@@ -320,20 +337,6 @@ async function cleanup(client) {
       and user_id <> ${COUNTRY_ADMINS.AE}
   `;
 
-  for (const [code, userId] of Object.entries(MAIN_BRANCH_ADMINS)) {
-    const country = targets.countryByCode.get(code);
-    const branch = targets.branchByCode.get(code);
-    await client`
-      update user_role_assignments
-      set role = 'main_branch_admin',
-          country_id = ${country.id},
-          country_branch_id = ${branch.id},
-          city_branch_id = null,
-          is_active = true
-      where user_id = ${userId}
-        and role = 'city_branch_admin'
-    `;
-  }
 
   await client`
     delete from user_role_assignments a
