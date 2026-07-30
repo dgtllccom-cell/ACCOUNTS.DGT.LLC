@@ -115,7 +115,10 @@ export function InstallAppBanner() {
   return (
     <>
       {/* ── Top Install Banner ── */}
-      <div className="bg-gradient-to-r from-blue-900 via-[#06122d] to-indigo-950 text-white px-4 py-2.5 shadow-md border-b border-blue-800/50 flex flex-wrap items-center justify-between gap-3 text-xs">
+      <div
+        className="bg-gradient-to-r from-blue-900 via-[#06122d] to-indigo-950 text-white px-4 py-2.5 shadow-md border-b border-blue-800/50 flex flex-wrap items-center justify-between gap-3 text-xs"
+        style={{ backgroundColor: "#06122d", color: "#ffffff" }}
+      >
         <div className="flex items-center gap-3">
           <div className="h-8 w-8 rounded-xl bg-blue-500/20 border border-blue-400/30 flex items-center justify-center shrink-0">
             <Smartphone className="h-4 w-4 text-blue-300" />

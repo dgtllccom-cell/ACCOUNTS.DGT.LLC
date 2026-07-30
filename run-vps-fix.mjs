@@ -59,7 +59,7 @@ CRONEOF
 chmod 644 /etc/cron.d/dgt-db-backup
 
 echo "[8/10] Installing Dependencies & Compiling Next.js..."
-npm install
+npm install --include=dev
 NODE_OPTIONS='--max-old-space-size=4096' npm run build
 
 echo "[9/10] Restarting PM2 process (dgt-nextjs) with clean process table..."

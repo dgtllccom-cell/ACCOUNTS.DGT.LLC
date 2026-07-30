@@ -59,8 +59,8 @@ git clean -fd -e .env.local -e .env*.local -e uploads/ -e backups/ -e env_backup
 git checkout -f -B main origin/main
 git reset --hard origin/main
 
-echo "[VPS 3/7] Running Database Migration & PostgREST Cache Reload..."
-npm install
+echo "[VPS 3/7] Installing Dependencies & Running Database Migration..."
+npm install --include=dev
 node apply-return-sms-reply-migration.mjs || true
 
 echo "[VPS 4/7] Cleaning Stale Build Cache & Compiling Next.js..."

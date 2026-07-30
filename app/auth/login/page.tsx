@@ -34,7 +34,7 @@ export default async function LoginPage({
             <div className="flex items-center gap-3">
               {/* Icon mark */}
               <div className="flex h-10 w-10 sm:h-12 sm:w-12 shrink-0 items-center justify-center rounded-2xl border border-blue-100 bg-white shadow-md shadow-blue-100 dark:border-blue-900/40 dark:bg-slate-900 dark:shadow-none">
-                <svg viewBox="0 0 40 40" className="h-7 w-7 sm:h-8 sm:w-8" fill="none" aria-hidden>
+                <svg viewBox="0 0 40 40" width="40" height="40" className="h-7 w-7 sm:h-8 sm:w-8" fill="none" aria-hidden>
                   <rect width="40" height="40" rx="10" fill="#EFF6FF"/>
                   <path d="M10 28 L10 14 L20 8 L30 14 L30 28 L20 34 Z" fill="#1e3a8a" opacity="0.15"/>
                   <path d="M10 20 L20 14 L30 20" stroke="#1e40af" strokeWidth="2.5" strokeLinecap="round"/>
