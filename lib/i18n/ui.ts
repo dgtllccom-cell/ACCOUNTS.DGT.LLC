@@ -43,6 +43,19 @@ export type UiKey =
   | "nav.purchase_order_management"
   | "nav.product_units"
   | "nav.product_brands"
+  | "nav.product_categories"
+  | "pc.title"
+  | "pc.code"
+  | "pc.name"
+  | "pc.description"
+  | "pc.active"
+  | "pc.add"
+  | "pc.edit"
+  | "pc.delete"
+  | "pc.save"
+  | "pc.cancel"
+  | "pc.search"
+  | "pc.empty"
   | "pb.title"
   | "pb.code"
   | "pb.name"
@@ -576,6 +589,19 @@ const en: Dict = {
   "nav.purchase_order_management": "Purchase Order Management",
   "nav.product_units": "Product Units",
   "nav.product_brands": "Product Brands",
+  "nav.product_categories": "Product Categories",
+  "pc.title": "Product Categories",
+  "pc.code": "Category Code",
+  "pc.name": "Category Name",
+  "pc.description": "Description",
+  "pc.active": "Active",
+  "pc.add": "Add Category",
+  "pc.edit": "Edit",
+  "pc.delete": "Delete",
+  "pc.save": "Save",
+  "pc.cancel": "Cancel",
+  "pc.search": "Search categories...",
+  "pc.empty": "No categories found",
   "pb.title": "Product Brands",
   "pb.code": "Brand Code",
   "pb.name": "Brand Name",
@@ -1094,6 +1120,19 @@ const ur: Dict = {
   "nav.purchase_order_management": "Purchase Order Management",
   "nav.product_units": "پروڈکٹ یونٹس",
   "nav.product_brands": "پروڈکٹ برانڈز",
+  "nav.product_categories": "پروڈکٹ کیٹگریز",
+  "pc.title": "پروڈکٹ کیٹگریز",
+  "pc.code": "کیٹگری کوڈ",
+  "pc.name": "کیٹگری نام",
+  "pc.description": "تفصیل",
+  "pc.active": "فعال",
+  "pc.add": "کیٹگری شامل کریں",
+  "pc.edit": "ترمیم",
+  "pc.delete": "حذف",
+  "pc.save": "محفوظ کریں",
+  "pc.cancel": "منسوخ",
+  "pc.search": "کیٹگری تلاش کریں...",
+  "pc.empty": "کوئی کیٹگری نہیں ملی",
   "pb.title": "پروڈکٹ برانڈز",
   "pb.code": "برانڈ کوڈ",
   "pb.name": "برانڈ نام",
@@ -1559,6 +1598,19 @@ const ar: Dict = {
   "nav.purchase_order_management": "Purchase Order Management",
   "nav.product_units": "وحدات المنتج",
   "nav.product_brands": "علامات المنتج",
+  "nav.product_categories": "فئات المنتج",
+  "pc.title": "فئات المنتج",
+  "pc.code": "رمز الفئة",
+  "pc.name": "اسم الفئة",
+  "pc.description": "الوصف",
+  "pc.active": "نشط",
+  "pc.add": "إضافة فئة",
+  "pc.edit": "تعديل",
+  "pc.delete": "حذف",
+  "pc.save": "حفظ",
+  "pc.cancel": "إلغاء",
+  "pc.search": "بحث عن الفئات...",
+  "pc.empty": "لا توجد فئات",
   "pb.title": "علامات المنتج",
   "pb.code": "رمز العلامة",
   "pb.name": "اسم العلامة",
@@ -2000,6 +2052,19 @@ const fa: Dict = {
   "nav.purchase_order_management": "Purchase Order Management",
   "nav.product_units": "واحدهای محصول",
   "nav.product_brands": "برندهای محصول",
+  "nav.product_categories": "دسته‌های محصول",
+  "pc.title": "دسته‌های محصول",
+  "pc.code": "کد دسته",
+  "pc.name": "نام دسته",
+  "pc.description": "توضیحات",
+  "pc.active": "فعال",
+  "pc.add": "افزودن دسته",
+  "pc.edit": "ویرایش",
+  "pc.delete": "حذف",
+  "pc.save": "ذخیره",
+  "pc.cancel": "لغو",
+  "pc.search": "جستجوی دسته‌ها...",
+  "pc.empty": "دسته‌ای یافت نشد",
   "pb.title": "برندهای محصول",
   "pb.code": "کد برند",
   "pb.name": "نام برند",
@@ -2364,6 +2429,19 @@ const ps: Dict = {
   "nav.purchase_order_management": "Purchase Order Management",
   "nav.product_units": "د محصول واحدونه",
   "nav.product_brands": "د محصول برنډونه",
+  "nav.product_categories": "د محصول کټګورۍ",
+  "pc.title": "د محصول کټګورۍ",
+  "pc.code": "د کټګورۍ کوډ",
+  "pc.name": "د کټګورۍ نوم",
+  "pc.description": "تشریح",
+  "pc.active": "فعال",
+  "pc.add": "کټګوري اضافه کړئ",
+  "pc.edit": "سمون",
+  "pc.delete": "ړنګول",
+  "pc.save": "خوندي کول",
+  "pc.cancel": "لغوه کول",
+  "pc.search": "د کټګوریو لټون...",
+  "pc.empty": "هیڅ کټګوري ونه موندل شوه",
   "pb.title": "د محصول برنډونه",
   "pb.code": "د برنډ کوډ",
   "pb.name": "د برنډ نوم",
