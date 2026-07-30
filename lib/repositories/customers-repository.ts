@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
 export type CustomerRow = {
   id: string;
@@ -149,6 +150,7 @@ export class CustomersRepository {
       p_original_language_code: input.originalLanguageCode
     });
     if (error) throw new Error(error.message);
+    void translateMasterRecord("customers", data as string, { customer_name: input.customerName, company_name: input.companyName }, "en");
     return data as string;
   }
 
@@ -218,6 +220,7 @@ export class CustomersRepository {
 
     const { error } = await supabase.from("customers").update(patch).eq("id", id).is("deleted_at", null);
     if (error) throw new Error(error.message);
+    void translateMasterRecord("customers", id, { customer_name: input.customerName, company_name: input.companyName }, "en");
   }
 
   async softDelete(id: string) {

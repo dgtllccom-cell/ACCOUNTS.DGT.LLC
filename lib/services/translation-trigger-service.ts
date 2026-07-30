@@ -34,8 +34,8 @@ const TRANSLATABLE_FIELDS: Record<string, string[]> = {
   goods_variations: ["size", "brand"],
 
   // Contacts
-  customers: ["name", "company_name"],
-  suppliers: ["name", "company_name"],
+  customers: ["customer_name", "company_name"],
+  suppliers: ["customer_name", "company_name", "name"],
   contact_persons: ["full_name"],
 
   // Payment & Tax
