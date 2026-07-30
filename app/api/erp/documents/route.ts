@@ -4,6 +4,7 @@ import { eq, and } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { erpDocuments, erpDocumentVersions } from "@/lib/db/schema";
 import { requireErpSession } from "@/lib/auth/session";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { apiOk, handleApiError, apiError } from "@/lib/api/response";
 
@@ -17,6 +18,7 @@ const listSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "attachments", action: "read" });
     const { searchParams } = new URL(request.url);
 
     const query = listSchema.parse({
@@ -61,6 +63,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "attachments", action: "create" });
     const formData = await request.formData();
 
     const file = formData.get("file") as File | null;
