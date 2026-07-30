@@ -62,6 +62,16 @@ const DEFAULT_COUNTRY_EMAILS: Record<string, { officeName: string; email: string
   }
 };
 
+/**
+ * Temporary global default email used for ALL countries/branches until each
+ * one has its own official email configured in the database (via Settings →
+ * Email Configuration / erp_email_accounts or the country email columns).
+ * DB configuration always takes priority, so future per-branch changes require
+ * only a settings update — no code change.
+ */
+export const GLOBAL_DEFAULT_EMAIL = "dgt.llc.com@gmail.com";
+export const GLOBAL_DEFAULT_OFFICE_NAME = "Digital Dock ERP";
+
 function normalizeKey(value: string | null | undefined) {
   return String(value ?? "")
     .toLowerCase()
@@ -88,7 +98,10 @@ export function resolveCountryEmailConfig(country: CountryEmailRecord | null | u
   const defaults = defaultForCountry(country);
   const settings = (country?.email_server_settings ?? {}) as Record<string, unknown>;
   const officeName = String(settings.officeName ?? settings.office_name ?? defaults?.officeName ?? country?.name ?? "DAMAAN Business Group ERP");
-  const officialEmail = country?.official_email ?? defaults?.email ?? null;
+  // Priority: per-country/branch DB config  ->  global temporary default.
+  // (The legacy hardcoded country map is intentionally bypassed so that the
+  //  single global default applies uniformly until DB config is set.)
+  const officialEmail = country?.official_email ?? GLOBAL_DEFAULT_EMAIL;
   const adminEmail = country?.admin_email ?? null;
   const emailDomain = country?.email_domain ?? defaults?.domain ?? (officialEmail?.includes("@") ? officialEmail.split("@").pop() ?? null : null);
   const mainBranchName = branch.mainBranchName ?? null;
