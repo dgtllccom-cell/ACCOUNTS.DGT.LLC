@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function DELETE(
@@ -8,6 +9,7 @@ export async function DELETE(
 ) {
   try {
     const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "tax_codes", action: "delete" });
 
     const supabase = createSupabaseAdminClient();
     const { error } = await supabase

@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
+import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function GET() {
   try {
     const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "tax_codes", action: "read" });
 
     const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase
@@ -34,6 +36,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     const session = await requireErpSession();
+    authorizeApiScope(session, { resource: "tax_codes", action: "create" });
 
     const body = await req.json();
     if (!body.taxName || body.taxPct == null || !body.countryName) {
