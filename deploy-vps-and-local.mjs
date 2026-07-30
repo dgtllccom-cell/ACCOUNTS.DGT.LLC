@@ -20,7 +20,7 @@ try {
   console.log("\n[2/4] Staging and committing all local code changes...");
   execSync('git add -A', { stdio: 'inherit' });
   try {
-    execSync('git commit -m "feat(communication): production database schema migration for communication_conversations & whatsapp_accounts"', { stdio: 'inherit' });
+    execSync('git commit -m "feat(messaging): Hostinger Titan Email SMTP integration, Branch Email requirement, unified Message System menu & A4 PDF reports"', { stdio: 'inherit' });
   } catch (e) {
     console.log("No new changes to commit or commit already up to date.");
   }
