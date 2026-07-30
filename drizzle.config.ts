@@ -13,12 +13,20 @@ function readDatabaseUrl() {
   return line ? line.slice(line.indexOf("=") + 1).trim() : "";
 }
 
+const databaseUrl = readDatabaseUrl();
+
+if (!databaseUrl) {
+  throw new Error(
+    "DATABASE_URL is required. Configure it in the environment or .env.local before running Drizzle."
+  );
+}
+
 export default defineConfig({
   schema: "./lib/db/schema.ts",
   out: "./supabase/migrations/drizzle",
   dialect: "postgresql",
   dbCredentials: {
-    url: readDatabaseUrl() || "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres"
+    url: databaseUrl
   },
   strict: true
 });

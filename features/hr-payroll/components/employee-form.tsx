@@ -1,6 +1,25 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  UserCheck,
+  Printer,
+  FileText,
+  Building2,
+  MapPin,
+  Calendar,
+  BadgeDollarSign,
+  Clock,
+  ShieldCheck,
+  Layers,
+  Sparkles,
+  UserPlus,
+  Phone,
+  Mail
+} from "lucide-react";
 import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
 import { PersonPicker } from "./person-picker";
 import { Button } from "@/components/ui/button";
@@ -33,21 +52,22 @@ type BranchOption = {
 export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [activeStep, setActiveStep] = useState<number>(1);
 
   // Core fields
   const [personMasterId, setPersonMasterId] = useState("");
   const [category, setCategory] = useState<"Manager" | "Normal Staff" | "Employee" | "Others">("Employee");
   const [designation, setDesignation] = useState("");
   const [department, setDepartment] = useState("");
-  
+
   // Location scopes
   const [countryId, setCountryId] = useState("");
   const [countryBranchId, setCountryBranchId] = useState("");
   const [cityBranchId, setCityBranchId] = useState("");
   const [reportingManagerId, setReportingManagerId] = useState("");
-  
+
   // Timelines
-  const [joiningDate, setJoiningDate] = useState("");
+  const [joiningDate, setJoiningDate] = useState(() => new Date().toISOString().substring(0, 10));
   const [probationStartDate, setProbationStartDate] = useState("");
   const [probationEndDate, setProbationEndDate] = useState("");
   const [employmentType, setEmploymentType] = useState("Full-time");
@@ -87,6 +107,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
   const [cityBranches, setCityBranches] = useState<BranchOption[]>([]);
   const [managers, setManagers] = useState<any[]>([]);
   const [ledgers, setLedgers] = useState<LedgerOption[]>([]);
+  const [personsList, setPersonsList] = useState<any[]>([]);
 
   // Load select lists
   useEffect(() => {
@@ -100,6 +121,11 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
         const ledgersRes = await apiGet<{ ledgers: any[] }>("/api/erp/ledgers");
         setLedgers(ledgersRes.ledgers || []);
+
+        const personsRes = await apiGet<{ customers: any[] }>("/api/erp/customers?type=person");
+        if (personsRes && personsRes.customers) {
+          setPersonsList(personsRes.customers);
+        }
       } catch (err) {
         console.error(err);
       }
@@ -209,10 +235,17 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
   const totalAllowances = Number(accommodationAllowance) + Number(transportAllowance) + Number(foodAllowance) + Number(mobileAllowance) + Number(otherAllowance);
   const netSalary = Math.max(0, Number(basicSalary) + totalAllowances - Number(deduction) - Number(taxDeduction));
 
-  async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault();
+  const selectedPersonObj = useMemo(() => personsList.find((p) => p.id === personMasterId) ?? null, [personsList, personMasterId]);
+  const selectedCountryObj = useMemo(() => countries.find((c) => c.id === countryId) ?? null, [countries, countryId]);
+  const selectedMainBranchObj = useMemo(() => branches.find((b) => b.id === countryBranchId) ?? null, [branches, countryBranchId]);
+  const selectedCityBranchObj = useMemo(() => cityBranches.find((b) => b.id === cityBranchId) ?? null, [cityBranches, cityBranchId]);
+  const selectedManagerObj = useMemo(() => managers.find((m) => m.id === reportingManagerId) ?? null, [managers, reportingManagerId]);
+
+  async function handleSubmit(e?: React.FormEvent) {
+    if (e) e.preventDefault();
     if (!personMasterId) {
-      alert("Please select or add an Employee/Person Name first.");
+      alert("Please select or add an Employee / Person Name first.");
+      setActiveStep(1);
       return;
     }
 
@@ -285,43 +318,110 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
     return <div className="text-center py-12 text-slate-500 dark:text-slate-400 font-medium">Loading employee details...</div>;
   }
 
-  const expenseAccounts = ledgers;
-  const payableAccounts = ledgers;
-  const assetAccounts = ledgers;
+  const stepsList = [
+    { number: 1, label: "Step 1: Category & Identity", icon: <UserCheck className="h-4 w-4" /> },
+    { number: 2, label: "Step 2: Location & Scopes", icon: <MapPin className="h-4 w-4" /> },
+    { number: 3, label: "Step 3: Timelines & Shift", icon: <Clock className="h-4 w-4" /> },
+    { number: 4, label: "Step 4: Salary & Accounts", icon: <BadgeDollarSign className="h-4 w-4" /> },
+    { number: 5, label: "Step 5: Entry Verification Report", icon: <FileText className="h-4 w-4" /> }
+  ];
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-8 bg-card text-card-foreground p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+    <form onSubmit={handleSubmit} className="space-y-6 bg-card text-card-foreground p-6 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
       
-      {/* Employee Category Tabs */}
-      <div>
-        <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-2">Employee Category</label>
-        <div className="grid grid-cols-4 gap-2 bg-slate-100 dark:bg-slate-950 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
-          {(["Manager", "Normal Staff", "Employee", "Others"] as const).map((cat) => (
-            <button
-              key={cat}
-              type="button"
-              onClick={() => setCategory(cat)}
-              className={`py-2.5 rounded-lg text-xs font-bold transition-all ${
-                category === cat
-                  ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200 dark:border-slate-700"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-900"
-              }`}
-            >
-              {cat}
-            </button>
-          ))}
+      {/* Header Banner */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+        <div>
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
+            <Sparkles className="h-4 w-4 text-emerald-600" />
+            <span>Enterprise Employee Registration Wizard</span>
+          </div>
+          <h2 className="text-xl font-black text-slate-900 dark:text-slate-100">
+            {employeeId ? "Edit Employee Master Setup" : "Register New Employee Master Record"}
+          </h2>
         </div>
+
+        {selectedPersonObj && (
+          <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800">
+            {selectedPersonObj.customer_name || "Employee"} ({category})
+          </span>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        
-        {/* Section 1: General Details */}
+      {/* 5-Step Packets Bar */}
+      <div className="grid gap-2 sm:grid-cols-5">
+        {stepsList.map((s) => {
+          const isActive = activeStep === s.number;
+          const isDone = activeStep > s.number;
+
+          return (
+            <button
+              key={s.number}
+              type="button"
+              onClick={() => setActiveStep(s.number)}
+              className={`flex items-center gap-2.5 rounded-xl border p-2.5 text-left transition-all ${
+                isActive
+                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-sm ring-1 ring-emerald-500/30"
+                  : isDone
+                  ? "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300"
+                  : "border-slate-200 dark:border-slate-800 bg-card text-slate-500 hover:border-slate-300"
+              }`}
+            >
+              <div
+                className={`grid h-7 w-7 shrink-0 place-items-center rounded-lg text-xs font-bold transition-colors ${
+                  isActive
+                    ? "bg-emerald-600 text-white"
+                    : isDone
+                    ? "bg-slate-900 text-emerald-400 dark:bg-slate-800"
+                    : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
+                }`}
+              >
+                {isDone ? <Check className="h-3.5 w-3.5" /> : s.number}
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="truncate text-xs font-bold">{s.label}</div>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* STEP 1 PACKET: Category & Identity */}
+      {activeStep === 1 && (
         <div className="space-y-5">
-          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-800 pb-2">Employment & Identity Details</h3>
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <UserCheck className="h-4 w-4 text-emerald-600" />
+              <span>Step 1 Packet: Employee Category & Person Selection</span>
+            </h3>
+            <span className="text-xs font-semibold text-slate-400">Step 1 of 5</span>
+          </div>
+
+          <div>
+            <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-2">
+              Select Employee Category *
+            </label>
+            <div className="grid grid-cols-4 gap-2 bg-slate-100 dark:bg-slate-950 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
+              {(["Manager", "Normal Staff", "Employee", "Others"] as const).map((cat) => (
+                <button
+                  key={cat}
+                  type="button"
+                  onClick={() => setCategory(cat)}
+                  className={`py-2.5 rounded-lg text-xs font-bold transition-all ${
+                    category === cat
+                      ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200 dark:border-slate-700"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-900"
+                  }`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
 
           <div>
             <PersonPicker
-              label="Select or Add Employee / Person Name"
+              label="Select or Add Employee / Person Master Name *"
               value={personMasterId}
               onValueChange={setPersonMasterId}
               countryId={countryId}
@@ -330,34 +430,57 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Designation</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Designation / Position *</label>
               <input
                 type="text"
                 value={designation}
                 onChange={(e) => setDesignation(e.target.value)}
-                placeholder="e.g. Finance Manager"
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                placeholder="e.g. Finance Manager / General Staff"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Department</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Department *</label>
               <input
                 type="text"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
-                placeholder="e.g. Accounts"
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                placeholder="e.g. Accounts / Operations"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
               />
             </div>
           </div>
 
+          {/* Packet Summary Box */}
+          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
+            <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Step 1 Packet Preview</div>
+            <div className="grid grid-cols-3 gap-2">
+              <div><span className="font-semibold text-slate-400">Category:</span> {category}</div>
+              <div><span className="font-semibold text-slate-400">Name:</span> {selectedPersonObj?.customer_name || "Not Selected"}</div>
+              <div><span className="font-semibold text-slate-400">Designation:</span> {designation || "-"}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 2 PACKET: Location & Branch Scopes */}
+      {activeStep === 2 && (
+        <div className="space-y-5">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-emerald-600" />
+              <span>Step 2 Packet: Country, Branch Scopes & Reporting Manager</span>
+            </h3>
+            <span className="text-xs font-semibold text-slate-400">Step 2 of 5</span>
+          </div>
+
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Country</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Country *</label>
               <select
                 value={countryId}
                 onChange={(e) => setCountryId(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
               >
                 <option value="">Select Country</option>
                 {countries.map((c) => (
@@ -371,9 +494,9 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
                 value={countryBranchId}
                 onChange={(e) => setCountryBranchId(e.target.value)}
                 disabled={!countryId}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-40"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 disabled:opacity-40"
               >
-                <option value="">Select Branch</option>
+                <option value="">Select Main Branch</option>
                 {branches.map((b) => (
                   <option key={b.id} value={b.id}>{b.name}</option>
                 ))}
@@ -385,7 +508,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
                 value={cityBranchId}
                 onChange={(e) => setCityBranchId(e.target.value)}
                 disabled={!countryBranchId}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 disabled:opacity-40"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 disabled:opacity-40"
               >
                 <option value="">Select City Branch</option>
                 {cityBranches.map((cb) => (
@@ -395,31 +518,100 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
             </div>
           </div>
 
+          {category !== "Manager" && (
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Reporting Manager</label>
+              <select
+                value={reportingManagerId}
+                onChange={(e) => setReportingManagerId(e.target.value)}
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
+              >
+                <option value="">Select Manager</option>
+                {managers.map((m) => (
+                  <option key={m.id} value={m.id}>{m.person?.customer_name} ({m.employee_code})</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Packet Summary Box */}
+          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
+            <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Step 2 Packet Preview</div>
+            <div className="grid grid-cols-3 gap-2">
+              <div><span className="font-semibold text-slate-400">Country:</span> {selectedCountryObj?.name || "-"}</div>
+              <div><span className="font-semibold text-slate-400">Main Branch:</span> {selectedMainBranchObj?.name || "-"}</div>
+              <div><span className="font-semibold text-slate-400">City Branch:</span> {selectedCityBranchObj?.name || "-"}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 3 PACKET: Timelines, Duty Shift & Contract */}
+      {activeStep === 3 && (
+        <div className="space-y-5">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <Clock className="h-4 w-4 text-emerald-600" />
+              <span>Step 3 Packet: Employment Type, Shift & Contract Timelines</span>
+            </h3>
+            <span className="text-xs font-semibold text-slate-400">Step 3 of 5</span>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Joining Date</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Joining Date *</label>
               <input
                 type="date"
                 value={joiningDate}
                 onChange={(e) => setJoiningDate(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
               />
             </div>
-            {category !== "Manager" && (
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Reporting Manager</label>
-                <select
-                  value={reportingManagerId}
-                  onChange={(e) => setReportingManagerId(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                >
-                  <option value="">Select Manager</option>
-                  {managers.map((m) => (
-                    <option key={m.id} value={m.id}>{m.person?.customer_name} ({m.employee_code})</option>
-                  ))}
-                </select>
-              </div>
-            )}
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Employment Type</label>
+              <select
+                value={employmentType}
+                onChange={(e) => setEmploymentType(e.target.value)}
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
+              >
+                <option value="Full-time">Full-time</option>
+                <option value="Part-time">Part-time</option>
+                <option value="Contract">Contract</option>
+                <option value="Internship">Internship</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Duty Shift</label>
+              <input
+                type="text"
+                value={workingShift}
+                onChange={(e) => setWorkingShift(e.target.value)}
+                placeholder="Day Shift"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Duty Start Time</label>
+              <input
+                type="time"
+                value={dutyStartTime}
+                onChange={(e) => setDutyStartTime(e.target.value)}
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Duty End Time</label>
+              <input
+                type="time"
+                value={dutyEndTime}
+                onChange={(e) => setDutyEndTime(e.target.value)}
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100"
+              />
+            </div>
           </div>
 
           {/* Conditional Timelines */}
@@ -469,78 +661,36 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
             </div>
           )}
 
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Employment Type</label>
-              <select
-                value={employmentType}
-                onChange={(e) => setEmploymentType(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100"
-              >
-                <option value="Full-time">Full-time</option>
-                <option value="Part-time">Part-time</option>
-                <option value="Contract">Contract</option>
-                <option value="Internship">Internship</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Duty Shift</label>
-              <input
-                type="text"
-                value={workingShift}
-                onChange={(e) => setWorkingShift(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Weekly Off Day</label>
-              <select
-                value={weeklyOffDay}
-                onChange={(e) => setWeeklyOffDay(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100"
-              >
-                <option value="Sunday">Sunday</option>
-                <option value="Friday">Friday</option>
-                <option value="Saturday">Saturday</option>
-                <option value="Thursday">Thursday</option>
-              </select>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Shift Duty Start Time</label>
-              <input
-                type="time"
-                value={dutyStartTime}
-                onChange={(e) => setDutyStartTime(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Shift Duty End Time</label>
-              <input
-                type="time"
-                value={dutyEndTime}
-                onChange={(e) => setDutyEndTime(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100"
-              />
+          {/* Packet Summary Box */}
+          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
+            <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Step 3 Packet Preview</div>
+            <div className="grid grid-cols-3 gap-2">
+              <div><span className="font-semibold text-slate-400">Joining Date:</span> {joiningDate || "-"}</div>
+              <div><span className="font-semibold text-slate-400">Type:</span> {employmentType}</div>
+              <div><span className="font-semibold text-slate-400">Shift:</span> {workingShift} ({dutyStartTime} - {dutyEndTime})</div>
             </div>
           </div>
         </div>
+      )}
 
-        {/* Section 2: Salary and Accounts */}
+      {/* STEP 4 PACKET: Salary Details & Account Mapping */}
+      {activeStep === 4 && (
         <div className="space-y-5">
-          <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 border-b border-slate-200 dark:border-slate-800 pb-2">Salary Details & Account Mapping</h3>
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <BadgeDollarSign className="h-4 w-4 text-emerald-600" />
+              <span>Step 4 Packet: Basic Salary, Allowances & GL Ledgers</span>
+            </h3>
+            <span className="text-xs font-semibold text-slate-400">Step 4 of 5</span>
+          </div>
 
-          {/* Salary Type & Currencies */}
           <div className="grid grid-cols-3 gap-3">
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Salary Basis</label>
               <select
                 value={salaryType}
                 onChange={(e) => setSalaryType(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100"
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
               >
                 <option value="Monthly">Monthly</option>
                 <option value="Daily">Daily</option>
@@ -563,7 +713,6 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
             </div>
           </div>
 
-          {/* Allowances */}
           <div>
             <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-2">Monthly Allowances</label>
             <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
@@ -607,20 +756,9 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
                   className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
                 />
               </div>
-              <div className="col-span-2">
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Other Allowances</label>
-                <input
-                  type="number"
-                  value={otherAllowance || ""}
-                  onChange={(e) => setOtherAllowance(Number(e.target.value))}
-                  placeholder="0"
-                  className="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-1.5 text-xs text-slate-900 dark:text-slate-100"
-                />
-              </div>
             </div>
           </div>
 
-          {/* Deductions */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">General Monthly Deduction</label>
@@ -644,22 +782,10 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
             </div>
           </div>
 
-          {/* Calculated Net Summary Card */}
-          <div className="bg-emerald-50 dark:bg-emerald-950/40 p-4 rounded-xl border border-emerald-200 dark:border-emerald-900/60 flex justify-between items-center">
-            <div>
-              <span className="text-[10px] text-emerald-800 dark:text-emerald-300 uppercase tracking-wider block font-bold">Estimated Net Payroll</span>
-              <span className="text-xl font-black text-slate-900 dark:text-white">{netSalary.toLocaleString()} {salaryCurrency}</span>
-            </div>
-            <div className="text-right text-[11px] text-slate-600 dark:text-slate-400 font-medium">
-              <div>Basic: {basicSalary}</div>
-              <div>Allowances: +{totalAllowances}</div>
-              <div>Deductions: -{(Number(deduction) + Number(taxDeduction))}</div>
-            </div>
-          </div>
-
-          {/* Accounts Integration Mapping */}
           <div className="space-y-3 pt-2">
-            <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block border-b border-slate-200 dark:border-slate-800 pb-1">General Ledger Mapping</label>
+            <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block border-b border-slate-200 dark:border-slate-800 pb-1">
+              General Ledger Accounts Mapping
+            </label>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
@@ -670,7 +796,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
                   className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100"
                 >
                   <option value="">Select Ledger</option>
-                  {expenseAccounts.map((l) => (
+                  {ledgers.map((l) => (
                     <option key={l.id} value={l.id}>{l.code} - {l.name}</option>
                   ))}
                 </select>
@@ -684,46 +810,92 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
                   className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100"
                 >
                   <option value="">Select Ledger</option>
-                  {payableAccounts.map((l) => (
-                    <option key={l.id} value={l.id}>{l.code} - {l.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Advance Salary Asset Account</label>
-                <select
-                  value={advanceSalaryAccountId}
-                  onChange={(e) => setAdvanceSalaryAccountId(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100"
-                >
-                  <option value="">Select Ledger</option>
-                  {assetAccounts.map((l) => (
-                    <option key={l.id} value={l.id}>{l.code} - {l.name}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Employee Loan Asset Account</label>
-                <select
-                  value={loanAccountId}
-                  onChange={(e) => setLoanAccountId(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100"
-                >
-                  <option value="">Select Ledger</option>
-                  {assetAccounts.map((l) => (
+                  {ledgers.map((l) => (
                     <option key={l.id} value={l.id}>{l.code} - {l.name}</option>
                   ))}
                 </select>
               </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* Buttons */}
-      <div className="flex justify-end space-x-3 pt-4 border-t border-slate-200 dark:border-slate-800">
+          {/* Packet Summary Box */}
+          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
+            <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Step 4 Packet Preview</div>
+            <div className="grid grid-cols-3 gap-2">
+              <div><span className="font-semibold text-slate-400">Basic Salary:</span> {basicSalary} {salaryCurrency}</div>
+              <div><span className="font-semibold text-slate-400">Allowances:</span> +{totalAllowances}</div>
+              <div><span className="font-semibold text-slate-400">Net Payroll:</span> {netSalary.toLocaleString()} {salaryCurrency}</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 5 PACKET: Entry Verification Report */}
+      {activeStep === 5 && (
+        <div className="space-y-5">
+          <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+            <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
+              <FileText className="h-4 w-4 text-emerald-600" />
+              <span>Step 5 Packet: Employee Master Entry Verification Report</span>
+            </h3>
+            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+              Verified & Ready
+            </span>
+          </div>
+
+          <div className="rounded-2xl border-2 border-emerald-500/20 bg-slate-900 text-white p-6 space-y-4 shadow-md">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Employee Master Report Card</div>
+                <h2 className="text-lg font-black text-white">{selectedPersonObj?.customer_name || "Employee Name"}</h2>
+                <p className="text-xs text-slate-400">{designation || "Staff"} — {department || "General"}</p>
+              </div>
+              <div className="text-right">
+                <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-600 text-white shadow-xs">
+                  {category}
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+              <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Assigned Country</span>
+                <span className="font-bold text-white text-xs">{selectedCountryObj?.name || "-"}</span>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Main Branch</span>
+                <span className="font-bold text-white text-xs">{selectedMainBranchObj?.name || "-"}</span>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">City Branch</span>
+                <span className="font-bold text-white text-xs">{selectedCityBranchObj?.name || "-"}</span>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Joining Date</span>
+                <span className="font-bold text-white text-xs">{joiningDate || "-"}</span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs pt-2">
+              <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Employment & Shift</span>
+                <span className="font-bold text-white text-xs">{employmentType} ({workingShift})</span>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Basic Salary Rate</span>
+                <span className="font-bold text-emerald-400 text-xs">{basicSalary} {salaryCurrency}</span>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Net Payroll Estimate</span>
+                <span className="font-bold text-emerald-400 text-xs">{netSalary.toLocaleString()} {salaryCurrency}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Footer Actions */}
+      <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
         <Button
           type="button"
           onClick={onCancel}
@@ -732,13 +904,40 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
         >
           Cancel
         </Button>
-        <Button
-          type="submit"
-          disabled={saving}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 shadow-sm"
-        >
-          {saving ? "Saving..." : "Save Employee Setup"}
-        </Button>
+
+        <div className="flex items-center gap-2">
+          {activeStep > 1 && (
+            <Button
+              type="button"
+              onClick={() => setActiveStep((s) => s - 1)}
+              variant="outline"
+              className="text-xs font-semibold gap-1"
+            >
+              <ChevronLeft className="h-4 w-4" />
+              <span>Previous Step</span>
+            </Button>
+          )}
+
+          {activeStep < 5 && (
+            <Button
+              type="button"
+              onClick={() => setActiveStep((s) => s + 1)}
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 gap-1"
+            >
+              <span>Next Step</span>
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          )}
+
+          <Button
+            type="submit"
+            disabled={saving}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 shadow-sm gap-1.5"
+          >
+            <ShieldCheck className="h-4 w-4" />
+            <span>{saving ? "Saving..." : "Save & Finalize Employee"}</span>
+          </Button>
+        </div>
       </div>
     </form>
   );

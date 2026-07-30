@@ -425,8 +425,14 @@ export function CityBranchRegistrationWizard() {
                   }}
                 />
                 <InputField label="Currency" value={currency} onChange={setCurrency} placeholder="PKR / AED / USD" />
-                <InputField label="City Branch Name" value={branchName} onChange={setBranchName} placeholder="e.g. Chaman City Branch" />
-                <InputField label="City Branch Code" value={branchCode} onChange={(value) => setBranchCode(normalizeCode(value))} placeholder="e.g. PAK-CH-001" />
+                <InputField label="City Branch Name *" value={branchName} onChange={setBranchName} placeholder="e.g. Chaman City Branch" />
+                <InputField label="City Branch Code *" value={branchCode} onChange={(value) => setBranchCode(normalizeCode(value))} placeholder="e.g. PAK-CH-001" />
+                <InputField
+                  label="Branch Email (Hostinger Titan Mailbox) *"
+                  value={communication.branchEmail}
+                  onChange={(value) => updateCommunication("branchEmail", value)}
+                  placeholder="e.g. dubai@dgtllc.com or khi@dgtllc.com"
+                />
                 <InputField label="Phone Number" value={phone} onChange={setPhone} placeholder="+92..." />
                 <CompanyPicker label="Linked Company / Owner Master" value={companyId} onValueChange={setCompanyId} placeholder="Search company master..." />
               </div>

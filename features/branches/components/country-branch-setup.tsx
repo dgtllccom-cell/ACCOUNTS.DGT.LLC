@@ -185,6 +185,7 @@ function CountryBranchSetupContent() {
   });
 
   const [currency, setCurrency] = useState("");
+  const [branchEmail, setBranchEmail] = useState("");
   const [fullAddress, setFullAddress] = useState("");
 
   const [companyId, setCompanyId] = useState("");
@@ -870,6 +871,11 @@ function CountryBranchSetupContent() {
       return;
     }
 
+    if (!branchEmail || !branchEmail.includes("@")) {
+      setBanner({ type: "error", message: "Branch Email (Hostinger Titan Mailbox) is required." });
+      return;
+    }
+
     if (!permissionTemplate || !permissionGrants.length) {
       setBanner({ type: "error", message: "Please select a Role Template and at least one permission before saving the Country." });
       return;
@@ -884,8 +890,7 @@ function CountryBranchSetupContent() {
         .map((row) => ({ type: row.type.trim(), value: row.value.trim() }))
         .filter((row) => row.type && row.value);
 
-      const emailContact = contactsPayload.find((row) => row.type.toLowerCase().includes("email"))?.value;
-      const email = emailContact && emailContact.includes("@") ? emailContact : `${branchCode.trim().toLowerCase()}@dgt.llc`;
+      const email = branchEmail.trim().toLowerCase();
       const phone = contactsPayload.find((row) => row.type.toLowerCase().includes("phone") || row.type.toLowerCase().includes("mobile"))?.value;
       const whatsappNumber = contactsPayload.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value;
 
@@ -1069,8 +1074,25 @@ function CountryBranchSetupContent() {
                   />
 
                   <div className="space-y-2">
-                    <Label className="text-xs text-slate-600">Currency</Label>
+                    <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Currency</Label>
                     <Input value={currency} readOnly placeholder="Auto from selected Country" />
+                  </div>
+
+                  <div className="space-y-1.5 md:col-span-2">
+                    <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      Branch Email (Hostinger Titan Mailbox) *
+                    </Label>
+                    <Input
+                      type="email"
+                      required
+                      value={branchEmail}
+                      onChange={(e) => setBranchEmail(e.target.value)}
+                      placeholder="e.g. dubai@dgtllc.com or khi@dgtllc.com"
+                      className="h-9 text-xs font-medium"
+                    />
+                    <p className="text-[11px] text-slate-500">
+                      Enter your Hostinger Titan mailbox address for this branch. The ERP will securely send emails using this sender address via Titan SMTP.
+                    </p>
                   </div>
                 </div>
                 <input type="hidden" value={branchType} readOnly />

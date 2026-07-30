@@ -23,7 +23,9 @@ import {
   Lock,
   Plus,
   Search,
-  UserCheck
+  UserCheck,
+  BadgeCheck,
+  Shield
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -98,6 +100,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   // User Core State
   const [userCode, setUserCode] = useState(() => makeAutoUserCode());
   const [fullName, setFullName] = useState("");
+  const [loginUsername, setLoginUsername] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [personalEmail, setPersonalEmail] = useState("");
   const [designation, setDesignation] = useState("Staff");
@@ -150,6 +153,9 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     if (emp) {
       const empName = emp.person?.customer_name || emp.name || emp.full_name || "";
       setFullName(empName);
+      if (!loginUsername) {
+        setLoginUsername(empName.toLowerCase().replace(/\s+/g, "."));
+      }
       if (emp.person?.mobile) setContactPhone(emp.person.mobile);
       if (emp.person?.email) setPersonalEmail(emp.person.email);
       if (emp.designation) setDesignation(emp.designation);
@@ -319,7 +325,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     if (currentStep === 3) {
       if (!editUserId && (!password || password.length < 8)) return false;
       if (password && password !== confirmPassword) return false;
-      return Boolean(personalEmail.trim() || userCode.trim());
+      return Boolean(userCode.trim());
     }
     return true;
   }
@@ -425,7 +431,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   }
 
   const steps = [
-    { number: 1 as const, label: "Select Employee", icon: <Users className="h-4 w-4" /> },
+    { number: 1 as const, label: "Employee & Identity", icon: <Users className="h-4 w-4" /> },
     { number: 2 as const, label: "Branch Access", icon: <MapPin className="h-4 w-4" /> },
     { number: 3 as const, label: "Login & Security", icon: <Key className="h-4 w-4" /> }
   ];
@@ -455,6 +461,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               onClick={() => {
                 setEditUserId(null);
                 setFullName("");
+                setLoginUsername("");
                 setSelectedEmployeeId("");
                 setUserCode(makeAutoUserCode());
                 setStep(1);
@@ -556,10 +563,10 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
       {/* Main Split-Screen Section */}
       <div className="grid gap-6 lg:grid-cols-12">
-        {/* Left Side Form Wizard (7 Columns) */}
-        <div className="space-y-4 lg:col-span-7">
+        {/* Left Side Form Wizard (6 Columns) */}
+        <div className="space-y-4 lg:col-span-6">
           <Card className="rounded-xl border border-slate-200 dark:border-slate-800 bg-card shadow-sm overflow-hidden">
-            <CardHeader className="border-b bg-slate-900 text-white px-5 py-3.5 flex flex-row items-center justify-between">
+            <CardHeader className="border-b bg-slate-900 text-white px-5 py-3 flex flex-row items-center justify-between">
               <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-slate-100">
                 {steps[step - 1].icon}
                 <span>Step {step}: {steps[step - 1].label}</span>
@@ -569,106 +576,67 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               </span>
             </CardHeader>
 
-            <CardContent className="p-5 space-y-4">
+            <CardContent className="p-4 space-y-3">
               {/* STEP 1: Select & Attach Employee */}
               {step === 1 && (
-                <div className="space-y-4">
-                  <div className="flex flex-col gap-3">
-                    <div className="flex items-end gap-2">
-                      <div className="flex-1">
-                        <SearchSelect
-                          label={hrEmployeesLoading ? "Select Employee Record (Loading...)" : "Select Registered Employee *"}
-                          value={selectedEmployeeId}
-                          placeholder="Search employee by code, name, designation..."
-                          options={employeeOptions}
-                          disabled={hrEmployeesLoading}
-                          onValueChange={setSelectedEmployeeId}
-                        />
-                      </div>
-                      <Button
-                        type="button"
-                        onClick={() => setShowEmployeeModal(true)}
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 h-9 rounded-lg gap-1.5 shadow-sm shrink-0"
-                      >
-                        <Plus className="h-4 w-4" />
-                        <span>Add New Employee</span>
-                      </Button>
-                    </div>
-
-                    <div className="relative my-2">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t border-slate-200 dark:border-slate-800" />
-                      </div>
-                      <div className="relative flex justify-center text-[10px] uppercase">
-                        <span className="bg-card px-2 text-slate-400 font-bold">Or Enter User Details Directly</span>
+                <div className="space-y-3">
+                  <div className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-1">
+                      <SearchSelect
+                        label={hrEmployeesLoading ? "Select Employee Record (Loading...)" : "Select Registered Employee *"}
+                        value={selectedEmployeeId}
+                        placeholder="Search employee by code, name, designation..."
+                        options={employeeOptions}
+                        disabled={hrEmployeesLoading}
+                        onValueChange={setSelectedEmployeeId}
+                        createLabel="+ Register New Employee Master"
+                        onCreateNew={() => setShowEmployeeModal(true)}
+                      />
+                      <div className="flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setShowEmployeeModal(true)}
+                          className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 hover:underline flex items-center gap-1"
+                        >
+                          <Plus className="h-3 w-3" />
+                          <span>+ Add New Employee</span>
+                        </button>
                       </div>
                     </div>
 
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div className="space-y-1.5 sm:col-span-2">
+                    <div className="grid gap-2.5 sm:grid-cols-2 pt-1">
+                      <div className="space-y-1">
                         <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">User Full Name *</Label>
                         <Input
                           value={fullName}
                           onChange={(e) => setFullName(e.target.value)}
                           placeholder="e.g. Muhammad Ali Shah"
-                          className="h-9 text-xs font-medium"
+                          className="h-8.5 text-xs font-medium"
                         />
                       </div>
 
-                      <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Contact Phone Number</Label>
+                      <div className="space-y-1">
+                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Login Username / Page Name *</Label>
                         <Input
-                          value={contactPhone}
-                          onChange={(e) => setContactPhone(e.target.value)}
-                          placeholder="e.g. +92 300 1234567"
-                          className="h-9 text-xs font-mono"
-                        />
-                      </div>
-
-                      <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Personal / Official Email</Label>
-                        <Input
-                          type="email"
-                          value={personalEmail}
-                          onChange={(e) => setPersonalEmail(e.target.value)}
-                          placeholder="e.g. user@company.com"
-                          className="h-9 text-xs"
+                          value={loginUsername}
+                          onChange={(e) => setLoginUsername(e.target.value)}
+                          placeholder="e.g. ali.shah or USR-1001"
+                          className="h-8.5 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400"
                         />
                       </div>
                     </div>
                   </div>
-
-                  {/* Selected Employee Summary Card */}
-                  {selectedEmployeeObj && (
-                    <div className="rounded-xl border border-emerald-200 dark:border-emerald-800 bg-emerald-50/50 dark:bg-emerald-950/30 p-4 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold text-xs">
-                          <UserCheck className="h-4 w-4 text-emerald-600" />
-                          <span>Attached Employee Record</span>
-                        </div>
-                        <span className="font-mono text-[11px] font-bold bg-emerald-200 dark:bg-emerald-800 text-emerald-900 dark:text-emerald-100 px-2 py-0.5 rounded">
-                          {selectedEmployeeObj.employee_code || "EMP"}
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 text-xs text-slate-700 dark:text-slate-300 pt-1 border-t border-emerald-200/60 dark:border-emerald-800/60">
-                        <div><span className="font-semibold text-slate-500">Name:</span> {fullName}</div>
-                        <div><span className="font-semibold text-slate-500">Designation:</span> {designation || "-"}</div>
-                        <div><span className="font-semibold text-slate-500">Department:</span> {department || "-"}</div>
-                        <div><span className="font-semibold text-slate-500">Phone:</span> {contactPhone || "-"}</div>
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
 
-              {/* STEP 2: Location & Branch Access */}
+              {/* STEP 2: Location & Branch Access (Compact 2-per-row) */}
               {step === 2 && (
-                <div className="space-y-4">
-                  <div className="grid gap-4">
+                <div className="space-y-3">
+                  <div className="grid gap-2.5 sm:grid-cols-2">
                     <SearchSelect
-                      label={loadingCountries ? "Assigned Country (Loading...)" : "Assigned Country *"}
+                      label={loadingCountries ? "Country (Loading...)" : "Assigned Country *"}
                       value={countryId}
-                      placeholder="Select country from master locations"
+                      placeholder="Select country"
                       disabled={loadingCountries}
                       options={countryOptions}
                       onValueChange={setCountryId}
@@ -690,7 +658,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       <SearchSelect
                         label="Assigned Main Branch *"
                         value={countryBranchId}
-                        placeholder="Select country main branch"
+                        placeholder="Select main branch"
                         options={mainBranches.map((b) => ({ value: b.id, label: `${b.name} (${b.code})`, keywords: b.name }))}
                         disabled={!countryId}
                         onValueChange={setCountryBranchId}
@@ -706,16 +674,19 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       />
                     )}
 
-                    <div className="grid grid-cols-2 gap-3">
-                      <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Branch Code (Auto)</Label>
-                        <Input value={branchCode} readOnly className="bg-slate-100 dark:bg-slate-900 font-mono font-bold h-9 text-xs text-emerald-600 dark:text-emerald-400 border-slate-200 dark:border-slate-700" />
-                      </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Branch Code (Auto)</Label>
+                      <Input value={branchCode} readOnly className="bg-slate-100 dark:bg-slate-900 font-mono font-bold h-9 text-xs text-emerald-600 dark:text-emerald-400 border-slate-200 dark:border-slate-700" />
+                    </div>
 
-                      <div className="space-y-1.5">
-                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Work City / Country (Auto)</Label>
-                        <Input value={cityName || selectedCountry?.name || "-"} readOnly className="bg-slate-100 dark:bg-slate-900 font-bold h-9 text-xs text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700" />
-                      </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Work City / Country (Auto)</Label>
+                      <Input value={cityName || selectedCountry?.name || "-"} readOnly className="bg-slate-100 dark:bg-slate-900 font-bold h-9 text-xs text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700" />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Currency Scope (Auto)</Label>
+                      <Input value={currency || "USD"} readOnly className="bg-slate-100 dark:bg-slate-900 font-bold h-9 text-xs text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700" />
                     </div>
                   </div>
                 </div>
@@ -723,33 +694,33 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
               {/* STEP 3: System Login Credentials & Role Privileges */}
               {step === 3 && (
-                <div className="space-y-4">
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <div className="space-y-1.5">
+                <div className="space-y-3">
+                  <div className="grid gap-2.5 sm:grid-cols-2">
+                    <div className="space-y-1">
                       <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">User ID / System Code *</Label>
                       <Input
                         value={userCode}
                         onChange={(e) => setUserCode(e.target.value)}
                         placeholder="e.g. USR-1001"
-                        className="h-9 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400"
+                        className="h-8.5 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400"
                       />
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Login Email / Identifier *</Label>
                       <Input
                         type="email"
                         value={personalEmail}
                         onChange={(e) => setPersonalEmail(e.target.value)}
                         placeholder="user@dgt.com"
-                        className="h-9 text-xs font-medium"
+                        className="h-8.5 text-xs font-medium"
                       />
                     </div>
 
-                    <div className="space-y-1.5 sm:col-span-2">
+                    <div className="space-y-1 sm:col-span-2">
                       <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">System Role Assignment *</Label>
                       <select
-                        className="flex h-9 w-full rounded-lg border border-input bg-background px-3 text-xs shadow-sm font-medium"
+                        className="flex h-8.5 w-full rounded-lg border border-input bg-background px-3 text-xs shadow-sm font-medium"
                         value={role}
                         onChange={(e) => setRole(e.target.value as EnterpriseRole)}
                       >
@@ -761,36 +732,36 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       </select>
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                        {editUserId ? "New Password (Leave blank to keep existing)" : "Password *"}
+                        {editUserId ? "New Password" : "Password *"}
                       </Label>
                       <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          placeholder="At least 8 characters"
-                          className="h-9 text-xs font-mono pr-9"
+                          placeholder="At least 8 chars"
+                          className="h-8.5 text-xs font-mono pr-8"
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
+                          className="absolute right-2 top-2 text-slate-400 hover:text-slate-600"
                         >
-                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                          {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
                         </button>
                       </div>
                     </div>
 
-                    <div className="space-y-1.5">
+                    <div className="space-y-1">
                       <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Confirm Password</Label>
                       <Input
                         type={showPassword ? "text" : "password"}
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="Re-enter password"
-                        className="h-9 text-xs font-mono"
+                        className="h-8.5 text-xs font-mono"
                       />
                     </div>
                   </div>
@@ -798,16 +769,16 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               )}
 
               {/* Step Navigation Controls */}
-              <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
+              <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   disabled={step === 1 || saving}
                   onClick={prev}
-                  className="gap-1.5 text-xs font-semibold"
+                  className="gap-1.5 text-xs font-semibold h-8"
                 >
-                  <ChevronLeft className="h-4 w-4" />
+                  <ChevronLeft className="h-3.5 w-3.5" />
                   <span>Previous</span>
                 </Button>
 
@@ -817,10 +788,10 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     size="sm"
                     disabled={!isStepValid(step) || saving}
                     onClick={next}
-                    className="gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white"
+                    className="gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white h-8"
                   >
                     <span>Next Step</span>
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-3.5 w-3.5" />
                   </Button>
                 ) : (
                   <Button
@@ -828,13 +799,13 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     size="sm"
                     disabled={!isStepValid(3) || saving}
                     onClick={finish}
-                    className="gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-6"
+                    className="gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-5 h-8"
                   >
                     {saving ? (
                       <span>Saving User...</span>
                     ) : (
                       <>
-                        <ShieldCheck className="h-4 w-4" />
+                        <ShieldCheck className="h-3.5 w-3.5" />
                         <span>{editUserId ? "Update User" : "Register User Now"}</span>
                       </>
                     )}
@@ -845,64 +816,131 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
           </Card>
         </div>
 
-        {/* Right Side User Preview Summary Card (5 Columns) */}
-        <div className="space-y-4 lg:col-span-5">
-          <Card className="rounded-xl border border-slate-200 dark:border-slate-800 bg-card shadow-sm overflow-hidden sticky top-6">
-            <CardHeader className="bg-slate-900 text-white px-5 py-3.5 flex flex-row items-center justify-between">
-              <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-slate-100">
-                <UserCheck className="h-4 w-4 text-emerald-400" />
-                <span>User Record Summary</span>
-              </CardTitle>
-              <span className="text-[11px] font-mono font-bold text-emerald-400">
-                {role}
+        {/* Right Side Live User Summary Card - ENLARGED & RICH A4 PREVIEW (6 Columns) */}
+        <div className="space-y-4 lg:col-span-6">
+          <Card className="rounded-xl border-2 border-emerald-500/20 bg-card shadow-md overflow-hidden sticky top-6">
+            <CardHeader className="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white px-5 py-4 flex flex-row items-center justify-between border-b border-slate-800">
+              <div className="flex items-center gap-3">
+                <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-600/20 text-emerald-400 border border-emerald-500/30">
+                  <UserCheck className="h-5 w-5" />
+                </div>
+                <div>
+                  <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Live User Card</div>
+                  <CardTitle className="text-sm font-black tracking-tight text-white">
+                    {fullName || "System User Preview"}
+                  </CardTitle>
+                </div>
+              </div>
+              <span className="text-xs font-mono font-extrabold text-emerald-400 bg-slate-950 px-2.5 py-1 rounded-md border border-emerald-500/30">
+                {userCode}
               </span>
             </CardHeader>
 
             <CardContent className="p-5 space-y-4 text-xs">
-              <div className="rounded-lg bg-slate-50 dark:bg-slate-900/60 p-3.5 border border-slate-200 dark:border-slate-800 space-y-2">
-                <div className="flex justify-between items-center pb-2 border-b border-slate-200 dark:border-slate-800">
-                  <span className="text-slate-500 font-semibold">User ID:</span>
-                  <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{userCode}</span>
+              {/* Profile Summary & Status Bar */}
+              <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/80">
+                <div className="space-y-0.5">
+                  <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">System Role</div>
+                  <div className="font-extrabold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
+                    <Shield className="h-4 w-4 text-emerald-600" />
+                    <span>{roleOptions.find((r) => r.value === role)?.label || role}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500 font-semibold">Full Name:</span>
-                  <span className="font-bold text-slate-900 dark:text-slate-100">{fullName || "Not Specified"}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500 font-semibold">Phone:</span>
-                  <span className="font-mono">{contactPhone || "-"}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500 font-semibold">Email:</span>
-                  <span className="truncate max-w-[180px] text-slate-700 dark:text-slate-300">{personalEmail || "-"}</span>
-                </div>
-              </div>
-
-              <div className="rounded-lg bg-slate-50 dark:bg-slate-900/60 p-3.5 border border-slate-200 dark:border-slate-800 space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500 font-semibold">Country:</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200">{selectedCountry?.name || "-"}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500 font-semibold">Branch:</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200">
-                    {(branchType === "main" ? selectedMainBranch?.name : selectedCityBranch?.name) || "-"}
+                <div className="text-right">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-600 text-white shadow-xs">
+                    <BadgeCheck className="h-3 w-3" /> Active User
                   </span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500 font-semibold">Branch Code:</span>
-                  <span className="font-mono text-emerald-600 dark:text-emerald-400 font-bold">{branchCode || "-"}</span>
+              </div>
+
+              {/* Identity & Login Details Grid */}
+              <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">User ID / Code</span>
+                  <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-xs">{userCode}</div>
+                </div>
+
+                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Login Username</span>
+                  <div className="font-mono font-bold text-slate-900 dark:text-slate-100 text-xs truncate">
+                    {loginUsername || userCode.toLowerCase()}
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Contact Mobile</span>
+                  <div className="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs">{contactPhone || "-"}</div>
+                </div>
+
+                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Official Email</span>
+                  <div className="font-bold text-slate-800 dark:text-slate-200 text-xs truncate">{personalEmail || "-"}</div>
                 </div>
               </div>
 
-              <div className="rounded-lg bg-slate-900 text-slate-100 p-3.5 space-y-2">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Assigned System Role</div>
-                <div className="font-bold text-emerald-400 text-sm">
-                  {roleOptions.find((r) => r.value === role)?.label || role}
+              {/* Employee & Location Scope Breakdown */}
+              <div className="rounded-xl bg-slate-900 text-slate-100 p-4 space-y-3 border border-slate-800">
+                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
+                  <div className="flex items-center gap-2 font-bold text-xs text-emerald-400">
+                    <Building2 className="h-4 w-4" />
+                    <span>Location & Office Scope</span>
+                  </div>
+                  <span className="font-mono text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">
+                    {branchCode || "GLOBAL"}
+                  </span>
                 </div>
-                <p className="text-[11px] text-slate-400">
-                  {roleOptions.find((r) => r.value === role)?.help}
-                </p>
+
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div>
+                    <span className="text-slate-400 text-[11px] block">Assigned Country:</span>
+                    <span className="font-bold text-white">{selectedCountry?.name || "Global Scope"}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 text-[11px] block">Branch Scope:</span>
+                    <span className="font-bold text-white">
+                      {(branchType === "main" ? selectedMainBranch?.name : selectedCityBranch?.name) || "All Branches"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 text-[11px] block">Designation:</span>
+                    <span className="font-bold text-white">{designation || "Company Staff"}</span>
+                  </div>
+                  <div>
+                    <span className="text-slate-400 text-[11px] block">Department:</span>
+                    <span className="font-bold text-white">{department || "Operations"}</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Actions Footer */}
+              <div className="pt-2 flex justify-end">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    openUserA4ReportWindow({
+                      userId: editUserId || "USR-PREVIEW",
+                      userCode: userCode,
+                      fullName: fullName || "User Name",
+                      countryName: selectedCountry?.name || "Pakistan",
+                      branchName: (branchType === "main" ? selectedMainBranch?.name : selectedCityBranch?.name) || "Main Branch",
+                      branchCode: branchCode || "PK-MAIN-001",
+                      branchType: designation || "Company Staff",
+                      role: role,
+                      registrationDate: new Date().toISOString(),
+                      status: "Active",
+                      permissions: [],
+                      lastActivity: new Date().toISOString(),
+                      lastActivityAction: "user.registered",
+                      rawPassword: password || "••••••••",
+                      activityCounts: { logins: 1, transactions: 0, roznamcha: 0, purchases: 0, payments: 0, accounts: 0, approvals: 0, edits: 0 }
+                    });
+                  }}
+                  className="gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200"
+                >
+                  <Printer className="h-3.5 w-3.5 text-emerald-600" />
+                  <span>Print Full A4 Report</span>
+                </Button>
               </div>
             </CardContent>
           </Card>
