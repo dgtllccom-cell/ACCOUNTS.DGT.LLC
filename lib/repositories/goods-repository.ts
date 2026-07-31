@@ -1,5 +1,6 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import { allocateFormSerials } from "@/lib/services/form-serials";
 
 export type GoodsVariationRow = {
   id: string;
@@ -199,6 +200,10 @@ export class GoodsRepository {
 
     if (error) throw new Error(error.message);
     void translateMasterRecord("goods", data.id as string, { goods_name: input.goodsName }, "en");
+    try {
+      const s = await allocateFormSerials("goods", { countryId: input.originCountryId ?? null });
+      await supabase.from("goods").update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial }).eq("id", data.id as string);
+    } catch { /* non-fatal */ }
     return data.id as string;
   }
 

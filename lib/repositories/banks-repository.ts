@@ -1,5 +1,6 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import { allocateFormSerials } from "@/lib/services/form-serials";
 
 export type BankRow = {
   id: string;
@@ -145,6 +146,10 @@ export class BanksRepository {
       .single();
     if (error) throw new Error(error.message);
     void translateMasterRecord("banks", (data as { id: string }).id, { bank_name: input.bankName, short_name: input.shortName, branch_name: input.branchName }, "en");
+    try {
+      const s = await allocateFormSerials("banks", { countryId: input.countryId ?? null });
+      await supabase.from("banks").update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial }).eq("id", (data as { id: string }).id);
+    } catch { /* non-fatal */ }
     return (data as { id: string }).id;
   }
 

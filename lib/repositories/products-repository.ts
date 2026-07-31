@@ -1,6 +1,7 @@
 import type { ErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import { allocateFormSerials } from "@/lib/services/form-serials";
 
 export type ProductTranslationInput = {
   languageCode: string;
@@ -206,6 +207,10 @@ export class ProductsRepository {
       .single();
     if (error) throw new Error(error.message);
     void translateMasterRecord("products", data.id as string, { product_name: input.productName }, "en");
+    try {
+      const s = await allocateFormSerials("products", { countryId: input.countryId ?? null });
+      await supabase.from("products").update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial }).eq("id", data.id as string);
+    } catch { /* non-fatal */ }
     return data.id as string;
   }
 
