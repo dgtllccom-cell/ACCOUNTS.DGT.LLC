@@ -95,7 +95,7 @@ export function TransitLoadingManagementView({ lang }: { lang: SupportedLanguage
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-black text-slate-900 dark:text-white">{t(lang, "tt.title")}</h1>
         <div className="flex flex-wrap items-center gap-2">
-          <ReportActions title={t(lang, "tt.title")} rows={filtered} columns={[{ key: "transit_date", label: t(lang, "tt.date") }, { key: "transit_company", label: t(lang, "tt.company") }, { key: "truck_number", label: "Truck" }, { key: "goods_name", label: t(lang, "tt.goods") }, { key: "transit_route", label: t(lang, "tt.route") }, { key: "container_number", label: t(lang, "tt.container") }]} />
+          <ReportActions title={t(lang, "tt.title")} rows={filtered} columns={[{ key: "transit_date", label: t(lang, "tt.date") }, { key: "transit_company", label: t(lang, "tt.company") }, { key: "truck_number", label: "Truck" }, { key: "goods_name", label: t(lang, "tt.goods") }, { key: "transit_route", label: t(lang, "tt.route") }, { key: "container_number", label: t(lang, "tt.container") }]} lang={lang} />
           <button onClick={startAdd} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800">
             <Plus className="h-4 w-4" /> {t(lang, "tt.add")}
           </button>

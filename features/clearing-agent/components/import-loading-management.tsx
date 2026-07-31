@@ -94,7 +94,7 @@ export function ImportLoadingManagementView({ lang }: { lang: SupportedLanguage 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-black text-slate-900 dark:text-white">{t(lang, "il.title")}</h1>
         <div className="flex flex-wrap items-center gap-2">
-          <ReportActions title={t(lang, "il.title")} rows={filtered} columns={[{ key: "import_bill_number", label: t(lang, "il.bill") }, { key: "import_date", label: t(lang, "il.date") }, { key: "importer_name", label: t(lang, "il.importer") }, { key: "truck_number", label: "Truck" }, { key: "goods_name", label: t(lang, "il.goods") }, { key: "customs_office", label: t(lang, "il.customs") }]} />
+          <ReportActions title={t(lang, "il.title")} rows={filtered} columns={[{ key: "import_bill_number", label: t(lang, "il.bill") }, { key: "import_date", label: t(lang, "il.date") }, { key: "importer_name", label: t(lang, "il.importer") }, { key: "truck_number", label: "Truck" }, { key: "goods_name", label: t(lang, "il.goods") }, { key: "customs_office", label: t(lang, "il.customs") }]} lang={lang} />
           <button onClick={startAdd} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800">
             <Plus className="h-4 w-4" /> {t(lang, "il.add")}
           </button>

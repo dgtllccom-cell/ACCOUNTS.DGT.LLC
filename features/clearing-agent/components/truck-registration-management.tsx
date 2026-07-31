@@ -110,7 +110,7 @@ export function TruckRegistrationManagementView({ lang }: { lang: SupportedLangu
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-black text-slate-900 dark:text-white">{t(lang, "tr.title")}</h1>
         <div className="flex flex-wrap items-center gap-2">
-          <ReportActions title={t(lang, "tr.title")} rows={filtered} columns={[{ key: "truck_number", label: t(lang, "tr.number") }, { key: "registration_number", label: t(lang, "tr.reg_no") }, { key: "owner_name", label: t(lang, "tr.owner") }, { key: "driver_name", label: t(lang, "tr.driver") }, { key: "status", label: t(lang, "tr.status") }, { key: "registration_expiry_date", label: t(lang, "tr.reg_expiry") }, { key: "insurance_expiry_date", label: t(lang, "tr.ins_expiry") }]} />
+          <ReportActions title={t(lang, "tr.title")} rows={filtered} columns={[{ key: "truck_number", label: t(lang, "tr.number") }, { key: "registration_number", label: t(lang, "tr.reg_no") }, { key: "owner_name", label: t(lang, "tr.owner") }, { key: "driver_name", label: t(lang, "tr.driver") }, { key: "status", label: t(lang, "tr.status") }, { key: "registration_expiry_date", label: t(lang, "tr.reg_expiry") }, { key: "insurance_expiry_date", label: t(lang, "tr.ins_expiry") }]} lang={lang} />
           <button onClick={startAdd} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800">
             <Plus className="h-4 w-4" /> {t(lang, "tr.add")}
           </button>
