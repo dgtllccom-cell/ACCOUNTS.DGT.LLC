@@ -2,7 +2,9 @@ import fs from "node:fs";
 import postgres from "postgres";
 
 const confirmFlag = "--confirm-clean-operational";
-const applyChanges = process.argv.includes(confirmFlag);`r`nconst backupArg = process.argv.find((argument) => argument.startsWith("--backup="));`r`nconst backupDir = backupArg?.slice("--backup=".length);
+const applyChanges = process.argv.includes(confirmFlag);
+const backupArg = process.argv.find((argument) => argument.startsWith("--backup="));
+const backupDir = backupArg?.slice("--backup=".length);
 
 const fileEnv = Object.fromEntries(
   fs
@@ -233,7 +235,8 @@ try {
     JSON.stringify(
       {
         status: applyChanges ? "success" : "dry_run",
-        mode: applyChanges ? "applied" : `no changes; rerun with ${confirmFlag}`,`r`n        verifiedBackup,
+        mode: applyChanges ? "applied" : `no changes; rerun with ${confirmFlag}`,
+        verifiedBackup,
         preservedBefore,
         preservedAfter,
         operationalBefore,
