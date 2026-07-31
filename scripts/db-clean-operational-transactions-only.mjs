@@ -3,8 +3,10 @@ import postgres from "postgres";
 
 const confirmFlag = "--confirm-clean-operational";
 const applyChanges = process.argv.includes(confirmFlag);
+const backupArg = process.argv.find((argument) => argument.startsWith("--backup="));
+const backupDir = backupArg?.slice("--backup=".length);
 
-const env = Object.fromEntries(
+const fileEnv = Object.fromEntries(
   fs
     .readFileSync(".env.local", "utf8")
     .split(/\r?\n/)
@@ -15,6 +17,30 @@ const env = Object.fromEntries(
     })
 );
 
+const env = { ...fileEnv, ...process.env };
+
+function validateBackup(directory) {
+  if (!directory) throw new Error(`${confirmFlag} requires --backup=<completed backup directory>.`);
+  const resolved = path.resolve(directory);
+  const manifestPath = path.join(resolved, "manifest.json");
+  if (!fs.existsSync(manifestPath)) throw new Error(`Backup manifest is missing: ${manifestPath}`);
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  if (manifest.status !== "complete" || !manifest.completedAt || Number(manifest.tableCount) < 100) {
+    throw new Error("Backup manifest is incomplete or invalid.");
+  }
+  for (const [table, entry] of Object.entries(manifest.tables || {})) {
+    const filePath = path.join(resolved, entry.file || "");
+    if (entry.status !== "complete" || !entry.file || !fs.existsSync(filePath)) {
+      throw new Error(`Backup table is incomplete: ${table}`);
+    }
+    if (fs.statSync(filePath).size !== Number(entry.bytes)) {
+      throw new Error(`Backup size mismatch: ${table}`);
+    }
+  }
+  return { directory: resolved, completedAt: manifest.completedAt, tableCount: manifest.tableCount };
+}
+
+const verifiedBackup = applyChanges ? validateBackup(backupDir) : null;
 if (!env.DATABASE_URL) {
   console.error("DATABASE_URL is not set in .env.local");
   process.exit(1);
@@ -210,6 +236,7 @@ try {
       {
         status: applyChanges ? "success" : "dry_run",
         mode: applyChanges ? "applied" : `no changes; rerun with ${confirmFlag}`,
+        verifiedBackup,
         preservedBefore,
         preservedAfter,
         operationalBefore,

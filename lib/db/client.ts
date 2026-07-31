@@ -1,8 +1,13 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
 import * as schema from "@/lib/db/schema";
+import { ensureEnvironmentVerifiedOnce } from "@/lib/env/environment";
 
 export function createDbClient() {
+  // Hard-fail if dev is wired to the prod DB (or prod to a non-prod DB) before
+  // we ever open a Postgres connection.
+  ensureEnvironmentVerifiedOnce();
+
   const dbUrl = process.env.DATABASE_URL;
   if (!dbUrl) {
     throw new Error("DATABASE_URL is required for database operations.");

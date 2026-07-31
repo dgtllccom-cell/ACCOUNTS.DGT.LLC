@@ -1,0 +1,3078 @@
+{
+  "generatedAt": "2026-07-31T18:04:12.294Z",
+  "mode": "READ_ONLY",
+  "database": {
+    "host": "db.csesvyxxjivnkkozgopt.supabase.co",
+    "database": "postgres",
+    "fingerprint": "a2f49f2aaf43"
+  },
+  "requestedCountryCodes": [
+    "AE",
+    "PK",
+    "AF",
+    "IR",
+    "IN"
+  ],
+  "countries": [
+    {
+      "id": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+      "code": "AE",
+      "name": "United Arab Emirates",
+      "currency_code": "AED",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:23.728Z"
+    },
+    {
+      "id": "8366fa0e-dcf6-4acd-8602-2819f103dd63",
+      "code": "AF",
+      "name": "Afghanistan",
+      "currency_code": "AFN",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:24.415Z"
+    },
+    {
+      "id": "96ab1da1-12f6-470a-85d5-a681424559ab",
+      "code": "IN",
+      "name": "India",
+      "currency_code": "INR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:34.238Z"
+    },
+    {
+      "id": "5ae2b548-c37e-42ac-bf1a-a918969c93f8",
+      "code": "IR",
+      "name": "Iran",
+      "currency_code": "IRR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:36.234Z"
+    },
+    {
+      "id": "fb021716-a2e7-4141-9c1a-bd1ddd92eb14",
+      "code": "PK",
+      "name": "Pakistan",
+      "currency_code": "PKR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:04:49.806Z"
+    }
+  ],
+  "duplicateRequestedCountries": [],
+  "extraCountries": [
+    {
+      "id": "588e93eb-c660-4e38-92d9-19e72fe2c7e5",
+      "code": "AD",
+      "name": "Andorra",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:23.056Z"
+    },
+    {
+      "id": "1111e5d0-b539-463c-a4bd-a6ad4a549ef5",
+      "code": "AG",
+      "name": "Antigua and Barbuda",
+      "currency_code": "XCD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:25.130Z"
+    },
+    {
+      "id": "d2e86e28-f01e-410d-ab90-5bb45018537c",
+      "code": "AI",
+      "name": "Anguilla",
+      "currency_code": "XCD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:25.798Z"
+    },
+    {
+      "id": "108ffd14-268f-4ddd-886c-854f77f2a883",
+      "code": "AL",
+      "name": "Albania",
+      "currency_code": "ALL",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:26.477Z"
+    },
+    {
+      "id": "80c5d2f2-8129-4250-9424-5af99b5e8738",
+      "code": "AM",
+      "name": "Armenia",
+      "currency_code": "AMD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:27.160Z"
+    },
+    {
+      "id": "7ff9483e-1f13-4282-9253-2a683a4f718e",
+      "code": "AN",
+      "name": "Netherlands Antilles",
+      "currency_code": "ANG",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:17.769Z"
+    },
+    {
+      "id": "5fcee40f-33cb-42e5-b292-ff11a5f97bbb",
+      "code": "AO",
+      "name": "Angola",
+      "currency_code": "AOA",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:27.858Z"
+    },
+    {
+      "id": "274f0d43-b4fd-40d2-a980-63d5265bfdec",
+      "code": "AQ",
+      "name": "Antarctica",
+      "currency_code": "USD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:28.528Z"
+    },
+    {
+      "id": "bde925b2-2b9a-4063-beef-773fd91176f8",
+      "code": "AR",
+      "name": "Argentina",
+      "currency_code": "ARS",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:29.204Z"
+    },
+    {
+      "id": "dc60baca-bd87-458d-8afe-2a20aaa47cb1",
+      "code": "AS",
+      "name": "American Samoa",
+      "currency_code": "USD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:29.889Z"
+    },
+    {
+      "id": "ae44d2ed-bbfe-49b2-ae2b-6080ad296844",
+      "code": "AT",
+      "name": "Austria",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:30.647Z"
+    },
+    {
+      "id": "4b6c1383-3dbe-4c49-bde0-d982b9b8aa83",
+      "code": "AU",
+      "name": "Australia",
+      "currency_code": "AUD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:31.320Z"
+    },
+    {
+      "id": "b9c5b2e4-ced6-4725-af5c-3fef6b15f77e",
+      "code": "AW",
+      "name": "Aruba",
+      "currency_code": "AWG",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:31.986Z"
+    },
+    {
+      "id": "20314084-ea4e-45b1-90ce-abebcfebd0ed",
+      "code": "AX",
+      "name": "Aland Islands",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:32.785Z"
+    },
+    {
+      "id": "734a58e7-d5a3-4af7-ae87-09ac9d938def",
+      "code": "AZ",
+      "name": "Azerbaijan",
+      "currency_code": "AZN",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:33.527Z"
+    },
+    {
+      "id": "ad3195dc-de76-4d75-a5d2-a0eb60a5b24b",
+      "code": "BA",
+      "name": "Bosnia and Herzegovina",
+      "currency_code": "BAM",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:34.251Z"
+    },
+    {
+      "id": "e7dc7a71-dce8-4259-92aa-518b17d3fce3",
+      "code": "BB",
+      "name": "Barbados",
+      "currency_code": "BBD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:34.954Z"
+    },
+    {
+      "id": "721b5cab-915d-400e-9b42-c838b8cd50ee",
+      "code": "BD",
+      "name": "Bangladesh",
+      "currency_code": "BDT",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:35.688Z"
+    },
+    {
+      "id": "23325b52-c3d7-49f9-a639-1778fe8fc7d3",
+      "code": "BE",
+      "name": "Belgium",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:36.395Z"
+    },
+    {
+      "id": "35e2522b-6528-422d-b5bf-d5e03f911d03",
+      "code": "BF",
+      "name": "Burkina Faso",
+      "currency_code": "XOF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:37.081Z"
+    },
+    {
+      "id": "8e40ea8f-e89e-41e5-9496-eb067f49e5dd",
+      "code": "BG",
+      "name": "Bulgaria",
+      "currency_code": "BGN",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:37.750Z"
+    },
+    {
+      "id": "adf3401f-f9b9-4e9b-96e8-66c66fecec8c",
+      "code": "BH",
+      "name": "Bahrain",
+      "currency_code": "BHD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:38.457Z"
+    },
+    {
+      "id": "6e61aabb-eb94-42ee-9493-6cbe52a9ae63",
+      "code": "BI",
+      "name": "Burundi",
+      "currency_code": "BIF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:39.118Z"
+    },
+    {
+      "id": "23cd543a-49d7-4e04-b272-fdf1d41fe4c5",
+      "code": "BJ",
+      "name": "Benin",
+      "currency_code": "XOF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:39.790Z"
+    },
+    {
+      "id": "dbbda575-1575-4700-82ee-8f9e67efe1f0",
+      "code": "BL",
+      "name": "Saint Barthelemy",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:40.592Z"
+    },
+    {
+      "id": "c2435ed5-5c10-49ca-8da5-021fe5101027",
+      "code": "BM",
+      "name": "Bermuda",
+      "currency_code": "BMD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:41.257Z"
+    },
+    {
+      "id": "9d1ef523-8140-49bb-8c8e-45bc9487324e",
+      "code": "BN",
+      "name": "Brunei",
+      "currency_code": "BND",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:42.008Z"
+    },
+    {
+      "id": "4934d1b9-d9bd-44a7-b25a-41d2cc851854",
+      "code": "BO",
+      "name": "Bolivia",
+      "currency_code": "BOB",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:42.673Z"
+    },
+    {
+      "id": "30e0093c-7f5a-4eb9-a3d8-3bbfc5615e38",
+      "code": "BQ",
+      "name": "Bonaire, Saint Eustatius and Saba",
+      "currency_code": "USD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:43.374Z"
+    },
+    {
+      "id": "6a31ea26-b0eb-4a07-bb55-41687b9efd3b",
+      "code": "BR",
+      "name": "Brazil",
+      "currency_code": "BRL",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:44.052Z"
+    },
+    {
+      "id": "6a5db81e-aa06-4da3-aaa9-bc9f8fdea6de",
+      "code": "BS",
+      "name": "Bahamas",
+      "currency_code": "BSD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:44.761Z"
+    },
+    {
+      "id": "d94fe1ce-fe47-4f1c-a353-d0716b74a364",
+      "code": "BT",
+      "name": "Bhutan",
+      "currency_code": "BTN",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:45.423Z"
+    },
+    {
+      "id": "3296d0b9-6c50-422d-bf6e-5ae76c97d3aa",
+      "code": "BV",
+      "name": "Bouvet Island",
+      "currency_code": "NOK",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:46.131Z"
+    },
+    {
+      "id": "b1de7024-97e2-4bc0-a98d-c317d112cc8d",
+      "code": "BW",
+      "name": "Botswana",
+      "currency_code": "BWP",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:46.798Z"
+    },
+    {
+      "id": "bca5d580-c368-485a-ae4d-01d96c2760a6",
+      "code": "BY",
+      "name": "Belarus",
+      "currency_code": "BYN",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:47.505Z"
+    },
+    {
+      "id": "dd0d92fc-8d75-497a-859f-31273d215b06",
+      "code": "BZ",
+      "name": "Belize",
+      "currency_code": "BZD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:48.170Z"
+    },
+    {
+      "id": "748a1227-dfec-4102-9cc0-4b6ee8857b45",
+      "code": "CA",
+      "name": "Canada",
+      "currency_code": "CAD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:48.834Z"
+    },
+    {
+      "id": "78c25d73-4b0b-4f5b-9d35-2f055a59d17a",
+      "code": "CC",
+      "name": "Cocos Islands",
+      "currency_code": "AUD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:49.503Z"
+    },
+    {
+      "id": "b62fb2b4-ba86-45c7-ae5b-e9d30136d165",
+      "code": "CD",
+      "name": "Democratic Republic of the Congo",
+      "currency_code": "CDF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:50.170Z"
+    },
+    {
+      "id": "54542892-33c8-4ec7-bca1-835499a01312",
+      "code": "CF",
+      "name": "Central African Republic",
+      "currency_code": "XAF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:50.836Z"
+    },
+    {
+      "id": "104f302b-61e7-444d-92c1-3ae7b4d29089",
+      "code": "CG",
+      "name": "Republic of the Congo",
+      "currency_code": "XAF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:51.501Z"
+    },
+    {
+      "id": "220f311c-b2fc-4e99-9942-459c35d4d532",
+      "code": "CH",
+      "name": "Switzerland",
+      "currency_code": "CHF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:52.163Z"
+    },
+    {
+      "id": "5126bcf4-70a3-44b0-9144-52268b232b4e",
+      "code": "CI",
+      "name": "Ivory Coast",
+      "currency_code": "XOF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:52.827Z"
+    },
+    {
+      "id": "5469907a-da5e-46df-94f3-c0d87559ea3a",
+      "code": "CK",
+      "name": "Cook Islands",
+      "currency_code": "NZD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:53.500Z"
+    },
+    {
+      "id": "6ba9051f-6d00-4736-9e43-9d7e9c75eea9",
+      "code": "CL",
+      "name": "Chile",
+      "currency_code": "CLP",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:54.236Z"
+    },
+    {
+      "id": "de098edd-e0b5-415e-a1d2-71db31063e05",
+      "code": "CM",
+      "name": "Cameroon",
+      "currency_code": "XAF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:55.059Z"
+    },
+    {
+      "id": "6ec2de6b-11f9-41ee-94a5-7362bc469054",
+      "code": "CN",
+      "name": "China",
+      "currency_code": "CNY",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:55.944Z"
+    },
+    {
+      "id": "3fdb1a7f-a5e9-4d96-9262-63afd906c358",
+      "code": "CO",
+      "name": "Colombia",
+      "currency_code": "COP",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:56.730Z"
+    },
+    {
+      "id": "386e6d45-4220-44e3-898f-7c924c27633f",
+      "code": "CR",
+      "name": "Costa Rica",
+      "currency_code": "CRC",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:57.412Z"
+    },
+    {
+      "id": "1bdb8d5a-4b86-407c-bcf5-091d2cc23f7a",
+      "code": "CS",
+      "name": "Serbia and Montenegro",
+      "currency_code": "RSD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:17.020Z"
+    },
+    {
+      "id": "eacc3c9f-e662-433c-8b06-9352e27902ab",
+      "code": "CU",
+      "name": "Cuba",
+      "currency_code": "CUP",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:58.077Z"
+    },
+    {
+      "id": "8db1bd4a-a5cf-4bf3-94aa-93713d10fb88",
+      "code": "CV",
+      "name": "Cabo Verde",
+      "currency_code": "CVE",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:58.744Z"
+    },
+    {
+      "id": "c4c51f36-6894-4042-a7e9-f881e1edf02e",
+      "code": "CW",
+      "name": "Curacao",
+      "currency_code": "XCG",
+      "is_active": true,
+      "created_at": "2026-07-14T11:34:59.415Z"
+    },
+    {
+      "id": "85975f92-8132-4264-a8bf-465850dcc445",
+      "code": "CX",
+      "name": "Christmas Island",
+      "currency_code": "AUD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:00.094Z"
+    },
+    {
+      "id": "0083f9fe-48e1-4a48-aced-27c317842aab",
+      "code": "CY",
+      "name": "Cyprus",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:00.769Z"
+    },
+    {
+      "id": "d19c45ef-c9f5-4e0a-b266-f69904984b38",
+      "code": "CZ",
+      "name": "Czechia",
+      "currency_code": "CZK",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:01.435Z"
+    },
+    {
+      "id": "515398af-dfb0-4104-bc74-024d8a50e816",
+      "code": "DE",
+      "name": "Germany",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:02.105Z"
+    },
+    {
+      "id": "7ac402c0-9363-4d4f-9b81-9b9ef24810c1",
+      "code": "DJ",
+      "name": "Djibouti",
+      "currency_code": "DJF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:02.780Z"
+    },
+    {
+      "id": "0fec23bf-8b4c-47b4-b303-47cefa4970bb",
+      "code": "DK",
+      "name": "Denmark",
+      "currency_code": "DKK",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:03.449Z"
+    },
+    {
+      "id": "c2937c61-da18-4180-bd7e-e9ce3b7dc7e3",
+      "code": "DM",
+      "name": "Dominica",
+      "currency_code": "XCD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:04.111Z"
+    },
+    {
+      "id": "a1026e3a-77f0-41e5-8506-ee2376b6c6ca",
+      "code": "DO",
+      "name": "Dominican Republic",
+      "currency_code": "DOP",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:04.781Z"
+    },
+    {
+      "id": "1a4d2ae7-c124-40c3-8995-e062e5dc4be5",
+      "code": "DZ",
+      "name": "Algeria",
+      "currency_code": "DZD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:05.453Z"
+    },
+    {
+      "id": "323d203e-8a25-4633-a71e-0df3dfe1a5e0",
+      "code": "EC",
+      "name": "Ecuador",
+      "currency_code": "USD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:06.123Z"
+    },
+    {
+      "id": "241b438f-1c3f-4fd2-9cbd-562aa655bb04",
+      "code": "EE",
+      "name": "Estonia",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:06.784Z"
+    },
+    {
+      "id": "174f5d37-9b91-4d33-b8dd-bb58f3f1ef88",
+      "code": "EG",
+      "name": "Egypt",
+      "currency_code": "EGP",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:07.455Z"
+    },
+    {
+      "id": "57a2f434-1ce2-4345-8885-f01f9ebac2a0",
+      "code": "EH",
+      "name": "Western Sahara",
+      "currency_code": "MAD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:08.118Z"
+    },
+    {
+      "id": "b5e67b22-1e3d-498a-a341-e6cafe4eb759",
+      "code": "ER",
+      "name": "Eritrea",
+      "currency_code": "ERN",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:08.785Z"
+    },
+    {
+      "id": "4eebce26-2aea-4663-b325-0f794f4b5009",
+      "code": "ES",
+      "name": "Spain",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:09.452Z"
+    },
+    {
+      "id": "053666d9-3b59-4dea-8cc8-e31d812ad1c2",
+      "code": "ET",
+      "name": "Ethiopia",
+      "currency_code": "ETB",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:10.114Z"
+    },
+    {
+      "id": "b7e82d0d-1675-4984-a318-15304c423ef4",
+      "code": "FI",
+      "name": "Finland",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:10.803Z"
+    },
+    {
+      "id": "27a11081-2a97-463d-b458-4bf52d71ca94",
+      "code": "FJ",
+      "name": "Fiji",
+      "currency_code": "FJD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:11.468Z"
+    },
+    {
+      "id": "15c23f01-7124-4d95-9ea6-c7931ecaebe3",
+      "code": "FK",
+      "name": "Falkland Islands",
+      "currency_code": "FKP",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:12.131Z"
+    },
+    {
+      "id": "098bc87c-79ab-4138-94df-e16575f2d1cc",
+      "code": "FM",
+      "name": "Micronesia",
+      "currency_code": "USD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:12.796Z"
+    },
+    {
+      "id": "89567669-6376-47f0-8a44-5c700fa5141b",
+      "code": "FO",
+      "name": "Faroe Islands",
+      "currency_code": "DKK",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:13.468Z"
+    },
+    {
+      "id": "55fa36d1-af18-4d10-a84c-a13e91f75580",
+      "code": "FR",
+      "name": "France",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:14.138Z"
+    },
+    {
+      "id": "0b40308b-7370-4eb8-bf82-a99501e524f7",
+      "code": "GA",
+      "name": "Gabon",
+      "currency_code": "XAF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:14.801Z"
+    },
+    {
+      "id": "a6971465-85ff-4746-977d-fe46376f764a",
+      "code": "GB",
+      "name": "United Kingdom",
+      "currency_code": "GBP",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:15.463Z"
+    },
+    {
+      "id": "5af73ca0-4ce2-4b73-bb25-d5e9ead11cbc",
+      "code": "GD",
+      "name": "Grenada",
+      "currency_code": "XCD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:16.129Z"
+    },
+    {
+      "id": "2db6db04-b7e8-4897-b066-82ca4d32b9fb",
+      "code": "GE",
+      "name": "Georgia",
+      "currency_code": "GEL",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:16.793Z"
+    },
+    {
+      "id": "75716f46-721b-4ce6-84b5-76a61c78f7a1",
+      "code": "GF",
+      "name": "French Guiana",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:17.461Z"
+    },
+    {
+      "id": "5b563e11-46ed-4092-81f8-adaa6e05abbd",
+      "code": "GG",
+      "name": "Guernsey",
+      "currency_code": "GBP",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:18.145Z"
+    },
+    {
+      "id": "df9e8997-d2da-4241-a0f5-4e59a37919e2",
+      "code": "GH",
+      "name": "Ghana",
+      "currency_code": "GHS",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:18.806Z"
+    },
+    {
+      "id": "61d32991-5734-4561-a3df-adb05ca4b0e5",
+      "code": "GI",
+      "name": "Gibraltar",
+      "currency_code": "GIP",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:19.467Z"
+    },
+    {
+      "id": "0e60d403-e930-4432-9571-53a752694a12",
+      "code": "GL",
+      "name": "Greenland",
+      "currency_code": "DKK",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:20.132Z"
+    },
+    {
+      "id": "9ffb5b48-4688-42ed-848c-9cfce1449350",
+      "code": "GM",
+      "name": "Gambia",
+      "currency_code": "GMD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:20.796Z"
+    },
+    {
+      "id": "5cb1cb31-e091-49ae-9eb8-53c494617f2d",
+      "code": "GN",
+      "name": "Guinea",
+      "currency_code": "GNF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:21.460Z"
+    },
+    {
+      "id": "6b495015-7bda-4578-b5f8-5333094a7c16",
+      "code": "GP",
+      "name": "Guadeloupe",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:22.174Z"
+    },
+    {
+      "id": "7f0f4ea7-1834-4207-93bc-2f0310ab351f",
+      "code": "GQ",
+      "name": "Equatorial Guinea",
+      "currency_code": "XAF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:22.845Z"
+    },
+    {
+      "id": "c05d7129-03a1-4fac-81b4-e8183a59ec66",
+      "code": "GR",
+      "name": "Greece",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:23.512Z"
+    },
+    {
+      "id": "d938516c-13e0-4a4f-b2a0-12d18c7bc2e7",
+      "code": "GS",
+      "name": "South Georgia and the South Sandwich Islands",
+      "currency_code": "GBP",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:24.183Z"
+    },
+    {
+      "id": "21491f19-24ba-4540-842b-1fc41a0b47f7",
+      "code": "GT",
+      "name": "Guatemala",
+      "currency_code": "GTQ",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:24.846Z"
+    },
+    {
+      "id": "7701fc7f-f86e-445d-8b6a-879be1ffef38",
+      "code": "GU",
+      "name": "Guam",
+      "currency_code": "USD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:25.522Z"
+    },
+    {
+      "id": "37913d46-c128-4284-92b7-c32447ae7b8e",
+      "code": "GW",
+      "name": "Guinea-Bissau",
+      "currency_code": "XOF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:26.195Z"
+    },
+    {
+      "id": "b9832616-a13c-4f1e-9f21-ed4cdb4373c7",
+      "code": "GY",
+      "name": "Guyana",
+      "currency_code": "GYD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:26.861Z"
+    },
+    {
+      "id": "aa3a7893-f56c-4465-b2d7-9a41dd450e6c",
+      "code": "HK",
+      "name": "Hong Kong",
+      "currency_code": "HKD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:27.554Z"
+    },
+    {
+      "id": "e4bf81a2-ca1f-4bd3-a7b9-c464470ea946",
+      "code": "HM",
+      "name": "Heard Island and McDonald Islands",
+      "currency_code": "AUD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:28.232Z"
+    },
+    {
+      "id": "06480fa8-6613-4837-a81d-c2b8f605cc63",
+      "code": "HN",
+      "name": "Honduras",
+      "currency_code": "HNL",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:28.896Z"
+    },
+    {
+      "id": "f46f3cf7-e107-44dc-8a9b-2d22a52ee43a",
+      "code": "HR",
+      "name": "Croatia",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:29.555Z"
+    },
+    {
+      "id": "06daa7de-1de6-4140-8c1d-61b67ae4b2ad",
+      "code": "HT",
+      "name": "Haiti",
+      "currency_code": "HTG",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:30.219Z"
+    },
+    {
+      "id": "e6360cc5-e944-4e3e-9076-b01a8c6abd73",
+      "code": "HU",
+      "name": "Hungary",
+      "currency_code": "HUF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:30.887Z"
+    },
+    {
+      "id": "bd1d6e6d-b042-4563-a51b-c055fa696432",
+      "code": "ID",
+      "name": "Indonesia",
+      "currency_code": "IDR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:31.559Z"
+    },
+    {
+      "id": "938798c1-b086-49c0-85d7-8e95217ec6a6",
+      "code": "IE",
+      "name": "Ireland",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:32.236Z"
+    },
+    {
+      "id": "b32ab71b-1e7d-4143-9819-f13a590dcb3c",
+      "code": "IL",
+      "name": "Israel",
+      "currency_code": "ILS",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:32.902Z"
+    },
+    {
+      "id": "3ae6e0bb-91f9-46a2-8576-a2e4f46ce190",
+      "code": "IM",
+      "name": "Isle of Man",
+      "currency_code": "GBP",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:33.569Z"
+    },
+    {
+      "id": "1b5e6e45-4338-4adf-b962-f20dd89e13db",
+      "code": "IO",
+      "name": "British Indian Ocean Territory",
+      "currency_code": "USD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:34.905Z"
+    },
+    {
+      "id": "b087333a-02ed-4d9a-bb94-1647c0baf246",
+      "code": "IQ",
+      "name": "Iraq",
+      "currency_code": "IQD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:35.569Z"
+    },
+    {
+      "id": "5f7392cf-d0a2-4663-8072-0690d52f94ed",
+      "code": "IS",
+      "name": "Iceland",
+      "currency_code": "ISK",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:36.894Z"
+    },
+    {
+      "id": "0873db64-1790-4fa2-879e-672130b0da9c",
+      "code": "IT",
+      "name": "Italy",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:37.568Z"
+    },
+    {
+      "id": "d5fcb739-99d5-49f3-8d16-a34dddcd0d81",
+      "code": "JE",
+      "name": "Jersey",
+      "currency_code": "GBP",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:38.234Z"
+    },
+    {
+      "id": "3686ee49-9f74-4588-9b9f-f7cd0dc3ce78",
+      "code": "JM",
+      "name": "Jamaica",
+      "currency_code": "JMD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:38.965Z"
+    },
+    {
+      "id": "de512dd2-b128-468c-8b5d-33267dd407ec",
+      "code": "JO",
+      "name": "Jordan",
+      "currency_code": "JOD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:39.628Z"
+    },
+    {
+      "id": "9d009328-dd87-40b0-b534-60c8a0bcffec",
+      "code": "JP",
+      "name": "Japan",
+      "currency_code": "JPY",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:40.294Z"
+    },
+    {
+      "id": "59979dcc-7565-4c3b-88f3-a63788901177",
+      "code": "KE",
+      "name": "Kenya",
+      "currency_code": "KES",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:40.955Z"
+    },
+    {
+      "id": "e72929d6-2594-4d43-990e-bf4a531f3199",
+      "code": "KG",
+      "name": "Kyrgyzstan",
+      "currency_code": "KGS",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:41.619Z"
+    },
+    {
+      "id": "b8fb839f-da70-4184-b2eb-851b0a952075",
+      "code": "KH",
+      "name": "Cambodia",
+      "currency_code": "KHR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:42.281Z"
+    },
+    {
+      "id": "8e353baf-8789-452c-97bd-6be3f6ac9d22",
+      "code": "KI",
+      "name": "Kiribati",
+      "currency_code": "AUD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:42.940Z"
+    },
+    {
+      "id": "4320d5dd-0835-4e33-8541-9d96e770ff7e",
+      "code": "KM",
+      "name": "Comoros",
+      "currency_code": "KMF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:43.601Z"
+    },
+    {
+      "id": "b12e0e26-27d7-475b-812a-fdeca7a14e8a",
+      "code": "KN",
+      "name": "Saint Kitts and Nevis",
+      "currency_code": "XCD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:44.262Z"
+    },
+    {
+      "id": "716be570-42b2-4dd4-92bc-c9d27f4cd776",
+      "code": "KP",
+      "name": "North Korea",
+      "currency_code": "KPW",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:44.927Z"
+    },
+    {
+      "id": "25047c28-e7c7-4d28-b14b-04a090d570d0",
+      "code": "KR",
+      "name": "South Korea",
+      "currency_code": "KRW",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:45.594Z"
+    },
+    {
+      "id": "14d270bf-fdbb-4b7a-9e37-583c7394167c",
+      "code": "KW",
+      "name": "Kuwait",
+      "currency_code": "KWD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:46.917Z"
+    },
+    {
+      "id": "d675a4bf-1f8b-4ed0-a7dc-62fe394f1a14",
+      "code": "KY",
+      "name": "Cayman Islands",
+      "currency_code": "KYD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:47.581Z"
+    },
+    {
+      "id": "bb04687d-b1d0-47c0-a465-d24f6313f941",
+      "code": "KZ",
+      "name": "Kazakhstan",
+      "currency_code": "KZT",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:48.268Z"
+    },
+    {
+      "id": "35cbaa5f-670d-43cb-b017-9c7697f65629",
+      "code": "LA",
+      "name": "Laos",
+      "currency_code": "LAK",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:48.935Z"
+    },
+    {
+      "id": "c2b1f94e-8e1e-4e98-8384-91ad6b8eb386",
+      "code": "LB",
+      "name": "Lebanon",
+      "currency_code": "LBP",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:49.598Z"
+    },
+    {
+      "id": "1817bf3f-5fc7-4ae3-8dc4-d79c5f9e6e75",
+      "code": "LC",
+      "name": "Saint Lucia",
+      "currency_code": "XCD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:50.261Z"
+    },
+    {
+      "id": "9d099fb3-9f48-4627-94bf-6f9feb41a17e",
+      "code": "LI",
+      "name": "Liechtenstein",
+      "currency_code": "CHF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:50.987Z"
+    },
+    {
+      "id": "cdd64824-029d-4297-bc74-b0cd0a7b807e",
+      "code": "LK",
+      "name": "Sri Lanka",
+      "currency_code": "LKR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:51.656Z"
+    },
+    {
+      "id": "d0b2f825-91c4-43ba-bf60-1a6b7814bca7",
+      "code": "LR",
+      "name": "Liberia",
+      "currency_code": "LRD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:52.319Z"
+    },
+    {
+      "id": "4788548d-16a1-47f8-9aec-03e0de457e6d",
+      "code": "LS",
+      "name": "Lesotho",
+      "currency_code": "LSL",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:52.999Z"
+    },
+    {
+      "id": "85fca118-f405-4ee7-be3a-05c3520ee9c9",
+      "code": "LT",
+      "name": "Lithuania",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:53.670Z"
+    },
+    {
+      "id": "94bf937a-3f11-46a6-ad55-eab153d2fc9d",
+      "code": "LU",
+      "name": "Luxembourg",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:54.333Z"
+    },
+    {
+      "id": "237b087b-15ca-4555-bfd7-2b987cd3c18f",
+      "code": "LV",
+      "name": "Latvia",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:54.996Z"
+    },
+    {
+      "id": "85d027c2-aa0f-49a7-b4ce-526533300169",
+      "code": "LY",
+      "name": "Libya",
+      "currency_code": "LYD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:55.664Z"
+    },
+    {
+      "id": "fbbe616b-f135-431b-ba52-92305f4d6027",
+      "code": "MA",
+      "name": "Morocco",
+      "currency_code": "MAD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:56.329Z"
+    },
+    {
+      "id": "fc404ebc-26b5-483e-b724-358c5cd41bd3",
+      "code": "MC",
+      "name": "Monaco",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:57.004Z"
+    },
+    {
+      "id": "b3e65768-e55e-429d-a89e-d9160cea0e91",
+      "code": "MD",
+      "name": "Moldova",
+      "currency_code": "MDL",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:57.668Z"
+    },
+    {
+      "id": "9d37b9cb-ae86-46fe-976d-01f37b174f46",
+      "code": "ME",
+      "name": "Montenegro",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:58.333Z"
+    },
+    {
+      "id": "2c22355c-047c-4b5e-98ef-eac5a8e94737",
+      "code": "MF",
+      "name": "Saint Martin",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:58.999Z"
+    },
+    {
+      "id": "67c8ef82-6ccb-4560-a3d5-d6a37c955332",
+      "code": "MG",
+      "name": "Madagascar",
+      "currency_code": "MGA",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:59.706Z"
+    },
+    {
+      "id": "1722430e-0b83-44ac-8f2d-deed83a929d9",
+      "code": "MH",
+      "name": "Marshall Islands",
+      "currency_code": "USD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:00.367Z"
+    },
+    {
+      "id": "190b389d-609d-4dfa-b9d3-f2141c778b24",
+      "code": "MK",
+      "name": "North Macedonia",
+      "currency_code": "MKD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:01.031Z"
+    },
+    {
+      "id": "eee15bdf-0f47-4a57-b54d-aaf30271823c",
+      "code": "ML",
+      "name": "Mali",
+      "currency_code": "XOF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:01.699Z"
+    },
+    {
+      "id": "42366176-ed8e-4974-aad0-fcd72b343e89",
+      "code": "MM",
+      "name": "Myanmar",
+      "currency_code": "MMK",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:02.371Z"
+    },
+    {
+      "id": "ba1b0485-3007-4f41-8369-fd6bd4a8655a",
+      "code": "MN",
+      "name": "Mongolia",
+      "currency_code": "MNT",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:03.037Z"
+    },
+    {
+      "id": "03fd1c7c-1451-49c2-9f95-15d2f17385fa",
+      "code": "MO",
+      "name": "Macao",
+      "currency_code": "MOP",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:03.706Z"
+    },
+    {
+      "id": "d311bc50-da06-4a4e-9d12-fac7cd52ce54",
+      "code": "MP",
+      "name": "Northern Mariana Islands",
+      "currency_code": "USD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:04.373Z"
+    },
+    {
+      "id": "7d8469fa-bd1d-4641-8245-5dba1638eb28",
+      "code": "MQ",
+      "name": "Martinique",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:05.095Z"
+    },
+    {
+      "id": "3d0d5ca1-bde5-400e-8f7e-585b1eb42857",
+      "code": "MR",
+      "name": "Mauritania",
+      "currency_code": "MRU",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:06.324Z"
+    },
+    {
+      "id": "4651ba8e-b616-424c-9524-e787411dea9b",
+      "code": "MS",
+      "name": "Montserrat",
+      "currency_code": "XCD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:07.536Z"
+    },
+    {
+      "id": "1e63f59e-7ad5-4907-a34a-4fa7e4ae1e03",
+      "code": "MT",
+      "name": "Malta",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:09.485Z"
+    },
+    {
+      "id": "287d6077-f4fe-4691-9cc0-511b50d4fa04",
+      "code": "MU",
+      "name": "Mauritius",
+      "currency_code": "MUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:10.623Z"
+    },
+    {
+      "id": "282244c1-9935-4c49-b24c-a811964ecccc",
+      "code": "MV",
+      "name": "Maldives",
+      "currency_code": "MVR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:11.861Z"
+    },
+    {
+      "id": "c3118bba-3968-4ab5-9493-65487498e8fe",
+      "code": "MW",
+      "name": "Malawi",
+      "currency_code": "MWK",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:13.316Z"
+    },
+    {
+      "id": "cca9c28b-1687-4a3a-a606-a5eda32fb479",
+      "code": "MX",
+      "name": "Mexico",
+      "currency_code": "MXN",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:14.628Z"
+    },
+    {
+      "id": "a95b5046-c035-45c2-87b5-60b63644cc59",
+      "code": "MY",
+      "name": "Malaysia",
+      "currency_code": "MYR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:15.365Z"
+    },
+    {
+      "id": "485314af-a318-4405-a146-db9051f6091d",
+      "code": "MZ",
+      "name": "Mozambique",
+      "currency_code": "MZN",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:16.035Z"
+    },
+    {
+      "id": "9ecf2502-dc1b-4e2f-9e2a-0b63f60df1ad",
+      "code": "NA",
+      "name": "Namibia",
+      "currency_code": "NAD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:16.703Z"
+    },
+    {
+      "id": "2bad0ac9-e55c-465f-a661-4e8d4b0f5774",
+      "code": "NC",
+      "name": "New Caledonia",
+      "currency_code": "XPF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:17.369Z"
+    },
+    {
+      "id": "af0bd700-17ef-43f1-83b5-8f00a0abe963",
+      "code": "NE",
+      "name": "Niger",
+      "currency_code": "XOF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:18.028Z"
+    },
+    {
+      "id": "7e4641bf-f8f6-438c-8653-8fde5b7e271d",
+      "code": "NF",
+      "name": "Norfolk Island",
+      "currency_code": "AUD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:18.689Z"
+    },
+    {
+      "id": "df7fb33f-2e38-4f90-b5ad-ae98bdb2284d",
+      "code": "NG",
+      "name": "Nigeria",
+      "currency_code": "NGN",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:19.354Z"
+    },
+    {
+      "id": "121f2e9b-71bf-4d9e-b4ae-2f9925ec0fab",
+      "code": "NI",
+      "name": "Nicaragua",
+      "currency_code": "NIO",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:20.022Z"
+    },
+    {
+      "id": "6c047dba-efdb-4b39-93b8-cee8c42062ab",
+      "code": "NL",
+      "name": "The Netherlands",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:20.685Z"
+    },
+    {
+      "id": "bbb355dc-576d-4883-9fe6-7972d2510a6c",
+      "code": "NO",
+      "name": "Norway",
+      "currency_code": "NOK",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:21.347Z"
+    },
+    {
+      "id": "bc04b312-1f3d-4bd4-930c-c3d8f518a63d",
+      "code": "NP",
+      "name": "Nepal",
+      "currency_code": "NPR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:22.010Z"
+    },
+    {
+      "id": "5210a8ee-5d2a-4c1d-b724-5e3810b34f6f",
+      "code": "NR",
+      "name": "Nauru",
+      "currency_code": "AUD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:22.669Z"
+    },
+    {
+      "id": "4db69bac-8e43-4698-bddf-908cbe906459",
+      "code": "NU",
+      "name": "Niue",
+      "currency_code": "NZD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:23.330Z"
+    },
+    {
+      "id": "2e826433-fbe6-411a-8bd0-641331a9d4be",
+      "code": "NZ",
+      "name": "New Zealand",
+      "currency_code": "NZD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:23.993Z"
+    },
+    {
+      "id": "b57dc2bb-f875-47c9-a446-4e242a74b222",
+      "code": "OM",
+      "name": "Oman",
+      "currency_code": "OMR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:24.699Z"
+    },
+    {
+      "id": "ee2040e1-1ff6-4a6d-8552-acc9eabdd038",
+      "code": "PA",
+      "name": "Panama",
+      "currency_code": "PAB",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:25.358Z"
+    },
+    {
+      "id": "b9dd6c93-dadd-4a94-ade6-61f608471aa2",
+      "code": "PE",
+      "name": "Peru",
+      "currency_code": "PEN",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:26.122Z"
+    },
+    {
+      "id": "f12a8be8-3b96-4998-b22e-af193959727a",
+      "code": "PF",
+      "name": "French Polynesia",
+      "currency_code": "XPF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:26.787Z"
+    },
+    {
+      "id": "25e2a652-2721-4e2c-9649-dc784e8ab3b4",
+      "code": "PG",
+      "name": "Papua New Guinea",
+      "currency_code": "PGK",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:27.449Z"
+    },
+    {
+      "id": "1c93a75a-9a5c-4e96-97ef-e7a22e9538ea",
+      "code": "PH",
+      "name": "Philippines",
+      "currency_code": "PHP",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:28.113Z"
+    },
+    {
+      "id": "1a482758-d4b6-4044-bc09-b279b7bcfe8b",
+      "code": "PL",
+      "name": "Poland",
+      "currency_code": "PLN",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:29.442Z"
+    },
+    {
+      "id": "cdd9bfdc-c5fd-4fa2-8a66-85314f1b6c8e",
+      "code": "PM",
+      "name": "Saint Pierre and Miquelon",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:30.104Z"
+    },
+    {
+      "id": "6e3675d7-98f5-4625-b7b7-3cab86d98553",
+      "code": "PN",
+      "name": "Pitcairn",
+      "currency_code": "NZD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:30.778Z"
+    },
+    {
+      "id": "689f52ec-8306-48a2-999d-e59008302a37",
+      "code": "PR",
+      "name": "Puerto Rico",
+      "currency_code": "USD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:31.450Z"
+    },
+    {
+      "id": "75b8bc5f-927e-49c4-aa1d-fb5f6cdc5022",
+      "code": "PS",
+      "name": "Palestinian Territory",
+      "currency_code": "ILS",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:32.110Z"
+    },
+    {
+      "id": "6518e6ec-8565-462e-8fcc-73c5523fd9a7",
+      "code": "PT",
+      "name": "Portugal",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:32.772Z"
+    },
+    {
+      "id": "8d3e5b5a-4515-45ca-91a9-539ae53bf402",
+      "code": "PW",
+      "name": "Palau",
+      "currency_code": "USD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:33.435Z"
+    },
+    {
+      "id": "618518cd-b5a9-44a7-add7-e1668565dbbb",
+      "code": "PY",
+      "name": "Paraguay",
+      "currency_code": "PYG",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:34.096Z"
+    },
+    {
+      "id": "df2a83fb-e891-41eb-bcd6-dbb0285acf01",
+      "code": "QA",
+      "name": "Qatar",
+      "currency_code": "QAR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:34.760Z"
+    },
+    {
+      "id": "915e4a60-c62a-4e6a-b283-1997eeca4d52",
+      "code": "RE",
+      "name": "Reunion",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:35.428Z"
+    },
+    {
+      "id": "482b05e6-d9f3-4356-97d8-f80f869a0a2f",
+      "code": "RO",
+      "name": "Romania",
+      "currency_code": "RON",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:36.093Z"
+    },
+    {
+      "id": "52ea85c5-fde5-437e-9379-f5eabf15cd19",
+      "code": "RS",
+      "name": "Serbia",
+      "currency_code": "RSD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:36.821Z"
+    },
+    {
+      "id": "c298d635-1dca-4522-9c32-b4121c543e5c",
+      "code": "RU",
+      "name": "Russia",
+      "currency_code": "RUB",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:37.485Z"
+    },
+    {
+      "id": "b5b8a04c-7578-4a0c-996d-0b38ed129da6",
+      "code": "RW",
+      "name": "Rwanda",
+      "currency_code": "RWF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:38.153Z"
+    },
+    {
+      "id": "de3c87d3-b01d-4c76-9444-61edf6a1f641",
+      "code": "SA",
+      "name": "Saudi Arabia",
+      "currency_code": "SAR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:38.819Z"
+    },
+    {
+      "id": "62a09792-c326-4bbf-8f73-e7e2ca65fa47",
+      "code": "SB",
+      "name": "Solomon Islands",
+      "currency_code": "SBD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:39.480Z"
+    },
+    {
+      "id": "1ad57374-9f1f-4ada-b1d8-7994c96c7dd0",
+      "code": "SC",
+      "name": "Seychelles",
+      "currency_code": "SCR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:40.141Z"
+    },
+    {
+      "id": "4fbf0472-88ba-41c9-918f-672a992c74c7",
+      "code": "SD",
+      "name": "Sudan",
+      "currency_code": "SDG",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:40.808Z"
+    },
+    {
+      "id": "e47ab35b-a765-43d9-83f2-d319cbba5e67",
+      "code": "SE",
+      "name": "Sweden",
+      "currency_code": "SEK",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:42.144Z"
+    },
+    {
+      "id": "9f192d23-cfcf-4ced-8367-229e9beca3e2",
+      "code": "SG",
+      "name": "Singapore",
+      "currency_code": "SGD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:42.810Z"
+    },
+    {
+      "id": "98f9005a-2319-4493-84f0-d7a991b152ef",
+      "code": "SH",
+      "name": "Saint Helena",
+      "currency_code": "SHP",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:43.479Z"
+    },
+    {
+      "id": "7b259c4b-d514-4d5b-aca7-87df9bd93d0d",
+      "code": "SI",
+      "name": "Slovenia",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:44.146Z"
+    },
+    {
+      "id": "15406a8c-5b62-4188-8e2e-dcbca9dccc83",
+      "code": "SJ",
+      "name": "Svalbard and Jan Mayen",
+      "currency_code": "NOK",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:44.811Z"
+    },
+    {
+      "id": "e301341a-9c01-4631-bb32-7d76bf4a3651",
+      "code": "SK",
+      "name": "Slovakia",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:45.478Z"
+    },
+    {
+      "id": "4d8b16cb-eb40-49cf-9148-9f19b5c798a4",
+      "code": "SL",
+      "name": "Sierra Leone",
+      "currency_code": "SLE",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:46.144Z"
+    },
+    {
+      "id": "a5b39001-814e-4a81-8873-8f164f91151b",
+      "code": "SM",
+      "name": "San Marino",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:46.811Z"
+    },
+    {
+      "id": "3887d591-f1e1-4d2a-b868-43438b19b710",
+      "code": "SN",
+      "name": "Senegal",
+      "currency_code": "XOF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:47.475Z"
+    },
+    {
+      "id": "e78f25c4-315d-4dc7-8d43-af4af3316d9a",
+      "code": "SO",
+      "name": "Somalia",
+      "currency_code": "SOS",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:48.136Z"
+    },
+    {
+      "id": "26409835-ab03-4ea4-a163-2c021edb7a40",
+      "code": "SR",
+      "name": "Suriname",
+      "currency_code": "SRD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:48.804Z"
+    },
+    {
+      "id": "4c2bdee7-500e-4b3b-aa77-fae8fd846c0d",
+      "code": "SS",
+      "name": "South Sudan",
+      "currency_code": "SSP",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:41.478Z"
+    },
+    {
+      "id": "c0409296-ea98-4507-a477-8140379dc9dc",
+      "code": "ST",
+      "name": "Sao Tome and Principe",
+      "currency_code": "STN",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:49.473Z"
+    },
+    {
+      "id": "26523a16-33b4-4fde-aedd-a96008a4b5dc",
+      "code": "SV",
+      "name": "El Salvador",
+      "currency_code": "USD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:50.135Z"
+    },
+    {
+      "id": "9616dfce-be07-4b2e-9c8f-792df227e5f9",
+      "code": "SX",
+      "name": "Sint Maarten",
+      "currency_code": "XCG",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:50.825Z"
+    },
+    {
+      "id": "d45856a3-a036-41dc-bb17-667978cab7f9",
+      "code": "SY",
+      "name": "Syria",
+      "currency_code": "SYP",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:51.493Z"
+    },
+    {
+      "id": "95e00f41-b664-439f-9e69-c4a22fd9836e",
+      "code": "SZ",
+      "name": "Eswatini",
+      "currency_code": "SZL",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:52.153Z"
+    },
+    {
+      "id": "e3a19e5f-6ce5-418f-ac8a-349d84d83d34",
+      "code": "TC",
+      "name": "Turks and Caicos Islands",
+      "currency_code": "USD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:52.816Z"
+    },
+    {
+      "id": "a4a46b0b-a827-4f38-a327-da9d9d8c7349",
+      "code": "TD",
+      "name": "Chad",
+      "currency_code": "XAF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:53.480Z"
+    },
+    {
+      "id": "435257fd-4ed1-42d5-b980-b476dd4e3802",
+      "code": "TF",
+      "name": "French Southern Territories",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:54.146Z"
+    },
+    {
+      "id": "f4cbd4ab-65ed-4bca-9d66-cbfc1b11e1c1",
+      "code": "TG",
+      "name": "Togo",
+      "currency_code": "XOF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:54.812Z"
+    },
+    {
+      "id": "194f3c55-b876-42ce-a1a9-58e2a7a40802",
+      "code": "TH",
+      "name": "Thailand",
+      "currency_code": "THB",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:55.476Z"
+    },
+    {
+      "id": "1969cc1b-2984-404c-931b-3ecfdc9ad9b7",
+      "code": "TJ",
+      "name": "Tajikistan",
+      "currency_code": "TJS",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:56.142Z"
+    },
+    {
+      "id": "10e8efb3-4432-41f5-8ccf-5257bd4c1ff7",
+      "code": "TK",
+      "name": "Tokelau",
+      "currency_code": "NZD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:56.811Z"
+    },
+    {
+      "id": "0b79dd7d-1b40-4bb6-908b-9340de9ce3c0",
+      "code": "TL",
+      "name": "Timor Leste",
+      "currency_code": "USD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:57.480Z"
+    },
+    {
+      "id": "e3e3e9ae-fa3f-4221-b4b9-aae847e932fa",
+      "code": "TM",
+      "name": "Turkmenistan",
+      "currency_code": "TMT",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:58.145Z"
+    },
+    {
+      "id": "7aa8fdbc-caab-45b1-822f-96b46b573b4a",
+      "code": "TN",
+      "name": "Tunisia",
+      "currency_code": "TND",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:58.810Z"
+    },
+    {
+      "id": "6546390b-89b4-4658-a7a5-7482f527bee2",
+      "code": "TO",
+      "name": "Tonga",
+      "currency_code": "TOP",
+      "is_active": true,
+      "created_at": "2026-07-14T11:36:59.474Z"
+    },
+    {
+      "id": "6fa62e8d-eeb9-411f-b38d-8df675a9a919",
+      "code": "TR",
+      "name": "Turkey",
+      "currency_code": "TRY",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:00.139Z"
+    },
+    {
+      "id": "fdc07eef-559b-4504-83a7-0903e1746f78",
+      "code": "TT",
+      "name": "Trinidad and Tobago",
+      "currency_code": "TTD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:00.822Z"
+    },
+    {
+      "id": "6bb7b2af-0196-474e-9987-5d64b738ac85",
+      "code": "TV",
+      "name": "Tuvalu",
+      "currency_code": "AUD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:01.487Z"
+    },
+    {
+      "id": "354361f2-4354-42db-98ed-d6de37a30453",
+      "code": "TW",
+      "name": "Taiwan",
+      "currency_code": "TWD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:02.154Z"
+    },
+    {
+      "id": "66438d0b-abbc-4239-a273-06d5fd3887f8",
+      "code": "TZ",
+      "name": "Tanzania",
+      "currency_code": "TZS",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:02.822Z"
+    },
+    {
+      "id": "62b89cf9-11be-455d-a1d2-5b2f943b6d84",
+      "code": "UA",
+      "name": "Ukraine",
+      "currency_code": "UAH",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:03.488Z"
+    },
+    {
+      "id": "faffe490-5293-4093-9c60-5e95ed9f5906",
+      "code": "UE",
+      "name": "united arab emires",
+      "currency_code": "USD",
+      "is_active": true,
+      "created_at": "2026-07-14T10:54:40.380Z"
+    },
+    {
+      "id": "1ac89493-e1c3-4396-a57a-273d6aa6ba01",
+      "code": "UG",
+      "name": "Uganda",
+      "currency_code": "UGX",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:04.150Z"
+    },
+    {
+      "id": "3695a4de-943a-4257-bcea-f3e156f66e78",
+      "code": "UM",
+      "name": "United States Minor Outlying Islands",
+      "currency_code": "USD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:04.812Z"
+    },
+    {
+      "id": "17c940e3-98d5-4987-935b-47bab7e93522",
+      "code": "US",
+      "name": "United States",
+      "currency_code": "USD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:05.475Z"
+    },
+    {
+      "id": "c6159fe3-de4f-42cc-ab9a-70d9d2752e27",
+      "code": "UY",
+      "name": "Uruguay",
+      "currency_code": "UYU",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:06.138Z"
+    },
+    {
+      "id": "49212eb3-8c7e-4863-9282-b625c276c803",
+      "code": "UZ",
+      "name": "Uzbekistan",
+      "currency_code": "UZS",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:06.905Z"
+    },
+    {
+      "id": "147a133f-ed84-405f-926c-3bcee8663da0",
+      "code": "VA",
+      "name": "Vatican",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:07.569Z"
+    },
+    {
+      "id": "4a256d8f-234d-40c7-8313-a41208230085",
+      "code": "VC",
+      "name": "Saint Vincent and the Grenadines",
+      "currency_code": "XCD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:08.233Z"
+    },
+    {
+      "id": "d591ede9-a384-440c-a247-f1344c5bfbea",
+      "code": "VE",
+      "name": "Venezuela",
+      "currency_code": "VES",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:08.900Z"
+    },
+    {
+      "id": "c04f1cf9-0bdc-46e8-9d50-328c61e0f075",
+      "code": "VG",
+      "name": "British Virgin Islands",
+      "currency_code": "USD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:09.566Z"
+    },
+    {
+      "id": "24e05297-910c-4296-961a-9ae21bea906a",
+      "code": "VI",
+      "name": "U.S. Virgin Islands",
+      "currency_code": "USD",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:10.233Z"
+    },
+    {
+      "id": "9c9ec52f-026e-49e1-a05c-b0112bf87b56",
+      "code": "VN",
+      "name": "Vietnam",
+      "currency_code": "VND",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:10.898Z"
+    },
+    {
+      "id": "62d115b6-b7df-4b7c-8588-a62605863cb3",
+      "code": "VU",
+      "name": "Vanuatu",
+      "currency_code": "VUV",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:11.568Z"
+    },
+    {
+      "id": "6d6d3a51-8315-4a9c-9eee-ec01f7b1abfc",
+      "code": "WF",
+      "name": "Wallis and Futuna",
+      "currency_code": "XPF",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:12.265Z"
+    },
+    {
+      "id": "acdbe565-99f5-49e8-9722-e90c60b3b5a7",
+      "code": "WS",
+      "name": "Samoa",
+      "currency_code": "WST",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:12.931Z"
+    },
+    {
+      "id": "d120368f-46e0-4242-a6fa-1210be32c2bf",
+      "code": "XK",
+      "name": "Kosovo",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:35:46.257Z"
+    },
+    {
+      "id": "8ddedee3-ca21-4a71-9709-a7dbc7bf7baf",
+      "code": "YE",
+      "name": "Yemen",
+      "currency_code": "YER",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:13.598Z"
+    },
+    {
+      "id": "72052a95-4aad-415d-bd4c-6810008ff441",
+      "code": "YT",
+      "name": "Mayotte",
+      "currency_code": "EUR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:14.263Z"
+    },
+    {
+      "id": "851b654c-ee1c-49fc-b913-fbb8e228215c",
+      "code": "ZA",
+      "name": "South Africa",
+      "currency_code": "ZAR",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:14.927Z"
+    },
+    {
+      "id": "2c5329d0-553e-4c9d-ba47-1cfff62afaff",
+      "code": "ZM",
+      "name": "Zambia",
+      "currency_code": "ZMW",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:15.594Z"
+    },
+    {
+      "id": "36960929-48b8-49db-be41-534cf620171c",
+      "code": "ZW",
+      "name": "Zimbabwe",
+      "currency_code": "ZWG",
+      "is_active": true,
+      "created_at": "2026-07-14T11:37:16.354Z"
+    }
+  ],
+  "mainBranches": [
+    {
+      "id": "87c2e253-b6c1-482d-a808-272337f3ffda",
+      "country_id": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+      "code": "ARE-MAIN-001",
+      "name": "United Arab Emirates Main Branch",
+      "status": "active",
+      "created_at": "2026-07-14T12:12:23.173Z",
+      "country_code": "AE",
+      "country_name": "United Arab Emirates"
+    },
+    {
+      "id": "0842bdac-4c33-4b9e-ada5-e21aa8176151",
+      "country_id": "8366fa0e-dcf6-4acd-8602-2819f103dd63",
+      "code": "AFG-MAIN-001",
+      "name": "Afghanistan Main Branch",
+      "status": "active",
+      "created_at": "2026-07-14T12:38:15.990Z",
+      "country_code": "AF",
+      "country_name": "Afghanistan"
+    },
+    {
+      "id": "39f10317-e04d-4321-92e0-bcfd1bf52377",
+      "country_id": "1a4d2ae7-c124-40c3-8995-e062e5dc4be5",
+      "code": "DZA-MAIN-001",
+      "name": "Country Main Branch",
+      "status": "active",
+      "created_at": "2026-07-19T15:09:20.559Z",
+      "country_code": "DZ",
+      "country_name": "Algeria"
+    },
+    {
+      "id": "798ae034-999d-4d63-ae17-8e8e737256da",
+      "country_id": "96ab1da1-12f6-470a-85d5-a681424559ab",
+      "code": "IND-MAIN-001",
+      "name": "India Main Branch",
+      "status": "active",
+      "created_at": "2026-07-27T13:01:41.121Z",
+      "country_code": "IN",
+      "country_name": "India"
+    },
+    {
+      "id": "5269c1cb-92a1-4aa8-aad8-d4c7260badaa",
+      "country_id": "fb021716-a2e7-4141-9c1a-bd1ddd92eb14",
+      "code": "PAK-MAIN-001",
+      "name": "Pakistan Main Branch",
+      "status": "active",
+      "created_at": "2026-07-14T12:23:56.655Z",
+      "country_code": "PK",
+      "country_name": "Pakistan"
+    }
+  ],
+  "cityBranches": [
+    {
+      "id": "92355b3f-18c5-4fd4-9f63-64b2ec22e165",
+      "country_id": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+      "country_branch_id": "87c2e253-b6c1-482d-a808-272337f3ffda",
+      "code": "ARE-0000-001",
+      "name": "AL.RAS",
+      "status": "active",
+      "created_at": "2026-07-14T13:24:56.176Z",
+      "country_code": "AE"
+    },
+    {
+      "id": "6d16fe64-1d94-4908-ae1e-09fa27c348ac",
+      "country_id": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+      "country_branch_id": "87c2e253-b6c1-482d-a808-272337f3ffda",
+      "code": "ARE-2922-002",
+      "name": "Dubai City Branch",
+      "status": "active",
+      "created_at": "2026-07-19T15:53:17.112Z",
+      "country_code": "AE"
+    },
+    {
+      "id": "36a17f32-230d-4112-8a20-7433087ff23d",
+      "country_id": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+      "country_branch_id": "87c2e253-b6c1-482d-a808-272337f3ffda",
+      "code": "ALRAS",
+      "name": "AL_RAS City Branch",
+      "status": "active",
+      "created_at": "2026-07-27T12:34:40.972Z",
+      "country_code": "AE"
+    },
+    {
+      "id": "6d5c5d1c-504c-4a60-9666-62e8c88885e5",
+      "country_id": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+      "country_branch_id": "87c2e253-b6c1-482d-a808-272337f3ffda",
+      "code": "DXB",
+      "name": "Dubai Main City Branch",
+      "status": "active",
+      "created_at": "2026-07-27T12:34:41.655Z",
+      "country_code": "AE"
+    },
+    {
+      "id": "623dbff8-b333-410d-bb7b-4c674bf19fe6",
+      "country_id": "8366fa0e-dcf6-4acd-8602-2819f103dd63",
+      "country_branch_id": "0842bdac-4c33-4b9e-ada5-e21aa8176151",
+      "code": "AFG-KAH-001",
+      "name": "kah City Branch",
+      "status": "active",
+      "created_at": "2026-07-19T14:35:44.068Z",
+      "country_code": "AF"
+    },
+    {
+      "id": "ffc4ceff-4745-4516-902c-702c4e1db7bf",
+      "country_id": "8366fa0e-dcf6-4acd-8602-2819f103dd63",
+      "country_branch_id": "0842bdac-4c33-4b9e-ada5-e21aa8176151",
+      "code": "KND",
+      "name": "Kandahar City Branch",
+      "status": "active",
+      "created_at": "2026-07-27T12:34:38.148Z",
+      "country_code": "AF"
+    },
+    {
+      "id": "a68074f7-7cb5-4178-b5a7-96b0337ff6b8",
+      "country_id": "8366fa0e-dcf6-4acd-8602-2819f103dd63",
+      "country_branch_id": "0842bdac-4c33-4b9e-ada5-e21aa8176151",
+      "code": "KBL",
+      "name": "Kabul City Branch",
+      "status": "active",
+      "created_at": "2026-07-27T12:34:38.926Z",
+      "country_code": "AF"
+    },
+    {
+      "id": "36dbaf1e-a43f-4381-b39d-9c2eb30b1c75",
+      "country_id": "8366fa0e-dcf6-4acd-8602-2819f103dd63",
+      "country_branch_id": "0842bdac-4c33-4b9e-ada5-e21aa8176151",
+      "code": "HRT",
+      "name": "Herat City Branch",
+      "status": "active",
+      "created_at": "2026-07-27T12:34:39.608Z",
+      "country_code": "AF"
+    },
+    {
+      "id": "28298258-a0b2-47f8-bad4-43ad5e9e7da4",
+      "country_id": "fb021716-a2e7-4141-9c1a-bd1ddd92eb14",
+      "country_branch_id": "5269c1cb-92a1-4aa8-aad8-d4c7260badaa",
+      "code": "PAK-1181-001",
+      "name": "Chaman City Branch",
+      "status": "active",
+      "created_at": "2026-07-14T13:46:50.603Z",
+      "country_code": "PK"
+    },
+    {
+      "id": "329f2f79-4e1e-4b5d-bb60-727a2721656e",
+      "country_id": "fb021716-a2e7-4141-9c1a-bd1ddd92eb14",
+      "country_branch_id": "5269c1cb-92a1-4aa8-aad8-d4c7260badaa",
+      "code": "PAK-1167-002",
+      "name": "Quetta City Branch",
+      "status": "active",
+      "created_at": "2026-07-19T14:40:09.636Z",
+      "country_code": "PK"
+    }
+  ],
+  "privilegedAssignments": [
+    {
+      "id": "39c94b86-9915-4e17-a595-3c48aaacef2a",
+      "user_id": "7719341b-bfcb-4a31-b852-0f67e8062e95",
+      "full_name": "Super Admin",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:06.539Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "fda8d2be-4b38-4f11-94cb-b21d97b448b6",
+      "user_id": "724319b1-cf66-4179-8365-1cd3ce20955b",
+      "full_name": "ASMATULLAH",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:06.895Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "3aba8a67-7208-4981-b062-5e5c3cf3206c",
+      "user_id": "ae8b517e-d822-465f-88e9-5c6afa74b65e",
+      "full_name": "IMPOTRS EXPOTRS",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:07.242Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "7c19a194-c2f6-4a86-b97b-3af723b640fe",
+      "user_id": "3b7f6a85-6201-43fb-a3ce-f1312a5f3e82",
+      "full_name": "asmat",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:07.590Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "c28b20ae-61e4-4a19-b237-140e669ba637",
+      "user_id": "9667b381-dba3-43d1-8911-d7f519427a56",
+      "full_name": "najeeeb",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:07.934Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "2b56ef29-9cd1-4ac5-82f7-880239923ec7",
+      "user_id": "3f970255-af4a-4300-9d3b-871259f34e1c",
+      "full_name": "HAJI ASMATULLAH",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:08.279Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "aaad6f1b-e538-41be-9b3d-aa87c0848024",
+      "user_id": "3b7f6a85-6201-43fb-a3ce-f1312a5f3e82",
+      "full_name": "asmat",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:08.625Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "c54061d2-8f54-437f-b5f5-ac554ff95070",
+      "user_id": "7719341b-bfcb-4a31-b852-0f67e8062e95",
+      "full_name": "Super Admin",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:08.970Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "cfa77f05-b23d-4618-bb76-3b8826157b6b",
+      "user_id": "9667b381-dba3-43d1-8911-d7f519427a56",
+      "full_name": "najeeeb",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:09.316Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "5b7ac9df-3a89-471e-b082-8ca41e2177af",
+      "user_id": "ae8b517e-d822-465f-88e9-5c6afa74b65e",
+      "full_name": "IMPOTRS EXPOTRS",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:09.662Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "d720d6c6-e025-4f1f-a7a7-a029c3d32775",
+      "user_id": "3f970255-af4a-4300-9d3b-871259f34e1c",
+      "full_name": "HAJI ASMATULLAH",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:10.009Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "128d7a32-643f-48d6-916d-9d30777b84ab",
+      "user_id": "724319b1-cf66-4179-8365-1cd3ce20955b",
+      "full_name": "ASMATULLAH",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:10.355Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "2ce1057d-97ae-460a-add2-9682b725e007",
+      "user_id": "7719341b-bfcb-4a31-b852-0f67e8062e95",
+      "full_name": "Super Admin",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:12.993Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "55452900-0be3-498f-afe3-3c59d87de680",
+      "user_id": "724319b1-cf66-4179-8365-1cd3ce20955b",
+      "full_name": "ASMATULLAH",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:13.335Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "c2b56c3d-8245-462d-985d-d3d5e7d3268f",
+      "user_id": "ae8b517e-d822-465f-88e9-5c6afa74b65e",
+      "full_name": "IMPOTRS EXPOTRS",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:13.674Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "6c90afa1-7910-453e-bb7e-50b504c71987",
+      "user_id": "3b7f6a85-6201-43fb-a3ce-f1312a5f3e82",
+      "full_name": "asmat",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:14.014Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "c33caf7c-ef42-47c1-aebe-260a9a590c7e",
+      "user_id": "9667b381-dba3-43d1-8911-d7f519427a56",
+      "full_name": "najeeeb",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:14.355Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "617c1686-a294-46af-92dd-29fedc110c62",
+      "user_id": "3f970255-af4a-4300-9d3b-871259f34e1c",
+      "full_name": "HAJI ASMATULLAH",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:14.699Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "35142fdf-048c-423c-aaf9-6d35ec0ca62b",
+      "user_id": "3b7f6a85-6201-43fb-a3ce-f1312a5f3e82",
+      "full_name": "asmat",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:15.084Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "183940d6-8697-4785-9045-7b21c420ce50",
+      "user_id": "7719341b-bfcb-4a31-b852-0f67e8062e95",
+      "full_name": "Super Admin",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:15.498Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "00d3095a-cd66-44ac-9a04-5c07496faf53",
+      "user_id": "9667b381-dba3-43d1-8911-d7f519427a56",
+      "full_name": "najeeeb",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:15.838Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "b02f5ec3-fd44-4e84-937e-6e9a42db1b63",
+      "user_id": "ae8b517e-d822-465f-88e9-5c6afa74b65e",
+      "full_name": "IMPOTRS EXPOTRS",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:16.316Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "d9eea7a8-2eb6-4579-a283-1390b50e8522",
+      "user_id": "3f970255-af4a-4300-9d3b-871259f34e1c",
+      "full_name": "HAJI ASMATULLAH",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:16.724Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "1e48e9f5-6c6a-427f-a929-1b539698203f",
+      "user_id": "724319b1-cf66-4179-8365-1cd3ce20955b",
+      "full_name": "ASMATULLAH",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:17.103Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "6bb1b6bf-6cb3-4dbd-9081-0948b3a93d87",
+      "user_id": "724319b1-cf66-4179-8365-1cd3ce20955b",
+      "full_name": "ASMATULLAH",
+      "role": "country_admin",
+      "country_id": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-14T12:40:39.872Z",
+      "country_code": "AE",
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "d71977a1-b9a4-414d-b8fd-db346ddd39af",
+      "user_id": "3b7f6a85-6201-43fb-a3ce-f1312a5f3e82",
+      "full_name": "asmat",
+      "role": "country_admin",
+      "country_id": "935dd0b9-8228-43b3-b53d-c06e9ae2882f",
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-15T12:38:35.688Z",
+      "country_code": "AE",
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "d1f4c767-1b42-43bb-a6eb-f65f6f26031a",
+      "user_id": "9667b381-dba3-43d1-8911-d7f519427a56",
+      "full_name": "najeeeb",
+      "role": "country_admin",
+      "country_id": "fb021716-a2e7-4141-9c1a-bd1ddd92eb14",
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-19T14:44:13.960Z",
+      "country_code": "PK",
+      "branch_code": null,
+      "branch_name": null
+    }
+  ],
+  "coverage": {
+    "AE": {
+      "countries": 1,
+      "mainBranches": 1,
+      "countryAdmins": 2,
+      "mainBranchAdmins": 0
+    },
+    "PK": {
+      "countries": 1,
+      "mainBranches": 1,
+      "countryAdmins": 1,
+      "mainBranchAdmins": 0
+    },
+    "AF": {
+      "countries": 1,
+      "mainBranches": 1,
+      "countryAdmins": 0,
+      "mainBranchAdmins": 0
+    },
+    "IR": {
+      "countries": 1,
+      "mainBranches": 0,
+      "countryAdmins": 0,
+      "mainBranchAdmins": 0
+    },
+    "IN": {
+      "countries": 1,
+      "mainBranches": 1,
+      "countryAdmins": 0,
+      "mainBranchAdmins": 0
+    }
+  },
+  "globalSuperAdmins": [
+    {
+      "id": "39c94b86-9915-4e17-a595-3c48aaacef2a",
+      "user_id": "7719341b-bfcb-4a31-b852-0f67e8062e95",
+      "full_name": "Super Admin",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:06.539Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "fda8d2be-4b38-4f11-94cb-b21d97b448b6",
+      "user_id": "724319b1-cf66-4179-8365-1cd3ce20955b",
+      "full_name": "ASMATULLAH",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:06.895Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "3aba8a67-7208-4981-b062-5e5c3cf3206c",
+      "user_id": "ae8b517e-d822-465f-88e9-5c6afa74b65e",
+      "full_name": "IMPOTRS EXPOTRS",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:07.242Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "7c19a194-c2f6-4a86-b97b-3af723b640fe",
+      "user_id": "3b7f6a85-6201-43fb-a3ce-f1312a5f3e82",
+      "full_name": "asmat",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:07.590Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "c28b20ae-61e4-4a19-b237-140e669ba637",
+      "user_id": "9667b381-dba3-43d1-8911-d7f519427a56",
+      "full_name": "najeeeb",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:07.934Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "2b56ef29-9cd1-4ac5-82f7-880239923ec7",
+      "user_id": "3f970255-af4a-4300-9d3b-871259f34e1c",
+      "full_name": "HAJI ASMATULLAH",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:08.279Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "aaad6f1b-e538-41be-9b3d-aa87c0848024",
+      "user_id": "3b7f6a85-6201-43fb-a3ce-f1312a5f3e82",
+      "full_name": "asmat",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:08.625Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "c54061d2-8f54-437f-b5f5-ac554ff95070",
+      "user_id": "7719341b-bfcb-4a31-b852-0f67e8062e95",
+      "full_name": "Super Admin",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:08.970Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "cfa77f05-b23d-4618-bb76-3b8826157b6b",
+      "user_id": "9667b381-dba3-43d1-8911-d7f519427a56",
+      "full_name": "najeeeb",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:09.316Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "5b7ac9df-3a89-471e-b082-8ca41e2177af",
+      "user_id": "ae8b517e-d822-465f-88e9-5c6afa74b65e",
+      "full_name": "IMPOTRS EXPOTRS",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:09.662Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "d720d6c6-e025-4f1f-a7a7-a029c3d32775",
+      "user_id": "3f970255-af4a-4300-9d3b-871259f34e1c",
+      "full_name": "HAJI ASMATULLAH",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:10.009Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "128d7a32-643f-48d6-916d-9d30777b84ab",
+      "user_id": "724319b1-cf66-4179-8365-1cd3ce20955b",
+      "full_name": "ASMATULLAH",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:10.355Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "2ce1057d-97ae-460a-add2-9682b725e007",
+      "user_id": "7719341b-bfcb-4a31-b852-0f67e8062e95",
+      "full_name": "Super Admin",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:12.993Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "55452900-0be3-498f-afe3-3c59d87de680",
+      "user_id": "724319b1-cf66-4179-8365-1cd3ce20955b",
+      "full_name": "ASMATULLAH",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:13.335Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "c2b56c3d-8245-462d-985d-d3d5e7d3268f",
+      "user_id": "ae8b517e-d822-465f-88e9-5c6afa74b65e",
+      "full_name": "IMPOTRS EXPOTRS",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:13.674Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "6c90afa1-7910-453e-bb7e-50b504c71987",
+      "user_id": "3b7f6a85-6201-43fb-a3ce-f1312a5f3e82",
+      "full_name": "asmat",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:14.014Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "c33caf7c-ef42-47c1-aebe-260a9a590c7e",
+      "user_id": "9667b381-dba3-43d1-8911-d7f519427a56",
+      "full_name": "najeeeb",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:14.355Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "617c1686-a294-46af-92dd-29fedc110c62",
+      "user_id": "3f970255-af4a-4300-9d3b-871259f34e1c",
+      "full_name": "HAJI ASMATULLAH",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:14.699Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "35142fdf-048c-423c-aaf9-6d35ec0ca62b",
+      "user_id": "3b7f6a85-6201-43fb-a3ce-f1312a5f3e82",
+      "full_name": "asmat",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:15.084Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "183940d6-8697-4785-9045-7b21c420ce50",
+      "user_id": "7719341b-bfcb-4a31-b852-0f67e8062e95",
+      "full_name": "Super Admin",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:15.498Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "00d3095a-cd66-44ac-9a04-5c07496faf53",
+      "user_id": "9667b381-dba3-43d1-8911-d7f519427a56",
+      "full_name": "najeeeb",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:15.838Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "b02f5ec3-fd44-4e84-937e-6e9a42db1b63",
+      "user_id": "ae8b517e-d822-465f-88e9-5c6afa74b65e",
+      "full_name": "IMPOTRS EXPOTRS",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:16.316Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "d9eea7a8-2eb6-4579-a283-1390b50e8522",
+      "user_id": "3f970255-af4a-4300-9d3b-871259f34e1c",
+      "full_name": "HAJI ASMATULLAH",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:16.724Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    },
+    {
+      "id": "1e48e9f5-6c6a-427f-a929-1b539698203f",
+      "user_id": "724319b1-cf66-4179-8365-1cd3ce20955b",
+      "full_name": "ASMATULLAH",
+      "role": "super_admin",
+      "country_id": null,
+      "country_branch_id": null,
+      "city_branch_id": null,
+      "is_active": true,
+      "created_at": "2026-07-27T12:57:17.103Z",
+      "country_code": null,
+      "branch_code": null,
+      "branch_name": null
+    }
+  ],
+  "tableCounts": {
+    "countries": 253,
+    "countryBranches": 5,
+    "cityBranches": 10,
+    "profiles": 6,
+    "roleAssignments": 29
+  },
+  "transactionCandidates": [
+    {
+      "table": "enterprise_ledger_reversals",
+      "rows": 0
+    },
+    {
+      "table": "erp_record_transfers",
+      "rows": 0
+    },
+    {
+      "table": "exchange_rate_history",
+      "rows": 0
+    },
+    {
+      "table": "inter_branch_ledger_transfers",
+      "rows": 0
+    },
+    {
+      "table": "journal_entries",
+      "rows": 0
+    },
+    {
+      "table": "journal_lines",
+      "rows": 0
+    },
+    {
+      "table": "journal_reversals",
+      "rows": 0
+    },
+    {
+      "table": "ledger_balances",
+      "rows": 5
+    },
+    {
+      "table": "ledger_entries",
+      "rows": 0
+    },
+    {
+      "table": "ledger_opening_balances",
+      "rows": 0
+    },
+    {
+      "table": "ledger_posting_batches",
+      "rows": 0
+    },
+    {
+      "table": "ledger_posting_lines",
+      "rows": 0
+    },
+    {
+      "table": "ledger_transaction_audit_trail",
+      "rows": 0
+    },
+    {
+      "table": "ledgers",
+      "rows": 5
+    },
+    {
+      "table": "local_purchases",
+      "rows": 0
+    },
+    {
+      "table": "payment_methods",
+      "rows": 0
+    },
+    {
+      "table": "purchase_loading_records",
+      "rows": 2
+    },
+    {
+      "table": "purchase_order_expenses",
+      "rows": 0
+    },
+    {
+      "table": "purchase_order_items",
+      "rows": 1
+    },
+    {
+      "table": "purchase_order_payments",
+      "rows": 0
+    },
+    {
+      "table": "purchase_orders",
+      "rows": 511
+    },
+    {
+      "table": "roznamcha_entries",
+      "rows": 147
+    },
+    {
+      "table": "roznamcha_lines",
+      "rows": 283
+    },
+    {
+      "table": "roznamcha_reversals",
+      "rows": 0
+    },
+    {
+      "table": "sales_order_payments",
+      "rows": 0
+    },
+    {
+      "table": "sales_orders",
+      "rows": 0
+    },
+    {
+      "table": "shipping_bl_records",
+      "rows": 0
+    },
+    {
+      "table": "shipping_line_records",
+      "rows": 0
+    },
+    {
+      "table": "usd_purchase_sales",
+      "rows": 0
+    },
+    {
+      "table": "voucher_sequences",
+      "rows": 0
+    }
+  ]
+}

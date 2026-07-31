@@ -3,6 +3,10 @@ import path from "node:path";
 import postgres from "postgres";
 
 function getEnvConfig() {
+  // An explicitly supplied process URL is useful for one-off production
+  // maintenance without rewriting any checked-out environment file.
+  if (process.env.DATABASE_URL) return process.env;
+
   const envPaths = [".env.production", ".env.local", ".env"];
   for (const envPath of envPaths) {
     if (fs.existsSync(envPath)) {
@@ -152,3 +156,4 @@ async function runBackup() {
 }
 
 void runBackup();
+

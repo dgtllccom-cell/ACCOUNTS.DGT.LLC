@@ -179,14 +179,13 @@ export function LocationHierarchySelect({
     setCities([]);
     setAreas([]);
     if (!value.countryId) return;
-    if (!value.stateProvinceId) return;
 
     (async () => {
       setLoadingCities(true);
       try {
         const rows = await listCities({
           countryId: value.countryId,
-          stateProvinceId: value.stateProvinceId,
+          stateProvinceId: value.stateProvinceId || null,
           districtId: value.districtId || null
         });
         if (!cancelled) setCities(rows);
@@ -337,12 +336,27 @@ export function LocationHierarchySelect({
             <SearchSelect
               label={loadingCities ? "City (Loading...)" : "City"}
               value={value.cityId}
-              placeholder={value.stateProvinceId ? "Select city" : "Select state first"}
-              disabled={disabled || !value.countryId || !value.stateProvinceId || loadingCities}
+              placeholder={value.countryId ? "Select city" : "Select country first"}
+              disabled={disabled || !value.countryId || loadingCities}
               options={toOptions(cities)}
               onValueChange={(cityId) => {
-                const next: LocationHierarchyValue = { ...value, cityId, areaId: "" };
-                onChange(next, { ...meta, city: cities.find((c) => c.id === cityId) ?? null, area: null });
+                const foundCity = cities.find((c) => c.id === cityId);
+                const nextStateId = foundCity?.state_province_id || value.stateProvinceId;
+                const nextDistrictId = foundCity?.district_id || value.districtId;
+                const next: LocationHierarchyValue = {
+                  ...value,
+                  stateProvinceId: nextStateId,
+                  districtId: nextDistrictId,
+                  cityId,
+                  areaId: ""
+                };
+                onChange(next, {
+                  ...meta,
+                  state: states.find((s) => s.id === nextStateId) ?? meta.state,
+                  district: districts.find((d) => d.id === nextDistrictId) ?? meta.district,
+                  city: foundCity ?? null,
+                  area: null
+                });
               }}
               createLabel="+ New City"
               createButtonPlacement="both"
