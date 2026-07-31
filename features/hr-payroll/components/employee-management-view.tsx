@@ -245,7 +245,14 @@ export function EmployeeManagementView() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => printEmployeeCertificate({
+                          onClick={async () => {
+                            let company: any = {};
+                            try {
+                              const r = await fetch(`/api/erp/branding?countryId=${emp.country_id ?? ""}`);
+                              const j = await r.json();
+                              if (j?.branding) company = { name: j.branding.companyName, logoUrl: j.branding.logoUrl, country: j.branding.countryName, branch: emp.country_branch_name ?? emp.city_branch_name ?? null };
+                            } catch { /* fall back to default */ }
+                            printEmployeeCertificate({
                             employeeId: emp.employee_code,
                             name: emp.person?.customer_name,
                             photoUrl: emp.person?.photo_url ?? emp.photo_url ?? null,
@@ -263,7 +270,8 @@ export function EmployeeManagementView() {
                             salary: emp.salary ?? emp.basic_salary ?? null,
                             reportingManager: emp.reporting_manager_name ?? emp.reporting_manager_id ?? null,
                             serials: { superAdmin: emp.super_admin_serial, country: emp.country_serial, branch: emp.branch_serial, entry: emp.entry_serial },
-                          })}
+                            }, company);
+                          }}
                           className="h-7 text-xs px-2.5 text-emerald-600 dark:text-emerald-400"
                         >
                           Certificate
