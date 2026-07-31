@@ -6,10 +6,10 @@ import { eq, and } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
-export async function PUT(req: Request, { params }: { params: { id: string } }) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
-    const id = params.id;
+    const id = (await params).id;
     const body = await req.json();
     const { name, config, isPublic } = body;
 
@@ -40,10 +40,10 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
   }
 }
 
-export async function DELETE(req: Request, { params }: { params: { id: string } }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
-    const id = params.id;
+    const id = (await params).id;
 
     const [existing] = await db
       .select()

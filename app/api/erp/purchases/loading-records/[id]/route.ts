@@ -21,7 +21,7 @@ const updateSchema = z.object({
   reportPayload: z.record(z.string(), z.unknown()).optional()
 });
 
-export async function PATCH(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
     const body = updateSchema.parse(await request.json());
@@ -31,7 +31,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       supabase
         .from("purchase_loading_records")
         .select("*")
-        .eq("id", params.id)
+        .eq("id", (await params).id)
         .is("deleted_at", null)
         .single()
     );
@@ -60,7 +60,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
       supabase
         .from("purchase_loading_records")
         .update(payload)
-        .eq("id", params.id)
+        .eq("id", (await params).id)
         .select("id, loading_record_no")
         .single()
     );
@@ -80,7 +80,7 @@ export async function PATCH(request: NextRequest, { params }: { params: { id: st
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
 
@@ -89,7 +89,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       supabase
         .from("purchase_loading_records")
         .select("*")
-        .eq("id", params.id)
+        .eq("id", (await params).id)
         .is("deleted_at", null)
         .single()
     );
@@ -107,7 +107,7 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
       supabase
         .from("purchase_loading_records")
         .update({ deleted_at: deletedAt })
-        .eq("id", params.id)
+        .eq("id", (await params).id)
         .select("id, loading_record_no")
         .single()
     );

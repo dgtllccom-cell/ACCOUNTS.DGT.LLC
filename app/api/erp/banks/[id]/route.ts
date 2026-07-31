@@ -7,11 +7,11 @@ import { banksService } from "@/lib/services/banks-service";
 
 export async function GET(
   _request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireErpSession();
-    const bank = await banksService.getById(params.id);
+    const bank = await banksService.getById((await params).id);
     return apiOk({ bank });
   } catch (error) {
     return handleApiError(error);
@@ -20,22 +20,22 @@ export async function GET(
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await requireErpSession();
     const body = bankUpdateSchema.parse(await request.json());
 
-    await banksService.update(params.id, body, session.userId);
+    await banksService.update((await params).id, body, session.userId);
 
     await auditApiAction(request, {
       action: "banks.update.api",
       entityTable: "banks",
-      entityId: params.id,
+      entityId: (await params).id,
       after: body
     });
 
-    return apiOk({ bankId: params.id });
+    return apiOk({ bankId: (await params).id });
   } catch (error) {
     return handleApiError(error);
   }
@@ -43,16 +43,16 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireErpSession();
-    await banksService.softDelete(params.id);
+    await banksService.softDelete((await params).id);
 
     await auditApiAction(request, {
       action: "banks.delete.api",
       entityTable: "banks",
-      entityId: params.id
+      entityId: (await params).id
     });
 
     return apiOk({ deleted: true });

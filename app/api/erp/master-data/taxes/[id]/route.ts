@@ -5,7 +5,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 export async function DELETE(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await requireErpSession();
@@ -15,7 +15,7 @@ export async function DELETE(
     const { error } = await supabase
       .from("tax_codes")
       .delete()
-      .eq("id", params.id);
+      .eq("id", (await params).id);
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 500 });
