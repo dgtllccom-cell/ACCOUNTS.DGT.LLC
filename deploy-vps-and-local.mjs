@@ -20,7 +20,7 @@ try {
   console.log("\n[2/4] Staging and committing all local code changes...");
   execSync('git add -A', { stdio: 'inherit' });
   try {
-    execSync('git commit -m "feat(navigation): Journal Stock & Stock hierarchy reorganization, General Office i18n translations, route-level chunk recovery, tabs UI component, and force-dynamic pages"', { stdio: 'inherit' });
+    execSync('git commit -m "fix(roznamcha): cash entry variable hoisting fix, remove undefined setBranchLocked, refine error boundary chunk auto-reload, and sync Journal Stock hierarchy"', { stdio: 'inherit' });
   } catch (e) {
     console.log("No new changes to commit or commit already up to date.");
   }
