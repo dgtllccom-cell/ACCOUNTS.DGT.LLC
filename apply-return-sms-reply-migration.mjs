@@ -10,7 +10,7 @@
 import fs from 'fs';
 import postgres from 'postgres';
 
-const DB_URL = process.env.DATABASE_URL || "postgresql://postgres.csesvyxqjivnkkozgopt:Gulistan%409090@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require";
+const DB_URL = process.env.DATABASE_URL || "postgresql://postgres.csesvyxqjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres";
 
 /**
  * Split SQL file content into individual statements, handling:
