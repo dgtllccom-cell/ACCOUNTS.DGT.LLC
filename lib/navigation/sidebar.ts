@@ -1221,13 +1221,6 @@ export const sidebarTree: SidebarNode[] = [
             roles: ["super_admin"]
           },
           {
-            key: "settings-email-accounts",
-            labelKey: "Official Email Accounts (Titan SMTP)" as any,
-            iconKey: "mail",
-            href: "/dashboard/settings/email-accounts" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin"]
-          },
-          {
             key: "settings-database-cleanup",
             labelKey: "Database Backup & Reset" as any,
             href: "/dashboard/settings/database-cleanup" as Route,
