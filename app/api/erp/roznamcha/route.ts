@@ -7,6 +7,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { roznamchaService } from "@/lib/services/roznamcha-service";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { allocateFormSerials } from "@/lib/services/form-serials";
 import { revalidatePath } from "next/cache";
 
 export const dynamic = "force-dynamic";
@@ -327,6 +328,13 @@ export async function postRoznamchaWithErpSession(input: {
 
   if (entryError) throw new Error(entryError.message);
   const entryId = entry.id as string;
+
+  // 4-level serial (Global/Country/Branch/Entry) — additive metadata on the
+  // roznamcha entry only; does NOT touch the ledger/account posting below.
+  try {
+    const s = await allocateFormSerials("journal_roznamcha", { countryId: (body as any).countryId ?? null, branchKey: (body as any).countryBranchId ?? (body as any).cityBranchId ?? null });
+    await admin.from("roznamcha_entries").update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial }).eq("id", entryId);
+  } catch { /* non-fatal — never affects posting */ }
 
   for (const line of body.lines) {
     const ledgerId = line.ledgerId;
