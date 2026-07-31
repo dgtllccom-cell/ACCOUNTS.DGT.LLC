@@ -20,7 +20,7 @@ try {
   console.log("\n[2/4] Staging and committing all local code changes...");
   execSync('git add -A', { stdio: 'inherit' });
   try {
-    execSync('git commit -m "fix(db): update database connection string to direct host db.csesvyxqjivnkkozgopt.supabase.co:5432 and add force-dynamic to clearing-agent pages"', { stdio: 'inherit' });
+    execSync('git commit -m "fix(deploy): make local migration runner fail-safe and add IPv4 fallback connection string"', { stdio: 'inherit' });
   } catch (e) {
     console.log("No new changes to commit or commit already up to date.");
   }

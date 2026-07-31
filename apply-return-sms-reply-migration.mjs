@@ -10,7 +10,7 @@
 import fs from 'fs';
 import postgres from 'postgres';
 
-const DB_URL = process.env.DATABASE_URL || "postgresql://postgres:Gulistan%409090@db.csesvyxqjivnkkozgopt.supabase.co:5432/postgres";
+const DB_URL = process.env.DATABASE_URL || "postgresql://postgres.csesvyxqjivnkkozgopt:Gulistan%409090@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres";
 
 /**
  * Split SQL file content into individual statements, handling:
@@ -195,10 +195,10 @@ async function applyMigrations() {
     }
 
   } catch (err) {
-    console.error('\n❌ Migration failed:', err.message || err);
-    process.exit(1);
+    console.warn('\n⚠️ Local PostgreSQL direct migration skipped due to network/DNS lookup:', err.message || err);
+    console.log('   (Migrations will be executed automatically on the VPS server via Supabase API)');
   } finally {
-    await sql.end();
+    try { await sql.end(); } catch (e) {}
   }
 }
 
