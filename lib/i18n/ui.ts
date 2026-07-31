@@ -48,6 +48,28 @@ export type UiKey =
   | "nav.truck_registration"
   | "nav.truck_loading"
   | "nav.import_loading"
+  | "nav.transit_loading"
+  | "tt.title"
+  | "tt.select_truck"
+  | "tt.date"
+  | "tt.company"
+  | "tt.goods"
+  | "tt.qty"
+  | "tt.unit"
+  | "tt.route"
+  | "tt.border"
+  | "tt.destination"
+  | "tt.customs"
+  | "tt.container"
+  | "tt.seal"
+  | "tt.remarks"
+  | "tt.add"
+  | "tt.edit"
+  | "tt.delete"
+  | "tt.save"
+  | "tt.cancel"
+  | "tt.search"
+  | "tt.empty"
   | "il.title"
   | "il.select_truck"
   | "il.date"
@@ -668,6 +690,28 @@ const en: Dict = {
   "nav.truck_registration": "Truck Registration",
   "nav.truck_loading": "Truck Loading",
   "nav.import_loading": "Import Loading",
+  "nav.transit_loading": "Transit Loading",
+  "tt.title": "Transit Loading",
+  "tt.select_truck": "Select Truck",
+  "tt.date": "Transit Date",
+  "tt.company": "Transit Company",
+  "tt.goods": "Goods",
+  "tt.qty": "Quantity",
+  "tt.unit": "Unit",
+  "tt.route": "Transit Route",
+  "tt.border": "Border",
+  "tt.destination": "Destination",
+  "tt.customs": "Customs Info",
+  "tt.container": "Container No",
+  "tt.seal": "Seal No",
+  "tt.remarks": "Remarks",
+  "tt.add": "New Transit",
+  "tt.edit": "Edit",
+  "tt.delete": "Delete",
+  "tt.save": "Save",
+  "tt.cancel": "Cancel",
+  "tt.search": "Search transits...",
+  "tt.empty": "No transits found",
   "il.title": "Import Loading",
   "il.select_truck": "Select Truck",
   "il.date": "Import Date",
@@ -1274,6 +1318,28 @@ const ur: Dict = {
   "nav.truck_registration": "ٹرک رجسٹریشن",
   "nav.truck_loading": "ٹرک لوڈنگ",
   "nav.import_loading": "امپورٹ لوڈنگ",
+  "nav.transit_loading": "ٹرانزٹ لوڈنگ",
+  "tt.title": "ٹرانزٹ لوڈنگ",
+  "tt.select_truck": "ٹرک منتخب کریں",
+  "tt.date": "ٹرانزٹ تاریخ",
+  "tt.company": "ٹرانزٹ کمپنی",
+  "tt.goods": "مال",
+  "tt.qty": "مقدار",
+  "tt.unit": "یونٹ",
+  "tt.route": "ٹرانزٹ روٹ",
+  "tt.border": "بارڈر",
+  "tt.destination": "منزل",
+  "tt.customs": "کسٹمز معلومات",
+  "tt.container": "کنٹینر نمبر",
+  "tt.seal": "سیل نمبر",
+  "tt.remarks": "تفصیل",
+  "tt.add": "نیا ٹرانزٹ",
+  "tt.edit": "ترمیم",
+  "tt.delete": "حذف",
+  "tt.save": "محفوظ کریں",
+  "tt.cancel": "منسوخ",
+  "tt.search": "ٹرانزٹ تلاش کریں...",
+  "tt.empty": "کوئی ٹرانزٹ نہیں",
   "il.title": "امپورٹ لوڈنگ",
   "il.select_truck": "ٹرک منتخب کریں",
   "il.date": "امپورٹ تاریخ",
@@ -1827,6 +1893,28 @@ const ar: Dict = {
   "nav.truck_registration": "تسجيل الشاحنة",
   "nav.truck_loading": "تحميل الشاحنة",
   "nav.import_loading": "تحميل الاستيراد",
+  "nav.transit_loading": "تحميل العبور",
+  "tt.title": "تحميل العبور",
+  "tt.select_truck": "اختر الشاحنة",
+  "tt.date": "تاريخ العبور",
+  "tt.company": "شركة العبور",
+  "tt.goods": "البضائع",
+  "tt.qty": "الكمية",
+  "tt.unit": "الوحدة",
+  "tt.route": "مسار العبور",
+  "tt.border": "الحدود",
+  "tt.destination": "الوجهة",
+  "tt.customs": "معلومات الجمارك",
+  "tt.container": "رقم الحاوية",
+  "tt.seal": "رقم الختم",
+  "tt.remarks": "ملاحظات",
+  "tt.add": "عبور جديد",
+  "tt.edit": "تعديل",
+  "tt.delete": "حذف",
+  "tt.save": "حفظ",
+  "tt.cancel": "إلغاء",
+  "tt.search": "بحث عن العبور...",
+  "tt.empty": "لا يوجد عبور",
   "il.title": "تحميل الاستيراد",
   "il.select_truck": "اختر الشاحنة",
   "il.date": "تاريخ الاستيراد",
@@ -2344,6 +2432,28 @@ const fa: Dict = {
   "nav.truck_registration": "ثبت کامیون",
   "nav.truck_loading": "بارگیری کامیون",
   "nav.import_loading": "بارگیری واردات",
+  "nav.transit_loading": "بارگیری ترانزیت",
+  "tt.title": "بارگیری ترانزیت",
+  "tt.select_truck": "انتخاب کامیون",
+  "tt.date": "تاریخ ترانزیت",
+  "tt.company": "شرکت ترانزیت",
+  "tt.goods": "کالا",
+  "tt.qty": "مقدار",
+  "tt.unit": "واحد",
+  "tt.route": "مسیر ترانزیت",
+  "tt.border": "مرز",
+  "tt.destination": "مقصد",
+  "tt.customs": "اطلاعات گمرک",
+  "tt.container": "شماره کانتینر",
+  "tt.seal": "شماره پلمب",
+  "tt.remarks": "ملاحظات",
+  "tt.add": "ترانزیت جدید",
+  "tt.edit": "ویرایش",
+  "tt.delete": "حذف",
+  "tt.save": "ذخیره",
+  "tt.cancel": "لغو",
+  "tt.search": "جستجوی ترانزیت...",
+  "tt.empty": "ترانزیتی یافت نشد",
   "il.title": "بارگیری واردات",
   "il.select_truck": "انتخاب کامیون",
   "il.date": "تاریخ واردات",
@@ -2784,6 +2894,28 @@ const ps: Dict = {
   "nav.truck_registration": "د لارۍ راجستر",
   "nav.truck_loading": "د لارۍ بار",
   "nav.import_loading": "د واردولو بار",
+  "nav.transit_loading": "د ترانزیت بار",
+  "tt.title": "د ترانزیت بار",
+  "tt.select_truck": "لارۍ وټاکئ",
+  "tt.date": "د ترانزیت نیټه",
+  "tt.company": "د ترانزیت شرکت",
+  "tt.goods": "توکي",
+  "tt.qty": "مقدار",
+  "tt.unit": "واحد",
+  "tt.route": "د ترانزیت لاره",
+  "tt.border": "پوله",
+  "tt.destination": "منزل",
+  "tt.customs": "د ګمرک معلومات",
+  "tt.container": "د کانتینر نمبر",
+  "tt.seal": "د سیل نمبر",
+  "tt.remarks": "یادښتونه",
+  "tt.add": "نوی ترانزیت",
+  "tt.edit": "سمون",
+  "tt.delete": "ړنګول",
+  "tt.save": "خوندي کول",
+  "tt.cancel": "لغوه کول",
+  "tt.search": "د ترانزیت لټون...",
+  "tt.empty": "هیڅ ترانزیت ونه موندل شو",
   "il.title": "د واردولو بار",
   "il.select_truck": "لارۍ وټاکئ",
   "il.date": "د واردولو نیټه",
