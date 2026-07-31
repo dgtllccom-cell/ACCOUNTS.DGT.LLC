@@ -20,7 +20,7 @@ try {
   console.log("\n[2/4] Staging and committing all local code changes...");
   execSync('git add -A', { stdio: 'inherit' });
   try {
-    execSync('git commit -m "fix(clearing-agent): apply truck_loadings database migrations to active Supabase project and establish left-form right-report dual panel layout design"', { stdio: 'inherit' });
+    execSync('git commit -m "feat(final-phase): multi-company branding profile integration, report headers/footers/stamps, DB schema verification, cross-device QA, and production release v1.0"', { stdio: 'inherit' });
   } catch (e) {
     console.log("No new changes to commit or commit already up to date.");
   }

@@ -21,6 +21,7 @@ import { openLoadingRecordsPrintReport, type PurchaseLoadingReportRow } from "@/
 import { openFinalizedPOPrintReport, type FinalizedPORow } from "@/lib/reports/open-finalized-po-print-report";
 import { openTransferPaymentPrintReport } from "@/lib/reports/open-transfer-payment-print-report";
 import { openRecentCashEntriesPrintReport, type CashEntryLine } from "@/lib/reports/open-cash-entries-print-report";
+import { openEntryTypePrintReport, type EntryLine } from "@/lib/reports/open-entry-type-print-report";
 import { openPurchaseBookingOrderPrintReport } from "@/lib/reports/open-purchase-booking-print-report";
 import { openRoznamchaVoucherPrintReport } from "@/lib/reports/open-roznamcha-voucher-print-report";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
@@ -359,6 +360,45 @@ export default function PrintReportsHubPage() {
       selectedCountryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
     });
   }, [roznamchaEntries, selectedBranch, selectedCountry]);
+
+  // 5b. Entry-type prints (Bank / Business Roznamcha / Invoice) — shared branded builder.
+  const buildEntryLines = useCallback((): EntryLine[] => {
+    return roznamchaEntries.slice(0, 25).map((r: any, i: number) => ({
+      id: r.id || `E-${i}`,
+      voucherNo: r.voucher_no || `V-${100 + i}`,
+      entryDate: r.entry_date || "2026-06-12",
+      accountCode: r.account_code || r.debit_account_code || "1010",
+      accountTitle: r.account_title || r.narration || "Ledger Account",
+      debit: Number(r.total_debit || 0),
+      credit: Number(r.total_credit || 0),
+      currency: r.currency || "PKR",
+      narration: r.narration || "",
+      user: r.created_by_name || "Super Admin",
+      branch: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
+      entryType: r.entry_type || r.category || undefined,
+      bankName: r.bank_name || undefined,
+      instrumentNo: r.instrument_no || r.cheque_no || undefined,
+      invoiceNo: r.invoice_no || undefined,
+      party: r.party_name || r.counterparty || undefined,
+    }));
+  }, [roznamchaEntries, selectedBranch]);
+
+  const companyInfoForPrint = useCallback(() => ({
+    country: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
+    branch: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
+  }), [selectedCountry, selectedBranch]);
+
+  const handlePrintBankEntries = useCallback(() => {
+    openEntryTypePrintReport({ mode: "bank", entries: buildEntryLines(), companyInfo: companyInfoForPrint(), filterByType: false });
+  }, [buildEntryLines, companyInfoForPrint]);
+
+  const handlePrintBusinessRoznamcha = useCallback(() => {
+    openEntryTypePrintReport({ mode: "business", entries: buildEntryLines(), companyInfo: companyInfoForPrint(), filterByType: false });
+  }, [buildEntryLines, companyInfoForPrint]);
+
+  const handlePrintInvoiceEntries = useCallback(() => {
+    openEntryTypePrintReport({ mode: "invoice", entries: buildEntryLines(), companyInfo: companyInfoForPrint(), filterByType: false });
+  }, [buildEntryLines, companyInfoForPrint]);
 
   // 6. Purchase Booking Order
   const handlePrintPurchaseBooking = useCallback(() => {
@@ -757,6 +797,75 @@ export default function PrintReportsHubPage() {
         { name: "Quetta City Branch", code: "CHN-QUETTA-001", status: "Active", users: 4, lastTime: "08:45 PM", progress: 98 },
         { name: "Lahore Main Branch", code: "PK-LHR-002", status: "Active", users: 2, lastTime: "07:20 PM", progress: 90 }
       ]
+    },
+    {
+      id: "bank-entries",
+      title: "Bank Entry Print",
+      subtitle: "Bank Transactions Only",
+      description: "Bank debit & credit transactions with bank name, instrument/cheque number, balanced status, branded letterhead and QR verification.",
+      format: "A4 Landscape",
+      icon: Wallet,
+      color: "from-indigo-600 to-blue-700",
+      badgeColor: "bg-indigo-100 text-indigo-800 dark:bg-indigo-950 dark:text-indigo-300",
+      onPrint: handlePrintBankEntries,
+      category: "Bank",
+      dataCount: roznamchaEntries.length,
+      countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
+      branchName: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
+      branchCode: "PK-MAIN-001",
+      periodFrom: "2026-06-12 08:00 AM",
+      periodTo: "2026-06-12 09:00 PM",
+      lastActiveTime: "2026-06-12 08:45 PM",
+      activeUsersCount: 5,
+      processPercent: 95,
+      processTimeRemaining: "5 Mins Remaining",
+      subBranches: []
+    },
+    {
+      id: "business-roznamcha",
+      title: "Business Roznamcha Print",
+      subtitle: "Business Journal Only",
+      description: "Business journal (roznamcha) transactions with party, account code/title, debit/credit, balanced status, branded header/footer and QR.",
+      format: "A4 Landscape",
+      icon: Receipt,
+      color: "from-emerald-600 to-teal-700",
+      badgeColor: "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300",
+      onPrint: handlePrintBusinessRoznamcha,
+      category: "Journal",
+      dataCount: roznamchaEntries.length,
+      countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
+      branchName: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
+      branchCode: "PK-MAIN-001",
+      periodFrom: "2026-06-12 08:00 AM",
+      periodTo: "2026-06-12 09:00 PM",
+      lastActiveTime: "2026-06-12 08:45 PM",
+      activeUsersCount: 5,
+      processPercent: 95,
+      processTimeRemaining: "5 Mins Remaining",
+      subBranches: []
+    },
+    {
+      id: "invoice-entries",
+      title: "Invoice Print",
+      subtitle: "Invoice Transactions Only",
+      description: "Invoice-related transactions with invoice number, party, account, debit/credit totals, branded letterhead, footer and QR verification.",
+      format: "A4 Landscape",
+      icon: FileText,
+      color: "from-rose-600 to-pink-700",
+      badgeColor: "bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300",
+      onPrint: handlePrintInvoiceEntries,
+      category: "Invoice",
+      dataCount: roznamchaEntries.length,
+      countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
+      branchName: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
+      branchCode: "PK-MAIN-001",
+      periodFrom: "2026-06-12 08:00 AM",
+      periodTo: "2026-06-12 09:00 PM",
+      lastActiveTime: "2026-06-12 08:45 PM",
+      activeUsersCount: 5,
+      processPercent: 95,
+      processTimeRemaining: "5 Mins Remaining",
+      subBranches: []
     },
     {
       id: "purchase-booking",

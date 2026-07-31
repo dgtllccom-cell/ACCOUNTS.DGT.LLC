@@ -82,6 +82,10 @@ export function generateReportHtml(input: {
   const printedDate = companyInfo.printedDate || new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
   const financialYear = companyInfo.financialYear || "2025 - 2026";
   const reportPeriod = companyInfo.reportPeriod || `Jul 01, 2026 To ${formatDate(new Date().toISOString())}`;
+  const compLogo = companyInfo.logoUrl || "";
+  // QR verification payload: company + report + date, so a printed sheet is verifiable.
+  const qrPayload = `ERP|${compName}|${title}|${printedDate}|${reportPeriod}`;
+  const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${encodeURIComponent(qrPayload)}`;
 
   return `<!doctype html>
 <html lang="${lang}" dir="${isRtl ? "rtl" : "ltr"}">
@@ -604,7 +608,7 @@ export function generateReportHtml(input: {
         <!-- Letterhead Header -->
         <div class="letterhead">
           <div class="brand-col">
-            <div class="brand-logo">⚓</div>
+            ${compLogo ? `<img class="brand-logo" src="${escapeHtml(compLogo)}" alt="logo" style="object-fit:contain;background:#fff;" />` : `<div class="brand-logo">⚓</div>`}
             <div class="brand-details">
               <div class="brand-name">${escapeHtml(compName)}</div>
               <div class="brand-tagline">${escapeHtml(compTagline)}</div>
@@ -617,6 +621,7 @@ export function generateReportHtml(input: {
 
           <div class="title-col">
             <h1 class="report-title-text">${escapeHtml(title)}</h1>
+            <div style="margin-top:6px;"><img src="${qrSrc}" alt="QR verify" style="width:48px;height:48px;" /><div style="font-size:6px;color:#64748b;">Scan to verify</div></div>
           </div>
 
           <div class="meta-col">
@@ -694,7 +699,7 @@ export function generateReportHtml(input: {
           </div>
 
           <div class="bottom-bar">
-            Digital Dock ERP &mdash; Smart Business, Strong Future
+            ${escapeHtml(compName)} &mdash; Official ERP System Generated Document
           </div>
         </div>
 

@@ -1,6 +1,6 @@
 import postgres from 'postgres';
 
-const dbUrl = "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres";
+const dbUrl = "postgresql://postgres.csesvyxqjivnkkozgopt:Gulistan%409090@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require";
 const sql = postgres(dbUrl);
 
 async function checkDb() {
