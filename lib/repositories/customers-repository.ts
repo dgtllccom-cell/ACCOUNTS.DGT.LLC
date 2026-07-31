@@ -1,5 +1,6 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import { allocateFormSerials } from "@/lib/services/form-serials";
 
 export type CustomerRow = {
   id: string;
@@ -151,6 +152,16 @@ export class CustomersRepository {
     });
     if (error) throw new Error(error.message);
     void translateMasterRecord("customers", data as string, { customer_name: input.customerName, company_name: input.companyName }, "en");
+    // 4-level serial (Global/Country/Branch/Entry) — independent 'customers' sequence.
+    try {
+      const serials = await allocateFormSerials("customers", { countryId: input.countryId, branchKey: input.cityId ?? null });
+      await supabase.from("customers").update({
+        super_admin_serial: serials.superAdminSerial,
+        country_serial: serials.countrySerial,
+        branch_serial: serials.branchSerial,
+        entry_serial: serials.entrySerial,
+      }).eq("id", data);
+    } catch { /* serial allocation is non-fatal */ }
     return data as string;
   }
 
