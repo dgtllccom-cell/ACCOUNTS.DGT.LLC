@@ -10,14 +10,12 @@
 import fs from 'fs';
 import postgres from 'postgres';
 
-const CANDIDATE_URLS = [
-  process.env.DATABASE_URL,
-  "postgresql://postgres.csesvyxqjivnkkozgopt:Gulistan%409090@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres",
-  "postgresql://postgres.csesvyxqjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres",
-  "postgresql://postgres:Gulistan%409090@db.csesvyxqjivnkkozgopt.supabase.co:5432/postgres"
-].filter(Boolean);
+const PROD_REF = "inmayhrxucimxqhgseqi";
+const databaseUrl = process.env.DATABASE_URL;
 
-const DB_URL = CANDIDATE_URLS[0];
+if (!databaseUrl || !databaseUrl.includes(PROD_REF)) {
+  throw new Error(`DATABASE_URL must target the production project (${PROD_REF}).`);
+}
 
 /**
  * Split SQL file content into individual statements, handling:
@@ -80,30 +78,15 @@ function splitSqlStatements(sql) {
 async function applyMigrations() {
   console.log('\n🔌 Connecting to production Supabase database...');
 
-  let sql = null;
-  for (const candidateUrl of CANDIDATE_URLS) {
-    try {
-      const client = postgres(candidateUrl, {
-        ssl: 'require',
-        prepare: false,
-        max: 1,
-        connect_timeout: 5,
-        connection: { application_name: 'erp-migration-runner' }
-      });
-      await client`SELECT 1`;
-      sql = client;
-      console.log(`✅ Connected successfully to Supabase database.`);
-      break;
-    } catch (err) {
-      // Try next candidate URL silently
-    }
-  }
-
-  if (!sql) {
-    console.log('ℹ️  Local TCP port 6543/5432 is restricted by local network ISP.');
-    console.log('   Migrations are queued and will execute via Supabase API on VPS server deployment.\n');
-    return;
-  }
+  const sql = postgres(databaseUrl, {
+    ssl: 'require',
+    prepare: false,
+    max: 1,
+    connect_timeout: 10,
+    connection: { application_name: 'erp-production-migration-runner' }
+  });
+  await sql`SELECT 1`;
+  console.log(`Connected successfully to production Supabase (${PROD_REF}).`);
 
   const filesToRun = [
     'supabase/migrations/0066_whatsapp_team_inbox.sql',
@@ -220,8 +203,8 @@ async function applyMigrations() {
     }
 
   } catch (err) {
-    console.warn('\n⚠️ Local PostgreSQL direct migration skipped due to network/DNS lookup:', err.message || err);
-    console.log('   (Migrations will be executed automatically on the VPS server via Supabase API)');
+    console.error('\\nProduction migration failed:', err.message || err);
+    process.exitCode = 1;
   } finally {
     try { await sql.end(); } catch (e) {}
   }

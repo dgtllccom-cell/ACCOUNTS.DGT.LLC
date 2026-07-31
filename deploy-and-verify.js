@@ -163,14 +163,19 @@ git fetch origin main
 git reset --hard origin/main
 echo 'Server repository updated to latest GitHub main.'
 
-echo '=== [3/7] Restoring Environment Configuration ==='
-if [ -f /var/www/env_backups/.env.local.bak ]; then
+echo '=== [3/7] Restoring and Validating Production Environment ==='
+if [ -f /var/www/env_backups/.env.production ]; then
+  cp -f /var/www/env_backups/.env.production .env.local
+elif [ -f /var/www/env_backups/.env.local.bak ]; then
   cp -f /var/www/env_backups/.env.local.bak .env.local
 fi
-if [ -f /var/www/env_backups/.env.bak ]; then
-  cp -f /var/www/env_backups/.env.bak .env
+if [ ! -f .env.local ]; then
+  echo 'ERROR: production .env.local is missing.'
+  exit 1
 fi
-chmod 600 .env.local .env 2>/dev/null || true
+node scripts/verify-production-env.mjs
+cp -f .env.local .env
+chmod 600 .env.local .env
 
 echo '=== [4/7] Verifying Swap Memory Space ==='
 if [ $(free -m | awk '/Swap:/ {print $2}') -eq 0 ]; then
