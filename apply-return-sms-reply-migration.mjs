@@ -10,7 +10,7 @@
 import fs from 'fs';
 import postgres from 'postgres';
 
-const DB_URL = "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres";
+const DB_URL = process.env.DATABASE_URL || "postgresql://postgres.csesvyxqjivnkkozgopt:Gulistan%409090@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require";
 
 /**
  * Split SQL file content into individual statements, handling:
@@ -84,6 +84,16 @@ async function applyMigrations() {
     'supabase/migrations/0066_whatsapp_team_inbox.sql',
     'supabase/migrations/0068_communication_center.sql',
     'supabase/migrations/20260729_return_sms_reply.sql',
+    'supabase/migrations/20260730_warehouses_master.sql',
+    'supabase/migrations/20260731_clearing_agent_truck_forms.sql',
+    'supabase/migrations/20260801_truck_registration.sql',
+    'supabase/migrations/20260802_open_entity_serials_and_form_serials.sql',
+    'supabase/migrations/20260803_accounting_credit_debit_rates.sql',
+    'supabase/migrations/20260804_trucks_base_location.sql',
+    'supabase/migrations/20260805_transit_dest_location.sql',
+    'supabase/migrations/20260806_loading_dest_location.sql',
+    'supabase/migrations/20260807_universal_serial_columns.sql',
+    'supabase/migrations/20260808_warehouses_serials.sql',
   ];
 
   try {
