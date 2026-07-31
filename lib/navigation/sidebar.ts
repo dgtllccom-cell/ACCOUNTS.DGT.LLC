@@ -596,12 +596,6 @@ export const sidebarTree: SidebarNode[] = [
     iconKey: "truck",
     children: [
       {
-        key: "logistics-dashboard",
-        labelKey: "nav.shipping_clearing",
-        href: "/dashboard/logistics" as Route,
-        roles: ["super_admin", "agent_user"]
-      },
-      {
         key: "shipping-shipment-details",
         labelKey: "nav.shipment_details",
         href: "/dashboard/shipping-line/shipment-details" as Route,
