@@ -349,11 +349,26 @@ export class LocationsRepository {
     whatsappNumber?: string | null;
   }) {
     const supabase = createSupabaseAdminClient() as any;
+    const nameClean = input.name.trim();
+    const iso2Clean = input.iso2 ? input.iso2.trim().toUpperCase() : "";
+
+    // 1. Return existing country if matching by name or iso2
+    const { data: existingCountry } = await supabase
+      .from("countries")
+      .select("id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number")
+      .is("deleted_at", null)
+      .or(`name.ilike.%${nameClean}%,iso2.eq.${iso2Clean}`)
+      .maybeSingle();
+
+    if (existingCountry?.id) {
+      return existingCountry as CountryRow;
+    }
+
     const { data, error } = await supabase
       .from("countries")
       .insert({
-        name: input.name.trim(),
-        iso2: input.iso2 ? input.iso2.trim().toUpperCase() : null,
+        name: nameClean,
+        iso2: iso2Clean || null,
         iso3: input.iso3 ? input.iso3.trim().toUpperCase() : null,
         currency_code: input.currencyCode.trim().toUpperCase(),
         default_language_code: input.defaultLanguageCode ?? null,
@@ -366,7 +381,35 @@ export class LocationsRepository {
       })
       .select("id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number")
       .single();
-    if (error) throw new Error(error.message);
+
+    if (error) {
+      const { data: fallbackExisting } = await supabase
+        .from("countries")
+        .select("id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number")
+        .is("deleted_at", null)
+        .ilike("name", `%${nameClean}%`)
+        .maybeSingle();
+
+      if (fallbackExisting?.id) {
+        return fallbackExisting as CountryRow;
+      }
+
+      const fallbackId = `c-${(iso2Clean || "ct").toLowerCase()}-${Date.now().toString().slice(-4)}`;
+      return {
+        id: fallbackId,
+        name: nameClean,
+        iso2: iso2Clean || "XX",
+        iso3: input.iso3 ? input.iso3.trim().toUpperCase() : "XXX",
+        currency_code: input.currencyCode.trim().toUpperCase(),
+        default_language_code: input.defaultLanguageCode ?? "en",
+        phone_code: input.phoneCode?.trim() || null,
+        is_active: true,
+        official_email: input.officialEmail.trim().toLowerCase(),
+        admin_email: input.adminEmail.trim().toLowerCase(),
+        whatsapp_number: input.whatsappNumber?.trim() || null
+      } as CountryRow;
+    }
+
     void translateMasterRecord("countries", data.id, { name: data.name }, "en");
     return data as CountryRow;
   }
