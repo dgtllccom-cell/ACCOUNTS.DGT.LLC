@@ -10,7 +10,14 @@
 import fs from 'fs';
 import postgres from 'postgres';
 
-const DB_URL = process.env.DATABASE_URL || "postgresql://postgres.csesvyxqjivnkkozgopt:Gulistan%409090@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres";
+const CANDIDATE_URLS = [
+  process.env.DATABASE_URL,
+  "postgresql://postgres.csesvyxqjivnkkozgopt:Gulistan%409090@aws-0-ap-southeast-1.pooler.supabase.com:6543/postgres",
+  "postgresql://postgres.csesvyxqjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres",
+  "postgresql://postgres:Gulistan%409090@db.csesvyxqjivnkkozgopt.supabase.co:5432/postgres"
+].filter(Boolean);
+
+const DB_URL = CANDIDATE_URLS[0];
 
 /**
  * Split SQL file content into individual statements, handling:
@@ -73,10 +80,12 @@ function splitSqlStatements(sql) {
 async function applyMigrations() {
   console.log('\n🔌 Connecting to production Supabase database...');
 
-  // max=1 ensures we use a single connection and avoid pgBouncer transaction-mode issues
+  // max=1 and prepare=false ensure compatibility with Supavisor pooler transaction mode
   const sql = postgres(DB_URL, {
     ssl: 'require',
+    prepare: false,
     max: 1,
+    connect_timeout: 10,
     connection: { application_name: 'erp-migration-runner' }
   });
 
