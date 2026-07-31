@@ -7,6 +7,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { allocateFormSerials } from "@/lib/services/form-serials";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -307,6 +308,13 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     }
 
     const paymentId = data as string;
+
+    // 4-level serial (Global/Country/Branch/Entry) — additive metadata only, applied
+    // AFTER the atomic posting RPC. Does NOT touch the posting/ledger/roznamcha logic.
+    try {
+      const s = await allocateFormSerials("payment_purchase", { countryId: (order as any).country_id, branchKey: (order as any).country_branch_id ?? (order as any).city_branch_id ?? null });
+      await supabase.from("purchase_order_payments").update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial }).eq("id", paymentId);
+    } catch { /* non-fatal — never affects posting */ }
 
     if (body.typeDetails?.sourceRecordId) {
       await supabase
