@@ -8,6 +8,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { allocateFormSerials } from "@/lib/services/form-serials";
 import { safeInsertPurchaseOrderItems, safeInsertPurchaseOrderExpenses } from "@/lib/services/purchase-table-manager";
 import { revalidatePath } from "next/cache";
 
@@ -373,6 +374,13 @@ export async function POST(request: NextRequest) {
     }
 
     const orderId = (inserted as any).id;
+
+    // 4-level serial (Global/Country/Branch/Entry) — additive metadata only, applied
+    // AFTER the order row is created. Does NOT touch posting/ledger logic.
+    try {
+      const s = await allocateFormSerials("purchase", { countryId: effective.countryId, branchKey: effective.countryBranchId ?? effective.cityBranchId ?? null });
+      await adminSupabase.from("purchase_orders").update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial }).eq("id", orderId);
+    } catch { /* non-fatal — never blocks the order/posting */ }
 
     if (body.items && body.items.length > 0) {
       const itemsPayload = body.items.map((it: any) => ({

@@ -6,6 +6,7 @@ import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/l
 import { optionalUuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { allocateFormSerials } from "@/lib/services/form-serials";
 import postgres from "postgres";
 
 async function ensureTableExists() {
@@ -325,6 +326,13 @@ export async function POST(request: NextRequest) {
     };
 
     const row = await requireSupabaseData(supabase.from("sales_orders").insert(payload).select("id, sales_order_no").single());
+
+    // 4-level serial (Global/Country/Branch/Entry) — additive metadata only, AFTER
+    // the order row is created. Does NOT touch posting/ledger logic.
+    try {
+      const s = await allocateFormSerials("sales", { countryId: effective.countryId, branchKey: effective.countryBranchId ?? effective.cityBranchId ?? null });
+      await admin.from("sales_orders").update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial }).eq("id", (row as any).id);
+    } catch { /* non-fatal — never blocks the order/posting */ }
 
     await writeAuditLog({
       action: "create",
