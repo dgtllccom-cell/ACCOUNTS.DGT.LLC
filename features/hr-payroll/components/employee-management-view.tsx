@@ -8,6 +8,7 @@ import { EmployeeForm } from "./employee-form";
 import { AdvanceLoanModal } from "./advance-loan-modal";
 import { EmployeeLedgerPanel } from "./employee-ledger-panel";
 import { PayrollReportsView } from "./payroll-reports-view";
+import { printEmployeeCertificate } from "@/components/ui/employee-certificate-print";
 
 export function EmployeeManagementView() {
   const [activeTab, setActiveTab] = useState<"master" | "payroll">("master");
@@ -240,6 +241,32 @@ export function EmployeeManagementView() {
                           className="h-7 text-xs px-2.5 text-blue-600 dark:text-blue-400"
                         >
                           Ledger
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => printEmployeeCertificate({
+                            employeeId: emp.employee_code,
+                            name: emp.person?.customer_name,
+                            photoUrl: emp.person?.photo_url ?? emp.photo_url ?? null,
+                            cnicPassport: emp.person?.cnic ?? emp.person?.passport ?? emp.cnic_passport ?? null,
+                            department: emp.department,
+                            designation: emp.designation,
+                            joiningDate: emp.joining_date,
+                            employmentType: emp.employment_type,
+                            status: emp.status,
+                            nationality: emp.person?.nationality,
+                            address: emp.person?.address,
+                            mobile: emp.person?.mobile,
+                            email: emp.person?.email,
+                            emergencyContact: emp.person?.emergency_contact ?? emp.person?.whatsapp,
+                            salary: emp.salary ?? emp.basic_salary ?? null,
+                            reportingManager: emp.reporting_manager_name ?? emp.reporting_manager_id ?? null,
+                            serials: { superAdmin: emp.super_admin_serial, country: emp.country_serial, branch: emp.branch_serial, entry: emp.entry_serial },
+                          })}
+                          className="h-7 text-xs px-2.5 text-emerald-600 dark:text-emerald-400"
+                        >
+                          Certificate
                         </Button>
                         <Button
                           variant="outline"
