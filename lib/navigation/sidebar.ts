@@ -195,6 +195,12 @@ export const sidebarTree: SidebarNode[] = [
         labelKey: "nav.ledger_general_report",
         href: "/dashboard/ledger/general-report" as Route,
         roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"]
+      },
+      {
+        key: "ledgers-outstanding",
+        labelKey: "nav.ledger_outstanding",
+        href: "/dashboard/ledger/outstanding" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"]
       }
     ]
   },
