@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireErpSession } from "@/lib/auth/session";
+import { allocateFormSerials } from "@/lib/services/form-serials";
 
 export const dynamic = "force-dynamic";
 
@@ -224,6 +225,12 @@ export async function POST(request: NextRequest) {
     if (insertError) {
       return NextResponse.json({ error: insertError.message }, { status: 400 });
     }
+
+    // 4-level serial (Global/Country/Branch/Entry) — independent 'employees' sequence.
+    try {
+      const s = await allocateFormSerials("employees", { countryId: countryId || null, branchKey: countryBranchId || null });
+      await supabase.from("employees").update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial }).eq("id", (newEmployee as any).id);
+    } catch { /* non-fatal */ }
 
     return NextResponse.json({ employee: newEmployee });
   } catch (err: any) {

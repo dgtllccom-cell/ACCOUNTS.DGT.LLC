@@ -3,6 +3,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import { allocateFormSerials } from "@/lib/services/form-serials";
 
 /**
  * Warehouses master — list + create (secure-by-default).
@@ -66,6 +67,12 @@ export async function POST(req: Request) {
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
     void translateMasterRecord("warehouses", data.id, { warehouse_name: data.warehouse_name }, "en", session.userId);
+
+    // 4-level serial (Global/Country/Branch/Entry) — independent 'warehouses' sequence.
+    try {
+      const s = await allocateFormSerials("warehouses", { countryId: countryId as string | null, branchKey: (body.country_branch_id as string | null) ?? null });
+      await supabase.from("warehouses").update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial }).eq("id", data.id);
+    } catch { /* non-fatal */ }
 
     return NextResponse.json({ warehouse: data });
   } catch (err: any) {
