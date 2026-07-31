@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, Search, Loader2, X } from "lucide-react";
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
+import { ReportActions } from "@/components/ui/report-actions";
 
 type Unit = {
   id: string;
@@ -96,9 +97,12 @@ export function ProductUnitsManagementView({ lang }: { lang: SupportedLanguage }
     <div dir={dir} className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-black text-slate-900 dark:text-white">{t(lang, "pu.title")}</h1>
-        <button onClick={startAdd} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800">
-          <Plus className="h-4 w-4" /> {t(lang, "pu.add")}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <ReportActions title={t(lang, "pu.title")} rows={filtered} columns={[{ key: "unitCode", label: t(lang, "pu.code") }, { key: "unitName", label: t(lang, "pu.name") }, { key: "baseUnitCode", label: t(lang, "pu.base") }, { key: "conversionFactor", label: t(lang, "pu.factor") }]} />
+          <button onClick={startAdd} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800">
+            <Plus className="h-4 w-4" /> {t(lang, "pu.add")}
+          </button>
+        </div>
       </div>
 
       <div className="relative">

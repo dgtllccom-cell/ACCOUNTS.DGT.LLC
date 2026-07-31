@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, Search, Loader2, X } from "lucide-react";
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
+import { ReportActions } from "@/components/ui/report-actions";
 
 type Category = {
   id: string;
@@ -87,9 +88,12 @@ export function ProductCategoriesManagementView({ lang }: { lang: SupportedLangu
     <div dir={dir} className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-black text-slate-900 dark:text-white">{t(lang, "pc.title")}</h1>
-        <button onClick={startAdd} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800">
-          <Plus className="h-4 w-4" /> {t(lang, "pc.add")}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <ReportActions title={t(lang, "pc.title")} rows={filtered} columns={[{ key: "categoryCode", label: t(lang, "pc.code") }, { key: "categoryName", label: t(lang, "pc.name") }, { key: "description", label: t(lang, "pc.description") }]} />
+          <button onClick={startAdd} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800">
+            <Plus className="h-4 w-4" /> {t(lang, "pc.add")}
+          </button>
+        </div>
       </div>
 
       <div className="relative">
