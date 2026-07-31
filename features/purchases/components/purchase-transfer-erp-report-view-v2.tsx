@@ -657,7 +657,7 @@ function PurchaseTransferErpReportViewContent({
                   <span>👤 BUYER / DEBIT ENTITY</span>
                   <span className="font-mono text-blue-700">{purchaseAccCode}</span>
                 </div>
-                <div>Buyer Entity: <b className="text-slate-900">{d.buyerName || "DAMAN BUSINESS GROUP"}</b></div>
+                <div>Buyer Entity: <b className="text-slate-900">{d.buyerName || "—"}</b></div>
                 <div>DR Account Name: <b className="text-blue-800 uppercase">{purchaseAccName}</b></div>
                 <div>DR Serial Number: <b className="font-mono text-blue-700">{debitSerial}</b></div>
                 <div>Receiving Branch: <b>{branchName}</b></div>

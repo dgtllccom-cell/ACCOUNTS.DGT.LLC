@@ -271,7 +271,7 @@ export function CountryDetailedLedgerView() {
 
         <div className="report-col">
           <h5>Company Details</h5>
-          <div className="kv"><div className="k">Company Name:</div><div className="v">{header?.companyName || "Damaan General Trading LLC"}</div></div>
+          <div className="kv"><div className="k">Company Name:</div><div className="v">{header?.companyName || header?.countryName || "—"}</div></div>
           <div className="kv"><div className="k">City:</div><div className="v">{header?.cityName || "-"}</div></div>
           <div className="kv"><div className="k">State:</div><div className="v">{header?.stateName || "-"}</div></div>
           <div className="kv"><div className="k">Address:</div><div className="v">{header?.address || "-"}</div></div>
