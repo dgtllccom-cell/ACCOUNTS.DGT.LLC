@@ -24,13 +24,22 @@ export type EmployeeCertificate = {
   serials?: { superAdmin?: string | null; country?: string | null; branch?: string | null; entry?: string | null };
 };
 
-type Company = { name?: string; logoUrl?: string | null; country?: string | null; branch?: string | null };
+type Company = {
+  name?: string;
+  logoUrl?: string | null;
+  stampUrl?: string | null;
+  certificateHeader?: string | null;
+  hrManagerName?: string | null;
+  address?: string | null;
+  country?: string | null;
+  branch?: string | null;
+};
 
 const esc = (v: any) => String(v ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 export function printEmployeeCertificate(emp: EmployeeCertificate, company: Company = {}) {
   const now = new Date();
-  const companyName = company.name || "Digital Dock ERP";
+  const companyName = company.name || company.country || "Company";
   const qrData = encodeURIComponent(`EMP:${emp.employeeId ?? ""}|${emp.name ?? ""}|${emp.cnicPassport ?? ""}`);
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=${qrData}`;
   const photo = emp.photoUrl
@@ -85,6 +94,8 @@ export function printEmployeeCertificate(emp: EmployeeCertificate, company: Comp
           <div>
             <h1>${esc(companyName)}</h1>
             <div class="sub">${esc(company.country || "")}${company.branch ? " — " + esc(company.branch) : ""} &middot; Human Resources Department</div>
+            ${company.address ? `<div class="sub">${esc(company.address)}</div>` : ""}
+            ${company.certificateHeader ? `<div class="sub">${esc(company.certificateHeader)}</div>` : ""}
           </div>
         </div>
 
@@ -128,8 +139,8 @@ export function printEmployeeCertificate(emp: EmployeeCertificate, company: Comp
 
         <div class="signs">
           <div class="sign"><div class="l">Employee Signature</div></div>
-          <div class="sign"><div class="l">HR / Admin Signature</div></div>
-          <div class="sign"><div class="stamp">Company<br/>Stamp</div></div>
+          <div class="sign">${company.hrManagerName ? `<div style="font-weight:700;">${esc(company.hrManagerName)}</div>` : ""}<div class="l">HR / Admin Signature</div></div>
+          <div class="sign">${company.stampUrl ? `<img src="${esc(company.stampUrl)}" alt="stamp" style="width:120px;height:120px;object-fit:contain;" />` : `<div class="stamp">Company<br/>Stamp</div>`}</div>
         </div>
 
         <div class="ftr">

@@ -250,7 +250,7 @@ export function EmployeeManagementView() {
                             try {
                               const r = await fetch(`/api/erp/branding?countryId=${emp.country_id ?? ""}`);
                               const j = await r.json();
-                              if (j?.branding) company = { name: j.branding.companyName, logoUrl: j.branding.logoUrl, country: j.branding.countryName, branch: emp.country_branch_name ?? emp.city_branch_name ?? null };
+                              if (j?.branding) company = { name: j.branding.companyName, logoUrl: j.branding.logoUrl, stampUrl: j.branding.stampUrl, certificateHeader: j.branding.certificateHeader, hrManagerName: j.branding.hrManagerName, address: j.branding.address, country: j.branding.countryName, branch: emp.country_branch_name ?? emp.city_branch_name ?? null };
                             } catch { /* fall back to default */ }
                             printEmployeeCertificate({
                             employeeId: emp.employee_code,
