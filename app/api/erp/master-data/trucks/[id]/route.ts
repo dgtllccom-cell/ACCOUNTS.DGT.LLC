@@ -4,7 +4,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const COLS =
-  "id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial, branch_serial, entry_serial, truck_serial, truck_number, registration_number, registration_country_id, truck_type, make, model, manufacturing_year, color, chassis_number, engine_number, capacity, owner_name, owner_mobile, transport_company, driver_name, driver_mobile, driver_cnic_passport, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date, status, notes, is_active, created_at, updated_at";
+  "id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial, branch_serial, entry_serial, truck_serial, truck_number, registration_number, registration_country_id, truck_type, make, model, manufacturing_year, color, chassis_number, engine_number, capacity, owner_name, owner_mobile, transport_company, driver_name, driver_mobile, driver_cnic_passport, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date, base_state_province_id, base_district_id, base_city_id, status, notes, is_active, created_at, updated_at";
 
 const TEXT = [
   "truck_serial", "truck_number", "registration_number", "truck_type", "make", "model",
@@ -25,6 +25,9 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     for (const d of DATES) if (body[d] !== undefined) patch[d] = body[d] || null;
     if (body.manufacturing_year !== undefined) patch.manufacturing_year = body.manufacturing_year ? Number(body.manufacturing_year) : null;
     if (body.registration_country_id !== undefined) patch.registration_country_id = body.registration_country_id ?? null;
+    if (body.base_state_province_id !== undefined) patch.base_state_province_id = body.base_state_province_id ?? null;
+    if (body.base_district_id !== undefined) patch.base_district_id = body.base_district_id ?? null;
+    if (body.base_city_id !== undefined) patch.base_city_id = body.base_city_id ?? null;
     if (body.status !== undefined && ["active", "inactive", "suspended", "expired"].includes(body.status)) patch.status = body.status;
     if (body.is_active !== undefined) patch.is_active = Boolean(body.is_active);
 

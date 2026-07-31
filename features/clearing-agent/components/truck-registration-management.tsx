@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, Search, Loader2, X } from "lucide-react";
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
+import { LocationSelect, type LocationValue } from "@/components/ui/location-select";
 
 type Truck = {
   id: string;
@@ -30,7 +31,7 @@ type Truck = {
   notes: string | null;
 };
 
-const EMPTY: any = { id: "", truck_number: "", registration_number: "", truck_type: "", make: "", model: "", manufacturing_year: "", color: "", chassis_number: "", engine_number: "", capacity: "", owner_name: "", owner_mobile: "", transport_company: "", driver_name: "", driver_mobile: "", driver_cnic_passport: "", registration_expiry_date: "", insurance_expiry_date: "", status: "active", notes: "" };
+const EMPTY: any = { id: "", truck_number: "", registration_number: "", truck_type: "", make: "", model: "", manufacturing_year: "", color: "", chassis_number: "", engine_number: "", capacity: "", owner_name: "", owner_mobile: "", transport_company: "", driver_name: "", driver_mobile: "", driver_cnic_passport: "", registration_expiry_date: "", insurance_expiry_date: "", status: "active", notes: "", registration_country_id: null, base_state_province_id: null, base_district_id: null, base_city_id: null };
 
 const STATUSES = ["active", "inactive", "suspended", "expired"];
 
@@ -194,6 +195,15 @@ export function TruckRegistrationManagementView({ lang }: { lang: SupportedLangu
                   {STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
               </label>
+              <div className="sm:col-span-2">
+                <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">Base Location (central master)</span>
+                <div className="mt-1">
+                  <LocationSelect
+                    value={{ countryId: form.registration_country_id ?? null, stateProvinceId: form.base_state_province_id ?? null, districtId: form.base_district_id ?? null, cityId: form.base_city_id ?? null } as LocationValue}
+                    onChange={(v) => setForm({ ...form, registration_country_id: v.countryId, base_state_province_id: v.stateProvinceId, base_district_id: v.districtId, base_city_id: v.cityId })}
+                  />
+                </div>
+              </div>
               <label className="block sm:col-span-2">
                 <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">Notes</span>
                 <textarea value={form.notes ?? ""} onChange={(e) => setForm({ ...form, notes: e.target.value })} rows={2} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950" />

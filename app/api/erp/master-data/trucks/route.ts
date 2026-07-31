@@ -10,7 +10,7 @@ import { allocateFormSerials } from "@/lib/services/form-serials";
  * Table: trucks (migration 20260801_truck_registration.sql).
  */
 const COLS =
-  "id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial, branch_serial, entry_serial, truck_serial, truck_number, registration_number, registration_country_id, truck_type, make, model, manufacturing_year, color, chassis_number, engine_number, capacity, owner_name, owner_mobile, transport_company, driver_name, driver_mobile, driver_cnic_passport, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date, status, notes, is_active, created_at, updated_at";
+  "id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial, branch_serial, entry_serial, truck_serial, truck_number, registration_number, registration_country_id, truck_type, make, model, manufacturing_year, color, chassis_number, engine_number, capacity, owner_name, owner_mobile, transport_company, driver_name, driver_mobile, driver_cnic_passport, registration_expiry_date, insurance_expiry_date, driver_docs_expiry_date, base_state_province_id, base_district_id, base_city_id, status, notes, is_active, created_at, updated_at";
 
 const TEXT = [
   "truck_serial", "truck_number", "registration_number", "truck_type", "make", "model",
@@ -61,6 +61,9 @@ export async function POST(req: Request) {
       country_branch_id: body.country_branch_id ?? session.countryBranchIds?.[0] ?? null,
       city_branch_id: body.city_branch_id ?? session.cityBranchIds?.[0] ?? null,
       registration_country_id: body.registration_country_id ?? null,
+      base_state_province_id: body.base_state_province_id ?? null,
+      base_district_id: body.base_district_id ?? null,
+      base_city_id: body.base_city_id ?? null,
       manufacturing_year: body.manufacturing_year ? Number(body.manufacturing_year) : null,
       status: ["active", "inactive", "suspended", "expired"].includes(body.status) ? body.status : "active",
       is_active: true,
