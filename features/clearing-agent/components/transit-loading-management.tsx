@@ -7,6 +7,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { LocationHierarchySelect } from "@/features/locations/components/location-hierarchy-select";
 import { ReportActions } from "@/components/ui/report-actions";
+import { TruckAttachments } from "@/features/clearing-agent/components/truck-attachments";
 
 type Row = {
   id: string; transit_date: string | null; transit_serial: string | null; transit_company: string | null;
@@ -187,6 +188,7 @@ export function TransitLoadingManagementView({ lang }: { lang: SupportedLanguage
                 <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">{t(lang, "tt.remarks")}</span>
                 <textarea value={form.remarks ?? ""} onChange={(e) => setForm({ ...form, remarks: e.target.value })} rows={2} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950" />
               </label>
+              {form.id ? <div className="sm:col-span-2 border-t border-slate-100 pt-3 dark:border-slate-800"><TruckAttachments entityId={form.id} entityKey="transit_loading" /></div> : null}
             </div>
             <div className="mt-5 flex justify-end gap-2">
               <button onClick={() => setEditing(false)} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">{t(lang, "tt.cancel")}</button>

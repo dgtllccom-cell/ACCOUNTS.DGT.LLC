@@ -10,17 +10,24 @@ import { Upload, Download, Trash2, Loader2, FileText, Paperclip } from "lucide-r
  * Other. Upload / list / download / delete, 20MB, pdf|image|xlsx|docx.
  */
 const CATEGORIES: { key: string; label: string }[] = [
-  { key: "truck_photo", label: "Truck Photo" },
-  { key: "truck_registration", label: "Registration Card" },
-  { key: "truck_insurance", label: "Insurance Documents" },
-  { key: "truck_driver_docs", label: "Driver Documents" },
-  { key: "truck_vehicle_docs", label: "Vehicle Documents" },
-  { key: "truck_other", label: "Other Attachments" },
+  { key: "photo", label: "Photo" },
+  { key: "registration", label: "Registration Card" },
+  { key: "insurance", label: "Insurance Documents" },
+  { key: "driver_docs", label: "Driver Documents" },
+  { key: "vehicle_docs", label: "Vehicle / Goods Documents" },
+  { key: "other", label: "Other Attachments" },
 ];
 
 type Doc = { id: string; name: string; mimeType?: string; sizeBytes?: number };
 
-export function TruckAttachments({ truckId }: { truckId: string | null }) {
+/**
+ * Reusable entity attachments over /api/erp/documents.
+ * - truckId (legacy) OR entityId: the record the documents belong to.
+ * - entityKey: prefix for the document category entity_type (default "truck").
+ *   Loading forms pass entityKey="truck_loading" | "import_loading" | "transit_loading".
+ */
+export function TruckAttachments({ truckId, entityId, entityKey = "truck" }: { truckId?: string | null; entityId?: string | null; entityKey?: string }) {
+  const recordId = entityId ?? truckId ?? null;
   const [category, setCategory] = useState(CATEGORIES[0].key);
   const [docs, setDocs] = useState<Doc[]>([]);
   const [loading, setLoading] = useState(false);
@@ -28,25 +35,25 @@ export function TruckAttachments({ truckId }: { truckId: string | null }) {
   const [error, setError] = useState<string | null>(null);
 
   async function load() {
-    if (!truckId) return;
+    if (!recordId) return;
     setLoading(true); setError(null);
     try {
-      const res = await fetch(`/api/erp/documents?entityType=${category}&entityId=${truckId}`);
+      const res = await fetch(`/api/erp/documents?entityType=${entityKey}_${category}&entityId=${recordId}`);
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json?.error?.message || json?.error || "Failed to load documents");
       setDocs((json.data?.results ?? json.results ?? []) as Doc[]);
     } catch (e: any) { setError(e.message); setDocs([]); } finally { setLoading(false); }
   }
-  useEffect(() => { load(); /* eslint-disable-next-line */ }, [truckId, category]);
+  useEffect(() => { load(); /* eslint-disable-next-line */ }, [recordId, category]);
 
   async function upload(file: File) {
-    if (!truckId) return;
+    if (!recordId) return;
     setUploading(true); setError(null);
     try {
       const fd = new FormData();
       fd.append("file", file);
-      fd.append("entityType", category);
-      fd.append("entityId", truckId);
+      fd.append("entityType", `${entityKey}_${category}`);
+      fd.append("entityId", recordId);
       const res = await fetch("/api/erp/documents", { method: "POST", body: fd });
       const json = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(json?.error?.message || json?.error || "Upload failed");
@@ -63,8 +70,8 @@ export function TruckAttachments({ truckId }: { truckId: string | null }) {
     } catch (e: any) { setError(e.message); }
   }
 
-  if (!truckId) {
-    return <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-950/40">Save the truck first to add documents & attachments.</div>;
+  if (!recordId) {
+    return <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-center text-sm text-slate-500 dark:border-slate-700 dark:bg-slate-950/40">Save the record first to add documents & attachments.</div>;
   }
 
   return (
