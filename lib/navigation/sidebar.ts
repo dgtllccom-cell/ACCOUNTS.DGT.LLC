@@ -465,22 +465,22 @@ export const sidebarTree: SidebarNode[] = [
   },
   {
     key: "general-office",
-    labelKey: "nav.general_office_management" as any,
+    labelKey: "nav.general_office_management",
     iconKey: "users",
     href: "/dashboard/general-office/employees" as Route,
     roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"],
     children: [
-      { key: "go-master-setup", labelKey: "nav.employee_master_setup" as any, iconKey: "users", href: "/dashboard/general-office/employees?tab=master-setup" as Route },
-      { key: "go-emp-mgmt", labelKey: "nav.employee_management" as any, iconKey: "users", href: "/dashboard/general-office/employees?tab=management" as Route },
-      { key: "go-departments", labelKey: "nav.departments" as any, iconKey: "building-2", href: "/dashboard/general-office/employees?tab=departments" as Route },
-      { key: "go-designations", labelKey: "nav.designations" as any, iconKey: "scroll-text", href: "/dashboard/general-office/employees?tab=designations" as Route },
-      { key: "go-attendance", labelKey: "nav.attendance" as any, iconKey: "clock", href: "/dashboard/general-office/employees?tab=attendance" as Route },
-      { key: "go-leave", labelKey: "nav.leave_management" as any, iconKey: "calendar", href: "/dashboard/general-office/employees?tab=leave" as Route },
-      { key: "go-payroll", labelKey: "nav.payroll_salary" as any, iconKey: "banknote", href: "/dashboard/general-office/employees?tab=payroll" as Route },
-      { key: "go-assets", labelKey: "nav.office_assets" as any, iconKey: "clipboard-list", href: "/dashboard/general-office/employees?tab=assets" as Route },
-      { key: "go-documents", labelKey: "nav.office_documents" as any, iconKey: "file-text", href: "/dashboard/general-office/employees?tab=documents" as Route },
-      { key: "go-id-cards", labelKey: "nav.employee_id_cards" as any, iconKey: "badge", href: "/dashboard/general-office/employees?tab=id-cards" as Route },
-      { key: "go-reports", labelKey: "nav.employee_reports" as any, iconKey: "bar-chart", href: "/dashboard/general-office/employees?tab=reports" as Route }
+      { key: "go-master-setup", labelKey: "nav.employee_master_setup", iconKey: "users", href: "/dashboard/general-office/employees?tab=master-setup" as Route },
+      { key: "go-emp-mgmt", labelKey: "nav.employee_management", iconKey: "users", href: "/dashboard/general-office/employees?tab=management" as Route },
+      { key: "go-departments", labelKey: "nav.departments", iconKey: "building-2", href: "/dashboard/general-office/employees?tab=departments" as Route },
+      { key: "go-designations", labelKey: "nav.designations", iconKey: "scroll-text", href: "/dashboard/general-office/employees?tab=designations" as Route },
+      { key: "go-attendance", labelKey: "nav.attendance", iconKey: "clock", href: "/dashboard/general-office/employees?tab=attendance" as Route },
+      { key: "go-leave", labelKey: "nav.leave_management", iconKey: "calendar", href: "/dashboard/general-office/employees?tab=leave" as Route },
+      { key: "go-payroll", labelKey: "nav.payroll_salary", iconKey: "banknote", href: "/dashboard/general-office/employees?tab=payroll" as Route },
+      { key: "go-assets", labelKey: "nav.office_assets", iconKey: "clipboard-list", href: "/dashboard/general-office/employees?tab=assets" as Route },
+      { key: "go-documents", labelKey: "nav.office_documents", iconKey: "file-text", href: "/dashboard/general-office/employees?tab=documents" as Route },
+      { key: "go-id-cards", labelKey: "nav.employee_id_cards", iconKey: "badge", href: "/dashboard/general-office/employees?tab=id-cards" as Route },
+      { key: "go-reports", labelKey: "nav.employee_reports", iconKey: "bar-chart", href: "/dashboard/general-office/employees?tab=reports" as Route }
     ]
   },
   {
@@ -496,90 +496,97 @@ export const sidebarTree: SidebarNode[] = [
     iconKey: "clipboard-list",
     children: [
       {
-        key: "journal-stock-group",
-        labelKey: "nav.journal_stock_report",
-        iconKey: "bar-chart",
-        children: [
-          {
-            key: "salesman-report",
-            labelKey: "nav.salesman_report",
-            href: "/dashboard/inventory/stock-reports/salesman" as Route
-          },
-          {
-            key: "country-report",
-            labelKey: "nav.country_report",
-            href: "/dashboard/inventory/stock-reports/country" as Route
-          },
-          {
-            key: "branch-report",
-            labelKey: "nav.branch_report",
-            href: "/dashboard/inventory/stock-reports/branch" as Route
-          }
-        ]
-      },
-      {
-        key: "journal-bill-checking-group",
-        labelKey: "nav.journal_stock_checking_report",
+        key: "journal-stock-sub",
+        labelKey: "nav.journal_stock",
         iconKey: "file-text",
         children: [
           {
-            key: "journal-salesman-report",
-            labelKey: "nav.journal_salesman_report",
-            href: "/dashboard/inventory/journal-report/salesman" as Route
+            key: "journal-stock-group",
+            labelKey: "nav.journal_stock_report",
+            iconKey: "bar-chart",
+            children: [
+              {
+                key: "salesman-report",
+                labelKey: "nav.salesman_report",
+                href: "/dashboard/inventory/stock-reports/salesman" as Route
+              },
+              {
+                key: "country-report",
+                labelKey: "nav.country_report",
+                href: "/dashboard/inventory/stock-reports/country" as Route
+              },
+              {
+                key: "branch-report",
+                labelKey: "nav.branch_report",
+                href: "/dashboard/inventory/stock-reports/branch" as Route
+              }
+            ]
           },
           {
-            key: "journal-country-report",
-            labelKey: "nav.journal_country_report",
-            href: "/dashboard/inventory/journal-report/country" as Route
-          },
-          {
-            key: "journal-branch-report",
-            labelKey: "nav.journal_branch_report",
-            href: "/dashboard/inventory/journal-report/branch" as Route
+            key: "journal-bill-checking-group",
+            labelKey: "nav.journal_stock_checking_report",
+            iconKey: "file-text",
+            children: [
+              {
+                key: "journal-salesman-report",
+                labelKey: "nav.journal_salesman_report",
+                href: "/dashboard/inventory/journal-report/salesman" as Route
+              },
+              {
+                key: "journal-country-report",
+                labelKey: "nav.journal_country_report",
+                href: "/dashboard/inventory/journal-report/country" as Route
+              },
+              {
+                key: "journal-branch-report",
+                labelKey: "nav.journal_branch_report",
+                href: "/dashboard/inventory/journal-report/branch" as Route
+              }
+            ]
           }
         ]
-      }
-    ]
-  },
-  {
-    key: "stock",
-    labelKey: "nav.stock",
-    iconKey: "clipboard-list",
-    children: [
-      {
-        key: "stock-booking",
-        labelKey: "nav.booking_stock",
-        href: "/dashboard/purchase/stock/booking" as Route
       },
       {
-        key: "stock-confirmed",
-        labelKey: "nav.confirmed_stock",
-        href: "/dashboard/purchase/stock/confirmed" as Route
-      },
-      {
-        key: "stock-import",
-        labelKey: "nav.import_stock",
-        href: "/dashboard/purchase/stock/import" as Route
-      },
-      {
-        key: "stock-warehouse",
-        labelKey: "nav.warehouse_stock",
-        href: "/dashboard/purchase/stock/warehouse" as Route
-      },
-      {
-        key: "stock-in-transit",
-        labelKey: "nav.in_transit_stock",
-        href: "/dashboard/purchase/stock/in-transit" as Route
-      },
-      {
-        key: "stock-export",
-        labelKey: "nav.export_stock",
-        href: "/dashboard/purchase/stock/export" as Route
-      },
-      {
-        key: "stock-delivered",
-        labelKey: "nav.delivered_stock",
-        href: "/dashboard/purchase/stock/delivered" as Route
+        key: "stock-sub",
+        labelKey: "nav.stock",
+        iconKey: "clipboard-list",
+        children: [
+          {
+            key: "stock-booking",
+            labelKey: "nav.booking_stock",
+            href: "/dashboard/purchase/stock/booking" as Route
+          },
+          {
+            key: "stock-confirmed",
+            labelKey: "nav.confirmed_stock",
+            href: "/dashboard/purchase/stock/confirmed" as Route
+          },
+          {
+            key: "stock-import",
+            labelKey: "nav.import_stock",
+            href: "/dashboard/purchase/stock/import" as Route
+          },
+          {
+            key: "stock-warehouse",
+            labelKey: "nav.warehouse_stock",
+            href: "/dashboard/purchase/stock/warehouse" as Route
+          },
+          {
+            key: "stock-in-transit",
+            labelKey: "nav.in_transit_stock",
+            href: "/dashboard/purchase/stock/in-transit" as Route
+          },
+          {
+            key: "stock-export",
+            labelKey: "nav.export_stock",
+            href: "/dashboard/purchase/stock/export" as Route
+          },
+          {
+            key: "stock-delivered",
+            labelKey: "nav.delivered_stock",
+            href: "/dashboard/purchase/stock/delivered" as Route
+          }
+        ]
       }
     ]
   },

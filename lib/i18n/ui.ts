@@ -106,8 +106,19 @@ export type UiKey =
   | "nav.import_stock"
   | "nav.journal_stock"
   | "nav.journal_stock_report"
-  | "nav.journal_stock_checking_report"
   | "nav.document_management"
+  | "nav.general_office_management"
+  | "nav.employee_master_setup"
+  | "nav.employee_management"
+  | "nav.departments"
+  | "nav.designations"
+  | "nav.attendance"
+  | "nav.leave_management"
+  | "nav.payroll_salary"
+  | "nav.office_assets"
+  | "nav.office_documents"
+  | "nav.employee_id_cards"
+  | "nav.employee_reports"
   | "nav.scanner_integration"
   | "nav.all_reports_catalog"
   | "nav.journal_bill_checking"
@@ -655,6 +666,18 @@ const en: Dict = {
   "nav.journal_stock_report": "Journal Stock Report",
   "nav.journal_stock_checking_report": "Journal Stock Checking Report",
   "nav.document_management": "Document Management & Hardware Scanner",
+  "nav.general_office_management": "General Office Management",
+  "nav.employee_master_setup": "Employee Master Setup",
+  "nav.employee_management": "Employee Management",
+  "nav.departments": "Departments",
+  "nav.designations": "Designations",
+  "nav.attendance": "Attendance",
+  "nav.leave_management": "Leave Management",
+  "nav.payroll_salary": "Payroll & Salary",
+  "nav.office_assets": "Office Assets",
+  "nav.office_documents": "Office Documents",
+  "nav.employee_id_cards": "Employee ID Cards",
+  "nav.employee_reports": "Employee Reports",
   "nav.scanner_integration": "Direct Scanner Capture",
   "nav.all_reports_catalog": "All ERP Reports Catalog",
   "nav.journal_bill_checking": "Journal Bill Checking",
@@ -1186,6 +1209,18 @@ const ur: Dict = {
   "nav.journal_stock_report": "جرنل اسٹاک رپورٹ",
   "nav.journal_stock_checking_report": "جرنل اسٹاک چیکنگ رپورٹ",
   "nav.document_management": "ڈاکیومنٹ مینجمنٹ اور اسکینر",
+  "nav.general_office_management": "جنرل آفس مینجمنٹ",
+  "nav.employee_master_setup": "ملازمین ماسٹر سیٹ اپ",
+  "nav.employee_management": "ملازمین کی دیکھ بھال",
+  "nav.departments": "شعبہ جات",
+  "nav.designations": "عہدے",
+  "nav.attendance": "حاضری",
+  "nav.leave_management": "چھٹیوں کی ترسیل",
+  "nav.payroll_salary": "تنخواہ اور پی رول",
+  "nav.office_assets": "آفس اثاثہ جات",
+  "nav.office_documents": "آفس دستاویزات",
+  "nav.employee_id_cards": "ایمپلائی آئی ڈی کارڈز",
+  "nav.employee_reports": "ملازمین کی رپورٹس",
   "nav.scanner_integration": "ڈائریکٹ اسکینر کیپچر",
   "nav.all_reports_catalog": "تمام ای آر پی رپورٹس کیٹلاگ",
   "nav.journal_bill_checking": "جرنل بل چیکنگ",

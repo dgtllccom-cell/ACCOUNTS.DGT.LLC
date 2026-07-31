@@ -45,6 +45,10 @@ const CHANGED_KEYS = new Set<string>([
   "accounts",
   "accounts-new",
   "journal-super-admin-exchange-rate",
+  // Journal Stock hierarchy reorganizations
+  "journal-stock",
+  "journal-stock-sub",
+  "stock-sub",
 ]);
 
 function isPathMatch(href: string, pathname: string) {
