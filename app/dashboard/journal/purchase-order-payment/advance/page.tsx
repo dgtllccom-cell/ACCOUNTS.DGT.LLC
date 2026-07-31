@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { Suspense } from "react";
 import { PurchaseOrderPaymentJournal } from "@/features/journal/components/purchase-order-payment-journal";
 

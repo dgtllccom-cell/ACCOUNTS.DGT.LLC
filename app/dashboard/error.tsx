@@ -38,12 +38,14 @@ export default function DashboardError({
         }
       } catch (e) {}
 
-      const lastReload = sessionStorage.getItem("chunk_reload_timestamp");
+      const routeKey = "chunk_reload_" + window.location.pathname;
+      const lastReload = sessionStorage.getItem(routeKey);
       const now = Date.now();
-      // Auto-reload immediately if not reloaded in the last 10 seconds
-      if (!lastReload || now - parseInt(lastReload, 10) > 10000) {
-        sessionStorage.setItem("chunk_reload_timestamp", String(now));
-        window.location.href = window.location.pathname + "?_t=" + now;
+      // Auto-reload immediately per route if not reloaded on this path in the last 30 seconds
+      if (!lastReload || now - parseInt(lastReload, 10) > 30000) {
+        sessionStorage.setItem(routeKey, String(now));
+        window.location.reload();
+        return;
       }
     }
   }, [error]);

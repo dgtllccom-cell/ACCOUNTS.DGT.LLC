@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { NewLedgerDashboard } from "@/features/ledger/components/new-ledger-dashboard";
 
 export default async function NewLedgerPage({
