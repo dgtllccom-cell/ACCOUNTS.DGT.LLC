@@ -5,6 +5,7 @@ import { Plus, Pencil, Trash2, Search, Loader2, X } from "lucide-react";
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
+import { LocationHierarchySelect } from "@/features/locations/components/location-hierarchy-select";
 
 type Loading = {
   id: string;
@@ -34,7 +35,7 @@ type TruckOpt = {
   owner_name: string | null;
 };
 
-const EMPTY: any = { id: "", truck_id: "", loading_date: "", truck_number: "", driver_name: "", driver_mobile_1: "", vehicle_type: "", goods_name: "", quantity: "", unit: "", net_weight: "", gross_weight: "", destination: "", remarks: "" };
+const EMPTY: any = { id: "", truck_id: "", loading_date: "", truck_number: "", driver_name: "", driver_mobile_1: "", vehicle_type: "", goods_name: "", quantity: "", unit: "", net_weight: "", gross_weight: "", destination: "", remarks: "", dest_country_id: null, dest_state_province_id: null, dest_district_id: null, dest_city_id: null };
 
 export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }) {
   const dir = getLanguageDirection(lang);
@@ -195,6 +196,15 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
               {field("net_weight", t(lang, "tl.net_weight"), "number")}
               {field("gross_weight", t(lang, "tl.gross_weight"), "number")}
               {field("destination", t(lang, "tl.destination"))}
+              <div className="sm:col-span-2">
+                <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">{t(lang, "tl.destination")} (central master)</span>
+                <div className="mt-1">
+                  <LocationHierarchySelect
+                    value={{ countryId: form.dest_country_id ?? "", stateProvinceId: form.dest_state_province_id ?? "", districtId: form.dest_district_id ?? "", cityId: form.dest_city_id ?? "" }}
+                    onChange={(v) => setForm({ ...form, dest_country_id: v.countryId || null, dest_state_province_id: v.stateProvinceId || null, dest_district_id: v.districtId || null, dest_city_id: v.cityId || null })}
+                  />
+                </div>
+              </div>
               <label className="block sm:col-span-2">
                 <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">{t(lang, "tl.remarks")}</span>
                 <textarea value={form.remarks ?? ""} onChange={(e) => setForm({ ...form, remarks: e.target.value })} rows={2} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950" />

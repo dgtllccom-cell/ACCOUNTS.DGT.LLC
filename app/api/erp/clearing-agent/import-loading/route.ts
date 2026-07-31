@@ -6,9 +6,10 @@ import { allocateFormSerials } from "@/lib/services/form-serials";
 
 /** Clearing Agent — Import Loading (secure, scoped CRUD). Table: import_truck_loadings. */
 const COLS =
-  "id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial, branch_serial, entry_serial, truck_id, import_date, import_bill_number, import_serial, importer_name, supplier_name, driver_name, driver_mobile, truck_number, truck_type, goods_name, quantity, unit, customs_office, border_crossing, country_of_origin, destination_country, clearing_agent, remarks, status, is_active, created_at, updated_at";
+  "id, country_id, country_branch_id, city_branch_id, super_admin_serial, country_serial, branch_serial, entry_serial, truck_id, import_date, import_bill_number, import_serial, importer_name, supplier_name, driver_name, driver_mobile, truck_number, truck_type, goods_name, quantity, unit, customs_office, border_crossing, country_of_origin, destination_country, clearing_agent, dest_country_id, dest_state_province_id, dest_district_id, dest_city_id, remarks, status, is_active, created_at, updated_at";
 
 const FIELDS = [
+  "dest_country_id", "dest_state_province_id", "dest_district_id", "dest_city_id",
   "truck_id", "import_date", "import_bill_number", "import_serial", "importer_name", "supplier_name",
   "driver_name", "driver_mobile", "truck_number", "truck_type", "goods_name", "unit",
   "customs_office", "border_crossing", "country_of_origin", "destination_country", "clearing_agent", "remarks",

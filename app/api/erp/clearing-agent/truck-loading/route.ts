@@ -10,7 +10,7 @@ import { allocateFormSerials } from "@/lib/services/form-serials";
  * Attachments reuse /api/erp/documents (entity_type = 'truck_loading').
  */
 const COLS =
-  "id, country_id, country_branch_id, city_branch_id, loading_date, loading_serial, super_admin_serial, country_serial, branch_serial, entry_serial, truck_id, truck_name, truck_number, driver_name, driver_mobile_1, driver_mobile_2, cnic_passport, truck_owner_name, truck_owner_mobile, vehicle_type, goods_name, quantity, unit, net_weight, gross_weight, destination, remarks, status, is_active, created_at, updated_at";
+  "id, country_id, country_branch_id, city_branch_id, loading_date, loading_serial, super_admin_serial, country_serial, branch_serial, entry_serial, truck_id, truck_name, truck_number, driver_name, driver_mobile_1, driver_mobile_2, cnic_passport, truck_owner_name, truck_owner_mobile, vehicle_type, goods_name, quantity, unit, net_weight, gross_weight, destination, dest_country_id, dest_state_province_id, dest_district_id, dest_city_id, remarks, status, is_active, created_at, updated_at";
 
 export async function GET(req: Request) {
   try {
@@ -36,6 +36,7 @@ export async function GET(req: Request) {
 }
 
 const FIELDS = [
+  "dest_country_id", "dest_state_province_id", "dest_district_id", "dest_city_id",
   "truck_id", "loading_date", "loading_serial", "truck_name", "truck_number", "driver_name",
   "driver_mobile_1", "driver_mobile_2", "cnic_passport", "truck_owner_name",
   "truck_owner_mobile", "vehicle_type", "goods_name", "unit", "destination", "remarks",
