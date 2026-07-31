@@ -19,25 +19,12 @@ export async function GET(request: NextRequest) {
       countries = countries.filter((c) => allowed.has(c.id));
     }
     if (!countries || countries.length === 0) {
-      countries = [
-        { id: "c-uae-1001", name: "United Arab Emirates", iso2: "AE", iso3: "ARE", currency_code: "AED", is_active: true } as any,
-        { id: "c-pk-1002", name: "Pakistan", iso2: "PK", iso3: "PAK", currency_code: "PKR", is_active: true } as any,
-        { id: "c-in-1003", name: "India", iso2: "IN", iso3: "IND", currency_code: "INR", is_active: true } as any,
-        { id: "c-af-1004", name: "Afghanistan", iso2: "AF", iso3: "AFG", currency_code: "AFN", is_active: true } as any,
-        { id: "c-ir-1005", name: "Iran", iso2: "IR", iso3: "IRN", currency_code: "IRR", is_active: true } as any
-      ];
+      countries = await locationsRepository.listCountries({ query: q, limit: 500 });
     }
     return apiOk({ countries });
   } catch (error) {
-    return apiOk({
-      countries: [
-        { id: "c-uae-1001", name: "United Arab Emirates", iso2: "AE", iso3: "ARE", currency_code: "AED", is_active: true } as any,
-        { id: "c-pk-1002", name: "Pakistan", iso2: "PK", iso3: "PAK", currency_code: "PKR", is_active: true } as any,
-        { id: "c-in-1003", name: "India", iso2: "IN", iso3: "IND", currency_code: "INR", is_active: true } as any,
-        { id: "c-af-1004", name: "Afghanistan", iso2: "AF", iso3: "AFG", currency_code: "AFN", is_active: true } as any,
-        { id: "c-ir-1005", name: "Iran", iso2: "IR", iso3: "IRN", currency_code: "IRR", is_active: true } as any
-      ]
-    });
+    const countries = await locationsRepository.listCountries({ limit: 500 }).catch(() => []);
+    return apiOk({ countries });
   }
 }
 

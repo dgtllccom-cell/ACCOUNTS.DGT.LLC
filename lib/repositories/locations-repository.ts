@@ -104,6 +104,194 @@ export class LocationsRepository {
     return scoped;
   }
 
+  async resolveCountryUuid(countryInput: string): Promise<string> {
+    if (!countryInput || typeof countryInput !== "string") return countryInput;
+    const clean = countryInput.trim();
+    if (isUuid(clean)) return clean;
+
+    const supabase = createSupabaseAdminClient() as any;
+    const { data: allCountries } = await supabase
+      .from("countries")
+      .select("id, name, iso2, iso3")
+      .is("deleted_at", null);
+
+    const lower = clean.toLowerCase();
+
+    if (allCountries && Array.isArray(allCountries) && allCountries.length > 0) {
+      const match = allCountries.find((c: any) => {
+        const cName = (c.name || "").toLowerCase();
+        const iso2 = (c.iso2 || "").toLowerCase();
+        const iso3 = (c.iso3 || "").toLowerCase();
+        return (
+          c.id === clean ||
+          cName === lower ||
+          cName.includes(lower) ||
+          lower.includes(cName) ||
+          iso2 === lower ||
+          iso3 === lower ||
+          (lower.includes("pk") && cName.includes("pakistan")) ||
+          (lower.includes("uae") && (cName.includes("emirates") || iso2 === "ae")) ||
+          (lower.includes("in") && cName.includes("india")) ||
+          (lower.includes("af") && cName.includes("afghanistan")) ||
+          (lower.includes("sa") && cName.includes("saudi")) ||
+          (lower.includes("ir") && cName.includes("iran"))
+        );
+      });
+
+      if (match?.id) return match.id;
+    }
+
+    let name = "Pakistan";
+    let iso2 = "PK";
+    let iso3 = "PAK";
+    let currencyCode = "PKR";
+
+    if (lower.includes("uae") || lower.includes("emirates") || lower.includes("ae")) {
+      name = "United Arab Emirates";
+      iso2 = "AE";
+      iso3 = "ARE";
+      currencyCode = "AED";
+    } else if (lower.includes("in") || lower.includes("india")) {
+      name = "India";
+      iso2 = "IN";
+      iso3 = "IND";
+      currencyCode = "INR";
+    } else if (lower.includes("af") || lower.includes("afghanistan")) {
+      name = "Afghanistan";
+      iso2 = "AF";
+      iso3 = "AFG";
+      currencyCode = "AFN";
+    } else if (lower.includes("sa") || lower.includes("saudi")) {
+      name = "Saudi Arabia";
+      iso2 = "SA";
+      iso3 = "SAU";
+      currencyCode = "SAR";
+    } else if (lower.includes("ir") || lower.includes("iran")) {
+      name = "Iran";
+      iso2 = "IR";
+      iso3 = "IRN";
+      currencyCode = "IRR";
+    }
+
+    const { data: existingByName } = await supabase
+      .from("countries")
+      .select("id")
+      .eq("name", name)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (existingByName?.id) return existingByName.id;
+
+    const { data: created } = await supabase
+      .from("countries")
+      .insert({
+        name,
+        iso2,
+        iso3,
+        currency_code: currencyCode,
+        is_active: true,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select("id")
+      .single();
+
+    if (created?.id) return created.id;
+    if (allCountries && allCountries.length > 0) return allCountries[0].id;
+    return clean;
+  }
+
+  async resolveStateUuid(stateInput: string, countryIdResolved?: string): Promise<string> {
+    if (!stateInput || typeof stateInput !== "string") return stateInput;
+    const clean = stateInput.trim();
+    if (isUuid(clean)) return clean;
+
+    const supabase = createSupabaseAdminClient() as any;
+    let query = supabase.from("states_provinces").select("id, name, code").is("deleted_at", null);
+    if (countryIdResolved && isUuid(countryIdResolved)) {
+      query = query.eq("country_id", countryIdResolved);
+    }
+
+    const { data: states } = await query;
+    const lower = clean.toLowerCase();
+
+    if (states && Array.isArray(states) && states.length > 0) {
+      const match = states.find((s: any) => {
+        const sName = (s.name || "").toLowerCase();
+        const sCode = (s.code || "").toLowerCase();
+        return (
+          s.id === clean ||
+          sName === lower ||
+          sName.includes(lower) ||
+          lower.includes(sName) ||
+          (sCode && sCode === lower)
+        );
+      });
+      if (match?.id) return match.id;
+    }
+
+    return clean;
+  }
+
+  async resolveDistrictUuid(districtInput: string, stateProvinceIdResolved?: string): Promise<string> {
+    if (!districtInput || typeof districtInput !== "string") return districtInput;
+    const clean = districtInput.trim();
+    if (isUuid(clean)) return clean;
+
+    const supabase = createSupabaseAdminClient() as any;
+    let query = supabase.from("districts").select("id, name, code").is("deleted_at", null);
+    if (stateProvinceIdResolved && isUuid(stateProvinceIdResolved)) {
+      query = query.eq("state_province_id", stateProvinceIdResolved);
+    }
+
+    const { data: districts } = await query;
+    const lower = clean.toLowerCase();
+
+    if (districts && Array.isArray(districts) && districts.length > 0) {
+      const match = districts.find((d: any) => {
+        const dName = (d.name || "").toLowerCase();
+        const dCode = (d.code || "").toLowerCase();
+        return (
+          d.id === clean ||
+          dName === lower ||
+          dName.includes(lower) ||
+          lower.includes(dName) ||
+          (dCode && dCode === lower)
+        );
+      });
+      if (match?.id) return match.id;
+    }
+
+    return clean;
+  }
+
+  async resolveCityUuid(cityInput: string): Promise<string> {
+    if (!cityInput || typeof cityInput !== "string") return cityInput;
+    const clean = cityInput.trim();
+    if (isUuid(clean)) return clean;
+
+    const supabase = createSupabaseAdminClient() as any;
+    const { data: cities } = await supabase.from("cities").select("id, name, code").is("deleted_at", null);
+    const lower = clean.toLowerCase();
+
+    if (cities && Array.isArray(cities) && cities.length > 0) {
+      const match = cities.find((c: any) => {
+        const cName = (c.name || "").toLowerCase();
+        const cCode = (c.code || "").toLowerCase();
+        return (
+          c.id === clean ||
+          cName === lower ||
+          cName.includes(lower) ||
+          lower.includes(cName) ||
+          (cCode && cCode === lower)
+        );
+      });
+      if (match?.id) return match.id;
+    }
+
+    return clean;
+  }
+
   async listCountries(input?: { query?: string | null; limit?: number }) {
     const supabase = createSupabaseAdminClient() as any;
     const limit = Math.min(Math.max(input?.limit ?? 200, 1), 500);
@@ -121,8 +309,31 @@ export class LocationsRepository {
       );
     }
 
-    const { data, error } = await query.limit(limit);
+    let { data, error } = await query.limit(limit);
     if (error) throw new Error(error.message);
+
+    if (!data || data.length === 0) {
+      const defaultCountries = [
+        { name: "United Arab Emirates", iso2: "AE", iso3: "ARE", currency_code: "AED", is_active: true, official_email: "official@dgt.ae", admin_email: "admin@dgt.ae" },
+        { name: "Pakistan", iso2: "PK", iso3: "PAK", currency_code: "PKR", is_active: true, official_email: "official@dgt.pk", admin_email: "admin@dgt.pk" },
+        { name: "India", iso2: "IN", iso3: "IND", currency_code: "INR", is_active: true, official_email: "official@dgt.in", admin_email: "admin@dgt.in" },
+        { name: "Afghanistan", iso2: "AF", iso3: "AFG", currency_code: "AFN", is_active: true, official_email: "official@dgt.af", admin_email: "admin@dgt.af" },
+        { name: "Iran", iso2: "IR", iso3: "IRN", currency_code: "IRR", is_active: true, official_email: "official@dgt.ir", admin_email: "admin@dgt.ir" }
+      ];
+
+      for (const c of defaultCountries) {
+        await supabase.from("countries").insert({ ...c, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }).catch(() => null);
+      }
+
+      const { data: reData } = await supabase
+        .from("countries")
+        .select("id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number")
+        .is("deleted_at", null)
+        .order("name", { ascending: true });
+
+      data = reData;
+    }
+
     return (data ?? []) as CountryRow[];
   }
 
@@ -201,19 +412,7 @@ export class LocationsRepository {
     const limit = Math.min(Math.max(input.limit ?? 200, 1), 500);
     const q = (input.query ?? "").trim();
 
-    // Resolve countryId (could be UUID, name, or iso code)
-    let countryId = input.countryId;
-    if (countryId && !isUuid(countryId)) {
-      const { data: matchedCountry } = await supabase
-        .from("countries")
-        .select("id, name")
-        .or(`name.ilike.${countryId},iso2.ilike.${countryId},iso3.ilike.${countryId}`)
-        .is("deleted_at", null)
-        .maybeSingle();
-      if (matchedCountry?.id) {
-        countryId = matchedCountry.id;
-      }
-    }
+    const countryId = await this.resolveCountryUuid(input.countryId);
 
     let query = supabase
       .from("states_provinces")
@@ -229,42 +428,58 @@ export class LocationsRepository {
 
     if (q) query = query.or(`name.ilike.%${q}%,code.ilike.%${q}%`);
 
-    const { data } = await query.limit(limit);
-    if (data && data.length > 0) {
-      return data as StateRow[];
+    let { data } = await query.limit(limit);
+
+    if (!data || data.length === 0) {
+      if (isUuid(countryId)) {
+        const defaultStateNames: Record<string, Array<{ name: string; code: string }>> = {
+          pakistan: [
+            { name: "Balochistan", code: "BAL" },
+            { name: "Sindh", code: "SND" },
+            { name: "Punjab", code: "PJB" },
+            { name: "Khyber Pakhtunkhwa", code: "KPK" },
+            { name: "Islamabad Capital Territory", code: "ICT" }
+          ],
+          "united arab emirates": [
+            { name: "Dubai", code: "DXB" },
+            { name: "Abu Dhabi", code: "AUH" },
+            { name: "Sharjah", code: "SHJ" },
+            { name: "Ajman", code: "AJM" },
+            { name: "Ras Al Khaimah", code: "RAK" }
+          ],
+          "saudi arabia": [
+            { name: "Riyadh Region", code: "RUH" },
+            { name: "Makkah Region", code: "MKH" },
+            { name: "Eastern Province", code: "EAS" }
+          ],
+          afghanistan: [
+            { name: "Kabul Province", code: "KBL" },
+            { name: "Kandahar Province", code: "KDR" },
+            { name: "Herat Province", code: "HRT" }
+          ]
+        };
+
+        const { data: cRow } = await supabase.from("countries").select("name").eq("id", countryId).maybeSingle();
+        const cNameLower = (cRow?.name || input.countryId || "").toLowerCase();
+        const key = Object.keys(defaultStateNames).find((k) => cNameLower.includes(k)) || "pakistan";
+        const toSeed = defaultStateNames[key] || defaultStateNames["pakistan"];
+
+        for (const s of toSeed) {
+          await this.createState({ countryId, name: s.name, code: s.code }).catch(() => null);
+        }
+
+        const { data: reData } = await supabase
+          .from("states_provinces")
+          .select("id, country_id, name, code, postal_code, phone_area_code, is_active")
+          .eq("country_id", countryId)
+          .is("deleted_at", null)
+          .order("name", { ascending: true });
+
+        data = reData;
+      }
     }
 
-    // Fallback Master States if DB returns empty
-    const idLower = input.countryId.toLowerCase();
-    const fallbackStates: Record<string, Array<{ id: string; country_id: string; name: string; code: string; is_active: boolean }>> = {
-      pakistan: [
-        { id: "st-pk-balochistan", country_id: input.countryId, name: "Balochistan", code: "BAL", is_active: true },
-        { id: "st-pk-sindh", country_id: input.countryId, name: "Sindh", code: "SND", is_active: true },
-        { id: "st-pk-punjab", country_id: input.countryId, name: "Punjab", code: "PJB", is_active: true },
-        { id: "st-pk-kpk", country_id: input.countryId, name: "Khyber Pakhtunkhwa", code: "KPK", is_active: true },
-        { id: "st-pk-ict", country_id: input.countryId, name: "Islamabad Capital Territory", code: "ICT", is_active: true }
-      ],
-      "united arab emirates": [
-        { id: "st-uae-dubai", country_id: input.countryId, name: "Dubai", code: "DXB", is_active: true },
-        { id: "st-uae-abudhabi", country_id: input.countryId, name: "Abu Dhabi", code: "AUH", is_active: true },
-        { id: "st-uae-sharjah", country_id: input.countryId, name: "Sharjah", code: "SHJ", is_active: true },
-        { id: "st-uae-ajman", country_id: input.countryId, name: "Ajman", code: "AJM", is_active: true },
-        { id: "st-uae-rak", country_id: input.countryId, name: "Ras Al Khaimah", code: "RAK", is_active: true }
-      ],
-      "saudi arabia": [
-        { id: "st-ksa-riyadh", country_id: input.countryId, name: "Riyadh Region", code: "RUH", is_active: true },
-        { id: "st-ksa-makkah", country_id: input.countryId, name: "Makkah Region", code: "MKH", is_active: true },
-        { id: "st-ksa-eastern", country_id: input.countryId, name: "Eastern Province", code: "EAS", is_active: true }
-      ],
-      afghanistan: [
-        { id: "st-afg-kabul", country_id: input.countryId, name: "Kabul Province", code: "KBL", is_active: true },
-        { id: "st-afg-kandahar", country_id: input.countryId, name: "Kandahar Province", code: "KDR", is_active: true },
-        { id: "st-afg-herat", country_id: input.countryId, name: "Herat Province", code: "HRT", is_active: true }
-      ]
-    };
-
-    const key = Object.keys(fallbackStates).find((k) => idLower.includes(k)) || "pakistan";
-    return (fallbackStates[key] || fallbackStates["pakistan"]) as StateRow[];
+    return (data ?? []) as StateRow[];
   }
 
   async listDistricts(input: { stateProvinceId: string; query?: string | null; limit?: number }) {
@@ -272,16 +487,46 @@ export class LocationsRepository {
     const limit = Math.min(Math.max(input.limit ?? 200, 1), 500);
     const q = (input.query ?? "").trim();
 
+    const stateProvinceId = await this.resolveStateUuid(input.stateProvinceId);
+
     let query = supabase
       .from("districts")
       .select("id, country_id, state_province_id, name, code, postal_code, phone_area_code, is_active")
-      .eq("state_province_id", input.stateProvinceId)
       .is("deleted_at", null)
       .order("name", { ascending: true });
 
+    if (isUuid(stateProvinceId)) {
+      query = query.eq("state_province_id", stateProvinceId);
+    }
+
     if (q) query = query.or(`name.ilike.%${q}%,code.ilike.%${q}%`);
 
-    const { data } = await query.limit(limit);
+    let { data } = await query.limit(limit);
+
+    if (!data || data.length === 0) {
+      if (isUuid(stateProvinceId)) {
+        const { data: stRow } = await supabase.from("states_provinces").select("id, country_id, name").eq("id", stateProvinceId).maybeSingle();
+        if (stRow?.id) {
+          const defaultDistrictName = `${stRow.name} District`;
+          await this.createDistrict({
+            countryId: stRow.country_id,
+            stateProvinceId: stRow.id,
+            name: defaultDistrictName,
+            code: stRow.name.slice(0, 3).toUpperCase()
+          }).catch(() => null);
+
+          const { data: reData } = await supabase
+            .from("districts")
+            .select("id, country_id, state_province_id, name, code, postal_code, phone_area_code, is_active")
+            .eq("state_province_id", stateProvinceId)
+            .is("deleted_at", null)
+            .order("name", { ascending: true });
+
+          data = reData;
+        }
+      }
+    }
+
     return (data ?? []) as DistrictRow[];
   }
 
@@ -296,19 +541,9 @@ export class LocationsRepository {
     const limit = Math.min(Math.max(input.limit ?? 200, 1), 500);
     const q = (input.query ?? "").trim();
 
-    // Resolve countryId (could be UUID, name, or iso code)
-    let countryId = input.countryId;
-    if (countryId && !isUuid(countryId)) {
-      const { data: matchedCountry } = await supabase
-        .from("countries")
-        .select("id, name")
-        .or(`name.ilike.${countryId},iso2.ilike.${countryId},iso3.ilike.${countryId}`)
-        .is("deleted_at", null)
-        .maybeSingle();
-      if (matchedCountry?.id) {
-        countryId = matchedCountry.id;
-      }
-    }
+    const countryId = await this.resolveCountryUuid(input.countryId);
+    const stateProvinceId = input.stateProvinceId ? await this.resolveStateUuid(input.stateProvinceId, countryId) : null;
+    const districtId = input.districtId ? await this.resolveDistrictUuid(input.districtId, stateProvinceId ?? undefined) : null;
 
     let query = supabase
       .from("cities")
@@ -320,54 +555,74 @@ export class LocationsRepository {
       query = query.eq("country_id", countryId);
     }
 
-    if (input.districtId) query = query.eq("district_id", input.districtId);
-    else if (input.stateProvinceId && isUuid(input.stateProvinceId)) query = query.eq("state_province_id", input.stateProvinceId);
+    if (districtId && isUuid(districtId)) query = query.eq("district_id", districtId);
+    else if (stateProvinceId && isUuid(stateProvinceId)) query = query.eq("state_province_id", stateProvinceId);
 
     if (q) query = query.or(`name.ilike.%${q}%,code.ilike.%${q}%,zip_code.ilike.%${q}%`);
 
-    const { data } = await query.limit(limit);
-    if (data && data.length > 0) {
-      return data as CityRow[];
+    let { data } = await query.limit(limit);
+
+    if (!data || data.length === 0) {
+      if (isUuid(countryId)) {
+        const defaultCityNames: Record<string, Array<{ name: string; code: string }>> = {
+          pakistan: [
+            { name: "Quetta", code: "UET" },
+            { name: "Karachi", code: "KHI" },
+            { name: "Lahore", code: "LHE" },
+            { name: "Peshawar", code: "PEW" },
+            { name: "Islamabad", code: "ISB" },
+            { name: "Rawalpindi", code: "RWP" },
+            { name: "Multan", code: "MUX" },
+            { name: "Chaman", code: "CHM" },
+            { name: "Gwadar", code: "GWD" }
+          ],
+          "united arab emirates": [
+            { name: "Dubai", code: "DXB" },
+            { name: "Abu Dhabi", code: "AUH" },
+            { name: "Sharjah", code: "SHJ" },
+            { name: "Al Ain", code: "AAN" },
+            { name: "Ajman", code: "AJM" }
+          ],
+          "saudi arabia": [
+            { name: "Riyadh", code: "RUH" },
+            { name: "Jeddah", code: "JED" },
+            { name: "Dammam", code: "DMM" },
+            { name: "Mecca", code: "MAK" },
+            { name: "Medina", code: "MED" }
+          ],
+          afghanistan: [
+            { name: "Kabul", code: "KBL" },
+            { name: "Kandahar", code: "KDR" },
+            { name: "Herat", code: "HRT" },
+            { name: "Jalalabad", code: "JBD" }
+          ]
+        };
+
+        const { data: cRow } = await supabase.from("countries").select("name").eq("id", countryId).maybeSingle();
+        const cNameLower = (cRow?.name || input.countryId || "").toLowerCase();
+        const key = Object.keys(defaultCityNames).find((k) => cNameLower.includes(k)) || "pakistan";
+        const toSeed = defaultCityNames[key] || defaultCityNames["pakistan"];
+
+        for (const c of toSeed) {
+          await this.createCity({ countryId, stateProvinceId, districtId, name: c.name, code: c.code }).catch(() => null);
+        }
+
+        let reQuery = supabase
+          .from("cities")
+          .select("id, country_id, state_province_id, district_id, name, code, zip_code, phone_area_code, is_active")
+          .eq("country_id", countryId)
+          .is("deleted_at", null)
+          .order("name", { ascending: true });
+
+        if (districtId && isUuid(districtId)) reQuery = reQuery.eq("district_id", districtId);
+        else if (stateProvinceId && isUuid(stateProvinceId)) reQuery = reQuery.eq("state_province_id", stateProvinceId);
+
+        const { data: reData } = await reQuery.limit(limit);
+        data = reData;
+      }
     }
 
-    // Fallback Master Cities if DB returns empty
-    const idLower = input.countryId.toLowerCase();
-    const fallbackCities: Record<string, Array<{ id: string; country_id: string; name: string; code: string; is_active: boolean }>> = {
-      pakistan: [
-        { id: "ct-quetta", country_id: input.countryId, name: "Quetta", code: "UET", is_active: true },
-        { id: "ct-karachi", country_id: input.countryId, name: "Karachi", code: "KHI", is_active: true },
-        { id: "ct-lahore", country_id: input.countryId, name: "Lahore", code: "LHE", is_active: true },
-        { id: "ct-peshawar", country_id: input.countryId, name: "Peshawar", code: "PEW", is_active: true },
-        { id: "ct-islamabad", country_id: input.countryId, name: "Islamabad", code: "ISB", is_active: true },
-        { id: "ct-rawalpindi", country_id: input.countryId, name: "Rawalpindi", code: "RWP", is_active: true },
-        { id: "ct-multan", country_id: input.countryId, name: "Multan", code: "MUX", is_active: true },
-        { id: "ct-chaman", country_id: input.countryId, name: "Chaman", code: "CHM", is_active: true },
-        { id: "ct-gwadar", country_id: input.countryId, name: "Gwadar", code: "GWD", is_active: true }
-      ],
-      "united arab emirates": [
-        { id: "ct-dubai", country_id: input.countryId, name: "Dubai", code: "DXB", is_active: true },
-        { id: "ct-abudhabi", country_id: input.countryId, name: "Abu Dhabi", code: "AUH", is_active: true },
-        { id: "ct-sharjah", country_id: input.countryId, name: "Sharjah", code: "SHJ", is_active: true },
-        { id: "ct-alain", country_id: input.countryId, name: "Al Ain", code: "AAN", is_active: true },
-        { id: "ct-ajman", country_id: input.countryId, name: "Ajman", code: "AJM", is_active: true }
-      ],
-      "saudi arabia": [
-        { id: "ct-riyadh", country_id: input.countryId, name: "Riyadh", code: "RUH", is_active: true },
-        { id: "ct-jeddah", country_id: input.countryId, name: "Jeddah", code: "JED", is_active: true },
-        { id: "ct-dammam", country_id: input.countryId, name: "Dammam", code: "DMM", is_active: true },
-        { id: "ct-mecca", country_id: input.countryId, name: "Mecca", code: "MAK", is_active: true },
-        { id: "ct-medina", country_id: input.countryId, name: "Medina", code: "MED", is_active: true }
-      ],
-      afghanistan: [
-        { id: "ct-kabul", country_id: input.countryId, name: "Kabul", code: "KBL", is_active: true },
-        { id: "ct-kandahar", country_id: input.countryId, name: "Kandahar", code: "KDR", is_active: true },
-        { id: "ct-herat", country_id: input.countryId, name: "Herat", code: "HRT", is_active: true },
-        { id: "ct-jalalabad", country_id: input.countryId, name: "Jalalabad", code: "JBD", is_active: true }
-      ]
-    };
-
-    const key = Object.keys(fallbackCities).find((k) => idLower.includes(k)) || "pakistan";
-    return (fallbackCities[key] || fallbackCities["pakistan"]) as CityRow[];
+    return (data ?? []) as CityRow[];
   }
 
   async listAreas(input: { cityId: string; query?: string | null; limit?: number }) {

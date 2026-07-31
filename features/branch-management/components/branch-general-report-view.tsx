@@ -1729,10 +1729,20 @@ export function BranchGeneralReportView({
                             </span>
                           </td>
                           <td className="p-2 relative">
-                            <div className="flex items-center justify-center">
+                            <div className="flex items-center justify-center gap-1.5">
                               <button
+                                type="button"
+                                onClick={() => setBranchDetailModal({ country, branch: mainBranch || { id: country.id, name: `${country.name} Main Branch`, code: country.code, localCurrency: country.currency, status: country.status, isMain: true, cityBranches: [] } })}
+                                className="inline-flex items-center gap-1 rounded-md border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[9px] font-black text-emerald-700 shadow-xs hover:bg-emerald-100 hover:border-emerald-400 transition-all focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                                title="View Country Main Branch & City Branches"
+                              >
+                                <Eye className="h-3 w-3" />
+                                View
+                              </button>
+                              <button
+                                type="button"
                                 onClick={(e) => openActionDropdown(country.id, e.currentTarget)}
-                                className="action-dropdown-trigger inline-flex items-center gap-1.5 rounded-md border border-slate-300 bg-white px-2.5 py-1 text-[9px] font-bold text-slate-700 shadow-sm hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-400"
+                                className="action-dropdown-trigger inline-flex items-center gap-1 rounded-md border border-slate-300 bg-white px-2 py-1 text-[9px] font-bold text-slate-700 shadow-xs hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700 transition-all focus:outline-none focus:ring-2 focus:ring-indigo-400"
                               >
                                 Actions
                                 <ChevronRight className={cn("h-2.5 w-2.5 transition-transform duration-150", activeActionDropdownId === country.id ? "rotate-90" : "")} />

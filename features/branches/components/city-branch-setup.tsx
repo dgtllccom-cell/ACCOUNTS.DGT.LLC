@@ -962,7 +962,11 @@ function CityBranchSetupContent() {
     }
     const json = (await res.json()) as { countryBranches?: CountryBranchRow[] };
     const list = Array.isArray(json.countryBranches) ? json.countryBranches : [];
-    setMainBranches(list.filter((b) => b.is_main));
+    const mains = list.filter((b) => b.is_main);
+    setMainBranches(mains);
+    if (mains.length > 0 && !countryBranchId) {
+      await onMainBranchSelected(mains[0].id);
+    }
   }
 
   async function loadExistingCityBranches(nextCountryId: string, nextCountryBranchId: string) {

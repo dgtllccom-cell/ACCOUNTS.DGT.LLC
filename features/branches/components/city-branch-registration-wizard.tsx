@@ -160,7 +160,11 @@ export function CityBranchRegistrationWizard() {
           `/api/branch-management/country-branches?countryId=${encodeURIComponent(location.countryId)}`
         );
         if (cancelled) return;
-        setMainBranches(res.countryBranches ?? []);
+        const branches = res.countryBranches ?? [];
+        setMainBranches(branches);
+        if (branches.length > 0 && !countryBranchId) {
+          setCountryBranchId(branches[0].id);
+        }
       } catch (error) {
         if (!cancelled) {
           setBanner({ type: "error", message: error instanceof Error ? error.message : "Unable to load main branches." });
@@ -400,14 +404,14 @@ export function CityBranchRegistrationWizard() {
                     }
                   }}
                   showCountry
-                  showState={branchUnlocked}
+                  showState={Boolean(location.countryId)}
                   showDistrict={false}
-                  showCity={branchUnlocked}
+                  showCity={Boolean(location.countryId)}
                   showArea={false}
                 />
-                {!branchUnlocked ? (
+                {!location.countryId ? (
                   <p className="mt-2 rounded-lg bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">
-                    Select Country, then Main Branch. State and City dropdowns unlock after Main Branch is selected.
+                    Select Country first to load Main Branch, State, and City options.
                   </p>
                 ) : null}
               </div>

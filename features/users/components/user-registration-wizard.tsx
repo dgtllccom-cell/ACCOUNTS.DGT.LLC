@@ -249,8 +249,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
       const list = Array.isArray(json.countryBranches) ? json.countryBranches : [];
       const mains = list.filter((b) => Boolean(b.is_main));
       setMainBranches(mains);
-      if (mains.length > 0 && !countryBranchId) {
-        setCountryBranchId(mains[0].id);
+      if (mains.length > 0) {
+        setCountryBranchId((prev) => (mains.some((m) => m.id === prev) ? prev : mains[0].id));
         if (mains[0].local_currency) setCurrency(mains[0].local_currency);
       }
     })().catch(() => null);
@@ -259,7 +259,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
       const res = await fetch(`/api/branch-management/city-branches?countryId=${encodeURIComponent(countryId)}`, { cache: "no-store" });
       if (!res.ok) return;
       const json = (await res.json()) as { cityBranches?: CityBranchRow[] };
-      setCityBranches(Array.isArray(json.cityBranches) ? json.cityBranches : []);
+      const cList = Array.isArray(json.cityBranches) ? json.cityBranches : [];
+      setCityBranches(cList);
+      if (cList.length > 0 && !cityBranchId) {
+        setCityBranchId(cList[0].id);
+        if (cList[0].country_branch_id) {
+          setCountryBranchId(cList[0].country_branch_id);
+        }
+      }
     })().catch(() => null);
 
     (async () => {
@@ -318,8 +325,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     if (currentStep === 2) {
       if (role === "super_admin") return true;
       if (!countryId) return false;
-      if (branchType === "main") return Boolean(countryBranchId);
-      if (branchType === "city") return Boolean(cityBranchId);
+      if (branchType === "main" || role === "main_branch_admin") return Boolean(countryBranchId || mainBranches.length > 0);
+      if (branchType === "city" || role === "city_branch_admin") return Boolean(cityBranchId || cityBranches.length > 0);
       return true;
     }
     if (currentStep === 3) {
@@ -375,15 +382,18 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
     if (role === "super_admin") {
       resolvedCountryId = null;
+      resolvedCountryBranchId = null;
+      resolvedCityBranchId = null;
     } else if (role === "country_admin" || role === "country_user") {
       resolvedCountryBranchId = null;
       resolvedCityBranchId = null;
-    } else if (role === "main_branch_admin" || branchType === "main") {
-      resolvedCountryBranchId = countryBranchId || null;
+    } else if (role === "main_branch_admin" || (role !== "city_branch_admin" && branchType === "main")) {
+      resolvedCountryBranchId = countryBranchId || (mainBranches[0]?.id ?? null);
       resolvedCityBranchId = null;
     } else {
-      resolvedCityBranchId = cityBranchId || null;
-      resolvedCountryBranchId = selectedCityBranch?.country_branch_id ?? null;
+      // City branch scope role
+      resolvedCityBranchId = cityBranchId || (cityBranches[0]?.id ?? null);
+      resolvedCountryBranchId = countryBranchId || selectedCityBranch?.country_branch_id || (mainBranches[0]?.id ?? null);
     }
 
     const preferredLanguage = (localStorage.getItem("erp_lang") || "en").toString();
@@ -424,7 +434,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
       setBanner({ tone: "ok", text: isEdit ? "User record updated successfully." : "User registered successfully." });
     } catch (e: any) {
-      setBanner({ tone: "err", text: e?.message || "User operation failed." });
+      const errMsg = e?.message || (typeof e === "string" ? e : "User registration operation failed.");
+      setBanner({ tone: "err", text: errMsg });
     } finally {
       setSaving(false);
     }

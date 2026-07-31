@@ -52,14 +52,18 @@ export async function POST(request: NextRequest) {
       throw new Error("countryId and name are required");
     }
 
-    if (!session.isSuperAdmin && !session.countryIds.includes(body.countryId)) {
+    const resolvedCountryId = await locationsRepository.resolveCountryUuid(body.countryId);
+    const resolvedStateId = body.stateProvinceId ? await locationsRepository.resolveStateUuid(body.stateProvinceId, resolvedCountryId) : null;
+    const resolvedDistrictId = body.districtId ? await locationsRepository.resolveDistrictUuid(body.districtId, resolvedStateId ?? undefined) : null;
+
+    if (!session.isSuperAdmin && !session.countryIds.includes(body.countryId) && !session.countryIds.includes(resolvedCountryId)) {
       throw new Error("Country scope is not allowed.");
     }
 
     const city = await locationsRepository.createCity({
-      countryId: body.countryId,
-      stateProvinceId: body.stateProvinceId ?? null,
-      districtId: body.districtId ?? null,
+      countryId: resolvedCountryId,
+      stateProvinceId: resolvedStateId,
+      districtId: resolvedDistrictId,
       name: body.name,
       code: body.code ?? null,
       zipCode: body.zipCode ?? null,

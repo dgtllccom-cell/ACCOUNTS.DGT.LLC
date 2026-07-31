@@ -133,7 +133,7 @@ export function CustomerPicker({
         <SimpleModal
           title="New Customer — Customer Master"
           onClose={() => setOpenCreate(false)}
-          className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto"
+          className="w-[98vw] max-w-[98vw] h-[95vh] max-h-[95vh] rounded-2xl overflow-y-auto font-sans"
         >
           <CustomerForm
             lang={guessOriginalLanguage()}

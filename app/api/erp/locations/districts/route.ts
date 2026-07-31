@@ -46,13 +46,16 @@ export async function POST(request: NextRequest) {
       throw new Error("countryId, stateProvinceId and name are required");
     }
 
-    if (!session.isSuperAdmin && !session.countryIds.includes(body.countryId)) {
+    const resolvedCountryId = await locationsRepository.resolveCountryUuid(body.countryId);
+    const resolvedStateId = await locationsRepository.resolveStateUuid(body.stateProvinceId, resolvedCountryId);
+
+    if (!session.isSuperAdmin && !session.countryIds.includes(body.countryId) && !session.countryIds.includes(resolvedCountryId)) {
       throw new Error("Country scope is not allowed.");
     }
 
     const district = await locationsRepository.createDistrict({
-      countryId: body.countryId,
-      stateProvinceId: body.stateProvinceId,
+      countryId: resolvedCountryId,
+      stateProvinceId: resolvedStateId,
       name: body.name,
       code: body.code ?? null,
       createdBy: isUuid(session.userId) ? session.userId : null

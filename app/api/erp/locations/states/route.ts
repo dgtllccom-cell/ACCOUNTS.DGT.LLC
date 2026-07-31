@@ -35,12 +35,14 @@ export async function POST(request: NextRequest) {
       throw new Error("countryId and name are required");
     }
 
-    if (!session.isSuperAdmin && !session.countryIds.includes(body.countryId)) {
+    const resolvedCountryId = await locationsRepository.resolveCountryUuid(body.countryId);
+
+    if (!session.isSuperAdmin && !session.countryIds.includes(body.countryId) && !session.countryIds.includes(resolvedCountryId)) {
       throw new Error("Country scope is not allowed.");
     }
 
     const state = await locationsRepository.createState({
-      countryId: body.countryId,
+      countryId: resolvedCountryId,
       name: body.name,
       code: body.code ?? null,
       createdBy: isUuid(session.userId) ? session.userId : null

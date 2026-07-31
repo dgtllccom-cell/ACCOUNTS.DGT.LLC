@@ -138,13 +138,21 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
     if (!countryId) {
       setBranches([]);
       setCountryBranchId("");
+      setCityBranches([]);
+      setCityBranchId("");
       return;
     }
     async function loadBranches() {
       try {
         const res = await apiGet<{ ok: boolean; data: { branches: any[] } }>(`/api/erp/locations/branches/main?countryId=${countryId}`);
         if (res.ok && res.data?.branches) {
-          setBranches(res.data.branches);
+          const list = res.data.branches;
+          setBranches(list);
+          if (list.length > 0) {
+            setCountryBranchId((prev) => (list.some((b) => b.id === prev) ? prev : list[0].id));
+          } else {
+            setCountryBranchId("");
+          }
         }
       } catch (err) {
         console.error(err);
@@ -164,7 +172,13 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
       try {
         const res = await apiGet<{ ok: boolean; data: { cityBranches: any[] } }>(`/api/erp/locations/branches/city?countryBranchId=${countryBranchId}`);
         if (res.ok && res.data?.cityBranches) {
-          setCityBranches(res.data.cityBranches);
+          const list = res.data.cityBranches;
+          setCityBranches(list);
+          if (list.length > 0) {
+            setCityBranchId((prev) => (list.some((cb) => cb.id === prev) ? prev : list[0].id));
+          } else {
+            setCityBranchId("");
+          }
         }
       } catch (err) {
         console.error(err);
