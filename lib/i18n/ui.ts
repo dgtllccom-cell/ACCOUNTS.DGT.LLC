@@ -46,6 +46,25 @@ export type UiKey =
   | "nav.product_categories"
   | "nav.warehouses"
   | "nav.truck_registration"
+  | "nav.truck_loading"
+  | "tl.title"
+  | "tl.select_truck"
+  | "tl.date"
+  | "tl.serial"
+  | "tl.goods"
+  | "tl.qty"
+  | "tl.unit"
+  | "tl.net_weight"
+  | "tl.gross_weight"
+  | "tl.destination"
+  | "tl.remarks"
+  | "tl.add"
+  | "tl.edit"
+  | "tl.delete"
+  | "tl.save"
+  | "tl.cancel"
+  | "tl.search"
+  | "tl.empty"
   | "tr.title"
   | "tr.number"
   | "tr.reg_no"
@@ -624,6 +643,25 @@ const en: Dict = {
   "nav.product_categories": "Product Categories",
   "nav.warehouses": "Warehouses",
   "nav.truck_registration": "Truck Registration",
+  "nav.truck_loading": "Truck Loading",
+  "tl.title": "Truck Loading",
+  "tl.select_truck": "Select Truck",
+  "tl.date": "Loading Date",
+  "tl.serial": "Serial",
+  "tl.goods": "Goods",
+  "tl.qty": "Quantity",
+  "tl.unit": "Unit",
+  "tl.net_weight": "Net Weight",
+  "tl.gross_weight": "Gross Weight",
+  "tl.destination": "Destination",
+  "tl.remarks": "Remarks",
+  "tl.add": "New Loading",
+  "tl.edit": "Edit",
+  "tl.delete": "Delete",
+  "tl.save": "Save",
+  "tl.cancel": "Cancel",
+  "tl.search": "Search loadings...",
+  "tl.empty": "No loadings found",
   "tr.title": "Truck Registration",
   "tr.number": "Truck Number",
   "tr.reg_no": "Registration No",
@@ -1188,6 +1226,25 @@ const ur: Dict = {
   "nav.product_categories": "پروڈکٹ کیٹگریز",
   "nav.warehouses": "گودام",
   "nav.truck_registration": "ٹرک رجسٹریشن",
+  "nav.truck_loading": "ٹرک لوڈنگ",
+  "tl.title": "ٹرک لوڈنگ",
+  "tl.select_truck": "ٹرک منتخب کریں",
+  "tl.date": "لوڈنگ تاریخ",
+  "tl.serial": "سیریل",
+  "tl.goods": "مال",
+  "tl.qty": "مقدار",
+  "tl.unit": "یونٹ",
+  "tl.net_weight": "نیٹ وزن",
+  "tl.gross_weight": "گراس وزن",
+  "tl.destination": "منزل",
+  "tl.remarks": "تفصیل",
+  "tl.add": "نئی لوڈنگ",
+  "tl.edit": "ترمیم",
+  "tl.delete": "حذف",
+  "tl.save": "محفوظ کریں",
+  "tl.cancel": "منسوخ",
+  "tl.search": "لوڈنگ تلاش کریں...",
+  "tl.empty": "کوئی لوڈنگ نہیں",
   "tr.title": "ٹرک رجسٹریشن",
   "tr.number": "ٹرک نمبر",
   "tr.reg_no": "رجسٹریشن نمبر",
@@ -1699,6 +1756,25 @@ const ar: Dict = {
   "nav.product_categories": "فئات المنتج",
   "nav.warehouses": "المستودعات",
   "nav.truck_registration": "تسجيل الشاحنة",
+  "nav.truck_loading": "تحميل الشاحنة",
+  "tl.title": "تحميل الشاحنة",
+  "tl.select_truck": "اختر الشاحنة",
+  "tl.date": "تاريخ التحميل",
+  "tl.serial": "تسلسل",
+  "tl.goods": "البضائع",
+  "tl.qty": "الكمية",
+  "tl.unit": "الوحدة",
+  "tl.net_weight": "الوزن الصافي",
+  "tl.gross_weight": "الوزن الإجمالي",
+  "tl.destination": "الوجهة",
+  "tl.remarks": "ملاحظات",
+  "tl.add": "تحميل جديد",
+  "tl.edit": "تعديل",
+  "tl.delete": "حذف",
+  "tl.save": "حفظ",
+  "tl.cancel": "إلغاء",
+  "tl.search": "بحث عن التحميلات...",
+  "tl.empty": "لا توجد تحميلات",
   "tr.title": "تسجيل الشاحنة",
   "tr.number": "رقم الشاحنة",
   "tr.reg_no": "رقم التسجيل",
@@ -2174,6 +2250,25 @@ const fa: Dict = {
   "nav.product_categories": "دسته‌های محصول",
   "nav.warehouses": "انبارها",
   "nav.truck_registration": "ثبت کامیون",
+  "nav.truck_loading": "بارگیری کامیون",
+  "tl.title": "بارگیری کامیون",
+  "tl.select_truck": "انتخاب کامیون",
+  "tl.date": "تاریخ بارگیری",
+  "tl.serial": "سریال",
+  "tl.goods": "کالا",
+  "tl.qty": "مقدار",
+  "tl.unit": "واحد",
+  "tl.net_weight": "وزن خالص",
+  "tl.gross_weight": "وزن ناخالص",
+  "tl.destination": "مقصد",
+  "tl.remarks": "ملاحظات",
+  "tl.add": "بارگیری جدید",
+  "tl.edit": "ویرایش",
+  "tl.delete": "حذف",
+  "tl.save": "ذخیره",
+  "tl.cancel": "لغو",
+  "tl.search": "جستجوی بارگیری‌ها...",
+  "tl.empty": "بارگیری یافت نشد",
   "tr.title": "ثبت کامیون",
   "tr.number": "شماره کامیون",
   "tr.reg_no": "شماره ثبت",
@@ -2572,6 +2667,25 @@ const ps: Dict = {
   "nav.product_categories": "د محصول کټګورۍ",
   "nav.warehouses": "ګودامونه",
   "nav.truck_registration": "د لارۍ راجستر",
+  "nav.truck_loading": "د لارۍ بار",
+  "tl.title": "د لارۍ بار",
+  "tl.select_truck": "لارۍ وټاکئ",
+  "tl.date": "د بار نیټه",
+  "tl.serial": "سریال",
+  "tl.goods": "توکي",
+  "tl.qty": "مقدار",
+  "tl.unit": "واحد",
+  "tl.net_weight": "خالص وزن",
+  "tl.gross_weight": "ناخالص وزن",
+  "tl.destination": "منزل",
+  "tl.remarks": "یادښتونه",
+  "tl.add": "نوی بار",
+  "tl.edit": "سمون",
+  "tl.delete": "ړنګول",
+  "tl.save": "خوندي کول",
+  "tl.cancel": "لغوه کول",
+  "tl.search": "د بارونو لټون...",
+  "tl.empty": "هیڅ بار ونه موندل شو",
   "tr.title": "د لارۍ راجستر",
   "tr.number": "د لارۍ نمبر",
   "tr.reg_no": "د راجستر نمبر",
