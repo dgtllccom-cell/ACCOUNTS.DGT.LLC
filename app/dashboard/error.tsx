@@ -18,10 +18,7 @@ export default function DashboardError({
     const isChunkError =
       msg.includes("Loading chunk") ||
       msg.includes("ChunkLoadError") ||
-      msg.includes("failed to fetch") ||
-      msg.includes(".js") ||
-      msg.includes("before initialization") ||
-      msg.includes("Cannot access");
+      (msg.toLowerCase().includes("failed to fetch") && msg.includes("_next/static"));
 
     if (isChunkError) {
       try {

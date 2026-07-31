@@ -336,6 +336,21 @@ export function CashEntryForm({
 
   const [recentEntries, setRecentEntries] = useState<any[]>([]);
 
+  const selectedCountry = useMemo(
+    () => countries.find((c) => c.id === countryId) ?? null,
+    [countries, countryId]
+  );
+
+  const selectedMainBranch = useMemo(
+    () => mainBranches.find((b) => b.id === countryBranchId) ?? null,
+    [countryBranchId, mainBranches]
+  );
+
+  const selectedCityBranch = useMemo(
+    () => cityBranches.find((b) => b.id === cityBranchId) ?? null,
+    [cityBranchId, cityBranches]
+  );
+
   const liveSerials = useMemo(() => {
     const nextSeq = recentEntries.length + 1;
     const cIso = selectedCountry?.iso2 || "GLOBAL";
@@ -382,12 +397,6 @@ export function CashEntryForm({
       balanceType
     };
   }, [recentEntries]);
-
-  useEffect(() => {
-    if (!countryId) {
-      setBranchLocked(false);
-    }
-  }, [countryId]);
 
   const [showRoznamcha, setShowRoznamcha] = useState(false);
   const [roznamchaType, setRoznamchaType] = useState("Cash Book No.");
@@ -479,21 +488,6 @@ export function CashEntryForm({
     selectedCashLedger?.ledgerId &&
       selectedCounterLedger?.ledgerId &&
       selectedCashLedger.ledgerId === selectedCounterLedger.ledgerId
-  );
-
-  const selectedCountry = useMemo(
-    () => countries.find((c) => c.id === countryId) ?? null,
-    [countries, countryId]
-  );
-
-  const selectedMainBranch = useMemo(
-    () => mainBranches.find((b) => b.id === countryBranchId) ?? null,
-    [countryBranchId, mainBranches]
-  );
-
-  const selectedCityBranch = useMemo(
-    () => cityBranches.find((b) => b.id === cityBranchId) ?? null,
-    [cityBranchId, cityBranches]
   );
 
   const branchCurrency =
