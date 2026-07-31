@@ -3,6 +3,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { ImportLoadingManagementView } from "@/features/clearing-agent/components/import-loading-management";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Import Loading — Clearing Agent",
   description: "Record import truck loadings with customs, border and clearing-agent details.",

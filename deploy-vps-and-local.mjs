@@ -20,7 +20,7 @@ try {
   console.log("\n[2/4] Staging and committing all local code changes...");
   execSync('git add -A', { stdio: 'inherit' });
   try {
-    execSync('git commit -m "fix(db): update Supabase connection string to Sydney pooler region (aws-1-ap-southeast-2:6543) resolving migration ENOTFOUND error"', { stdio: 'inherit' });
+    execSync('git commit -m "fix(db): update database connection string to direct host db.csesvyxqjivnkkozgopt.supabase.co:5432 and add force-dynamic to clearing-agent pages"', { stdio: 'inherit' });
   } catch (e) {
     console.log("No new changes to commit or commit already up to date.");
   }
