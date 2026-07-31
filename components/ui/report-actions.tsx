@@ -55,7 +55,7 @@ function brandHeader(b: Branding | null, title: string, lang: string, subtitle?:
 }
 
 function watermarkOf(b: Branding | null, lang: string) {
-  return esc(brandingName(b, lang) || "REPORT");
+  return esc(b?.watermarkText || brandingName(b, lang) || "REPORT");
 }
 
 function openWindow(html: string) {

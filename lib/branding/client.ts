@@ -19,6 +19,10 @@ export type Branding = {
   reportHeader?: string | null;
   certificateHeader?: string | null;
   hrManagerName?: string | null;
+  hrDepartmentName?: string | null;
+  watermarkText?: string | null;
+  qrEnabled?: boolean;
+  branchId?: string | null;
   address?: string | null;
   phone?: string | null;
   email?: string | null;
