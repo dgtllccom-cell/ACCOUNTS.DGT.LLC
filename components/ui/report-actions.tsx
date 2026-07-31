@@ -18,6 +18,42 @@ function cell(v: any): string {
   return String(v);
 }
 
+const PRINT_STYLE = `
+  @page { size: A4; margin: 16mm; }
+  body { font-family: Arial, Helvetica, sans-serif; color:#111; }
+  .hdr { display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid #1e3a8a; padding-bottom:6px; margin-bottom:12px; }
+  .hdr h1 { font-size:18px; margin:0; color:#1e3a8a; }
+  .brand { font-size:12px; font-weight:bold; text-align:right; }
+  .meta { font-size:10px; color:#555; }
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th,td { border:1px solid #cbd5e1; padding:6px 9px; text-align:left; vertical-align:top; }
+  .kv th { background:#eef2ff; width:34%; }
+  .ftr { margin-top:16px; font-size:9px; color:#888; text-align:center; border-top:1px solid #e2e8f0; padding-top:6px; }
+  .watermark { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; opacity:0.05; font-size:110px; font-weight:900; color:#1e3a8a; z-index:-1; }
+`;
+
+function openPrint(title: string, inner: string, subtitle?: string) {
+  const now = new Date();
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>${PRINT_STYLE}</style></head><body>
+    <div class="watermark">DIGITAL DOCK ERP</div>
+    <div class="hdr"><div><h1>${esc(title)}</h1>${subtitle ? `<div class="meta">${esc(subtitle)}</div>` : ""}</div>
+      <div class="brand">Digital Dock ERP<div class="meta">Printed: ${now.toLocaleString()}</div></div></div>
+    ${inner}
+    <div class="ftr">Digital Dock ERP — ${esc(title)} — Page 1</div>
+    <script>window.onload=function(){window.print();}</script></body></html>`;
+  const w = window.open("", "_blank", "width=1000,height=700");
+  if (!w) return;
+  w.document.open(); w.document.write(html); w.document.close();
+}
+
+/** Single-record print — a professional A4 key/value document for one record. */
+export function printRecord(title: string, record: Record<string, any>, columns: ReportColumn[], subtitle?: string) {
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const rows = columns.map((c) => `<tr><th>${esc(c.label)}</th><td>${esc(cell(record[c.key]))}</td></tr>`).join("");
+  openPrint(title, `<table class="kv"><tbody>${rows}</tbody></table>`, subtitle);
+}
+
 export function ReportActions({
   title,
   rows,
