@@ -5,7 +5,7 @@ import { Plus, Pencil, Trash2, Search, Loader2, X } from "lucide-react";
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
-import { LocationSelect, type LocationValue } from "@/components/ui/location-select";
+import { LocationHierarchySelect } from "@/features/locations/components/location-hierarchy-select";
 
 type Truck = {
   id: string;
@@ -198,9 +198,9 @@ export function TruckRegistrationManagementView({ lang }: { lang: SupportedLangu
               <div className="sm:col-span-2">
                 <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">Base Location (central master)</span>
                 <div className="mt-1">
-                  <LocationSelect
-                    value={{ countryId: form.registration_country_id ?? null, stateProvinceId: form.base_state_province_id ?? null, districtId: form.base_district_id ?? null, cityId: form.base_city_id ?? null } as LocationValue}
-                    onChange={(v) => setForm({ ...form, registration_country_id: v.countryId, base_state_province_id: v.stateProvinceId, base_district_id: v.districtId, base_city_id: v.cityId })}
+                  <LocationHierarchySelect
+                    value={{ countryId: form.registration_country_id ?? "", stateProvinceId: form.base_state_province_id ?? "", districtId: form.base_district_id ?? "", cityId: form.base_city_id ?? "" }}
+                    onChange={(v) => setForm({ ...form, registration_country_id: v.countryId || null, base_state_province_id: v.stateProvinceId || null, base_district_id: v.districtId || null, base_city_id: v.cityId || null })}
                   />
                 </div>
               </div>
