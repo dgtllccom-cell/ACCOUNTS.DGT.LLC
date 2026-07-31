@@ -6,6 +6,7 @@ import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { LocationHierarchySelect } from "@/features/locations/components/location-hierarchy-select";
+import { ReportActions } from "@/components/ui/report-actions";
 
 type Loading = {
   id: string;
@@ -120,9 +121,12 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
     <div dir={dir} className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <h1 className="text-xl font-black text-slate-900 dark:text-white">{t(lang, "tl.title")}</h1>
-        <button onClick={startAdd} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800">
-          <Plus className="h-4 w-4" /> {t(lang, "tl.add")}
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <ReportActions title={t(lang, "tl.title")} rows={filtered} columns={[{ key: "loading_serial", label: t(lang, "tl.serial") }, { key: "loading_date", label: t(lang, "tl.date") }, { key: "truck_number", label: "Truck" }, { key: "driver_name", label: "Driver" }, { key: "goods_name", label: t(lang, "tl.goods") }, { key: "quantity", label: t(lang, "tl.qty") }, { key: "destination", label: t(lang, "tl.destination") }]} />
+          <button onClick={startAdd} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800">
+            <Plus className="h-4 w-4" /> {t(lang, "tl.add")}
+          </button>
+        </div>
       </div>
 
       <div className="relative">
