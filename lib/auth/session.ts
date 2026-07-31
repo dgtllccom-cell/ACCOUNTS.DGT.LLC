@@ -321,6 +321,9 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
       isSuperAdmin
     };
   } catch (err: any) {
+    if (err?.digest === "DYNAMIC_SERVER_USAGE" || (typeof err?.message === "string" && err.message.includes("Dynamic server usage"))) {
+      throw err;
+    }
     console.error("getCurrentErpSession Error:", err);
     return null;
   }
@@ -339,4 +342,3 @@ export async function requireErpSession() {
 // Compatibility Aliases
 export const requireSession = requireErpSession;
 export const getSession = getCurrentErpSession;
-
