@@ -1175,27 +1175,34 @@ export const sidebarTree: SidebarNode[] = [
             href: "/dashboard/settings/account-type" as Route
           },
           {
-            key: "mgmt-goods-master",
+            key: "mgmt-goods-group",
             labelKey: "nav.goods_master",
-            href: "/dashboard/settings/management/goods" as Route
-          },
-          {
-            key: "mgmt-product-units",
-            labelKey: "nav.product_units",
-            href: "/dashboard/settings/product-units" as Route,
-            permission: { resource: "product_units", action: "read" }
-          },
-          {
-            key: "mgmt-product-brands",
-            labelKey: "nav.product_brands",
-            href: "/dashboard/settings/product-brands" as Route,
-            permission: { resource: "product_brands", action: "read" }
-          },
-          {
-            key: "mgmt-product-categories",
-            labelKey: "nav.product_categories",
-            href: "/dashboard/settings/product-categories" as Route,
-            permission: { resource: "product_categories", action: "read" }
+            iconKey: "clipboard-list",
+            children: [
+              {
+                key: "mgmt-goods-master",
+                labelKey: "nav.goods_master",
+                href: "/dashboard/settings/management/goods" as Route
+              },
+              {
+                key: "mgmt-product-units",
+                labelKey: "nav.product_units",
+                href: "/dashboard/settings/product-units" as Route,
+                permission: { resource: "product_units", action: "read" }
+              },
+              {
+                key: "mgmt-product-brands",
+                labelKey: "nav.product_brands",
+                href: "/dashboard/settings/product-brands" as Route,
+                permission: { resource: "product_brands", action: "read" }
+              },
+              {
+                key: "mgmt-product-categories",
+                labelKey: "nav.product_categories",
+                href: "/dashboard/settings/product-categories" as Route,
+                permission: { resource: "product_categories", action: "read" }
+              }
+            ]
           },
           {
             key: "mgmt-warehouses",
