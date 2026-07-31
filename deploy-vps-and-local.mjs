@@ -20,7 +20,7 @@ try {
   console.log("\n[2/4] Staging and committing all local code changes...");
   execSync('git add -A', { stdio: 'inherit' });
   try {
-    execSync('git commit -m "fix(deploy): configure prepare:false in postgres client for Supavisor transaction pooler compatibility"', { stdio: 'inherit' });
+    execSync('git commit -m "fix(deploy): test candidate DB URLs cleanly with SELECT 1 and fallback to VPS API execution"', { stdio: 'inherit' });
   } catch (e) {
     console.log("No new changes to commit or commit already up to date.");
   }

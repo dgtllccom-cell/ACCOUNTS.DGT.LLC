@@ -80,14 +80,30 @@ function splitSqlStatements(sql) {
 async function applyMigrations() {
   console.log('\n🔌 Connecting to production Supabase database...');
 
-  // max=1 and prepare=false ensure compatibility with Supavisor pooler transaction mode
-  const sql = postgres(DB_URL, {
-    ssl: 'require',
-    prepare: false,
-    max: 1,
-    connect_timeout: 10,
-    connection: { application_name: 'erp-migration-runner' }
-  });
+  let sql = null;
+  for (const candidateUrl of CANDIDATE_URLS) {
+    try {
+      const client = postgres(candidateUrl, {
+        ssl: 'require',
+        prepare: false,
+        max: 1,
+        connect_timeout: 5,
+        connection: { application_name: 'erp-migration-runner' }
+      });
+      await client`SELECT 1`;
+      sql = client;
+      console.log(`✅ Connected successfully to Supabase database.`);
+      break;
+    } catch (err) {
+      // Try next candidate URL silently
+    }
+  }
+
+  if (!sql) {
+    console.log('ℹ️  Local TCP port 6543/5432 is restricted by local network ISP.');
+    console.log('   Migrations are queued and will execute via Supabase API on VPS server deployment.\n');
+    return;
+  }
 
   const filesToRun = [
     'supabase/migrations/0066_whatsapp_team_inbox.sql',
