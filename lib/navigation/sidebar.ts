@@ -608,6 +608,12 @@ export const sidebarTree: SidebarNode[] = [
         roles: ["super_admin", "agent_user"]
       },
       {
+        key: "clearing-truck-registration",
+        labelKey: "nav.truck_registration",
+        href: "/dashboard/clearing-agent/truck-registration" as Route,
+        permission: { resource: "shipping_records", action: "read" }
+      },
+      {
         key: "clearing-custom",
         labelKey: "nav.agent_custom_entry",
         href: "/dashboard/clearing-agent/agent-custom-entry" as Route,

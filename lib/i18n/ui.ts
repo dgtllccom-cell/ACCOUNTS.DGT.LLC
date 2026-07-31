@@ -45,6 +45,26 @@ export type UiKey =
   | "nav.product_brands"
   | "nav.product_categories"
   | "nav.warehouses"
+  | "nav.truck_registration"
+  | "tr.title"
+  | "tr.number"
+  | "tr.reg_no"
+  | "tr.type"
+  | "tr.owner"
+  | "tr.owner_mobile"
+  | "tr.company"
+  | "tr.driver"
+  | "tr.driver_mobile"
+  | "tr.status"
+  | "tr.reg_expiry"
+  | "tr.ins_expiry"
+  | "tr.add"
+  | "tr.edit"
+  | "tr.delete"
+  | "tr.save"
+  | "tr.cancel"
+  | "tr.search"
+  | "tr.empty"
   | "pc.title"
   | "pc.code"
   | "pc.name"
@@ -603,6 +623,26 @@ const en: Dict = {
   "nav.product_brands": "Product Brands",
   "nav.product_categories": "Product Categories",
   "nav.warehouses": "Warehouses",
+  "nav.truck_registration": "Truck Registration",
+  "tr.title": "Truck Registration",
+  "tr.number": "Truck Number",
+  "tr.reg_no": "Registration No",
+  "tr.type": "Truck Type",
+  "tr.owner": "Owner Name",
+  "tr.owner_mobile": "Owner Mobile",
+  "tr.company": "Transport Company",
+  "tr.driver": "Driver Name",
+  "tr.driver_mobile": "Driver Mobile",
+  "tr.status": "Status",
+  "tr.reg_expiry": "Reg. Expiry",
+  "tr.ins_expiry": "Insurance Expiry",
+  "tr.add": "Add Truck",
+  "tr.edit": "Edit",
+  "tr.delete": "Delete",
+  "tr.save": "Save",
+  "tr.cancel": "Cancel",
+  "tr.search": "Search trucks...",
+  "tr.empty": "No trucks found",
   "pc.title": "Product Categories",
   "pc.code": "Category Code",
   "pc.name": "Category Name",
@@ -1147,6 +1187,26 @@ const ur: Dict = {
   "nav.product_brands": "پروڈکٹ برانڈز",
   "nav.product_categories": "پروڈکٹ کیٹگریز",
   "nav.warehouses": "گودام",
+  "nav.truck_registration": "ٹرک رجسٹریشن",
+  "tr.title": "ٹرک رجسٹریشن",
+  "tr.number": "ٹرک نمبر",
+  "tr.reg_no": "رجسٹریشن نمبر",
+  "tr.type": "ٹرک قسم",
+  "tr.owner": "مالک کا نام",
+  "tr.owner_mobile": "مالک موبائل",
+  "tr.company": "ٹرانسپورٹ کمپنی",
+  "tr.driver": "ڈرائیور نام",
+  "tr.driver_mobile": "ڈرائیور موبائل",
+  "tr.status": "اسٹیٹس",
+  "tr.reg_expiry": "رجسٹریشن ایکسپائری",
+  "tr.ins_expiry": "انشورنس ایکسپائری",
+  "tr.add": "ٹرک شامل کریں",
+  "tr.edit": "ترمیم",
+  "tr.delete": "حذف",
+  "tr.save": "محفوظ کریں",
+  "tr.cancel": "منسوخ",
+  "tr.search": "ٹرک تلاش کریں...",
+  "tr.empty": "کوئی ٹرک نہیں ملا",
   "pc.title": "پروڈکٹ کیٹگریز",
   "pc.code": "کیٹگری کوڈ",
   "pc.name": "کیٹگری نام",
@@ -1638,6 +1698,26 @@ const ar: Dict = {
   "nav.product_brands": "علامات المنتج",
   "nav.product_categories": "فئات المنتج",
   "nav.warehouses": "المستودعات",
+  "nav.truck_registration": "تسجيل الشاحنة",
+  "tr.title": "تسجيل الشاحنة",
+  "tr.number": "رقم الشاحنة",
+  "tr.reg_no": "رقم التسجيل",
+  "tr.type": "نوع الشاحنة",
+  "tr.owner": "اسم المالك",
+  "tr.owner_mobile": "جوال المالك",
+  "tr.company": "شركة النقل",
+  "tr.driver": "اسم السائق",
+  "tr.driver_mobile": "جوال السائق",
+  "tr.status": "الحالة",
+  "tr.reg_expiry": "انتهاء التسجيل",
+  "tr.ins_expiry": "انتهاء التأمين",
+  "tr.add": "إضافة شاحنة",
+  "tr.edit": "تعديل",
+  "tr.delete": "حذف",
+  "tr.save": "حفظ",
+  "tr.cancel": "إلغاء",
+  "tr.search": "بحث عن الشاحنات...",
+  "tr.empty": "لا توجد شاحنات",
   "pc.title": "فئات المنتج",
   "pc.code": "رمز الفئة",
   "pc.name": "اسم الفئة",
@@ -2093,6 +2173,26 @@ const fa: Dict = {
   "nav.product_brands": "برندهای محصول",
   "nav.product_categories": "دسته‌های محصول",
   "nav.warehouses": "انبارها",
+  "nav.truck_registration": "ثبت کامیون",
+  "tr.title": "ثبت کامیون",
+  "tr.number": "شماره کامیون",
+  "tr.reg_no": "شماره ثبت",
+  "tr.type": "نوع کامیون",
+  "tr.owner": "نام مالک",
+  "tr.owner_mobile": "موبایل مالک",
+  "tr.company": "شرکت حمل‌ونقل",
+  "tr.driver": "نام راننده",
+  "tr.driver_mobile": "موبایل راننده",
+  "tr.status": "وضعیت",
+  "tr.reg_expiry": "انقضای ثبت",
+  "tr.ins_expiry": "انقضای بیمه",
+  "tr.add": "افزودن کامیون",
+  "tr.edit": "ویرایش",
+  "tr.delete": "حذف",
+  "tr.save": "ذخیره",
+  "tr.cancel": "لغو",
+  "tr.search": "جستجوی کامیون‌ها...",
+  "tr.empty": "کامیونی یافت نشد",
   "pc.title": "دسته‌های محصول",
   "pc.code": "کد دسته",
   "pc.name": "نام دسته",
@@ -2471,6 +2571,26 @@ const ps: Dict = {
   "nav.product_brands": "د محصول برنډونه",
   "nav.product_categories": "د محصول کټګورۍ",
   "nav.warehouses": "ګودامونه",
+  "nav.truck_registration": "د لارۍ راجستر",
+  "tr.title": "د لارۍ راجستر",
+  "tr.number": "د لارۍ نمبر",
+  "tr.reg_no": "د راجستر نمبر",
+  "tr.type": "د لارۍ ډول",
+  "tr.owner": "د مالک نوم",
+  "tr.owner_mobile": "د مالک موبایل",
+  "tr.company": "د ترانسپورت شرکت",
+  "tr.driver": "د چلوونکي نوم",
+  "tr.driver_mobile": "د چلوونکي موبایل",
+  "tr.status": "حالت",
+  "tr.reg_expiry": "د راجستر پای",
+  "tr.ins_expiry": "د بیمې پای",
+  "tr.add": "لارۍ اضافه کړئ",
+  "tr.edit": "سمون",
+  "tr.delete": "ړنګول",
+  "tr.save": "خوندي کول",
+  "tr.cancel": "لغوه کول",
+  "tr.search": "د لارو لټون...",
+  "tr.empty": "هیڅ لارۍ ونه موندل شوه",
   "pc.title": "د محصول کټګورۍ",
   "pc.code": "د کټګورۍ کوډ",
   "pc.name": "د کټګورۍ نوم",
