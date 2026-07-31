@@ -1,6 +1,7 @@
 "use client";
 
 import { Printer, FileDown, FileSpreadsheet } from "lucide-react";
+import { fetchBranding, brandingFooter, brandingName, type Branding } from "@/lib/branding/client";
 
 /**
  * Universal report actions — Print, PDF (print-to-PDF), Excel (CSV) — drop into
@@ -8,7 +9,12 @@ import { Printer, FileDown, FileSpreadsheet } from "lucide-react";
  * (Save as PDF), Excel exports a CSV that opens in Excel. One consistent
  * layout/toolbar for the whole ERP.
  *
- *   <ReportActions title="Truck Loading" rows={rows}
+ * Branding: pass `countryId` (and optionally `lang`) and the printed header,
+ * logo, watermark and footer are pulled from that country/company's profile
+ * via the shared /api/erp/branding resolver. No hardcoded company — one
+ * company's branding can never appear on another's report.
+ *
+ *   <ReportActions title="Truck Loading" rows={rows} countryId={countryId}
  *      columns={[{ key: "truck_number", label: "Truck #" }, ...]} />
  */
 export type ReportColumn = { key: string; label: string };
@@ -18,13 +24,17 @@ function cell(v: any): string {
   return String(v);
 }
 
+const esc = (s: string) => String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
 const PRINT_STYLE = `
   @page { size: A4; margin: 16mm; }
   body { font-family: Arial, Helvetica, sans-serif; color:#111; }
-  .hdr { display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid #1e3a8a; padding-bottom:6px; margin-bottom:12px; }
+  .hdr { display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #1e3a8a; padding-bottom:6px; margin-bottom:12px; }
   .hdr h1 { font-size:18px; margin:0; color:#1e3a8a; }
+  .hdr .left { display:flex; align-items:center; gap:12px; }
+  .hdr .logo { height:52px; width:auto; max-width:120px; object-fit:contain; }
   .brand { font-size:12px; font-weight:bold; text-align:right; }
-  .meta { font-size:10px; color:#555; }
+  .meta { font-size:10px; color:#555; font-weight:normal; }
   table { width:100%; border-collapse:collapse; font-size:12px; }
   th,td { border:1px solid #cbd5e1; padding:6px 9px; text-align:left; vertical-align:top; }
   .kv th { background:#eef2ff; width:34%; }
@@ -32,26 +42,54 @@ const PRINT_STYLE = `
   .watermark { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; opacity:0.05; font-size:110px; font-weight:900; color:#1e3a8a; z-index:-1; }
 `;
 
-function openPrint(title: string, inner: string, subtitle?: string) {
+/** Header block built from branding (logo + company name + scope + optional report header). */
+function brandHeader(b: Branding | null, title: string, lang: string, subtitle?: string, extraMeta?: string) {
   const now = new Date();
-  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>${PRINT_STYLE}</style></head><body>
-    <div class="watermark">DIGITAL DOCK ERP</div>
-    <div class="hdr"><div><h1>${esc(title)}</h1>${subtitle ? `<div class="meta">${esc(subtitle)}</div>` : ""}</div>
-      <div class="brand">Digital Dock ERP<div class="meta">Printed: ${now.toLocaleString()}</div></div></div>
-    ${inner}
-    <div class="ftr">Digital Dock ERP — ${esc(title)} — Page 1</div>
-    <script>window.onload=function(){window.print();}</script></body></html>`;
+  const name = brandingName(b, lang) || "Report";
+  const logo = b?.logoUrl ? `<img class="logo" src="${esc(b.logoUrl)}" alt="logo" />` : "";
+  const scope = [b?.countryName, b?.reportHeader].filter(Boolean).map((x) => esc(String(x))).join(" — ");
+  return `<div class="hdr">
+      <div class="left">${logo}<div><h1>${esc(title)}</h1>${subtitle ? `<div class="meta">${esc(subtitle)}</div>` : ""}${scope ? `<div class="meta">${scope}</div>` : ""}</div></div>
+      <div class="brand">${esc(name)}<div class="meta">Printed: ${now.toLocaleString()}</div>${extraMeta ? `<div class="meta">${esc(extraMeta)}</div>` : ""}</div>
+    </div>`;
+}
+
+function watermarkOf(b: Branding | null, lang: string) {
+  return esc(brandingName(b, lang) || "REPORT");
+}
+
+function openWindow(html: string) {
   const w = window.open("", "_blank", "width=1000,height=700");
   if (!w) return;
   w.document.open(); w.document.write(html); w.document.close();
 }
 
-/** Single-record print — a professional A4 key/value document for one record. */
-export function printRecord(title: string, record: Record<string, any>, columns: ReportColumn[], subtitle?: string) {
-  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+function openPrint(title: string, inner: string, b: Branding | null, lang: string, subtitle?: string) {
+  const footer = brandingFooter(b, lang) || watermarkOf(b, lang);
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title><style>${PRINT_STYLE}</style></head><body>
+    <div class="watermark">${watermarkOf(b, lang)}</div>
+    ${brandHeader(b, title, lang, subtitle)}
+    ${inner}
+    <div class="ftr">${esc(footer)} — ${esc(title)}</div>
+    <script>window.onload=function(){window.print();}</script></body></html>`;
+  openWindow(html);
+}
+
+/**
+ * Single-record print — a professional A4 key/value document for one record.
+ * Pass opts.countryId to brand it for that record's country/company.
+ */
+export async function printRecord(
+  title: string,
+  record: Record<string, any>,
+  columns: ReportColumn[],
+  subtitle?: string,
+  opts?: { countryId?: string | null; lang?: string }
+) {
+  const b = await fetchBranding(opts?.countryId);
+  const lang = opts?.lang || "en";
   const rows = columns.map((c) => `<tr><th>${esc(c.label)}</th><td>${esc(cell(record[c.key]))}</td></tr>`).join("");
-  openPrint(title, `<table class="kv"><tbody>${rows}</tbody></table>`, subtitle);
+  openPrint(title, `<table class="kv"><tbody>${rows}</tbody></table>`, b, lang, subtitle);
 }
 
 export function ReportActions({
@@ -60,12 +98,16 @@ export function ReportActions({
   columns,
   filename,
   subtitle,
+  countryId,
+  lang = "en",
 }: {
   title: string;
   rows: Record<string, any>[];
   columns: ReportColumn[];
   filename?: string;
   subtitle?: string;
+  countryId?: string | null;
+  lang?: string;
 }) {
   const base = (filename || title).replace(/[^a-zA-Z0-9]+/g, "_");
 
@@ -81,19 +123,21 @@ export function ReportActions({
     URL.revokeObjectURL(url);
   }
 
-  function printDoc() {
-    const now = new Date();
-    const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  async function printDoc() {
+    const b = await fetchBranding(countryId);
     const head = columns.map((c) => `<th>${esc(c.label)}</th>`).join("");
     const body = rows.map((r) => `<tr>${columns.map((c) => `<td>${esc(cell(r[c.key]))}</td>`).join("")}</tr>`).join("");
+    const footer = brandingFooter(b, lang) || watermarkOf(b, lang);
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title>
       <style>
         @page { size: A4 landscape; margin: 14mm; }
         body { font-family: Arial, Helvetica, sans-serif; color: #111; }
-        .hdr { display:flex; justify-content:space-between; align-items:flex-end; border-bottom:2px solid #1e3a8a; padding-bottom:6px; margin-bottom:10px; }
+        .hdr { display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #1e3a8a; padding-bottom:6px; margin-bottom:10px; }
         .hdr h1 { font-size:18px; margin:0; color:#1e3a8a; }
-        .hdr .brand { font-size:12px; font-weight:bold; }
-        .meta { font-size:10px; color:#555; }
+        .hdr .left { display:flex; align-items:center; gap:12px; }
+        .hdr .logo { height:52px; width:auto; max-width:120px; object-fit:contain; }
+        .hdr .brand { font-size:12px; font-weight:bold; text-align:right; }
+        .meta { font-size:10px; color:#555; font-weight:normal; }
         table { width:100%; border-collapse:collapse; font-size:11px; }
         th,td { border:1px solid #cbd5e1; padding:5px 7px; text-align:left; }
         thead th { background:#eef2ff; }
@@ -101,18 +145,13 @@ export function ReportActions({
         .ftr { margin-top:14px; font-size:9px; color:#888; text-align:center; }
         .watermark { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; opacity:0.05; font-size:120px; font-weight:900; color:#1e3a8a; z-index:-1; }
       </style></head><body>
-      <div class="watermark">DIGITAL DOCK ERP</div>
-      <div class="hdr">
-        <div><h1>${esc(title)}</h1>${subtitle ? `<div class="meta">${esc(subtitle)}</div>` : ""}</div>
-        <div class="brand">Digital Dock ERP<div class="meta">Printed: ${now.toLocaleString()}</div><div class="meta">Rows: ${rows.length}</div></div>
-      </div>
+      <div class="watermark">${watermarkOf(b, lang)}</div>
+      ${brandHeader(b, title, lang, subtitle, `Rows: ${rows.length}`)}
       <table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
-      <div class="ftr">Digital Dock ERP — ${esc(title)} — Page 1</div>
+      <div class="ftr">${esc(footer)} — ${esc(title)}</div>
       <script>window.onload=function(){window.print();}</script>
       </body></html>`;
-    const w = window.open("", "_blank", "width=1000,height=700");
-    if (!w) return;
-    w.document.open(); w.document.write(html); w.document.close();
+    openWindow(html);
   }
 
   const btn = "inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800";
