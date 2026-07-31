@@ -160,12 +160,6 @@ export const sidebarTree: SidebarNode[] = [
     iconKey: "users",
     children: [
       {
-        key: "employee-master-form-menu",
-        labelKey: "Employee Master Setup & Registration Form" as any,
-        href: "/dashboard/settings/employees" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      },
-      {
         key: "employee-general-office-form",
         labelKey: "General Office Employee Management" as any,
         href: "/dashboard/employees" as Route,
