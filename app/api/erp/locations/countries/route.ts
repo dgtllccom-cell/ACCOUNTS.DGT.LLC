@@ -3,7 +3,6 @@ import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { locationsRepository } from "@/lib/repositories/locations-repository";
 import { linkEmailAccount } from "@/lib/api/email-link";
-import { ensureCountryLocationMasterData } from "@/lib/services/location-master-population-service";
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,7 +21,7 @@ export async function GET(request: NextRequest) {
       countries = await locationsRepository.listCountries({ query: q, limit: 500 });
     }
     return apiOk({ countries });
-  } catch (error) {
+  } catch {
     const countries = await locationsRepository.listCountries({ limit: 500 }).catch(() => []);
     return apiOk({ countries });
   }
@@ -95,13 +94,7 @@ export async function POST(request: NextRequest) {
       adminEmail: country.admin_email
     });
 
-    const masterPopulation = await ensureCountryLocationMasterData({
-      name: country.name,
-      iso2: country.iso2,
-      iso3: country.iso3
-    });
-
-    return apiCreated({ country, masterPopulation });
+    return apiCreated({ country });
   } catch (error) {
     return handleApiError(error);
   }
