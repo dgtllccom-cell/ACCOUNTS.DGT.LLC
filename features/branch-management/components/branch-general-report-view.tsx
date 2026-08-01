@@ -1955,43 +1955,6 @@ export function BranchGeneralReportView({
                                       </tr>
                                     )}
                                     
-                                    {/* Default mockup sub-rows for fallback representation if data is empty */}
-                                    {(!mainBranch || !mainBranch.cityBranches.length) && country.name.toLowerCase().includes("pakistan") && (
-                                      <>
-                                        <tr className="border-b text-[9px] text-center text-slate-700 hover:bg-slate-50/50">
-                                          <td className="p-2 border-r border-slate-200 font-bold text-slate-900">{country.code}</td>
-                                          <td className="p-2 border-r border-slate-200 text-left">{country.name}</td>
-                                          <td className="p-2 border-r border-slate-200 font-semibold text-slate-500">PK-MAIN-001</td>
-                                          <td className="p-2 border-r border-slate-200 font-bold text-slate-800 text-left">PK-LHE-001</td>
-                                          <td className="p-2 border-r border-slate-200 font-semibold text-slate-800 text-left">Lahore Branch</td>
-                                          <td className="p-2 border-r border-slate-200">ABC Pvt Ltd</td>
-                                          <td className="p-2 border-r border-slate-200">Asmat Super Admin</td>
-                                          <td className="p-2 border-r border-slate-200">Lahore</td>
-                                          <td className="p-2 border-r border-slate-200 tabular-nums">3</td>
-                                          <td className="p-2">
-                                            <button className="rounded border border-indigo-200 bg-white px-2 py-0.5 text-[9px] font-bold text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 shadow-sm transition-all">
-                                              Edit
-                                            </button>
-                                          </td>
-                                        </tr>
-                                        <tr className="border-b text-[9px] text-center text-slate-700 hover:bg-slate-50/50">
-                                          <td className="p-2 border-r border-slate-200 font-bold text-slate-900">{country.code}</td>
-                                          <td className="p-2 border-r border-slate-200 text-left">{country.name}</td>
-                                          <td className="p-2 border-r border-slate-200 font-semibold text-slate-500">PK-MAIN-001</td>
-                                          <td className="p-2 border-r border-slate-200 font-bold text-slate-800 text-left">PK-KHI-002</td>
-                                          <td className="p-2 border-r border-slate-200 font-semibold text-slate-800 text-left">Karachi Branch</td>
-                                          <td className="p-2 border-r border-slate-200">ABC Pvt Ltd</td>
-                                          <td className="p-2 border-r border-slate-200">Asmat Super Admin</td>
-                                          <td className="p-2 border-r border-slate-200">Karachi</td>
-                                          <td className="p-2 border-r border-slate-200 tabular-nums">6</td>
-                                          <td className="p-2">
-                                            <button className="rounded border border-indigo-200 bg-white px-2 py-0.5 text-[9px] font-bold text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 shadow-sm transition-all">
-                                              Edit
-                                            </button>
-                                          </td>
-                                        </tr>
-                                      </>
-                                    )}
                                   </tbody>
                                 </table>
                               </div>
