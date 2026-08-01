@@ -313,144 +313,6 @@ function money(value: unknown, currency = "") {
   return currency ? `${amount} ${currency}` : amount;
 }
 
-const sampleReports: PurchaseReport[] = [
-  {
-    id: "sample-1",
-    purchaseBookingOrderNumber: "PB-2025-0001",
-    purchaseDate: "2025-01-02",
-    bookingDate: "2025-01-02",
-    purchaseAccountName: "Kabul Dry Fruits Purchase Account",
-    purchaseAccountNumber: "PA-1001",
-    salesAccountName: "Damaan Sales Account",
-    salesAccountNumber: "SA-2001",
-    supplierName: "Kabul Dry Fruits Wholesale",
-    buyerName: "Damaan Trading LLC",
-    productName: "Pistachio Kernels",
-    goodsDescription: "Premium dry fruits container booking",
-    quantity: 500,
-    unit: "MT",
-    totalWeight: 500000,
-    containerCount: 10,
-    purchaseRate: 250,
-    totalPurchaseAmount: 125000,
-    currency: "USD",
-    status: "Partial Confirmed",
-    paymentStatus: "Advance Paid",
-    branchName: "Kabul Main Branch",
-    countryName: "Afghanistan",
-    createdAt: "2025-01-02T10:00:00.000Z",
-    audit: { userName: "Admin User", userId: "USR-001", branchCode: "KBL-001" }
-  },
-  {
-    id: "sample-2",
-    purchaseBookingOrderNumber: "PB-2025-0002",
-    purchaseDate: "2025-01-01",
-    bookingDate: "2025-01-01",
-    purchaseAccountName: "Afghan Traders Purchase",
-    purchaseAccountNumber: "PA-1002",
-    salesAccountName: "Dubai Sales Account",
-    salesAccountNumber: "SA-2002",
-    supplierName: "Afghan Traders Group",
-    buyerName: "Damaan UAE",
-    productName: "Almonds",
-    goodsDescription: "Almond container booking",
-    quantity: 250,
-    unit: "MT",
-    totalWeight: 250000,
-    containerCount: 5,
-    purchaseRate: 250,
-    totalPurchaseAmount: 62500,
-    currency: "USD",
-    status: "Fully Confirmed",
-    paymentStatus: "Full Payment",
-    branchName: "Dubai Main Branch",
-    countryName: "Afghanistan",
-    createdAt: "2025-01-01T11:30:00.000Z",
-    audit: { userName: "Admin User", userId: "USR-001", branchCode: "DXB-001" }
-  },
-  {
-    id: "sample-3",
-    purchaseBookingOrderNumber: "PB-2024-0098",
-    purchaseDate: "2024-12-31",
-    bookingDate: "2024-12-31",
-    purchaseAccountName: "Kabul Dry Fruits Purchase Account",
-    purchaseAccountNumber: "PA-1001",
-    salesAccountName: "Damaan Sales Account",
-    salesAccountNumber: "SA-2001",
-    supplierName: "Kabul Dry Fruits Wholesale",
-    buyerName: "Damaan Pakistan",
-    productName: "Raisins",
-    goodsDescription: "Raisins purchase booking",
-    quantity: 200,
-    unit: "MT",
-    totalWeight: 200000,
-    containerCount: 8,
-    purchaseRate: 200,
-    totalPurchaseAmount: 40000,
-    currency: "USD",
-    status: "Open",
-    paymentStatus: "Pending",
-    branchName: "Quetta City Branch",
-    countryName: "Afghanistan",
-    createdAt: "2024-12-31T12:00:00.000Z",
-    audit: { userName: "Admin User", userId: "USR-001", branchCode: "QTA-001" }
-  },
-  {
-    id: "sample-4",
-    purchaseBookingOrderNumber: "PB-2024-0097",
-    purchaseDate: "2024-12-30",
-    bookingDate: "2024-12-30",
-    purchaseAccountName: "Herat Purchase Account",
-    purchaseAccountNumber: "PA-1003",
-    salesAccountName: "Wholesale Sales Account",
-    salesAccountNumber: "SA-2003",
-    supplierName: "Herat Wholesale Co.",
-    buyerName: "Damaan Trading LLC",
-    productName: "Pistachio Nuts",
-    goodsDescription: "Pistachio nuts bulk booking",
-    quantity: 600,
-    unit: "MT",
-    totalWeight: 600000,
-    containerCount: 12,
-    purchaseRate: 250,
-    totalPurchaseAmount: 150000,
-    currency: "USD",
-    status: "Partial Confirmed",
-    paymentStatus: "Partial Payment",
-    branchName: "Herat Branch",
-    countryName: "Afghanistan",
-    createdAt: "2024-12-30T12:00:00.000Z",
-    audit: { userName: "Admin User", userId: "USR-001", branchCode: "HRT-001" }
-  },
-  {
-    id: "sample-5",
-    purchaseBookingOrderNumber: "PB-2024-0096",
-    purchaseDate: "2024-12-29",
-    bookingDate: "2024-12-29",
-    purchaseAccountName: "Kabul Purchase Account",
-    purchaseAccountNumber: "PA-1004",
-    salesAccountName: "Damaan Sales Account",
-    salesAccountNumber: "SA-2001",
-    supplierName: "Kabul Dry Fruits Wholesale",
-    buyerName: "Damaan Trading LLC",
-    productName: "Walnuts",
-    goodsDescription: "Walnut purchase booking",
-    quantity: 300.75,
-    unit: "MT",
-    totalWeight: 300750,
-    containerCount: 6,
-    purchaseRate: 251.58,
-    totalPurchaseAmount: 75657.5,
-    currency: "USD",
-    status: "Fully Confirmed",
-    paymentStatus: "Full Payment",
-    branchName: "Kabul Main Branch",
-    countryName: "Afghanistan",
-    createdAt: "2024-12-29T12:00:00.000Z",
-    audit: { userName: "Admin User", userId: "USR-001", branchCode: "KBL-001" }
-  }
-];
-
 function formatMoney(value: unknown) {
   return Number(value || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
@@ -1546,7 +1408,7 @@ export function PurchaseBookingJournalReportView({
         const error = typeof payload.error === "string" ? payload.error : payload.error?.message;
         throw new Error(error || "Purchase Booking Order Reports could not be loaded.");
       }
-      const nextReports = (payload.data?.reports && payload.data.reports.length > 0) ? payload.data.reports : sampleReports;
+      const nextReports = payload.data?.reports ?? [];
       setReports(nextReports);
       setScope(payload.data?.scope ?? null);
       if (payload.data?.usdRates) setUsdRates(payload.data.usdRates);
@@ -1554,7 +1416,7 @@ export function PurchaseBookingJournalReportView({
       setSelectedId((current) => (nextReports.some((report) => report.id === current) ? current : nextReports[0]?.id ?? ""));
       if (payload.data?.warning && payload.data.reports && payload.data.reports.length > 0) setMessage(payload.data.warning);
     } catch (error) {
-      setReports(sampleReports);
+      setReports([]);
       setScope(null);
       setUsdRates({});
       setLastExchangeRateUpdate(null);
@@ -2282,16 +2144,16 @@ export function PurchaseBookingJournalReportView({
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
               <span>Total Branches</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">
-                {branchSummary.length || 12}
+                {branchSummary.length}
               </span>
             </div>
             <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
               <span>Active Branches</span>
-              <span>{Math.max(1, (branchSummary.length || 12) - 2)}</span>
+              <span>{branchSummary.length}</span>
             </div>
             <div className="flex justify-between text-slate-400">
               <span>Inactive Branches</span>
-              <span>2</span>
+              <span>0</span>
             </div>
           </div>
         </div>
@@ -2306,25 +2168,25 @@ export function PurchaseBookingJournalReportView({
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
               <span>Bills Created</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">
-                {reports.filter(r => new Date(r.purchaseDate || r.createdAt).getMonth() === new Date().getMonth()).length || Math.min(48, reports.length)}
+                {reports.filter(r => new Date(r.purchaseDate || r.createdAt).getMonth() === new Date().getMonth()).length}
               </span>
             </div>
             <div className="flex justify-between text-blue-600 dark:text-blue-400 font-bold">
               <span>Amount (AED)</span>
               <span className="font-mono">
-                {formatMoney(reports.filter(r => new Date(r.purchaseDate || r.createdAt).getMonth() === new Date().getMonth()).reduce((s, r) => s + Number(r.totalPurchaseAmount || r.purchaseAmount || 0), 0) || 1785230)}
+                {formatMoney(reports.filter(r => new Date(r.purchaseDate || r.createdAt).getMonth() === new Date().getMonth()).reduce((s, r) => s + Number(r.totalPurchaseAmount || r.purchaseAmount || 0), 0))}
               </span>
             </div>
             <div className="flex justify-between text-slate-900 dark:text-slate-100 font-black">
               <span>Transferred</span>
               <span>
-                {reports.filter(r => (r.status === "Transferred" || r.status === "Posted") && new Date(r.purchaseDate || r.createdAt).getMonth() === new Date().getMonth()).length || 28}
+                {reports.filter(r => (r.status === "Transferred" || r.status === "Posted") && new Date(r.purchaseDate || r.createdAt).getMonth() === new Date().getMonth()).length}
               </span>
             </div>
             <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
               <span>Completed</span>
               <span>
-                {reports.filter(r => r.status === "Completed" && new Date(r.purchaseDate || r.createdAt).getMonth() === new Date().getMonth()).length || 12}
+                {reports.filter(r => r.status === "Completed" && new Date(r.purchaseDate || r.createdAt).getMonth() === new Date().getMonth()).length}
               </span>
             </div>
           </div>
@@ -2411,7 +2273,7 @@ export function PurchaseBookingJournalReportView({
           </div>
         ) : !registerRows.length ? (
           <div className="m-5 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-xs text-blue-800 font-semibold shadow-sm animate-in fade-in">
-            No live purchase booking records found for this scope. The register is ready for new bookings.
+            No Records Found
           </div>
         ) : null}
 
