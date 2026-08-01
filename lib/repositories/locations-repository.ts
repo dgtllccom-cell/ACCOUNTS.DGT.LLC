@@ -77,6 +77,12 @@ export type AreaRow = {
 
 const UAE_DEFAULT_ZIP_CODE = "00000";
 
+function isUuid(value: string | null | undefined) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value ?? ""
+  );
+}
+
 function isUaeCountry(row: { name?: string | null; iso2?: string | null; iso3?: string | null; currency_code?: string | null }) {
   const name = (row.name ?? "").trim().toLowerCase();
   const iso2 = (row.iso2 ?? "").trim().toUpperCase();
