@@ -1,5 +1,7 @@
 import { Activity, Building2, Globe, User, Users2, Wrench } from "lucide-react";
 import postgres from "postgres";
+import { redirect } from "next/navigation";
+import { getCurrentErpSession } from "@/lib/auth/session";
 import { SyncLedgersButton } from "@/features/dashboard/components/sync-ledgers-button";
 import { SuperAdminOverviewCharts, type CountryFinancialSummary, type MonthlyFinancialSummary } from "@/features/dashboard/components/super-admin-overview-charts";
 import { DashboardWidget, SuperAdminDashboardSettingsPanel, SuperAdminDashboardSettingsProvider } from "@/features/dashboard/components/super-admin-dashboard-settings";
@@ -155,6 +157,10 @@ async function loadDashboard(): Promise<DashboardData> {
 }
 
 export default async function SuperAdminDashboardPage() {
+  const session = await getCurrentErpSession();
+  if (!session) redirect("/auth/login");
+  if (!session.isSuperAdmin) redirect("/dashboard");
+
   const data = await loadDashboard();
   const kpis = [
     { title: "Total Countries", value: data.counts.countries, subtitle: "Live records", icon: Globe, color: "text-cyan-500" },
