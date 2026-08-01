@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
@@ -23,6 +23,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { listCountries, listCities, type LocationCountry, type LocationCity } from "@/features/master-forms";
 
 type LoginTab = "super_admin" | "country" | "city" | "branch" | "agent";
 
@@ -42,13 +43,13 @@ const LANGUAGES = [
   { code: "fa", name: "فارسی", flag: "🇮🇷" },
 ];
 
-const COUNTRIES = ["Pakistan", "Afghanistan", "UAE", "Saudi Arabia", "United Kingdom"];
-const CITIES: Record<string, string[]> = {
+const DEFAULT_COUNTRIES = ["Pakistan", "Afghanistan", "United Arab Emirates", "Saudi Arabia", "India"];
+const DEFAULT_CITIES: Record<string, string[]> = {
   Pakistan: ["Quetta", "Karachi", "Lahore", "Islamabad", "Peshawar"],
   Afghanistan: ["Kabul", "Kandahar", "Herat", "Mazar-i-Sharif"],
-  UAE: ["Dubai", "Abu Dhabi", "Sharjah", "Ajman"],
+  "United Arab Emirates": ["Dubai", "Abu Dhabi", "Sharjah", "Ajman"],
   "Saudi Arabia": ["Riyadh", "Jeddah", "Dammam", "Mecca"],
-  "United Kingdom": ["London", "Manchester", "Birmingham", "Leeds"],
+  India: ["Mumbai", "Delhi", "Bangalore", "Hyderabad"],
 };
 const BRANCHES = ["Main Branch", "North Branch", "South Branch", "East Branch", "West Branch"];
 
@@ -110,7 +111,56 @@ export function LoginForm({ lang: initialLang }: { lang?: SupportedLanguage }) {
   const [idFocused, setIdFocused] = useState(false);
   const [pwFocused, setPwFocused] = useState(false);
 
-  const availableCities = selectedCountry ? CITIES[selectedCountry] ?? [] : [];
+  const [masterCountries, setMasterCountries] = useState<LocationCountry[]>([]);
+  const [masterCities, setMasterCities] = useState<LocationCity[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const rows = await listCountries();
+        if (!cancelled && rows && rows.length > 0) {
+          setMasterCountries(rows);
+        }
+      } catch {
+        // Fallback to default
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const countryOptions = masterCountries.length > 0 ? masterCountries.map((c) => c.name) : DEFAULT_COUNTRIES;
+
+  useEffect(() => {
+    let cancelled = false;
+    setMasterCities([]);
+    if (!selectedCountry) return;
+
+    const matchedCountry = masterCountries.find((c) => c.name === selectedCountry || c.id === selectedCountry);
+    if (matchedCountry) {
+      (async () => {
+        try {
+          const rows = await listCities({ countryId: matchedCountry.id });
+          if (!cancelled) setMasterCities(rows);
+        } catch {
+          // Fallback to default
+        }
+      })();
+    }
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedCountry, masterCountries]);
+
+  const availableCities =
+    masterCities.length > 0
+      ? masterCities.map((c) => c.name)
+      : selectedCountry
+      ? DEFAULT_CITIES[selectedCountry] ?? []
+      : [];
+
   const needsCountry = ["country", "city", "branch", "agent"].includes(activeTab);
   const needsCity = ["city", "branch", "agent"].includes(activeTab);
   const needsBranch = ["branch", "agent"].includes(activeTab);
@@ -262,7 +312,7 @@ export function LoginForm({ lang: initialLang }: { lang?: SupportedLanguage }) {
               setSelectedCity("");
               setSelectedBranch("");
             }}
-            options={COUNTRIES}
+            options={countryOptions}
             placeholder="Select Country"
           />
         )}

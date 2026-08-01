@@ -22,6 +22,16 @@ create extension if not exists pgcrypto with schema extensions;
 
 create extension if not exists supabase_vault with schema vault;
 
+-- Bootstrap dependency for helper functions created before the full definition
+-- later in this baseline. It denies access until replaced by the real function.
+create or replace function public.is_super_admin()
+returns boolean
+language sql
+stable
+security definer
+set search_path = 'public'
+as $$ select false $$;
+
 create type public.account_kind as enum ('asset', 'liability', 'equity', 'income', 'expense');
 
 create type public.account_status as enum ('active', 'archived');

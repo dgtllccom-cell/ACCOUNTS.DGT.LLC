@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { DashboardShell } from "@/components/layout/dashboard-shell";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { supportedLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { isDemoAuthEnabled } from "@/lib/supabase/config";
 
 function normalizeLanguage(value: string | undefined): SupportedLanguage | null {
   if (!value) return null;
@@ -12,7 +12,7 @@ function normalizeLanguage(value: string | undefined): SupportedLanguage | null 
 
 export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const cookieStore = await cookies();
-  const isPreviewSession = cookieStore.get("damaan_dashboard_preview")?.value === "1";
+  const isPreviewSession = isDemoAuthEnabled() && cookieStore.get("damaan_dashboard_preview")?.value === "1";
   const cookieLang = normalizeLanguage(cookieStore.get("erp_lang")?.value);
 
   // Preview mode is explicit via cookie (so the app behaves like production by default).

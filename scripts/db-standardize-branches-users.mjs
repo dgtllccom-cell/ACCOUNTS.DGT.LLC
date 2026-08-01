@@ -22,11 +22,18 @@ if (!env.DATABASE_URL) {
 }
 
 const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false, connect_timeout: 30 });
-const supabaseAdmin = createClient(
-  env.NEXT_PUBLIC_SUPABASE_URL,
-  env.SUPABASE_SECRET_KEY || env.SUPABASE_SERVICE_ROLE_KEY,
-  { auth: { autoRefreshToken: false, persistSession: false } }
-);
+
+const supabaseKey = (
+  env.SUPABASE_SECRET_KEY ||
+  env.SUPABASE_SERVICE_ROLE_KEY ||
+  env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+  env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  ""
+).trim();
+
+const supabaseAdmin = (env.NEXT_PUBLIC_SUPABASE_URL && supabaseKey)
+  ? createClient(env.NEXT_PUBLIC_SUPABASE_URL, supabaseKey, { auth: { autoRefreshToken: false, persistSession: false } })
+  : null;
 
 async function run() {
   try {
@@ -117,26 +124,32 @@ async function run() {
       throw new Error(`Missing branch code mapping: Chaman:${!!chamanBr}, Quetta:${!!quettaBr}, AllahRahm:${!!allahrahmBr}, Kandahar:${!!kandaharBr}, NewDelhi:${!!newdelhiBr}, Dubai:${!!dubaiBr}, Sharjah:${!!sharjahBr}`);
     }
 
-    // Fetch all Auth Users from Supabase
-    const { data: { users } } = await supabaseAdmin.auth.admin.listUsers({ perPage: 1000 });
-
     const setupUser = async (email, password, fullName, userCode, role, scope) => {
-      let authUser = users.find((u) => u.email === email);
-      let userId = "";
+      const existing = await sql`SELECT id FROM auth.users WHERE email = ${email}`;
+      let userId = existing[0]?.id;
 
-      if (authUser) {
-        userId = authUser.id;
+      if (userId) {
         console.log(`User ${email} already exists in auth: ${userId}`);
+        await sql`
+          UPDATE auth.users 
+          SET encrypted_password = crypt(${password}, gen_salt('bf')),
+              email_confirmed_at = COALESCE(email_confirmed_at, NOW())
+          WHERE id = ${userId}
+        `;
       } else {
         console.log(`Creating auth user: ${email}...`);
-        const { data: newUser, error: createError } = await supabaseAdmin.auth.admin.createUser({
-          email,
-          password,
-          email_confirm: true,
-          user_metadata: { full_name: fullName }
-        });
-        if (createError) throw createError;
-        userId = newUser.user.id;
+        const [newUser] = await sql`
+          INSERT INTO auth.users (
+            id, instance_id, email, encrypted_password, email_confirmed_at, 
+            raw_app_meta_data, raw_user_meta_data, created_at, updated_at, role, aud
+          ) VALUES (
+            gen_random_uuid(), '00000000-0000-0000-0000-000000000000', ${email}, 
+            crypt(${password}, gen_salt('bf')), NOW(),
+            '{"provider":"email","providers":["email"]}', ${sql.json({ full_name: fullName })},
+            NOW(), NOW(), 'authenticated', 'authenticated'
+          ) RETURNING id
+        `;
+        userId = newUser.id;
         console.log(`Auth user created: ${email} (${userId})`);
       }
 
@@ -229,9 +242,8 @@ async function run() {
       "kabul@dgt.llc", "mumbai@dgt.llc", "allahrahm@dgt.llc"
     ];
 
-    const allowedUserIds = users
-      .filter((u) => allowedEmails.includes(u.email))
-      .map((u) => u.id);
+    const allowedUserRows = await sql`SELECT id FROM auth.users WHERE email IN ${sql(allowedEmails)}`;
+    const allowedUserIds = allowedUserRows.map((u) => u.id);
 
     console.log("Deactivating/deleting other active role assignments in standardized countries...");
     // Find all assignments linked to target countries

@@ -59,7 +59,12 @@ git clean -fd -e .env.local -e .env*.local -e uploads/ -e backups/ -e env_backup
 git checkout -f -B main origin/main
 git reset --hard origin/main
 
-echo "[VPS 3/7] Installing Dependencies & Running Database Migration..."
+echo "[VPS 3/7] Verifying Production Environment..."
+node scripts/verify-production-env.mjs
+cp -f .env.local .env
+chmod 600 .env.local .env
+
+echo "[VPS 3b/7] Installing Dependencies & Running Database Migration..."
 npm install --include=dev
 node apply-return-sms-reply-migration.mjs || true
 

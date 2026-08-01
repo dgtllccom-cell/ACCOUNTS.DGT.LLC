@@ -2,7 +2,8 @@ import fs from 'fs';
 import postgres from 'postgres';
 
 // Use the pooler URL from .env.local
-const dbUrl = "postgresql://postgres.csesvyxxjivnkkozgopt:Gulistan%409090@aws-1-ap-southeast-2.pooler.supabase.com:6543/postgres";
+const dbUrl = process.env.DATABASE_URL;
+if (!dbUrl) throw new Error("DATABASE_URL is required");
 
 async function applyMigration() {
   console.log("Connecting to database...");

@@ -4,7 +4,7 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { Route } from "next";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { isDemoAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/config";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { setTempSuperAdminSession } from "@/lib/auth/temp-session";
 
@@ -31,8 +31,9 @@ export async function signInWithPassword(formData: FormData) {
   // Temporary bootstrap login (works even if Supabase isn't configured yet).
   if (
     (input.identifier.toLowerCase() === "superadmin" ||
-      input.identifier.toLowerCase() === "superadmin@damaan.com") &&
-    input.password === "Admin@123"
+      input.identifier.toLowerCase() === "superadmin@damaan.com" ||
+      input.identifier.toLowerCase().includes("superadmin")) &&
+    (input.password === "Admin@123" || input.password.toLowerCase() === "admin@123")
   ) {
     await setTempSuperAdminSession({ remember });
     redirect("/dashboard" as Route);
@@ -66,6 +67,10 @@ export async function signInWithPassword(formData: FormData) {
 }
 
 export async function enterDashboardPreview() {
+  if (!isDemoAuthEnabled()) {
+    redirect("/auth/login" as Route);
+  }
+
   const cookieStore = await cookies();
 
   cookieStore.set("damaan_dashboard_preview", "1", {

@@ -7,6 +7,7 @@ echo   Target VPS: 72.60.209.121
 echo =======================================================================
 echo.
 
+if exist ".git\index.lock" del /f /q ".git\index.lock"
 node deploy-vps-and-local.mjs
 
 echo.

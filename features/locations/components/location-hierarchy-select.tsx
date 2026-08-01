@@ -459,7 +459,7 @@ export function LocationHierarchySelect({
   );
 }
 
-function LocationQuickCreateModal({
+export function LocationQuickCreateModal({
   type,
   countryId,
   stateProvinceId,

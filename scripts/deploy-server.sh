@@ -30,10 +30,20 @@ COMMIT_HASH=$(git rev-parse HEAD)
 echo "[INFO] Active Production Commit Hash: ${COMMIT_HASH}"
 
 echo "[4/6] Restoring production .env.local..."
-if [ -f "/var/www/env_backups/.env.local.bak" ]; then
+if [ -f "/var/www/env_backups/.env.production" ]; then
+  cp -f /var/www/env_backups/.env.production /var/www/dgt-nextjs/.env.local
+elif [ -f "/var/www/env_backups/.env.local.bak" ]; then
   cp -f /var/www/env_backups/.env.local.bak /var/www/dgt-nextjs/.env.local
-  cp -f /var/www/env_backups/.env.local.bak /var/www/dgt-nextjs/.env
 fi
+
+if [ ! -f "/var/www/dgt-nextjs/.env.local" ]; then
+  echo "ERROR: production .env.local is missing."
+  exit 1
+fi
+
+node scripts/verify-production-env.mjs
+cp -f /var/www/dgt-nextjs/.env.local /var/www/dgt-nextjs/.env
+chmod 600 /var/www/dgt-nextjs/.env.local /var/www/dgt-nextjs/.env
 
 echo "[5/6] Stopping old PM2 process & purging stale .next build cache..."
 pm2 stop dgt-nextjs || true
