@@ -1,402 +1,213 @@
-import {
-  Globe,
-  Building2,
-  Users2,
-  User,
-  Wrench,
-  Activity,
-  ArrowUpRight,
-  ArrowDownRight
-} from "lucide-react";
-import { SyncLedgersButton } from "@/features/dashboard/components/sync-ledgers-button";
-import { SuperAdminOverviewCharts } from "@/features/dashboard/components/super-admin-overview-charts";
-import {
-  DashboardWidget,
-  SuperAdminDashboardSettingsPanel,
-  SuperAdminDashboardSettingsProvider
-} from "@/features/dashboard/components/super-admin-dashboard-settings";
+import { Activity, Building2, Globe, User, Users2, Wrench } from "lucide-react";
 import postgres from "postgres";
+import { SyncLedgersButton } from "@/features/dashboard/components/sync-ledgers-button";
+import { SuperAdminOverviewCharts, type CountryFinancialSummary, type MonthlyFinancialSummary } from "@/features/dashboard/components/super-admin-overview-charts";
+import { DashboardWidget, SuperAdminDashboardSettingsPanel, SuperAdminDashboardSettingsProvider } from "@/features/dashboard/components/super-admin-dashboard-settings";
+import { SuperAdminDashboardLiveRefresh } from "@/features/dashboard/components/super-admin-dashboard-live-refresh";
 
-type CountMap = {
-  countries: number;
-  branches: number;
-  users: number;
-  accounts: number;
-  customers: number;
-  suppliers: number;
-  banks: number;
-  payments: number;
-  ledgers: number;
-  roznamcha: number;
-  purchases: number;
-  sales: number;
-  shipping: number;
-};
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
-type CountryFinancialSummary = {
-  id: string;
-  name: string;
-  currency: string;
-  totalPurchases: number;
-  totalSales: number;
-  totalDebit: number;
-  totalCredit: number;
-  totalLedgerBalance: number;
-  totalBranches: number;
-};
-
-type SuperAdminDashboardData = {
-  counts: CountMap;
-  purchaseTotal: number;
-  salesTotal: number;
-  ledgerDebit: number;
-  ledgerCredit: number;
-  ledgerBalance: number;
+type CountryRow = { id: string; name: string; currency_code: string | null; is_active: boolean };
+type BranchRow = { id: string; country_id: string };
+type CountryUserRow = { country_id: string; users: number };
+type OrderTotalRow = { country_id: string | null; order_total: number | string | null };
+type LedgerTotalRow = { country_id: string | null; debit_total: number | string | null; credit_total: number | string | null; current_balance: number | string | null };
+type MonthlyRow = { name: string; sales: number | string; purchases: number | string };
+type CountRow = { value: number | string };
+type DashboardData = {
+  counts: { countries: number; branches: number; users: number; customers: number; suppliers: number };
+  totals: { sales: number; purchases: number; debit: number; credit: number; balance: number };
   activeUsers: number;
-  countrySummaries: CountryFinancialSummary[];
-  databaseReady: boolean;
+  countries: CountryFinancialSummary[];
+  monthly: MonthlyFinancialSummary[];
   error: string | null;
 };
 
-function formatMoney(value: number) {
-  return `$${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value || 0)}`;
+const EMPTY_DATA: DashboardData = {
+  counts: { countries: 0, branches: 0, users: 0, customers: 0, suppliers: 0 },
+  totals: { sales: 0, purchases: 0, debit: 0, credit: 0, balance: 0 },
+  activeUsers: 0,
+  countries: [],
+  monthly: [],
+  error: null
+};
+
+function money(value: number) {
+  return `$${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(value)}`;
 }
 
-async function loadSuperAdminData(): Promise<SuperAdminDashboardData> {
-  const fallbackCountrySummaries: CountryFinancialSummary[] = [
-    { id: "pk", name: "Pakistan", currency: "PKR", totalPurchases: 104623, totalSales: 135000, totalDebit: 48000, totalCredit: 32000, totalLedgerBalance: 56000, totalBranches: 4 },
-    { id: "af", name: "Afghanistan", currency: "AFN", totalPurchases: 65400, totalSales: 82000, totalDebit: 28000, totalCredit: 19000, totalLedgerBalance: 34000, totalBranches: 3 },
-    { id: "ae", name: "United Arab Emirates", currency: "AED", totalPurchases: 89000, totalSales: 112000, totalDebit: 41000, totalCredit: 27000, totalLedgerBalance: 48000, totalBranches: 2 },
-    { id: "in", name: "India", currency: "INR", totalPurchases: 47850, totalSales: 56000, totalDebit: 25500, totalCredit: 20200, totalLedgerBalance: 30900, totalBranches: 2 },
-    { id: "ir", name: "Iran", currency: "IRR", totalPurchases: 0, totalSales: 0, totalDebit: 0, totalCredit: 0, totalLedgerBalance: 0, totalBranches: 1 }
-  ];
+async function loadDashboard(): Promise<DashboardData> {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) return { ...EMPTY_DATA, error: "DATABASE_URL is not configured." };
+
+  const sql = postgres(dbUrl, { max: 4, prepare: false, idle_timeout: 5, connect_timeout: 10 });
+  const count = async (table: string) => {
+    try {
+      const rows = await sql`select count(*)::int as value from ${sql(table)} where deleted_at is null`;
+      return Number(rows[0]?.value || 0);
+    } catch {
+      try {
+        const rows = await sql`select count(*)::int as value from ${sql(table)}`;
+        return Number(rows[0]?.value || 0);
+      } catch {
+        return 0;
+      }
+    }
+  };
 
   try {
-    const dbUrl = process.env.DATABASE_URL;
-    if (!dbUrl) throw new Error("DATABASE_URL is not configured");
-    const sql = postgres(dbUrl, { prepare: false, idle_timeout: 5, connect_timeout: 10 });
-
-    const safeCount = async (tableName: string) => {
-      try {
-        const res = await sql`SELECT count(*)::int as c FROM ${sql(tableName)} WHERE deleted_at IS NULL;`;
-        return res[0]?.c || 0;
-      } catch {
-        try {
-          const res = await sql`SELECT count(*)::int as c FROM ${sql(tableName)};`;
-          return res[0]?.c || 0;
-        } catch {
-          return 0;
-        }
-      }
-    };
-
+    await sql`select 1 as connected`;
     const [
-      countriesCount, countryBranchesCount, cityBranchesCount, usersCount,
-      accountsCount, customersCount, suppliersCount, banksCount, paymentsCount, ledgersCount, roznamchaCount, purchasesCount, salesCount,
-      shippingCount, activeUsersCount, purchaseRows, salesRows, balanceRows,
-      countriesList, mainBranchesList, cityBranchesList
+      countriesCount, countryBranchesCount, cityBranchesCount, usersCount, customersCount, companiesCount,
+      activeRows, purchaseRows, salesRows, ledgerRows, countries, mainBranches, cityBranches, countryUsers, monthly
     ] = await Promise.all([
-      safeCount("countries"),
-      safeCount("country_branches"),
-      safeCount("city_branches"),
-      safeCount("profiles"),
-      safeCount("enterprise_accounts"),
-      safeCount("customers"),
-      safeCount("companies"),
-      safeCount("banks"),
-      safeCount("purchase_order_payments"),
-      safeCount("ledgers"),
-      safeCount("roznamcha_entries"),
-      safeCount("purchase_orders"),
-      safeCount("sales_orders"),
-      safeCount("shipping_line_records"),
-      sql`SELECT count(*)::int as c FROM profiles WHERE status = 'active';`.catch(() => [{ c: 0 }]),
-      sql`SELECT country_id, order_total FROM purchase_orders WHERE deleted_at IS NULL;`.catch(() => []),
-      sql`SELECT country_id, order_total FROM sales_orders WHERE deleted_at IS NULL;`.catch(() => []),
-      sql`SELECT country_id, debit_total, credit_total, current_balance FROM ledgers WHERE deleted_at IS NULL;`.catch(() => []),
-      sql`SELECT id, name, currency_code FROM countries WHERE deleted_at IS NULL;`.catch(() => []),
-      sql`SELECT id, country_id FROM country_branches WHERE deleted_at IS NULL;`.catch(() => []),
-      sql`SELECT id, country_id FROM city_branches WHERE deleted_at IS NULL;`.catch(() => [])
+      count("countries"), count("country_branches"), count("city_branches"), count("profiles"), count("customers"), count("companies"),
+      sql`select count(distinct user_id)::int as value from user_role_assignments where is_active=true and deleted_at is null`.catch(() => [{ value: 0 }]),
+      sql`select country_id, order_total from purchase_orders where deleted_at is null`.catch(() => []),
+      sql`select country_id, order_total from sales_orders where deleted_at is null`.catch(() => []),
+      sql`select country_id, debit_total, credit_total, current_balance from ledgers where deleted_at is null`.catch(() => []),
+      sql`select id, name, currency_code, is_active from countries where deleted_at is null order by name`.catch(() => []),
+      sql`select id, country_id from country_branches where deleted_at is null`.catch(() => []),
+      sql`select id, country_id from city_branches where deleted_at is null`.catch(() => []),
+      sql`select country_id, count(distinct user_id)::int as users from user_role_assignments where is_active=true and deleted_at is null and country_id is not null group by country_id`.catch(() => []),
+      sql`
+        with months as (
+          select generate_series(date_trunc('month', current_date)-interval '5 months', date_trunc('month', current_date), interval '1 month') month_start
+        )
+        select to_char(month_start,'Mon YYYY') name,
+          coalesce((select sum(order_total) from sales_orders where deleted_at is null and created_at>=month_start and created_at<month_start+interval '1 month'),0)::float8 sales,
+          coalesce((select sum(order_total) from purchase_orders where deleted_at is null and created_at>=month_start and created_at<month_start+interval '1 month'),0)::float8 purchases
+        from months order by month_start
+      `.catch(() => [])
     ]);
 
-    await sql.end().catch(() => {});
+    const countryRows = countries as unknown as CountryRow[];
+    const mainBranchRows = mainBranches as unknown as BranchRow[];
+    const cityBranchRows = cityBranches as unknown as BranchRow[];
+    const countryUserData = countryUsers as unknown as CountryUserRow[];
+    const purchases = purchaseRows as unknown as OrderTotalRow[];
+    const sales = salesRows as unknown as OrderTotalRow[];
+    const ledgers = ledgerRows as unknown as LedgerTotalRow[];
+    const monthlyData = monthly as unknown as MonthlyRow[];
+    const activeData = activeRows as unknown as CountRow[];
 
-    const dbPurchaseOrderTotal = (purchaseRows || []).reduce((sum: number, row: any) => sum + Number(row.order_total || 0), 0);
-    const dbSalesOrderTotal = (salesRows || []).reduce((sum: number, row: any) => sum + Number(row.order_total || 0), 0);
-    const dbLedgerDebit = (balanceRows || []).reduce((sum: number, row: any) => sum + Number(row.debit_total || 0), 0);
-    const dbLedgerCredit = (balanceRows || []).reduce((sum: number, row: any) => sum + Number(row.credit_total || 0), 0);
-    const dbLedgerBalance = (balanceRows || []).reduce((sum: number, row: any) => sum + Number(row.current_balance || 0), 0);
-
-    const purchaseTotal = dbPurchaseOrderTotal || dbLedgerDebit || 306875;
-    const salesTotal = dbSalesOrderTotal || dbLedgerCredit || 385000;
-    const ledgerDebit = dbLedgerDebit || 142500;
-    const ledgerCredit = dbLedgerCredit || 98200;
-    const ledgerBalance = dbLedgerBalance || 168900;
-
-    const countrySummaryMap = new Map<string, CountryFinancialSummary>();
-    if (countriesList && (countriesList as any[]).length > 0) {
-      for (const country of (countriesList as any[])) {
-        const mainCount = (mainBranchesList as any[]).filter((b: any) => b.country_id === country.id).length;
-        const cityCount = (cityBranchesList as any[]).filter((b: any) => b.country_id === country.id).length;
-        countrySummaryMap.set(country.id, {
-          id: country.id,
-          name: country.name,
-          currency: country.currency_code || "USD",
-          totalPurchases: 0,
-          totalSales: 0,
-          totalDebit: 0,
-          totalCredit: 0,
-          totalLedgerBalance: 0,
-          totalBranches: mainCount + cityCount
-        });
-      }
-
-      for (const row of (purchaseRows as any[])) {
-        const target = row.country_id ? countrySummaryMap.get(row.country_id) : undefined;
-        if (target) target.totalPurchases += Number(row.order_total || 0);
-      }
-      for (const row of (salesRows as any[])) {
-        const target = row.country_id ? countrySummaryMap.get(row.country_id) : undefined;
-        if (target) target.totalSales += Number(row.order_total || 0);
-      }
-      for (const row of (balanceRows as any[])) {
-        const target = row.country_id ? countrySummaryMap.get(row.country_id) : undefined;
-        if (target) {
-          target.totalDebit += Number(row.debit_total || 0);
-          target.totalCredit += Number(row.credit_total || 0);
-          target.totalLedgerBalance += Number(row.current_balance || 0);
-        }
-      }
-
-      for (const target of countrySummaryMap.values()) {
-        target.totalPurchases = Math.max(target.totalPurchases, target.totalDebit);
-        target.totalSales = Math.max(target.totalSales, target.totalCredit);
+    const summaries = new Map<string, CountryFinancialSummary>();
+    for (const row of countryRows) {
+      summaries.set(row.id, {
+        id: row.id,
+        name: row.name,
+        currency: row.currency_code || "",
+        totalPurchases: 0,
+        totalSales: 0,
+        totalDebit: 0,
+        totalCredit: 0,
+        totalLedgerBalance: 0,
+        totalBranches: mainBranchRows.filter((branch) => branch.country_id === row.id).length + cityBranchRows.filter((branch) => branch.country_id === row.id).length,
+        totalUsers: Number(countryUserData.find((entry) => entry.country_id === row.id)?.users || 0),
+        isActive: row.is_active === true
+      });
+    }
+    for (const row of purchases) {
+      if (!row.country_id) continue;
+      const summary = summaries.get(row.country_id);
+      if (summary) summary.totalPurchases += Number(row.order_total || 0);
+    }
+    for (const row of sales) {
+      if (!row.country_id) continue;
+      const summary = summaries.get(row.country_id);
+      if (summary) summary.totalSales += Number(row.order_total || 0);
+    }
+    for (const row of ledgers) {
+      if (!row.country_id) continue;
+      const summary = summaries.get(row.country_id);
+      if (summary) {
+        summary.totalDebit += Number(row.debit_total || 0);
+        summary.totalCredit += Number(row.credit_total || 0);
+        summary.totalLedgerBalance += Number(row.current_balance || 0);
       }
     }
 
-    const finalCountrySummaries = countrySummaryMap.size > 0 
-      ? Array.from(countrySummaryMap.values())
-      : fallbackCountrySummaries;
-
+    const salesTotal = sales.reduce((total, row) => total + Number(row.order_total || 0), 0);
+    const purchaseTotal = purchases.reduce((total, row) => total + Number(row.order_total || 0), 0);
+    const debitTotal = ledgers.reduce((total, row) => total + Number(row.debit_total || 0), 0);
+    const creditTotal = ledgers.reduce((total, row) => total + Number(row.credit_total || 0), 0);
+    const ledgerBalance = ledgers.reduce((total, row) => total + Number(row.current_balance || 0), 0);
     return {
-      counts: {
-        countries: countriesCount || 5,
-        branches: (countryBranchesCount + cityBranchesCount) || 12,
-        users: usersCount || 18,
-        accounts: accountsCount || 42,
-        customers: customersCount || 31,
-        suppliers: suppliersCount || 24,
-        banks: banksCount || 8,
-        payments: paymentsCount || 20,
-        ledgers: ledgersCount || 64,
-        roznamcha: roznamchaCount || 40,
-        purchases: purchasesCount || 31,
-        sales: salesCount || 28,
-        shipping: shippingCount || 14
+      counts: { countries: countriesCount, branches: countryBranchesCount + cityBranchesCount, users: usersCount, customers: customersCount, suppliers: companiesCount },
+      totals: {
+        sales: salesTotal,
+        purchases: purchaseTotal,
+        debit: debitTotal,
+        credit: creditTotal,
+        balance: ledgerBalance
       },
-      purchaseTotal,
-      salesTotal,
-      ledgerDebit,
-      ledgerCredit,
-      ledgerBalance,
-      activeUsers: activeUsersCount[0]?.c || 18,
-      countrySummaries: finalCountrySummaries,
-      databaseReady: true,
+      activeUsers: Number(activeData[0]?.value || 0),
+      countries: Array.from(summaries.values()),
+      monthly: monthlyData.map((row) => ({ name: String(row.name), sales: Number(row.sales || 0), purchases: Number(row.purchases || 0) })),
       error: null
     };
   } catch (error) {
-    return {
-      counts: {
-        countries: 5,
-        branches: 12,
-        users: 18,
-        accounts: 42,
-        customers: 31,
-        suppliers: 24,
-        banks: 8,
-        payments: 20,
-        ledgers: 64,
-        roznamcha: 40,
-        purchases: 31,
-        sales: 28,
-        shipping: 14
-      },
-      purchaseTotal: 306875,
-      salesTotal: 385000,
-      ledgerDebit: 142500,
-      ledgerCredit: 98200,
-      ledgerBalance: 168900,
-      activeUsers: 18,
-      countrySummaries: fallbackCountrySummaries,
-      databaseReady: false,
-      error: null
-    };
+    return { ...EMPTY_DATA, error: error instanceof Error ? error.message : "Unable to load the live database." };
+  } finally {
+    await sql.end({ timeout: 2 }).catch(() => undefined);
   }
 }
 
 export default async function SuperAdminDashboardPage() {
-  const data = await loadSuperAdminData();
-
-  // Top Row KPIs structured exactly like Reference Dashboard
-  const topKpiCards = [
-    {
-      title: "Total Countries",
-      value: data.counts.countries.toLocaleString(),
-      subtitle: "Active",
-      icon: Globe,
-      iconClass: "text-[#06b6d4] bg-[#06b6d4]/10 border-[#06b6d4]/20"
-    },
-    {
-      title: "Total Branches",
-      value: data.counts.branches.toLocaleString(),
-      subtitle: "Active",
-      icon: Building2,
-      iconClass: "text-[#10b981] bg-[#10b981]/10 border-[#10b981]/20"
-    },
-    {
-      title: "Total Users",
-      value: data.counts.users.toLocaleString(),
-      subtitle: "All Users",
-      icon: Users2,
-      iconClass: "text-[#8b5cf6] bg-[#8b5cf6]/10 border-[#8b5cf6]/20"
-    },
-    {
-      title: "Total Customers",
-      value: data.counts.customers.toLocaleString(),
-      subtitle: "Customers",
-      icon: User,
-      iconClass: "text-[#f59e0b] bg-[#f59e0b]/10 border-[#f59e0b]/20"
-    },
-    {
-      title: "Total Suppliers",
-      value: data.counts.suppliers.toLocaleString(),
-      subtitle: "Suppliers",
-      icon: Wrench,
-      iconClass: "text-[#06b6d4] bg-[#06b6d4]/10 border-[#06b6d4]/20"
-    },
-    {
-      title: "System Uptime",
-      value: "99.9%",
-      subtitle: "Last 30 days",
-      icon: Activity,
-      iconClass: "text-[#3b82f6] bg-[#3b82f6]/10 border-[#3b82f6]/20"
-    }
+  const data = await loadDashboard();
+  const kpis = [
+    { title: "Total Countries", value: data.counts.countries, subtitle: "Live records", icon: Globe, color: "text-cyan-500" },
+    { title: "Total Branches", value: data.counts.branches, subtitle: "Main and city", icon: Building2, color: "text-emerald-500" },
+    { title: "Total Users", value: data.counts.users, subtitle: "Approved profiles", icon: Users2, color: "text-violet-500" },
+    { title: "Total Customers", value: data.counts.customers, subtitle: "Live records", icon: User, color: "text-amber-500" },
+    { title: "Companies / Suppliers", value: data.counts.suppliers, subtitle: "Live records", icon: Wrench, color: "text-cyan-500" },
+    { title: "Active Users", value: data.activeUsers, subtitle: "Active role assignments", icon: Activity, color: "text-blue-500" }
   ];
-
-  // Financial Overview Grid matching colors, formatting and indicator icons
-  const financialOverview = [
-    {
-      label: "Total Sales",
-      value: formatMoney(data.salesTotal),
-      change: "18.3%",
-      isUp: true
-    },
-    {
-      label: "Total Purchase",
-      value: formatMoney(data.purchaseTotal),
-      change: "12.5%",
-      isUp: true
-    },
-    {
-      label: "Total Receivables",
-      value: formatMoney(data.ledgerDebit),
-      change: "8.2%",
-      isUp: true
-    },
-    {
-      label: "Total Payables",
-      value: formatMoney(data.ledgerCredit),
-      change: "5.8%",
-      isUp: false
-    },
-    {
-      label: "Cash Balance",
-      value: formatMoney(Math.max(data.ledgerDebit - data.ledgerCredit, 0)),
-      change: "6.1%",
-      isUp: true
-    },
-    {
-      label: "Bank Balance",
-      value: formatMoney(data.ledgerBalance),
-      change: "10.2%",
-      isUp: true
-    }
-  ];
+  const financial = [
+    ["Total Sales", data.totals.sales, "Sales order total"],
+    ["Total Purchase", data.totals.purchases, "Purchase order total"],
+    ["Total Receivables", data.totals.debit, "Ledger debit total"],
+    ["Total Payables", data.totals.credit, "Ledger credit total"],
+    ["Cash Balance", data.totals.debit - data.totals.credit, "Debit less credit"],
+    ["Ledger Balance", data.totals.balance, "Current ledger balance"]
+  ] as const;
 
   return (
     <SuperAdminDashboardSettingsProvider>
-      <div className="space-y-6 text-foreground p-4 lg:p-6 min-h-screen">
-        {/* Super Admin Control bar */}
-        <section className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-border pb-4">
+      <div className="min-h-screen space-y-6 p-4 text-foreground lg:p-6">
+        <SuperAdminDashboardLiveRefresh />
+        <section className="flex flex-col gap-4 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-xl font-extrabold text-foreground flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              Super Admin Control Center
-            </h1>
-            <p className="text-xs text-muted-foreground mt-1 font-medium">
-              Real-time multi-national operations & currency-rate alignment engine.
-            </p>
+            <h1 className="flex items-center gap-2 text-xl font-extrabold"><span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />Super Admin Control Center</h1>
+            <p className="mt-1 text-xs font-medium text-muted-foreground">Live database overview. No demo or fallback statistics.</p>
           </div>
-          <div className="flex items-center gap-2">
-            <SuperAdminDashboardSettingsPanel />
-            <SyncLedgersButton />
-          </div>
+          <div className="flex items-center gap-2"><SuperAdminDashboardSettingsPanel /><SyncLedgersButton /></div>
         </section>
 
+        {data.error && <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-700 dark:text-rose-300">Live database data could not be loaded. No demo values are being shown. {data.error}</div>}
+
         <DashboardWidget id="kpis">
-          <section className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-            {topKpiCards.map((card, idx) => {
-              const IconComponent = card.icon;
-              return (
-                <div
-                  key={idx}
-                  className="bg-card text-card-foreground border border-border hover:border-border/80 p-4 rounded-2xl flex items-center justify-between shadow-lg transition-transform hover:-translate-y-0.5 duration-200"
-                >
-                  <div>
-                    <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-wider">{card.title}</p>
-                    <h3 className="text-xl font-extrabold text-foreground mt-1.5 leading-none">{card.value}</h3>
-                    <p className="text-[10px] text-muted-foreground/80 font-semibold mt-1">{card.subtitle}</p>
-                  </div>
-                  <div className={`h-9 w-9 rounded-xl flex items-center justify-center border shrink-0 ${card.iconClass}`}>
-                    <IconComponent className="h-4 w-4" />
-                  </div>
-                </div>
-              );
-            })}
+          <section className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+            {kpis.map(({ title, value, subtitle, icon: Icon, color }) => (
+              <div key={title} className="flex items-center justify-between rounded-2xl border border-border bg-card p-4 shadow-lg">
+                <div><p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{title}</p><h3 className="mt-1.5 text-xl font-extrabold">{value.toLocaleString()}</h3><p className="mt-1 text-[10px] font-semibold text-muted-foreground">{subtitle}</p></div>
+                <div className={`grid h-9 w-9 place-items-center rounded-xl border border-current/20 bg-current/10 ${color}`}><Icon className="h-4 w-4" /></div>
+              </div>
+            ))}
           </section>
         </DashboardWidget>
 
         <DashboardWidget id="finance">
           <section className="space-y-3">
-            <h2 className="text-xs font-black uppercase tracking-wider text-muted-foreground px-1">Financial Overview (All Countries)</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
-              {financialOverview.map((item, idx) => (
-                <div
-                  key={idx}
-                  className="bg-card text-card-foreground border border-border hover:border-border/80 p-4 rounded-2xl shadow-lg transition-all duration-200"
-                >
-                  <p className="text-[10px] text-muted-foreground font-bold">{item.label}</p>
-                  <h3 className="text-lg font-black text-foreground mt-2 leading-none">{item.value}</h3>
-                  <div className="mt-3 flex items-center gap-1">
-                    {item.isUp ? (
-                      <span className="text-[10px] font-bold text-emerald-500 dark:text-emerald-400 flex items-center gap-0.5">
-                        <ArrowUpRight className="h-3 w-3" /> {item.change}
-                      </span>
-                    ) : (
-                      <span className="text-[10px] font-bold text-rose-500 dark:text-rose-400 flex items-center gap-0.5">
-                        <ArrowDownRight className="h-3 w-3" /> {item.change}
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
+            <h2 className="px-1 text-xs font-black uppercase tracking-wider text-muted-foreground">Financial Overview (Live Records)</h2>
+            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
+              {financial.map(([label, value, subtitle]) => <div key={label} className="rounded-2xl border border-border bg-card p-4 shadow-lg"><p className="text-[10px] font-bold text-muted-foreground">{label}</p><h3 className="mt-2 text-lg font-black">{money(value)}</h3><p className="mt-3 text-[10px] font-semibold text-muted-foreground">{subtitle}</p></div>)}
             </div>
           </section>
         </DashboardWidget>
 
-        <section className="pt-2">
-          <SuperAdminOverviewCharts countrySummaries={data.countrySummaries} />
-        </section>
+        <section className="pt-2"><SuperAdminOverviewCharts countrySummaries={data.countries} monthlyFinancials={data.monthly} /></section>
       </div>
     </SuperAdminDashboardSettingsProvider>
   );
