@@ -7,10 +7,6 @@ export function createSupabaseAdminClient() {
 
   const secretKey = getSupabaseSecretKey() || getSupabasePublicKey();
 
-  if (!secretKey) {
-    throw new Error("Supabase URL and API Key are required for database operations.");
-  }
-
   return createClient<Database>(
     getSupabaseUrl()!,
     secretKey,

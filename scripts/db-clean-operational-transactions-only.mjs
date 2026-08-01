@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import path from "node:path";
 import postgres from "postgres";
 
 const confirmFlag = "--confirm-clean-operational";
@@ -93,6 +94,9 @@ const preservedTables = [
 
 // Child/detail tables first, parent/header tables later. Master tables are intentionally excluded.
 const operationalDeleteOrder = [
+  "approval_status_history",
+  "approval_request_items",
+  "approval_requests",
   "shipment_documents",
   "shipping_bl_records",
   "shipping_line_records",
@@ -103,6 +107,7 @@ const operationalDeleteOrder = [
   "purchase_order_items",
   "purchase_order_reports",
   "purchase_order_payments",
+  "local_purchases",
   "purchase_orders",
   "sales_order_payments",
   "sales_orders",
@@ -121,6 +126,16 @@ const operationalDeleteOrder = [
   "ledger_opening_balances",
   "ledger_posting_batches",
   "cash_transactions",
+  "money_exchange_entries",
+  "product_inventory_balances",
+  "report_exports",
+  "report_runs",
+  "report_snapshots",
+  "erp_report_exports",
+  "erp_record_transfers",
+  "erp_activity_events",
+  "record_locks",
+  "soft_delete_logs",
   "transactions",
   "usd_purchase_sales",
   "transaction_serial_sequences"
@@ -134,6 +149,7 @@ const auditEntityTables = [
   "purchase_order_items",
   "purchase_order_reports",
   "purchase_order_payments",
+  "local_purchases",
   "purchase_loading_records",
   "sales_orders",
   "sales_order_payments",

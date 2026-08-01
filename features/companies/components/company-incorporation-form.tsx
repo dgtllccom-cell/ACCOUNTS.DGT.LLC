@@ -141,6 +141,42 @@ function SectionTitle({ children }: { children: React.ReactNode }) {
   return <h2 className="pt-2 text-sm font-semibold uppercase tracking-wide text-slate-700">{children}</h2>;
 }
 
+function PreviewSection({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <section className="border-t border-slate-100 pt-5">
+      <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-slate-500">{title}</h3>
+      {children}
+    </section>
+  );
+}
+
+function PreviewField({
+  label,
+  value,
+  mono = false,
+  className = ""
+}: {
+  label: string;
+  value?: string | null;
+  mono?: boolean;
+  className?: string;
+}) {
+  const shown = value && value !== "-" ? value : "—";
+  const empty = shown === "—";
+  return (
+    <div className={className}>
+      <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{label}</p>
+      <p
+        className={`mt-1 break-words text-sm leading-snug ${mono ? "font-mono" : ""} ${
+          empty ? "text-slate-300" : "font-medium text-slate-800"
+        }`}
+      >
+        {shown}
+      </p>
+    </div>
+  );
+}
+
 function toContactTypeKey(label: string): ContactTypeKey | null {
   const normalized = (label || "").toLowerCase();
   if (normalized.includes("mobile")) return "mobile";
@@ -611,7 +647,7 @@ export function CompanyIncorporationForm({
         })}
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_420px]">
+      <div className="grid gap-6 xl:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)]">
         <div className="space-y-6">
           <section className="space-y-5 rounded-lg border bg-card p-5 pb-24 shadow-sm">
           {currentStep === 1 && (
@@ -756,120 +792,130 @@ export function CompanyIncorporationForm({
           </section>
         </div>
 
-        <aside className="h-fit rounded-lg border bg-card p-5 shadow-sm xl:sticky xl:top-24">
-            <div className="flex items-center justify-between border-b pb-3 mb-4">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-4 w-4 text-primary" aria-hidden />
-                <h2 className="font-semibold text-slate-800 text-sm">Company Preview</h2>
+        <aside className="h-fit rounded-xl border bg-card p-6 shadow-sm xl:sticky xl:top-24">
+            {/* Header */}
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-4 mb-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+                  <Building2 className="h-5 w-5 text-primary" aria-hidden />
+                </div>
+                <div>
+                  <h2 className="font-semibold text-slate-900 text-base leading-tight">Company Preview</h2>
+                  <p className="text-xs text-muted-foreground">Review all details before saving</p>
+                </div>
               </div>
               <div>
                 {selectedCompanyId ? (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-200">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                     Saved Record
                   </span>
                 ) : (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-200">
-                    <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+                  <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 border border-amber-200">
+                    <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
                     Live Draft
                   </span>
                 )}
               </div>
             </div>
 
-            <div className="space-y-4 text-xs">
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Company Name</p>
-                <p className="text-sm font-bold text-slate-900 mt-0.5">{previewData.companyName}</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Business Name</p>
-                <p className="text-xs font-semibold text-slate-700 mt-0.5">{previewData.businessName || "-"}</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Business Type</p>
-                <p className="text-xs font-semibold text-slate-700 mt-0.5">{previewData.businessType || "-"}</p>
-              </div>
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Owner Name</p>
-                <p className="text-xs font-bold text-slate-800 mt-0.5">{previewData.ownerName}</p>
-              </div>
-              <div className="border-t pt-3">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Location</p>
-                <p className="text-xs text-slate-700 font-semibold mt-0.5">
-                  {[previewData.area, previewData.city, previewData.state, previewData.country].filter((item) => item && item !== "-").join(", ") || "-"}
+            {/* Hero: Company name */}
+            <div className="mb-6 rounded-xl border border-slate-100 bg-gradient-to-br from-slate-50 to-slate-100/40 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Company Name</p>
+              <p className="mt-1 break-words text-xl font-bold leading-snug text-slate-900 sm:text-2xl">
+                {previewData.companyName && previewData.companyName !== "-" ? previewData.companyName : "Untitled Company"}
+              </p>
+              {previewData.ownerName && previewData.ownerName !== "-" ? (
+                <p className="mt-1.5 text-sm text-slate-600">
+                  Owner: <span className="font-semibold text-slate-800">{previewData.ownerName}</span>
                 </p>
-                {previewData.zipCode && previewData.zipCode !== "-" && (
-                  <p className="text-[10px] text-muted-foreground mt-0.5 font-mono">Zip: {previewData.zipCode}</p>
-                )}
-              </div>
-              {previewData.address && previewData.address !== "-" && (
-                <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Full Address</p>
-                  <p className="text-xs text-slate-700 mt-0.5 leading-relaxed">{previewData.address}</p>
+              ) : null}
+            </div>
+
+            <div className="space-y-6">
+              {/* Business information */}
+              <PreviewSection title="Business Information">
+                <div className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+                  <PreviewField label="Business Name" value={previewData.businessName} />
+                  <PreviewField label="Business Type" value={previewData.businessType} />
+                  <PreviewField label="Owner Name" value={previewData.ownerName} />
                 </div>
-              )}
+              </PreviewSection>
+
+              {/* Location */}
+              <PreviewSection title="Location">
+                <div className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
+                  <PreviewField label="Country" value={previewData.country} />
+                  <PreviewField label="State / Province" value={previewData.state} />
+                  <PreviewField label="City" value={previewData.city} />
+                  <PreviewField label="Area / Locality" value={previewData.area} />
+                  <PreviewField label="ZIP Code" value={previewData.zipCode} mono />
+                </div>
+                {previewData.address && previewData.address !== "-" ? (
+                  <div className="mt-4 rounded-lg border border-slate-100 bg-slate-50/60 p-3">
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Full Address</p>
+                    <p className="mt-1 break-words text-sm leading-relaxed text-slate-700">{previewData.address}</p>
+                  </div>
+                ) : null}
+              </PreviewSection>
 
               {/* Contacts */}
-              <div className="border-t pt-3">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Contacts</p>
+              <PreviewSection title="Contacts">
                 {previewData.contacts.length > 0 ? (
-                  <div className="space-y-1 bg-slate-50/60 p-2 rounded-lg border border-slate-100">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {previewData.contacts.map((c) => (
-                      <div key={c.id} className="flex justify-between text-[11px] py-0.5">
-                        <span className="text-muted-foreground font-medium">{c.type}:</span>
-                        <span className="font-semibold text-slate-800 font-mono">{c.value}</span>
+                      <div key={c.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2">
+                        <span className="text-xs font-medium text-slate-500">{c.type}</span>
+                        <span className="break-all text-sm font-semibold text-slate-800 font-mono">{c.value}</span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground italic">No contacts added</p>
+                  <p className="text-sm italic text-slate-400">No contacts added</p>
                 )}
-              </div>
+              </PreviewSection>
 
               {/* Registrations */}
-              <div className="border-t pt-3">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Registrations</p>
+              <PreviewSection title="Registrations">
                 {previewData.registrations.length > 0 ? (
-                  <div className="space-y-1 bg-slate-50/60 p-2 rounded-lg border border-slate-100">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {previewData.registrations.map((r) => (
-                      <div key={r.id} className="flex justify-between text-[11px] py-0.5">
-                        <span className="text-muted-foreground font-medium">{r.type}:</span>
-                        <span className="font-semibold text-slate-800 font-mono">{r.value}</span>
+                      <div key={r.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2">
+                        <span className="text-xs font-medium text-slate-500">{r.type}</span>
+                        <span className="break-all text-sm font-semibold text-slate-800 font-mono">{r.value}</span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground italic">No registrations added</p>
+                  <p className="text-sm italic text-slate-400">No registrations added</p>
                 )}
-              </div>
+              </PreviewSection>
 
               {/* Owner Identification */}
-              <div className="border-t pt-3">
-                <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">Owner Identification</p>
+              <PreviewSection title="Owner Identification">
                 {previewData.ownerIds.length > 0 ? (
-                  <div className="space-y-1 bg-slate-50/60 p-2 rounded-lg border border-slate-100">
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {previewData.ownerIds.map((o) => (
-                      <div key={o.id} className="flex justify-between text-[11px] py-0.5">
-                        <span className="text-muted-foreground font-medium">{o.type}:</span>
-                        <span className="font-semibold text-slate-800 font-mono">{o.value}</span>
+                      <div key={o.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-100 bg-slate-50/60 px-3 py-2">
+                        <span className="text-xs font-medium text-slate-500">{o.type}</span>
+                        <span className="break-all text-sm font-semibold text-slate-800 font-mono">{o.value}</span>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-xs text-muted-foreground italic">No IDs added</p>
+                  <p className="text-sm italic text-slate-400">No IDs added</p>
                 )}
-              </div>
+              </PreviewSection>
 
               {selectedCompanyId ? (
-                <div className="pt-2">
+                <div className="pt-1">
                   <Button
                     type="button"
                     variant="outline"
                     onClick={() => setSelectedCompanyId(null)}
-                    className="w-full text-xs gap-1.5 h-8 border-slate-200"
+                    className="w-full gap-1.5 border-slate-200 text-sm"
                   >
-                    <RefreshCcw className="h-3 w-3" />
+                    <RefreshCcw className="h-4 w-4" />
                     Back to Form / New Draft
                   </Button>
                 </div>

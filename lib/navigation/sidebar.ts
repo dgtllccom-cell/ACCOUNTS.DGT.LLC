@@ -620,6 +620,12 @@ export const sidebarTree: SidebarNode[] = [
         permission: { resource: "shipping_records", action: "read" }
       },
       {
+        key: "clearing-truck-recreation",
+        labelKey: "nav.truck_recreation",
+        href: "/dashboard/clearing-agent/truck-recreation" as Route,
+        permission: { resource: "shipping_records", action: "read" }
+      },
+      {
         key: "clearing-truck-loading",
         labelKey: "nav.truck_loading",
         href: "/dashboard/clearing-agent/truck-loading" as Route,

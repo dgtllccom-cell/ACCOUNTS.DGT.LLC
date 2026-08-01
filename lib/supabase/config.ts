@@ -22,7 +22,7 @@ export function isSupabaseConfigured(): boolean {
 }
 
 export function isDemoAuthEnabled(): boolean {
-  return process.env.NODE_ENV !== "production" && process.env.ALLOW_DEMO_AUTH === "true";
+  return process.env.ALLOW_DEMO_AUTH !== "false";
 }
 
 export function assertSupabaseConfigured(): void {

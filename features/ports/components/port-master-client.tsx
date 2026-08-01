@@ -21,6 +21,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SimpleModal } from "@/components/ui/simple-modal";
+import { SearchSelect } from "@/components/ui/search-select";
+import { LocationQuickCreateModal } from "@/features/master-forms";
 import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api/client";
 
 export type PortRecord = {
@@ -74,6 +76,7 @@ export function PortMasterClient({
   const [formTransportType, setFormTransportType] = useState<"sea" | "road" | "air">("sea");
   const [formIsActive, setFormIsActive] = useState(true);
   const [formError, setFormError] = useState<string | null>(null);
+  const [openCreateCountryModal, setOpenCreateCountryModal] = useState(false);
 
   // Fetch data on mount
   useEffect(() => {
@@ -454,22 +457,16 @@ export function PortMasterClient({
             <div className="grid gap-4 sm:grid-cols-2">
               {/* Country Selection */}
               <div className="space-y-1.5">
-                <Label htmlFor="country" className="text-xs font-bold uppercase tracking-wider">
-                  Country
-                </Label>
-                <select
-                  id="country"
+                <SearchSelect
+                  label="Country"
                   value={formCountryId}
-                  onChange={(e) => setFormCountryId(e.target.value)}
-                  className={selectClass}
-                >
-                  <option value="">Select Country (Optional)</option>
-                  {countries.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+                  placeholder="Select Country (Optional)"
+                  options={countries.map((c) => ({ value: c.id, label: c.name, keywords: c.name }))}
+                  onValueChange={(val) => setFormCountryId(val)}
+                  createLabel="+ New Country"
+                  createButtonPlacement="both"
+                  onCreateNew={() => setOpenCreateCountryModal(true)}
+                />
               </div>
 
               {/* Port Code */}
@@ -523,6 +520,21 @@ export function PortMasterClient({
             </div>
           </form>
         </SimpleModal>
+      )}
+
+      {openCreateCountryModal && (
+        <LocationQuickCreateModal
+          type="country"
+          onClose={() => setOpenCreateCountryModal(false)}
+          onCreated={(newId, item) => {
+            setCountries((cur) => {
+              if (cur.some((c) => c.id === item.id)) return cur;
+              return [item, ...cur];
+            });
+            setFormCountryId(newId);
+            setOpenCreateCountryModal(false);
+          }}
+        />
       )}
     </div>
   );

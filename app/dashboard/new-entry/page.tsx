@@ -4,6 +4,7 @@ import { cookies } from "next/headers";
 import { Building2, ChevronDown, Landmark, Layers3, LockKeyhole, Users } from "lucide-react";
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { getCurrentErpSession } from "@/lib/auth/session";
+import { isDemoAuthEnabled } from "@/lib/supabase/config";
 
 type EntryStatus = "Ready" | "Next" | "Planned";
 
@@ -120,7 +121,7 @@ function StatusPill({ status }: { status: EntryStatus }) {
 
 export default async function NewEntryPage() {
   const cookieStore = await cookies();
-  const isPreviewSession = cookieStore.get("damaan_dashboard_preview")?.value === "1";
+  const isPreviewSession = isDemoAuthEnabled() && cookieStore.get("damaan_dashboard_preview")?.value === "1";
 
   let sessionRoles: EnterpriseRole[] | null = null;
   let isSuperAdmin = false;

@@ -4,11 +4,11 @@ import { TruckRecreationWizard } from "@/features/clearing-agent/components/truc
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export const metadata: Metadata = {
-  title: "Truck New Recreation — Clearing Agent ERP",
-  description: "5-Step, 5-language truck creation wizard with real-time live report summary.",
+  title: "Truck New Recreation — 5-Language ERP",
+  description: "Create complete truck record with 5-language auto-transliteration and live report summary.",
 };
 
-export default async function TruckRegistrationPage() {
+export default async function TruckRecreationPage() {
   const session = await requireErpSession();
   const lang = (session.preferredLanguage ?? "en") as SupportedLanguage;
   return (

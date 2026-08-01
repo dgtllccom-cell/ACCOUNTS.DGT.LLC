@@ -3,7 +3,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { type EnterpriseRole, enterpriseRoles } from "@/lib/permissions/enterprise-roles";
 import { enterpriseRolePermissions } from "@/lib/permissions/enterprise-roles";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { isDemoAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/config";
 import { readTempSession } from "@/lib/auth/temp-session";
 
 export type RoleAssignmentScope = {
