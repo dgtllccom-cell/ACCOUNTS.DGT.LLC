@@ -128,102 +128,29 @@ export default async function LoginPage({
               <AuthTopControls lang={lang} />
             </div>
           </div>
-
-          {/* ── Dashboard Widgets (vertically centred) ── */}
+          {/* Production status (no sample metrics) */}
           <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-10 pb-8">
-            {/* Main inventory card */}
             <div
               className="w-full max-w-[340px] rounded-2xl border border-white/10 p-5 shadow-2xl"
               style={{ background: "rgba(255,255,255,0.95)", backdropFilter: "blur(20px)" }}
             >
-              <div className="mb-4 flex items-start justify-between">
+              <div className="flex items-start justify-between">
                 <div>
                   <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-600">
-                    Live Inventory
+                    Production ERP
                   </p>
                   <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-slate-400">
-                    Analytics Dashboard
+                    Live Database Only
                   </p>
                 </div>
                 <span className="rounded-full bg-emerald-500 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest text-white">
-                  Operational
+                  Connected
                 </span>
               </div>
-
-              <svg viewBox="0 0 280 90" className="w-full" aria-hidden>
-                <defs>
-                  <linearGradient id="chartFill" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="0%" stopColor="#1e40af" stopOpacity="0.15"/>
-                    <stop offset="100%" stopColor="#1e40af" stopOpacity="0"/>
-                  </linearGradient>
-                  <linearGradient id="chartLine" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#3b82f6"/>
-                    <stop offset="100%" stopColor="#0d9488"/>
-                  </linearGradient>
-                </defs>
-                <path
-                  d="M0,70 C20,65 35,72 55,60 C75,48 90,55 115,42 C140,29 155,38 180,25 C205,12 225,20 255,10 L280,8 L280,90 L0,90 Z"
-                  fill="url(#chartFill)"
-                />
-                <path
-                  d="M0,70 C20,65 35,72 55,60 C75,48 90,55 115,42 C140,29 155,38 180,25 C205,12 225,20 255,10 L280,8"
-                  fill="none"
-                  stroke="url(#chartLine)"
-                  strokeWidth="2.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                {[
-                  [0,70],[55,60],[115,42],[180,25],[280,8],
-                ].map(([x, y], i) => (
-                  <circle key={i} cx={x} cy={y} r="3" fill="#1e40af" opacity="0.7"/>
-                ))}
-              </svg>
-
-              <div className="mt-4 grid grid-cols-2 gap-3 border-t border-slate-100 pt-4">
-                <div>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                    Active Units
-                  </p>
-                  <p className="mt-0.5 text-xl font-black text-[#06122d]">1.2M+</p>
-                </div>
-                <div>
-                  <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">
-                    Efficiency
-                  </p>
-                  <p className="mt-0.5 text-xl font-black text-emerald-600">98.4%</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Circular progress mini-card */}
-            <div
-              className="mt-4 flex w-[160px] items-center gap-4 self-end rounded-2xl border border-white/10 p-4 shadow-xl"
-              style={{ background: "rgba(255,255,255,0.92)", backdropFilter: "blur(16px)" }}
-            >
-              <svg width="52" height="52" viewBox="0 0 52 52" aria-hidden>
-                <circle cx="26" cy="26" r="20" fill="none" stroke="#e2e8f0" strokeWidth="5"/>
-                <circle
-                  cx="26" cy="26" r="20"
-                  fill="none"
-                  stroke="url(#ringGrad)"
-                  strokeWidth="5"
-                  strokeLinecap="round"
-                  strokeDasharray="125.6"
-                  strokeDashoffset="31.4"
-                  transform="rotate(-90 26 26)"
-                />
-                <defs>
-                  <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="0">
-                    <stop offset="0%" stopColor="#1e40af"/>
-                    <stop offset="100%" stopColor="#0d9488"/>
-                  </linearGradient>
-                </defs>
-                <text x="26" y="30" textAnchor="middle" fontSize="11" fontWeight="900" fill="#06122d">75%</text>
-              </svg>
-              <div>
-                <p className="text-[9px] font-black uppercase tracking-widest text-slate-500">Capacity</p>
-                <p className="mt-0.5 text-sm font-black text-[#06122d]">On Track</p>
+              <div className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
+                <p className="text-[10px] font-bold leading-5 text-emerald-800">
+                  Sign in to view live operational records. No sample or demo statistics are displayed.
+                </p>
               </div>
             </div>
           </div>

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import type { Route } from "next";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { isDemoAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/config";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { ERP_SESSION_COOKIE } from "@/lib/auth/temp-session";
@@ -390,10 +390,12 @@ export async function POST(request: NextRequest) {
 
   // Normalize input identifier
   const idClean = rawIdentifier.toLowerCase().replace(/\s+/g, "");
-  let demoAccount = demoAccounts[idClean] || demoAccounts[rawIdentifier.toLowerCase()];
+  let demoAccount = isDemoAuthEnabled()
+    ? demoAccounts[idClean] || demoAccounts[rawIdentifier.toLowerCase()]
+    : undefined;
 
   // Super Admin fallbacks for any typo like "super admi", "super admin", "superadmin", etc.
-  if (!demoAccount && (idClean.includes("superadmin") || idClean.includes("superadmi") || idClean.includes("admin"))) {
+  if (isDemoAuthEnabled() && !demoAccount && (idClean.includes("superadmin") || idClean.includes("superadmi") || idClean.includes("admin"))) {
     demoAccount = demoAccounts["superadmin"];
   }
 
@@ -455,7 +457,7 @@ export async function POST(request: NextRequest) {
     return helperResponse(
       "/auth/login",
       undefined,
-      "Supabase is not configured. Use the temporary Super Admin login (User ID: superadmin, Password: Admin@123)."
+      "Supabase is not configured."
     );
   }
 

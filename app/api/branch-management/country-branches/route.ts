@@ -95,47 +95,16 @@ export async function GET(request: Request) {
       error = fallbackResult.error;
     }
 
-    let countryBranches = normalizeCountryBranchRows(data);
-    if (!countryBranches || countryBranches.length === 0) {
-      countryBranches = getFallbackCountryBranches(countryId);
-    }
+    const countryBranches = normalizeCountryBranchRows(data);
     return NextResponse.json({ countryBranches }, { status: 200 });
   } catch (error) {
-    const url = new URL(request.url);
-    const countryId = url.searchParams.get("countryId");
-    return NextResponse.json({
-      countryBranches: getFallbackCountryBranches(countryId)
-    }, { status: 200 });
+    if (error instanceof ErpAuthError) {
+      return NextResponse.json({ error: error.message }, { status: error.status });
+    }
+    const message = error instanceof Error ? error.message : "Failed to load country branches.";
+    return NextResponse.json({ error: message, countryBranches: [] }, { status: 500 });
   }
 }
-
-function getFallbackCountryBranches(countryId: string | null) {
-  const cid = countryId || "c-uae-1001";
-  if (cid === "c-pk-1002") {
-    return [
-      { id: "b-pk-2003", country_id: cid, name: "Karachi (Main Branch)", code: "KHI_MAIN", local_currency: "PKR", is_main: true, status: "active" },
-      { id: "b-pk-2004", country_id: cid, name: "Lahore Branch", code: "LHR_BR", local_currency: "PKR", is_main: false, status: "active" }
-    ];
-  } else if (cid === "c-in-1003") {
-    return [
-      { id: "b-in-2005", country_id: cid, name: "Mumbai (Main Branch)", code: "BOM_MAIN", local_currency: "INR", is_main: true, status: "active" },
-      { id: "b-in-2006", country_id: cid, name: "Delhi Branch", code: "DEL_BR", local_currency: "INR", is_main: false, status: "active" }
-    ];
-  } else if (cid === "c-af-1004") {
-    return [
-      { id: "b-af-2007", country_id: cid, name: "Kabul (Main Branch)", code: "KBL_MAIN", local_currency: "AFN", is_main: true, status: "active" }
-    ];
-  } else if (cid === "c-ir-1005") {
-    return [
-      { id: "b-ir-2008", country_id: cid, name: "Tehran (Main Branch)", code: "THR_MAIN", local_currency: "IRR", is_main: true, status: "active" }
-    ];
-  }
-  return [
-    { id: "b-alras-2001", country_id: cid, name: "AL.RAS (Main Branch)", code: "AL_RAS", local_currency: "AED", is_main: true, status: "active" },
-    { id: "b-ho-2002", country_id: cid, name: "HO Head Office", code: "HO", local_currency: "AED", is_main: false, status: "active" }
-  ];
-}
-
 export async function POST(request: Request) {
   try {
     const session = await requireErpSession();

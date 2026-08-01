@@ -77,6 +77,12 @@ export type AreaRow = {
 
 const UAE_DEFAULT_ZIP_CODE = "00000";
 
+function isUuid(value: string | null | undefined) {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+    value ?? ""
+  );
+}
+
 function isUaeCountry(row: { name?: string | null; iso2?: string | null; iso3?: string | null; currency_code?: string | null }) {
   const name = (row.name ?? "").trim().toLowerCase();
   const iso2 = (row.iso2 ?? "").trim().toUpperCase();
@@ -122,83 +128,13 @@ export class LocationsRepository {
         const cName = (c.name || "").toLowerCase();
         const iso2 = (c.iso2 || "").toLowerCase();
         const iso3 = (c.iso3 || "").toLowerCase();
-        return (
-          c.id === clean ||
-          cName === lower ||
-          cName.includes(lower) ||
-          lower.includes(cName) ||
-          iso2 === lower ||
-          iso3 === lower ||
-          (lower.includes("pk") && cName.includes("pakistan")) ||
-          (lower.includes("uae") && (cName.includes("emirates") || iso2 === "ae")) ||
-          (lower.includes("in") && cName.includes("india")) ||
-          (lower.includes("af") && cName.includes("afghanistan")) ||
-          (lower.includes("sa") && cName.includes("saudi")) ||
-          (lower.includes("ir") && cName.includes("iran"))
-        );
+        return c.id === clean || cName === lower || iso2 === lower || iso3 === lower;
       });
 
       if (match?.id) return match.id;
     }
 
-    let name = "Pakistan";
-    let iso2 = "PK";
-    let iso3 = "PAK";
-    let currencyCode = "PKR";
-
-    if (lower.includes("uae") || lower.includes("emirates") || lower.includes("ae")) {
-      name = "United Arab Emirates";
-      iso2 = "AE";
-      iso3 = "ARE";
-      currencyCode = "AED";
-    } else if (lower.includes("in") || lower.includes("india")) {
-      name = "India";
-      iso2 = "IN";
-      iso3 = "IND";
-      currencyCode = "INR";
-    } else if (lower.includes("af") || lower.includes("afghanistan")) {
-      name = "Afghanistan";
-      iso2 = "AF";
-      iso3 = "AFG";
-      currencyCode = "AFN";
-    } else if (lower.includes("sa") || lower.includes("saudi")) {
-      name = "Saudi Arabia";
-      iso2 = "SA";
-      iso3 = "SAU";
-      currencyCode = "SAR";
-    } else if (lower.includes("ir") || lower.includes("iran")) {
-      name = "Iran";
-      iso2 = "IR";
-      iso3 = "IRN";
-      currencyCode = "IRR";
-    }
-
-    const { data: existingByName } = await supabase
-      .from("countries")
-      .select("id")
-      .eq("name", name)
-      .is("deleted_at", null)
-      .maybeSingle();
-
-    if (existingByName?.id) return existingByName.id;
-
-    const { data: created } = await supabase
-      .from("countries")
-      .insert({
-        name,
-        iso2,
-        iso3,
-        currency_code: currencyCode,
-        is_active: true,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select("id")
-      .single();
-
-    if (created?.id) return created.id;
-    if (allCountries && allCountries.length > 0) return allCountries[0].id;
-    return clean;
+    throw new Error(`Country not found in database: ${clean}`);
   }
 
   async resolveStateUuid(stateInput: string, countryIdResolved?: string): Promise<string> {
@@ -309,30 +245,8 @@ export class LocationsRepository {
       );
     }
 
-    let { data, error } = await query.limit(limit);
+    const { data, error } = await query.limit(limit);
     if (error) throw new Error(error.message);
-
-    if (!data || data.length === 0) {
-      const defaultCountries = [
-        { name: "United Arab Emirates", iso2: "AE", iso3: "ARE", currency_code: "AED", is_active: true, official_email: "official@dgt.ae", admin_email: "admin@dgt.ae" },
-        { name: "Pakistan", iso2: "PK", iso3: "PAK", currency_code: "PKR", is_active: true, official_email: "official@dgt.pk", admin_email: "admin@dgt.pk" },
-        { name: "India", iso2: "IN", iso3: "IND", currency_code: "INR", is_active: true, official_email: "official@dgt.in", admin_email: "admin@dgt.in" },
-        { name: "Afghanistan", iso2: "AF", iso3: "AFG", currency_code: "AFN", is_active: true, official_email: "official@dgt.af", admin_email: "admin@dgt.af" },
-        { name: "Iran", iso2: "IR", iso3: "IRN", currency_code: "IRR", is_active: true, official_email: "official@dgt.ir", admin_email: "admin@dgt.ir" }
-      ];
-
-      for (const c of defaultCountries) {
-        await supabase.from("countries").insert({ ...c, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }).catch(() => null);
-      }
-
-      const { data: reData } = await supabase
-        .from("countries")
-        .select("id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number")
-        .is("deleted_at", null)
-        .order("name", { ascending: true });
-
-      data = reData;
-    }
 
     return (data ?? []) as CountryRow[];
   }
