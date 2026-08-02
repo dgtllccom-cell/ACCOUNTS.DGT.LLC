@@ -8,13 +8,39 @@
  */
 
 import fs from 'fs';
+import path from 'path';
 import postgres from 'postgres';
 
+function readEnv(file) {
+  if (!fs.existsSync(file)) return {};
+  const values = {};
+  for (const rawLine of fs.readFileSync(file, 'utf8').split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith('#')) continue;
+    const equals = line.indexOf('=');
+    if (equals < 1) continue;
+    const key = line.slice(0, equals).trim();
+    let value = line.slice(equals + 1).trim();
+    if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
+      value = value.slice(1, -1);
+    }
+    values[key] = value;
+  }
+  return values;
+}
+
+const root = process.cwd();
+const env = {
+  ...readEnv(path.join(root, '.env')),
+  ...readEnv(path.join(root, '.env.local')),
+  ...process.env,
+};
+
 const PROD_REF = "inmayhrxucimxqhgseqi";
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = env.DATABASE_URL;
 
 if (!databaseUrl || !databaseUrl.includes(PROD_REF)) {
-  throw new Error(`DATABASE_URL must target the production project (${PROD_REF}).`);
+  throw new Error(`DATABASE_URL must target the production project (${PROD_REF}). Found: ${databaseUrl || 'undefined'}`);
 }
 
 /**
