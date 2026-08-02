@@ -28,22 +28,14 @@ try {
   if (fs.existsSync('.git/index.lock')) {
     try { fs.unlinkSync('.git/index.lock'); } catch {}
   }
-  const currentBranch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
+  execSync('git checkout -B main', { stdio: 'inherit' });
   execSync('git add -A', { stdio: 'inherit' });
   try {
-    execSync('git -c user.name="DeployBot" -c user.email="deploy@damaan.local" commit -m "fix: location population action and currency auto-set"', { stdio: 'inherit' });
-  } catch {}
-
-  if (currentBranch !== "main") {
-    console.log(`[2/4] Checking out local main branch & merging ${currentBranch}...`);
-    execSync('git checkout main', { stdio: 'inherit' });
-    execSync(`git merge ${currentBranch} -m "chore(release): merge ${currentBranch} into main"`, { stdio: 'inherit' });
-  } else {
-    console.log("[2/4] Already on main branch.");
+    execSync('git -c user.name="DeployBot" -c user.email="deploy@damaan.local" commit -m "fix: add location sync route and currency auto-set"', { stdio: 'inherit' });
+  } catch (e) {
+    console.log("Commit skipped or already clean");
   }
-
-  console.log("[3/4] Pushing main branch to GitHub...");
-  execSync('git push origin main', { stdio: 'inherit' });
+  execSync('git push -u origin main', { stdio: 'inherit' });
   console.log("✅ GitHub main branch updated successfully!\n");
 } catch (err) {
   console.error("Git merge/push error:", err.message);
