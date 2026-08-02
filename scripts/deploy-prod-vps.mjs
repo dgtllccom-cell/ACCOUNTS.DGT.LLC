@@ -29,16 +29,15 @@ try {
     try { fs.unlinkSync('.git/index.lock'); } catch {}
   }
   const currentBranch = execSync('git rev-parse --abbrev-ref HEAD', { encoding: 'utf8' }).trim();
-  console.log(`[1/4] Current branch: ${currentBranch}. Staging and committing changes...`);
-  execSync('git add .', { stdio: 'inherit' });
+  execSync('git add -A', { stdio: 'inherit' });
   try {
-    execSync('git commit -m "fix(auth): finalize superadmin login and session fixes for production release"', { stdio: 'inherit' });
+    execSync('git -c user.name="DeployBot" -c user.email="deploy@damaan.local" commit -m "fix: location population action and currency auto-set"', { stdio: 'inherit' });
   } catch {}
 
   if (currentBranch !== "main") {
     console.log(`[2/4] Checking out local main branch & merging ${currentBranch}...`);
     execSync('git checkout main', { stdio: 'inherit' });
-    execSync(`git merge ${currentBranch} -m "chore(release): merge ${currentBranch} into main for production deployment"`, { stdio: 'inherit' });
+    execSync(`git merge ${currentBranch} -m "chore(release): merge ${currentBranch} into main"`, { stdio: 'inherit' });
   } else {
     console.log("[2/4] Already on main branch.");
   }

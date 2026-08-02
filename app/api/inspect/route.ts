@@ -107,6 +107,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ country_counts });
     }
 
+    if (action === "populate-locations") {
+      await sql.end();
+      const populateRoute = await import("../admin/populate-locations/route");
+      return populateRoute.GET(request);
+    }
+
 
 
     if (action === "list-accounts") {
