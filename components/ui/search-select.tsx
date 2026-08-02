@@ -25,6 +25,7 @@ export function SearchSelect({
   onSearchValueChange,
   createLabel = "+ New",
   onCreateNew,
+  createButtonPlacement = "below",
   triggerClassName,
   className
 }: {
