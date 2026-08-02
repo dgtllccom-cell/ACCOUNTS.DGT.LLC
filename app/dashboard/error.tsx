@@ -38,10 +38,10 @@ export default function DashboardError({
       const routeKey = "chunk_reload_" + window.location.pathname;
       const lastReload = sessionStorage.getItem(routeKey);
       const now = Date.now();
-      // Auto-reload immediately per route if not reloaded on this path in the last 30 seconds
+      // Auto-reload immediately with cache-busting timestamp per route if not reloaded on this path in the last 30 seconds
       if (!lastReload || now - parseInt(lastReload, 10) > 30000) {
         sessionStorage.setItem(routeKey, String(now));
-        window.location.reload();
+        window.location.href = window.location.pathname + "?_t=" + now;
         return;
       }
     }

@@ -34,7 +34,7 @@ export default function GlobalClientError({
         const now = Date.now();
         if (!lastReload || now - parseInt(lastReload, 10) > 15000) {
           sessionStorage.setItem("chunk_reload_attempt", now.toString());
-          window.location.reload();
+          window.location.href = window.location.pathname + "?_t=" + now;
         }
       } catch {}
     }
