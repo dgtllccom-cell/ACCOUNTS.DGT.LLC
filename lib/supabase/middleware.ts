@@ -28,8 +28,8 @@ export async function updateSession(request: NextRequest) {
       return supabaseResponse;
     }
 
-    // Auth pages must stay available even when Supabase/Auth is slow or unreachable.
-    if (request.nextUrl.pathname.startsWith("/auth")) {
+    // Auth pages and Location lookups must stay available even when Supabase/Auth is slow or unauthenticated.
+    if (request.nextUrl.pathname.startsWith("/auth") || request.nextUrl.pathname.startsWith("/api/erp/locations")) {
       return supabaseResponse;
     }
 

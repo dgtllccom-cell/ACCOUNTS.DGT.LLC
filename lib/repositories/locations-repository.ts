@@ -1,6 +1,27 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
+function getDbUrl(): string {
+  if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
+  try {
+    const fs = require("fs");
+    const path = require("path");
+    const fileLocal = path.join(process.cwd(), ".env.local");
+    if (fs.existsSync(fileLocal)) {
+      const content = fs.readFileSync(fileLocal, "utf8");
+      const match = content.match(/^DATABASE_URL=(.+)$/m);
+      if (match) return match[1].trim().replace(/^['"]|['"]$/g, "");
+    }
+    const fileEnv = path.join(process.cwd(), ".env");
+    if (fs.existsSync(fileEnv)) {
+      const content = fs.readFileSync(fileEnv, "utf8");
+      const match = content.match(/^DATABASE_URL=(.+)$/m);
+      if (match) return match[1].trim().replace(/^['"]|['"]$/g, "");
+    }
+  } catch {}
+  return "";
+}
+
 export type CountryRow = {
   id: string;
   name: string;
@@ -413,9 +434,10 @@ export class LocationsRepository {
 
     let { data } = await query.limit(limit);
 
-    if ((!data || data.length === 0) && process.env.DATABASE_URL) {
+    const dbUrl = getDbUrl();
+    if ((!data || data.length === 0) && dbUrl) {
       try {
-        const sql = (await import("postgres")).default(process.env.DATABASE_URL, { max: 1, prepare: false });
+        const sql = (await import("postgres")).default(dbUrl, { max: 1, prepare: false });
         const rows = q
           ? await sql`
               SELECT id, country_id, name, code, postal_code, phone_area_code, is_active
@@ -461,9 +483,9 @@ export class LocationsRepository {
 
     let { data } = await query.limit(limit);
 
-    if ((!data || data.length === 0) && process.env.DATABASE_URL) {
+    if ((!data || data.length === 0) && dbUrl) {
       try {
-        const sql = (await import("postgres")).default(process.env.DATABASE_URL, { max: 1, prepare: false });
+        const sql = (await import("postgres")).default(dbUrl, { max: 1, prepare: false });
         const rows = q
           ? await sql`
               SELECT id, country_id, state_province_id, name, code, postal_code, phone_area_code, is_active
@@ -520,9 +542,9 @@ export class LocationsRepository {
 
     let { data } = await query.limit(limit);
 
-    if ((!data || data.length === 0) && process.env.DATABASE_URL) {
+    if ((!data || data.length === 0) && dbUrl) {
       try {
-        const sql = (await import("postgres")).default(process.env.DATABASE_URL, { max: 1, prepare: false });
+        const sql = (await import("postgres")).default(dbUrl, { max: 1, prepare: false });
         const rows = stateProvinceId
           ? await sql`
               SELECT id, country_id, state_province_id, district_id, name, code, zip_code, phone_area_code, is_active
