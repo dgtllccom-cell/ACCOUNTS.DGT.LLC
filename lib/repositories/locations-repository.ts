@@ -413,52 +413,27 @@ export class LocationsRepository {
 
     let { data } = await query.limit(limit);
 
-    if (!data || data.length === 0) {
-      if (isUuid(countryId)) {
-        const defaultStateNames: Record<string, Array<{ name: string; code: string }>> = {
-          pakistan: [
-            { name: "Balochistan", code: "BAL" },
-            { name: "Sindh", code: "SND" },
-            { name: "Punjab", code: "PJB" },
-            { name: "Khyber Pakhtunkhwa", code: "KPK" },
-            { name: "Islamabad Capital Territory", code: "ICT" }
-          ],
-          "united arab emirates": [
-            { name: "Dubai", code: "DXB" },
-            { name: "Abu Dhabi", code: "AUH" },
-            { name: "Sharjah", code: "SHJ" },
-            { name: "Ajman", code: "AJM" },
-            { name: "Ras Al Khaimah", code: "RAK" }
-          ],
-          "saudi arabia": [
-            { name: "Riyadh Region", code: "RUH" },
-            { name: "Makkah Region", code: "MKH" },
-            { name: "Eastern Province", code: "EAS" }
-          ],
-          afghanistan: [
-            { name: "Kabul Province", code: "KBL" },
-            { name: "Kandahar Province", code: "KDR" },
-            { name: "Herat Province", code: "HRT" }
-          ]
-        };
-
-        const { data: cRow } = await supabase.from("countries").select("name").eq("id", countryId).maybeSingle();
-        const cNameLower = (cRow?.name || input.countryId || "").toLowerCase();
-        const key = Object.keys(defaultStateNames).find((k) => cNameLower.includes(k)) || "pakistan";
-        const toSeed = defaultStateNames[key] || defaultStateNames["pakistan"];
-
-        for (const s of toSeed) {
-          await this.createState({ countryId, name: s.name, code: s.code }).catch(() => null);
-        }
-
-        const { data: reData } = await supabase
-          .from("states_provinces")
-          .select("id, country_id, name, code, postal_code, phone_area_code, is_active")
-          .eq("country_id", countryId)
-          .is("deleted_at", null)
-          .order("name", { ascending: true });
-
-        data = reData;
+    if ((!data || data.length === 0) && process.env.DATABASE_URL) {
+      try {
+        const sql = (await import("postgres")).default(process.env.DATABASE_URL, { max: 1, prepare: false });
+        const rows = q
+          ? await sql`
+              SELECT id, country_id, name, code, postal_code, phone_area_code, is_active
+              FROM public.states_provinces
+              WHERE country_id = ${countryId} AND deleted_at IS NULL
+                AND (name ILIKE ${'%' + q + '%'} OR code ILIKE ${'%' + q + '%'})
+              ORDER BY name ASC LIMIT ${limit}
+            `
+          : await sql`
+              SELECT id, country_id, name, code, postal_code, phone_area_code, is_active
+              FROM public.states_provinces
+              WHERE country_id = ${countryId} AND deleted_at IS NULL
+              ORDER BY name ASC LIMIT ${limit}
+            `;
+        await sql.end();
+        if (rows && rows.length > 0) return rows as StateRow[];
+      } catch {
+        // Fallthrough
       }
     }
 
@@ -486,27 +461,27 @@ export class LocationsRepository {
 
     let { data } = await query.limit(limit);
 
-    if (!data || data.length === 0) {
-      if (isUuid(stateProvinceId)) {
-        const { data: stRow } = await supabase.from("states_provinces").select("id, country_id, name").eq("id", stateProvinceId).maybeSingle();
-        if (stRow?.id) {
-          const defaultDistrictName = `${stRow.name} District`;
-          await this.createDistrict({
-            countryId: stRow.country_id,
-            stateProvinceId: stRow.id,
-            name: defaultDistrictName,
-            code: stRow.name.slice(0, 3).toUpperCase()
-          }).catch(() => null);
-
-          const { data: reData } = await supabase
-            .from("districts")
-            .select("id, country_id, state_province_id, name, code, postal_code, phone_area_code, is_active")
-            .eq("state_province_id", stateProvinceId)
-            .is("deleted_at", null)
-            .order("name", { ascending: true });
-
-          data = reData;
-        }
+    if ((!data || data.length === 0) && process.env.DATABASE_URL) {
+      try {
+        const sql = (await import("postgres")).default(process.env.DATABASE_URL, { max: 1, prepare: false });
+        const rows = q
+          ? await sql`
+              SELECT id, country_id, state_province_id, name, code, postal_code, phone_area_code, is_active
+              FROM public.districts
+              WHERE state_province_id = ${stateProvinceId} AND deleted_at IS NULL
+                AND (name ILIKE ${'%' + q + '%'} OR code ILIKE ${'%' + q + '%'})
+              ORDER BY name ASC LIMIT ${limit}
+            `
+          : await sql`
+              SELECT id, country_id, state_province_id, name, code, postal_code, phone_area_code, is_active
+              FROM public.districts
+              WHERE state_province_id = ${stateProvinceId} AND deleted_at IS NULL
+              ORDER BY name ASC LIMIT ${limit}
+            `;
+        await sql.end();
+        if (rows && rows.length > 0) return rows as DistrictRow[];
+      } catch {
+        // Fallthrough
       }
     }
 
@@ -544,6 +519,29 @@ export class LocationsRepository {
     if (q) query = query.or(`name.ilike.%${q}%,code.ilike.%${q}%,zip_code.ilike.%${q}%`);
 
     let { data } = await query.limit(limit);
+
+    if ((!data || data.length === 0) && process.env.DATABASE_URL) {
+      try {
+        const sql = (await import("postgres")).default(process.env.DATABASE_URL, { max: 1, prepare: false });
+        const rows = stateProvinceId
+          ? await sql`
+              SELECT id, country_id, state_province_id, district_id, name, code, zip_code, phone_area_code, is_active
+              FROM public.cities
+              WHERE country_id = ${countryId} AND state_province_id = ${stateProvinceId} AND deleted_at IS NULL
+              ORDER BY name ASC LIMIT ${limit}
+            `
+          : await sql`
+              SELECT id, country_id, state_province_id, district_id, name, code, zip_code, phone_area_code, is_active
+              FROM public.cities
+              WHERE country_id = ${countryId} AND deleted_at IS NULL
+              ORDER BY name ASC LIMIT ${limit}
+            `;
+        await sql.end();
+        if (rows && rows.length > 0) return rows as CityRow[];
+      } catch {
+        // Fallthrough
+      }
+    }
 
     if (!data || data.length === 0) {
       if (isUuid(countryId)) {
