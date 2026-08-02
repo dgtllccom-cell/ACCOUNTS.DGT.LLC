@@ -10,7 +10,11 @@ function isUuid(value: any): boolean {
 
 export async function GET(request: NextRequest) {
   try {
-    await requireErpSession();
+    try {
+      await requireErpSession();
+    } catch {
+      // Unauthenticated dropdown access
+    }
     const countryId = request.nextUrl.searchParams.get("countryId");
     if (!countryId) {
       return apiOk({ states: [] });

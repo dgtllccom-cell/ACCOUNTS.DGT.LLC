@@ -28,13 +28,13 @@ try {
   if (fs.existsSync('.git/index.lock')) {
     try { fs.unlinkSync('.git/index.lock'); } catch {}
   }
-  execSync('git checkout -B main', { stdio: 'inherit' });
   execSync('git add -A', { stdio: 'inherit' });
   try {
-    execSync('git -c user.name="DeployBot" -c user.email="deploy@damaan.local" commit -m "fix: add location sync route and currency auto-set"', { stdio: 'inherit' });
+    execSync('git -c user.name="DeployBot" -c user.email="deploy@damaan.local" commit -m "fix: location sync route and currency auto-set"', { stdio: 'inherit' });
   } catch (e) {
     console.log("Commit skipped or already clean");
   }
+  execSync('git branch -M main', { stdio: 'inherit' });
   execSync('git push -u origin main', { stdio: 'inherit' });
   console.log("✅ GitHub main branch updated successfully!\n");
 } catch (err) {

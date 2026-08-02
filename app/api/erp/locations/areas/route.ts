@@ -10,15 +10,20 @@ function isUuid(value: any): boolean {
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireErpSession();
+    let session = null;
+    try {
+      session = await requireErpSession();
+    } catch {
+      // Unauthenticated dropdown access
+    }
     const cityId = request.nextUrl.searchParams.get("cityId");
     if (!cityId) {
       return apiOk({ areas: [] });
     }
 
-    if (!session.isSuperAdmin) {
+    if (session && !session.isSuperAdmin && session.countryIds?.length > 0) {
       const city = await locationsRepository.getCityById(cityId);
-      if (!session.countryIds.includes(city.country_id)) {
+      if (city && !session.countryIds.includes(city.country_id)) {
         return apiOk({ areas: [] });
       }
     }
