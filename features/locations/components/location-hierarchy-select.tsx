@@ -93,23 +93,52 @@ export function LocationHierarchySelect({
   const [openCreateType, setOpenCreateType] = useState<"country" | "state" | "district" | "city" | "area" | null>(null);
 
   const selectedCountry = useMemo(
-    () => countries.find((c) => c.id === value.countryId) ?? null,
+    () =>
+      countries.find(
+        (c) =>
+          c.id === value.countryId ||
+          (Boolean(value.countryId) &&
+            (c.name.toLowerCase() === value.countryId.toLowerCase() ||
+              c.iso2?.toLowerCase() === value.countryId.toLowerCase()))
+      ) ?? null,
     [countries, value.countryId]
   );
   const selectedState = useMemo(
-    () => states.find((s) => s.id === value.stateProvinceId) ?? null,
+    () =>
+      states.find(
+        (s) =>
+          s.id === value.stateProvinceId ||
+          (Boolean(value.stateProvinceId) && s.name.toLowerCase() === value.stateProvinceId.toLowerCase())
+      ) ?? null,
     [states, value.stateProvinceId]
   );
   const selectedDistrict = useMemo(
-    () => districts.find((d) => d.id === value.districtId) ?? null,
+    () =>
+      districts.find(
+        (d) =>
+          d.id === value.districtId ||
+          (Boolean(value.districtId) && d.name.toLowerCase() === value.districtId.toLowerCase())
+      ) ?? null,
     [districts, value.districtId]
   );
   const selectedCity = useMemo(
-    () => cities.find((c) => c.id === value.cityId) ?? null,
+    () =>
+      cities.find(
+        (c) =>
+          c.id === value.cityId ||
+          (Boolean(value.cityId) && c.name.toLowerCase() === value.cityId.toLowerCase())
+      ) ?? null,
     [cities, value.cityId]
   );
   const selectedArea = useMemo(
-    () => (value.areaId ? areas.find((a) => a.id === value.areaId) ?? null : null),
+    () =>
+      value.areaId
+        ? areas.find(
+            (a) =>
+              a.id === value.areaId ||
+              (Boolean(value.areaId) && a.name.toLowerCase() === value.areaId.toLowerCase())
+          ) ?? null
+        : null,
     [areas, value.areaId]
   );
 
@@ -493,11 +522,14 @@ export function LocationQuickCreateModal({
     type ? type.charAt(0).toUpperCase() + type.slice(1) : "";
 
   const canSave = useMemo(() => {
-    if (type === "country") {
-      return Boolean(name.trim() && iso2.trim());
-    }
-    return Boolean(name.trim());
-  }, [type, name, iso2]);
+    if (!name.trim()) return false;
+    if (type === "country") return Boolean(iso2.trim());
+    if (type === "state") return Boolean(countryId);
+    if (type === "district") return Boolean(countryId && stateProvinceId);
+    if (type === "city") return Boolean(countryId);
+    if (type === "area") return Boolean(countryId && cityId);
+    return true;
+  }, [type, countryId, stateProvinceId, cityId, name, iso2]);
 
   async function handleSave() {
     if (!canSave || !type) return;

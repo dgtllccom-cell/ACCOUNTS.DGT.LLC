@@ -6,24 +6,26 @@ import { linkEmailAccount } from "@/lib/api/email-link";
 
 export async function GET(request: NextRequest) {
   try {
-    const session = await requireErpSession();
     const q = request.nextUrl.searchParams.get("q");
     let countries = await locationsRepository.listCountries({ query: q, limit: 500 });
 
-    // Scope: super admin can see all; others see only assigned countries.
-    // Pass ?all=true to bypass scoping (used for transit country pickers in purchase wizard).
+    let session = null;
+    try {
+      session = await requireErpSession();
+    } catch {
+      // Unauthenticated public access for login form dropdowns
+    }
+
     const bypassScope = request.nextUrl.searchParams.get("all") === "true";
-    if (!session.isSuperAdmin && !bypassScope) {
+    if (session && !session.isSuperAdmin && !bypassScope && session.countryIds?.length > 0) {
       const allowed = new Set(session.countryIds);
-      countries = countries.filter((c) => allowed.has(c.id));
+      const filtered = countries.filter((c) => allowed.has(c.id));
+      if (filtered.length > 0) countries = filtered;
     }
-    if (!countries || countries.length === 0) {
-      countries = await locationsRepository.listCountries({ query: q, limit: 500 });
-    }
+
     return apiOk({ countries });
-  } catch {
-    const countries = await locationsRepository.listCountries({ limit: 500 }).catch(() => []);
-    return apiOk({ countries });
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
