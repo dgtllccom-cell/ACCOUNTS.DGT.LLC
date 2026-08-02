@@ -159,6 +159,24 @@ export function SearchSelect({
           </Command>
         </PopoverContent>
       </Popover>
+
+      {onCreateNew && (createButtonPlacement === "below" || createButtonPlacement === "both") && (
+        <div className="mt-1 flex justify-start">
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={async (e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              await onCreateNew();
+            }}
+            className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline cursor-pointer disabled:opacity-50 transition"
+          >
+            <span className="text-sm font-black">+</span>
+            <span>{createLabel}</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }

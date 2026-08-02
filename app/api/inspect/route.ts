@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import postgres from "postgres";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { locationsRepository } from "@/lib/repositories/locations-repository";
 
 export const dynamic = "force-dynamic";
 
@@ -79,7 +79,7 @@ export async function GET(request: NextRequest) {
     }
 
     if (action === "list-locations") {
-      const countries = await sql`SELECT id, name, currency_code FROM public.countries WHERE deleted_at IS NULL`;
+      const countries = await sql`SELECT id, name, iso2, currency_code FROM public.countries WHERE deleted_at IS NULL ORDER BY name`;
       const country_branches = await sql`SELECT id, country_id, name, code, local_currency, is_main, company_id FROM public.country_branches WHERE deleted_at IS NULL`;
       const city_branches = await sql`SELECT id, country_id, country_branch_id, city_name, name, code, local_currency, company_id FROM public.city_branches WHERE deleted_at IS NULL`;
       const companies = await sql`SELECT id, name, base_currency FROM public.companies WHERE deleted_at IS NULL`;
@@ -87,6 +87,24 @@ export async function GET(request: NextRequest) {
       const cities = await sql`SELECT id, country_id, name, code FROM public.cities WHERE deleted_at IS NULL LIMIT 200`;
       await sql.end();
       return NextResponse.json({ countries, country_branches, city_branches, companies, branches, cities });
+    }
+
+    if (action === "count-official-locations") {
+      const country_counts = await sql`
+        SELECT c.name as country_name, c.iso2, 
+               count(distinct s.id) as state_count, 
+               count(distinct d.id) as district_count, 
+               count(distinct ct.id) as city_count
+        FROM public.countries c
+        LEFT JOIN public.states_provinces s ON s.country_id = c.id AND s.deleted_at IS NULL
+        LEFT JOIN public.districts d ON d.country_id = c.id AND d.deleted_at IS NULL
+        LEFT JOIN public.cities ct ON ct.country_id = c.id AND ct.deleted_at IS NULL
+        WHERE c.deleted_at IS NULL
+        GROUP BY c.id, c.name, c.iso2
+        ORDER BY c.name
+      `;
+      await sql.end();
+      return NextResponse.json({ country_counts });
     }
 
 
@@ -887,6 +905,6 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message, stack: error.stack }, { status: 200 });
+    return NextResponse.json({ inspectError: error?.message || String(error), stack: error?.stack }, { status: 200 });
   }
 }

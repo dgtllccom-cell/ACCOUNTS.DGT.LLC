@@ -61,6 +61,12 @@ async function run() {
       throw new Error(`One of the main country branches was not found: AFG:${!!afgMain}, IND:${!!indMain}, PAK:${!!pakMain}, UAE:${!!uaeMain}`);
     }
 
+    // Dynamically resolve optional state and city IDs
+    const [afgState] = await sql`SELECT id FROM states_provinces WHERE country_id = ${afg.id} AND deleted_at IS NULL LIMIT 1`;
+    const [afgCity] = await sql`SELECT id FROM cities WHERE country_id = ${afg.id} AND deleted_at IS NULL LIMIT 1`;
+    const [indState] = await sql`SELECT id FROM states_provinces WHERE country_id = ${ind.id} AND deleted_at IS NULL LIMIT 1`;
+    const [indCity] = await sql`SELECT id FROM cities WHERE country_id = ${ind.id} AND deleted_at IS NULL LIMIT 1`;
+
     // 2. Insert city branches if not exists
     // Kabul, Afghanistan (AFG-AFKD-002)
     const [kabulBranchExists] = await sql`SELECT id FROM city_branches WHERE code = 'AFG-AFKD-002' AND deleted_at IS NULL`;
@@ -76,7 +82,7 @@ async function run() {
           state_province_id, city_id, company_id, owner_name, permission_template, permission_grants, district_id, email, phone
         ) VALUES (
           ${afg.id}, ${afgMain.id}, 'Kabul', 'KB/01', 'AFG-AFKD-002', 'AFN', 'active',
-          '3215c0ed-b728-437f-9bff-214809f90317', 'cd209214-5638-44ee-b7e2-19b262edbfc9',
+          ${afgState?.id ?? null}, ${afgCity?.id ?? null},
           ${afgMain.company_id}, ${afgMain.owner_name || 'Asmatullah'}, 'city-standard', ${sql.json(afgMain.permission_grants)}, ${afgMain.district_id}, 'kabul@dgt.llc', '0000000000'
         ) RETURNING id
       `;
@@ -98,7 +104,7 @@ async function run() {
           state_province_id, city_id, company_id, owner_name, permission_template, permission_grants, district_id, email, phone
         ) VALUES (
           ${ind.id}, ${indMain.id}, 'Mumbai', 'MB/01', 'IND-INDL-002', 'INR', 'active',
-          '946b5d13-19fb-495e-92ee-686ec6ff5ef3', '6b661dd8-6e3c-4d06-afa0-424453c94fc1',
+          ${indState?.id ?? null}, ${indCity?.id ?? null},
           ${indMain.company_id}, ${indMain.owner_name || 'Asmatullah'}, 'city-standard', ${sql.json(indMain.permission_grants)}, ${indMain.district_id}, 'mumbai@dgt.llc', '0000000000'
         ) RETURNING id
       `;

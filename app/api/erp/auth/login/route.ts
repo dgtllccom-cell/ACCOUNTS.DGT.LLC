@@ -72,6 +72,27 @@ const demoAccounts: Record<
     fullName: "Super Admin",
     roles: ["super_admin"]
   },
+  asmatdgtllc: {
+    password: "Admin@123",
+    userId: TEMP_USER_UUIDS["temp-super-admin"],
+    email: "superadmin@damaan.com",
+    fullName: "Asmatullah Khan (Super Admin)",
+    roles: ["super_admin"]
+  },
+  "asmatdgtllc@dgt.llc": {
+    password: "Admin@123",
+    userId: TEMP_USER_UUIDS["temp-super-admin"],
+    email: "superadmin@damaan.com",
+    fullName: "Asmatullah Khan (Super Admin)",
+    roles: ["super_admin"]
+  },
+  asmat: {
+    password: "Admin@123",
+    userId: TEMP_USER_UUIDS["temp-super-admin"],
+    email: "superadmin@damaan.com",
+    fullName: "Asmatullah Khan (Super Admin)",
+    roles: ["super_admin"]
+  },
   "super admin": {
     password: "Admin@123",
     userId: TEMP_USER_UUIDS["temp-super-admin"],
@@ -427,8 +448,8 @@ export async function POST(request: NextRequest) {
   const idClean = rawIdentifier.toLowerCase().replace(/\s+/g, "");
   let demoAccount = demoAccounts[idClean] || demoAccounts[rawIdentifier.toLowerCase()];
 
-  // Super Admin fallbacks for any typo like "super admi", "super admin", "superadmin", etc.
-  if (!demoAccount && (idClean.includes("superadmin") || idClean.includes("superadmi") || idClean.includes("admin"))) {
+  // Super Admin fallbacks for any typo like "super admi", "super admin", "superadmin", "asmat", "asmatdgtllc", etc.
+  if (!demoAccount && (idClean.includes("superadmin") || idClean.includes("superadmi") || idClean.includes("admin") || idClean.includes("asmat"))) {
     demoAccount = demoAccounts["superadmin"];
   }
 

