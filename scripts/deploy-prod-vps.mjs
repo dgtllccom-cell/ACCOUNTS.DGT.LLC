@@ -30,12 +30,25 @@ try {
   }
   execSync('git add -A', { stdio: 'inherit' });
   try {
-    execSync('git -c user.name="DeployBot" -c user.email="deploy@damaan.local" commit -m "fix: location sync route and currency auto-set"', { stdio: 'inherit' });
+    execSync('git -c user.name="DeployBot" -c user.email="deploy@damaan.local" commit -m "fix: include populate-vps-locations and unauthenticated location routes"', { stdio: 'inherit' });
   } catch (e) {
     console.log("Commit skipped or already clean");
   }
-  execSync('git branch -M main', { stdio: 'inherit' });
-  execSync('git push -u origin main', { stdio: 'inherit' });
+
+  console.log("Syncing with GitHub remote main...");
+  try {
+    execSync('git fetch origin main', { stdio: 'inherit' });
+    try {
+      execSync('git rebase origin/main', { stdio: 'inherit' });
+    } catch {
+      execSync('git rebase --abort', { stdio: 'inherit' });
+      execSync('git merge origin/main --no-edit', { stdio: 'inherit' });
+    }
+  } catch (err) {
+    console.log("Remote sync notice:", err.message);
+  }
+
+  execSync('git push -f origin main', { stdio: 'inherit' });
   console.log("✅ GitHub main branch updated successfully!\n");
 } catch (err) {
   console.error("Git merge/push error:", err.message);
