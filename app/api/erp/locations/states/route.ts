@@ -23,8 +23,8 @@ export async function GET(request: NextRequest) {
     const q = request.nextUrl.searchParams.get("q");
     const states = await locationsRepository.listStates({ countryId, query: q, limit: 500 });
     return apiOk({ states });
-  } catch (error: any) {
-    return NextResponse.json({ ok: false, error: error?.message || String(error), stack: error?.stack }, { status: 200 });
+  } catch (error) {
+    return handleApiError(error);
   }
 }
 
