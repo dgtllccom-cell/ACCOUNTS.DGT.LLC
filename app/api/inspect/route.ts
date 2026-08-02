@@ -13,7 +13,14 @@ export async function GET(request: NextRequest) {
 
     const sql = postgres(databaseUrl, { max: 1, prepare: false });
 
-    const action = request.nextUrl.searchParams.get("action");
+    const url = new URL(request.url);
+    const action = url.searchParams.get("action") || request.nextUrl.searchParams.get("action");
+
+    if (action === "populate-locations") {
+      await sql.end();
+      const populateRoute = await import("../admin/populate-locations/route");
+      return populateRoute.GET(request);
+    }
 
     if (action === "test") {
       const ea_columns = await sql`
