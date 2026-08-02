@@ -39,8 +39,13 @@ const env = {
 const PROD_REF = "inmayhrxucimxqhgseqi";
 const databaseUrl = env.DATABASE_URL;
 
-if (!databaseUrl || !databaseUrl.includes(PROD_REF)) {
-  throw new Error(`DATABASE_URL must target the production project (${PROD_REF}). Found: ${databaseUrl || 'undefined'}`);
+if (!databaseUrl) {
+  throw new Error(`DATABASE_URL environment variable is missing.`);
+}
+
+const isProdTarget = databaseUrl.includes(PROD_REF);
+if (env.APP_ENV === "production" && !isProdTarget) {
+  throw new Error(`Production DATABASE_URL must target project (${PROD_REF}). Found: ${databaseUrl}`);
 }
 
 /**

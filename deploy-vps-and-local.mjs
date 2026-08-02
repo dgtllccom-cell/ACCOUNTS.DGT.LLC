@@ -26,7 +26,7 @@ try {
   }
 
   console.log("\n[3/4] Pushing latest code to GitHub (origin main)...");
-  execSync('git push origin main', { stdio: 'inherit' });
+  execSync('git push origin HEAD:main', { stdio: 'inherit' });
   console.log("Git push completed successfully!");
 } catch (err) {
   console.error("Git sync warning/error:", err.message);
