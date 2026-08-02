@@ -161,8 +161,8 @@ function PreviewField({
   mono?: boolean;
   className?: string;
 }) {
-  const shown = value && value !== "-" ? value : "—";
-  const empty = shown === "—";
+  const shown = value && value !== "-" ? value : "â€”";
+  const empty = shown === "â€”";
   return (
     <div className={className}>
       <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{label}</p>
@@ -309,7 +309,8 @@ export function CompanyIncorporationForm({
     countryId: "",
     stateProvinceId: "",
     districtId: "",
-    cityId: ""
+    cityId: "",
+    areaId: ""
   });
   const [locationMeta, setLocationMeta] = useState<LocationHierarchyMeta>(damaamDraftLocationMeta);
   const [address, setAddress] = useState("Al Ras, Deira, Dubai, United Arab Emirates");
@@ -322,60 +323,66 @@ export function CompanyIncorporationForm({
   const [message, setMessage] = useState("");
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
 
-  const [savedCompanies, setSavedCompanies] = useState<(CompanyIncorporationData & { id: string })[]>([]);
-  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(initialCompanyId ?? null);
+  const [saving, setSaving] = useState(false);
 
-  // Initialize from LocalStorage
+  // Load company details from API if initialCompanyId is provided for editing
   useEffect(() => {
-    const stored = localStorage.getItem("incorporated_companies");
-    if (stored) {
-      try {
-        setSavedCompanies(JSON.parse(stored));
-      } catch {
-        setSavedCompanies(initialCompanies);
-      }
-    } else {
-      setSavedCompanies(initialCompanies);
-      localStorage.setItem("incorporated_companies", JSON.stringify(initialCompanies));
-    }
-  }, []);
+    if (initialCompanyId) {
+      apiGet<{ company: any }>(`/api/erp/companies/${encodeURIComponent(initialCompanyId)}`)
+        .then((res) => {
+          const comp = res.company;
+          if (comp) {
+            setOwnerName(comp.owner_name || "");
+            setCompanyName(comp.name || "");
+            setBusinessName(comp.legal_name || "");
+            setBusinessType(comp.business_type || "");
+            setAddress(comp.address || "");
 
-  // Load company details if initialCompanyId is provided for editing
-  useEffect(() => {
-    if (initialCompanyId && savedCompanies.length > 0) {
-      const comp = savedCompanies.find((c) => c.id === initialCompanyId);
-      if (comp) {
-        setOwnerName(comp.ownerName);
-        setCompanyName(comp.companyName);
-        setBusinessName(comp.businessName);
-        setBusinessType(comp.businessType || "");
-        setAddress(comp.address);
-        setContacts(comp.contacts.length > 0 ? comp.contacts : [newRow()]);
-        setRegistrations(comp.registrations.length > 0 ? comp.registrations : [newRow()]);
-        setOwnerIds(comp.ownerIds.length > 0 ? comp.ownerIds : [newRow()]);
-        
-        setLocation({
-          countryId: comp.countryId || "",
-          stateProvinceId: comp.stateProvinceId || "",
-          districtId: comp.districtId || "",
-          cityId: comp.cityId || ""
+            const mappedContacts = Array.isArray(comp.contacts) && comp.contacts.length > 0
+              ? comp.contacts.map((c: any, i: number) => ({ id: c.id || `c-${i}`, type: c.type || "", value: c.value || "" }))
+              : [newRow()];
+            const mappedRegs = Array.isArray(comp.registrations) && comp.registrations.length > 0
+              ? comp.registrations.map((r: any, i: number) => ({ id: r.id || `r-${i}`, type: r.type || "", value: r.value || "" }))
+              : [newRow()];
+            const mappedOwnerIds = Array.isArray(comp.owner_ids) && comp.owner_ids.length > 0
+              ? comp.owner_ids.map((o: any, i: number) => ({ id: o.id || `o-${i}`, type: o.type || "", value: o.value || "" }))
+              : [newRow()];
+
+            setContacts(mappedContacts);
+            setRegistrations(mappedRegs);
+            setOwnerIds(mappedOwnerIds);
+
+            setLocation({
+              countryId: comp.country_id || "",
+              stateProvinceId: comp.state_province_id || "",
+              districtId: comp.district_id || "",
+              cityId: comp.city_id || "",
+              areaId: comp.area_location_id || ""
+            });
+
+            setLocationMeta({
+              country: comp.country_name ? ({ id: comp.country_id || "", name: comp.country_name } as any) : null,
+              state: comp.state_name ? ({ id: comp.state_province_id || "", name: comp.state_name } as any) : null,
+              district: comp.district_name ? ({ id: comp.district_id || "", name: comp.district_name } as any) : null,
+              city: comp.city_name ? ({ id: comp.city_id || "", name: comp.city_name, zip_code: comp.zip_code } as any) : null,
+              area: comp.area_name ? ({ id: comp.area_location_id || "", name: comp.area_name, postal_code: comp.zip_code, zip_code: comp.zip_code } as any) : null
+            });
+          }
+        })
+        .catch((err) => {
+          console.error("Error loading company profile:", err);
+          setMessage("Failed to load company record from database.");
         });
-        setLocationMeta({
-          country: comp.country ? { id: comp.countryId || "", name: comp.country } as any : null,
-          state: comp.state ? { id: comp.stateProvinceId || "", name: comp.state } as any : null,
-          district: comp.district ? { id: comp.districtId || "", name: comp.district } as any : null,
-          city: comp.city ? { id: comp.cityId || "", name: comp.city, zip_code: comp.zipCode } as any : null,
-          area: (comp as any).area ? { id: comp.areaLocationId || "", name: (comp as any).area, postal_code: comp.zipCode, zip_code: comp.zipCode } as any : null
-        });
-      }
     }
-  }, [initialCompanyId, savedCompanies]);
+  }, [initialCompanyId]);
 
   const country = locationMeta.country?.name ?? "";
   const stateName = locationMeta.state?.name ?? "";
   const districtName = locationMeta.district?.name ?? "";
   const city = locationMeta.city?.name ?? "";
   const areaName = locationMeta.area?.name ?? "";
+  const areaCode = (locationMeta.area as any)?.code ?? "";
+  const displayArea = areaName ? (areaCode ? `${areaName} (${areaCode})` : areaName) : "-";
   const zipCode = ((locationMeta.area as any)?.postal_code || (locationMeta.area as any)?.zip_code || (locationMeta.city as any)?.postal_code || locationMeta.city?.zip_code || "");
 
   // Auto-fill Country phone prefix when country selects
@@ -396,10 +403,6 @@ export function CompanyIncorporationForm({
   const ready = Boolean(ownerName && companyName && businessName && country && stateName && city && address);
 
   const previewData = useMemo(() => {
-    if (selectedCompanyId) {
-      const match = savedCompanies.find((c) => c.id === selectedCompanyId);
-      if (match) return match;
-    }
     return {
       ownerName: ownerName || "-",
       companyName: companyName || "-",
@@ -409,7 +412,8 @@ export function CompanyIncorporationForm({
       state: stateName || "-",
       district: districtName || "-",
       city: city || "-",
-      area: areaName || "-",
+      area: displayArea || "-",
+      areaCode: areaCode || "-",
       zipCode: zipCode || "-",
       address: address || "-",
       contacts: contacts.filter((row) => row.type && row.value),
@@ -417,8 +421,6 @@ export function CompanyIncorporationForm({
       ownerIds: ownerIds.filter((row) => row.type && row.value)
     };
   }, [
-    selectedCompanyId,
-    savedCompanies,
     ownerName,
     companyName,
     businessName,
@@ -427,7 +429,8 @@ export function CompanyIncorporationForm({
     stateName,
     districtName,
     city,
-    areaName,
+    displayArea,
+    areaCode,
     zipCode,
     address,
     contacts,
@@ -472,74 +475,76 @@ export function CompanyIncorporationForm({
       return;
     }
 
-    if (initialCompanyId) {
-      // Edit mode: update existing
-      const updated = savedCompanies.map((c) => {
-        if (c.id === initialCompanyId) {
-          return {
-            ...c,
-            ownerName,
-            companyName,
-            businessName,
-            businessType,
-            countryId: location.countryId || undefined,
-            stateProvinceId: location.stateProvinceId || undefined,
-            districtId: location.districtId || undefined,
-            cityId: location.cityId || undefined,
-            areaLocationId: location.areaId || undefined,
-            country,
-            state: stateName,
-            district: districtName,
-            city,
-            area: areaName,
-            zipCode,
-            address,
-            contacts: contacts.filter((row) => row.type && row.value),
-            registrations: registrations.filter((row) => row.type && row.value),
-            ownerIds: ownerIds.filter((row) => row.type && row.value)
-          };
-        }
-        return c;
-      });
-      setSavedCompanies(updated);
-      localStorage.setItem("incorporated_companies", JSON.stringify(updated));
-      setMessage(`Updated company "${companyName}" successfully.`);
-      
-      if (mode === "standalone") {
-        setTimeout(() => {
-          router.push("/dashboard/settings/company" as Route);
-        }, 1000);
-      } else {
-        onSave?.(updated.find(c => c.id === initialCompanyId) as CompanyIncorporationData);
-      }
-    } else {
-      // Creation mode: add new
-      try {
-        const lang = (typeof document !== "undefined" ? document.documentElement.lang : "en") || "en";
-        const originalLanguage = ["ar", "ur", "fa", "ps"].includes(lang) ? lang : "en";
+    setSaving(true);
+    setMessage("");
 
-        const res = await apiPost<{ companyId: string }>("/api/erp/companies", {
-          name: companyName.trim(),
-          legalName: businessName.trim() || companyName.trim(),
-          baseCurrency: "USD",
-          originalLanguage,
+    const payload = {
+      name: companyName.trim(),
+      legalName: businessName.trim() || companyName.trim(),
+      baseCurrency: "USD",
+      ownerName: ownerName.trim(),
+      businessType: businessType.trim(),
+      countryId: location.countryId || undefined,
+      stateProvinceId: location.stateProvinceId || undefined,
+      districtId: location.districtId || undefined,
+      cityId: location.cityId || undefined,
+      areaLocationId: location.areaId || undefined,
+      countryName: country,
+      stateName,
+      districtName,
+      cityName: city,
+      areaName,
+      zipCode,
+      address,
+      contacts: contacts.filter((row) => row.type && row.value),
+      registrations: registrations.filter((row) => row.type && row.value),
+      ownerIds: ownerIds.filter((row) => row.type && row.value)
+    };
+
+    try {
+      if (initialCompanyId) {
+        // Edit mode: update database record
+        await apiPatch<{ company: any }>(`/api/erp/companies/${encodeURIComponent(initialCompanyId)}`, payload);
+        setMessage(`Updated company "${companyName}" in database successfully.`);
+
+        const updatedData: CompanyIncorporationData & { id: string } = {
+          id: initialCompanyId,
           ownerName,
+          companyName,
+          businessName,
           businessType,
           countryId: location.countryId || undefined,
           stateProvinceId: location.stateProvinceId || undefined,
           districtId: location.districtId || undefined,
           cityId: location.cityId || undefined,
           areaLocationId: location.areaId || undefined,
-          countryName: country,
-          stateName,
-          districtName,
-          cityName: city,
-          areaName,
+          country,
+          state: stateName,
+          district: districtName,
+          city,
+          area: areaName,
           zipCode,
           address,
           contacts: contacts.filter((row) => row.type && row.value),
           registrations: registrations.filter((row) => row.type && row.value),
           ownerIds: ownerIds.filter((row) => row.type && row.value)
+        };
+
+        onSave?.(updatedData);
+
+        if (mode === "standalone") {
+          setTimeout(() => {
+            router.push("/dashboard/settings/company" as Route);
+          }, 1000);
+        }
+      } else {
+        // Creation mode: add new company to database
+        const lang = (typeof document !== "undefined" ? document.documentElement.lang : "en") || "en";
+        const originalLanguage = ["ar", "ur", "fa", "ps"].includes(lang) ? lang : "en";
+
+        const res = await apiPost<{ companyId: string }>("/api/erp/companies", {
+          ...payload,
+          originalLanguage
         });
 
         const newCompany: CompanyIncorporationData & { id: string } = {
@@ -565,21 +570,45 @@ export function CompanyIncorporationForm({
           ownerIds: ownerIds.filter((row) => row.type && row.value)
         };
 
-        const updated = [newCompany, ...savedCompanies];
-        setSavedCompanies(updated);
-        localStorage.setItem("incorporated_companies", JSON.stringify(updated));
-
         onSave?.(newCompany);
-        setMessage(`Saved company "${newCompany.companyName}" successfully.`);
-        
+        setMessage(`Saved company "${newCompany.companyName}" to database successfully.`);
+
         if (mode === "standalone") {
           setTimeout(() => {
             router.push("/dashboard/settings/company" as Route);
           }, 1000);
         }
-      } catch (err: any) {
-        setMessage(err?.message || "Failed to save company to database.");
       }
+    } catch (err: any) {
+      const errMsg = String(err?.message || err || "");
+      if (errMsg.includes("duplicate") || errMsg.includes("already exists")) {
+        try {
+          const listRes = await apiGet<{ companies: Array<{ id: string; name: string }> }>("/api/erp/companies?limit=50");
+          const match = listRes.companies?.find((c) => c.name.toLowerCase() === companyName.trim().toLowerCase());
+          if (match?.id) {
+            const fallbackComp: CompanyIncorporationData & { id: string } = {
+              id: match.id,
+              ownerName,
+              companyName: match.name,
+              businessName,
+              country,
+              state: stateName,
+              city,
+              zipCode,
+              address,
+              contacts: [],
+              registrations: [],
+              ownerIds: []
+            };
+            onSave?.(fallbackComp);
+            setMessage(`Selected existing company "${match.name}".`);
+            return;
+          }
+        } catch {}
+      }
+      setMessage(err?.message || "Failed to save company to database.");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -848,7 +877,10 @@ export function CompanyIncorporationForm({
                   <PreviewField label="Country" value={previewData.country} />
                   <PreviewField label="State / Province" value={previewData.state} />
                   <PreviewField label="City" value={previewData.city} />
-                  <PreviewField label="Area / Locality" value={previewData.area} />
+                  <PreviewField label="Area / Town / Locality / Road" value={previewData.area} />
+                  {(previewData as any).areaCode && (previewData as any).areaCode !== "-" ? (
+                    <PreviewField label="Road / Area Code" value={(previewData as any).areaCode} mono />
+                  ) : null}
                   <PreviewField label="ZIP Code" value={previewData.zipCode} mono />
                 </div>
                 {previewData.address && previewData.address !== "-" ? (

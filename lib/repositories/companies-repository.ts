@@ -1,4 +1,26 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import postgres from "postgres";
+
+function getDbUrl(): string {
+  if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
+  try {
+    const fs = require("fs");
+    const path = require("path");
+    const fileLocal = path.join(process.cwd(), ".env.local");
+    if (fs.existsSync(fileLocal)) {
+      const content = fs.readFileSync(fileLocal, "utf8");
+      const match = content.match(/^DATABASE_URL=(.+)$/m);
+      if (match) return match[1].trim().replace(/^['"]|['"]$/g, "");
+    }
+    const fileEnv = path.join(process.cwd(), ".env");
+    if (fs.existsSync(fileEnv)) {
+      const content = fs.readFileSync(fileEnv, "utf8");
+      const match = content.match(/^DATABASE_URL=(.+)$/m);
+      if (match) return match[1].trim().replace(/^['"]|['"]$/g, "");
+    }
+  } catch {}
+  return "";
+}
 
 export type CompanyContact = {
   id?: string;
@@ -104,6 +126,47 @@ function cleanJsonArray<T>(value: T[] | null | undefined) {
   return Array.isArray(value) ? value : [];
 }
 
+function parseJsonField(val: any) {
+  if (!val) return [];
+  if (typeof val === "string") {
+    try {
+      return JSON.parse(val);
+    } catch {
+      return [];
+    }
+  }
+  return Array.isArray(val) ? val : [];
+}
+
+function mapRawRow(r: any): CompanyRow {
+  return {
+    id: r.id,
+    name: r.name,
+    legal_name: r.legal_name ?? null,
+    base_currency: r.base_currency ?? "USD",
+    owner_name: r.owner_name ?? null,
+    business_type: r.business_type ?? null,
+    country_id: r.country_id ?? null,
+    state_province_id: r.state_province_id ?? null,
+    district_id: r.district_id ?? null,
+    city_id: r.city_id ?? null,
+    area_location_id: r.area_location_id ?? null,
+    country_name: r.country_name ?? null,
+    state_name: r.state_name ?? null,
+    district_name: r.district_name ?? null,
+    city_name: r.city_name ?? null,
+    area_name: r.area_name ?? null,
+    zip_code: r.zip_code ?? null,
+    address: r.address ?? null,
+    contacts: parseJsonField(r.contacts),
+    registrations: parseJsonField(r.registrations),
+    owner_ids: parseJsonField(r.owner_ids),
+    is_active: r.is_active ?? true,
+    created_at: String(r.created_at || new Date().toISOString()),
+    updated_at: String(r.updated_at || new Date().toISOString())
+  };
+}
+
 function toPayload(input: Partial<CompanyWriteInput>) {
   const payload: Record<string, unknown> = {};
   if ("name" in input) payload.name = cleanText(input.name) ?? "";
@@ -132,27 +195,71 @@ function toPayload(input: Partial<CompanyWriteInput>) {
 
 export class CompaniesRepository {
   async search(input: { query?: string | null; limit?: number }) {
-    const supabase = createSupabaseAdminClient() as any;
-    const limit = Math.min(Math.max(input.limit ?? 20, 1), 50);
+    const limit = Math.min(Math.max(input.limit ?? 500, 1), 500);
+    const q = cleanQuery(input.query ?? "");
+    const localDbUrl = getDbUrl();
 
+    if (localDbUrl) {
+      const localSql = postgres(localDbUrl, { max: 1, prepare: false });
+      try {
+        const rows = q
+          ? await localSql`
+              SELECT * FROM public.companies 
+              WHERE deleted_at IS NULL 
+                AND (name ILIKE ${'%' + q + '%'} OR legal_name ILIKE ${'%' + q + '%'} OR owner_name ILIKE ${'%' + q + '%'} OR country_name ILIKE ${'%' + q + '%'} OR city_name ILIKE ${'%' + q + '%'})
+              ORDER BY name ASC 
+              LIMIT ${limit}
+            `
+          : await localSql`
+              SELECT * FROM public.companies 
+              WHERE deleted_at IS NULL 
+              ORDER BY name ASC 
+              LIMIT ${limit}
+            `;
+        if (rows && rows.length > 0) {
+          return { companies: rows.map(mapRawRow), limit };
+        }
+      } catch (err) {
+        console.error("Direct postgres search error:", err);
+      } finally {
+        await localSql.end({ timeout: 5 });
+      }
+    }
+
+    const supabase = createSupabaseAdminClient() as any;
     let query = supabase
       .from("companies")
       .select(COMPANY_SELECT)
       .is("deleted_at", null)
       .order("name", { ascending: true });
 
-    const q = cleanQuery(input.query ?? "");
     if (q) {
       const like = `%${q}%`;
       query = query.or([`name.ilike.${like}`, `legal_name.ilike.${like}`, `owner_name.ilike.${like}`, `country_name.ilike.${like}`, `city_name.ilike.${like}`].join(","));
     }
 
-    const { data, error } = await query.limit(limit);
-    if (error) throw new Error(error.message);
-    return { companies: (data ?? []) as CompanyRow[], limit };
+    const { data } = await query.limit(limit);
+    return { companies: ((data ?? []).map(mapRawRow)) as CompanyRow[], limit };
   }
 
   async getById(id: string) {
+    const localDbUrl = getDbUrl();
+    if (localDbUrl) {
+      const localSql = postgres(localDbUrl, { max: 1, prepare: false });
+      try {
+        const rows = await localSql`
+          SELECT * FROM public.companies WHERE id = ${id}::uuid AND deleted_at IS NULL LIMIT 1
+        `;
+        if (rows && rows.length > 0) {
+          return mapRawRow(rows[0]);
+        }
+      } catch (err) {
+        console.error("Direct postgres getById error:", err);
+      } finally {
+        await localSql.end({ timeout: 5 });
+      }
+    }
+
     const supabase = createSupabaseAdminClient() as any;
     const { data, error } = await supabase
       .from("companies")
@@ -161,35 +268,138 @@ export class CompaniesRepository {
       .is("deleted_at", null)
       .single();
     if (error) throw new Error(error.message);
-    return data as CompanyRow;
+    return mapRawRow(data);
   }
 
   async create(input: CompanyWriteInput) {
-    const supabase = createSupabaseAdminClient() as any;
     const now = new Date().toISOString();
-    const payload = {
-      ...toPayload(input),
+    const payload = toPayload(input);
+    const localDbUrl = getDbUrl();
+
+    if (localDbUrl) {
+      const localSql = postgres(localDbUrl, { max: 1, prepare: false });
+      try {
+        const rows = await localSql`
+          INSERT INTO public.companies (
+            name, legal_name, base_currency, owner_name, business_type,
+            country_id, state_province_id, district_id, city_id, area_location_id,
+            country_name, state_name, district_name, city_name, area_name, zip_code, address,
+            contacts, registrations, owner_ids, is_active, created_at, updated_at
+          ) VALUES (
+            ${(payload.name as string) || ""},
+            ${(payload.legal_name as string) || null},
+            ${(payload.base_currency as string) || "USD"},
+            ${(payload.owner_name as string) || null},
+            ${(payload.business_type as string) || null},
+            ${payload.country_id ? String(payload.country_id) : null}::uuid,
+            ${payload.state_province_id ? String(payload.state_province_id) : null}::uuid,
+            ${payload.district_id ? String(payload.district_id) : null}::uuid,
+            ${payload.city_id ? String(payload.city_id) : null}::uuid,
+            ${payload.area_location_id ? String(payload.area_location_id) : null}::uuid,
+            ${(payload.country_name as string) || null},
+            ${(payload.state_name as string) || null},
+            ${(payload.district_name as string) || null},
+            ${(payload.city_name as string) || null},
+            ${(payload.area_name as string) || null},
+            ${(payload.zip_code as string) || null},
+            ${(payload.address as string) || null},
+            ${JSON.stringify(payload.contacts || [])}::jsonb,
+            ${JSON.stringify(payload.registrations || [])}::jsonb,
+            ${JSON.stringify(payload.owner_ids || [])}::jsonb,
+            true, ${now}, ${now}
+          )
+          RETURNING id
+        `;
+        if (rows && rows[0]?.id) {
+          return rows[0].id as string;
+        }
+      } catch (err) {
+        console.error("Direct postgres create error:", err);
+      } finally {
+        await localSql.end({ timeout: 5 });
+      }
+    }
+
+    const supabase = createSupabaseAdminClient() as any;
+    const { data, error } = await supabase.from("companies").insert({
+      ...payload,
       is_active: true,
       created_at: now,
       updated_at: now
-    };
-
-    const { data, error } = await supabase.from("companies").insert(payload).select("id").single();
+    }).select("id").single();
     if (error) throw new Error(error.message);
     return data.id as string;
   }
 
   async update(id: string, input: Partial<CompanyWriteInput>) {
-    const supabase = createSupabaseAdminClient() as any;
-    const patch: Record<string, unknown> = { ...toPayload(input), updated_at: new Date().toISOString() };
+    const now = new Date().toISOString();
+    const payload = toPayload(input);
+    const localDbUrl = getDbUrl();
 
+    if (localDbUrl) {
+      const localSql = postgres(localDbUrl, { max: 1, prepare: false });
+      try {
+        const rows = await localSql`
+          UPDATE public.companies SET
+            name = COALESCE(${payload.name !== undefined ? (payload.name as string) : null}, name),
+            legal_name = COALESCE(${payload.legal_name !== undefined ? (payload.legal_name as string) : null}, legal_name),
+            base_currency = COALESCE(${payload.base_currency !== undefined ? (payload.base_currency as string) : null}, base_currency),
+            owner_name = COALESCE(${payload.owner_name !== undefined ? (payload.owner_name as string) : null}, owner_name),
+            business_type = COALESCE(${payload.business_type !== undefined ? (payload.business_type as string) : null}, business_type),
+            country_id = COALESCE(${payload.country_id !== undefined ? (payload.country_id ? String(payload.country_id) : null) : null}::uuid, country_id),
+            state_province_id = COALESCE(${payload.state_province_id !== undefined ? (payload.state_province_id ? String(payload.state_province_id) : null) : null}::uuid, state_province_id),
+            district_id = COALESCE(${payload.district_id !== undefined ? (payload.district_id ? String(payload.district_id) : null) : null}::uuid, district_id),
+            city_id = COALESCE(${payload.city_id !== undefined ? (payload.city_id ? String(payload.city_id) : null) : null}::uuid, city_id),
+            area_location_id = COALESCE(${payload.area_location_id !== undefined ? (payload.area_location_id ? String(payload.area_location_id) : null) : null}::uuid, area_location_id),
+            country_name = COALESCE(${payload.country_name !== undefined ? (payload.country_name as string) : null}, country_name),
+            state_name = COALESCE(${payload.state_name !== undefined ? (payload.state_name as string) : null}, state_name),
+            district_name = COALESCE(${payload.district_name !== undefined ? (payload.district_name as string) : null}, district_name),
+            city_name = COALESCE(${payload.city_name !== undefined ? (payload.city_name as string) : null}, city_name),
+            area_name = COALESCE(${payload.area_name !== undefined ? (payload.area_name as string) : null}, area_name),
+            zip_code = COALESCE(${payload.zip_code !== undefined ? (payload.zip_code as string) : null}, zip_code),
+            address = COALESCE(${payload.address !== undefined ? (payload.address as string) : null}, address),
+            contacts = COALESCE(${payload.contacts !== undefined ? JSON.stringify(payload.contacts) : null}::jsonb, contacts),
+            registrations = COALESCE(${payload.registrations !== undefined ? JSON.stringify(payload.registrations) : null}::jsonb, registrations),
+            owner_ids = COALESCE(${payload.owner_ids !== undefined ? JSON.stringify(payload.owner_ids) : null}::jsonb, owner_ids),
+            is_active = COALESCE(${payload.is_active !== undefined ? Boolean(payload.is_active) : null}, is_active),
+            updated_at = ${now}
+          WHERE id = ${id}::uuid AND deleted_at IS NULL
+          RETURNING id
+        `;
+        if (rows && rows.length > 0) return;
+      } catch (err) {
+        console.error("Direct postgres update error:", err);
+      } finally {
+        await localSql.end({ timeout: 5 });
+      }
+    }
+
+    const supabase = createSupabaseAdminClient() as any;
+    const patch: Record<string, unknown> = { ...payload, updated_at: now };
     const { error } = await supabase.from("companies").update(patch).eq("id", id).is("deleted_at", null);
     if (error) throw new Error(error.message);
   }
 
   async softDelete(id: string) {
-    const supabase = createSupabaseAdminClient() as any;
     const now = new Date().toISOString();
+    const localDbUrl = getDbUrl();
+
+    if (localDbUrl) {
+      const localSql = postgres(localDbUrl, { max: 1, prepare: false });
+      try {
+        await localSql`
+          UPDATE public.companies SET deleted_at = ${now}, updated_at = ${now}, is_active = false
+          WHERE id = ${id}::uuid AND deleted_at IS NULL
+        `;
+        return;
+      } catch (err) {
+        console.error("Direct postgres softDelete error:", err);
+      } finally {
+        await localSql.end({ timeout: 5 });
+      }
+    }
+
+    const supabase = createSupabaseAdminClient() as any;
     const { error } = await supabase
       .from("companies")
       .update({ deleted_at: now, updated_at: now, is_active: false })

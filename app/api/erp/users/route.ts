@@ -155,8 +155,11 @@ export async function POST(request: NextRequest) {
       throw new Error("No assignable permissions remain after applying parent scope limits.");
     }
 
-    const { data: created, error: createError } = await admin.auth.admin.createUser({
-      email: body.email,
+    let targetEmail = body.email;
+    let createdUser: any = null;
+
+    let { data: created, error: createError } = await admin.auth.admin.createUser({
+      email: targetEmail,
       password: body.password,
       email_confirm: true,
       user_metadata: {
@@ -168,10 +171,55 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    if (createError) throw new Error(createError.message);
+    if (createError) {
+      const errMsg = createError.message || String(createError);
+      if (errMsg.includes("already been registered") || errMsg.includes("already exists")) {
+        const cleanCode = issuedUserCode.toLowerCase().replace(/[^a-z0-9]/g, "");
+        const parts = targetEmail.split("@");
+        targetEmail = `${parts[0]}.${cleanCode}@${parts[1] || "dgt.llc"}`;
 
-    const newUserId = created?.user?.id as string | undefined;
-    if (!newUserId) throw new Error("Failed to create user.");
+        const retryRes = await admin.auth.admin.createUser({
+          email: targetEmail,
+          password: body.password,
+          email_confirm: true,
+          user_metadata: {
+            user_code: issuedUserCode,
+            phone: body.phone ?? null,
+            company_id: body.companyId ?? null,
+            id_type: body.idType ?? null,
+            id_value: body.idValue ?? null
+          }
+        });
+
+        if (retryRes.error) {
+          targetEmail = `${cleanCode}@dgt.llc`;
+          const retry2Res = await admin.auth.admin.createUser({
+            email: targetEmail,
+            password: body.password,
+            email_confirm: true,
+            user_metadata: {
+              user_code: issuedUserCode,
+              phone: body.phone ?? null,
+              company_id: body.companyId ?? null,
+              id_type: body.idType ?? null,
+              id_value: body.idValue ?? null
+            }
+          });
+
+          if (retry2Res.error) throw new Error(retry2Res.error.message);
+          createdUser = retry2Res.data;
+        } else {
+          createdUser = retryRes.data;
+        }
+      } else {
+        throw new Error(errMsg);
+      }
+    } else {
+      createdUser = created;
+    }
+
+    const newUserId = createdUser?.user?.id as string | undefined;
+    if (!newUserId) throw new Error("Failed to create user account.");
 
     // Ensure profile exists.
     const profilePayload = {

@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import postgres from "postgres";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
 function getDbUrl(): string {
@@ -281,6 +282,18 @@ export class LocationsRepository {
     const supabase = createSupabaseAdminClient() as any;
     const limit = Math.min(Math.max(input?.limit ?? 200, 1), 500);
     const q = (input?.query ?? "").trim();
+    const localDbUrl = getDbUrl();
+    if (localDbUrl) {
+      const localSql = postgres(localDbUrl, { max: 1, prepare: false });
+      try {
+        const localRows = q
+          ? await localSql`SELECT id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number FROM public.countries WHERE deleted_at IS NULL AND (name ILIKE ${'%' + q + '%'} OR iso2 ILIKE ${'%' + q + '%'} OR iso3 ILIKE ${'%' + q + '%'}) ORDER BY name ASC LIMIT ${limit}`
+          : await localSql`SELECT id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number FROM public.countries WHERE deleted_at IS NULL ORDER BY name ASC LIMIT ${limit}`;
+        if (localRows.length > 0) return localRows as CountryRow[];
+      } finally {
+        await localSql.end({ timeout: 5 });
+      }
+    }
 
     let query = supabase
       .from("countries")
@@ -295,9 +308,20 @@ export class LocationsRepository {
     }
 
     const { data } = await query.limit(limit);
+    const dbUrl = getDbUrl();
+    if ((!data || data.length === 0) && dbUrl) {
+      const sql = postgres(dbUrl, { max: 1, prepare: false });
+      try {
+        const rows = q
+          ? await sql`SELECT id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number FROM public.countries WHERE deleted_at IS NULL AND (name ILIKE ${'%' + q + '%'} OR iso2 ILIKE ${'%' + q + '%'} OR iso3 ILIKE ${'%' + q + '%'}) ORDER BY name ASC LIMIT ${limit}`
+          : await sql`SELECT id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number FROM public.countries WHERE deleted_at IS NULL ORDER BY name ASC LIMIT ${limit}`;
+        if (rows.length > 0) return rows as CountryRow[];
+      } finally {
+        await sql.end({ timeout: 5 });
+      }
+    }
     return (data ?? []) as CountryRow[];
   }
-
   async createCountry(input: {
     name: string;
     iso2?: string | null;
@@ -363,39 +387,6 @@ export class LocationsRepository {
         iso3: input.iso3 ? input.iso3.trim().toUpperCase() : "XXX",
         currency_code: input.currencyCode.trim().toUpperCase(),
         default_language_code: input.defaultLanguageCode ?? "en",
-        phone_code: input.phoneCode?.trim() || null,
-        is_active: true,
-        official_email: input.officialEmail.trim().toLowerCase(),
-        admin_email: input.adminEmail.trim().toLowerCase(),
-        whatsapp_number: input.whatsappNumber?.trim() || null
-      } as CountryRow;
-    }
-
-    void translateMasterRecord("countries", data.id, { name: data.name }, "en");
-    return data as CountryRow;
-  }
-
-  async updateCountry(input: {
-    countryId: string;
-    name?: string | null;
-    iso2?: string | null;
-    iso3?: string | null;
-    currencyCode?: string | null;
-    defaultLanguageCode?: string | null;
-    isActive?: boolean | null;
-    officialEmail?: string | null;
-    adminEmail?: string | null;
-    whatsappNumber?: string | null;
-  }) {
-    const supabase = createSupabaseAdminClient() as any;
-    const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
-    if (input.name !== undefined) patch.name = input.name?.trim();
-    if (input.iso2 !== undefined) patch.iso2 = input.iso2 ? input.iso2.trim().toUpperCase() : null;
-    if (input.iso3 !== undefined) patch.iso3 = input.iso3 ? input.iso3.trim().toUpperCase() : null;
-    if (input.currencyCode !== undefined) patch.currency_code = input.currencyCode ? input.currencyCode.trim().toUpperCase() : null;
-    if (input.defaultLanguageCode !== undefined) patch.default_language_code = input.defaultLanguageCode ?? null;
-    if (input.isActive !== undefined && input.isActive !== null) patch.is_active = Boolean(input.isActive);
-    if (input.officialEmail !== undefined) patch.official_email = input.officialEmail?.trim().toLowerCase();
     if (input.adminEmail !== undefined) patch.admin_email = input.adminEmail?.trim().toLowerCase();
     if (input.whatsappNumber !== undefined) patch.whatsapp_number = input.whatsappNumber?.trim() || null;
 
@@ -437,7 +428,7 @@ export class LocationsRepository {
     const dbUrl = getDbUrl();
     if ((!data || data.length === 0) && dbUrl) {
       try {
-        const sql = (await import("postgres")).default(dbUrl, { max: 1, prepare: false });
+        const sql = postgres(dbUrl, { max: 1, prepare: false });
         const rows = q
           ? await sql`
               SELECT id, country_id, name, code, postal_code, phone_area_code, is_active
@@ -466,6 +457,7 @@ export class LocationsRepository {
     const supabase = createSupabaseAdminClient() as any;
     const limit = Math.min(Math.max(input.limit ?? 200, 1), 500);
     const q = (input.query ?? "").trim();
+    const dbUrl = getDbUrl();
 
     const stateProvinceId = await this.resolveStateUuid(input.stateProvinceId);
 
@@ -485,7 +477,7 @@ export class LocationsRepository {
 
     if ((!data || data.length === 0) && dbUrl) {
       try {
-        const sql = (await import("postgres")).default(dbUrl, { max: 1, prepare: false });
+        const sql = postgres(dbUrl, { max: 1, prepare: false });
         const rows = q
           ? await sql`
               SELECT id, country_id, state_province_id, name, code, postal_code, phone_area_code, is_active
@@ -520,6 +512,7 @@ export class LocationsRepository {
     const supabase = createSupabaseAdminClient() as any;
     const limit = Math.min(Math.max(input.limit ?? 200, 1), 500);
     const q = (input.query ?? "").trim();
+    const dbUrl = getDbUrl();
 
     const countryId = await this.resolveCountryUuid(input.countryId);
     const stateProvinceId = input.stateProvinceId ? await this.resolveStateUuid(input.stateProvinceId, countryId) : null;
@@ -544,7 +537,7 @@ export class LocationsRepository {
 
     if ((!data || data.length === 0) && dbUrl) {
       try {
-        const sql = (await import("postgres")).default(dbUrl, { max: 1, prepare: false });
+        const sql = postgres(dbUrl, { max: 1, prepare: false });
         const rows = stateProvinceId
           ? await sql`
               SELECT id, country_id, state_province_id, district_id, name, code, zip_code, phone_area_code, is_active
@@ -581,7 +574,7 @@ export class LocationsRepository {
         if (fbData && fbData.length > 0) {
           data = fbData;
         } else {
-          // Table has 0 cities for country — seed standard default cities
+          // Table has 0 cities for country ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â seed standard default cities
           const defaultCityNames: Record<string, Array<{ name: string; code: string }>> = {
             pakistan: [
               { name: "Quetta", code: "UET" },
@@ -659,6 +652,27 @@ export class LocationsRepository {
     if (q) query = query.ilike("name", `%${q}%`);
 
     let { data, error } = await query.limit(limit);
+    if (!error && data && data.length > 0) return data as AreaRow[];
+
+    const dbUrl = getDbUrl();
+    if (dbUrl) {
+      const sql = postgres(dbUrl, { max: 1, prepare: false });
+      try {
+        const rows = isUuid(cityId)
+          ? (q
+            ? await sql`SELECT id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active FROM public.areas_locations WHERE deleted_at IS NULL AND city_id = ${cityId}::uuid AND name ILIKE ${'%' + q + '%'} ORDER BY name ASC LIMIT ${limit}`
+            : await sql`SELECT id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active FROM public.areas_locations WHERE deleted_at IS NULL AND city_id = ${cityId}::uuid ORDER BY name ASC LIMIT ${limit}`)
+          : (q
+            ? await sql`SELECT id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active FROM public.areas_locations WHERE deleted_at IS NULL AND name ILIKE ${'%' + q + '%'} ORDER BY name ASC LIMIT ${limit}`
+            : await sql`SELECT id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active FROM public.areas_locations WHERE deleted_at IS NULL ORDER BY name ASC LIMIT ${limit}`);
+        return rows as AreaRow[];
+      } catch (fallbackErr) {
+        console.error("Direct Postgres fallback for listAreas failed:", fallbackErr);
+      } finally {
+        await sql.end({ timeout: 5 });
+      }
+    }
+
     if (error) throw new Error(error.message);
     return (data ?? []) as AreaRow[];
   }
@@ -1035,25 +1049,70 @@ export class LocationsRepository {
   }) {
     const supabase = createSupabaseAdminClient() as any;
     const normalizedCode = input.code?.trim() || ((await this.shouldUseUaeDefaultZip(input.countryId)) ? UAE_DEFAULT_ZIP_CODE : null);
-    const { data, error } = await supabase
-      .from("areas_locations")
-      .insert({
-        country_id: input.countryId,
-        state_province_id: input.stateProvinceId ?? null,
-        district_id: input.districtId ?? null,
-        city_id: input.cityId,
-        name: input.name.trim(),
-        code: normalizedCode,
-        postal_code: input.postalCode?.trim() || null,
-        created_by: input.createdBy ?? null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      })
-      .select("id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active")
-      .single();
-    if (error) throw new Error(error.message);
-    void translateMasterRecord("areas_locations", data.id, { name: data.name }, "en");
-    return data as AreaRow;
+    const now = new Date().toISOString();
+
+    let supabaseErr: any = null;
+    try {
+      const { data, error } = await supabase
+        .from("areas_locations")
+        .insert({
+          country_id: input.countryId,
+          state_province_id: input.stateProvinceId ?? null,
+          district_id: input.districtId ?? null,
+          city_id: input.cityId,
+          name: input.name.trim(),
+          code: normalizedCode,
+          postal_code: input.postalCode?.trim() || null,
+          created_by: input.createdBy ?? null,
+          created_at: now,
+          updated_at: now
+        })
+        .select("id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active")
+        .single();
+      if (!error && data) {
+        void translateMasterRecord("areas_locations", data.id, { name: data.name }, "en");
+        return data as AreaRow;
+      }
+      supabaseErr = error;
+    } catch (e: any) {
+      supabaseErr = e;
+    }
+
+    const dbUrl = getDbUrl();
+    if (dbUrl) {
+      const sql = postgres(dbUrl, { max: 1, prepare: false });
+      try {
+        const rows = await sql`
+          INSERT INTO public.areas_locations (
+            country_id, state_province_id, district_id, city_id, name, code, postal_code, created_by, created_at, updated_at
+          ) VALUES (
+            ${input.countryId}::uuid,
+            ${input.stateProvinceId ? input.stateProvinceId : null}::uuid,
+            ${input.districtId ? input.districtId : null}::uuid,
+            ${input.cityId}::uuid,
+            ${input.name.trim()},
+            ${normalizedCode},
+            ${input.postalCode?.trim() || null},
+            ${input.createdBy && isUuid(input.createdBy) ? input.createdBy : null}::uuid,
+            ${now}::timestamptz,
+            ${now}::timestamptz
+          )
+          RETURNING id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active
+        `;
+        if (rows && rows[0]) {
+          void translateMasterRecord("areas_locations", rows[0].id, { name: rows[0].name }, "en");
+          return rows[0] as AreaRow;
+        }
+      } catch (pgErr: any) {
+        console.error("Direct Postgres createArea fallback error:", pgErr);
+        throw new Error(pgErr.message || "Failed to create area record in database.");
+      } finally {
+        await sql.end({ timeout: 5 });
+      }
+    }
+
+    if (supabaseErr) throw new Error(supabaseErr.message || String(supabaseErr));
+    throw new Error("Failed to create area record.");
   }
 
   async updateArea(input: { areaId: string; name?: string | null; code?: string | null; districtId?: string | null; isActive?: boolean | null }) {
@@ -1064,16 +1123,52 @@ export class LocationsRepository {
     if (input.districtId !== undefined) patch.district_id = input.districtId;
     if (input.isActive !== undefined && input.isActive !== null) patch.is_active = Boolean(input.isActive);
 
-    const { data, error } = await supabase
-      .from("areas_locations")
-      .update(patch)
-      .eq("id", input.areaId)
-      .is("deleted_at", null)
-      .select("id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active")
-      .single();
-    if (error) throw new Error(error.message);
-    void translateMasterRecord("areas_locations", data.id, { name: data.name }, "en");
-    return data as AreaRow;
+    let supabaseErr: any = null;
+    try {
+      const { data, error } = await supabase
+        .from("areas_locations")
+        .update(patch)
+        .eq("id", input.areaId)
+        .is("deleted_at", null)
+        .select("id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active")
+        .single();
+      if (!error && data) {
+        void translateMasterRecord("areas_locations", data.id, { name: data.name }, "en");
+        return data as AreaRow;
+      }
+      supabaseErr = error;
+    } catch (e: any) {
+      supabaseErr = e;
+    }
+
+    const dbUrl = getDbUrl();
+    if (dbUrl) {
+      const sql = postgres(dbUrl, { max: 1, prepare: false });
+      try {
+        const rows = await sql`
+          UPDATE public.areas_locations
+          SET
+            name = COALESCE(${input.name !== undefined ? input.name?.trim() : null}, name),
+            code = COALESCE(${input.code !== undefined ? (input.code ? input.code.trim() : null) : null}, code),
+            district_id = COALESCE(${input.districtId !== undefined ? input.districtId : null}::uuid, district_id),
+            is_active = COALESCE(${input.isActive !== undefined && input.isActive !== null ? Boolean(input.isActive) : null}, is_active),
+            updated_at = NOW()
+          WHERE id = ${input.areaId}::uuid AND deleted_at IS NULL
+          RETURNING id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active
+        `;
+        if (rows && rows[0]) {
+          void translateMasterRecord("areas_locations", rows[0].id, { name: rows[0].name }, "en");
+          return rows[0] as AreaRow;
+        }
+      } catch (pgErr: any) {
+        console.error("Direct Postgres updateArea fallback error:", pgErr);
+      } finally {
+        await sql.end({ timeout: 5 });
+      }
+    }
+
+    if (supabaseErr) throw new Error(supabaseErr.message || String(supabaseErr));
+    throw new Error("Failed to update area record.");
   }
 
   async deleteCountry(countryId: string) {
@@ -1140,6 +1235,228 @@ export class LocationsRepository {
 
     await supabase.from("areas_locations").update({ deleted_at: now, updated_at: now }).eq("city_id", cityId).is("deleted_at", null);
     return true;
+  }
+
+  async getLocationSummaryStats() {
+    const dbUrl = getDbUrl();
+    if (dbUrl) {
+      const sql = postgres(dbUrl, { max: 1, prepare: false });
+      try {
+        const [countriesRes, statesRes, districtsRes, citiesRes] = await Promise.all([
+          sql`SELECT COUNT(*)::int AS count FROM public.countries WHERE deleted_at IS NULL`,
+          sql`SELECT COUNT(*)::int AS count FROM public.states_provinces WHERE deleted_at IS NULL`,
+          sql`SELECT COUNT(*)::int AS count FROM public.districts WHERE deleted_at IS NULL`,
+          sql`SELECT COUNT(*)::int AS count FROM public.cities WHERE deleted_at IS NULL`
+        ]);
+        return {
+          totalCountries: countriesRes[0]?.count || 0,
+          totalStates: statesRes[0]?.count || 0,
+          totalCities: districtsRes[0]?.count || 0,
+          totalDistricts: citiesRes[0]?.count || 0
+        };
+      } finally {
+        await sql.end({ timeout: 5 });
+      }
+    }
+
+    const supabase = createSupabaseAdminClient() as any;
+    const [c, s, d, ct] = await Promise.all([
+      supabase.from("countries").select("id", { count: "exact", head: true }).is("deleted_at", null),
+      supabase.from("states_provinces").select("id", { count: "exact", head: true }).is("deleted_at", null),
+      supabase.from("districts").select("id", { count: "exact", head: true }).is("deleted_at", null),
+      supabase.from("cities").select("id", { count: "exact", head: true }).is("deleted_at", null)
+    ]);
+    return {
+      totalCountries: c.count || 0,
+      totalStates: s.count || 0,
+      totalCities: d.count || 0,
+      totalDistricts: ct.count || 0
+    };
+  }
+
+  async listCountrySummaries() {
+    const dbUrl = getDbUrl();
+    if (dbUrl) {
+      const sql = postgres(dbUrl, { max: 1, prepare: false });
+      try {
+        const rows = await sql`
+          SELECT 
+            c.id,
+            c.name,
+            c.iso2,
+            c.iso3,
+            c.currency_code,
+            c.is_active,
+            COALESCE(s.total_states, 0)::int AS total_states,
+            COALESCE(d.total_cities, 0)::int AS total_cities,
+            COALESCE(ct.total_districts, 0)::int AS total_districts
+          FROM public.countries c
+          LEFT JOIN (
+            SELECT country_id, COUNT(*)::int AS total_states
+            FROM public.states_provinces WHERE deleted_at IS NULL GROUP BY country_id
+          ) s ON s.country_id = c.id
+          LEFT JOIN (
+            SELECT country_id, COUNT(*)::int AS total_cities
+            FROM public.districts WHERE deleted_at IS NULL GROUP BY country_id
+          ) d ON d.country_id = c.id
+          LEFT JOIN (
+            SELECT country_id, COUNT(*)::int AS total_districts
+            FROM public.cities WHERE deleted_at IS NULL GROUP BY country_id
+          ) ct ON ct.country_id = c.id
+          WHERE c.deleted_at IS NULL
+          ORDER BY c.name ASC
+        `;
+        return rows;
+      } finally {
+        await sql.end({ timeout: 5 });
+      }
+    }
+
+    const countries = await this.listCountries();
+    return countries.map((c) => ({
+      ...c,
+      total_states: 0,
+      total_cities: 0,
+      total_districts: 0
+    }));
+  }
+
+  async listStateSummaries(countryId: string) {
+    const dbUrl = getDbUrl();
+    if (dbUrl) {
+      const sql = postgres(dbUrl, { max: 1, prepare: false });
+      try {
+        const rows = await sql`
+          SELECT 
+            s.id,
+            s.country_id,
+            s.name,
+            s.code,
+            s.is_active,
+            COALESCE(d.total_cities, 0)::int AS total_cities,
+            COALESCE(ct.total_districts, 0)::int AS total_districts
+          FROM public.states_provinces s
+          LEFT JOIN (
+            SELECT state_province_id, COUNT(*)::int AS total_cities
+            FROM public.districts WHERE deleted_at IS NULL GROUP BY state_province_id
+          ) d ON d.state_province_id = s.id
+          LEFT JOIN (
+            SELECT state_province_id, COUNT(*)::int AS total_districts
+            FROM public.cities WHERE deleted_at IS NULL GROUP BY state_province_id
+          ) ct ON ct.state_province_id = s.id
+          WHERE s.country_id = ${countryId}::uuid AND s.deleted_at IS NULL
+          ORDER BY s.name ASC
+        `;
+        return rows;
+      } finally {
+        await sql.end({ timeout: 5 });
+      }
+    }
+
+    const states = await this.listStates({ countryId });
+    return states.map((s) => ({
+      ...s,
+      total_cities: 0,
+      total_districts: 0
+    }));
+  }
+
+  async listCitySummaries(stateId: string) {
+    const dbUrl = getDbUrl();
+    if (dbUrl) {
+      const sql = postgres(dbUrl, { max: 1, prepare: false });
+      try {
+        const rows = await sql`
+          SELECT 
+            d.id,
+            d.country_id,
+            d.state_province_id,
+            d.name,
+            d.code,
+            d.is_active,
+            COALESCE(ct.total_districts, 0)::int AS total_districts
+          FROM public.districts d
+          LEFT JOIN (
+            SELECT district_id, COUNT(*)::int AS total_districts
+            FROM public.cities WHERE deleted_at IS NULL GROUP BY district_id
+          ) ct ON ct.district_id = d.id
+          WHERE d.state_province_id = ${stateId}::uuid AND d.deleted_at IS NULL
+          ORDER BY d.name ASC
+        `;
+        return rows;
+      } finally {
+        await sql.end({ timeout: 5 });
+      }
+    }
+
+    const districts = await this.listDistricts({ stateProvinceId: stateId });
+    return districts.map((d) => ({
+      ...d,
+      total_districts: 0
+    }));
+  }
+
+  async getFullLocationTree() {
+    const dbUrl = getDbUrl();
+    if (dbUrl) {
+      const sql = postgres(dbUrl, { max: 1, prepare: false });
+      try {
+        const [countries, states, districts, cities] = await Promise.all([
+          sql`SELECT id, name, iso2 AS code, is_active FROM public.countries WHERE deleted_at IS NULL ORDER BY name ASC`,
+          sql`SELECT id, country_id, name, code, is_active FROM public.states_provinces WHERE deleted_at IS NULL ORDER BY name ASC`,
+          sql`SELECT id, country_id, state_province_id, name, code, is_active FROM public.districts WHERE deleted_at IS NULL ORDER BY name ASC`,
+          sql`SELECT id, country_id, state_province_id, district_id, name, code, zip_code, is_active FROM public.cities WHERE deleted_at IS NULL ORDER BY name ASC`
+        ]);
+
+        const tree = countries.map((c: any) => {
+          const cStates = states.filter((s: any) => s.country_id === c.id);
+          return {
+            id: c.id,
+            name: c.name,
+            code: c.code || "",
+            type: "country",
+            isActive: c.is_active,
+            item: c,
+            children: cStates.map((s: any) => {
+              const sCities = districts.filter((d: any) => d.state_province_id === s.id);
+              return {
+                id: s.id,
+                name: s.name,
+                code: s.code || "",
+                type: "state",
+                isActive: s.is_active,
+                item: s,
+                children: sCities.map((d: any) => {
+                  const dTehsils = cities.filter((ct: any) => ct.district_id === d.id);
+                  return {
+                    id: d.id,
+                    name: d.name,
+                    code: d.code || "",
+                    type: "city",
+                    isActive: d.is_active,
+                    item: d,
+                    children: dTehsils.map((ct: any) => ({
+                      id: ct.id,
+                      name: ct.name,
+                      code: ct.code || "",
+                      type: "district",
+                      isActive: ct.is_active,
+                      item: ct
+                    }))
+                  };
+                })
+              };
+            })
+          };
+        });
+
+        return tree;
+      } finally {
+        await sql.end({ timeout: 5 });
+      }
+    }
+
+    return [];
   }
 }
 

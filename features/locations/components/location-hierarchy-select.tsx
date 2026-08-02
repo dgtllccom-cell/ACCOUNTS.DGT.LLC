@@ -41,6 +41,8 @@ export type LocationHierarchyMeta = {
 function toOptions<T extends { id: string; name: string }>(rows: T[]): SearchSelectOption[] {
   return rows.map((row) => {
     const anyRow = row as any;
+    const codeStr = anyRow.code ? ` (${anyRow.code})` : "";
+    const label = `${row.name}${codeStr}`;
     const keywords = [
       anyRow.code,
       anyRow.iso2,
@@ -53,7 +55,7 @@ function toOptions<T extends { id: string; name: string }>(rows: T[]): SearchSel
     ]
       .filter(Boolean)
       .join(" ");
-    return { value: row.id, label: row.name, keywords };
+    return { value: row.id, label, keywords };
   });
 }
 
@@ -620,11 +622,11 @@ export function LocationQuickCreateModal({
 
         {(type === "state" || type === "district" || type === "city" || type === "area") && (
           <div className="space-y-2">
-            <Label>{typeLabel} Code</Label>
+            <Label>{type === "area" ? "Area / Town / Locality / Road Code" : `${typeLabel} Code`}</Label>
             <Input
               value={code}
               onChange={(e) => setCode(e.target.value)}
-              placeholder={`Enter ${typeLabel.toLowerCase()} code (optional)`}
+              placeholder={`Enter ${type === "area" ? "road code" : `${typeLabel.toLowerCase()} code`} (optional)`}
             />
           </div>
         )}

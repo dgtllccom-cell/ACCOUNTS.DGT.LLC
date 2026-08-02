@@ -157,7 +157,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         setLoginUsername(empName.toLowerCase().replace(/\s+/g, "."));
       }
       if (emp.person?.mobile) setContactPhone(emp.person.mobile);
-      if (emp.person?.email) setPersonalEmail(emp.person.email);
+      
+      const cleanCode = (userCode || makeAutoUserCode()).toLowerCase().replace(/[^a-z0-9]/g, "");
+      if (emp.person?.email && !emp.person.email.includes("@dgt.local")) {
+        setPersonalEmail(emp.person.email);
+      } else {
+        setPersonalEmail(`${cleanCode}@dgt.llc`);
+      }
+
       if (emp.designation) setDesignation(emp.designation);
       if (emp.department) setDepartment(emp.department);
       if (emp.country_id) setCountryId(emp.country_id);
@@ -397,7 +404,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     }
 
     const preferredLanguage = (localStorage.getItem("erp_lang") || "en").toString();
-    const email = personalEmail.trim() || `${issuedCode.toLowerCase()}@users.dgt.local`;
+    const cleanUserCode = issuedCode.toLowerCase().replace(/[^a-z0-9]/g, "");
+    const email = personalEmail.trim() || `${cleanUserCode}@dgt.llc`;
 
     setSaving(true);
     try {
@@ -435,7 +443,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
       setBanner({ tone: "ok", text: isEdit ? "User record updated successfully." : "User registered successfully." });
     } catch (e: any) {
       const errMsg = e?.message || (typeof e === "string" ? e : "User registration operation failed.");
-      setBanner({ tone: "err", text: errMsg });
+      if (errMsg.includes("already registered") || errMsg.includes("already exists")) {
+        setBanner({
+          tone: "err",
+          text: `A user with email address '${email}' has already been registered. Please click "+ Auto-Generate Unique Email" or use a unique email identifier.`
+        });
+      } else {
+        setBanner({ tone: "err", text: errMsg });
+      }
     } finally {
       setSaving(false);
     }
@@ -718,7 +733,19 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Login Email / Identifier *</Label>
+                      <div className="flex items-center justify-between">
+                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Login Email / Identifier *</Label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const cleanCode = (userCode || makeAutoUserCode()).toLowerCase().replace(/[^a-z0-9]/g, "");
+                            setPersonalEmail(`${cleanCode}@dgt.llc`);
+                          }}
+                          className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
+                        >
+                          <Plus className="h-3 w-3" /> Auto-Generate Unique Email
+                        </button>
+                      </div>
                       <Input
                         type="email"
                         value={personalEmail}

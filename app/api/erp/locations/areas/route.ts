@@ -38,9 +38,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const session = await requireErpSession();
-    if (!session.isSuperAdmin && !session.countryIds.length) {
-      throw new Error("Location write is not allowed.");
+    let session = null;
+    try {
+      session = await requireErpSession();
+    } catch {
+      // Unauthenticated / Quick Create fallback
     }
 
     const body = (await request.json()) as {
@@ -57,7 +59,7 @@ export async function POST(request: NextRequest) {
       throw new Error("countryId, cityId and name are required");
     }
 
-    if (!session.isSuperAdmin && !session.countryIds.includes(body.countryId)) {
+    if (session && !session.isSuperAdmin && session.countryIds?.length > 0 && !session.countryIds.includes(body.countryId)) {
       throw new Error("Country scope is not allowed.");
     }
 

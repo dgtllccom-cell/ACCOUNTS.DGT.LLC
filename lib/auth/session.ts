@@ -182,26 +182,10 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
     // Temporary local session (for initial Super Admin bootstrapping)
     const temp = await readTempSession();
     if (temp) {
-      let resolvedUserId = temp.userId;
-      let adminSupabase: any = null;
-      if (isSupabaseConfigured()) {
-        try {
-          adminSupabase = createSupabaseAdminClient();
-          if (temp.userId.startsWith("00000000-")) {
-            const { data: firstProfile } = await adminSupabase
-              .from("profiles")
-              .select("id")
-              .order("created_at", { ascending: true })
-              .limit(1)
-              .maybeSingle();
-            if (firstProfile?.id) {
-              resolvedUserId = firstProfile.id;
-            }
-          }
-        } catch (e) {
-          console.error("Failed to resolve profile ID for temp session:", e);
-        }
-      }
+      // A temporary session is self-contained. Do not make an Admin API call here:
+      // because local development may intentionally have no service-role key configured.
+      const resolvedUserId = temp.userId;
+      const adminSupabase: any = null;
 
       const perms = [...new Set(temp.roles.flatMap((role) => enterpriseRolePermissions[role] ?? []))];
       const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds } = getAssignmentRoots(temp.assignments);

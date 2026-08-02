@@ -4,62 +4,65 @@ import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { printStore } from "@/lib/store/print-store";
 import type { Route } from "next";
-import { Building2, Plus, Search, Eye, PencilLine, Printer, Trash2, X, MoreVertical } from "lucide-react";
+import { Building2, Plus, Search, Eye, PencilLine, Printer, Trash2, X, MoreVertical, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import type { CompanyIncorporationData } from "./company-incorporation-form";
+import { apiGet, apiDelete } from "@/lib/api/client";
+import type { CompanyRow } from "@/lib/repositories/companies-repository";
 
-const initialCompanies: (CompanyIncorporationData & { id: string })[] = [
-  {
-    id: "co-1",
-    ownerName: "John Doe",
-    companyName: "Apex Trading LLC",
-    businessName: "Apex Imports",
-    country: "United States",
-    state: "New York",
-    city: "New York",
-    zipCode: "10001",
-    address: "5th Avenue, Manhattan, NY",
-    contacts: [
-      { id: "c-1", type: "Mobile Number", value: "+1-555-0199" },
-      { id: "c-2", type: "Email Address", value: "info@apextrading.com" }
-    ],
-    registrations: [
-      { id: "r-1", type: "GST No", value: "REG-9988221" }
-    ],
-    ownerIds: [
-      { id: "o-1", type: "Passport No", value: "US9876543" }
-    ]
-  },
-  {
-    id: "co-2",
-    ownerName: "Muhammad Ali",
-    companyName: "Al-Noor Logistics",
-    businessName: "Al-Noor Cargo",
-    country: "Pakistan",
-    state: "Punjab",
-    city: "Lahore",
-    zipCode: "54000",
-    address: "Gulberg III, Lahore, Pakistan",
-    contacts: [
-      { id: "c-3", type: "Mobile Number", value: "+92-300-1234567" },
-      { id: "c-4", type: "Email Address", value: "contact@alnoor.pk" }
-    ],
-    registrations: [
-      { id: "r-2", type: "NTN No", value: "NTN-882233-1" }
-    ],
-    ownerIds: [
-      { id: "o-2", type: "CNIC No", value: "35201-1234567-1" }
-    ]
-  }
-];
+export type CompanyDisplayRecord = {
+  id: string;
+  ownerName: string;
+  companyName: string;
+  businessName: string;
+  country: string;
+  state: string;
+  city: string;
+  zipCode: string;
+  address: string;
+  contacts: Array<{ id: string; type: string; value: string }>;
+  registrations: Array<{ id: string; type: string; value: string }>;
+  ownerIds: Array<{ id: string; type: string; value: string }>;
+  raw: CompanyRow;
+};
+
+function mapDbRowToDisplayRecord(c: CompanyRow): CompanyDisplayRecord {
+  return {
+    id: c.id,
+    ownerName: c.owner_name || "-",
+    companyName: c.name || "-",
+    businessName: c.legal_name || "-",
+    country: c.country_name || "",
+    state: c.state_name || "",
+    city: c.city_name || c.district_name || "",
+    zipCode: c.zip_code || "",
+    address: c.address || "",
+    contacts: (c.contacts || []).map((x, i) => ({
+      id: x.id || `c-${i}`,
+      type: x.type || "Contact",
+      value: x.value || ""
+    })),
+    registrations: (c.registrations || []).map((x, i) => ({
+      id: x.id || `r-${i}`,
+      type: x.type || "Registration",
+      value: x.value || ""
+    })),
+    ownerIds: (c.owner_ids || []).map((x, i) => ({
+      id: x.id || `o-${i}`,
+      type: x.type || "ID",
+      value: x.value || ""
+    })),
+    raw: c
+  };
+}
 
 export function CompanyRegistry() {
   const router = useRouter();
-  const [savedCompanies, setSavedCompanies] = useState<(CompanyIncorporationData & { id: string })[]>([]);
+  const [savedCompanies, setSavedCompanies] = useState<CompanyDisplayRecord[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [viewingCompany, setViewingCompany] = useState<(CompanyIncorporationData & { id: string }) | null>(null);
+  const [viewingCompany, setViewingCompany] = useState<CompanyDisplayRecord | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
   // Close dropdown on click outside
@@ -75,19 +78,23 @@ export function CompanyRegistry() {
     }
   }, [openMenuId]);
 
-  // Initialize from LocalStorage
-  useEffect(() => {
-    const stored = localStorage.getItem("incorporated_companies");
-    if (stored) {
-      try {
-        setSavedCompanies(JSON.parse(stored));
-      } catch {
-        setSavedCompanies(initialCompanies);
-      }
-    } else {
-      setSavedCompanies(initialCompanies);
-      localStorage.setItem("incorporated_companies", JSON.stringify(initialCompanies));
+  // Load companies directly from API database
+  async function loadCompaniesFromDb() {
+    setLoading(true);
+    try {
+      const res = await apiGet<{ companies: CompanyRow[] }>("/api/erp/companies?limit=500");
+      const list = res.companies || [];
+      setSavedCompanies(list.map(mapDbRowToDisplayRecord));
+    } catch (err) {
+      console.error("Failed to fetch companies from database:", err);
+      setSavedCompanies([]);
+    } finally {
+      setLoading(false);
     }
+  }
+
+  useEffect(() => {
+    loadCompaniesFromDb();
   }, []);
 
   const stats = useMemo(() => {
@@ -110,17 +117,20 @@ export function CompanyRegistry() {
     );
   }, [searchQuery, savedCompanies]);
 
-  function handleDelete(id: string) {
-    if (!window.confirm("Are you sure you want to delete this company?")) return;
-    const updated = savedCompanies.filter((c) => c.id !== id);
-    setSavedCompanies(updated);
-    localStorage.setItem("incorporated_companies", JSON.stringify(updated));
-    if (viewingCompany?.id === id) {
-      setViewingCompany(null);
+  async function handleDelete(id: string) {
+    if (!window.confirm("Are you sure you want to delete this company from the database?")) return;
+    try {
+      await apiDelete(`/api/erp/companies/${id}`);
+      if (viewingCompany?.id === id) {
+        setViewingCompany(null);
+      }
+      loadCompaniesFromDb();
+    } catch (err: any) {
+      alert(`Failed to delete company: ${err.message || String(err)}`);
     }
   }
 
-  function handlePrint(c: CompanyIncorporationData & { id: string }) {
+  function handlePrint(c: CompanyDisplayRecord) {
     const contactsHTML = c.contacts.length > 0
       ? `<ul>` + c.contacts.map((x) => `<li><strong>${x.type}</strong><span>${x.value}</span></li>`).join("") + `</ul>`
       : `<div style="font-size: 11px; font-style: italic; color: #94a3b8; text-align: center; margin-top: 10px;">No registered contact methods</div>`;
@@ -200,86 +210,72 @@ export function CompanyRegistry() {
             
             .org-title {
               font-family: 'Cinzel', serif;
-              font-size: 14px;
-              font-weight: 700;
-              color: #0f172a;
-              letter-spacing: 0.2em;
+              font-size: 16px;
+              letter-spacing: 0.15em;
+              color: #1e3a8a;
+              margin: 0 0 4px 0;
               text-transform: uppercase;
-              margin: 0 0 8px 0;
             }
             
             .cert-title {
               font-family: 'Cinzel', serif;
-              font-size: 26px;
+              font-size: 28px;
               font-weight: 700;
-              color: #1e3a8a;
+              color: #0f172a;
               margin: 0;
               letter-spacing: 0.05em;
-              line-height: 1.2;
             }
             
             .cert-subtitle {
               font-size: 11px;
-              color: #475569;
-              font-weight: 600;
-              letter-spacing: 0.15em;
               text-transform: uppercase;
-              margin-top: 6px;
+              letter-spacing: 0.2em;
+              color: #64748b;
+              margin-top: 4px;
             }
             
             .statement {
               text-align: center;
-              margin: 25px auto;
-              max-width: 650px;
-              font-size: 13.5px;
+              font-size: 13px;
               color: #334155;
-              line-height: 1.8;
-            }
-            
-            .statement strong {
-              color: #0f172a;
-              font-weight: 700;
+              max-width: 650px;
+              margin: 0 auto 30px auto;
+              line-height: 1.6;
             }
             
             .company-highlight {
+              display: block;
               font-family: 'Cinzel', serif;
               font-size: 22px;
-              color: #0f172a;
-              display: block;
+              font-weight: 800;
+              color: #1e3a8a;
               margin: 10px 0;
-              font-weight: 700;
-              border-bottom: 1px solid #e2e8f0;
-              padding-bottom: 8px;
+              letter-spacing: 0.05em;
             }
             
             .grid {
               display: grid;
-              grid-template-cols: 1fr 1fr;
+              grid-template-columns: 1fr 1fr;
               gap: 20px;
-              margin-top: 15px;
+              margin-bottom: 20px;
             }
             
             .card {
-              background: #ffffff;
               border: 1px solid #e2e8f0;
               border-radius: 8px;
-              padding: 15px;
-              box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+              padding: 16px;
+              background-color: #ffffff;
             }
             
             .card-title {
               font-size: 11px;
               font-weight: 700;
-              color: #1e3a8a;
               text-transform: uppercase;
-              letter-spacing: 0.08em;
-              margin-top: 0;
-              margin-bottom: 10px;
-              border-bottom: 1.5px solid #cbd5e1;
-              padding-bottom: 4px;
-              display: flex;
-              align-items: center;
-              gap: 6px;
+              letter-spacing: 0.1em;
+              color: #1e3a8a;
+              margin: 0 0 12px 0;
+              border-b: 1px solid #f1f5f9;
+              padding-bottom: 6px;
             }
             
             .field {
@@ -291,58 +287,52 @@ export function CompanyRegistry() {
             }
             
             .label {
-              font-size: 9px;
+              font-size: 9.5px;
               text-transform: uppercase;
               color: #64748b;
-              font-weight: 700;
-              letter-spacing: 0.05em;
+              font-weight: 600;
             }
             
             .value {
               font-size: 12px;
               font-weight: 600;
               color: #0f172a;
-              margin-top: 1px;
             }
             
             ul {
-              list-style-type: none;
+              list-style: none;
               padding: 0;
               margin: 0;
             }
             
             li {
-              font-size: 11.5px;
-              margin-bottom: 6px;
+              font-size: 11px;
               display: flex;
               justify-content: space-between;
+              padding: 4px 0;
               border-bottom: 1px dashed #f1f5f9;
-              padding-bottom: 4px;
             }
             
             li:last-child {
-              margin-bottom: 0;
               border-bottom: none;
-              padding-bottom: 0;
             }
             
             li strong {
               color: #475569;
-              font-weight: 500;
             }
             
             li span {
+              font-family: monospace;
               font-weight: 600;
               color: #0f172a;
-              font-family: monospace;
             }
             
             .footer-controls {
+              margin-top: 30px;
               display: flex;
               justify-content: space-between;
               align-items: flex-end;
-              margin-top: 35px;
-              padding-top: 15px;
+              padding-top: 20px;
               border-top: 1px solid #e2e8f0;
             }
             
@@ -526,7 +516,7 @@ export function CompanyRegistry() {
                     </div>
                   </div>
                   <div class="meta-info">
-                    <strong>Document ID:</strong> REG-${c.id.toUpperCase()}-${Math.floor(1000 + Math.random() * 9000)}<br>
+                    <strong>Document ID:</strong> REG-${c.id.substring(0, 8).toUpperCase()}<br>
                     <strong>Generated On:</strong> ${new Date().toLocaleString()}<br>
                     <strong>Status:</strong> Active & Incorporated
                   </div>
@@ -562,7 +552,7 @@ export function CompanyRegistry() {
             Company Management
           </h1>
           <p className="text-sm text-muted-foreground">
-            Manage incorporated business entities, registration numbers, contact directories, and owners.
+            Manage incorporated business entities, registration numbers, contact directories, and owners directly from database.
           </p>
         </div>
         <Button
@@ -617,7 +607,7 @@ export function CompanyRegistry() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <CardTitle className="text-base font-semibold text-slate-800">Incorporated Companies Registry</CardTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">Use the search box to find specific companies, and use actions to preview, edit, print or delete.</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Real-time database records of all incorporated business entities in the system.</p>
             </div>
             <div className="relative w-64">
               <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
@@ -644,7 +634,15 @@ export function CompanyRegistry() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {filteredCompanies.length > 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="px-5 py-10 text-center text-muted-foreground">
+                      <div className="flex items-center justify-center gap-2 font-medium">
+                        <Loader2 className="h-5 w-5 animate-spin text-primary" /> Loading company records from database...
+                      </div>
+                    </td>
+                  </tr>
+                ) : filteredCompanies.length > 0 ? (
                   filteredCompanies.map((c) => (
                     <tr
                       key={c.id}
@@ -653,11 +651,13 @@ export function CompanyRegistry() {
                     >
                       <td className="px-4 py-2.5 font-semibold text-slate-900">
                         <div>{c.companyName}</div>
-                        {c.businessName && <div className="text-[10px] text-muted-foreground mt-0.5 font-normal">{c.businessName}</div>}
+                        {c.businessName && c.businessName !== "-" && (
+                          <div className="text-[10px] text-muted-foreground mt-0.5 font-normal">{c.businessName}</div>
+                        )}
                       </td>
                       <td className="px-4 py-2.5 text-slate-800 font-medium">{c.ownerName}</td>
                       <td className="px-4 py-2.5 text-slate-600">
-                        {[c.city, c.state, c.country].filter(Boolean).join(", ")}
+                        {[c.city, c.state, c.country].filter((x) => x && x !== "-").join(", ") || "-"}
                       </td>
                       <td className="px-4 py-2.5 text-center font-semibold text-slate-700">{c.contacts.length}</td>
                       <td className="px-4 py-2.5 text-center font-semibold text-slate-700">{c.registrations.length}</td>

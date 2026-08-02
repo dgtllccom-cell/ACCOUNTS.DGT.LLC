@@ -335,16 +335,16 @@ function CountryBranchSetupContent() {
 
   const hasAny = Boolean(
     location.countryId ||
-      location.stateProvinceId ||
-      location.cityId ||
-      currency ||
-      fullAddress ||
-      companyId ||
-      ownerName ||
-      branchType ||
-      branchCode ||
-      permissionGrants.length ||
-      contacts.some((c) => c.type || c.value)
+    location.stateProvinceId ||
+    location.cityId ||
+    currency ||
+    fullAddress ||
+    companyId ||
+    ownerName ||
+    branchType ||
+    branchCode ||
+    permissionGrants.length ||
+    contacts.some((c) => c.type || c.value)
   );
 
   const reportRows = useMemo(
@@ -485,7 +485,7 @@ function CountryBranchSetupContent() {
       branchType: "MAIN",
       country: previewCountry,
       currency: active?.local_currency || currency || "USD",
-      
+
       parentBranch: {
         name: "ACCOUNTS.DGT.LLC Headquarters",
         code: "SUPER-HQ-001",
@@ -635,7 +635,7 @@ function CountryBranchSetupContent() {
       branchType: "MAIN",
       country: previewCountry || row.name.split(" ")[0] || "Country",
       currency: row.local_currency || currency || "USD",
-      
+
       parentBranch: {
         name: "ACCOUNTS.DGT.LLC Headquarters",
         code: "SUPER-HQ-001",
@@ -1027,7 +1027,8 @@ function CountryBranchSetupContent() {
             )}
           </div>
         </div>
-      <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto"> 
+      </div>
+      <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
         <Card className="border-slate-200/80 shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle>Country Main Branch Setup</CardTitle>
