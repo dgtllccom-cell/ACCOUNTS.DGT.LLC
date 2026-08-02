@@ -7,8 +7,19 @@ export const dynamic = "force-dynamic";
 export async function GET(request: NextRequest) {
   try {
     const root = process.cwd();
+    const action = request.nextUrl.searchParams.get("action");
+
+    if (action === "populate") {
+      const scriptPath = path.join(root, "scripts", "populate-vps-locations.mjs");
+      const output = execSync(`node "${scriptPath}"`, {
+        cwd: root,
+        encoding: "utf8",
+        timeout: 600000
+      });
+      return NextResponse.json({ success: true, message: "Populated locations successfully.", output });
+    }
+
     const scriptPath = path.join(root, "scripts", "deploy-prod-vps.mjs");
-    
     const output = execSync(`node "${scriptPath}"`, {
       cwd: root,
       encoding: "utf8",
