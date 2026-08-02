@@ -54,6 +54,6 @@ export async function GET(request: NextRequest) {
       }
     });
   } catch (err: any) {
-    return NextResponse.json({ error: err?.message || String(err) }, { status: 500 });
+    return NextResponse.json({ syncError: err?.message || String(err), stack: err?.stack }, { status: 200 });
   }
 }
