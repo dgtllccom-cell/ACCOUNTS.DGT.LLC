@@ -1361,10 +1361,7 @@ function CityBranchSetupContent() {
 
           <span className={pillClassName()}>
             <b>Scope:</b> City branch under selected Country Main Branch
-          </span>
-        </div>
-      </div>
-      <div className={cn("grid gap-5", activeStep === 9 ? "xl:grid-cols-1" : "xl:grid-cols-[0.9fr_1.1fr]")}>
+      <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
         <Card className="border-slate-200/80 shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle>City Branch Setup</CardTitle>
