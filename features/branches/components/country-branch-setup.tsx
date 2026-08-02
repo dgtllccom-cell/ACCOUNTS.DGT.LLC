@@ -218,6 +218,12 @@ function CountryBranchSetupContent() {
   }, [countryBranches, countryBranchSearch]);
 
   useEffect(() => {
+    if (locationMeta.country?.currency_code) {
+      setCurrency(locationMeta.country.currency_code);
+    }
+  }, [locationMeta.country]);
+
+  useEffect(() => {
     let cancelled = false;
     (async () => {
       if (!companyId) {

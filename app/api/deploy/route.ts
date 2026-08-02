@@ -17,7 +17,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: "Production deployment triggered successfully.",
+      message: "Production deployment & location DB population completed successfully.",
       output
     });
   } catch (error: any) {

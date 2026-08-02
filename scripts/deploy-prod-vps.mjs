@@ -79,6 +79,8 @@ pm2 delete dgt-nextjs 2>/dev/null || true
 pm2 start ecosystem.config.cjs || pm2 start npm --name "dgt-nextjs" -- start
 pm2 save
 sudo systemctl reload nginx || systemctl reload nginx 2>/dev/null || true
+echo "[VPS 6/6] Populating official location master tables in VPS database..."
+curl -s http://localhost:3000/api/admin/populate-locations || true
 
 echo "=== PRODUCTION DEPLOYMENT COMPLETED ON THIS VPS (${BRANCH} branch) ==="
 `;
