@@ -2733,33 +2733,6 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
           <Button type="button" size="sm" variant="outline" onClick={handlePrintReport} className="h-8 rounded-lg border-slate-200 text-xs font-bold">
             <Printer className="mr-1.5 h-3.5 w-3.5 text-slate-500" /> Print
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            onClick={async () => {
-              if (confirm("Clear all old test loading records and populate 3 fresh test loading entries?")) {
-                setLoading(true);
-                try {
-                  const res = await fetch("/api/erp/purchases/loading-records/reset-test-data", { method: "POST" });
-                  const data = await res.json();
-                  if (data.ok) {
-                    setMessage("Old test records cleared and 3 fresh loading entries created.");
-                    await loadRecords();
-                  } else {
-                    setMessage("Error resetting test data: " + (data.error || "Failed"));
-                  }
-                } catch (err: any) {
-                  setMessage("Error resetting test data: " + err.message);
-                } finally {
-                  setLoading(false);
-                }
-              }
-            }}
-            className="h-8 rounded-lg border-rose-200 text-rose-700 bg-rose-50 hover:bg-rose-100 dark:border-rose-900/40 dark:bg-rose-950/40 dark:text-rose-300 text-xs font-bold"
-          >
-            <Trash2 className="mr-1.5 h-3.5 w-3.5 text-rose-500" /> Reset Test Data
-          </Button>
         </div>,
         actionsSlot
       )}
