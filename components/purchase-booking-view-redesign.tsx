@@ -5,7 +5,7 @@ import {
   Menu, Building2, Calendar, Globe, Languages, Bell, HelpCircle, ChevronDown,
   Save, Check, ArrowRightLeft, Printer, MoreHorizontal, Pencil, Trash2, Upload,
   X, FileText, LayoutDashboard, ShoppingCart, Package, Users, Wallet, BarChart3,
-  Container, Warehouse,
+  Container, Warehouse, Truck, Settings, Ship, Anchor, ClipboardList, FileDown,
 } from "lucide-react";
 import { FullPurchaseBookingReport } from "./reports/full-purchase-booking-report";
 import { CompactPurchaseBookingOrder } from "./reports/compact-purchase-booking-order";
