@@ -6,7 +6,8 @@ import type { Route } from "next";
 import {
   Anchor, Building2, Landmark, Mail, MapPin, Settings, SlidersHorizontal,
   Warehouse, Globe, Globe2, Search, Filter, ShieldCheck, Database, RefreshCcw,
-  Sparkles, Layers, Activity, CheckCircle2, ChevronRight, Download, Plus, ArrowUpRight
+  Sparkles, Layers, Activity, CheckCircle2, ChevronRight, Download, Plus, ArrowUpRight,
+  LayoutDashboard
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,9 +88,17 @@ const settingsItems = [
     badge: "Super Admin"
   },
   {
+    title: "KYC Verification & Compliance Reports",
+    description: "Track 15-day grace period countdowns, missing documents, and compliance status for country branches, city branches, and accounts.",
+    href: "/dashboard/kyc-reports" as Route,
+    icon: ShieldCheck,
+    category: "System & Security",
+    badge: "KYC Audit"
+  },
+  {
     title: "Local Translation Management",
     description: "Super Admin offline 5-language dictionary manager (English, Urdu, Pashto, Farsi, Arabic).",
-    href: "/dashboard/settings/translations" as Route,
+    href: "/dashboard/translations" as Route,
     icon: Globe2,
     category: "System & Security",
     badge: "5 Languages"

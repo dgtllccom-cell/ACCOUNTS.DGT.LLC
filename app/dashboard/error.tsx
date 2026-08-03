@@ -4,6 +4,35 @@ import { useEffect } from "react";
 import { AlertCircle, RefreshCcw, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+function clearChunkReloadCache() {
+  try {
+    if (typeof window !== "undefined") {
+      try {
+        sessionStorage.removeItem("chunk_reload_attempt");
+        sessionStorage.removeItem("chunk_reload_timestamp");
+        sessionStorage.removeItem("erp_chunk_reload_timestamp");
+        for (let i = sessionStorage.length - 1; i >= 0; i--) {
+          const key = sessionStorage.key(i);
+          if (key && (key.startsWith("chunk_reload") || key.startsWith("erp_chunk_reload"))) {
+            sessionStorage.removeItem(key);
+          }
+        }
+      } catch (e) {}
+
+      if (window.isSecureContext && "serviceWorker" in navigator) {
+        navigator.serviceWorker.getRegistrations().then((regs) => {
+          regs.forEach((reg) => reg.unregister());
+        }).catch(() => {});
+      }
+      if ("caches" in window) {
+        caches.keys().then((keys) => {
+          keys.forEach((key) => caches.delete(key));
+        }).catch(() => {});
+      }
+    }
+  } catch (e) {}
+}
+
 export default function DashboardError({
   error,
   reset,
@@ -16,31 +45,22 @@ export default function DashboardError({
     
     const msg = String(error?.message || error || "");
     const isChunkError =
+      error?.name === "ChunkLoadError" ||
       msg.includes("Loading chunk") ||
       msg.includes("ChunkLoadError") ||
+      msg.includes("failed to fetch") ||
+      msg.includes("Failed to fetch dynamically imported module") ||
       (msg.toLowerCase().includes("failed to fetch") && msg.includes("_next/static"));
 
     if (isChunkError) {
-      try {
-        // Clear all Service Workers & caches to wipe stale chunks
-        if ("serviceWorker" in navigator) {
-          navigator.serviceWorker.getRegistrations().then((regs) => {
-            regs.forEach((reg) => reg.unregister());
-          });
-        }
-        if ("caches" in window) {
-          caches.keys().then((keys) => {
-            keys.forEach((key) => caches.delete(key));
-          });
-        }
-      } catch (e) {}
-
-      const routeKey = "chunk_reload_" + window.location.pathname;
-      const lastReload = sessionStorage.getItem(routeKey);
+      const routeKey = "erp_chunk_reload_" + window.location.pathname;
+      const lastReload = sessionStorage.getItem(routeKey) || sessionStorage.getItem("chunk_reload_attempt");
       const now = Date.now();
-      // Auto-reload immediately with cache-busting timestamp per route if not reloaded on this path in the last 30 seconds
-      if (!lastReload || now - parseInt(lastReload, 10) > 30000) {
+
+      if (!lastReload || now - parseInt(lastReload, 10) > 15000) {
+        clearChunkReloadCache();
         sessionStorage.setItem(routeKey, String(now));
+        sessionStorage.setItem("chunk_reload_attempt", String(now));
         window.location.href = window.location.pathname + "?_t=" + now;
         return;
       }
@@ -48,17 +68,7 @@ export default function DashboardError({
   }, [error]);
 
   const handleTryAgain = () => {
-    try {
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.getRegistrations().then((regs) => {
-          regs.forEach((reg) => reg.unregister());
-        });
-      }
-      if ("caches" in window) {
-        caches.keys().then((keys) => keys.forEach((key) => caches.delete(key)));
-      }
-    } catch (e) {}
-    sessionStorage.removeItem("chunk_reload_timestamp");
+    clearChunkReloadCache();
     window.location.href = window.location.pathname + "?_t=" + Date.now();
   };
 
@@ -96,7 +106,10 @@ export default function DashboardError({
           <Button
             type="button"
             variant="outline"
-            onClick={() => window.location.href = "/dashboard"}
+            onClick={() => {
+              clearChunkReloadCache();
+              window.location.href = "/dashboard";
+            }}
             className="h-9 font-bold text-xs gap-1.5"
           >
             <LayoutDashboard className="h-3.5 w-3.5" /> Go to Dashboard

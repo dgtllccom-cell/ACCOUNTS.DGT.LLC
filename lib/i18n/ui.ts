@@ -277,6 +277,7 @@ export type UiKey =
   | "nav.branch_ledger_report"
   | "nav.branch_general_report"
   | "nav.other_reports"
+  | "nav.kyc_reports"
   | "nav.sales_report"
   | "nav.purchase_report"
   | "nav.exchange_rate_report"
@@ -880,6 +881,7 @@ const en: Dict = {
   "nav.country_ledger": "Country Ledger",
   "nav.branch_ledger": "City Ledger",
   "nav.ledger_general_report": "Ledger General Report",
+  "nav.kyc_reports": "KYC Reports",
   "nav.ledger_outstanding": "Outstanding & Recovery Ledger",
   "nav.ledger_super_admin_detailed": "Super Admin Ledger (Detailed)",
   "nav.ledger_country_detailed": "Country Ledger (Detailed)",

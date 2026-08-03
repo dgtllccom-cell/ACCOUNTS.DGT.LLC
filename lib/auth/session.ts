@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { type EnterpriseRole, enterpriseRoles } from "@/lib/permissions/enterprise-roles";
@@ -314,7 +315,7 @@ export async function requireErpSession() {
   const session = await getCurrentErpSession();
 
   if (!session) {
-    throw new ErpAuthError();
+    redirect("/auth/login");
   }
 
   return session;

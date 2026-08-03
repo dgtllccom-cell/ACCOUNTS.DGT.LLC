@@ -44,7 +44,17 @@ export default function GlobalClientError({
     setIsUpdating(true);
     try {
       if (typeof window !== "undefined") {
-        try { sessionStorage.removeItem("chunk_reload_attempt"); } catch {}
+        try {
+          sessionStorage.removeItem("chunk_reload_attempt");
+          sessionStorage.removeItem("chunk_reload_timestamp");
+          sessionStorage.removeItem("erp_chunk_reload_timestamp");
+          for (let i = sessionStorage.length - 1; i >= 0; i--) {
+            const key = sessionStorage.key(i);
+            if (key && (key.startsWith("chunk_reload") || key.startsWith("erp_chunk_reload"))) {
+              sessionStorage.removeItem(key);
+            }
+          }
+        } catch {}
         if (window.isSecureContext && "serviceWorker" in navigator) {
           const registrations = await navigator.serviceWorker.getRegistrations();
           for (const reg of registrations) {
@@ -61,7 +71,7 @@ export default function GlobalClientError({
     } catch (e) {
       console.warn("Failed to clear service worker caches:", e);
     }
-    window.location.href = window.location.href;
+    window.location.href = window.location.pathname + "?_t=" + Date.now();
   };
 
   const handleCopyDiagnostic = () => {
