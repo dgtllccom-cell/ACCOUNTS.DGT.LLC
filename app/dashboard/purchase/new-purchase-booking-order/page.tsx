@@ -2,6 +2,8 @@ import { Suspense } from "react";
 import { PurchaseOrderWizard } from "@/features/purchases/components/purchase-order-wizard.jsx";
 import { requireErpSession } from "@/lib/auth/session";
 
+export const dynamic = "force-dynamic";
+
 export default async function NewPurchaseBookingOrderPage() {
   const session = await requireErpSession().catch(() => null);
   return (
