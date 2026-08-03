@@ -1,9 +1,8 @@
 import { execSync } from 'child_process';
 import fs from 'fs';
 
-// TARGET BRANCH: Set to 'dev' for ongoing development and testing.
-// Switch to 'main' ONLY after final review and approval by user.
-const BRANCH = "dev";
+// TARGET BRANCH: Set to 'main' for production VPS server deployment.
+const BRANCH = "main";
 
 // List of target VPS servers (add second IP in SECOND_VPS.txt or directly below)
 const SERVERS = [

@@ -591,6 +591,13 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
+    key: "kyc-reports-top",
+    labelKey: "nav.kyc_reports",
+    iconKey: "clipboard-list",
+    href: "/dashboard/kyc-reports" as Route,
+    roles: ["super_admin", "auditor_viewer", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+  },
+  {
     key: "logistics",
     labelKey: "nav.shipping_clearing",
     iconKey: "truck",

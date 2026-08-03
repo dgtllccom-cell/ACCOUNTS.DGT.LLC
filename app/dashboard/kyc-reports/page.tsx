@@ -9,6 +9,7 @@ import {
   Building2,
   CheckCircle2,
   Clock,
+  ExternalLink,
   FileCheck2,
   FileText,
   Filter,
@@ -29,6 +30,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { getLanguageDirection } from "@/lib/i18n/languages";
 
 type KycEntityType = "country_branch" | "city_branch" | "user_account" | "new_account";
 
@@ -51,6 +54,7 @@ type KycItem = {
   progressPercent: number;
   ownerName?: string | null;
   documentsCount: number;
+  editUrl?: string;
   rawDetails: Record<string, any>;
 };
 
@@ -62,7 +66,62 @@ type KycMetrics = {
   compliant: number;
 };
 
+const KYC_UI: Record<string, Record<SupportedLanguage, string>> = {
+  title: {
+    en: "KYC Reports & Master Record Audit Center",
+    ur: "کے وائی سی رپورٹ اور ماسٹر ریکارڈ آڈٹ سینٹر",
+    ar: "تقرير KYC ومركز تدقيق السجلات الرئيسية",
+    fa: "گزارش KYC و مرکز حسابرسی پرونده‌های اصلی",
+    ps: "د KYC راپور او د ماسټر ریکارډ د پلټنې مرکز"
+  },
+  subtitle: {
+    en: "Live audit monitoring of missing profile fields, documents, and compliance grace period for Countries, Branches, Users & Fleet",
+    ur: "ممالک، برانچز، صارفین اور گاڑیوں کے لیے ادھورے پروفائلز اور دستاویزات کا لائیو جائزہ",
+    ar: "مراقبة التدقيق المباشر للحقول والمستندات المفقودة وفترة التوفيق للمؤسسات",
+    fa: "پایش زنده مدارک و پرونده‌های ناقص برای کشورها، شعب، کاربران و ناوگان",
+    ps: "د هیوادونو، څانګو، کاروونکو او موټرو لپاره د نیمګړو ریکارډونو ژوندۍ ارزونه"
+  },
+  totalTracked: {
+    en: "Total Audited Entities",
+    ur: "کل آڈٹ شدہ ریکارڈز",
+    ar: "إجمالي السجلات المدققة",
+    fa: "کل پرونده‌های آڈیت شده",
+    ps: "ټول ارزیابي شوي ریکارډونه"
+  },
+  actionRequired: {
+    en: "Incomplete (Red Alert)",
+    ur: "غیر مکمل (سرخ الرٹ)",
+    ar: "غير مكتمل (تنبيه أحمر)",
+    fa: "ناقص (هشدار قرمز)",
+    ps: "نیمګړی (سور خبرداری)"
+  },
+  nearExpiry: {
+    en: "Near Expiry / Overdue",
+    ur: "مہلت ختم ہونے کے قریب",
+    ar: "قريب من الانتهاء",
+    fa: "نزدیک به انقضا",
+    ps: "د مودي پای ته نږدې"
+  },
+  compliant: {
+    en: "Compliant & Verified",
+    ur: "مکمل اور تصدیق شدہ",
+    ar: "متوافق وموثق",
+    fa: "کامل و تایید شده",
+    ps: "بشپړ او تایید شوی"
+  },
+  completeNow: {
+    en: "+ Upload / Complete Profile",
+    ur: "+ پروفائل مکمل کریں",
+    ar: "+ إكمال الملف",
+    fa: "+ تکمیل پرونده",
+    ps: "+ پروفایل بشپړ کړئ"
+  }
+};
+
 export default function KycReportsPage() {
+  const [activeLang, setActiveLang] = useState<SupportedLanguage>("en");
+  const dir = getLanguageDirection(activeLang);
+
   const [items, setItems] = useState<KycItem[]>([]);
   const [metrics, setMetrics] = useState<KycMetrics>({
     total: 0,
@@ -77,7 +136,7 @@ export default function KycReportsPage() {
   const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [message, setMessage] = useState("");
 
-  // Modal / Drawer state for Uploading & Completing KYC
+  // Modal state for Uploading & Completing KYC
   const [activeItem, setActiveItem] = useState<KycItem | null>(null);
   const [editOwnerName, setEditOwnerName] = useState("");
   const [editPhone, setEditPhone] = useState("");
@@ -86,6 +145,8 @@ export default function KycReportsPage() {
   const [newDocName, setNewDocName] = useState("");
   const [docList, setDocList] = useState<string[]>([]);
   const [savingKyc, setSavingKyc] = useState(false);
+
+  const tUI = (key: string) => KYC_UI[key]?.[activeLang] || KYC_UI[key]?.en || key;
 
   async function fetchKycData() {
     setLoading(true);
@@ -173,25 +234,49 @@ export default function KycReportsPage() {
   });
 
   return (
-    <div className="mx-auto max-w-[1600px] space-y-6 text-foreground p-4 lg:p-6">
+    <div dir={dir} className="mx-auto max-w-[1600px] space-y-6 text-foreground p-4 lg:p-6">
       {/* Header Banner */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b border-border/60 pb-5 gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-pulse" />
             <p className="text-[10px] font-bold uppercase tracking-widest text-rose-600 dark:text-rose-400">
-              Regulatory Compliance & Verification Center
+              Regulatory Compliance & Verification Center (5-Language Active)
             </p>
           </div>
           <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight text-foreground mt-1">
-            KYC Verification & Compliance Reports
+            {tUI("title")}
           </h1>
           <p className="text-xs text-muted-foreground mt-1 max-w-3xl">
-            Live compliance tracker monitoring 15-day grace period timers, missing documents, and KYC requirements for Country Main Branches, City Nodes, Employees & Commercial Accounts.
+            {tUI("subtitle")}
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5">
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* 5-Language Switcher Pills */}
+          <div className="flex items-center gap-1 rounded-2xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-800 dark:bg-slate-950">
+            {[
+              { code: "en", label: "US English" },
+              { code: "ur", label: "اردو PK" },
+              { code: "ps", label: "پښتو AF" },
+              { code: "ar", label: "العربية AE" },
+              { code: "fa", label: "فارسی IR" }
+            ].map((l) => (
+              <button
+                key={l.code}
+                type="button"
+                onClick={() => setActiveLang(l.code as SupportedLanguage)}
+                className={`rounded-xl px-2.5 py-1 text-xs font-bold transition-all ${
+                  activeLang === l.code
+                    ? "bg-rose-600 text-white shadow-md shadow-rose-600/30"
+                    : "text-slate-600 hover:bg-slate-200/60 dark:text-slate-400 dark:hover:bg-slate-800"
+                }`}
+              >
+                {l.label}
+              </button>
+            ))}
+          </div>
+
           <Button
             onClick={fetchKycData}
             disabled={loading}
@@ -201,11 +286,6 @@ export default function KycReportsPage() {
             <RefreshCw className={cn("h-4 w-4 mr-2", loading ? "animate-spin text-rose-600" : "")} />
             Refresh KYC Matrix
           </Button>
-          <Link href="/dashboard/settings/management">
-            <Button className="bg-rose-600 hover:bg-rose-700 text-white font-bold h-9 px-4 rounded-xl shadow-sm text-xs">
-              <ShieldCheck className="h-4 w-4 mr-1.5" /> Management Rules
-            </Button>
-          </Link>
         </div>
       </div>
 
@@ -226,9 +306,9 @@ export default function KycReportsPage() {
         <Card className="bg-card border-border/60 p-4 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Total Entities</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{tUI("totalTracked")}</p>
               <p className="mt-1.5 text-2xl font-black text-foreground">{metrics.total}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Tracked for KYC verification</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Tracked across system databases</p>
             </div>
             <div className="p-3 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
               <Building2 className="h-6 w-6" />
@@ -239,9 +319,9 @@ export default function KycReportsPage() {
         <Card className="bg-card border-border/60 p-4 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">Action Required</p>
-              <p className="mt-1.5 text-2xl font-black text-amber-600 dark:text-amber-400">{metrics.incomplete}</p>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Incomplete KYC documents</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">{tUI("actionRequired")}</p>
+              <p className="mt-1.5 text-2xl font-black text-rose-600 dark:text-rose-400">{metrics.incomplete}</p>
+              <p className="text-[10px] text-rose-600/80 dark:text-rose-400/80 mt-0.5">Missing required profile fields</p>
             </div>
             <div className="p-3 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400">
               <AlertTriangle className="h-6 w-6" />
@@ -252,7 +332,7 @@ export default function KycReportsPage() {
         <Card className="bg-card border-border/60 p-4 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">Near Expiry / Overdue</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">{tUI("nearExpiry")}</p>
               <p className="mt-1.5 text-2xl font-black text-rose-600 dark:text-rose-400">{metrics.nearExpiry + metrics.suspended}</p>
               <p className="text-[10px] text-rose-600/80 dark:text-rose-400/80 mt-0.5">&le; 5 Days before suspension</p>
             </div>
@@ -265,7 +345,7 @@ export default function KycReportsPage() {
         <Card className="bg-card border-border/60 p-4 rounded-2xl shadow-sm">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Compliant & Verified</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">{tUI("compliant")}</p>
               <p className="mt-1.5 text-2xl font-black text-emerald-600 dark:text-emerald-400">{metrics.compliant}</p>
               <p className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 mt-0.5">100% verified status</p>
             </div>
@@ -279,7 +359,6 @@ export default function KycReportsPage() {
       {/* Filter Toolbar */}
       <Card className="bg-card border-border/60 p-4 rounded-2xl shadow-sm space-y-4">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          
           {/* Search Box */}
           <div className="relative flex-1 max-w-md">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -296,10 +375,10 @@ export default function KycReportsPage() {
           <div className="flex flex-wrap items-center gap-1.5">
             {[
               { id: "all", label: "All Entities" },
-              { id: "country_branch", label: "Country Branches" },
-              { id: "city_branch", label: "City Branches" },
-              { id: "user_account", label: "User Accounts" },
-              { id: "new_account", label: "New Accounts" }
+              { id: "country_branch", label: "Countries & Main Branches" },
+              { id: "city_branch", label: "City Branch Nodes" },
+              { id: "user_account", label: "Users & Staff" },
+              { id: "new_account", label: "Commercial Accounts" }
             ].map((type) => (
               <button
                 key={type.id}
@@ -322,7 +401,7 @@ export default function KycReportsPage() {
           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground shrink-0">Filter Status:</span>
           {[
             { id: "all", label: "All Statuses" },
-            { id: "incomplete", label: "Incomplete (Action Required)" },
+            { id: "incomplete", label: "Incomplete (Red Alert)" },
             { id: "near_expiry", label: "Near Expiry (< 5 Days)" },
             { id: "suspended", label: "Suspended / Overdue" },
             { id: "compliant", label: "Compliant & Verified" }
@@ -349,10 +428,10 @@ export default function KycReportsPage() {
           <div>
             <CardTitle className="text-sm font-bold text-foreground flex items-center gap-2">
               <FileCheck2 className="h-4 w-4 text-rose-600 dark:text-rose-400" />
-              KYC Verification & Grace Period Directory
+              KYC Verification & Grace Period Audit Directory
             </CardTitle>
             <CardDescription className="text-xs text-muted-foreground mt-0.5">
-              Showing {filteredItems.length} of {items.length} compliance records.
+              Showing {filteredItems.length} of {items.length} compliance audit records.
             </CardDescription>
           </div>
         </CardHeader>
@@ -361,19 +440,19 @@ export default function KycReportsPage() {
           <table className="w-full text-xs text-left text-foreground">
             <thead className="bg-muted/40 text-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-border/60">
               <tr>
-                <th className="px-5 py-3.5">Entity & Node Title</th>
-                <th className="px-5 py-3.5">Type & Country</th>
-                <th className="px-5 py-3.5">Missing Requirements</th>
+                <th className="px-5 py-3.5">Entity & Record Title</th>
+                <th className="px-5 py-3.5">Type & Location</th>
+                <th className="px-5 py-3.5">Missing Profile Requirements</th>
                 <th className="px-5 py-3.5">Grace Period (15 Days)</th>
                 <th className="px-5 py-3.5">Status</th>
-                <th className="px-5 py-3.5 text-right">Action</th>
+                <th className="px-5 py-3.5 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/40">
               {loading ? (
                 <tr>
                   <td colSpan={6} className="px-6 py-12 text-center text-muted-foreground font-semibold">
-                    Loading live KYC reports and compliance timers...
+                    Loading live KYC reports and compliance audit timers...
                   </td>
                 </tr>
               ) : filteredItems.length === 0 ? (
@@ -410,14 +489,14 @@ export default function KycReportsPage() {
                       {item.missingRequirements.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
                           {item.missingRequirements.map((req, idx) => (
-                            <span key={idx} className="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-300 border border-amber-500/20">
-                              {req}
+                            <span key={idx} className="px-2 py-0.5 rounded text-[9px] font-bold bg-rose-500/10 text-rose-700 dark:text-rose-300 border border-rose-500/20">
+                              ⚠ {req}
                             </span>
                           ))}
                         </div>
                       ) : (
                         <span className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                          <CheckCircle2 className="h-3.5 w-3.5" /> All documents verified
+                          <CheckCircle2 className="h-3.5 w-3.5" /> All requirements verified
                         </span>
                       )}
                     </td>
@@ -462,12 +541,24 @@ export default function KycReportsPage() {
                     </td>
 
                     <td className="px-5 py-4 text-right">
-                      <Button
-                        onClick={() => handleOpenKycModal(item)}
-                        className="bg-rose-600 hover:bg-rose-700 text-white font-bold h-8 px-3 rounded-lg text-xs shadow-xs"
-                      >
-                        <Upload className="h-3.5 w-3.5 mr-1" /> Upload / Complete KYC
-                      </Button>
+                      <div className="flex items-center justify-end gap-2">
+                        {item.editUrl && (
+                          <Link href={item.editUrl as any}>
+                            <Button
+                              variant="outline"
+                              className="h-8 px-2.5 text-[11px] font-bold border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+                            >
+                              <ExternalLink className="h-3 w-3 mr-1 text-slate-600 dark:text-slate-400" /> Direct Edit
+                            </Button>
+                          </Link>
+                        )}
+                        <Button
+                          onClick={() => handleOpenKycModal(item)}
+                          className="bg-rose-600 hover:bg-rose-700 text-white font-bold h-8 px-3 rounded-lg text-xs shadow-xs"
+                        >
+                          <Upload className="h-3.5 w-3.5 mr-1" /> {tUI("completeNow")}
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))

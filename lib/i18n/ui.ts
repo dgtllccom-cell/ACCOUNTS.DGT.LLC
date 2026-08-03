@@ -923,6 +923,7 @@ const en: Dict = {
   "nav.branch_ledger_report": "Branch Ledger Report",
   "nav.branch_general_report": "Branch General Report",
   "nav.other_reports": "Other Reports",
+  "nav.kyc_reports": "KYC Reports",
   "nav.sales_report": "Sales Report",
   "nav.purchase_report": "Purchase Report",
   "nav.exchange_rate_report": "Exchange Rate Report",

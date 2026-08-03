@@ -1,6 +1,8 @@
 import { PurchaseLoadingRecordsView } from "@/features/purchases/components/purchase-loading-records-view";
 import { requireErpSession } from "@/lib/auth/session";
 
+export const dynamic = "force-dynamic";
+
 export default async function PurchaseLoadingRecordsPage({ searchParams }: { searchParams?: Promise<Record<string, string | string[] | undefined>> }) {
   await requireErpSession();
   const resolvedParams = searchParams ? await searchParams : {};

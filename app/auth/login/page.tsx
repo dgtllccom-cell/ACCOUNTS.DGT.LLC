@@ -19,10 +19,10 @@ export default async function LoginPage({
   const lang = await getRequestLanguage();
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-950 dark:text-slate-50">
       <InstallAppBanner />
-      <main className="flex-1 bg-slate-50 text-slate-950 dark:bg-slate-950 dark:text-slate-50 flex flex-col justify-center">
-      <div className="grid min-h-screen lg:grid-cols-[1fr_1.1fr]">
+      <main className="flex-1 flex flex-col justify-center">
+        <div className="grid min-h-screen w-full lg:grid-cols-[1fr_1.1fr]">
 
         {/* ═══════════════════════════════════════════════════════════════
             LEFT PANEL — Login Form (clean & fully responsive)
@@ -90,7 +90,7 @@ export default async function LoginPage({
         ═══════════════════════════════════════════════════════════════ */}
         <section
           className="relative hidden overflow-hidden lg:flex lg:flex-col justify-between"
-          style={{ background: "linear-gradient(160deg, #06122d 0%, #0a1f45 45%, #071828 100%)" }}
+          style={{ background: "linear-gradient(160deg, #06122d 0%, #0a1f45 45%, #071828 100%)", color: "#ffffff" }}
           aria-hidden="true"
         >
           {/* ── Organic texture blobs ── */}
@@ -132,23 +132,23 @@ export default async function LoginPage({
           <div className="relative z-10 flex flex-1 flex-col items-center justify-center px-10 pb-8">
             <div
               className="w-full max-w-[340px] rounded-2xl border border-white/10 p-5 shadow-2xl"
-              style={{ background: "rgba(255,255,255,0.95)", backdropFilter: "blur(20px)" }}
+              style={{ background: "rgba(255,255,255,0.95)", backdropFilter: "blur(20px)", color: "#0f172a" }}
             >
               <div className="flex items-start justify-between">
                 <div>
-                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-600">
+                  <p className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-600" style={{ color: "#475569" }}>
                     Production ERP
                   </p>
-                  <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-slate-400">
+                  <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-slate-400" style={{ color: "#94a3b8" }}>
                     Live Database Only
                   </p>
                 </div>
-                <span className="rounded-full bg-emerald-500 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest text-white">
+                <span className="rounded-full bg-emerald-500 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest text-white" style={{ backgroundColor: "#10b981", color: "#ffffff" }}>
                   Connected
                 </span>
               </div>
-              <div className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-                <p className="text-[10px] font-bold leading-5 text-emerald-800">
+              <div className="mt-5 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3" style={{ backgroundColor: "#ecfdf5", borderColor: "#d1fae5" }}>
+                <p className="text-[10px] font-bold leading-5 text-emerald-800" style={{ color: "#065f46" }}>
                   Sign in to view live operational records. No sample or demo statistics are displayed.
                 </p>
               </div>
@@ -157,20 +157,20 @@ export default async function LoginPage({
 
           {/* Bottom brand text */}
           <div className="relative z-10 pb-8 text-center">
-            <p className="text-[9px] font-bold uppercase tracking-[0.34em] text-white/40">
+            <p className="text-[9px] font-bold uppercase tracking-[0.34em] text-white/40" style={{ color: "rgba(255, 255, 255, 0.6)" }}>
               Established Excellence
             </p>
-            <p className="mt-1.5 text-2xl font-black text-white">
+            <p className="mt-1.5 text-2xl font-black text-white" style={{ color: "#ffffff" }}>
               Damaan <span className="font-light">Group Of Business</span>
             </p>
-            <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.28em] text-white/35">
+            <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.28em] text-white/35" style={{ color: "rgba(255, 255, 255, 0.5)" }}>
               Global Logistics &amp; Inventory
             </p>
           </div>
         </section>
 
-      </div>
-    </main>
+        </div>
+      </main>
     </div>
   );
 }

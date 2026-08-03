@@ -24,6 +24,7 @@ export type KycReportItem = {
   progressPercent: number;
   ownerName?: string | null;
   documentsCount: number;
+  editUrl?: string;
   rawDetails: Record<string, any>;
 };
 
@@ -127,6 +128,7 @@ export async function GET(request: Request) {
         progressPercent: grace.progressPercent,
         ownerName: cb.owner_name,
         documentsCount: Array.isArray(cb.documents) ? cb.documents.length : 0,
+        editUrl: `/dashboard/new-entry/branch-entry/country-branch?id=${cb.id}`,
         rawDetails: cb
       });
     });
@@ -160,6 +162,7 @@ export async function GET(request: Request) {
         daysRemaining: grace.daysRemaining,
         progressPercent: grace.progressPercent,
         documentsCount: Array.isArray(cbr.documents) ? cbr.documents.length : 0,
+        editUrl: `/dashboard/new-entry/branch-entry/city-branch?id=${cbr.id}`,
         rawDetails: cbr
       });
     });
@@ -187,6 +190,7 @@ export async function GET(request: Request) {
         daysRemaining: grace.daysRemaining,
         progressPercent: grace.progressPercent,
         documentsCount: 0,
+        editUrl: `/dashboard/new-entry/users/registration?id=${u.id}`,
         rawDetails: u
       });
     });
@@ -215,6 +219,7 @@ export async function GET(request: Request) {
         daysRemaining: grace.daysRemaining,
         progressPercent: grace.progressPercent,
         documentsCount: 0,
+        editUrl: `/dashboard/accounts/setup?id=${acc.id}`,
         rawDetails: acc
       });
     });

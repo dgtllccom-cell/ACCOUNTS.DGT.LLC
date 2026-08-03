@@ -29,6 +29,7 @@ import {
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { autoTranslate5Languages, resolveActiveText, type MultilingualText } from "@/lib/i18n/multilingual-translator";
+import { PersonPicker } from "@/features/hr-payroll/components/person-picker";
 
 interface DocumentItem {
   id: string;
@@ -292,6 +293,69 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
   const [newContractStart, setNewContractStart] = useState("");
   const [newContractEnd, setNewContractEnd] = useState("");
   const [newContractTerms, setNewContractTerms] = useState("");
+
+  // Person/Customer Master File Pickers
+  const [selectedOwnerId, setSelectedOwnerId] = useState("");
+  const [selectedDriverId, setSelectedDriverId] = useState("");
+
+  useEffect(() => {
+    if (!selectedOwnerId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/erp/customers/${encodeURIComponent(selectedOwnerId)}`).then((r) => r.json());
+        if (cancelled) return;
+        if (res?.customer) {
+          const c = res.customer;
+          const nameEn = c.customer_name || "";
+          const updated5 = autoTranslate5Languages(nameEn, "en", formData.ownerName);
+          const compEn = c.company_name || "";
+          const comp5 = autoTranslate5Languages(compEn, "en", formData.transportCompany);
+          setFormData((prev) => ({
+            ...prev,
+            ownerName: updated5,
+            ownerCnicPassport: c.cnic || c.passport || prev.ownerCnicPassport,
+            ownerMobile: c.mobile || c.whatsapp || prev.ownerMobile,
+            ownerAddress: c.address || prev.ownerAddress,
+            transportCompany: comp5
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to load customer details", err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedOwnerId]);
+
+  useEffect(() => {
+    if (!selectedDriverId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(`/api/erp/customers/${encodeURIComponent(selectedDriverId)}`).then((r) => r.json());
+        if (cancelled) return;
+        if (res?.customer) {
+          const c = res.customer;
+          const nameEn = c.customer_name || "";
+          const updated5 = autoTranslate5Languages(nameEn, "en", formData.driverName);
+          setFormData((prev) => ({
+            ...prev,
+            driverName: updated5,
+            licenseNo: c.license_no || c.cnic || prev.licenseNo,
+            driverMobile: c.mobile || c.whatsapp || prev.driverMobile,
+            driverAddress: c.address || prev.driverAddress
+          }));
+        }
+      } catch (err) {
+        console.error("Failed to load driver details", err);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedDriverId]);
 
   useEffect(() => {
     async function loadOptions() {
@@ -923,6 +987,19 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                   </span>
                 </div>
 
+                {/* Person / Owner Database Selector */}
+                <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4 dark:border-blue-900/40 dark:bg-slate-950 space-y-2">
+                  <PersonPicker
+                    label="Search & Select Owner / Customer Record from Database (or + Add New Owner)"
+                    value={selectedOwnerId}
+                    onValueChange={(id) => setSelectedOwnerId(id)}
+                    placeholder="Search by owner name, mobile, company, CNIC..."
+                  />
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                    Selecting an owner auto-fills their Name, CNIC, Mobile, Transport Company, and Address. Click &quot;+ Add New Person Master&quot; to register a new owner in the database.
+                  </p>
+                </div>
+
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>
                     <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
@@ -1039,6 +1116,19 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                 <h3 className="text-base font-black text-slate-900 dark:text-white border-b pb-3 border-slate-100 dark:border-slate-800">
                   Driver Personal & License Details
                 </h3>
+
+                {/* Person / Driver Database Selector */}
+                <div className="rounded-2xl border border-blue-100 bg-blue-50/60 p-4 dark:border-blue-900/40 dark:bg-slate-950 space-y-2">
+                  <PersonPicker
+                    label="Search & Select Driver / Person Record from Database (or + Add New Driver)"
+                    value={selectedDriverId}
+                    onValueChange={(id) => setSelectedDriverId(id)}
+                    placeholder="Search by driver name, license, mobile..."
+                  />
+                  <p className="text-[11px] font-medium text-slate-500 dark:text-slate-400">
+                    Selecting a driver auto-fills their Name, License Number, Mobile, and Address. Click &quot;+ Add New Person Master&quot; to register a new driver in the database.
+                  </p>
+                </div>
 
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <div>

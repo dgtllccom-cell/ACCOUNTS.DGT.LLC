@@ -161,16 +161,17 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
     loadBranches();
   }, [countryId]);
 
-  // Fetch city branches when main branch changes
+  // Fetch city branches when country or main branch changes
   useEffect(() => {
-    if (!countryBranchId) {
+    if (!countryId) {
       setCityBranches([]);
       setCityBranchId("");
       return;
     }
     async function loadCityBranches() {
       try {
-        const res = await apiGet<{ ok: boolean; data: { cityBranches: any[] } }>(`/api/erp/locations/branches/city?countryBranchId=${countryBranchId}`);
+        const url = `/api/erp/locations/branches/city?countryId=${countryId}${countryBranchId ? `&countryBranchId=${countryBranchId}` : ""}`;
+        const res = await apiGet<{ ok: boolean; data: { cityBranches: any[] } }>(url);
         if (res.ok && res.data?.cityBranches) {
           const list = res.data.cityBranches;
           setCityBranches(list);
@@ -185,7 +186,17 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
       }
     }
     loadCityBranches();
-  }, [countryBranchId]);
+  }, [countryId, countryBranchId]);
+
+  // Auto-sync countryBranchId if a city branch with parent branch is selected
+  useEffect(() => {
+    if (cityBranchId && cityBranches.length > 0) {
+      const selectedCb = cityBranches.find((cb) => cb.id === cityBranchId);
+      if (selectedCb?.country_branch_id && selectedCb.country_branch_id !== countryBranchId) {
+        setCountryBranchId(selectedCb.country_branch_id);
+      }
+    }
+  }, [cityBranchId, cityBranches, countryBranchId]);
 
   // Fetch employee details if editing
   useEffect(() => {
@@ -512,7 +523,9 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               >
                 <option value="">Select Main Branch</option>
                 {branches.map((b) => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
+                  <option key={b.id} value={b.id}>
+                    {b.name} {b.code ? `(${b.code})` : ""}
+                  </option>
                 ))}
               </select>
             </div>
@@ -521,12 +534,14 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               <select
                 value={cityBranchId}
                 onChange={(e) => setCityBranchId(e.target.value)}
-                disabled={!countryBranchId}
+                disabled={!countryId}
                 className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 disabled:opacity-40"
               >
                 <option value="">Select City Branch</option>
                 {cityBranches.map((cb) => (
-                  <option key={cb.id} value={cb.id}>{cb.name}</option>
+                  <option key={cb.id} value={cb.id}>
+                    {cb.name} {cb.code ? `(${cb.code})` : ""}
+                  </option>
                 ))}
               </select>
             </div>
@@ -553,8 +568,14 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
             <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Step 2 Packet Preview</div>
             <div className="grid grid-cols-3 gap-2">
               <div><span className="font-semibold text-slate-400">Country:</span> {selectedCountryObj?.name || "-"}</div>
-              <div><span className="font-semibold text-slate-400">Main Branch:</span> {selectedMainBranchObj?.name || "-"}</div>
-              <div><span className="font-semibold text-slate-400">City Branch:</span> {selectedCityBranchObj?.name || "-"}</div>
+              <div>
+                <span className="font-semibold text-slate-400">Main Branch:</span>{" "}
+                {selectedMainBranchObj ? `${selectedMainBranchObj.name} ${selectedMainBranchObj.code ? `(${selectedMainBranchObj.code})` : ""}` : "-"}
+              </div>
+              <div>
+                <span className="font-semibold text-slate-400">City Branch:</span>{" "}
+                {selectedCityBranchObj ? `${selectedCityBranchObj.name} ${selectedCityBranchObj.code ? `(${selectedCityBranchObj.code})` : ""}` : "-"}
+              </div>
             </div>
           </div>
         </div>
@@ -878,11 +899,15 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               </div>
               <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Main Branch</span>
-                <span className="font-bold text-white text-xs">{selectedMainBranchObj?.name || "-"}</span>
+                <span className="font-bold text-white text-xs">
+                  {selectedMainBranchObj ? `${selectedMainBranchObj.name} ${selectedMainBranchObj.code ? `(${selectedMainBranchObj.code})` : ""}` : "-"}
+                </span>
               </div>
               <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">City Branch</span>
-                <span className="font-bold text-white text-xs">{selectedCityBranchObj?.name || "-"}</span>
+                <span className="font-bold text-white text-xs">
+                  {selectedCityBranchObj ? `${selectedCityBranchObj.name} ${selectedCityBranchObj.code ? `(${selectedCityBranchObj.code})` : ""}` : "-"}
+                </span>
               </div>
               <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
                 <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Joining Date</span>

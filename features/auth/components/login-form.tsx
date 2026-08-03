@@ -252,14 +252,27 @@ export function LoginForm({ lang: initialLang }: { lang?: SupportedLanguage }) {
         <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-500 dark:text-slate-400 mb-1.5 flex items-center gap-1">
           <Globe className="h-3 w-3 text-blue-600" /> Select System Language
         </div>
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5" style={{ display: "flex", flexWrap: "wrap", gap: "6px" }}>
           {LANGUAGES.map((l) => (
             <button
               key={l.code}
               type="button"
               onClick={() => setSelectedLang(l.code)}
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "6px",
+                padding: "6px 12px",
+                borderRadius: "8px",
+                fontSize: "12px",
+                fontWeight: 700,
+                border: "1px solid " + (selectedLang === l.code ? "#2563eb" : "#cbd5e1"),
+                backgroundColor: selectedLang === l.code ? "#2563eb" : "#f8fafc",
+                color: selectedLang === l.code ? "#ffffff" : "#334155",
+                cursor: "pointer",
+              }}
               className={cn(
-                "flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all border",
+                "flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all border cursor-pointer",
                 selectedLang === l.code
                   ? "bg-blue-600 text-white border-blue-600 shadow-sm"
                   : "bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100 dark:bg-slate-900 dark:text-slate-300 dark:border-slate-800"
@@ -273,14 +286,32 @@ export function LoginForm({ lang: initialLang }: { lang?: SupportedLanguage }) {
       </div>
 
       {/* ── Role Scope Pills ── */}
-      <div className="mb-4 flex overflow-x-auto gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-800/60 no-scrollbar">
+      <div
+        className="mb-4 flex overflow-x-auto gap-1 rounded-xl border border-slate-200 bg-slate-100 p-1 dark:border-slate-800 dark:bg-slate-800/60 no-scrollbar"
+        style={{ display: "flex", flexWrap: "nowrap", gap: "4px", padding: "4px", backgroundColor: "#f1f5f9", borderRadius: "12px", border: "1px solid #e2e8f0", overflowX: "auto" }}
+      >
         {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
             onClick={() => handleTabChange(tab.id)}
+            style={{
+              flex: "1 1 0%",
+              padding: "8px 10px",
+              borderRadius: "8px",
+              fontSize: "10px",
+              fontWeight: 800,
+              textTransform: "uppercase",
+              letterSpacing: "0.05em",
+              textAlign: "center",
+              whiteSpace: "nowrap",
+              cursor: "pointer",
+              backgroundColor: activeTab === tab.id ? "#0f172a" : "transparent",
+              color: activeTab === tab.id ? "#ffffff" : "#64748b",
+              border: "none",
+            }}
             className={cn(
-              "shrink-0 flex-1 rounded-lg px-2.5 py-2 text-[9px] sm:text-[9.5px] font-black uppercase tracking-wider transition-all duration-200 text-center whitespace-nowrap",
+              "shrink-0 flex-1 rounded-lg px-2.5 py-2 text-[9px] sm:text-[9.5px] font-black uppercase tracking-wider transition-all duration-200 text-center whitespace-nowrap cursor-pointer",
               activeTab === tab.id
                 ? "bg-slate-900 text-white shadow-xs dark:bg-white dark:text-slate-900"
                 : "text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
@@ -436,7 +467,23 @@ export function LoginForm({ lang: initialLang }: { lang?: SupportedLanguage }) {
         <Button
           type="submit"
           disabled={loading}
-          className="h-12 w-full font-black text-xs sm:text-sm tracking-wide text-white shadow-md transition-all duration-200 hover:shadow-lg rounded-xl bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 hover:from-blue-800 hover:to-indigo-800 gap-2"
+          style={{
+            height: "48px",
+            width: "100%",
+            borderRadius: "12px",
+            background: "linear-gradient(to right, #1d4ed8, #4338ca, #1e40af)",
+            color: "#ffffff",
+            fontWeight: 900,
+            fontSize: "13px",
+            letterSpacing: "0.05em",
+            display: "inline-flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: "8px",
+            border: "none",
+            cursor: loading ? "wait" : "pointer"
+          }}
+          className="h-12 w-full font-black text-xs sm:text-sm tracking-wide text-white shadow-md transition-all duration-200 hover:shadow-lg rounded-xl bg-gradient-to-r from-blue-700 via-indigo-700 to-blue-800 hover:from-blue-800 hover:to-indigo-800 gap-2 cursor-pointer"
         >
           {loading ? (
             <>
