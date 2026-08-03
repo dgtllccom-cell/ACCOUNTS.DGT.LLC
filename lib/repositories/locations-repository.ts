@@ -322,6 +322,7 @@ export class LocationsRepository {
     }
     return (data ?? []) as CountryRow[];
   }
+
   async createCountry(input: {
     name: string;
     iso2?: string | null;
@@ -387,6 +388,44 @@ export class LocationsRepository {
         iso3: input.iso3 ? input.iso3.trim().toUpperCase() : "XXX",
         currency_code: input.currencyCode.trim().toUpperCase(),
         default_language_code: input.defaultLanguageCode ?? "en",
+        phone_code: input.phoneCode?.trim() || null,
+        is_active: true,
+        official_email: input.officialEmail.trim().toLowerCase(),
+        admin_email: input.adminEmail.trim().toLowerCase(),
+        whatsapp_number: input.whatsappNumber?.trim() || null,
+      } as CountryRow;
+    }
+
+    if (data?.id) {
+      void translateMasterRecord("countries", data.id, { name: data.name }, "en");
+    }
+    return data as CountryRow;
+  }
+
+  async updateCountry(input: {
+    countryId: string;
+    name?: string | null;
+    iso2?: string | null;
+    iso3?: string | null;
+    currencyCode?: string | null;
+    defaultLanguageCode?: string | null;
+    isActive?: boolean | null;
+    officialEmail?: string | null;
+    adminEmail?: string | null;
+    whatsappNumber?: string | null;
+  }) {
+    const supabase = createSupabaseAdminClient() as any;
+    const patch: Record<string, any> = {
+      updated_at: new Date().toISOString(),
+    };
+
+    if (input.name !== undefined && input.name !== null) patch.name = input.name.trim();
+    if (input.iso2 !== undefined) patch.iso2 = input.iso2 ? input.iso2.trim().toUpperCase() : null;
+    if (input.iso3 !== undefined) patch.iso3 = input.iso3 ? input.iso3.trim().toUpperCase() : null;
+    if (input.currencyCode !== undefined && input.currencyCode !== null) patch.currency_code = input.currencyCode.trim().toUpperCase();
+    if (input.defaultLanguageCode !== undefined) patch.default_language_code = input.defaultLanguageCode ? input.defaultLanguageCode.trim().toLowerCase() : "en";
+    if (input.isActive !== undefined) patch.is_active = Boolean(input.isActive);
+    if (input.officialEmail !== undefined) patch.official_email = input.officialEmail?.trim().toLowerCase();
     if (input.adminEmail !== undefined) patch.admin_email = input.adminEmail?.trim().toLowerCase();
     if (input.whatsappNumber !== undefined) patch.whatsapp_number = input.whatsappNumber?.trim() || null;
 
