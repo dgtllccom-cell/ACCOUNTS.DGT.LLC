@@ -2,7 +2,25 @@
 
 **Scope:** Full-sweep QA of the ERP source at `B:\...\ACCOUNTS.DGT.LLC`, cross-referenced against the deployment at `http://72.60.209.121/`.
 **Date:** 2026-08-03
-**Method note:** Round 1 was a source-code audit. Round 2 (2026-08-03, added below) is a live in-browser pass against `http://72.60.209.121/` — it is currently **blocked at the front door** by a broken static-asset pipeline (see L0). Items marked _(verify live)_ still need confirmation once the deployment is serving assets again.
+**Method note:** Round 1 was a source-code audit. Round 2 was a live in-browser/HTTP pass. **Round 3 (RESOLVED, see below)** completed the security cleanup and full page QA.
+
+---
+
+## ✅ ROUND 3 — SECURITY CLEANUP + FULL PAGE QA (RESOLVED, 2026-08-03)
+
+**Security cleanup (deployed to `dev` + `main`, verified live):**
+- Deleted **57 unauthenticated routes** that executed shell commands / raw SQL / git recovery / deploys / data dumps (temp-diagnose RCE, dev/run-sql, inspect-users, deploy, git-recover, recovery-*, db-alter, setup-db, debug*, dev*, test*, temp*, etc.). All return **404** now.
+- Removed the **login backdoor** (hardcoded `admin`/`password` + `superadmin@damaan.com`/`Admin@123` + weak-password allow-list + "any identifier containing admin" → super_admin). Login now authenticates **only** against real Supabase users. `admin`/`password` → **401**.
+- Set a strong **`ERP_SESSION_SECRET`** (was unset → forgeable super-admin tokens) and `ALLOW_DEMO_AUTH=false`.
+- Provisioned a real super-admin (`asmatdgtllc@users.damaan.local`) with a known password so the removal doesn't lock anyone out. _(Owner confirmed the backdoor stays removed.)_
+- Removed the `database-cleanup` settings page + nav link and the "Reset Test Data" button (their routes were deleted).
+
+**Full page QA — swept all 168 static dashboard pages authenticated; 2 were 500, both now fixed:**
+- `/dashboard/settings/company-setup` — `ReferenceError: selectedCompanyId is not defined` → used the `initialCompanyId` prop. **200**.
+- `/dashboard/purchase/purchase-booking-journal-report` — `ReferenceError: Warehouse/Truck/Eye/... is not defined` → 9 lucide icons used but never imported. **200**.
+- **Final: 168/168 pages return 200.**
+
+Commits: `dev` → …`33cb75c`; `main` → `1cf653c`. Both branches carry security + build + page fixes.
 
 ---
 
