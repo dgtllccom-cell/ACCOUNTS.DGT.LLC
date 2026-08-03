@@ -2311,6 +2311,28 @@ function DashboardSummaryHeader({
     );
 }
 
+// Module-scope so the binding stays in the same chunk as its usages regardless
+// of webpack code-splitting (previously an in-component const that could be
+// dropped/undefined in a shared server chunk -> "getTableHeader is not defined").
+const SALES_ORDER_TABLE_HEADERS: Record<string, Record<LanguageCode, string>> = {
+  "PO Number": { en: "PO Number", ur: "آرڈر نمبر", ar: "رقم طلب الشراء", fa: "شماره سفارش", ps: "د امر شمیره" },
+  "Bill / Date": { en: "Bill & Date", ur: "بل اور تاریخ", ar: "الفاتورة والتاريخ", fa: "صورتحساب و تاریخ", ps: "بل او نیټه" },
+  "Branch / Country": { en: "Branch & Country", ur: "برانچ اور ملک", ar: "الفرع والبلد", fa: "شعبه و کشور", ps: "څانګه او هیواد" },
+  "Purchase Amount": { en: "Purchase Amount", ur: "کل خریداری", ar: "قيمة المشتريات", fa: "مبلغ خرید", ps: "د پیرودلو قیمت" },
+  "Invoice %": { en: "Invoice %", ur: "ایڈوانس فیصد", ar: "نسبة الدفعة المقدمة", fa: "درصد پیش پرداخت", ps: "د پرمختګ سلنه" },
+  "Invoice Amount": { en: "Invoice Amount", ur: "ایڈوانس رقم", ar: "مبلغ الدفعة المقدمة", fa: "مبلغ پیش پرداخت", ps: "د پرمختګ رقم" },
+  "Remaining Purchase": { en: "Remaining Purchase", ur: "بقایا رقم", ar: "المبلغ المتبقي", fa: "مبلغ باقیمانده", ps: "پاتې رقم" },
+  "Exchange Rate": { en: "Exchange Rate", ur: "شرح تبادلہ", ar: "سعر الصرف", fa: "نرخ ارز", ps: "د تبادلې نرخ" },
+  "Local Currency Amount": { en: "Local Currency Amount", ur: "مقامی کرنسی رقم", ar: "المبلغ بالعملة المحلية", fa: "مبلغ ارز محلی", ps: "د ځایی اسعارو مقدار" },
+  "Local Currency Advance": { en: "Local Currency Advance", ur: "مقامی کرنسی ایڈوانس", ar: "الدفعة المقدمة بالعملة المحلية", fa: "پیش پرداخت ارز محلی", ps: "د ځایی اسعارو پرمختګ" },
+  "Remaining Local Currency": { en: "Remaining Local Currency", ur: "بقایا مقامی کرنسی", ar: "المتبقي بالعملة المحلية", fa: "باقیمانده ارز محلی", ps: "پاتې ځایی اسعار" },
+  "Payment Status": { en: "Payment Status", ur: "ادائیگی کی صورتحال", ar: "حالة الدفع", fa: "وضعیت پرداخت", ps: "د تادیې حالت" },
+  "Action": { en: "Action", ur: "عمل", ar: "إجراء", fa: "عمل", ps: "عمل" }
+};
+function getSalesOrderTableHeader(h: string, currentLanguage: LanguageCode): string {
+  return SALES_ORDER_TABLE_HEADERS[h]?.[currentLanguage] || h;
+}
+
 export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentMode }) {
   const router = useRouter();
   const activeMode: PaymentMode = mode === "charges" ? "credit" : mode;
@@ -3678,53 +3700,8 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     ps: "ØªØ§Ø²Ù‡ Ú©ÙˆÙ„"
   };
 
-  const getTableHeader = (h: string) => {
-    const headersMap: Record<string, Record<LanguageCode, string>> = {
-      "PO Number": { en: "PO Number", ur: "آرڈر نمبر", ar: "رقم طلب الشراء", fa: "شماره سفارش", ps: "د امر شمیره" },
-      "Bill / Date": { en: "Bill & Date", ur: "بل اور تاریخ", ar: "الفاتورة والتاريخ", fa: "صورتحساب و تاریخ", ps: "بل او نیټه" },
-      "Branch / Country": { en: "Branch & Country", ur: "برانچ اور ملک", ar: "الفرع والبلد", fa: "شعبه و کشور", ps: "څانګه او هیواد" },
-      "Purchase Amount": { en: "Purchase Amount", ur: "کل خریداری", ar: "قيمة المشتريات", fa: "مبلغ خرید", ps: "د پیرودلو قیمت" },
-      "Invoice %": { en: "Invoice %", ur: "ایڈوانس فیصد", ar: "نسبة الدفعة المقدمة", fa: "درصد پیش پرداخت", ps: "د پرمختګ سلنه" },
-      "Invoice Amount": { en: "Invoice Amount", ur: "ایڈوانس رقم", ar: "مبلغ الدفعة المقدمة", fa: "مبلغ پیش پرداخت", ps: "د پرمختګ رقم" },
-      "Remaining Purchase": { en: "Remaining Purchase", ur: "بقایا رقم", ar: "المبلغ المتبقي", fa: "مبلغ باقیمانده", ps: "پاتې رقم" },
-      "Exchange Rate": { en: "Exchange Rate", ur: "شرح تبادلہ", ar: "سعر الصرف", fa: "نرخ ارز", ps: "د تبادلې نرخ" },
-      "Local Currency Amount": { en: "Local Currency Amount", ur: "مقامی کرنسی رقم", ar: "المبلغ بالعملة المحلية", fa: "مبلغ ارز محلی", ps: "د ځایی اسعارو مقدار" },
-      "Local Currency Advance": { en: "Local Currency Advance", ur: "مقامی کرنسی ایڈوانس", ar: "الدفعة المقدمة بالعملة المحلية", fa: "پیش پرداخت ارز محلی", ps: "د ځایی اسعارو پرمختګ" },
-      "Remaining Local Currency": { en: "Remaining Local Currency", ur: "بقایا مقامی کرنسی", ar: "المتبقي بالعملة المحلية", fa: "باقیمانده ارز محلی", ps: "پاتې ځایی اسعار" },
-      "Payment Status": { en: "Payment Status", ur: "ادائیگی کی صورتحال", ar: "حالة الدفع", fa: "وضعیت پرداخت", ps: "د تادیې حالت" },
-      "Action": { en: "Action", ur: "عمل", ar: "إجراء", fa: "عمل", ps: "عمل" }
-    };
-    return headersMap[h]?.[currentLanguage] || h;
-  };
-  const _unused_getTableHeader = (h: string) => {
-    const headersMap: Record<string, Record<LanguageCode, string>> = {
-      "PO No.": { en: "PO Number", ur: "Ø¢Ø±ÚˆØ± Ù†Ù…Ø¨Ø±", ar: "Ø±Ù‚Ù… Ø·Ù„Ø¨ Ø§Ù„Ø´Ø±Ø§Ø¡", fa: "Ø´Ù…Ø§Ø±Ù‡ Ø³ÙØ§Ø±Ø´", ps: "Ø¯ Ø§Ù…Ø± Ø´Ù…ÛŒØ±Ù‡" },
-      "Bill / Date": { en: "Bill & Date", ur: "Ø¨Ù„ Ø§ÙˆØ± ØªØ§Ø±ÛŒØ®", ar: "Ø§Ù„ÙØ§ØªÙˆØ±Ø© ÙˆØ§Ù„ØªØ§Ø±ÙŠØ®", fa: "ØµÙˆØ±ØªØ­Ø³Ø§Ø¨ Ùˆ ØªØ§Ø±ÛŒØ®", ps: "Ø¨Ù„ Ø§Ùˆ Ù†ÛŒÙ¼Ù‡" },
-      "Branch / Country": { en: "Branch & Country", ur: "Ø¨Ø±Ø§Ù†Ú† Ø§ÙˆØ± Ù…Ù„Ú©", ar: "Ø§Ù„ÙØ±Ø¹ ÙˆØ§Ù„Ø¨Ù„Ø¯", fa: "Ø´Ø¹Ø¨Ù‡ Ùˆ Ú©Ø´ÙˆØ±", ps: "Ú…Ø§Ù†Ú«Ù‡ Ø§Ùˆ Ù‡ÛŒÙˆØ§Ø¯" },
-      "Purchase A/C": { en: "Purchase A/C", ur: "Ø®Ø±ÛŒØ¯Ø§Ø±ÛŒ Ø§Ú©Ø§Ø¤Ù†Ù¹", ar: "Ø­Ø³Ø§Ø¨ Ø§Ù„Ø´Ø±Ø§Ø¡", fa: "Ø­Ø³Ø§Ø¨ Ø®Ø±ÛŒØ¯", ps: "Ø¯ Ù¾ÛŒØ±ÙˆØ¯ Ø­Ø³Ø§Ø¨" },
-      "Sales A/C": { en: "Sales A/C", ur: "Ø³ÛŒÙ„Ø² Ø§Ú©Ø§Ø¤Ù†Ù¹", ar: "Ø­Ø³Ø§Ø¨ Ø§Ù„Ù…Ø¨ÙŠØ¹Ø§Øª", fa: "Ø­Ø³Ø§Ø¨ ÙØ±ÙˆØ´", ps: "Ø¯ Ù¾Ù„ÙˆØ± Ø­Ø³Ø§Ø¨" },
-      "Total Purchase": { en: "Total Purchase", ur: "Ú©Ù„ Ø®Ø±ÛŒØ¯Ø§Ø±ÛŒ", ar: "Ø¥Ø¬Ù…Ø§Ù„ÙŠ Ø§Ù„Ø´Ø±Ø§Ø¡", fa: "Ú©Ù„ Ø®Ø±ÛŒØ¯", ps: "Ù¼ÙˆÙ„ Ù¾ÛŒØ±ÙˆØ¯" },
-      "Paid Advance": { en: "Paid Advance", ur: "Ø§Ø¯Ø§ Ø´Ø¯Û Ø§ÛŒÚˆÙˆØ§Ù†Ø³", ar: "Ø§Ù„Ø¯ÙØ¹Ø© Ø§Ù„Ù…Ù‚Ø¯Ù…Ø© Ø§Ù„Ù…Ø¯ÙÙˆØ¹Ø©", fa: "Ù¾ÛŒØ´ Ù¾Ø±Ø¯Ø§Ø®Øª", ps: "ØªØ§Ø¯ÛŒÙ‡ Ø´ÙˆÛŒ Ù¾Ø±Ù…Ø®ØªÚ«" },
-      "Final Amount": { en: "Final Amount", ur: "Ø­ØªÙ…ÛŒ Ø±Ù‚Ù…", ar: "Ø§Ù„Ù…Ø¨Ù„Øº Ø§Ù„Ù†Ù‡Ø§Ø¦ÙŠ", fa: "Ù…Ø¨Ù„Øº Ù†Ù‡Ø§ÛŒÛŒ", ps: "ÙˆØ±ÙˆØ³ØªÛŒ Ù…Ù‚Ø¯Ø§Ø±" },
-      "Rem. Advance": { en: "Rem. Advance", ur: "Ø¨Ø§Ù‚ÛŒ Ù…Ø§Ù†Ø¯Û Ø§ÛŒÚˆÙˆØ§Ù†Ø³", ar: "Ø§Ù„Ø¯ÙØ¹Ø© Ø§Ù„Ù…Ù‚Ø¯Ù…Ø© Ø§Ù„Ù…ØªØ¨Ù‚ÙŠØ©", fa: "Ù¾ÛŒØ´ Ù¾Ø±Ø¯Ø§Ø®Øª Ø¨Ø§Ù‚ÛŒÙ…Ø§Ù†Ø¯Ù‡", ps: "Ù¾Ø§ØªÛ Ù¾Ø±Ù…Ø®ØªÚ«" },
-      "Action": { en: "Action", ur: "Ø¹Ù…Ù„", ar: "Ø¥Ø¬Ø±Ø§Ø¡", fa: "Ø¹Ù…Ù„", ps: "Ø¹Ù…Ù„" }
-    };
-    const result = headersMap[h]?.[currentLanguage] || h;
-
-    // Fallbacks for original headers if translation is missing
-    const fallbacks: Record<string, string> = {
-      "Total Purchase": "Cargo / Brand",
-      "Req. Advance": "Cargo Details",
-      "Paid Advance": "Purchase Amount",
-      "Final Amount": "Advance Details",
-      "Rem. Advance": "Outstanding Due"
-    };
-    if (currentLanguage === "en" && fallbacks[h]) {
-      return fallbacks[h];
-    }
-
-    return result;
-  };
+  // getTableHeader hoisted to module scope (getSalesOrderTableHeader) to avoid a
+  // webpack chunk-splitting bug where the in-component const became undefined.
 
   return (
     <div dir={isRtl ? "rtl" : "ltr"} className={cn("flex min-h-screen flex-col bg-slate-50 dark:bg-slate-950", isRtl ? "text-right" : "text-left")}>
@@ -3925,7 +3902,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                   "Invoice Amount", "Remaining Purchase", "Exchange Rate", "Local Currency Amount", 
                   "Local Currency Advance", "Remaining Local Currency", "Payment Status", "Action"
                 ].map((h) => (
-                  <th key={h} className={cn("px-3 py-4 text-[10px] font-black uppercase tracking-widest text-slate-605 dark:text-slate-350 whitespace-nowrap", isRtl ? "text-right" : "text-left")}>{getTableHeader(h)}</th>
+                  <th key={h} className={cn("px-3 py-4 text-[10px] font-black uppercase tracking-widest text-slate-605 dark:text-slate-350 whitespace-nowrap", isRtl ? "text-right" : "text-left")}>{getSalesOrderTableHeader(h, currentLanguage)}</th>
                 ))}
               </tr>
             </thead>

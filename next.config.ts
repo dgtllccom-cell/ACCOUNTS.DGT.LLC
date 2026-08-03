@@ -25,8 +25,9 @@ const nextConfig: NextConfig = {
     // Reduces initial memory footprint in dev by avoiding eager preloading of every route entrypoint.
     // This can help prevent dev server restarts caused by high memory usage.
     preloadEntriesOnStart: false,
-    // Lower-risk Webpack behavior change (Next.js v15+) that reduces peak memory usage in builds/dev.
-    webpackMemoryOptimizations: true,
+    // NOTE: `webpackMemoryOptimizations` was removed — it caused faulty server-chunk
+    // splitting where in-module bindings (e.g. getTableHeader) were separated from
+    // their usages and became `undefined` at runtime, 500-ing some pages.
   },
   webpack: (config, { dev }) => {
     // Extend Webpack chunk loading timeout from default 12s to 60s to prevent script timeout errors
