@@ -1361,6 +1361,9 @@ function CityBranchSetupContent() {
 
           <span className={pillClassName()}>
             <b>Scope:</b> City branch under selected Country Main Branch
+          </span>
+        </div>
+      </div>
       <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
         <Card className="border-slate-200/80 shadow-sm">
           <CardHeader className="pb-3">
