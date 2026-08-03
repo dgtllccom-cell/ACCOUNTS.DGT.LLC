@@ -834,7 +834,7 @@ export function CompanyIncorporationForm({
                 </div>
               </div>
               <div>
-                {selectedCompanyId ? (
+                {initialCompanyId ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
                     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                     Saved Record
@@ -939,7 +939,7 @@ export function CompanyIncorporationForm({
                 )}
               </PreviewSection>
 
-              {selectedCompanyId ? (
+              {initialCompanyId ? (
                 <div className="pt-1">
                   <Button
                     type="button"
