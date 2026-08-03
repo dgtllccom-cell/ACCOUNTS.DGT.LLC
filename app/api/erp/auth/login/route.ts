@@ -62,135 +62,45 @@ export async function POST(request: NextRequest) {
 
   // Resolve a real email to authenticate against Supabase Auth. Identifiers may be
   // either an email address or an internal user code that maps to a real auth user.
-  const admin = createSupabaseAdminClient() as any;
   const emailResult = z.string().email().safeParse(rawIdentifier);
   let emailToLogin = emailResult.success ? emailResult.data : null;
-  let targetProfileId: string | null = null;
-  let targetRawPassword: string | null = null;
 
-  // 1. Special Handling for Super Admin Auto-Provisioning & Auto-Sync
-  const isSuperAdminCredential =
-    (rawIdentifier.toLowerCase() === "superadmin@damaan.com" ||
-      rawIdentifier.toLowerCase() === "superadmin" ||
-      rawIdentifier.toUpperCase() === "SUPERADMIN") &&
-    rawPassword === "Admin@123";
-
-  if (isSuperAdminCredential) {
-    emailToLogin = "superadmin@damaan.com";
+  if (!emailToLogin) {
     try {
-      const { data: usersList } = await admin.auth.admin.listUsers();
-      let saUser = (usersList?.users || []).find((u: any) => u.email?.toLowerCase() === "superadmin@damaan.com");
-
-      if (!saUser) {
-        const { data: created, error: createErr } = await admin.auth.admin.createUser({
-          email: "superadmin@damaan.com",
-          password: "Admin@123",
-          email_confirm: true,
-          user_metadata: { full_name: "Super Admin" }
-        });
-        if (createErr) console.error("Create super admin error:", createErr);
-        saUser = created?.user;
-      } else {
-        await admin.auth.admin.updateUserById(saUser.id, { password: "Admin@123" });
-      }
-
-      if (saUser?.id) {
-        targetProfileId = saUser.id;
-        targetRawPassword = "Admin@123";
-
-        await admin.from("profiles").upsert({
-          id: saUser.id,
-          full_name: "Super Admin",
-          user_code: "SUPERADMIN",
-          raw_password: "Admin@123",
-          preferred_language_code: "en",
-          updated_at: new Date().toISOString()
-        }, { onConflict: "id" });
-
-        await admin.from("user_role_assignments").upsert({
-          user_id: saUser.id,
-          role: "super_admin",
-          is_active: true
-        }, { onConflict: "user_id,role" });
-      }
-    } catch (e) {
-      console.error("Super admin auto-provisioning exception:", e);
-    }
-  }
-
-  // 2. Standard Profile & Email Resolution
-  if (!targetProfileId) {
-    try {
+      const admin = createSupabaseAdminClient() as any;
       const userCode = normalizeUserCode(rawIdentifier);
-      const { data: profile } = await admin
+      const { data: profile, error: profileError } = await admin
         .from("profiles")
-        .select("id, user_code, raw_password")
-        .or(`user_code.eq.${userCode},user_code.ilike.${rawIdentifier},user_code.eq.${rawIdentifier.toUpperCase()}`)
+        .select("id")
+        .eq("user_code", userCode)
         .is("deleted_at", null)
         .maybeSingle();
+      if (profileError) throw new Error(profileError.message);
 
-      if (profile) {
-        targetProfileId = profile.id;
-        targetRawPassword = profile.raw_password;
-        if (!emailToLogin) {
-          const { data: userRes } = await admin.auth.admin.getUserById(profile.id);
-          if (userRes?.user?.email) {
-            emailToLogin = userRes.user.email;
-          }
-        }
+      const profileId = profile?.id as string | undefined;
+      if (!profileId) {
+        return respondError("Invalid User ID or Password.", 401);
       }
 
-      if (!targetProfileId && emailToLogin) {
-        const { data: usersList } = await admin.auth.admin.listUsers();
-        const matchedUser = (usersList?.users || []).find((u: any) => u.email?.toLowerCase() === emailToLogin?.toLowerCase());
-        if (matchedUser) {
-          targetProfileId = matchedUser.id;
-          const { data: p } = await admin.from("profiles").select("raw_password").eq("id", matchedUser.id).maybeSingle();
-          if (p) targetRawPassword = p.raw_password;
-        }
+      const { data: userRes, error: userErr } = await admin.auth.admin.getUserById(profileId);
+      if (userErr) throw new Error(userErr.message);
+      const resolvedEmail = (userRes?.user?.email as string | undefined) ?? undefined;
+      if (!resolvedEmail) {
+        return respondError("Invalid User ID or Password.", 401);
       }
-    } catch (err) {
-      console.error("Profile resolution error:", err);
+      emailToLogin = resolvedEmail;
+    } catch {
+      return respondError("Invalid User ID or Password.", 401);
     }
-  }
-
-  if (!emailToLogin && !targetProfileId) {
-    return respondError("Invalid User ID or Password.", 401);
   }
 
   const supabase = await createServerSupabaseClient();
-  let signInData: any = null;
-  let error: any = null;
+  const { data: signInData, error } = await supabase.auth.signInWithPassword({
+    email: emailToLogin,
+    password: rawPassword
+  });
 
-  if (emailToLogin) {
-    const res = await supabase.auth.signInWithPassword({
-      email: emailToLogin,
-      password: rawPassword
-    });
-    signInData = res.data;
-    error = res.error;
-  }
-
-  // 3. Fallback: If Supabase Auth returns an error, but raw_password in DB matches (or is SuperAdmin), sync password in Supabase Auth via Admin Client
-  if ((error || !signInData?.user) && targetProfileId && (targetRawPassword === rawPassword || isSuperAdminCredential)) {
-    try {
-      await admin.auth.admin.updateUserById(targetProfileId, { password: rawPassword });
-      if (emailToLogin) {
-        const retryRes = await supabase.auth.signInWithPassword({
-          email: emailToLogin,
-          password: rawPassword
-        });
-        if (retryRes.data?.user) {
-          signInData = retryRes.data;
-          error = null;
-        }
-      }
-    } catch (e) {
-      console.error("Auto password sync fallback error:", e);
-    }
-  }
-
-  if (error || !signInData?.user) {
+  if (error) {
     return respondError("Invalid User ID or Password.", 401);
   }
 
