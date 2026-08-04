@@ -1,68 +1,8 @@
 "use client";
 
-import { TrendingUp, TrendingDown, Minus, DollarSign, BarChart3, CreditCard, Wallet, ClipboardList, Building2, CalendarDays, Clock3 } from "lucide-react";
+import { Users, ClipboardList, Wallet, Building2, CalendarDays, Clock3 } from "lucide-react";
 import { t, type UiKey } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { cn } from "@/lib/utils";
-
-type KpiCardProps = {
-  label: string;
-  value: number;
-  currency?: string;
-  trend?: "up" | "down" | "neutral";
-  icon: React.ReactNode;
-  colorClass: string;
-  bgClass: string;
-  borderClass: string;
-  format?: "currency" | "number" | "percent";
-};
-
-function KpiCard({ label, value, currency, trend, icon, colorClass, bgClass, borderClass, format = "currency" }: KpiCardProps) {
-  const formatted = format === "currency"
-    ? new Intl.NumberFormat("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(value)
-    : format === "number"
-    ? new Intl.NumberFormat("en-US").format(value)
-    : `${value.toFixed(1)}%`;
-
-  return (
-    <div className={cn(
-      "relative overflow-hidden rounded-2xl border p-4 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5",
-      bgClass, borderClass
-    )}>
-      <div className={cn("absolute -top-4 -right-4 h-20 w-20 rounded-full opacity-20 blur-2xl", bgClass)} />
-
-      <div className="relative flex items-start justify-between">
-        <div className={cn("rounded-xl p-2", bgClass, borderClass, "border")}>
-          <div className={colorClass}>{icon}</div>
-        </div>
-        {trend && (
-          <span className={cn(
-            "text-[10px] font-black rounded-full px-2 py-0.5",
-            trend === "up" ? "text-emerald-700 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-950/50" :
-            trend === "down" ? "text-red-700 bg-red-100 dark:text-red-400 dark:bg-red-950/50" :
-            "text-slate-600 bg-slate-100 dark:text-slate-400 dark:bg-slate-800"
-          )}>
-            {trend === "up" ? "▲" : trend === "down" ? "▼" : "—"}
-          </span>
-        )}
-      </div>
-
-      <div className="mt-3">
-        <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">
-          {label}
-        </p>
-        <div className="flex items-baseline gap-1.5">
-          {currency && (
-            <span className={cn("text-xs font-black", colorClass)}>{currency}</span>
-          )}
-          <span className={cn("text-xl font-black tabular-nums tracking-tight", colorClass)}>
-            {formatted}
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 type ReportSummary = {
   records?: number;
@@ -77,6 +17,11 @@ type ReportSummary = {
   totalAdvance?: number;
 
   // Standardized 5-card detailed summary properties
+  countryName?: string;
+  branchName?: string;
+  userId?: string;
+  userName?: string;
+  userRole?: string;
   draft?: number;
   accepted?: number;
   transferred?: number;
@@ -104,7 +49,7 @@ function formatMoney(val: number) {
   return new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
 }
 
-export function ReportKpiCards({ lang, summary, reportType, currency = "AED", isLoading }: Props) {
+export function ReportKpiCards({ lang, summary, reportType, currency = "USD", isLoading }: Props) {
   const _ = (key: UiKey, fallback?: string) => t(lang, key, fallback);
 
   if (isLoading) {
@@ -116,6 +61,12 @@ export function ReportKpiCards({ lang, summary, reportType, currency = "AED", is
       </div>
     );
   }
+
+  const country = summary.countryName ?? "Pakistan";
+  const branch = summary.branchName ?? "Karachi Main";
+  const uId = summary.userId ?? "USR-001";
+  const uName = summary.userName ?? "Admin User";
+  const uRole = summary.userRole ?? "Super Admin";
 
   const totalRecords = summary.records ?? summary.total ?? 0;
   const draftCount = summary.draft ?? Math.max(0, totalRecords - (summary.accepted ?? 0) - (summary.transferred ?? 0) - (summary.completed ?? 0));
@@ -144,11 +95,37 @@ export function ReportKpiCards({ lang, summary, reportType, currency = "AED", is
 
   return (
     <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
-      {/* Card 1: SUMMARY / BILL SUMMARY */}
+      {/* MANDATORY Card 1: BRANCH & USER DETAILS */}
       <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
         <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-          <ClipboardList className="h-4 w-4 text-blue-600" />
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">RECORD / BILL SUMMARY</span>
+          <Users className="h-4 w-4 text-blue-600" />
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. BRANCH & USER DETAILS</span>
+        </div>
+        <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+          <div className="flex justify-between">
+            <span>Country:</span>
+            <span className="font-bold text-slate-900 dark:text-slate-100">{country}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Branch Name:</span>
+            <span className="font-bold text-slate-900 dark:text-slate-100 uppercase">{branch}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>User ID / Name:</span>
+            <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[120px]" title={`${uId} - ${uName}`}>{uId} ({uName})</span>
+          </div>
+          <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
+            <span>Status:</span>
+            <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px]">Active Session</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Card 2: RECORD / BILL SUMMARY */}
+      <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+          <ClipboardList className="h-4 w-4 text-emerald-600" />
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">2. RECORD / BILL SUMMARY</span>
         </div>
         <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
           <div className="flex justify-between text-slate-600 dark:text-slate-400">
@@ -174,11 +151,11 @@ export function ReportKpiCards({ lang, summary, reportType, currency = "AED", is
         </div>
       </div>
 
-      {/* Card 2: TOTAL AMOUNTS */}
+      {/* Card 3: TOTAL AMOUNTS */}
       <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
         <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-          <Wallet className="h-4 w-4 text-emerald-600" />
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">TOTAL AMOUNTS ({qCurrency})</span>
+          <Wallet className="h-4 w-4 text-purple-600" />
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. TOTAL AMOUNTS ({qCurrency})</span>
         </div>
         <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
           <div className="flex justify-between text-slate-600 dark:text-slate-400">
@@ -200,11 +177,11 @@ export function ReportKpiCards({ lang, summary, reportType, currency = "AED", is
         </div>
       </div>
 
-      {/* Card 3: BRANCHES */}
+      {/* Card 4: BRANCHES */}
       <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
         <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-          <Building2 className="h-4 w-4 text-purple-600" />
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">BRANCHES</span>
+          <Building2 className="h-4 w-4 text-indigo-600" />
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. BRANCHES</span>
         </div>
         <div className="mt-2.5 space-y-1.5 text-[11px] font-semibold">
           <div className="flex justify-between text-slate-600 dark:text-slate-400">
@@ -222,37 +199,11 @@ export function ReportKpiCards({ lang, summary, reportType, currency = "AED", is
         </div>
       </div>
 
-      {/* Card 4: THIS MONTH */}
-      <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-        <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
-          <CalendarDays className="h-4 w-4 text-blue-500" />
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">THIS MONTH</span>
-        </div>
-        <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
-          <div className="flex justify-between text-slate-600 dark:text-slate-400">
-            <span>Created</span>
-            <span className="font-bold text-slate-900 dark:text-slate-100">{thisMonthCreated}</span>
-          </div>
-          <div className="flex justify-between text-blue-600 dark:text-blue-400 font-bold">
-            <span>Amount ({qCurrency})</span>
-            <span className="font-mono">{formatMoney(thisMonthAmt)}</span>
-          </div>
-          <div className="flex justify-between text-slate-900 dark:text-slate-100 font-black">
-            <span>Transferred</span>
-            <span>{thisMonthTransferred}</span>
-          </div>
-          <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-            <span>Completed</span>
-            <span>{thisMonthCompleted}</span>
-          </div>
-        </div>
-      </div>
-
       {/* Card 5: QUICK INFO */}
       <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
         <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
           <Clock3 className="h-4 w-4 text-amber-500" />
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">QUICK INFO</span>
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">5. QUICK INFO</span>
         </div>
         <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
           <div className="flex justify-between">

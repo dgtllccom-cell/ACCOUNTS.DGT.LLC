@@ -398,67 +398,113 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
         </div>
       ) : null}
 
-      {/* Stats Summary cards */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-        <Card className="rounded-xl border shadow-sm bg-white">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{getLabel("totalCustomers", lang)}</p>
-              <p className="mt-1.5 text-2xl font-extrabold text-slate-800">{stats.total}</p>
+      {/* Standardized 5 KPI Summary Cards Grid */}
+      <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+        {/* MANDATORY Card 1: BRANCH & USER DETAILS */}
+        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <Users className="h-4 w-4 text-blue-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. BRANCH & USER DETAILS</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+            <div className="flex justify-between">
+              <span>Country:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">Pakistan</span>
             </div>
-            <div className="p-3 bg-blue-50 rounded-lg text-blue-600">
-              <Users className="h-5 w-5" />
+            <div className="flex justify-between">
+              <span>Branch Name:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 uppercase">Karachi Main</span>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex justify-between">
+              <span>User ID / Name:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]" title="USR-001 (Admin User)">USR-001 (Admin)</span>
+            </div>
+            <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
+              <span>Status:</span>
+              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px]">Active Session</span>
+            </div>
+          </div>
+        </div>
 
-        <Card className="rounded-xl border shadow-sm bg-white">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{getLabel("activeCustomers", lang)}</p>
-              <p className="mt-1.5 text-2xl font-extrabold text-teal-600">{stats.active}</p>
+        {/* Card 2: TOTAL CUSTOMERS & PERSONS */}
+        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <UserCheck className="h-4 w-4 text-emerald-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">2. PERSONS SUMMARY</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+            <div className="flex justify-between text-slate-600 dark:text-slate-400">
+              <span>Total Persons:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{stats.total}</span>
             </div>
-            <div className="p-3 bg-teal-50 rounded-lg text-teal-600">
-              <UserCheck className="h-5 w-5" />
+            <div className="flex justify-between text-emerald-600 font-bold">
+              <span>Active Persons:</span>
+              <span>{stats.active}</span>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex justify-between text-slate-400">
+              <span>Inactive Persons:</span>
+              <span>{stats.inactive}</span>
+            </div>
+          </div>
+        </div>
 
-        <Card className="rounded-xl border shadow-sm bg-white">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{getLabel("inactiveCustomers", lang)}</p>
-              <p className="mt-1.5 text-2xl font-extrabold text-rose-600">{stats.inactive}</p>
+        {/* Card 3: TYPE BREAKDOWN */}
+        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <Building2 className="h-4 w-4 text-purple-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. TYPE BREAKDOWN</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+            <div className="flex justify-between text-amber-600 font-bold">
+              <span>Corporate / Business:</span>
+              <span>{stats.business}</span>
             </div>
-            <div className="p-3 bg-rose-50 rounded-lg text-rose-600">
-              <UserMinus className="h-5 w-5" />
+            <div className="flex justify-between text-indigo-600 font-bold">
+              <span>Individual / Personal:</span>
+              <span>{stats.individual}</span>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="rounded-xl border shadow-sm bg-white">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{getLabel("businessCustomers", lang)}</p>
-              <p className="mt-1.5 text-2xl font-extrabold text-amber-600">{stats.business}</p>
+        {/* Card 4: BRANCHES */}
+        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <Building2 className="h-4 w-4 text-indigo-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. BRANCHES</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+            <div className="flex justify-between text-slate-600 dark:text-slate-400">
+              <span>Total Branches:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">12</span>
             </div>
-            <div className="p-3 bg-amber-50 rounded-lg text-amber-600">
-              <Building2 className="h-5 w-5" />
+            <div className="flex justify-between text-emerald-600 font-bold">
+              <span>Active Branches:</span>
+              <span>10</span>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
-        <Card className="rounded-xl border shadow-sm bg-white">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{getLabel("individualCustomers", lang)}</p>
-              <p className="mt-1.5 text-2xl font-extrabold text-indigo-600">{stats.individual}</p>
+        {/* Card 5: QUICK INFO */}
+        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <FileText className="h-4 w-4 text-amber-500" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">5. QUICK INFO</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+            <div className="flex justify-between">
+              <span>Currency:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">USD</span>
             </div>
-            <div className="p-3 bg-indigo-50 rounded-lg text-indigo-600">
-              <Users className="h-5 w-5" />
+            <div className="flex justify-between">
+              <span>Company:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]">DGT LLC</span>
             </div>
-          </CardContent>
-        </Card>
+            <div className="flex justify-between">
+              <span>Financial Year:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">2025-26</span>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Main Table */}

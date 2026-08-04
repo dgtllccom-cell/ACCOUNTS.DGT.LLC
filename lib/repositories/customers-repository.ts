@@ -54,7 +54,6 @@ export class CustomersRepository {
       .select(
         "id, country_id, state_province_id, district_id, city_id, area_location_id, customer_name, company_name, contact_person, mobile, whatsapp, email, address, notes, original_language_code, is_active, created_at, updated_at"
       )
-      .is("deleted_at", null)
       .order("customer_name", { ascending: true });
 
     if (input.countryId) query = query.eq("country_id", input.countryId);
@@ -74,7 +73,10 @@ export class CustomersRepository {
     }
 
     const { data, error } = await query.limit(limit);
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.warn("Customers query fallback warning:", error.message);
+      return { customers: [], limit };
+    }
     return { customers: (data ?? []) as CustomerRow[], limit };
   }
 

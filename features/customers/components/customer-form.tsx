@@ -499,9 +499,13 @@ export function CustomerForm({
                     }}
                     className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20"
                   >
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Business">Business</option>
+                    <option value="Customer">👤 Customer (گاہک / کسٹمر)</option>
+                    <option value="Employee">💼 Employee (ملازم / ایمپلائی)</option>
+                    <option value="Driver">🚛 Truck Driver (ٹرک ڈرائیور)</option>
+                    <option value="Truck Owner">🚚 Truck Owner (مالک ٹرک)</option>
+                    <option value="Clearing Agent">🛃 Clearing / Custom Agent (کسٹم ایجنٹ)</option>
+                    <option value="Vendor">🏭 Supplier / Vendor (سپلائر / وینڈر)</option>
+                    <option value="Business">🏢 Business / Corporate (کارپوریٹ کمپنی)</option>
                   </select>
                 </div>
 
