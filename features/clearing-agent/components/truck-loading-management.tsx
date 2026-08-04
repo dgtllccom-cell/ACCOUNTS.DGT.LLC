@@ -37,7 +37,7 @@ type TruckOpt = {
   owner_name: string | null;
 };
 
-const EMPTY: any = { id: "", truck_id: "", loading_date: "", truck_number: "", driver_name: "", driver_mobile_1: "", vehicle_type: "", goods_name: "", quantity: "", unit: "", net_weight: "", gross_weight: "", destination: "", remarks: "", dest_country_id: null, dest_state_province_id: null, dest_district_id: null, dest_city_id: null };
+const EMPTY: any = { id: "", loading_type: "local", truck_id: "", loading_date: "", truck_number: "", driver_name: "", driver_mobile_1: "", vehicle_type: "", goods_name: "", quantity: "", unit: "", net_weight: "", gross_weight: "", destination: "", customs_agent_name: "", border_port_name: "", declaration_no: "", transit_country: "", remarks: "", dest_country_id: null, dest_state_province_id: null, dest_district_id: null, dest_city_id: null };
 
 export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }) {
   const dir = getLanguageDirection(lang);
@@ -184,6 +184,19 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
             </div>
             <div className="grid gap-3 sm:grid-cols-2">
               <label className="block sm:col-span-2">
+                <span className="text-[11px] font-black uppercase tracking-wide text-slate-500">Loading Category / shipment type</span>
+                <select
+                  value={form.loading_type ?? "local"}
+                  onChange={(e) => setForm({ ...form, loading_type: e.target.value })}
+                  className="mt-1 w-full rounded-xl border border-indigo-200 bg-indigo-50/50 px-3 py-2 text-sm font-bold text-indigo-900 dark:border-indigo-900 dark:bg-slate-950 dark:text-indigo-300"
+                >
+                  <option value="local">🚛 Local Truck Loading (داخلی بارگیری)</option>
+                  <option value="import">🛃 Import Loading (امپورٹ بارگیری / Customs Clearing)</option>
+                  <option value="transit">🌐 Transit Loading (ٹرانزٹ بارگیری / Border Transit)</option>
+                </select>
+              </label>
+
+              <label className="block sm:col-span-2">
                 <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">{t(lang, "tl.select_truck")}</span>
                 <select value={form.truck_id ?? ""} onChange={(e) => onSelectTruck(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950">
                   <option value="">—</option>
@@ -201,6 +214,21 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
               {field("net_weight", t(lang, "tl.net_weight"), "number")}
               {field("gross_weight", t(lang, "tl.gross_weight"), "number")}
               {field("destination", t(lang, "tl.destination"))}
+
+              {/* Dynamic Import / Transit Fields */}
+              {(form.loading_type === "import" || form.loading_type === "transit") && (
+                <>
+                  <div className="sm:col-span-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 p-3 my-1">
+                    <p className="text-xs font-black text-amber-800 dark:text-amber-300 uppercase tracking-wide">
+                      {form.loading_type === "import" ? "🛃 Import & Customs Clearing Details" : "🌐 Border Transit Shipment Details"}
+                    </p>
+                  </div>
+                  {field("customs_agent_name", "Clearing Agent / Custom House")}
+                  {field("border_port_name", "Border Port / Entry Customs Station")}
+                  {field("declaration_no", "Declaration / GD Number")}
+                  {form.loading_type === "transit" && field("transit_country", "Final Destination Country (Transit)")}
+                </>
+              )}
               <div className="sm:col-span-2">
                 <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">{t(lang, "tl.destination")} (central master)</span>
                 <div className="mt-1">
