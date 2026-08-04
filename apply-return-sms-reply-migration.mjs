@@ -228,6 +228,9 @@ async function applyMigrations() {
     'supabase/migrations/20260806_loading_dest_location.sql',
     'supabase/migrations/20260807_universal_serial_columns.sql',
     'supabase/migrations/20260808_warehouses_serials.sql',
+    'supabase/migrations/20260809_branding_extra_fields.sql',
+    'supabase/migrations/20260810_ledger_outstanding_view.sql',
+    'supabase/migrations/20260811_branch_branding_override.sql',
   ];
 
   try {

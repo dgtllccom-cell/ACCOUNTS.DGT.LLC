@@ -19,7 +19,8 @@ import {
   Search,
   Settings2,
   Users,
-  Truck
+  Truck,
+  Video
 } from "lucide-react";
 import type { SidebarIconKey } from "@/lib/navigation/sidebar";
 import { cn } from "@/lib/utils";
@@ -42,7 +43,8 @@ const iconMap: Record<SidebarIconKey, LucideIcon> = {
   bell: Bell,
   palette: Palette,
   search: Search,
-  truck: Truck
+  truck: Truck,
+  video: Video
 };
 
 export function SidebarIcon({ name, className }: { name?: SidebarIconKey; className?: string }) {

@@ -49,6 +49,7 @@ export type UiKey =
   | "nav.truck_loading"
   | "nav.import_loading"
   | "nav.transit_loading"
+  | "nav.walkthrough_video"
   | "tt.title"
   | "tt.select_truck"
   | "tt.date"
@@ -693,6 +694,7 @@ const en: Dict = {
   "nav.truck_loading": "Truck Loading",
   "nav.import_loading": "Import Loading",
   "nav.transit_loading": "Transit Loading",
+  "nav.walkthrough_video": "System Walkthrough Video",
   "tt.title": "Transit Loading",
   "tt.select_truck": "Select Truck",
   "tt.date": "Transit Date",
@@ -1324,6 +1326,7 @@ const ur: Dict = {
   "nav.truck_loading": "ٹرک لوڈنگ",
   "nav.import_loading": "امپورٹ لوڈنگ",
   "nav.transit_loading": "ٹرانزٹ لوڈنگ",
+  "nav.walkthrough_video": "سسٹم ویڈیو واک تھرو",
   "tt.title": "ٹرانزٹ لوڈنگ",
   "tt.select_truck": "ٹرک منتخب کریں",
   "tt.date": "ٹرانزٹ تاریخ",
@@ -1900,6 +1903,7 @@ const ar: Dict = {
   "nav.truck_loading": "تحميل الشاحنة",
   "nav.import_loading": "تحميل الاستيراد",
   "nav.transit_loading": "تحميل العبور",
+  "nav.walkthrough_video": "فيديو جولة النظام",
   "tt.title": "تحميل العبور",
   "tt.select_truck": "اختر الشاحنة",
   "tt.date": "تاريخ العبور",
@@ -2440,6 +2444,7 @@ const fa: Dict = {
   "nav.truck_loading": "بارگیری کامیون",
   "nav.import_loading": "بارگیری واردات",
   "nav.transit_loading": "بارگیری ترانزیت",
+  "nav.walkthrough_video": "ویدیو راهنمای سیستم",
   "tt.title": "بارگیری ترانزیت",
   "tt.select_truck": "انتخاب کامیون",
   "tt.date": "تاریخ ترانزیت",
@@ -2903,6 +2908,7 @@ const ps: Dict = {
   "nav.truck_loading": "د لارۍ بار",
   "nav.import_loading": "د واردولو بار",
   "nav.transit_loading": "د ترانزیت بار",
+  "nav.walkthrough_video": "د سیسټم لارښود ویډیو",
   "tt.title": "د ترانزیت بار",
   "tt.select_truck": "لارۍ وټاکئ",
   "tt.date": "د ترانزیت نیټه",

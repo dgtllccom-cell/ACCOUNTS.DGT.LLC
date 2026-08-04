@@ -20,7 +20,8 @@ export type SidebarIconKey =
   | "bell"
   | "palette"
   | "search"
-  | "truck";
+  | "truck"
+  | "video";
 
 export type SidebarNode = {
   key: string;
@@ -1322,6 +1323,12 @@ export const sidebarTree: SidebarNode[] = [
         ]
       }
     ]
+  },
+  {
+    key: "walkthrough-video",
+    labelKey: "nav.walkthrough_video",
+    iconKey: "video",
+    href: "/dashboard/walkthrough-video" as Route
   }
 ];
 

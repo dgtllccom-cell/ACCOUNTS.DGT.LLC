@@ -257,7 +257,22 @@ export function LoginForm({ lang: initialLang }: { lang?: SupportedLanguage }) {
             <button
               key={l.code}
               type="button"
-              onClick={() => setSelectedLang(l.code)}
+              onClick={() => {
+                setSelectedLang(l.code);
+                if (typeof window !== "undefined") {
+                  try {
+                    localStorage.setItem("erp_lang", l.code);
+                    const isRtl = ["ar", "ur", "fa", "ps"].includes(l.code);
+                    document.documentElement.lang = l.code;
+                    document.documentElement.dir = isRtl ? "rtl" : "ltr";
+                    const headerSelect = document.querySelector('select[aria-label="Language"]') as HTMLSelectElement | null;
+                    if (headerSelect && headerSelect.value !== l.code) {
+                      headerSelect.value = l.code;
+                      headerSelect.dispatchEvent(new Event("change", { bubbles: true }));
+                    }
+                  } catch (e) {}
+                }
+              }}
               style={{
                 display: "inline-flex",
                 alignItems: "center",

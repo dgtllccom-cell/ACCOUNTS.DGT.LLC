@@ -4424,7 +4424,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             if (val === "__ADD_NEW__") {
                               const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
                               if (!selGood) {
-                                alert(`Please select a Good first before adding a new Brand. (Current goodsName: "${form.goodsName || ""}", dbGoods count: ${dbGoods.length})`);
+                                alert("Please select a Good first before adding a new Brand.");
                                 return;
                               }
                               setCustomVariationForm({
@@ -4460,7 +4460,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             if (val === "__ADD_NEW__") {
                               const selGood = dbGoods.find(g => (g.goods_name || g.goodsName || "").trim().toUpperCase() === (form.goodsName || "").trim().toUpperCase());
                               if (!selGood) {
-                                alert(`Please select a Good first before adding a new Size. (Current goodsName: "${form.goodsName || ""}", dbGoods count: ${dbGoods.length})`);
+                                alert("Please select a Good first before adding a new Size.");
                                 return;
                               }
                               setCustomVariationForm({

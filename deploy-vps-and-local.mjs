@@ -1,10 +1,24 @@
 import { execSync } from 'child_process';
+import fs from 'fs';
+import path from 'path';
 
 const SERVER = "root@72.60.209.121";
 
 console.log("===============================================================");
 console.log("  1-CLICK GIT SYNC, DB MIGRATION & FULL VPS DEPLOYMENT: 72.60.209.121");
 console.log("===============================================================\n");
+
+// Publish walkthrough video to public web assets
+try {
+  const artifactVideoPath = 'C:\\Users\\dgtll\\.gemini\\antigravity-ide\\brain\\6846e857-103f-4b6a-bd22-1ee300735888\\erp_qa_walkthrough_1785859149283.webp';
+  if (fs.existsSync(artifactVideoPath)) {
+    fs.copyFileSync(artifactVideoPath, path.join(process.cwd(), 'public', 'erp_qa_walkthrough.webp'));
+    fs.copyFileSync(artifactVideoPath, path.join(process.cwd(), 'exports', 'erp_qa_walkthrough.webp'));
+    console.log("✅ Walkthrough video copied to public/erp_qa_walkthrough.webp and exports/erp_qa_walkthrough.webp!");
+  }
+} catch (e) {
+  console.warn("Video copy notice:", e.message);
+}
 
 // Step 1: Run Database Migration
 try {
