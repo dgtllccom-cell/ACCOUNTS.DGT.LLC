@@ -49,6 +49,8 @@ import { openTradeDocumentWindow } from "@/lib/reports/open-trade-document-windo
 import { cn } from "@/lib/utils";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
+import { ReportPagination } from "@/features/reports/components/report-pagination";
+import { ReportStatusLegend } from "@/features/reports/components/report-status-legend";
 
 type PurchaseReport = {
   id: string;
@@ -107,17 +109,32 @@ type PurchaseReport = {
   };
 };
 
+type ApiSummary = {
+  total: number;
+  totalAmount: number;
+  totalQuantity: number;
+  totalContainers: number;
+  draft: number;
+  accepted: number;
+  transferred: number;
+  completed: number;
+  cancelled: number;
+  acceptedAmount: number;
+  transferredAmount: number;
+  completedAmount: number;
+  totalBranches: number;
+  activeBranches: number;
+  inactiveBranches: number;
+  thisMonth: { created: number; amount: number; transferred: number; completed: number };
+  quickInfo: { currency: string; exchangeRate: string; company: string; financialYear: string };
+};
+
 type ApiPayload = {
   ok: boolean;
   data?: {
     reports: PurchaseReport[];
     selected: PurchaseReport | null;
-    summary: {
-      total: number;
-      totalAmount: number;
-      totalQuantity: number;
-      totalContainers: number;
-    };
+    summary: ApiSummary;
     scope?: {
       type: "super_admin" | "country" | "main_branch" | "city_branch";
       countryIds: string[];
@@ -125,6 +142,8 @@ type ApiPayload = {
       cityBranchIds: string[];
       isGlobal: boolean;
     };
+    usdRates?: Record<string, number>;
+    lastExchangeRateUpdate?: string | null;
     warning?: string;
   };
   error?: string | { message?: string };
@@ -1194,6 +1213,7 @@ export function PurchaseBookingJournalReportView({
   const [lastExchangeRateUpdate, setLastExchangeRateUpdate] = useState<string | null>(null);
   const [allCountriesExpanded, setAllCountriesExpanded] = useState(false);
   const [tableViewMode, setTableViewMode] = useState<"standard" | "detailed">("detailed");
+  const [apiSummary, setApiSummary] = useState<ApiSummary | null>(null);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -1413,6 +1433,7 @@ export function PurchaseBookingJournalReportView({
       setScope(payload.data?.scope ?? null);
       if (payload.data?.usdRates) setUsdRates(payload.data.usdRates);
       if (payload.data?.lastExchangeRateUpdate) setLastExchangeRateUpdate(payload.data.lastExchangeRateUpdate);
+      if (payload.data?.summary) setApiSummary(payload.data.summary);
       setSelectedId((current) => (nextReports.some((report) => report.id === current) ? current : nextReports[0]?.id ?? ""));
       if (payload.data?.warning && payload.data.reports && payload.data.reports.length > 0) setMessage(payload.data.warning);
     } catch (error) {
@@ -2192,7 +2213,7 @@ export function PurchaseBookingJournalReportView({
           </div>
         </div>
 
-        {/* Card 5: QUICK INFO */}
+        {/* Card 5: QUICK INFO — live from API */}
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Clock3 className="h-4 w-4 text-amber-500" />
@@ -2201,19 +2222,19 @@ export function PurchaseBookingJournalReportView({
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             <div className="flex justify-between">
               <span>Currency</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">AED</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{apiSummary?.quickInfo?.currency ?? "—"}</span>
             </div>
             <div className="flex justify-between">
               <span>Exchange Rate (Avg.)</span>
-              <span className="font-mono font-bold text-slate-900 dark:text-slate-100">1.0000</span>
+              <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{apiSummary?.quickInfo?.exchangeRate ?? "—"}</span>
             </div>
             <div className="flex justify-between">
               <span>Company</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">DGT LLC</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[120px] text-right" title={apiSummary?.quickInfo?.company}>{apiSummary?.quickInfo?.company ?? "—"}</span>
             </div>
             <div className="flex justify-between">
               <span>Financial Year</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">2025-26</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{apiSummary?.quickInfo?.financialYear ?? "—"}</span>
             </div>
           </div>
         </div>
@@ -2887,96 +2908,25 @@ export function PurchaseBookingJournalReportView({
           </div>
         )}
 
-        {/* ── Footer Controls & Pagination ───────────────────────── */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-5 py-3 border-t border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950 text-xs font-semibold text-slate-600 dark:text-slate-400">
-          <div>
-            Showing {registerRows.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to {Math.min(currentPage * pageSize, registerRows.length)} of {registerRows.length} entries
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex items-center gap-1.5">
-              <span>Rows per page</span>
-              <select
-                value={pageSize}
-                onChange={(e) => { setPageSize(Number(e.target.value)); setCurrentPage(1); }}
-                className="h-8 rounded-lg border border-slate-200 bg-white px-2 text-xs font-bold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
-              >
-                <option value={10}>10</option>
-                <option value={25}>25</option>
-                <option value={50}>50</option>
-                <option value={100}>100</option>
-              </select>
-            </div>
-
-            <div className="flex items-center gap-1">
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage <= 1}
-                onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                className="h-8 w-8 p-0"
-              >
-                ‹
-              </Button>
-              {Array.from({ length: Math.min(5, Math.ceil(registerRows.length / pageSize) || 1) }, (_, i) => i + 1).map(p => (
-                <Button
-                  key={p}
-                  variant={currentPage === p ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => setCurrentPage(p)}
-                  className={cn("h-8 w-8 p-0 font-bold text-xs", currentPage === p && "bg-blue-600 text-white")}
-                >
-                  {p}
-                </Button>
-              ))}
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={currentPage >= Math.ceil(registerRows.length / pageSize)}
-                onClick={() => setCurrentPage(prev => Math.min(Math.ceil(registerRows.length / pageSize), prev + 1))}
-                className="h-8 w-8 p-0"
-              >
-                ›
-              </Button>
-            </div>
-          </div>
-        </div>
       </section>
 
-      {/* ── Status Legend & Notes Footer Cards ───────────────────── */}
-      <div className="grid gap-3.5 md:grid-cols-2">
-        {/* STATUS LEGEND */}
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-          <h4 className="text-[10px] font-black uppercase tracking-wider text-slate-400 mb-2.5">STATUS LEGEND</h4>
-          <div className="flex flex-wrap items-center gap-4 text-xs font-semibold">
-            <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-slate-400"></span>
-              <span className="text-slate-600 dark:text-slate-400">Draft (Not Accepted)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-red-600"></span>
-              <span className="text-red-600 font-bold">Accepted (Not Transferred)</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-slate-900 dark:bg-white"></span>
-              <span className="text-slate-900 dark:text-slate-100 font-bold">Transferred</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="h-3 w-3 rounded-full bg-emerald-600"></span>
-              <span className="text-emerald-600 font-bold">Completed</span>
-            </div>
-          </div>
-        </div>
+      {/* ── Standardized Pagination ─────────────────────────────── */}
+      <ReportPagination
+        totalCount={registerRows.length}
+        page={currentPage}
+        pageSize={pageSize}
+        onPageChange={setCurrentPage}
+        onPageSizeChange={(s) => { setPageSize(s); setCurrentPage(1); }}
+      />
 
-        {/* NOTE */}
-        <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-4 shadow-sm dark:border-blue-900/40 dark:bg-blue-950/20">
-          <h4 className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-1.5">NOTE</h4>
-          <div className="text-[11px] font-medium text-slate-700 dark:text-slate-300 space-y-1">
-            <div>• After Accept: Bill will appear in register in <strong className="text-red-600">RED color</strong>.</div>
-            <div>• After Transfer: Same bill will remain in register in <strong className="text-slate-900 dark:text-white">BLACK color</strong>.</div>
-          </div>
-        </div>
-      </div>
+      {/* ── Standardized Status Legend ──────────────────────────── */}
+      <ReportStatusLegend
+        statuses={["Draft", "Accepted", "Transferred", "Completed"]}
+        notes={[
+          "After Accept: Bill will appear in register in RED color.",
+          "After Transfer: Same bill will remain in register in BLACK color."
+        ]}
+      />
 
         <DetailDrawer
           isOpen={isDrawerOpen}

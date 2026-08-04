@@ -335,6 +335,78 @@ function normalizeOrder(row: any) {
         console.warn("Could not fetch daily USD rates", e);
       }
 
+      // ─── Compute live status breakdown ───────────────────────────────────
+      const nowMs = Date.now();
+      const firstDayOfMonth = new Date();
+      firstDayOfMonth.setDate(1);
+      firstDayOfMonth.setHours(0, 0, 0, 0);
+      const monthStartIso = firstDayOfMonth.toISOString();
+
+      const statusCounts = { draft: 0, accepted: 0, transferred: 0, completed: 0, cancelled: 0 };
+      let thisMonthCreated = 0;
+      let thisMonthAmount = 0;
+      let thisMonthTransferred = 0;
+      let thisMonthCompleted = 0;
+      let totalAcceptedAmount = 0;
+      let totalTransferredAmount = 0;
+      let totalCompletedAmount = 0;
+      let totalExchangeRateSum = 0;
+      let totalExchangeRateCount = 0;
+
+      const branchIds = new Set<string>();
+      const activeBranchIds = new Set<string>();
+
+      for (const r of reports) {
+        const st = String(r.status || "Draft");
+        const amt = Number(r.totalPurchaseAmount || 0);
+        const isThisMonth = r.createdAt && r.createdAt >= monthStartIso;
+
+        // Status counts
+        if (/draft/i.test(st)) { statusCounts.draft++; }
+        else if (/accept/i.test(st)) { statusCounts.accepted++; totalAcceptedAmount += amt; }
+        else if (/transfer/i.test(st)) { statusCounts.transferred++; totalTransferredAmount += amt; }
+        else if (/complet/i.test(st)) { statusCounts.completed++; totalCompletedAmount += amt; }
+        else if (/cancel/i.test(st)) { statusCounts.cancelled++; }
+        else { statusCounts.draft++; } // fallback
+
+        // This month
+        if (isThisMonth) {
+          thisMonthCreated++;
+          thisMonthAmount += amt;
+          if (/transfer/i.test(st)) thisMonthTransferred++;
+          if (/complet/i.test(st)) thisMonthCompleted++;
+        }
+
+        // Branch tracking
+        const bid = r.countryBranchId || r.cityBranchId;
+        if (bid) {
+          branchIds.add(bid);
+          if (!/cancel|inactive/i.test(st)) activeBranchIds.add(bid);
+        }
+
+        // Exchange rate averaging
+        const exr = Number((r as any).exchange_rate || 0);
+        if (exr > 0) { totalExchangeRateSum += exr; totalExchangeRateCount++; }
+      }
+
+      const avgExchangeRate = totalExchangeRateCount > 0
+        ? (totalExchangeRateSum / totalExchangeRateCount).toFixed(4)
+        : "1.0000";
+
+      // Fetch company name and financial year from session/data
+      const companyName = (data?.[0] as any)?.companies?.name ?? "DGT LLC";
+      const now = new Date();
+      const fyStart = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+      const financialYear = `${fyStart}-${String(fyStart + 1).slice(-2)}`;
+
+      // Currency from most common in reports
+      const currencyFreq: Record<string, number> = {};
+      for (const r of reports) {
+        const c = String(r.currency || r.finalCurrency || "AED").toUpperCase();
+        currencyFreq[c] = (currencyFreq[c] ?? 0) + 1;
+      }
+      const topCurrency = Object.entries(currencyFreq).sort(([, a], [, b]) => b - a)[0]?.[0] ?? "AED";
+
       return apiOk({
         reports,
         selected: reports[0] ?? null,
@@ -342,7 +414,35 @@ function normalizeOrder(row: any) {
           total: reports.length,
           totalAmount: reports.reduce((sum: number, report: any) => sum + Number(report.totalPurchaseAmount || 0), 0),
           totalQuantity: reports.reduce((sum: number, report: any) => sum + Number(report.quantity || 0), 0),
-          totalContainers: reports.reduce((sum: number, report: any) => sum + Number(report.containerCount || 0), 0)
+          totalContainers: reports.reduce((sum: number, report: any) => sum + Number(report.containerCount || 0), 0),
+          // ── Status breakdown (live) ──
+          draft: statusCounts.draft,
+          accepted: statusCounts.accepted,
+          transferred: statusCounts.transferred,
+          completed: statusCounts.completed,
+          cancelled: statusCounts.cancelled,
+          // ── Amount breakdown by status ──
+          acceptedAmount: totalAcceptedAmount,
+          transferredAmount: totalTransferredAmount,
+          completedAmount: totalCompletedAmount,
+          // ── Branches ──
+          totalBranches: branchIds.size,
+          activeBranches: activeBranchIds.size,
+          inactiveBranches: Math.max(0, branchIds.size - activeBranchIds.size),
+          // ── This Month ──
+          thisMonth: {
+            created: thisMonthCreated,
+            amount: thisMonthAmount,
+            transferred: thisMonthTransferred,
+            completed: thisMonthCompleted
+          },
+          // ── Quick Info ──
+          quickInfo: {
+            currency: topCurrency,
+            exchangeRate: avgExchangeRate,
+            company: companyName,
+            financialYear
+          }
         },
         usdRates,
         lastExchangeRateUpdate,
@@ -352,3 +452,4 @@ function normalizeOrder(row: any) {
       return handleApiError(error);
     }
   }
+
