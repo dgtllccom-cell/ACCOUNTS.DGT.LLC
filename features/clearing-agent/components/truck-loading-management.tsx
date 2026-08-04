@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Pencil, Trash2, Search, Loader2, X } from "lucide-react";
+import { Plus, Pencil, Trash2, Search, Loader2, X, Ship, Truck, FileText, CheckCircle, RefreshCcw, Save, ShieldCheck, DollarSign } from "lucide-react";
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { LocationHierarchySelect } from "@/features/locations/components/location-hierarchy-select";
 import { ReportActions } from "@/components/ui/report-actions";
 import { TruckAttachments } from "@/features/clearing-agent/components/truck-attachments";
+import { cn } from "@/lib/utils";
 
 type Loading = {
   id: string;
@@ -37,7 +38,67 @@ type TruckOpt = {
   owner_name: string | null;
 };
 
-const EMPTY: any = { id: "", loading_type: "local", truck_id: "", loading_date: "", truck_number: "", driver_name: "", driver_mobile_1: "", vehicle_type: "", goods_name: "", quantity: "", unit: "", net_weight: "", gross_weight: "", destination: "", customs_agent_name: "", border_port_name: "", declaration_no: "", transit_country: "", remarks: "", dest_country_id: null, dest_state_province_id: null, dest_district_id: null, dest_city_id: null };
+const EMPTY: any = {
+  id: "",
+  loading_type: "local",
+  truck_id: "",
+  loading_date: new Date().toISOString().slice(0, 10),
+  truck_number: "",
+  driver_name: "",
+  driver_mobile_1: "",
+  vehicle_type: "Truck Trailer",
+  goods_name: "PISTACHIOS KERNEL",
+  quantity: "100",
+  unit: "BAGS",
+  net_weight: "4975",
+  gross_weight: "5000",
+  destination: "Dubai Border",
+  customs_agent_name: "",
+  border_port_name: "",
+  declaration_no: "",
+  transit_country: "",
+  remarks: "",
+  customerAccountNo: "CUST-1001",
+  shippingType: "By Sea",
+  shipmentType: "Import",
+  importer: "Pending Data",
+  exporter: "Pending Data",
+  notifyParty: "Not Assigned",
+  bookingNo: "BK-2026-001",
+  bookingCompanyType: "Shipping Line",
+  bookingCompanyName: "DGT Logistics",
+  bookingName: "BL Booking",
+  bookingDate: new Date().toISOString().slice(0, 10),
+  vesselName: "MSC ATHENS",
+  issueDate: new Date().toISOString().slice(0, 10),
+  issueSerial: "ISS-671867",
+  blType: "New BL",
+  blNo: "BL-671867",
+  routeCountry: "PK / UAE",
+  loadCountry: "Pakistan",
+  loadPlace: "Karachi Port",
+  receiveCountry: "UAE",
+  receivePlace: "Jebel Ali Port",
+  loadDate: new Date().toISOString().slice(0, 10),
+  receiveDate: new Date().toISOString().slice(0, 10),
+  goodsSize: "Large",
+  goodsBrand: "Premium",
+  goodsOrigin: "IRAN",
+  hsCode: "0802.51",
+  allotName: "ALT-4421",
+  warehouse: "MAIN WH-A",
+  emptyPerBag: "0.25",
+  divideName: "Ton",
+  divideNumber: "1000",
+  carrierType: "container",
+  carrierSubType: "Dry Container 20FT",
+  carrierName: "Container Line",
+  sealNumber: "SEAL-7788",
+  dest_country_id: null,
+  dest_state_province_id: null,
+  dest_district_id: null,
+  dest_city_id: null
+};
 
 export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }) {
   const dir = getLanguageDirection(lang);
@@ -49,6 +110,7 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
   const [form, setForm] = useState<any>(EMPTY);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState<"parties" | "bl" | "goods" | "carrier">("parties");
 
   async function load() {
     setLoading(true); setError(null);
@@ -71,10 +133,9 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
     return rows.filter((r) => [r.truck_number, r.driver_name, r.goods_name, r.loading_serial].some((v) => (v || "").toLowerCase().includes(q)));
   }, [rows, query]);
 
-  function startAdd() { setForm(EMPTY); setEditing(true); }
-  function startEdit(r: Loading) { setForm({ ...EMPTY, ...r, quantity: r.quantity ?? "", net_weight: r.net_weight ?? "", gross_weight: r.gross_weight ?? "", loading_date: r.loading_date ?? "" }); setEditing(true); }
+  function startAdd() { setForm(EMPTY); setActiveTab("parties"); setEditing(true); }
+  function startEdit(r: Loading) { setForm({ ...EMPTY, ...r, quantity: r.quantity ?? "", net_weight: r.net_weight ?? "", gross_weight: r.gross_weight ?? "", loading_date: r.loading_date ?? "" }); setActiveTab("parties"); setEditing(true); }
 
-  // Auto-fill registered truck details on selection (no re-typing).
   function onSelectTruck(truckId: string) {
     const tr = trucks.find((x) => x.id === truckId);
     setForm((f: any) => ({
@@ -83,7 +144,7 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
       truck_number: tr?.truck_number ?? "",
       driver_name: tr?.driver_name ?? "",
       driver_mobile_1: tr?.driver_mobile ?? "",
-      vehicle_type: tr?.vehicle_type ?? tr?.truck_type ?? "",
+      vehicle_type: tr?.vehicle_type ?? tr?.truck_type ?? "Truck",
     }));
   }
 
@@ -111,62 +172,76 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
     } catch (e: any) { setError(e.message); }
   }
 
-  const field = (k: string, label: string, type = "text") => (
-    <label className="block">
-      <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">{label}</span>
-      <input type={type} value={form[k] ?? ""} onChange={(e) => setForm({ ...form, [k]: e.target.value })} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950" />
-    </label>
-  );
+  // Calculated weights & divide
+  const grossKg = Number(form.gross_weight || 0);
+  const emptyBagKg = Number(form.emptyPerBag || 0);
+  const qtyNo = Number(form.quantity || 0);
+  const totalEmptyKg = qtyNo * emptyBagKg;
+  const computedNetKg = Math.max(0, grossKg - totalEmptyKg);
 
   return (
     <div dir={dir} className="space-y-4">
+      {/* Header Strip */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-xl font-black text-slate-900 dark:text-white">{t(lang, "tl.title")}</h1>
+        <div>
+          <h1 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <Truck className="h-6 w-6 text-blue-600" />
+            Truck Loading & Clearing Booking
+          </h1>
+          <p className="text-xs font-medium text-slate-500">
+            Create complete truck loading entry with live mini journal report and inventory breakdown
+          </p>
+        </div>
+
         <div className="flex flex-wrap items-center gap-2">
-          <ReportActions title={t(lang, "tl.title")} rows={filtered} columns={[{ key: "loading_serial", label: t(lang, "tl.serial") }, { key: "loading_date", label: t(lang, "tl.date") }, { key: "truck_number", label: "Truck" }, { key: "driver_name", label: "Driver" }, { key: "goods_name", label: t(lang, "tl.goods") }, { key: "quantity", label: t(lang, "tl.qty") }, { key: "destination", label: t(lang, "tl.destination") }]} lang={lang} />
-          <button onClick={startAdd} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800">
-            <Plus className="h-4 w-4" /> {t(lang, "tl.add")}
+          <ReportActions title="Truck Loading Report" rows={filtered} columns={[{ key: "loading_serial", label: "Serial" }, { key: "loading_date", label: "Date" }, { key: "truck_number", label: "Truck" }, { key: "driver_name", label: "Driver" }, { key: "goods_name", label: "Goods" }, { key: "quantity", label: "Qty" }, { key: "destination", label: "Destination" }]} lang={lang} />
+          <button onClick={startAdd} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800 shadow-md transition">
+            <Plus className="h-4 w-4" /> + New Loading Entry
           </button>
         </div>
       </div>
 
+      {/* Search Bar */}
       <div className="relative">
         <Search className="pointer-events-none absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
-        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t(lang, "tl.search")} className="w-full rounded-xl border border-slate-200 bg-white py-2.5 ps-9 pe-3 text-sm dark:border-slate-800 dark:bg-slate-950" />
+        <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search loading serial, truck number, driver name, goods..." className="w-full rounded-xl border border-slate-200 bg-white py-2.5 ps-9 pe-3 text-sm dark:border-slate-800 dark:bg-slate-950 shadow-sm" />
       </div>
 
       {error ? <div className="rounded-xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 dark:border-red-900 dark:bg-red-950/40 dark:text-red-300">{error}</div> : null}
 
-      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      {/* List Table */}
+      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 shadow-sm">
         <table className="w-full text-start text-sm">
           <thead className="bg-slate-50 text-[11px] font-black uppercase tracking-wide text-slate-500 dark:bg-slate-950/60">
             <tr>
-              <th className="px-3 py-3 text-start">{t(lang, "tl.serial")}</th>
-              <th className="px-3 py-3 text-start">{t(lang, "tl.date")}</th>
-              <th className="px-3 py-3 text-start">Truck</th>
-              <th className="px-3 py-3 text-start">{t(lang, "tl.goods")}</th>
-              <th className="px-3 py-3 text-start">{t(lang, "tl.qty")}</th>
-              <th className="px-3 py-3 text-start">{t(lang, "tl.destination")}</th>
-              <th className="px-3 py-3 text-end"></th>
+              <th className="px-4 py-3 text-start">Serial #</th>
+              <th className="px-4 py-3 text-start">Loading Date</th>
+              <th className="px-4 py-3 text-start">Truck #</th>
+              <th className="px-4 py-3 text-start">Driver</th>
+              <th className="px-4 py-3 text-start">Goods</th>
+              <th className="px-4 py-3 text-start">Qty</th>
+              <th className="px-4 py-3 text-start">Destination</th>
+              <th className="px-4 py-3 text-end">Actions</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {loading ? (
-              <tr><td colSpan={7} className="px-4 py-10 text-center text-slate-400"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>
+              <tr><td colSpan={8} className="px-4 py-10 text-center text-slate-400"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>
             ) : filtered.length === 0 ? (
-              <tr><td colSpan={7} className="px-4 py-10 text-center text-slate-400">{t(lang, "tl.empty")}</td></tr>
+              <tr><td colSpan={8} className="px-4 py-10 text-center text-slate-400">No loading entries found. Click "+ New Loading Entry" to create one.</td></tr>
             ) : filtered.map((r) => (
-              <tr key={r.id} className="border-t border-slate-100 dark:border-slate-800">
-                <td className="px-3 py-3 font-bold">{r.loading_serial || "-"}</td>
-                <td className="px-3 py-3">{r.loading_date || "-"}</td>
-                <td className="px-3 py-3">{r.truck_number || "-"}</td>
-                <td className="px-3 py-3">{r.goods_name || "-"}</td>
-                <td className="px-3 py-3">{r.quantity ?? "-"} {r.unit || ""}</td>
-                <td className="px-3 py-3">{r.destination || "-"}</td>
-                <td className="px-3 py-3">
-                  <div className="flex items-center justify-end gap-1">
-                    <button onClick={() => startEdit(r)} className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800" title={t(lang, "tl.edit")}><Pencil className="h-4 w-4" /></button>
-                    <button onClick={() => remove(r.id)} className="rounded-lg p-2 text-slate-500 hover:bg-red-50 hover:text-red-600 dark:hover:bg-red-950/40" title={t(lang, "tl.delete")}><Trash2 className="h-4 w-4" /></button>
+              <tr key={r.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-950/40 transition">
+                <td className="px-4 py-3 font-mono font-bold text-indigo-600 dark:text-indigo-400">{r.loading_serial || "-"}</td>
+                <td className="px-4 py-3 text-slate-600 dark:text-slate-300">{r.loading_date || "-"}</td>
+                <td className="px-4 py-3 font-bold text-slate-900 dark:text-white">{r.truck_number || "-"}</td>
+                <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{r.driver_name || "-"}</td>
+                <td className="px-4 py-3 text-slate-700 dark:text-slate-300 font-semibold">{r.goods_name || "-"}</td>
+                <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{r.quantity ?? "-"} {r.unit || ""}</td>
+                <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{r.destination || "-"}</td>
+                <td className="px-4 py-3 text-end">
+                  <div className="flex items-center justify-end gap-1.5">
+                    <button onClick={() => startEdit(r)} className="rounded-lg p-1.5 text-slate-500 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800" title="Edit Entry"><Pencil className="h-4 w-4" /></button>
+                    <button onClick={() => remove(r.id)} className="rounded-lg p-1.5 text-slate-500 hover:bg-rose-50 hover:text-rose-600 dark:hover:bg-rose-950/40" title="Delete Entry"><Trash2 className="h-4 w-4" /></button>
                   </div>
                 </td>
               </tr>
@@ -175,84 +250,608 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
         </table>
       </div>
 
-      {editing ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setEditing(false)}>
-          <div dir={dir} className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-5 shadow-xl dark:border-slate-800 dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-lg font-black">{form.id ? t(lang, "tl.edit") : t(lang, "tl.add")}</h2>
-              <button onClick={() => setEditing(false)} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><X className="h-4 w-4" /></button>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <label className="block sm:col-span-2">
-                <span className="text-[11px] font-black uppercase tracking-wide text-slate-500">Loading Category / shipment type</span>
-                <select
-                  value={form.loading_type ?? "local"}
-                  onChange={(e) => setForm({ ...form, loading_type: e.target.value })}
-                  className="mt-1 w-full rounded-xl border border-indigo-200 bg-indigo-50/50 px-3 py-2 text-sm font-bold text-indigo-900 dark:border-indigo-900 dark:bg-slate-950 dark:text-indigo-300"
-                >
-                  <option value="local">🚛 Local Truck Loading (داخلی بارگیری)</option>
-                  <option value="import">🛃 Import Loading (امپورٹ بارگیری / Customs Clearing)</option>
-                  <option value="transit">🌐 Transit Loading (ٹرانزٹ بارگیری / Border Transit)</option>
-                </select>
-              </label>
-
-              <label className="block sm:col-span-2">
-                <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">{t(lang, "tl.select_truck")}</span>
-                <select value={form.truck_id ?? ""} onChange={(e) => onSelectTruck(e.target.value)} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950">
-                  <option value="">—</option>
-                  {trucks.map((tr) => <option key={tr.id} value={tr.id}>{tr.truck_number}{tr.driver_name ? ` — ${tr.driver_name}` : ""}</option>)}
-                </select>
-              </label>
-              {field("loading_date", t(lang, "tl.date"), "date")}
-              {field("truck_number", "Truck #")}
-              {field("driver_name", "Driver")}
-              {field("driver_mobile_1", "Driver Mobile")}
-              {field("vehicle_type", "Vehicle Type")}
-              {field("goods_name", t(lang, "tl.goods"))}
-              {field("quantity", t(lang, "tl.qty"), "number")}
-              {field("unit", t(lang, "tl.unit"))}
-              {field("net_weight", t(lang, "tl.net_weight"), "number")}
-              {field("gross_weight", t(lang, "tl.gross_weight"), "number")}
-              {field("destination", t(lang, "tl.destination"))}
-
-              {/* Dynamic Import / Transit Fields */}
-              {(form.loading_type === "import" || form.loading_type === "transit") && (
-                <>
-                  <div className="sm:col-span-2 rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 p-3 my-1">
-                    <p className="text-xs font-black text-amber-800 dark:text-amber-300 uppercase tracking-wide">
-                      {form.loading_type === "import" ? "🛃 Import & Customs Clearing Details" : "🌐 Border Transit Shipment Details"}
-                    </p>
-                  </div>
-                  {field("customs_agent_name", "Clearing Agent / Custom House")}
-                  {field("border_port_name", "Border Port / Entry Customs Station")}
-                  {field("declaration_no", "Declaration / GD Number")}
-                  {form.loading_type === "transit" && field("transit_country", "Final Destination Country (Transit)")}
-                </>
-              )}
-              <div className="sm:col-span-2">
-                <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">{t(lang, "tl.destination")} (central master)</span>
-                <div className="mt-1">
-                  <LocationHierarchySelect
-                    value={{ countryId: form.dest_country_id ?? "", stateProvinceId: form.dest_state_province_id ?? "", districtId: form.dest_district_id ?? "", cityId: form.dest_city_id ?? "" }}
-                    onChange={(v) => setForm({ ...form, dest_country_id: v.countryId || null, dest_state_province_id: v.stateProvinceId || null, dest_district_id: v.districtId || null, dest_city_id: v.cityId || null })}
-                  />
-                </div>
+      {/* FULL 2-COLUMN SPLIT ENTRY MODAL / DRAWER (Matching User HTML Design) */}
+      {editing && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-3 sm:p-6 overflow-y-auto animate-in fade-in duration-200">
+          <div className="w-full max-w-[1600px] max-h-[92vh] overflow-y-auto rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-5 space-y-4">
+            
+            {/* Modal Header */}
+            <div className="flex items-center justify-between border-b pb-3 border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2">
+                <div className="h-3 w-3 rounded-full bg-cyan-500" />
+                <h2 className="text-lg font-black uppercase text-slate-900 dark:text-slate-100">
+                  {form.id ? "Edit Truck Loading & BL Entry" : "New Truck Loading & Customer Account Booking"}
+                </h2>
               </div>
-              <label className="block sm:col-span-2">
-                <span className="text-[11px] font-black uppercase tracking-wide text-slate-400">{t(lang, "tl.remarks")}</span>
-                <textarea value={form.remarks ?? ""} onChange={(e) => setForm({ ...form, remarks: e.target.value })} rows={2} className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-sm dark:border-slate-800 dark:bg-slate-950" />
-              </label>
-              {form.id ? <div className="sm:col-span-2 border-t border-slate-100 pt-3 dark:border-slate-800"><TruckAttachments entityId={form.id} entityKey="truck_loading" /></div> : null}
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={save}
+                  disabled={saving}
+                  className="inline-flex items-center gap-2 rounded-xl bg-blue-600 hover:bg-blue-700 px-5 py-2 text-xs font-black text-white shadow-md transition"
+                >
+                  {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  Save Loading Record
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setEditing(false)}
+                  className="rounded-xl border border-slate-200 p-2 text-slate-400 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
             </div>
-            <div className="mt-5 flex justify-end gap-2">
-              <button onClick={() => setEditing(false)} className="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800">{t(lang, "tl.cancel")}</button>
-              <button onClick={save} disabled={saving} className="inline-flex items-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800 disabled:opacity-60">
-                {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}{t(lang, "tl.save")}
-              </button>
+
+            {/* 2-COLUMN SPLIT GRID (LEFT FORM + RIGHT LIVE MINI JOURNAL & GOODS TABLE) */}
+            <div className="grid grid-cols-1 xl:grid-cols-[380px_1fr] gap-5 items-start">
+              
+              {/* LEFT COLUMN: Step-by-Step Form Controls */}
+              <div className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 dark:border-slate-800 dark:bg-slate-950 space-y-4">
+                
+                {/* Module Loading Category Selector */}
+                <div className="space-y-1">
+                  <label className="text-[10px] font-black uppercase text-slate-500">Loading Category / Shipment Type</label>
+                  <select
+                    value={form.loading_type ?? "local"}
+                    onChange={(e) => setForm({ ...form, loading_type: e.target.value })}
+                    className="w-full rounded-xl border border-indigo-200 bg-white px-3 py-2 text-xs font-bold text-indigo-900 dark:border-indigo-900 dark:bg-slate-900 dark:text-indigo-300 outline-none focus:ring-2 focus:ring-indigo-500"
+                  >
+                    <option value="local">🚛 Local Truck Loading (داخلی بارگیری)</option>
+                    <option value="import">🛃 Import Loading (امپورٹ بارگیری / Customs Clearing)</option>
+                    <option value="transit">🌐 Transit Loading (ٹرانزٹ بارگیری / Border Transit)</option>
+                  </select>
+                </div>
+
+                {/* 4 Step Tabs */}
+                <div className="grid grid-cols-4 gap-1">
+                  {[
+                    { id: "parties", label: "1) Parties" },
+                    { id: "bl", label: "2) BL Entry" },
+                    { id: "goods", label: "3) Goods" },
+                    { id: "carrier", label: "4) Carrier" }
+                  ].map((tab) => (
+                    <button
+                      key={tab.id}
+                      type="button"
+                      onClick={() => setActiveTab(tab.id as any)}
+                      className={cn(
+                        "h-8 rounded-lg text-[9px] font-black transition border",
+                        activeTab === tab.id
+                          ? "bg-blue-600 text-white border-blue-600 shadow-sm"
+                          : "bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:bg-slate-100"
+                      )}
+                    >
+                      {tab.label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* TAB 1: PARTIES & BOOKING */}
+                {activeTab === "parties" && (
+                  <div className="space-y-3 animate-in fade-in duration-150">
+                    <div className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">SR#: 1 - Parties & Booking</div>
+                    
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-slate-500">Customer Account No *</label>
+                      <input
+                        type="text"
+                        value={form.customerAccountNo || "CUST-1001"}
+                        onChange={e => setForm({ ...form, customerAccountNo: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold dark:border-slate-800 dark:bg-slate-900"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] font-black uppercase text-slate-500">Shipping Type *</label>
+                        <select
+                          value={form.shippingType || "By Sea"}
+                          onChange={e => setForm({ ...form, shippingType: e.target.value })}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-900"
+                        >
+                          <option value="By Sea">By Sea</option>
+                          <option value="By Road">By Road</option>
+                          <option value="By Air">By Air</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black uppercase text-slate-500">Shipment Type *</label>
+                        <select
+                          value={form.shipmentType || "Import"}
+                          onChange={e => setForm({ ...form, shipmentType: e.target.value })}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-900"
+                        >
+                          <option value="Import">Import</option>
+                          <option value="Export">Export</option>
+                          <option value="Transit">Transit</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-slate-500">Importer Name *</label>
+                      <input
+                        type="text"
+                        value={form.importer || ""}
+                        onChange={e => setForm({ ...form, importer: e.target.value })}
+                        placeholder="Importer Name"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-900"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-slate-500">Exporter Name *</label>
+                      <input
+                        type="text"
+                        value={form.exporter || ""}
+                        onChange={e => setForm({ ...form, exporter: e.target.value })}
+                        placeholder="Exporter Name"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-900"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] font-black uppercase text-slate-500">Booking No *</label>
+                        <input
+                          type="text"
+                          value={form.bookingNo || "BK-2026-001"}
+                          onChange={e => setForm({ ...form, bookingNo: e.target.value })}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold dark:border-slate-800 dark:bg-slate-900 font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black uppercase text-slate-500">Company Name *</label>
+                        <input
+                          type="text"
+                          value={form.bookingCompanyName || "DGT Logistics"}
+                          onChange={e => setForm({ ...form, bookingCompanyName: e.target.value })}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-900"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("bl")}
+                        className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-black text-white hover:bg-blue-700"
+                      >
+                        Next: BL Entry →
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 2: BL & ROUTE DETAILS */}
+                {activeTab === "bl" && (
+                  <div className="space-y-3 animate-in fade-in duration-150">
+                    <div className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">SR#: 2 - Transport & Route Details</div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] font-black uppercase text-slate-500">Issue Date *</label>
+                        <input
+                          type="date"
+                          value={form.issueDate || ""}
+                          onChange={e => setForm({ ...form, issueDate: e.target.value })}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-900"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black uppercase text-slate-500">Issue Serial *</label>
+                        <input
+                          type="text"
+                          value={form.issueSerial || "ISS-671867"}
+                          onChange={e => setForm({ ...form, issueSerial: e.target.value })}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold dark:border-slate-800 dark:bg-slate-900 font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] font-black uppercase text-slate-500">BL Type</label>
+                        <select
+                          value={form.blType || "New BL"}
+                          onChange={e => setForm({ ...form, blType: e.target.value })}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-900"
+                        >
+                          <option value="New BL">New BL</option>
+                          <option value="Old BL">Old BL</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black uppercase text-slate-500">BL No</label>
+                        <input
+                          type="text"
+                          value={form.blNo || "BL-671867"}
+                          onChange={e => setForm({ ...form, blNo: e.target.value })}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold dark:border-slate-800 dark:bg-slate-900 font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-cyan-200 bg-cyan-50/50 p-3 dark:border-cyan-900/40 dark:bg-slate-900 space-y-2">
+                      <p className="text-[10px] font-black uppercase text-cyan-700 dark:text-cyan-300">Loading & Receiving Borders</p>
+                      <div className="grid grid-cols-2 gap-2">
+                        <div>
+                          <label className="text-[9px] font-bold text-slate-500">Loading Country</label>
+                          <input
+                            type="text"
+                            value={form.loadCountry || "Pakistan"}
+                            onChange={e => setForm({ ...form, loadCountry: e.target.value })}
+                            className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-950"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-bold text-slate-500">Loading Border/Port</label>
+                          <input
+                            type="text"
+                            value={form.loadPlace || "Karachi Port"}
+                            onChange={e => setForm({ ...form, loadPlace: e.target.value })}
+                            className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-950"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-bold text-slate-500">Receiving Country</label>
+                          <input
+                            type="text"
+                            value={form.receiveCountry || "UAE"}
+                            onChange={e => setForm({ ...form, receiveCountry: e.target.value })}
+                            className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-950"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[9px] font-bold text-slate-500">Receiving Border/Port</label>
+                          <input
+                            type="text"
+                            value={form.receivePlace || "Dubai Border"}
+                            onChange={e => setForm({ ...form, receivePlace: e.target.value })}
+                            className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-950"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("goods")}
+                        className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-black text-white hover:bg-blue-700"
+                      >
+                        Next: Goods Entry →
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 3: GOODS ENTRY */}
+                {activeTab === "goods" && (
+                  <div className="space-y-3 animate-in fade-in duration-150">
+                    <div className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">SR#: 3 - Goods & Inventory Entry</div>
+
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-slate-500">Select Registered Truck *</label>
+                      <select
+                        value={form.truck_id ?? ""}
+                        onChange={(e) => onSelectTruck(e.target.value)}
+                        className="w-full rounded-xl border border-blue-200 bg-blue-50/50 px-3 py-2 text-xs font-bold text-blue-900 dark:border-blue-900 dark:bg-slate-900 dark:text-blue-300"
+                      >
+                        <option value="">Select registered truck from DB...</option>
+                        {trucks.map((tr) => (
+                          <option key={tr.id} value={tr.id}>
+                            {tr.truck_number} {tr.driver_name ? `(${tr.driver_name})` : ""}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-slate-500">Goods Name *</label>
+                      <input
+                        type="text"
+                        value={form.goods_name || "PISTACHIOS KERNEL"}
+                        onChange={e => setForm({ ...form, goods_name: e.target.value })}
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold dark:border-slate-800 dark:bg-slate-900"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[9px] font-bold text-slate-500">Size</label>
+                        <input
+                          type="text"
+                          value={form.goodsSize || "Large"}
+                          onChange={e => setForm({ ...form, goodsSize: e.target.value })}
+                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-950"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-bold text-slate-500">Brand</label>
+                        <input
+                          type="text"
+                          value={form.goodsBrand || "Premium"}
+                          onChange={e => setForm({ ...form, goodsBrand: e.target.value })}
+                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-950"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-bold text-slate-500">Quantity (Bags)</label>
+                        <input
+                          type="number"
+                          value={form.quantity || "100"}
+                          onChange={e => setForm({ ...form, quantity: e.target.value })}
+                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-bold dark:border-slate-800 dark:bg-slate-950"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[9px] font-bold text-slate-500">Gross Weight (KG)</label>
+                        <input
+                          type="number"
+                          value={form.gross_weight || "5000"}
+                          onChange={e => setForm({ ...form, gross_weight: e.target.value })}
+                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs font-bold dark:border-slate-800 dark:bg-slate-950"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Weight summary box */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-2 text-[10px] space-y-1 dark:border-slate-800 dark:bg-slate-950">
+                      <div className="flex justify-between text-slate-500">
+                        <span>Total Empty Wt:</span>
+                        <span className="font-bold">{totalEmptyKg} KG</span>
+                      </div>
+                      <div className="flex justify-between text-amber-600 font-bold">
+                        <span>Net Weight:</span>
+                        <span>{computedNetKg} KG</span>
+                      </div>
+                    </div>
+
+                    <div className="flex justify-end pt-2">
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab("carrier")}
+                        className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-black text-white hover:bg-blue-700"
+                      >
+                        Next: Carrier Details →
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* TAB 4: CARRIER & CONTAINER DETAILS */}
+                {activeTab === "carrier" && (
+                  <div className="space-y-3 animate-in fade-in duration-150">
+                    <div className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">SR#: 4 - Carrier / Container Details</div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] font-black uppercase text-slate-500">Carrier Type</label>
+                        <select
+                          value={form.carrierType || "container"}
+                          onChange={e => setForm({ ...form, carrierType: e.target.value })}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-2 py-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-900"
+                        >
+                          <option value="container">Container</option>
+                          <option value="truck">Truck Trailer</option>
+                          <option value="air">Air Cargo</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black uppercase text-slate-500">Container / Sub Type</label>
+                        <input
+                          type="text"
+                          value={form.carrierSubType || "Dry Container 20FT"}
+                          onChange={e => setForm({ ...form, carrierSubType: e.target.value })}
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-900"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] font-black uppercase text-slate-500">Container / Truck No *</label>
+                        <input
+                          type="text"
+                          value={form.truck_number || "CONT-123456"}
+                          onChange={e => setForm({ ...form, truck_number: e.target.value })}
+                          placeholder="e.g. CONT-123456"
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold dark:border-slate-800 dark:bg-slate-900 font-mono"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-black uppercase text-slate-500">Seal Number</label>
+                        <input
+                          type="text"
+                          value={form.sealNumber || "SEAL-7788"}
+                          onChange={e => setForm({ ...form, sealNumber: e.target.value })}
+                          placeholder="SEAL-7788"
+                          className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold dark:border-slate-800 dark:bg-slate-900 font-mono"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-slate-500">Driver Name</label>
+                      <input
+                        type="text"
+                        value={form.driver_name || ""}
+                        onChange={e => setForm({ ...form, driver_name: e.target.value })}
+                        placeholder="Driver Name"
+                        className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold dark:border-slate-800 dark:bg-slate-900"
+                      />
+                    </div>
+
+                    {/* Dynamic Import/Transit fields */}
+                    {(form.loading_type === "import" || form.loading_type === "transit") && (
+                      <div className="rounded-xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/40 p-2.5 space-y-2">
+                        <p className="text-[10px] font-black text-amber-800 dark:text-amber-300 uppercase">Customs & Transit Details</p>
+                        <input
+                          type="text"
+                          placeholder="Clearing Agent Name"
+                          value={form.customs_agent_name || ""}
+                          onChange={e => setForm({ ...form, customs_agent_name: e.target.value })}
+                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-950"
+                        />
+                        <input
+                          type="text"
+                          placeholder="Declaration / GD Number"
+                          value={form.declaration_no || ""}
+                          onChange={e => setForm({ ...form, declaration_no: e.target.value })}
+                          className="w-full rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs dark:border-slate-800 dark:bg-slate-950"
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* RIGHT COLUMN: Real-Time Live Mini Journal Report & Goods Inventory Table */}
+              <div className="space-y-4 min-w-0">
+                
+                {/* Card A: Board / BL / Loading Report (Live Mini Journal) */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-3">
+                  <div className="flex items-center justify-between border-b pb-3 border-slate-100 dark:border-slate-800">
+                    <div>
+                      <h3 className="text-sm font-black uppercase text-slate-900 dark:text-slate-100 flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-blue-600" />
+                        Board / BL / Loading Report
+                      </h3>
+                      <p className="text-[10px] font-medium text-slate-400">One Page Live Mini Journal Summary</p>
+                    </div>
+                    <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 bg-emerald-50 dark:bg-emerald-950/40 px-2.5 py-1 rounded-full border border-emerald-200 dark:border-emerald-800">
+                      ● LIVE UPDATING
+                    </span>
+                  </div>
+
+                  {/* Grid details */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-2 text-[11px] font-medium">
+                    <div className="col-span-full font-black text-blue-600 dark:text-blue-400 uppercase text-[9.5px] tracking-wider pt-1 border-b border-slate-100 dark:border-slate-800 pb-1">
+                      1. BL Basic / Board & Route Details
+                    </div>
+                    
+                    <div className="flex justify-between border-b border-dotted pb-1">
+                      <span className="text-slate-400 font-bold uppercase text-[9px]">Mode:</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-100">{form.blType || "New BL"}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-dotted pb-1">
+                      <span className="text-slate-400 font-bold uppercase text-[9px]">Issue Date:</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-100">{form.issueDate}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-dotted pb-1">
+                      <span className="text-slate-400 font-bold uppercase text-[9px]">Issue Serial:</span>
+                      <span className="font-bold text-indigo-600 dark:text-indigo-400 font-mono">{form.issueSerial}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-dotted pb-1">
+                      <span className="text-slate-400 font-bold uppercase text-[9px]">BL / Loading No:</span>
+                      <span className="font-bold text-indigo-600 dark:text-indigo-400 font-mono">{form.blNo}</span>
+                    </div>
+
+                    <div className="col-span-full flex justify-between border-b border-dotted pb-1">
+                      <span className="text-slate-400 font-bold uppercase text-[9px]">Full Route:</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-100 text-right truncate">
+                        {form.shippingType} | {form.routeCountry} | L: {form.loadCountry} / {form.loadPlace} → R: {form.receiveCountry} / {form.receivePlace}
+                      </span>
+                    </div>
+
+                    <div className="col-span-full font-black text-blue-600 dark:text-blue-400 uppercase text-[9.5px] tracking-wider pt-2 border-b border-slate-100 dark:border-slate-800 pb-1">
+                      2. Booking & Carrier Details
+                    </div>
+
+                    <div className="flex justify-between border-b border-dotted pb-1">
+                      <span className="text-slate-400 font-bold uppercase text-[9px]">Shipping / Category:</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-100 capitalize">{form.loading_type} / {form.shippingType}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-dotted pb-1">
+                      <span className="text-slate-400 font-bold uppercase text-[9px]">Booking Company:</span>
+                      <span className="font-bold text-slate-900 dark:text-slate-100">{form.bookingCompanyName}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-dotted pb-1">
+                      <span className="text-slate-400 font-bold uppercase text-[9px]">Truck / Vehicle No:</span>
+                      <span className="font-mono font-black text-blue-600 dark:text-blue-400">{form.truck_number || "CONT-123456"}</span>
+                    </div>
+                    <div className="flex justify-between border-b border-dotted pb-1">
+                      <span className="text-slate-400 font-bold uppercase text-[9px]">Seal Number:</span>
+                      <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{form.sealNumber || "SEAL-7788"}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Card B: Live Goods Loading Inventory Table */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-black uppercase text-slate-900 dark:text-slate-100">
+                        Goods Loading Report
+                      </h3>
+                      <p className="text-[10px] font-medium text-slate-400">Live Inventory Breakdown</p>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded-md border border-slate-200 dark:border-slate-700">
+                        Live Inventory
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+                    <table className="w-full text-left text-xs whitespace-nowrap">
+                      <thead className="bg-slate-900 text-white font-black text-[10px] uppercase tracking-wider dark:bg-slate-950">
+                        <tr>
+                          <th className="p-2.5">SR#</th>
+                          <th className="p-2.5">Goods Name</th>
+                          <th className="p-2.5">Size</th>
+                          <th className="p-2.5">Brand</th>
+                          <th className="p-2.5">Origin</th>
+                          <th className="p-2.5">HS Code</th>
+                          <th className="p-2.5">Warehouse</th>
+                          <th className="p-2.5">Qty (Bags)</th>
+                          <th className="p-2.5">Gross KG</th>
+                          <th className="p-2.5">Empty KG</th>
+                          <th className="p-2.5 text-right">Net Weight KG</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">
+                        <tr className="hover:bg-slate-50/50 dark:hover:bg-slate-950/40">
+                          <td className="p-2.5 font-bold text-slate-400">01</td>
+                          <td className="p-2.5 font-bold text-blue-600 dark:text-blue-400">{form.goods_name || "PISTACHIOS KERNEL"}</td>
+                          <td className="p-2.5 text-slate-600 dark:text-slate-300">{form.goodsSize || "Large"}</td>
+                          <td className="p-2.5 text-slate-600 dark:text-slate-300">{form.goodsBrand || "Premium"}</td>
+                          <td className="p-2.5 text-slate-600 dark:text-slate-300">{form.goodsOrigin || "IRAN"}</td>
+                          <td className="p-2.5 font-mono text-slate-500">{form.hsCode || "0802.51"}</td>
+                          <td className="p-2.5 text-slate-600 dark:text-slate-300">{form.warehouse || "MAIN WH-A"}</td>
+                          <td className="p-2.5 font-bold text-slate-900 dark:text-white">{qtyNo}</td>
+                          <td className="p-2.5 font-mono font-bold text-slate-900 dark:text-white">{grossKg.toLocaleString()}</td>
+                          <td className="p-2.5 font-mono text-slate-500">{totalEmptyKg}</td>
+                          <td className="p-2.5 font-mono font-black text-amber-600 dark:text-amber-400 text-right">{computedNetKg.toLocaleString()}</td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Totals strip */}
+                  <div className="flex justify-end items-center gap-8 rounded-xl bg-slate-50 dark:bg-slate-950 p-3 border border-slate-200 dark:border-slate-800 text-right">
+                    <div>
+                      <span className="block text-[9px] font-black uppercase text-slate-400">Total Gross Weight</span>
+                      <span className="text-base font-black text-slate-900 dark:text-slate-100 font-mono">{grossKg.toLocaleString()} KG</span>
+                    </div>
+                    <div>
+                      <span className="block text-[9px] font-black uppercase text-slate-400">Total Net Weight</span>
+                      <span className="text-base font-black text-amber-600 dark:text-amber-400 font-mono">{computedNetKg.toLocaleString()} KG</span>
+                    </div>
+                  </div>
+                </div>
+
+              </div>
             </div>
+
           </div>
         </div>
-      ) : null}
+      )}
     </div>
   );
 }
