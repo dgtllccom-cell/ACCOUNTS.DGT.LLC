@@ -1,4 +1,4 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { supportedLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
@@ -34,14 +34,27 @@ function base64UrlDecode(value: string) {
   return Buffer.from(value, "base64url").toString("utf8");
 }
 
+// SECURITY: previously fell back to the hardcoded literal
+// "dev-insecure-erp-session-secret" when no secret was configured. That
+// string is public (visible in source), so any deployment that forgot to set
+// ERP_SESSION_SECRET let anyone forge a valid super-admin session cookie
+// offline. Instead, generate a random secret once per server process. Set
+// ERP_SESSION_SECRET in the environment for secrets that survive restarts.
+let ephemeralSessionSecret: string | null = null;
+
 function getSessionSecret() {
-  return (
-    process.env.ERP_SESSION_SECRET ||
-    process.env.AUTH_SECRET ||
-    process.env.NEXTAUTH_SECRET ||
-    // Dev fallback: you SHOULD set ERP_SESSION_SECRET in production.
-    "dev-insecure-erp-session-secret"
-  );
+  const configured = process.env.ERP_SESSION_SECRET || process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET;
+  if (configured) return configured;
+
+  if (!ephemeralSessionSecret) {
+    ephemeralSessionSecret = randomBytes(32).toString("hex");
+    console.warn(
+      "[security] ERP_SESSION_SECRET is not set. Falling back to a random, process-local secret " +
+        "(existing session cookies will be invalidated on every restart). Set ERP_SESSION_SECRET " +
+        "in the environment for a stable, non-forgeable secret."
+    );
+  }
+  return ephemeralSessionSecret;
 }
 
 function sign(payloadB64: string) {

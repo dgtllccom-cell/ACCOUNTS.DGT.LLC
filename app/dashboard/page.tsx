@@ -7,6 +7,7 @@ import { getRequestLanguage } from "@/lib/i18n/server";
 import { t } from "@/lib/i18n/ui";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCurrentErpSession } from "@/lib/auth/session";
+import { isDemoAuthEnabled } from "@/lib/supabase/config";
 import { redirect } from "next/navigation";
 import { dashboardByRole } from "@/lib/permissions/enterprise-roles";
 import type { Route } from "next";
@@ -163,18 +164,26 @@ function StatusPill({ value }: { value: string }) {
 
 export default async function DashboardPage() {
   const session = await getCurrentErpSession();
-  if (session) {
-    const primary = session.roles.includes("super_admin")
-      ? "super_admin"
-      : session.roles.includes("country_admin")
-        ? "country_admin"
-        : session.roles.includes("country_user")
-          ? "country_user"
-          : session.roles[0];
-    const target = primary ? dashboardByRole[primary] : "/dashboard/super-admin";
-    if (target && target !== "/dashboard") {
-      redirect(target as Route);
-    }
+
+  // SECURITY: this previously only redirected when a session *existed* (for
+  // role-based routing). When there was no session it fell through and
+  // rendered the full page below anyway — including live financial totals
+  // pulled with the service-role client (RLS bypassed) and a card printing
+  // working test-account credentials. Require auth before rendering anything.
+  if (!session) {
+    redirect("/auth/login" as Route);
+  }
+
+  const primary = session.roles.includes("super_admin")
+    ? "super_admin"
+    : session.roles.includes("country_admin")
+      ? "country_admin"
+      : session.roles.includes("country_user")
+        ? "country_user"
+        : session.roles[0];
+  const target = primary ? dashboardByRole[primary] : "/dashboard/super-admin";
+  if (target && target !== "/dashboard") {
+    redirect(target as Route);
   }
 
   const lang = await getRequestLanguage();
@@ -211,7 +220,10 @@ export default async function DashboardPage() {
         </Card>
       ) : null}
 
-      {/* Experimental Setup Quick Login Block */}
+      {/* Experimental Setup Quick Login Block — only ever shown when demo/bootstrap
+          auth is explicitly enabled; this card prints working login credentials
+          and must never render for real users in production. */}
+      {isDemoAuthEnabled() ? (
       <section>
         <Card className="border-primary/20 bg-primary/5">
           <CardHeader className="pb-3">
@@ -248,6 +260,7 @@ export default async function DashboardPage() {
           </CardContent>
         </Card>
       </section>
+      ) : null}
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard label="Countries" value={String(data.counts.countries)} icon={Database} />

@@ -13,6 +13,15 @@ const loginSchema = z.object({
   password: z.string().min(8)
 });
 
+// SECURITY: this used to match ANY identifier merely *containing* "superadmin"
+// or "asmat" (e.g. "asmat123", "notasmatbutclose") together with a small list
+// of accepted passwords, unconditionally in every environment (isDemoAuthEnabled()
+// was imported but never actually called). That let anyone on the internet log
+// in as super_admin with no real credentials. Now: exact match only, on a
+// single configurable identifier/password, and only when demo auth is enabled.
+const BOOTSTRAP_IDENTIFIER = (process.env.BOOTSTRAP_SUPERADMIN_EMAIL || "superadmin@damaan.com").trim().toLowerCase();
+const BOOTSTRAP_PASSWORD = process.env.BOOTSTRAP_SUPERADMIN_PASSWORD || "Admin@123";
+
 export async function signInWithPassword(formData: FormData) {
   const parsed = loginSchema.safeParse({
     identifier: formData.get("identifier"),
@@ -29,12 +38,12 @@ export async function signInWithPassword(formData: FormData) {
   const remember = String(formData.get("remember") || "") === "on";
 
   // Temporary bootstrap login (works even if Supabase isn't configured yet).
+  // Gated behind ALLOW_DEMO_AUTH and requires an EXACT identifier + password
+  // match — set ALLOW_DEMO_AUTH=false once real Supabase accounts are confirmed.
   if (
-    (input.identifier.toLowerCase() === "superadmin" ||
-      input.identifier.toLowerCase() === "superadmin@damaan.com" ||
-      input.identifier.toLowerCase().includes("superadmin") ||
-      input.identifier.toLowerCase().includes("asmat")) &&
-    (input.password === "Admin@123" || input.password.toLowerCase() === "admin@123")
+    isDemoAuthEnabled() &&
+    input.identifier.toLowerCase() === BOOTSTRAP_IDENTIFIER &&
+    input.password === BOOTSTRAP_PASSWORD
   ) {
     await setTempSuperAdminSession({ remember });
     redirect("/dashboard" as Route);
