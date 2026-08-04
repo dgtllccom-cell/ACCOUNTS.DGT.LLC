@@ -86,10 +86,10 @@ export function ReportFilterBar({
   const isBranchLocked = Boolean(lockedBranchId);
 
   // Filter branches based on selected country
-  const filteredMainBranches = mainBranches.filter(
+  const filteredMainBranches = (mainBranches || []).filter(
     (mb) => !filters.countryId || filters.countryId === "all" || mb.country_id === filters.countryId
   );
-  const filteredCityBranches = cityBranches.filter((cb) => {
+  const filteredCityBranches = (cityBranches || []).filter((cb) => {
     if (filters.countryId && filters.countryId !== "all" && cb.country_id !== filters.countryId) return false;
     if (filters.mainBranchId && filters.mainBranchId !== "all" && cb.country_branch_id !== filters.mainBranchId) return false;
     return true;
@@ -108,9 +108,9 @@ export function ReportFilterBar({
   if (filters.userId && filters.userId !== "all") activeFilterCount++;
 
   // Label lookups for active chips
-  const selectedReportTypeName = reportTypes.find(rt => rt.key === filters.reportType)?.key || filters.reportType;
-  const selectedCountryName = countries.find(c => c.id === filters.countryId)?.name || "All Countries";
-  const selectedBranchName = cityBranches.find(b => b.id === filters.branchId)?.name || "All Branches";
+  const selectedReportTypeName = (reportTypes || []).find(rt => rt.key === filters.reportType)?.key || filters.reportType;
+  const selectedCountryName = (countries || []).find(c => c.id === filters.countryId)?.name || "All Countries";
+  const selectedBranchName = (cityBranches || []).find(b => b.id === filters.branchId)?.name || "All Branches";
 
   const handleApplyClick = () => {
     if (onApply) onApply();
