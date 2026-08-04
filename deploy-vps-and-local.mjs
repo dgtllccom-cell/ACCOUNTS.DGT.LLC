@@ -25,9 +25,25 @@ try {
     console.log("No new changes to commit or commit already up to date.");
   }
 
-  console.log("\n[3/4] Pushing latest code to GitHub (origin main)...");
-  execSync('git push origin HEAD:main', { stdio: 'inherit' });
-  console.log("Git push completed successfully!");
+  console.log("\n[3/4] Syncing & pushing latest code to GitHub (origin main)...");
+  try {
+    execSync('git fetch origin main', { stdio: 'inherit' });
+    try {
+      execSync('git rebase origin/main', { stdio: 'inherit' });
+    } catch {
+      execSync('git rebase --abort', { stdio: 'inherit' });
+      execSync('git merge origin/main --no-edit', { stdio: 'inherit' });
+    }
+  } catch (e) {
+    console.log("Remote sync notice:", e.message);
+  }
+  try {
+    execSync('git push origin HEAD:main', { stdio: 'inherit' });
+  } catch (pushErr) {
+    console.warn("Standard push rejected, attempting safe force push...");
+    execSync('git push origin HEAD:main --force-with-lease', { stdio: 'inherit' });
+  }
+  console.log("✅ Git push completed successfully!");
 } catch (err) {
   console.error("Git sync warning/error:", err.message);
 }

@@ -57,22 +57,40 @@ if (env.APP_ENV === "production" && !isProdTarget) {
 function splitSqlStatements(sql) {
   const statements = [];
   let current = '';
+  let inSingleQuote = false;
+  let inDoubleQuote = false;
+  let inLineComment = false;
+  let inBlockComment = false;
   let inDollarQuote = false;
   let dollarTag = '';
   let i = 0;
 
   while (i < sql.length) {
-    // Detect start/end of dollar-quoted block (e.g. $$ or $BODY$)
-    if (!inDollarQuote) {
-      const dollarMatch = sql.slice(i).match(/^\$([A-Za-z_]*)\$/);
-      if (dollarMatch) {
-        dollarTag = dollarMatch[0];
-        inDollarQuote = true;
-        current += dollarTag;
-        i += dollarTag.length;
+    // Line comment
+    if (inLineComment) {
+      current += sql[i];
+      if (sql[i] === '\n') {
+        inLineComment = false;
+      }
+      i++;
+      continue;
+    }
+
+    // Block comment
+    if (inBlockComment) {
+      current += sql[i];
+      if (sql[i] === '*' && sql[i + 1] === '/') {
+        current += '/';
+        i += 2;
+        inBlockComment = false;
         continue;
       }
-    } else {
+      i++;
+      continue;
+    }
+
+    // Dollar quote block ($$ or $BODY$)
+    if (inDollarQuote) {
       if (sql.slice(i).startsWith(dollarTag)) {
         current += dollarTag;
         i += dollarTag.length;
@@ -80,24 +98,101 @@ function splitSqlStatements(sql) {
         dollarTag = '';
         continue;
       }
+      current += sql[i];
+      i++;
+      continue;
     }
 
-    const char = sql[i];
+    // Single quoted string ('...')
+    if (inSingleQuote) {
+      current += sql[i];
+      if (sql[i] === "'") {
+        if (sql[i + 1] === "'") {
+          current += "'";
+          i += 2;
+          continue;
+        } else {
+          inSingleQuote = false;
+        }
+      }
+      i++;
+      continue;
+    }
 
-    if (!inDollarQuote && char === ';') {
-      current += char;
+    // Double quoted identifier ("...")
+    if (inDoubleQuote) {
+      current += sql[i];
+      if (sql[i] === '"') {
+        if (sql[i + 1] === '"') {
+          current += '"';
+          i += 2;
+          continue;
+        } else {
+          inDoubleQuote = false;
+        }
+      }
+      i++;
+      continue;
+    }
+
+    // Start of line comment (-- ...)
+    if (sql[i] === '-' && sql[i + 1] === '-') {
+      inLineComment = true;
+      current += '--';
+      i += 2;
+      continue;
+    }
+
+    // Start of block comment (/* ...)
+    if (sql[i] === '/' && sql[i + 1] === '*') {
+      inBlockComment = true;
+      current += '/*';
+      i += 2;
+      continue;
+    }
+
+    // Start of single quote
+    if (sql[i] === "'") {
+      inSingleQuote = true;
+      current += "'";
+      i++;
+      continue;
+    }
+
+    // Start of double quote
+    if (sql[i] === '"') {
+      inDoubleQuote = true;
+      current += '"';
+      i++;
+      continue;
+    }
+
+    // Start of dollar quote ($$ or $tag$)
+    const dollarMatch = sql.slice(i).match(/^\$([A-Za-z_]*)\$/);
+    if (dollarMatch) {
+      dollarTag = dollarMatch[0];
+      inDollarQuote = true;
+      current += dollarTag;
+      i += dollarTag.length;
+      continue;
+    }
+
+    // Semicolon outside quotes/comments => statement boundary
+    if (sql[i] === ';') {
+      current += ';';
       const trimmed = current.trim();
       if (trimmed && trimmed !== ';') {
         statements.push(trimmed);
       }
       current = '';
-    } else {
-      current += char;
+      i++;
+      continue;
     }
+
+    current += sql[i];
     i++;
   }
 
-  // Handle any trailing statement without a trailing semicolon
   const trailing = current.trim();
   if (trailing && trailing !== ';') {
     statements.push(trailing);
