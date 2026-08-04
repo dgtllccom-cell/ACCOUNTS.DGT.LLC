@@ -5,6 +5,8 @@ import { getCurrentErpSession } from "@/lib/auth/session";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 
+export const dynamic = "force-dynamic";
+
 const roleLabels: Record<string, string> = {
   super_admin: "Super Admin",
   country_admin: "Country Admin",

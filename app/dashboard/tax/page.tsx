@@ -2,6 +2,8 @@ import { Metadata } from "next";
 import { requireErpSession } from "@/lib/auth/session";
 import { CountryTaxManagementView } from "@/features/settings/components/country-tax-management";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Tax Setup & Rates — ERP",
   description: "Configure multi-country tax rates, VAT/GST registration numbers, and defaults per country."

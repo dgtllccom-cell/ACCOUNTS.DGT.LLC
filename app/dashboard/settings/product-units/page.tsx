@@ -3,6 +3,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { ProductUnitsManagementView } from "@/features/settings/components/product-units-management";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Product Units — Master Forms",
   description: "Create and manage product measurement units with five-language support.",
