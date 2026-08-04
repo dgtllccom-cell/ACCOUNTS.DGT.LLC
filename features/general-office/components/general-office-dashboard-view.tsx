@@ -331,7 +331,12 @@ export function GeneralOfficeDashboardView() {
     return () => observer.disconnect();
   }, []);
 
-  const t = useMemo(() => dict[lang] || dict.en, [lang]);
+  // Automatically trigger form modal if navigated directly to master-setup
+  useEffect(() => {
+    if (initialTab === "master-setup") {
+      setShowFormModal(true);
+    }
+  }, [initialTab]);
 
   // Fetch employees from API
   const loadEmployees = useCallback(async () => {
@@ -624,38 +629,8 @@ export function GeneralOfficeDashboardView() {
 
         {/* ── RIGHT PANEL: Active Sub-Module Content (9 cols) ── */}
         <div className="lg:col-span-9 space-y-6">
-          {/* TAB 1: EMPLOYEE MASTER SETUP */}
-          {activeTab === "master-setup" && (
-            <div className="rounded-2xl border bg-card p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b pb-4">
-                <div>
-                  <h2 className="text-lg font-bold">{t.masterSetup}</h2>
-                  <p className="text-xs text-muted-foreground">Register new employee masters, select category packets, assign location scopes and GL ledgers.</p>
-                </div>
-                <Button
-                  onClick={() => {
-                    setSelectedEmployeeId(null);
-                    setShowFormModal(true);
-                  }}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-4 py-2 rounded-xl"
-                >
-                  + {t.registerBtn}
-                </Button>
-              </div>
-
-              <EmployeeForm
-                employeeId={selectedEmployeeId}
-                onSave={() => {
-                  setShowFormModal(false);
-                  loadEmployees().catch(() => null);
-                }}
-                onCancel={() => setShowFormModal(false)}
-              />
-            </div>
-          )}
-
-          {/* TAB 2: EMPLOYEE MANAGEMENT TABLE */}
-          {activeTab === "management" && (
+          {/* TAB 1 & 2: EMPLOYEE MASTER SETUP & MANAGEMENT TABLE DIRECTORY */}
+          {(activeTab === "master-setup" || activeTab === "management") && (
             <div className="space-y-4">
               {/* Search & Filter Toolbar */}
               <div className="rounded-2xl border bg-card p-4 shadow-sm flex flex-wrap items-center gap-3">

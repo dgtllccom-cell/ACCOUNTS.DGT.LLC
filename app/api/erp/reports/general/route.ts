@@ -423,8 +423,7 @@ export async function GET(request: NextRequest) {
         try {
           const { data: dbProfiles } = await admin
             .from("profiles")
-            .select("id, full_name, user_code, created_at")
-            .is("deleted_at", null);
+            .select("id, full_name, user_code, created_at");
 
           const { data: dbAudits } = await admin
             .from("audit_logs")
