@@ -1182,6 +1182,12 @@ export const sidebarTree: SidebarNode[] = [
             roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
           },
           {
+            key: "mgmt-driver-registration",
+            labelKey: "Truck Driver & Owner Master Registration" as any,
+            href: "/dashboard/settings/driver-registration" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+          },
+          {
             key: "mgmt-contract-type",
             labelKey: "nav.contract_type",
             href: "/dashboard/settings/contract-type" as Route
