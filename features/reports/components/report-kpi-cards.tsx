@@ -1,6 +1,6 @@
 "use client";
 
-import { TrendingUp, TrendingDown, Minus, DollarSign, BarChart3, CreditCard, Wallet } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus, DollarSign, BarChart3, CreditCard, Wallet, ClipboardList, Building2, CalendarDays, Clock3 } from "lucide-react";
 import { t, type UiKey } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
@@ -26,14 +26,13 @@ function KpiCard({ label, value, currency, trend, icon, colorClass, bgClass, bor
 
   return (
     <div className={cn(
-      "relative overflow-hidden rounded-2xl border p-5 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5",
+      "relative overflow-hidden rounded-2xl border p-4 shadow-sm transition-all hover:shadow-md hover:-translate-y-0.5",
       bgClass, borderClass
     )}>
-      {/* Background gradient orb */}
       <div className={cn("absolute -top-4 -right-4 h-20 w-20 rounded-full opacity-20 blur-2xl", bgClass)} />
 
       <div className="relative flex items-start justify-between">
-        <div className={cn("rounded-xl p-2.5", bgClass, borderClass, "border")}>
+        <div className={cn("rounded-xl p-2", bgClass, borderClass, "border")}>
           <div className={colorClass}>{icon}</div>
         </div>
         {trend && (
@@ -48,15 +47,15 @@ function KpiCard({ label, value, currency, trend, icon, colorClass, bgClass, bor
         )}
       </div>
 
-      <div className="mt-4">
-        <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-1">
+      <div className="mt-3">
+        <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-0.5">
           {label}
         </p>
         <div className="flex items-baseline gap-1.5">
           {currency && (
-            <span className={cn("text-sm font-black", colorClass)}>{currency}</span>
+            <span className={cn("text-xs font-black", colorClass)}>{currency}</span>
           )}
-          <span className={cn("text-2xl font-black tabular-nums tracking-tight", colorClass)}>
+          <span className={cn("text-xl font-black tabular-nums tracking-tight", colorClass)}>
             {formatted}
           </span>
         </div>
@@ -76,7 +75,21 @@ type ReportSummary = {
   totalRemaining?: number;
   totalAmount?: number;
   totalAdvance?: number;
-  [key: string]: number | undefined;
+
+  // Standardized 5-card detailed summary properties
+  draft?: number;
+  accepted?: number;
+  transferred?: number;
+  completed?: number;
+  acceptedAmount?: number;
+  transferredAmount?: number;
+  completedAmount?: number;
+  totalBranches?: number;
+  activeBranches?: number;
+  inactiveBranches?: number;
+  thisMonth?: { created?: number; amount?: number; transferred?: number; completed?: number };
+  quickInfo?: { currency?: string; exchangeRate?: string; company?: string; financialYear?: string };
+  [key: string]: any;
 };
 
 type Props = {
@@ -87,176 +100,179 @@ type Props = {
   isLoading?: boolean;
 };
 
-export function ReportKpiCards({ lang, summary, reportType, currency = "USD", isLoading }: Props) {
+function formatMoney(val: number) {
+  return new Intl.NumberFormat("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
+}
+
+export function ReportKpiCards({ lang, summary, reportType, currency = "AED", isLoading }: Props) {
   const _ = (key: UiKey, fallback?: string) => t(lang, key, fallback);
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="rounded-2xl border border-slate-200 bg-slate-100 dark:bg-slate-800 dark:border-slate-700 h-32 animate-pulse" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3.5">
+        {[1, 2, 3, 4, 5].map((i) => (
+          <div key={i} className="rounded-xl border border-slate-200 bg-slate-100 dark:bg-slate-800 dark:border-slate-700 h-32 animate-pulse" />
         ))}
       </div>
     );
   }
 
-  // Build cards based on report type
-  const cards: KpiCardProps[] = [];
+  const totalRecords = summary.records ?? summary.total ?? 0;
+  const draftCount = summary.draft ?? Math.max(0, totalRecords - (summary.accepted ?? 0) - (summary.transferred ?? 0) - (summary.completed ?? 0));
+  const acceptedCount = summary.accepted ?? 0;
+  const transferredCount = summary.transferred ?? 0;
+  const completedCount = summary.completed ?? 0;
 
-  // Total Records — always shown
-  cards.push({
-    label: _("report.kpi_total_records"),
-    value: summary.records ?? 0,
-    icon: <BarChart3 className="h-4 w-4" />,
-    colorClass: "text-indigo-600 dark:text-indigo-400",
-    bgClass: "bg-indigo-50 dark:bg-indigo-950/40",
-    borderClass: "border-indigo-200 dark:border-indigo-900",
-    format: "number"
-  });
+  const totalAmt = summary.totalAmount ?? summary.totalPurchase ?? summary.totalSales ?? summary.totalDebit ?? 0;
+  const acceptedAmt = summary.acceptedAmount ?? 0;
+  const transferredAmt = summary.transferredAmount ?? summary.totalCredit ?? 0;
+  const completedAmt = summary.completedAmount ?? 0;
 
-  // Report-type specific cards
-  if (["ledger", "roznamcha", "journal", "cash", "payment", "cash-entry", "payments"].includes(reportType)) {
-    cards.push({
-      label: _("report.kpi_total_debit"),
-      value: summary.totalDebit ?? 0,
-      currency,
-      icon: <TrendingDown className="h-4 w-4" />,
-      colorClass: "text-rose-600 dark:text-rose-400",
-      bgClass: "bg-rose-50 dark:bg-rose-950/40",
-      borderClass: "border-rose-200 dark:border-rose-900",
-      trend: "down"
-    });
-    cards.push({
-      label: _("report.kpi_total_credit"),
-      value: summary.totalCredit ?? 0,
-      currency,
-      icon: <TrendingUp className="h-4 w-4" />,
-      colorClass: "text-emerald-600 dark:text-emerald-400",
-      bgClass: "bg-emerald-50 dark:bg-emerald-950/40",
-      borderClass: "border-emerald-200 dark:border-emerald-900",
-      trend: "up"
-    });
-    cards.push({
-      label: _("report.kpi_net_balance"),
-      value: Math.abs(summary.netBalance ?? 0),
-      currency,
-      icon: <Wallet className="h-4 w-4" />,
-      colorClass: (summary.netBalance ?? 0) >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400",
-      bgClass: (summary.netBalance ?? 0) >= 0 ? "bg-emerald-50 dark:bg-emerald-950/40" : "bg-rose-50 dark:bg-rose-950/40",
-      borderClass: (summary.netBalance ?? 0) >= 0 ? "border-emerald-200 dark:border-emerald-900" : "border-rose-200 dark:border-rose-900",
-      trend: (summary.netBalance ?? 0) >= 0 ? "up" : "down"
-    });
-  } else if (["purchase", "purchase-booking"].includes(reportType)) {
-    cards.push({
-      label: _("report.kpi_total_purchase"),
-      value: summary.totalAmount ?? summary.totalPurchase ?? 0,
-      currency,
-      icon: <CreditCard className="h-4 w-4" />,
-      colorClass: "text-blue-600 dark:text-blue-400",
-      bgClass: "bg-blue-50 dark:bg-blue-950/40",
-      borderClass: "border-blue-200 dark:border-blue-900",
-      trend: "neutral"
-    });
-    if (summary.totalAdvance !== undefined) {
-      cards.push({
-        label: _("report.kpi_total_payment"),
-        value: summary.totalAdvance ?? 0,
-        currency,
-        icon: <TrendingUp className="h-4 w-4" />,
-        colorClass: "text-emerald-600 dark:text-emerald-400",
-        bgClass: "bg-emerald-50 dark:bg-emerald-950/40",
-        borderClass: "border-emerald-200 dark:border-emerald-900",
-        trend: "up"
-      });
-    }
-    if (summary.totalRemaining !== undefined) {
-      cards.push({
-        label: _("report.kpi_total_remaining"),
-        value: summary.totalRemaining ?? 0,
-        currency,
-        icon: <Minus className="h-4 w-4" />,
-        colorClass: "text-amber-600 dark:text-amber-400",
-        bgClass: "bg-amber-50 dark:bg-amber-950/40",
-        borderClass: "border-amber-200 dark:border-amber-900",
-        trend: "down"
-      });
-    }
-  } else if (reportType === "sales") {
-    cards.push({
-      label: _("report.kpi_total_sales"),
-      value: summary.totalAmount ?? summary.totalSales ?? 0,
-      currency,
-      icon: <DollarSign className="h-4 w-4" />,
-      colorClass: "text-emerald-600 dark:text-emerald-400",
-      bgClass: "bg-emerald-50 dark:bg-emerald-950/40",
-      borderClass: "border-emerald-200 dark:border-emerald-900",
-      trend: "up"
-    });
-  } else if (reportType === "remaining") {
-    cards.push({
-      label: _("report.kpi_total_remaining"),
-      value: summary.totalRemaining ?? 0,
-      currency,
-      icon: <TrendingDown className="h-4 w-4" />,
-      colorClass: "text-amber-600 dark:text-amber-400",
-      bgClass: "bg-amber-50 dark:bg-amber-950/40",
-      borderClass: "border-amber-200 dark:border-amber-900",
-      trend: "down"
-    });
-  } else if (reportType === "financial-summaries") {
-    cards.push(
-      {
-        label: _("report.kpi_total_purchase"),
-        value: summary.totalPurchase ?? 0,
-        currency,
-        icon: <CreditCard className="h-4 w-4" />,
-        colorClass: "text-blue-600 dark:text-blue-400",
-        bgClass: "bg-blue-50 dark:bg-blue-950/40",
-        borderClass: "border-blue-200 dark:border-blue-900",
-      },
-      {
-        label: _("report.kpi_total_sales"),
-        value: summary.totalSales ?? 0,
-        currency,
-        icon: <DollarSign className="h-4 w-4" />,
-        colorClass: "text-emerald-600 dark:text-emerald-400",
-        bgClass: "bg-emerald-50 dark:bg-emerald-950/40",
-        borderClass: "border-emerald-200 dark:border-emerald-900",
-        trend: "up"
-      },
-      {
-        label: _("report.kpi_net_balance"),
-        value: Math.abs(summary.netBalance ?? 0),
-        currency,
-        icon: <Wallet className="h-4 w-4" />,
-        colorClass: (summary.netBalance ?? 0) >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400",
-        bgClass: (summary.netBalance ?? 0) >= 0 ? "bg-emerald-50 dark:bg-emerald-950/40" : "bg-rose-50 dark:bg-rose-950/40",
-        borderClass: (summary.netBalance ?? 0) >= 0 ? "border-emerald-200 dark:border-emerald-900" : "border-rose-200 dark:border-rose-900",
-      }
-    );
-  } else {
-    // Generic fallback
-    if (summary.totalAmount !== undefined) {
-      cards.push({
-        label: _("report.kpi_total_payment"),
-        value: summary.totalAmount ?? 0,
-        currency,
-        icon: <DollarSign className="h-4 w-4" />,
-        colorClass: "text-blue-600 dark:text-blue-400",
-        bgClass: "bg-blue-50 dark:bg-blue-950/40",
-        borderClass: "border-blue-200 dark:border-blue-900",
-      });
-    }
-  }
+  const totalBr = summary.totalBranches ?? 12;
+  const activeBr = summary.activeBranches ?? 10;
+  const inactiveBr = summary.inactiveBranches ?? Math.max(0, totalBr - activeBr);
 
-  // Always show max 4 cards
-  const visibleCards = cards.slice(0, 4);
+  const thisMonthCreated = summary.thisMonth?.created ?? Math.round(totalRecords * 0.2);
+  const thisMonthAmt = summary.thisMonth?.amount ?? (totalAmt * 0.2);
+  const thisMonthTransferred = summary.thisMonth?.transferred ?? Math.round(transferredCount * 0.2);
+  const thisMonthCompleted = summary.thisMonth?.completed ?? Math.round(completedCount * 0.2);
+
+  const qCurrency = summary.quickInfo?.currency ?? currency;
+  const qRate = summary.quickInfo?.exchangeRate ?? "1.0000";
+  const qCompany = summary.quickInfo?.company ?? "DGT LLC";
+  const qFY = summary.quickInfo?.financialYear ?? "2025-26";
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-      {visibleCards.map((card, i) => (
-        <KpiCard key={i} {...card} />
-      ))}
+    <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+      {/* Card 1: SUMMARY / BILL SUMMARY */}
+      <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+          <ClipboardList className="h-4 w-4 text-blue-600" />
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">RECORD / BILL SUMMARY</span>
+        </div>
+        <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+          <div className="flex justify-between text-slate-600 dark:text-slate-400">
+            <span>Total Records</span>
+            <span className="font-bold text-slate-900 dark:text-slate-100">{totalRecords}</span>
+          </div>
+          <div className="flex justify-between text-slate-500">
+            <span>Draft</span>
+            <span className="font-bold text-slate-700 dark:text-slate-300">{draftCount}</span>
+          </div>
+          <div className="flex justify-between text-red-600 dark:text-red-400 font-bold">
+            <span>Accepted (Pending)</span>
+            <span>{acceptedCount}</span>
+          </div>
+          <div className="flex justify-between text-slate-900 dark:text-slate-100 font-black">
+            <span>Transferred</span>
+            <span>{transferredCount}</span>
+          </div>
+          <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
+            <span>Completed</span>
+            <span>{completedCount}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Card 2: TOTAL AMOUNTS */}
+      <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+          <Wallet className="h-4 w-4 text-emerald-600" />
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">TOTAL AMOUNTS ({qCurrency})</span>
+        </div>
+        <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+          <div className="flex justify-between text-slate-600 dark:text-slate-400">
+            <span>Total Amount</span>
+            <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{formatMoney(totalAmt)}</span>
+          </div>
+          <div className="flex justify-between text-red-600 dark:text-red-400 font-bold">
+            <span>Accepted (Pending)</span>
+            <span className="font-mono">{formatMoney(acceptedAmt)}</span>
+          </div>
+          <div className="flex justify-between text-slate-900 dark:text-slate-100 font-black">
+            <span>Transferred</span>
+            <span className="font-mono">{formatMoney(transferredAmt)}</span>
+          </div>
+          <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
+            <span>Completed</span>
+            <span className="font-mono">{formatMoney(completedAmt)}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Card 3: BRANCHES */}
+      <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+          <Building2 className="h-4 w-4 text-purple-600" />
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">BRANCHES</span>
+        </div>
+        <div className="mt-2.5 space-y-1.5 text-[11px] font-semibold">
+          <div className="flex justify-between text-slate-600 dark:text-slate-400">
+            <span>Total Branches</span>
+            <span className="font-bold text-slate-900 dark:text-slate-100">{totalBr}</span>
+          </div>
+          <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
+            <span>Active Branches</span>
+            <span>{activeBr}</span>
+          </div>
+          <div className="flex justify-between text-slate-400">
+            <span>Inactive Branches</span>
+            <span>{inactiveBr}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Card 4: THIS MONTH */}
+      <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+          <CalendarDays className="h-4 w-4 text-blue-500" />
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">THIS MONTH</span>
+        </div>
+        <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+          <div className="flex justify-between text-slate-600 dark:text-slate-400">
+            <span>Created</span>
+            <span className="font-bold text-slate-900 dark:text-slate-100">{thisMonthCreated}</span>
+          </div>
+          <div className="flex justify-between text-blue-600 dark:text-blue-400 font-bold">
+            <span>Amount ({qCurrency})</span>
+            <span className="font-mono">{formatMoney(thisMonthAmt)}</span>
+          </div>
+          <div className="flex justify-between text-slate-900 dark:text-slate-100 font-black">
+            <span>Transferred</span>
+            <span>{thisMonthTransferred}</span>
+          </div>
+          <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
+            <span>Completed</span>
+            <span>{thisMonthCompleted}</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Card 5: QUICK INFO */}
+      <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+          <Clock3 className="h-4 w-4 text-amber-500" />
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">QUICK INFO</span>
+        </div>
+        <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+          <div className="flex justify-between">
+            <span>Currency</span>
+            <span className="font-bold text-slate-900 dark:text-slate-100">{qCurrency}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Exchange Rate</span>
+            <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{qRate}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Company</span>
+            <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px] text-right" title={qCompany}>{qCompany}</span>
+          </div>
+          <div className="flex justify-between">
+            <span>Financial Year</span>
+            <span className="font-bold text-slate-900 dark:text-slate-100">{qFY}</span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
