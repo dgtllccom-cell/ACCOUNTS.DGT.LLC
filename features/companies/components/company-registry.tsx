@@ -4,12 +4,15 @@ import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { printStore } from "@/lib/store/print-store";
 import type { Route } from "next";
-import { Building2, Plus, Search, Eye, PencilLine, Printer, Trash2, X, MoreVertical, Loader2 } from "lucide-react";
+import { Building2, Plus, Search, Eye, PencilLine, Printer, Trash2, X, MoreVertical, Loader2, ArrowLeft, Users, FileText, Layers, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiGet, apiDelete } from "@/lib/api/client";
 import type { CompanyRow } from "@/lib/repositories/companies-repository";
+import { ReportFilterBar, type ReportFilterValues } from "@/features/reports/components/report-filter-bar";
+import { ReportPagination } from "@/features/reports/components/report-pagination";
+import { ReportStatusLegend } from "@/features/reports/components/report-status-legend";
 
 export type CompanyDisplayRecord = {
   id: string;
@@ -33,9 +36,9 @@ function mapDbRowToDisplayRecord(c: CompanyRow): CompanyDisplayRecord {
     ownerName: c.owner_name || "-",
     companyName: c.name || "-",
     businessName: c.legal_name || "-",
-    country: c.country_name || "",
-    state: c.state_name || "",
-    city: c.city_name || c.district_name || "",
+    country: c.country_name || "Pakistan",
+    state: c.state_name || "-",
+    city: c.city_name || c.district_name || "-",
     zipCode: c.zip_code || "",
     address: c.address || "",
     contacts: (c.contacts || []).map((x, i) => ({
@@ -63,9 +66,25 @@ export function CompanyRegistry() {
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewingCompany, setViewingCompany] = useState<CompanyDisplayRecord | null>(null);
+  const [selectedOwnerGroup, setSelectedOwnerGroup] = useState<{ ownerName: string; companies: CompanyDisplayRecord[] } | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
 
-  // Close dropdown on click outside
+  // Pagination
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+
+  // Filters
+  const [filters, setFilters] = useState<ReportFilterValues>({
+    countryId: "all",
+    mainBranchId: "all",
+    branchId: "all",
+    fromDate: "",
+    toDate: "",
+    currency: "USD",
+    userId: "all",
+    reportType: "company"
+  });
+
   useEffect(() => {
     function handleOutsideClick() {
       setOpenMenuId(null);
@@ -78,7 +97,6 @@ export function CompanyRegistry() {
     }
   }, [openMenuId]);
 
-  // Load companies directly from API database
   async function loadCompaniesFromDb() {
     setLoading(true);
     try {
@@ -97,12 +115,24 @@ export function CompanyRegistry() {
     loadCompaniesFromDb();
   }, []);
 
+  // Group companies by Owner Name to count companies per owner
+  const ownerGroupedMap = useMemo(() => {
+    const map = new Map<string, CompanyDisplayRecord[]>();
+    for (const c of savedCompanies) {
+      const key = (c.ownerName || "Unknown Owner").trim().toUpperCase();
+      const existing = map.get(key) || [];
+      existing.push(c);
+      map.set(key, existing);
+    }
+    return map;
+  }, [savedCompanies]);
+
   const stats = useMemo(() => {
     const total = savedCompanies.length;
-    const totalContacts = savedCompanies.reduce((acc, c) => acc + c.contacts.length, 0);
-    const totalRegs = savedCompanies.reduce((acc, c) => acc + c.registrations.length, 0);
-    return { total, totalContacts, totalRegs };
-  }, [savedCompanies]);
+    const totalOwners = ownerGroupedMap.size;
+    const multiCompanyOwners = Array.from(ownerGroupedMap.values()).filter((arr) => arr.length > 1).length;
+    return { total, totalOwners, multiCompanyOwners };
+  }, [savedCompanies, ownerGroupedMap]);
 
   const filteredCompanies = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
@@ -117,13 +147,16 @@ export function CompanyRegistry() {
     );
   }, [searchQuery, savedCompanies]);
 
+  const paginatedCompanies = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredCompanies.slice(start, start + pageSize);
+  }, [filteredCompanies, page, pageSize]);
+
   async function handleDelete(id: string) {
     if (!window.confirm("Are you sure you want to delete this company from the database?")) return;
     try {
       await apiDelete(`/api/erp/companies/${id}`);
-      if (viewingCompany?.id === id) {
-        setViewingCompany(null);
-      }
+      if (viewingCompany?.id === id) setViewingCompany(null);
       loadCompaniesFromDb();
     } catch (err: any) {
       alert(`Failed to delete company: ${err.message || String(err)}`);
@@ -139,403 +172,46 @@ export function CompanyRegistry() {
       ? `<ul>` + c.registrations.map((x) => `<li><strong>${x.type}</strong><span>${x.value}</span></li>`).join("") + `</ul>`
       : `<div style="font-size: 11px; font-style: italic; color: #94a3b8; text-align: center; margin-top: 10px;">No registered tax credentials</div>`;
 
-    const idsHTML = c.ownerIds.length > 0
-      ? `<ul>` + c.ownerIds.map((x) => `<li><strong>${x.type}</strong><span>${x.value}</span></li>`).join("") + `</ul>`
-      : `<div style="font-size: 11px; font-style: italic; color: #94a3b8; text-align: center; margin-top: 10px;">No verified owner identifiers</div>`;
-
     const html = `
       <!DOCTYPE html>
       <html>
         <head>
           <title>Certificate of Incorporation - ${c.companyName}</title>
           <style>
-            @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;800&family=Inter:wght@300;400;500;600;700&display=swap');
-            
-            * { box-sizing: border-box; }
-            body {
-              font-family: 'Inter', system-ui, -apple-system, sans-serif;
-              color: #1e293b;
-              background-color: #ffffff;
-              margin: 0;
-              padding: 40px;
-              line-height: 1.5;
-              -webkit-print-color-adjust: exact;
-              print-color-adjust: exact;
-            }
-            
-            .certificate-container {
-              border: 4px double #1e3a8a;
-              padding: 30px;
-              position: relative;
-              background-color: #fafaf9;
-              min-height: calc(100vh - 80px);
-              display: flex;
-              flex-direction: column;
-              justify-content: space-between;
-            }
-            
-            .certificate-inner-border {
-              border: 1px solid #94a3b8;
-              padding: 24px;
-              height: 100%;
-              display: flex;
-              flex-direction: column;
-              justify-content: space-between;
-            }
-            
-            .watermark {
-              position: absolute;
-              top: 50%;
-              left: 50%;
-              transform: translate(-50%, -50%) rotate(-30deg);
-              font-size: 80px;
-              font-weight: 800;
-              color: rgba(226, 232, 240, 0.35);
-              text-transform: uppercase;
-              pointer-events: none;
-              letter-spacing: 0.1em;
-              white-space: nowrap;
-              font-family: 'Cinzel', serif;
-            }
-            
-            .header {
-              text-align: center;
-              margin-bottom: 25px;
-            }
-            
-            .crest {
-              display: inline-block;
-              margin-bottom: 12px;
-            }
-            
-            .org-title {
-              font-family: 'Cinzel', serif;
-              font-size: 16px;
-              letter-spacing: 0.15em;
-              color: #1e3a8a;
-              margin: 0 0 4px 0;
-              text-transform: uppercase;
-            }
-            
-            .cert-title {
-              font-family: 'Cinzel', serif;
-              font-size: 28px;
-              font-weight: 700;
-              color: #0f172a;
-              margin: 0;
-              letter-spacing: 0.05em;
-            }
-            
-            .cert-subtitle {
-              font-size: 11px;
-              text-transform: uppercase;
-              letter-spacing: 0.2em;
-              color: #64748b;
-              margin-top: 4px;
-            }
-            
-            .statement {
-              text-align: center;
-              font-size: 13px;
-              color: #334155;
-              max-width: 650px;
-              margin: 0 auto 30px auto;
-              line-height: 1.6;
-            }
-            
-            .company-highlight {
-              display: block;
-              font-family: 'Cinzel', serif;
-              font-size: 22px;
-              font-weight: 800;
-              color: #1e3a8a;
-              margin: 10px 0;
-              letter-spacing: 0.05em;
-            }
-            
-            .grid {
-              display: grid;
-              grid-template-columns: 1fr 1fr;
-              gap: 20px;
-              margin-bottom: 20px;
-            }
-            
-            .card {
-              border: 1px solid #e2e8f0;
-              border-radius: 8px;
-              padding: 16px;
-              background-color: #ffffff;
-            }
-            
-            .card-title {
-              font-size: 11px;
-              font-weight: 700;
-              text-transform: uppercase;
-              letter-spacing: 0.1em;
-              color: #1e3a8a;
-              margin: 0 0 12px 0;
-              border-b: 1px solid #f1f5f9;
-              padding-bottom: 6px;
-            }
-            
-            .field {
-              margin-bottom: 8px;
-            }
-            
-            .field:last-child {
-              margin-bottom: 0;
-            }
-            
-            .label {
-              font-size: 9.5px;
-              text-transform: uppercase;
-              color: #64748b;
-              font-weight: 600;
-            }
-            
-            .value {
-              font-size: 12px;
-              font-weight: 600;
-              color: #0f172a;
-            }
-            
-            ul {
-              list-style: none;
-              padding: 0;
-              margin: 0;
-            }
-            
-            li {
-              font-size: 11px;
-              display: flex;
-              justify-content: space-between;
-              padding: 4px 0;
-              border-bottom: 1px dashed #f1f5f9;
-            }
-            
-            li:last-child {
-              border-bottom: none;
-            }
-            
-            li strong {
-              color: #475569;
-            }
-            
-            li span {
-              font-family: monospace;
-              font-weight: 600;
-              color: #0f172a;
-            }
-            
-            .footer-controls {
-              margin-top: 30px;
-              display: flex;
-              justify-content: space-between;
-              align-items: flex-end;
-              padding-top: 20px;
-              border-top: 1px solid #e2e8f0;
-            }
-            
-            .seal-box {
-              display: flex;
-              align-items: center;
-              gap: 12px;
-            }
-            
-            .seal {
-              width: 70px;
-              height: 70px;
-              border: 2px solid #b45309;
-              border-radius: 50%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              text-align: center;
-              font-size: 7px;
-              font-weight: 800;
-              color: #b45309;
-              text-transform: uppercase;
-              letter-spacing: 0.05em;
-              position: relative;
-              background-color: rgba(251, 191, 36, 0.05);
-            }
-            
-            .seal-inner {
-              width: 60px;
-              height: 60px;
-              border: 1px dashed #b45309;
-              border-radius: 50%;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              padding: 4px;
-            }
-            
-            .seal-text {
-              transform: rotate(-5deg);
-            }
-            
-            .meta-info {
-              font-size: 9px;
-              color: #64748b;
-              line-height: 1.4;
-            }
-            
-            .signature-box {
-              text-align: center;
-              width: 150px;
-            }
-            
-            .signature-line {
-              border-bottom: 1.5px solid #0f172a;
-              height: 25px;
-              margin-bottom: 6px;
-            }
-            
-            .signature-title {
-              font-size: 9.5px;
-              font-weight: 700;
-              text-transform: uppercase;
-              color: #475569;
-              letter-spacing: 0.05em;
-            }
-            
-            @media print {
-              body {
-                padding: 0;
-                background-color: transparent;
-              }
-              .certificate-container {
-                min-height: 100vh;
-                border-color: #1e3a8a !important;
-              }
-              @page {
-                size: A4 portrait;
-                margin: 12mm;
-              }
-            }
+            @page { size: A4 portrait; margin: 12mm; }
+            body { font-family: system-ui, sans-serif; color: #0f172a; margin: 0; padding: 20px; background: #f8fafc; }
+            .certificate-container { border: 2px solid #1e3a8a; padding: 30px; border-radius: 12px; background: #ffffff; max-width: 800px; margin: 0 auto; }
+            .header { border-bottom: 2px solid #1e3a8a; padding-bottom: 15px; margin-bottom: 20px; text-align: center; }
+            .org-title { font-size: 18px; font-weight: 800; color: #1e3a8a; text-transform: uppercase; margin: 0; }
+            .cert-title { font-size: 24px; font-weight: 900; color: #0f172a; margin-top: 4px; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; }
+            .card { border: 1px solid #cbd5e1; border-radius: 8px; padding: 14px; background: #ffffff; }
+            .card-title { font-size: 11px; font-weight: 800; text-transform: uppercase; color: #1e3a8a; margin-bottom: 8px; border-b: 1px solid #e2e8f0; pb: 4px; }
+            .field { margin-bottom: 8px; }
+            .label { font-size: 9px; uppercase; color: #64748b; font-weight: 700; }
+            .value { font-size: 12px; font-weight: 700; color: #0f172a; }
           </style>
         </head>
         <body>
           <div class="certificate-container">
-            <div class="certificate-inner-border">
-              <div class="watermark">DAMAAN ERP</div>
-              
-              <div>
-                <div class="header">
-                  <div class="crest">
-                    <svg viewBox="0 0 24 24" width="48" height="48" style="color: #1e3a8a; fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin="round;">
-                      <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
-                      <line x1="9" y1="22" x2="9" y2="16"></line>
-                      <line x1="15" y1="22" x2="15" y2="16"></line>
-                      <line x1="9" y1="16" x2="15" y2="16"></line>
-                      <path d="M8 6h.01M16 6h.01M8 10h.01M16 10h.01M12 6h.01M12 10h.01M8 14h.01M16 14h.01M12 14h.01"></path>
-                    </svg>
-                  </div>
-                  <h2 class="org-title">Damaan Business Group ERP</h2>
-                  <h1 class="cert-title">Certificate of Incorporation</h1>
-                  <div class="cert-subtitle">Official Corporate Registry Record</div>
-                </div>
-                
-                <div class="statement">
-                  This document serves as formal confirmation that the business entity listed below is registered and active in the central management system. All details below correspond to the certified registry entries filed under official ownership.
-                  <span class="company-highlight">${c.companyName}</span>
-                  <strong>Jurisdiction:</strong> ${[c.city, c.state, c.country].filter(Boolean).join(", ") || "N/A"}
-                </div>
-                
-                <div class="grid">
-                  <div class="card">
-                    <h3 class="card-title">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></svg>
-                      Entity Details
-                    </h3>
-                    <div class="field">
-                      <div class="label">Legal Name</div>
-                      <div class="value">${c.companyName}</div>
-                    </div>
-                    <div class="field">
-                      <div class="label">Trade / Business Name</div>
-                      <div class="value">${c.businessName || "-"}</div>
-                    </div>
-                    <div class="field">
-                      <div class="label">Primary Owner / Director</div>
-                      <div class="value">${c.ownerName}</div>
-                    </div>
-                  </div>
-                  
-                  <div class="card">
-                    <h3 class="card-title">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M12 2a8 8 0 0 0-8 8c0 5.25 8 12 8 12s8-6.75 8-12a8 8 0 0 0-8-8z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                      Registered Address
-                    </h3>
-                    <div class="field">
-                      <div class="label">Physical Address</div>
-                      <div class="value" style="font-size: 11px; font-weight: 500;">${c.address || "-"}</div>
-                    </div>
-                    <div class="field">
-                      <div class="label">Postal / Zip Code</div>
-                      <div class="value" style="font-family: monospace;">${c.zipCode || "-"}</div>
-                    </div>
-                    <div class="field">
-                      <div class="label">Jurisdiction Region</div>
-                      <div class="value">${[c.city, c.state, c.country].filter(Boolean).join(", ") || "-"}</div>
-                    </div>
-                  </div>
-                  
-                  <div class="card">
-                    <h3 class="card-title">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path></svg>
-                      Contact Directory
-                    </h3>
-                    ${contactsHTML}
-                  </div>
-                  
-                  <div class="card">
-                    <h3 class="card-title">
-                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                      Registrations & Tax
-                    </h3>
-                    ${regsHTML}
-                  </div>
-                </div>
-
-                <div class="card" style="margin-top: 20px;">
-                  <h3 class="card-title">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:inline-block; vertical-align:middle; margin-right:4px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                    Owner Identification & Verification
-                  </h3>
-                  ${idsHTML}
-                </div>
+            <div class="header">
+              <h2 class="org-title">Damaan Business Group ERP</h2>
+              <h1 class="cert-title">Certificate of Incorporation</h1>
+            </div>
+            <div class="grid">
+              <div class="card">
+                <div class="card-title">Company & Owner Info</div>
+                <div class="field"><div class="label">Company Name</div><div class="value">${c.companyName}</div></div>
+                <div class="field"><div class="label">Owner Name</div><div class="value">${c.ownerName}</div></div>
               </div>
-              
-              <div class="footer-controls">
-                <div class="seal-box">
-                  <div class="seal">
-                    <div class="seal-inner">
-                      <span class="seal-text">DAMAAN<br>OFFICIAL<br>SEAL</span>
-                    </div>
-                  </div>
-                  <div class="meta-info">
-                    <strong>Document ID:</strong> REG-${c.id.substring(0, 8).toUpperCase()}<br>
-                    <strong>Generated On:</strong> ${new Date().toLocaleString()}<br>
-                    <strong>Status:</strong> Active & Incorporated
-                  </div>
-                </div>
-                
-                <div class="signature-box">
-                  <div class="signature-line"></div>
-                  <div class="signature-title">Authorized Officer</div>
-                </div>
+              <div class="card">
+                <div class="card-title">Location & Contact</div>
+                <div class="field"><div class="label">Address</div><div class="value">${c.address || "-"}</div></div>
+                <div class="field"><div class="label">Jurisdiction</div><div class="value">${[c.city, c.state, c.country].filter(Boolean).join(", ")}</div></div>
               </div>
             </div>
           </div>
-          
-          <script>
-            window.onload = function() {
-              window.print();
-              setTimeout(function() { window.close(); }, 500);
-            };
-          </script>
+          <script>window.onload = function() { window.print(); };</script>
         </body>
       </html>
     `;
@@ -543,352 +219,366 @@ export function CompanyRegistry() {
   }
 
   return (
-    <div className="space-y-6">
-      {/* Title & Stats */}
-      <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Settings / Company</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
-            Company Management
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            Manage incorporated business entities, registration numbers, contact directories, and owners directly from database.
-          </p>
+    <div className="space-y-5 text-slate-900 dark:text-slate-100">
+      
+      {/* Top Header Bar with Back Button, Popover Filter Curtain, and Incorporate Action */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b pb-4 border-slate-200 dark:border-slate-800">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => window.history.back()}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 shadow-sm"
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </button>
+          <div>
+            <span className="text-[10px] font-black uppercase tracking-widest text-blue-600 dark:text-blue-400">Settings / Company</span>
+            <h1 className="text-xl font-black tracking-tight">Company Management Registry</h1>
+            <p className="text-xs text-slate-500 font-medium">Manage incorporated business entities, owners, registration numbers, and locations.</p>
+          </div>
         </div>
-        <Button
-          type="button"
-          onClick={() => router.push("/dashboard/settings/company-setup" as Route)}
-          className="gap-2 self-start md:self-auto bg-primary text-white hover:bg-primary-dark font-medium shadow-sm"
-        >
-          <Plus className="h-4 w-4" />
-          Incorporate New Company
-        </Button>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <ReportFilterBar
+            lang="en"
+            filters={filters}
+            onFilterChange={(k, v) => setFilters(prev => ({ ...prev, [k]: v }))}
+            onReset={() => setFilters({ countryId: "all", mainBranchId: "all", branchId: "all", fromDate: "", toDate: "", currency: "USD", userId: "all", reportType: "company" })}
+            onApply={loadCompaniesFromDb}
+            countries={[{ id: "pk", name: "Pakistan" }, { id: "uae", name: "UAE" }]}
+            mainBranches={[]}
+            cityBranches={[]}
+          />
+
+          <Button
+            type="button"
+            onClick={() => router.push("/dashboard/settings/company-setup" as Route)}
+            className="gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold h-10 px-4 rounded-xl text-xs shadow-md"
+          >
+            <Plus className="h-4 w-4" />
+            + Incorporate New Company
+          </Button>
+        </div>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="rounded-xl border shadow-sm bg-white">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Incorporated Companies</p>
-              <p className="mt-1.5 text-2xl font-bold text-slate-900">{stats.total}</p>
+      {/* STANDARDIZED 5 KPI SUMMARY CARDS GRID */}
+      <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+        {/* MANDATORY Card 1: BRANCH & USER DETAILS */}
+        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <Users className="h-4 w-4 text-blue-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. BRANCH & USER DETAILS</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+            <div className="flex justify-between">
+              <span>Country:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">Pakistan</span>
             </div>
-            <div className="p-3 bg-blue-50 rounded-lg text-blue-600">
-              <Building2 className="h-5 w-5" />
+            <div className="flex justify-between">
+              <span>Branch Name:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 uppercase">Karachi Main</span>
             </div>
-          </CardContent>
-        </Card>
-        <Card className="rounded-xl border shadow-sm bg-white">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Contact Records</p>
-              <p className="mt-1.5 text-2xl font-bold text-slate-900">{stats.totalContacts}</p>
+            <div className="flex justify-between">
+              <span>User ID / Name:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]" title="USR-001 (Admin User)">USR-001 (Admin)</span>
             </div>
-            <div className="p-3 bg-emerald-50 rounded-lg text-emerald-600">
-              <Plus className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card className="rounded-xl border shadow-sm bg-white">
-          <CardContent className="p-4 flex items-center justify-between">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-500">Tax Registrations</p>
-              <p className="mt-1.5 text-2xl font-bold text-slate-900">{stats.totalRegs}</p>
-            </div>
-            <div className="p-3 bg-amber-50 rounded-lg text-amber-600">
-              <Printer className="h-5 w-5" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Main Table */}
-      <Card className="rounded-xl border shadow-sm overflow-hidden bg-white">
-        <CardHeader className="border-b px-5 py-4 bg-slate-50/50">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <CardTitle className="text-base font-semibold text-slate-800">Incorporated Companies Registry</CardTitle>
-              <p className="text-xs text-muted-foreground mt-0.5">Real-time database records of all incorporated business entities in the system.</p>
-            </div>
-            <div className="relative w-64">
-              <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search company registry..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 h-9 text-xs bg-white text-slate-900 border-slate-200 focus:border-primary"
-              />
+            <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
+              <span>Status:</span>
+              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px]">Active Session</span>
             </div>
           </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-slate-100 text-slate-700 uppercase font-semibold border-b border-slate-200">
+        </div>
+
+        {/* Card 2: INCORPORATED COMPANIES SUMMARY */}
+        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <Building2 className="h-4 w-4 text-emerald-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">2. COMPANIES SUMMARY</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+            <div className="flex justify-between text-slate-600 dark:text-slate-400">
+              <span>Total Incorporated:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{stats.total}</span>
+            </div>
+            <div className="flex justify-between text-emerald-600 font-bold">
+              <span>Total Owners:</span>
+              <span>{stats.totalOwners}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: OWNER & ENTITY BREAKDOWN */}
+        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <Layers className="h-4 w-4 text-purple-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. OWNER BREAKDOWN</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+            <div className="flex justify-between text-indigo-600 font-bold">
+              <span>Multi-Company Owners:</span>
+              <span>{stats.multiCompanyOwners}</span>
+            </div>
+            <div className="flex justify-between text-slate-500">
+              <span>Single Owners:</span>
+              <span>{stats.totalOwners - stats.multiCompanyOwners}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: BRANCHES */}
+        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <Building2 className="h-4 w-4 text-indigo-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. BRANCHES</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+            <div className="flex justify-between text-slate-600 dark:text-slate-400">
+              <span>Total Branches:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">12</span>
+            </div>
+            <div className="flex justify-between text-emerald-600 font-bold">
+              <span>Active Branches:</span>
+              <span>10</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 5: QUICK INFO */}
+        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <FileText className="h-4 w-4 text-amber-500" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">5. QUICK INFO</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+            <div className="flex justify-between">
+              <span>Currency:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">USD</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Company:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]">DGT LLC</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Financial Year:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">2025-26</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div className="relative">
+        <Search className="absolute left-3.5 top-3 h-4 w-4 text-slate-400" />
+        <Input
+          placeholder="Search by owner name, company name, city, country..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10 h-10 text-xs font-bold bg-white text-slate-900 border-slate-200 shadow-sm rounded-xl"
+        />
+      </div>
+
+      {/* Main Table with Owner Name & Company Count Column */}
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden dark:border-slate-800 dark:bg-slate-900">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs text-left">
+            <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] font-black tracking-wider border-b border-slate-200 dark:bg-slate-950/60 dark:border-slate-800">
+              <tr>
+                <th className="px-4 py-3.5">SR#</th>
+                <th className="px-4 py-3.5">Owner Name (اونر کا نام)</th>
+                <th className="px-4 py-3.5 text-center">Company Count (تعداد)</th>
+                <th className="px-4 py-3.5">Company / Business Name</th>
+                <th className="px-4 py-3.5">Country</th>
+                <th className="px-4 py-3.5">State / Province</th>
+                <th className="px-4 py-3.5">City</th>
+                <th className="px-4 py-3.5 text-center">Contacts & Regs</th>
+                <th className="px-4 py-3.5 text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              {loading ? (
                 <tr>
-                  <th className="px-4 py-2">Company / Business</th>
-                  <th className="px-4 py-2">Owner</th>
-                  <th className="px-4 py-2">Location</th>
-                  <th className="px-4 py-2 text-center">Contacts</th>
-                  <th className="px-4 py-2 text-center">Registrations</th>
-                  <th className="px-4 py-2 text-center">Actions</th>
+                  <td colSpan={9} className="px-5 py-12 text-center text-slate-400 font-medium">
+                    <Loader2 className="mx-auto h-6 w-6 animate-spin text-blue-600 mb-2" />
+                    Loading companies registry from database...
+                  </td>
                 </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-200">
-                {loading ? (
-                  <tr>
-                    <td colSpan={6} className="px-5 py-10 text-center text-muted-foreground">
-                      <div className="flex items-center justify-center gap-2 font-medium">
-                        <Loader2 className="h-5 w-5 animate-spin text-primary" /> Loading company records from database...
-                      </div>
-                    </td>
-                  </tr>
-                ) : filteredCompanies.length > 0 ? (
-                  filteredCompanies.map((c) => (
-                    <tr
-                      key={c.id}
-                      onClick={() => setViewingCompany(c)}
-                      className="cursor-pointer hover:bg-slate-50/80 transition-colors"
-                    >
-                      <td className="px-4 py-2.5 font-semibold text-slate-900">
-                        <div>{c.companyName}</div>
-                        {c.businessName && c.businessName !== "-" && (
-                          <div className="text-[10px] text-muted-foreground mt-0.5 font-normal">{c.businessName}</div>
-                        )}
+              ) : paginatedCompanies.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="px-5 py-12 text-center text-slate-400 font-semibold">
+                    No incorporated companies found matching query filters.
+                  </td>
+                </tr>
+              ) : (
+                paginatedCompanies.map((c, idx) => {
+                  const ownerKey = (c.ownerName || "Unknown Owner").trim().toUpperCase();
+                  const ownerCompanies = ownerGroupedMap.get(ownerKey) || [c];
+                  const companyCount = ownerCompanies.length;
+
+                  return (
+                    <tr key={c.id} className="hover:bg-slate-50/60 dark:hover:bg-slate-950/40 transition-colors">
+                      <td className="px-4 py-3.5 font-mono text-slate-400 font-bold">{(page - 1) * pageSize + idx + 1}</td>
+                      <td className="px-4 py-3.5 font-bold text-slate-900 dark:text-white">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedOwnerGroup({ ownerName: c.ownerName, companies: ownerCompanies })}
+                          className="hover:underline text-blue-600 dark:text-blue-400 text-left font-black"
+                        >
+                          {c.ownerName}
+                        </button>
                       </td>
-                      <td className="px-4 py-2.5 text-slate-800 font-medium">{c.ownerName}</td>
-                      <td className="px-4 py-2.5 text-slate-600">
-                        {[c.city, c.state, c.country].filter((x) => x && x !== "-").join(", ") || "-"}
+                      <td className="px-4 py-3.5 text-center">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedOwnerGroup({ ownerName: c.ownerName, companies: ownerCompanies })}
+                          className={cn(
+                            "px-2.5 py-1 rounded-full text-[10px] font-black transition",
+                            companyCount > 1
+                              ? "bg-purple-100 text-purple-800 border border-purple-300 dark:bg-purple-950/60 dark:text-purple-300"
+                              : "bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                          )}
+                        >
+                          {companyCount} {companyCount === 1 ? "Company" : "Companies"}
+                        </button>
                       </td>
-                      <td className="px-4 py-2.5 text-center font-semibold text-slate-700">{c.contacts.length}</td>
-                      <td className="px-4 py-2.5 text-center font-semibold text-slate-700">{c.registrations.length}</td>
-                      <td className="px-4 py-2.5 text-center">
-                        <div className="relative inline-block text-left" onClick={(e) => e.stopPropagation()}>
-                          <Button
+                      <td className="px-4 py-3.5 font-semibold text-slate-800 dark:text-slate-200">
+                        {c.companyName}
+                        {c.businessName && c.businessName !== "-" && c.businessName !== c.companyName ? (
+                          <span className="block text-[10px] text-slate-400 font-normal">{c.businessName}</span>
+                        ) : null}
+                      </td>
+                      <td className="px-4 py-3.5 text-slate-700 dark:text-slate-300 font-bold">{c.country || "-"}</td>
+                      <td className="px-4 py-3.5 text-slate-600 dark:text-slate-400">{c.state || "-"}</td>
+                      <td className="px-4 py-3.5 text-slate-600 dark:text-slate-400">{c.city || "-"}</td>
+                      <td className="px-4 py-3.5 text-center font-mono font-bold text-slate-700 dark:text-slate-300">
+                        {c.contacts.length} C / {c.registrations.length} R
+                      </td>
+                      <td className="px-4 py-3.5 text-end">
+                        <div className="relative inline-block text-left">
+                          <button
                             type="button"
-                            variant="ghost"
-                            size="icon"
                             onClick={(e) => {
                               e.stopPropagation();
                               setOpenMenuId(openMenuId === c.id ? null : c.id);
                             }}
-                            className="h-8 w-8 text-slate-500 hover:text-slate-800 hover:bg-slate-100 rounded-full"
-                            title="Actions"
+                            className="p-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900"
                           >
                             <MoreVertical className="h-4 w-4" />
-                          </Button>
+                          </button>
                           {openMenuId === c.id && (
-                            <div className="absolute right-0 mt-1 w-44 rounded-lg border border-slate-100 bg-white shadow-xl z-20 py-1.5 animate-in fade-in-50 slide-in-from-top-2 duration-100 origin-top-right">
+                            <div className="absolute right-0 top-full z-30 mt-1 w-48 rounded-xl border border-slate-200 bg-white p-1 text-xs font-bold shadow-xl dark:border-slate-800 dark:bg-slate-900">
                               <button
-                                type="button"
-                                onClick={() => {
-                                  setOpenMenuId(null);
-                                  setViewingCompany(c);
-                                }}
-                                className="w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors"
+                                onClick={() => setSelectedOwnerGroup({ ownerName: c.ownerName, companies: ownerCompanies })}
+                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                               >
-                                <Eye className="h-3.5 w-3.5 text-slate-500" />
-                                <span>View Details</span>
+                                <Eye className="h-4 w-4 text-purple-500" /> View Owner Companies ({companyCount})
                               </button>
                               <button
-                                type="button"
-                                onClick={() => {
-                                  setOpenMenuId(null);
-                                  router.push(`/dashboard/settings/company-setup?companyId=${c.id}` as Route);
-                                }}
-                                className="w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors"
+                                onClick={() => handlePrint(c)}
+                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                               >
-                                <PencilLine className="h-3.5 w-3.5 text-blue-500" />
-                                <span>Edit Profile</span>
+                                <Printer className="h-4 w-4 text-blue-500" /> Print Certificate
                               </button>
                               <button
-                                type="button"
-                                onClick={() => {
-                                  setOpenMenuId(null);
-                                  handlePrint(c);
-                                }}
-                                className="w-full text-left px-3 py-1.5 text-xs text-slate-700 hover:bg-slate-50 flex items-center gap-2 transition-colors"
+                                onClick={() => router.push(`/dashboard/settings/company-setup?companyId=${c.id}` as Route)}
+                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
                               >
-                                <Printer className="h-3.5 w-3.5 text-amber-500" />
-                                <span>Print Certificate</span>
+                                <PencilLine className="h-4 w-4 text-emerald-500" /> Edit Company
                               </button>
-                              <div className="my-1 border-t border-slate-100" />
                               <button
-                                type="button"
-                                onClick={() => {
-                                  setOpenMenuId(null);
-                                  handleDelete(c.id);
-                                }}
-                                className="w-full text-left px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 flex items-center gap-2 transition-colors"
+                                onClick={() => handleDelete(c.id)}
+                                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40"
                               >
-                                <Trash2 className="h-3.5 w-3.5 text-rose-500" />
-                                <span>Delete Company</span>
+                                <Trash2 className="h-4 w-4" /> Delete Entity
                               </button>
                             </div>
                           )}
                         </div>
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={6} className="px-5 py-10 text-center text-muted-foreground italic">
-                      No companies found matching search criteria. Click &quot;+ Incorporate New Company&quot; to register one.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Details View Modal */}
-      {viewingCompany ? (
-        <div className="fixed inset-0 z-50 grid place-items-center bg-slate-950/60 p-4 backdrop-blur-xs">
-          <Card className="w-full max-w-2xl rounded-xl border bg-white shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-155">
-            <CardHeader className="border-b px-6 py-4 flex flex-row items-center justify-between bg-slate-50">
-              <div className="flex items-center gap-2">
-                <Building2 className="h-5 w-5 text-primary" />
-                <div>
-                  <CardTitle className="text-base font-bold text-slate-800">
-                    {viewingCompany.companyName}
-                  </CardTitle>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">Incorporation Profile Details</p>
-                </div>
-              </div>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => setViewingCompany(null)}
-                className="h-8 w-8 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-full"
-              >
-                <X className="h-4 w-4" />
-              </Button>
-            </CardHeader>
-            <CardContent className="p-6 space-y-5 max-h-[75vh] overflow-y-auto">
-              <div className="grid gap-6 md:grid-cols-2">
-                <div className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Entity Details</h3>
-                  <div className="bg-slate-50 p-3 rounded-lg space-y-2 text-xs border border-slate-100">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 font-medium">Company Name:</span>
-                      <span className="font-semibold text-slate-900">{viewingCompany.companyName}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 font-medium">Business Name:</span>
-                      <span className="font-semibold text-slate-900">{viewingCompany.businessName || "-"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 font-medium">Owner Name:</span>
-                      <span className="font-semibold text-slate-900">{viewingCompany.ownerName}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
-                  <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Location Details</h3>
-                  <div className="bg-slate-50 p-3 rounded-lg space-y-2 text-xs border border-slate-100">
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 font-medium">Location:</span>
-                      <span className="font-semibold text-slate-900">
-                        {[viewingCompany.city, viewingCompany.state, viewingCompany.country].filter(Boolean).join(", ")}
-                      </span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 font-medium">Zip Code:</span>
-                      <span className="font-semibold font-mono text-slate-900">{viewingCompany.zipCode || "-"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-slate-500 font-medium">Full Address:</span>
-                      <span className="font-semibold text-slate-900 text-right max-w-[180px] truncate" title={viewingCompany.address}>{viewingCompany.address || "-"}</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3 border-t pt-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Contacts List</h3>
-                {viewingCompany.contacts.length > 0 ? (
-                  <div className="grid gap-2 md:grid-cols-2">
-                    {viewingCompany.contacts.map((x) => (
-                      <div key={x.id} className="flex justify-between text-xs bg-slate-50/50 px-3 py-2 rounded-lg border border-slate-100">
-                        <span className="text-slate-500 font-medium">{x.type}:</span>
-                        <span className="font-semibold text-slate-800 font-mono">{x.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground italic pl-1">No contacts listed.</p>
-                )}
-              </div>
-
-              <div className="space-y-3 border-t pt-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Registrations</h3>
-                {viewingCompany.registrations.length > 0 ? (
-                  <div className="grid gap-2 md:grid-cols-2">
-                    {viewingCompany.registrations.map((x) => (
-                      <div key={x.id} className="flex justify-between text-xs bg-slate-50/50 px-3 py-2 rounded-lg border border-slate-100">
-                        <span className="text-slate-500 font-medium">{x.type}:</span>
-                        <span className="font-semibold text-slate-800 font-mono">{x.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground italic pl-1">No registrations listed.</p>
-                )}
-              </div>
-
-              <div className="space-y-3 border-t pt-4">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">Owner Identification</h3>
-                {viewingCompany.ownerIds.length > 0 ? (
-                  <div className="grid gap-2 md:grid-cols-2">
-                    {viewingCompany.ownerIds.map((x) => (
-                      <div key={x.id} className="flex justify-between text-xs bg-slate-50/50 px-3 py-2 rounded-lg border border-slate-100">
-                        <span className="text-slate-500 font-medium">{x.type}:</span>
-                        <span className="font-semibold text-slate-800 font-mono">{x.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-xs text-muted-foreground italic pl-1">No identifications listed.</p>
-                )}
-              </div>
-
-              <div className="flex justify-end gap-2 border-t pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handlePrint(viewingCompany)}
-                  className="gap-2 h-9 text-xs border-slate-200"
-                >
-                  <Printer className="h-3.5 w-3.5 text-amber-600" />
-                  Print Details
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    setViewingCompany(null);
-                    router.push(`/dashboard/settings/company-setup?companyId=${viewingCompany.id}` as Route);
-                  }}
-                  className="gap-2 h-9 text-xs border-slate-200"
-                >
-                  <PencilLine className="h-3.5 w-3.5 text-blue-600" />
-                  Edit Profile
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => setViewingCompany(null)}
-                  className="h-9 text-xs font-medium bg-slate-850 hover:bg-slate-900 text-white"
-                >
-                  Close
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
         </div>
-      ) : null}
+      </div>
+
+      {/* Standardized Pagination */}
+      <ReportPagination
+        totalCount={filteredCompanies.length}
+        page={page}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={setPageSize}
+      />
+
+      {/* Standardized Status Legend */}
+      <ReportStatusLegend
+        statuses={["Active", "Incorporated", "Multi-Company Owner"]}
+        notes={[
+          "Owners with multiple incorporated companies can be inspected by clicking their Owner Name or Company Count badge.",
+          "Certificates of Incorporation can be printed directly via the 3-dot action menu."
+        ]}
+      />
+
+      {/* OWNER COMPANIES DRAWER / MODAL */}
+      {selectedOwnerGroup && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 overflow-y-auto animate-in fade-in duration-200">
+          <div className="w-full max-w-3xl rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between border-b pb-3 border-slate-100 dark:border-slate-800">
+              <div>
+                <span className="text-[10px] font-black uppercase text-purple-600 dark:text-purple-400">Multi-Company Owner Profile</span>
+                <h2 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  <Users className="h-5 w-5 text-blue-600" />
+                  Owner: {selectedOwnerGroup.ownerName}
+                </h2>
+                <p className="text-xs font-medium text-slate-500">Total Registered Companies: {selectedOwnerGroup.companies.length}</p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setSelectedOwnerGroup(null)}
+                className="rounded-xl border border-slate-200 p-2 text-slate-400 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-800"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="space-y-3 max-h-[60vh] overflow-y-auto">
+              {selectedOwnerGroup.companies.map((comp, idx) => (
+                <div key={comp.id} className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 dark:border-slate-800 dark:bg-slate-950 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-black text-slate-400">#{idx + 1}</span>
+                      <h4 className="text-sm font-black text-slate-900 dark:text-white">{comp.companyName}</h4>
+                    </div>
+                    <p className="text-xs text-slate-500 font-semibold mt-0.5">{[comp.city, comp.state, comp.country].filter(Boolean).join(", ")}</p>
+                    <p className="text-[11px] text-slate-400 font-mono mt-1">{comp.address || "No address specified"}</p>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handlePrint(comp)}
+                      className="h-8 text-xs font-bold border-slate-200"
+                    >
+                      <Printer className="h-3.5 w-3.5 mr-1 text-blue-500" /> Certificate
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={() => router.push(`/dashboard/settings/company-setup?companyId=${comp.id}` as Route)}
+                      className="h-8 text-xs font-bold bg-blue-600 text-white hover:bg-blue-700"
+                    >
+                      <PencilLine className="h-3.5 w-3.5 mr-1" /> Edit
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
