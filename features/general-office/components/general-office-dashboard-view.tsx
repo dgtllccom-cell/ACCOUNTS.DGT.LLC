@@ -464,53 +464,115 @@ export function GeneralOfficeDashboardView() {
         <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
       </div>
 
-      {/* ── Summary Statistics Cards ── */}
-      <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-6">
-        <div className="rounded-2xl border bg-card p-4 shadow-sm">
-          <span className="text-[11px] font-semibold text-muted-foreground">{t.totalEmployees}</span>
-          <div className="mt-1 flex items-baseline justify-between">
-            <span className="text-xl font-bold text-foreground">1,420</span>
-            <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">+12%</span>
+      {/* ── STANDARDIZED 5 KPI SUMMARY CARDS GRID ── */}
+      <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+        {/* MANDATORY Card 1: BRANCH & USER DETAILS */}
+        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <Users className="h-4 w-4 text-blue-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. BRANCH & USER DETAILS</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+            <div className="flex justify-between">
+              <span>Country:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">Pakistan / UAE</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Branch Name:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 uppercase">Karachi Main</span>
+            </div>
+            <div className="flex justify-between">
+              <span>User ID / Name:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]" title="USR-001 (Admin User)">USR-001 (Admin)</span>
+            </div>
+            <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
+              <span>Status:</span>
+              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px]">Active Session</span>
+            </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border bg-card p-4 shadow-sm">
-          <span className="text-[11px] font-semibold text-muted-foreground">{t.activeStaff}</span>
-          <div className="mt-1 flex items-baseline justify-between">
-            <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">1,390</span>
-            <span className="text-[10px] font-semibold text-slate-500">97.8%</span>
+        {/* Card 2: EMPLOYEES & STAFF SUMMARY */}
+        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <ClipboardList className="h-4 w-4 text-emerald-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">2. EMPLOYEES SUMMARY</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+            <div className="flex justify-between text-slate-600 dark:text-slate-400">
+              <span>Total Employees:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{employees.length || 142}</span>
+            </div>
+            <div className="flex justify-between text-emerald-600 font-bold">
+              <span>Active Staff:</span>
+              <span>{employees.filter((e: any) => e.status === "Active").length || 138}</span>
+            </div>
+            <div className="flex justify-between text-blue-600 font-bold">
+              <span>Attendance Rate:</span>
+              <span>98.4%</span>
+            </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border bg-card p-4 shadow-sm">
-          <span className="text-[11px] font-semibold text-muted-foreground">{t.attendanceRate}</span>
-          <div className="mt-1 flex items-baseline justify-between">
-            <span className="text-xl font-bold text-blue-600 dark:text-blue-400">98.4%</span>
-            <span className="text-[10px] font-semibold text-blue-500">Today</span>
+        {/* Card 3: PAYROLL & ASSETS SUMMARY */}
+        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <Banknote className="h-4 w-4 text-purple-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. PAYROLL & ASSETS</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+            <div className="flex justify-between text-slate-600 dark:text-slate-400">
+              <span>Monthly Payroll:</span>
+              <span className="font-bold font-mono text-slate-900 dark:text-slate-100">AED 450K</span>
+            </div>
+            <div className="flex justify-between text-amber-600 font-bold">
+              <span>Pending Leaves:</span>
+              <span>12</span>
+            </div>
+            <div className="flex justify-between text-indigo-600 font-bold">
+              <span>Assets Tracked:</span>
+              <span>480</span>
+            </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border bg-card p-4 shadow-sm">
-          <span className="text-[11px] font-semibold text-muted-foreground">{t.monthlyPayroll}</span>
-          <div className="mt-1 flex items-baseline justify-between">
-            <span className="text-lg font-extrabold text-foreground">AED 450K</span>
-            <span className="text-[10px] font-semibold text-slate-500">PKR 34M</span>
+        {/* Card 4: BRANCHES */}
+        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <Building2 className="h-4 w-4 text-indigo-600" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. BRANCHES</span>
+          </div>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
+            <div className="flex justify-between text-slate-600 dark:text-slate-400">
+              <span>Total Branches:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">12</span>
+            </div>
+            <div className="flex justify-between text-emerald-600 font-bold">
+              <span>Active Branches:</span>
+              <span>10</span>
+            </div>
           </div>
         </div>
 
-        <div className="rounded-2xl border bg-card p-4 shadow-sm">
-          <span className="text-[11px] font-semibold text-muted-foreground">{t.pendingLeaves}</span>
-          <div className="mt-1 flex items-baseline justify-between">
-            <span className="text-xl font-bold text-amber-600 dark:text-amber-400">12</span>
-            <span className="text-[10px] font-semibold text-amber-500">Pending</span>
+        {/* Card 5: QUICK INFO */}
+        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+          <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
+            <FileText className="h-4 w-4 text-amber-500" />
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">5. QUICK INFO</span>
           </div>
-        </div>
-
-        <div className="rounded-2xl border bg-card p-4 shadow-sm">
-          <span className="text-[11px] font-semibold text-muted-foreground">{t.assetsTracked}</span>
-          <div className="mt-1 flex items-baseline justify-between">
-            <span className="text-xl font-bold text-indigo-600 dark:text-indigo-400">480</span>
-            <span className="text-[10px] font-semibold text-emerald-500">Active</span>
+          <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
+            <div className="flex justify-between">
+              <span>Currency:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">AED / USD</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Company:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]">DGT LLC</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Financial Year:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">2025-26</span>
+            </div>
           </div>
         </div>
       </div>
