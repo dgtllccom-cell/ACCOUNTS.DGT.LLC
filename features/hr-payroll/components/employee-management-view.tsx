@@ -19,6 +19,10 @@ export function EmployeeManagementView() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [status, setStatus] = useState("");
+  const [countryId, setCountryId] = useState("");
+  const [branchId, setBranchId] = useState("");
+  const [countriesList, setCountriesList] = useState<any[]>([]);
+  const [branchesList, setBranchesList] = useState<any[]>([]);
 
   // Modals state
   const [showFormModal, setShowFormModal] = useState(false);
@@ -27,6 +31,34 @@ export function EmployeeManagementView() {
   const [selectedEmployeeForLoan, setSelectedEmployeeForLoan] = useState<any | null>(null);
   const [selectedEmployeeForHistory, setSelectedEmployeeForHistory] = useState<any | null>(null);
 
+  // Load location options for filters
+  useEffect(() => {
+    async function loadFilterLocations() {
+      try {
+        const res = await apiGet<{ countries: any[] }>("/api/erp/locations/countries");
+        setCountriesList(res.countries || []);
+      } catch {}
+    }
+    loadFilterLocations();
+  }, []);
+
+  useEffect(() => {
+    if (!countryId) {
+      setBranchesList([]);
+      setBranchId("");
+      return;
+    }
+    async function loadFilterBranches() {
+      try {
+        const res = await apiGet<{ ok: boolean; data: { branches: any[] } }>(`/api/erp/locations/branches/main?countryId=${countryId}`);
+        if (res.ok && res.data?.branches) {
+          setBranchesList(res.data.branches);
+        }
+      } catch {}
+    }
+    loadFilterBranches();
+  }, [countryId]);
+
   async function loadEmployees() {
     setLoading(true);
     try {
@@ -34,6 +66,8 @@ export function EmployeeManagementView() {
       if (search) qp.set("search", search);
       if (category) qp.set("category", category);
       if (status) qp.set("status", status);
+      if (countryId) qp.set("countryId", countryId);
+      if (branchId) qp.set("branchId", branchId);
 
       const res = await apiGet<{ employees: any[] }>(`/api/erp/hr-payroll/employees?${qp.toString()}`);
       setEmployees(res.employees || []);
@@ -49,7 +83,7 @@ export function EmployeeManagementView() {
       loadEmployees().catch(() => null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, search, category, status]);
+  }, [activeTab, search, category, status, countryId, branchId]);
 
   async function handleDelete(id: string) {
     if (!confirm("Are you sure you want to delete this employee record?")) return;
@@ -126,8 +160,36 @@ export function EmployeeManagementView() {
                 className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-slate-900 dark:text-slate-100 placeholder-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
+
+            <div className="w-[160px]">
+              <select
+                value={countryId}
+                onChange={(e) => setCountryId(e.target.value)}
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+              >
+                <option value="">All Countries</option>
+                {countriesList.map((c) => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
+            {countryId && (
+              <div className="w-[160px]">
+                <select
+                  value={branchId}
+                  onChange={(e) => setBranchId(e.target.value)}
+                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                >
+                  <option value="">All Branches</option>
+                  {branchesList.map((b) => (
+                    <option key={b.id} value={b.id}>{b.name} {b.code ? `(${b.code})` : ""}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             
-            <div className="w-[180px]">
+            <div className="w-[160px]">
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
@@ -141,7 +203,7 @@ export function EmployeeManagementView() {
               </select>
             </div>
 
-            <div className="w-[150px]">
+            <div className="w-[140px]">
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
@@ -163,6 +225,7 @@ export function EmployeeManagementView() {
                 <tr>
                   <th className="px-6 py-3.5">Emp Code</th>
                   <th className="px-6 py-3.5">Employee / Person Name</th>
+                  <th className="px-6 py-3.5">Assigned Country / Branch</th>
                   <th className="px-6 py-3.5">Category</th>
                   <th className="px-6 py-3.5">Designation / Department</th>
                   <th className="px-6 py-3.5">Joining Date</th>
@@ -175,11 +238,11 @@ export function EmployeeManagementView() {
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                 {loading ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-12 text-center text-slate-500 font-medium">Loading registered employees...</td>
+                    <td colSpan={10} className="px-6 py-12 text-center text-slate-500 font-medium">Loading registered employees...</td>
                   </tr>
                 ) : employees.length === 0 ? (
                   <tr>
-                    <td colSpan={9} className="px-6 py-12 text-center text-slate-500">No employees registered yet. Click "Register New Employee" to register.</td>
+                    <td colSpan={10} className="px-6 py-12 text-center text-slate-500">No employees registered yet. Click "Register New Employee" to register.</td>
                   </tr>
                 ) : (
                   employees.map((emp) => (
@@ -188,6 +251,13 @@ export function EmployeeManagementView() {
                       <td className="px-6 py-4">
                         <div className="font-bold text-slate-900 dark:text-slate-100">{emp.person?.customer_name}</div>
                         <div className="text-[11px] text-slate-500 font-mono">{emp.person?.mobile || "-"}</div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="font-bold text-slate-900 dark:text-slate-100">{emp.country?.name || "-"}</div>
+                        <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                          {emp.country_branch?.name || emp.city_branch?.name || "-"}
+                          {emp.country_branch?.code ? ` (${emp.country_branch.code})` : emp.city_branch?.code ? ` (${emp.city_branch.code})` : ""}
+                        </div>
                       </td>
                       <td className="px-6 py-4">
                         <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded font-semibold text-[10px] uppercase">
