@@ -36,6 +36,26 @@ function collectAutoOpenKeys(nodes: SidebarNode[], pathname: string) {
   return keys;
 }
 
+const CHANGED_KEYS = new Set<string>([
+  "roz-expenses-bill-direct",
+  "roz-expenses-bill",
+  "local-purchase-management",
+  "local-purchase",
+  "local-purchase-transfer-payment",
+  "purchase-transfer-verification",
+  "local-goods-received",
+  "mgmt-location-workspace",
+  "mgmt-company",
+  "mgmt-employees",
+  "mgmt-product-units",
+  "mgmt-product-brands",
+  "mgmt-product-categories",
+  "mgmt-warehouses",
+  "mgmt-bank",
+  "mgmt-goods-master",
+  "roz-money-exchange"
+]);
+
 function SidebarNodeItem({
   node,
   lang,
@@ -57,6 +77,7 @@ function SidebarNodeItem({
   const isOpen = hasChildren && openKeys.has(node.key);
   const href = node.href ?? null;
   const isActive = href ? isPathMatch(String(href), activePath) : false;
+  const isChanged = CHANGED_KEYS.has(node.key);
 
   return (
     <div>
@@ -64,7 +85,7 @@ function SidebarNodeItem({
         className={cn(
           "group flex items-center justify-between rounded-lg text-[12.5px] transition-all duration-200 py-0.5",
           isActive
-            ? "bg-gradient-to-r from-red-600 via-rose-600 to-red-700 text-white font-black shadow-md shadow-red-500/20 active-nav-item"
+            ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 text-white font-black shadow-md shadow-blue-500/20 active-nav-item"
             : "text-slate-400 hover:text-slate-100 hover:bg-slate-800/40"
         )}
       >
@@ -77,6 +98,11 @@ function SidebarNodeItem({
           >
             <SidebarIcon name={node.iconKey} className={cn("transition-colors", isActive ? "text-white" : "text-slate-400 group-hover:text-slate-200")} />
             <span className="truncate text-start">{t(lang, node.labelKey)}</span>
+            {isChanged && !isActive && (
+              <span className="ms-1 shrink-0 rounded bg-amber-400 text-amber-950 px-1.5 py-0.5 text-[8.5px] font-black uppercase leading-none shadow-xs">
+                NEW
+              </span>
+            )}
           </Link>
         ) : (
           <button
@@ -87,6 +113,11 @@ function SidebarNodeItem({
           >
             <SidebarIcon name={node.iconKey} className={cn("transition-colors", isActive ? "text-white" : "text-slate-400 group-hover:text-slate-200")} />
             <span className="truncate">{t(lang, node.labelKey)}</span>
+            {isChanged && (
+              <span className="ms-1 shrink-0 rounded bg-amber-400 text-amber-950 px-1.5 py-0.5 text-[8.5px] font-black uppercase leading-none shadow-xs">
+                NEW
+              </span>
+            )}
           </button>
         )}
 
@@ -142,7 +173,6 @@ export function SidebarNav({
   const [openKeys, setOpenKeys] = useState<Set<string>>(() => autoOpen);
 
   useEffect(() => {
-    // When navigation changes, ensure active branches stay expanded.
     setOpenKeys((prev) => {
       const next = new Set(prev);
       for (const key of autoOpen) next.add(key);

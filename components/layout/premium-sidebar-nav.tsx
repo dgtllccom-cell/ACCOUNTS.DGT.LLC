@@ -22,33 +22,26 @@ import { SidebarIcon } from "@/components/layout/sidebar-icon";
  * `isChanged` usage below to restore normal colors — no other change needed.
  */
 const CHANGED_KEYS = new Set<string>([
-  // Purchase / Sales menu reorganization
-  "purchase",
-  "sales",
+  // Recently added & updated features
+  "roz-expenses-bill-direct",
+  "roz-expenses-bill",
   "local-purchase-management",
-  "sales-order-management",
-  "local-sales-management",
-  // New product-master modules (CRUD + UI + i18n + security)
+  "local-purchase",
+  "local-purchase-transfer-payment",
+  "purchase-transfer-verification",
+  "local-goods-received",
+  "mgmt-location-workspace",
+  "mgmt-company",
+  "mgmt-employees",
   "mgmt-product-units",
   "mgmt-product-brands",
   "mgmt-product-categories",
   "mgmt-warehouses",
-  // Masters wired to the centralized multilingual engine this phase
   "mgmt-bank",
   "mgmt-goods-master",
-  "mgmt-customers",
-  "mgmt-location-workspace",
-  // Security / authorization added this phase
-  "mgmt-tax-setup",
-  "documents-hub",
-  // Accounts (multilingual verified) + exchange-rate work
-  "accounts",
-  "accounts-new",
-  "journal-super-admin-exchange-rate",
-  // Journal Stock hierarchy reorganizations
-  "journal-stock",
-  "journal-stock-sub",
-  "stock-sub",
+  "roz-money-exchange",
+  "purchase",
+  "sales"
 ]);
 
 function isPathMatch(href: string, pathname: string) {
@@ -107,21 +100,21 @@ function PremiumNodeItem({
   const isActive = href ? isPathMatch(String(href), activePath) : false;
   const branchActive = !isActive && branchHasActive(node, activePath);
   const labelText = t(lang, node.labelKey);
-  const isChanged = CHANGED_KEYS.has(node.key); // TEMPORARY testing highlight
+  const isChanged = CHANGED_KEYS.has(node.key);
 
   const rowClass = cn(
     "group flex items-center justify-between rounded-xl transition-all duration-200 my-0.5",
     depth === 0 ? "text-[12.5px] font-bold" : depth === 1 ? "text-[12px] font-semibold" : "text-[11.5px] font-medium",
     isActive
-      ? "bg-gradient-to-r from-red-600 via-rose-600 to-red-700 font-black text-white shadow-lg shadow-red-500/30 ring-2 ring-red-400/50 scale-[1.01]"
+      ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 font-black text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-400/50 scale-[1.01]"
       : branchActive
-        ? "bg-red-50/90 font-extrabold text-red-700 dark:bg-red-950/50 dark:text-red-300 border-s-4 border-red-600 shadow-xs"
+        ? "bg-blue-50/90 font-extrabold text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border-s-4 border-blue-600 shadow-xs"
         : "text-slate-700 hover:bg-slate-100/90 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-white"
   );
 
   const iconClass = cn(
     "shrink-0 transition-colors h-4 w-4",
-    isActive ? "text-white animate-pulse" : branchActive ? "text-red-600 dark:text-red-400 font-bold" : "text-slate-400 group-hover:text-red-600 dark:text-slate-400"
+    isActive ? "text-white animate-pulse" : branchActive ? "text-blue-600 dark:text-blue-400 font-bold" : "text-slate-400 group-hover:text-blue-600 dark:text-slate-400"
   );
 
   const labelClass = "flex min-w-0 flex-1 items-center gap-2 py-1.5 px-2.5 overflow-hidden";
@@ -137,20 +130,20 @@ function PremiumNodeItem({
             title={labelText}
           >
             <SidebarIcon name={node.iconKey} className={iconClass} />
-            <span className={cn("min-w-0 flex-1 text-start truncate whitespace-nowrap tracking-tight", (isActive || branchActive || isChanged) && "font-bold text-red-600 dark:text-red-400", isActive && "text-white")}>
+            <span className={cn("min-w-0 flex-1 text-start truncate whitespace-nowrap tracking-tight", (isActive || branchActive) && "font-bold text-blue-600 dark:text-blue-400", isActive && "text-white")}>
               {labelText}
             </span>
             {isActive ? (
-              <span className="ms-1 shrink-0 rounded-full bg-white text-red-700 px-1.5 py-0.5 text-[8.5px] font-black uppercase tracking-widest shadow-xs">
+              <span className="ms-1 shrink-0 rounded-full bg-white text-blue-700 px-1.5 py-0.5 text-[8.5px] font-black uppercase tracking-widest shadow-xs">
                 ACTIVE
               </span>
             ) : branchActive ? (
-              <span className="ms-1 shrink-0 rounded bg-red-100 dark:bg-red-900/60 text-red-700 dark:text-red-300 px-1.5 py-0.5 text-[8.5px] font-black uppercase">
+              <span className="ms-1 shrink-0 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 text-[8.5px] font-black uppercase">
                 OPEN
               </span>
             ) : isChanged ? (
-              <span className="ms-1 shrink-0 rounded bg-red-100 px-1.5 py-0.5 text-[9px] font-black uppercase leading-none text-red-600 dark:bg-red-950/50 dark:text-red-400">
-                new
+              <span className="ms-1 shrink-0 rounded bg-amber-400 text-amber-950 px-1.5 py-0.5 text-[9px] font-black uppercase leading-none shadow-xs ring-1 ring-amber-500/50">
+                NEW
               </span>
             ) : null}
           </Link>
@@ -162,16 +155,16 @@ function PremiumNodeItem({
             title={labelText}
           >
             <SidebarIcon name={node.iconKey} className={iconClass} />
-            <span className={cn("min-w-0 flex-1 text-start truncate whitespace-nowrap tracking-tight", (branchActive || isChanged) && "font-bold text-red-600 dark:text-red-400")}>
+            <span className={cn("min-w-0 flex-1 text-start truncate whitespace-nowrap tracking-tight", branchActive && "font-bold text-blue-600 dark:text-blue-400")}>
               {labelText}
             </span>
             {branchActive ? (
-              <span className="ms-1 shrink-0 rounded bg-red-100 dark:bg-red-900/60 text-red-700 dark:text-red-300 px-1.5 py-0.5 text-[8.5px] font-black uppercase">
+              <span className="ms-1 shrink-0 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 text-[8.5px] font-black uppercase">
                 OPEN
               </span>
             ) : isChanged ? (
-              <span className="ms-1 shrink-0 rounded bg-red-100 px-1.5 py-0.5 text-[9px] font-black uppercase leading-none text-red-600 dark:bg-red-950/50 dark:text-red-400">
-                new
+              <span className="ms-1 shrink-0 rounded bg-amber-400 text-amber-950 px-1.5 py-0.5 text-[9px] font-black uppercase leading-none shadow-xs ring-1 ring-amber-500/50">
+                NEW
               </span>
             ) : null}
           </button>

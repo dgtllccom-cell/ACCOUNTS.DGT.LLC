@@ -237,8 +237,9 @@ export function LocalGoodsReceivedView({
       {titleSlot && createPortal(
         <div className="flex items-center gap-2">
           <Package className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
-          <h1 className="text-sm font-black uppercase tracking-tight text-slate-900 dark:text-white">
-            Local Goods Received
+          <h1 className="text-sm font-black uppercase tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
+            Receiving Country Workflow (Goods Received)
+            <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">NEW</span>
           </h1>
         </div>,
         titleSlot

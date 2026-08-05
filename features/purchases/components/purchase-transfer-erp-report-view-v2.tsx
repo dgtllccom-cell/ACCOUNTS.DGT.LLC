@@ -354,7 +354,8 @@ function PurchaseTransferErpReportViewContent({
           </div>
           <div>
             <h1 className="text-sm font-black text-white tracking-tight uppercase flex items-center gap-2">
-              Purchase Verification & Settlement Audit Sheet
+              Inter-Country Purchase Verification & Settlement Audit Sheet
+              <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-2 py-0.5 rounded-full shadow-xs uppercase tracking-wider">NEW</span>
               <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold bg-blue-500/20 text-blue-400 border border-blue-500/30 font-mono">
                 SAP / Oracle Enterprise Std
               </span>

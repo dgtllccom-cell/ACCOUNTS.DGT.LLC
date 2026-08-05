@@ -1,7 +1,9 @@
 import { Activity, Building2, Globe, User, Users2, Wrench } from "lucide-react";
 import postgres from "postgres";
 import { redirect } from "next/navigation";
+import type { Route } from "next";
 import { getCurrentErpSession } from "@/lib/auth/session";
+import { dashboardByRole } from "@/lib/permissions/enterprise-roles";
 import { SyncLedgersButton } from "@/features/dashboard/components/sync-ledgers-button";
 import { SuperAdminOverviewCharts, type CountryFinancialSummary, type MonthlyFinancialSummary } from "@/features/dashboard/components/super-admin-overview-charts";
 import { DashboardWidget, SuperAdminDashboardSettingsPanel, SuperAdminDashboardSettingsProvider } from "@/features/dashboard/components/super-admin-dashboard-settings";
@@ -158,7 +160,12 @@ async function loadDashboard(): Promise<DashboardData> {
 export default async function SuperAdminDashboardPage() {
   const session = await getCurrentErpSession();
   if (!session) redirect("/auth/login");
-  if (!session.isSuperAdmin) redirect("/dashboard");
+  if (!session.isSuperAdmin) {
+    const fallbackTarget = session.roles.length ? (dashboardByRole[session.roles[0]] || "/dashboard/country") : "/auth/login";
+    if (fallbackTarget !== "/dashboard/super-admin") {
+      redirect(fallbackTarget as Route);
+    }
+  }
 
   const data = await loadDashboard();
   const kpis = [

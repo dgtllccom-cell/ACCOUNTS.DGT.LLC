@@ -289,6 +289,13 @@ export const sidebarTree: SidebarNode[] = [
             ]
           },
           {
+            key: "roz-expenses-bill-direct",
+            labelKey: "Office/Home Expenses Bill" as any,
+            iconKey: "receipt",
+            href: "/dashboard/roznamcha/expenses-bill" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          },
+          {
             key: "roznamcha",
             labelKey: "nav.roznamcha",
             iconKey: "scroll-text",
@@ -307,7 +314,7 @@ export const sidebarTree: SidebarNode[] = [
               },
               {
                 key: "roz-expenses-bill",
-                labelKey: "nav.expenses_bill",
+                labelKey: "Office/Home Expenses Bill" as any,
                 href: "/dashboard/roznamcha/expenses-bill" as Route,
                 roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
               },
@@ -391,12 +398,12 @@ export const sidebarTree: SidebarNode[] = [
       },
       {
         key: "local-purchase-management",
-        labelKey: "nav.local_purchase_management",
+        labelKey: "Inter-Country / Local Purchase Management" as any,
         iconKey: "clipboard-list",
         children: [
           {
             key: "local-purchase",
-            labelKey: "nav.local_purchase",
+            labelKey: "Inter-Country / Local Purchase Booking" as any,
             href: "/dashboard/purchase/local-purchase" as Route
           },
           {
@@ -406,12 +413,17 @@ export const sidebarTree: SidebarNode[] = [
           },
           {
             key: "local-purchase-transfer-payment",
-            labelKey: "Local Purchase Transfer Payment" as any,
+            labelKey: "Inter-Country Transfer Payment" as any,
             href: "/dashboard/purchase/local-purchase-transfer-payment" as Route
           },
           {
+            key: "purchase-transfer-verification",
+            labelKey: "Inter-Country Transfer Verification" as any,
+            href: "/dashboard/purchase/purchase-transfer-verification" as Route
+          },
+          {
             key: "local-goods-received",
-            labelKey: "Local Goods Received" as any,
+            labelKey: "Receiving Country (Goods Received)" as any,
             href: "/dashboard/purchase/local-goods-received" as Route
           }
         ]
@@ -1172,26 +1184,10 @@ export const sidebarTree: SidebarNode[] = [
             href: "/dashboard/settings/company" as Route
           },
           {
-            key: "mgmt-customers",
-            labelKey: "nav.customers_form",
-            href: "/dashboard/settings/customers" as Route
-          },
-          {
             key: "mgmt-employees",
             labelKey: "nav.employee_management" as any,
             href: "/dashboard/settings/employees" as Route,
             roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-          },
-          {
-            key: "mgmt-driver-registration",
-            labelKey: "Truck Driver & Owner Master Registration" as any,
-            href: "/dashboard/settings/driver-registration" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-          },
-          {
-            key: "mgmt-contract-type",
-            labelKey: "nav.contract_type",
-            href: "/dashboard/settings/contract-type" as Route
           },
           {
             key: "mgmt-company-registration-type",

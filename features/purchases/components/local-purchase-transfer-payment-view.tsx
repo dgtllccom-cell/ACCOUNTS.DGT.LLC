@@ -211,8 +211,9 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
         <div>
           <div className="flex items-center gap-2">
             <Send className="h-5 w-5 text-amber-600" />
-            <h1 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight">
-              Local Purchase Transfer Payment
+            <h1 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight flex items-center gap-2">
+              Inter-Country / Local Purchase Transfer Payment
+              <span className="bg-amber-400 text-amber-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow-xs uppercase tracking-wider">NEW</span>
             </h1>
           </div>
           <p className="text-xs text-slate-500 font-medium mt-0.5">

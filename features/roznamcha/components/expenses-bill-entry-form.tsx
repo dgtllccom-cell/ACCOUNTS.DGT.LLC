@@ -830,10 +830,10 @@ export function ExpensesBillEntryForm({ lang }: { lang: SupportedLanguage }) {
       <div className="print:hidden">
       {/* Page Header Portal */}
       {portalNode && createPortal(
-        <div className="flex items-center gap-3">
-          <h1 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-1.5 mr-2">
+          <h1 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 mr-2">
             <FileText className="h-4 w-4 text-primary" />
-            Expenses Bill
+            Office / Home Expenses Bill
+            <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">NEW</span>
           </h1>
           {viewMode === "list" ? (
             <Button size="sm" onClick={() => setViewMode("form")} className="h-7 text-xs bg-primary hover:bg-primary/90 text-white shadow-sm">

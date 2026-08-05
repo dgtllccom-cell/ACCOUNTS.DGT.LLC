@@ -117,20 +117,23 @@ export function PdfPreviewModal() {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-1">
-          <Button variant="ghost" size="icon" className="text-slate-300 hover:text-green-400 hover:bg-slate-800" onClick={handleShareWhatsApp} title="WhatsApp">
-            <Share2 className="w-4 h-4" />
+        <div className="flex items-center gap-1.5">
+          <Button variant="ghost" size="sm" className="text-slate-300 hover:text-green-400 hover:bg-slate-800 gap-1 text-xs" onClick={handleShareWhatsApp} title="Share via WhatsApp">
+            <Share2 className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">WhatsApp</span>
           </Button>
-          <Button variant="ghost" size="icon" className="text-slate-300 hover:text-blue-400 hover:bg-slate-800" onClick={handleShareEmail} title="Email">
-            <Mail className="w-4 h-4" />
+          <Button variant="ghost" size="sm" className="text-slate-300 hover:text-blue-400 hover:bg-slate-800 gap-1 text-xs" onClick={handleShareEmail} title="Email Document">
+            <Mail className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Email</span>
           </Button>
-          <Button variant="ghost" size="icon" className="text-slate-300 hover:text-white hover:bg-slate-800" onClick={handleDownload} title="Download PDF">
-            <Download className="w-4 h-4" />
+          <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800 gap-1 text-xs" onClick={handleDownload} title="Download PDF">
+            <Download className="w-3.5 h-3.5" />
+            <span className="hidden md:inline">Download</span>
           </Button>
           <div className="w-px h-6 bg-slate-700 mx-1"></div>
-          <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-500 text-white gap-2 shadow-lg shadow-blue-900/20" onClick={handlePrint}>
+          <Button variant="default" size="sm" className="bg-blue-600 hover:bg-blue-500 text-white gap-2 font-bold text-xs shadow-lg shadow-blue-900/20" onClick={handlePrint}>
             <Printer className="w-4 h-4" />
-            <span className="hidden sm:inline">Print</span>
+            <span>Print</span>
           </Button>
         </div>
       </div>
