@@ -336,6 +336,35 @@ export function CashEntryForm({
 
   const [recentEntries, setRecentEntries] = useState<any[]>([]);
 
+  // Branch-wise cash summary (Total Credit / Debit / Balance / Entry count) for the
+  // selected country + branch + date. Sourced from the DB function get_branch_cash_summary
+  // via /api/erp/roznamcha/cash-summary so totals are accurate across ALL entries, not just
+  // the recent 100 loaded into the table.
+  type CashSummary = {
+    totalDebit: number;
+    totalCredit: number;
+    balance: number;
+    balanceType: string;
+    entryCount: number;
+  };
+  const [cashSummary, setCashSummary] = useState<CashSummary | null>(null);
+  const [loadingSummary, setLoadingSummary] = useState(false);
+
+  // Daily exchange rate (buying / selling / debit / credit) for the selected country + branch
+  // + date, entered in the Daily Exchange Rate module. Auto-displayed; never manually set here.
+  type DailyRate = {
+    found: boolean;
+    buyingRate: number | null;
+    sellingRate: number | null;
+    creditRate: number | null;
+    debitRate: number | null;
+    rateDate: string | null;
+    isExactDate: boolean | null;
+    isBranchSpecific: boolean | null;
+  };
+  const [dailyRate, setDailyRate] = useState<DailyRate | null>(null);
+  const [loadingDailyRate, setLoadingDailyRate] = useState(false);
+
   const selectedCountry = useMemo(
     () => countries.find((c) => c.id === countryId) ?? null,
     [countries, countryId]
@@ -423,10 +452,52 @@ export function CashEntryForm({
     }
   };
 
+  const fetchCashSummary = async () => {
+    if (!countryId) {
+      setCashSummary(null);
+      return;
+    }
+    try {
+      setLoadingSummary(true);
+      const params = new URLSearchParams({ countryId });
+      if (countryBranchId) params.set("countryBranchId", countryBranchId);
+      if (entryDate) params.set("date", entryDate);
+      const res = await apiGet<CashSummary>(`/api/erp/roznamcha/cash-summary?${params.toString()}`);
+      setCashSummary(res);
+    } catch (err) {
+      console.error("Failed to fetch cash summary", err);
+      setCashSummary(null);
+    } finally {
+      setLoadingSummary(false);
+    }
+  };
+
+  const fetchDailyRate = async () => {
+    if (!countryId) {
+      setDailyRate(null);
+      return;
+    }
+    try {
+      setLoadingDailyRate(true);
+      const params = new URLSearchParams({ countryId });
+      if (countryBranchId) params.set("countryBranchId", countryBranchId);
+      if (entryDate) params.set("date", entryDate);
+      const res = await apiGet<DailyRate>(`/api/erp/currency/daily-rate?${params.toString()}`);
+      setDailyRate(res);
+    } catch (err) {
+      console.error("Failed to fetch daily rate", err);
+      setDailyRate(null);
+    } finally {
+      setLoadingDailyRate(false);
+    }
+  };
+
   useEffect(() => {
     fetchRecentEntries();
+    fetchCashSummary();
+    fetchDailyRate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [countryId, countryBranchId, cityBranchId]);
+  }, [countryId, countryBranchId, cityBranchId, entryDate]);
 
   const ledgerRowsWithAccount = useMemo(
     () => ledgers.filter((row) => Boolean(row.accountId && row.ledgerId)),
@@ -1519,6 +1590,7 @@ export function CashEntryForm({
       setMessage("Entry deleted successfully.");
       setActiveRowMenuId(null);
       fetchRecentEntries();
+      fetchCashSummary();
     } catch (error: any) {
       setMessage(`Failed to delete entry: ${error?.message || "Unknown error"}`);
     }
@@ -1680,6 +1752,7 @@ export function CashEntryForm({
       );
       onSaved?.(res.entryId ?? null);
       fetchRecentEntries();
+      fetchCashSummary();
       setLedgerRefreshCount((c) => c + 1);
       return res.entryId ?? null;
     } catch (e: any) {
@@ -1889,6 +1962,83 @@ export function CashEntryForm({
         </SimpleModal>
       )}
 
+      {/* ============================================================
+          Branch-Wise Cash Summary (mandatory, always visible at top).
+          Totals for the selected Country + Branch + Date, sourced from the
+          get_branch_cash_summary DB function; auto-refreshes after each save.
+      ============================================================ */}
+      <div className="mx-4 mt-4 mb-3">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+            Daily Cash Position
+            <span className="ml-2 font-semibold text-slate-400 normal-case tracking-normal">
+              {selectedCountry?.name || (isSuperAdmin ? "Select a country" : "—")}
+              {selectedMainBranch?.name ? ` · ${selectedMainBranch.name}` : ""}
+              {entryDate ? ` · ${entryDate.split("-").reverse().join("/")}` : ""}
+            </span>
+          </h3>
+          <button
+            type="button"
+            onClick={() => { fetchCashSummary(); fetchDailyRate(); }}
+            disabled={loadingSummary || !countryId}
+            className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 disabled:opacity-50"
+          >
+            <RefreshCw className={cn("h-3 w-3", loadingSummary ? "animate-spin" : "")} />
+            Refresh
+          </button>
+        </div>
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* Total Credit (Money Paid) — green, matching the Ledger (Cr = green) */}
+          <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/20">
+            <div className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-300">Total Credit <span className="font-semibold normal-case tracking-normal opacity-70">(Money Paid)</span></div>
+            <div className="mt-1 text-lg font-black text-emerald-700 dark:text-emerald-200 tabular-nums">
+              {loadingSummary ? "…" : fmtAmount(cashSummary?.totalCredit ?? 0)}
+            </div>
+          </div>
+          {/* Total Debit (Money Received) — red, matching the Ledger (Dr = red) */}
+          <div className="rounded-xl border border-rose-200 bg-rose-50/60 p-3 shadow-sm dark:border-rose-900/50 dark:bg-rose-950/20">
+            <div className="text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-300">Total Debit <span className="font-semibold normal-case tracking-normal opacity-70">(Money Received)</span></div>
+            <div className="mt-1 text-lg font-black text-rose-700 dark:text-rose-200 tabular-nums">
+              {loadingSummary ? "…" : fmtAmount(cashSummary?.totalDebit ?? 0)}
+            </div>
+          </div>
+          {/* Current Balance = Credit - Debit (Cr positive) */}
+          <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-3 shadow-sm dark:border-blue-900/50 dark:bg-blue-950/20">
+            <div className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-300">Current Balance</div>
+            <div className="mt-1 text-lg font-black text-blue-700 dark:text-blue-200 tabular-nums">
+              {loadingSummary ? "…" : fmtAmount(cashSummary?.balance ?? 0)}
+              <span className="ml-1 text-[10px] font-bold uppercase">{cashSummary?.balanceType && cashSummary.balanceType !== "-" ? cashSummary.balanceType : ""}</span>
+            </div>
+          </div>
+          {/* Total Entries */}
+          <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+            <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Entries</div>
+            <div className="mt-1 text-lg font-black text-slate-800 dark:text-slate-100 tabular-nums">
+              {loadingSummary ? "…" : (cashSummary?.entryCount ?? 0)}
+            </div>
+          </div>
+        </div>
+        {/* Daily exchange rate strip (auto from Daily Exchange Rate module) */}
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] font-semibold">
+          <span className="text-slate-400 uppercase tracking-wider font-black">Daily Rate:</span>
+          {loadingDailyRate ? (
+            <span className="text-slate-400">Loading…</span>
+          ) : dailyRate?.found ? (
+            <>
+              <span className="rounded bg-emerald-50 border border-emerald-100 px-2 py-0.5 text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-900 dark:text-emerald-300">Buying: <b>{dailyRate.buyingRate ?? "—"}</b></span>
+              <span className="rounded bg-rose-50 border border-rose-100 px-2 py-0.5 text-rose-700 dark:bg-rose-950/40 dark:border-rose-900 dark:text-rose-300">Selling: <b>{dailyRate.sellingRate ?? "—"}</b></span>
+              <span className="rounded bg-slate-50 border border-slate-200 px-2 py-0.5 text-slate-600 dark:bg-slate-900 dark:border-slate-800">Debit Rate: <b>{dailyRate.debitRate ?? "—"}</b></span>
+              <span className="rounded bg-slate-50 border border-slate-200 px-2 py-0.5 text-slate-600 dark:bg-slate-900 dark:border-slate-800">Credit Rate: <b>{dailyRate.creditRate ?? "—"}</b></span>
+              {dailyRate.isExactDate === false ? (
+                <span className="text-amber-600 dark:text-amber-400" title="No rate entered for this exact date; showing the most recent prior rate.">(latest available)</span>
+              ) : null}
+            </>
+          ) : (
+            <span className="text-amber-600 dark:text-amber-400">Not entered yet for this country/branch/date — set it in the Daily Exchange Rate module.</span>
+          )}
+        </div>
+      </div>
+
       {/* Horizontal Scope & Session Grid */}
       <div className="mx-4 mt-4 mb-3 bg-white border border-slate-200 rounded-xl p-4 shadow-sm dark:bg-slate-900 dark:border-slate-800 flex flex-col lg:flex-row lg:items-start justify-between gap-6">
         <div className="flex flex-wrap items-start gap-x-10 gap-y-6">
@@ -2038,15 +2188,6 @@ export function CashEntryForm({
                 {countryRate?.buyRate ? ((countryRate.buyRate + (countryRate.sellRate || countryRate.buyRate)) / 2).toFixed(4) : "—"}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">Cash Ledger</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[150px]" title={selectedCashLedger?.ledgerName || "—"}>
-                {selectedCashLedger?.ledgerName || "—"}
-              </span>
-
-              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">Cash Balance</span>
-              <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
-                {cashBalanceText}
-              </span>
             </div>
           </div>
 
@@ -2458,8 +2599,19 @@ export function CashEntryForm({
                         <FieldBlock label={t(lang, "form.quantity")}>
                           <Input className="h-9 text-xs font-semibold" value={calcAmount} onChange={(e) => setCalcAmount(e.target.value)} type="number" step="0.0001" min="0" placeholder="e.g. 100" />
                         </FieldBlock>
-                        <FieldBlock label={t(lang, "form.transaction_rate")}>
+                        <FieldBlock label={`${t(lang, "form.transaction_rate")} (Applied)`}>
                           <Input className="h-9 text-xs font-semibold" value={exchangeRate} onChange={(e) => setExchangeRate(e.target.value)} type="number" step="0.0001" min="0" disabled={isLocalCurrency} />
+                          {dailyRate?.found ? (
+                            <div className="mt-1 flex flex-wrap gap-2 text-[9px] font-semibold text-slate-500">
+                              {dailyRate.buyingRate != null ? (
+                                <button type="button" className="rounded bg-emerald-50 px-1.5 py-0.5 text-emerald-700 hover:bg-emerald-100 dark:bg-emerald-950/40 dark:text-emerald-300" onClick={() => setExchangeRate(String(dailyRate.buyingRate))} title="Use daily buying rate">Buy: {dailyRate.buyingRate}</button>
+                              ) : null}
+                              {dailyRate.sellingRate != null ? (
+                                <button type="button" className="rounded bg-rose-50 px-1.5 py-0.5 text-rose-700 hover:bg-rose-100 dark:bg-rose-950/40 dark:text-rose-300" onClick={() => setExchangeRate(String(dailyRate.sellingRate))} title="Use daily selling rate">Sell: {dailyRate.sellingRate}</button>
+                              ) : null}
+                              <span className="text-slate-400">manual rate saved with entry</span>
+                            </div>
+                          ) : null}
                         </FieldBlock>
                         <FieldBlock label={t(lang, "form.operation")}>
                           <select
@@ -2712,10 +2864,10 @@ export function CashEntryForm({
                 <span className="bg-white border border-slate-200 shadow-sm dark:bg-slate-900 dark:border-slate-800 px-2.5 py-1 rounded flex gap-1 items-center">
                   Total Entries: <span className="font-bold text-slate-900 dark:text-slate-100">{recentEntriesSummary.count}</span>
                 </span>
-                <span className="bg-rose-50 border border-rose-100 text-rose-700 dark:bg-rose-950/40 dark:border-rose-900 dark:text-rose-300 px-2.5 py-1 rounded flex gap-1 items-center">
+                <span className="bg-emerald-50 border border-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-900 dark:text-emerald-300 px-2.5 py-1 rounded flex gap-1 items-center">
                   Total CR: <span className="font-bold">{fmtAmount(recentEntriesSummary.totalCredit)}</span>
                 </span>
-                <span className="bg-emerald-50 border border-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-900 dark:text-emerald-300 px-2.5 py-1 rounded flex gap-1 items-center">
+                <span className="bg-rose-50 border border-rose-100 text-rose-700 dark:bg-rose-950/40 dark:border-rose-900 dark:text-rose-300 px-2.5 py-1 rounded flex gap-1 items-center">
                   Total DR: <span className="font-bold">{fmtAmount(recentEntriesSummary.totalDebit)}</span>
                 </span>
                 <span className="bg-blue-50 border border-blue-100 text-blue-700 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-300 px-2.5 py-1 rounded flex gap-1 items-center">
@@ -2763,20 +2915,21 @@ export function CashEntryForm({
                     <th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "نمبرز" : lang === "ps" ? "شمېرې" : lang === "ar" ? "الأرقام" : lang === "fa" ? "شماره‌ها" : "Numbers"}</th>
                     <th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "تفصیلات" : lang === "ps" ? "تفصیلات" : lang === "ar" ? "التفاصيل" : lang === "fa" ? "جزئیات" : "Details"}</th>
                     <th className="p-3 font-bold text-center border border-slate-200 dark:border-slate-800">{lang === "ur" ? "کریڈٹ / ڈیبٹ" : lang === "ps" ? "کریډیټ / ډیبیټ" : lang === "ar" ? "دائن / مدين" : lang === "fa" ? "بستانکار / بدهکار" : "Credit/Debit"}</th>
-                    <th className="p-3 font-bold text-right border border-slate-200 dark:border-slate-800">{lang === "ur" ? "رقم / ادائیگی" : lang === "ps" ? "تادیه / پیسې" : lang === "ar" ? "المبلغ / الدفع" : lang === "fa" ? "مبلغ / پرداخت" : "Payment"}</th>
+                    <th className="p-3 font-bold text-right border border-slate-200 dark:border-slate-800">{lang === "ur" ? "ڈیبٹ (وصولی)" : lang === "ps" ? "ډیبیټ" : lang === "ar" ? "مدين" : lang === "fa" ? "بدهکار" : "Debit"}</th>
+                    <th className="p-3 font-bold text-right border border-slate-200 dark:border-slate-800">{lang === "ur" ? "کریڈٹ (ادائیگی)" : lang === "ps" ? "کریډیټ" : lang === "ar" ? "دائن" : lang === "fa" ? "بستانکار" : "Credit"}</th>
                     <th className="p-3 font-bold text-center border border-slate-200 dark:border-slate-800">{lang === "ur" ? "کارروائی" : lang === "ps" ? "کړنې" : lang === "ar" ? "الإجراءات" : lang === "fa" ? "عملیات" : "Actions"}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loadingEntries ? (
                     <tr>
-                      <td colSpan={9} className="p-8 text-center text-slate-400 font-medium italic border border-slate-200 dark:border-slate-800">
+                      <td colSpan={10} className="p-8 text-center text-slate-400 font-medium italic border border-slate-200 dark:border-slate-800">
                         {lang === "ur" ? "لوڈ ہو رہا ہے..." : lang === "ps" ? "بارول کیږي..." : lang === "ar" ? "جار التحميل..." : lang === "fa" ? "در حال بارگذاری..." : "Loading entries..."}
                       </td>
                     </tr>
                   ) : recentEntries.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="p-8 text-center text-slate-400 font-medium italic border border-slate-200 dark:border-slate-800">
+                      <td colSpan={10} className="p-8 text-center text-slate-400 font-medium italic border border-slate-200 dark:border-slate-800">
                         {lang === "ur" ? "کوئی اندراج موجود نہیں ہے۔" : lang === "ps" ? "هیڅ اندراج شتون نلري." : lang === "ar" ? "لا توجد إدخالات." : lang === "fa" ? "هیچ ورودی ثبت نشده است." : "No entries recorded yet."}
                       </td>
                     </tr>
@@ -2795,11 +2948,11 @@ export function CashEntryForm({
                         const creditText = lang === "ur" ? "کریڈٹ (ادائیگی)" : lang === "ps" ? "کریډیټ (تادیه شوی)" : lang === "ar" ? "دائن (مدفوع)" : lang === "fa" ? "بستانکار (پرداختی)" : "Credit";
 
                         const typeBadge = isDebit ? (
-                          <span className="rounded bg-emerald-50 px-2.5 py-0.5 font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                          <span className="rounded bg-rose-50 px-2.5 py-0.5 font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
                             {debitText}
                           </span>
                         ) : isCredit ? (
-                          <span className="rounded bg-rose-50 px-2.5 py-0.5 font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+                          <span className="rounded bg-emerald-50 px-2.5 py-0.5 font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
                             {creditText}
                           </span>
                         ) : (
@@ -2845,20 +2998,20 @@ export function CashEntryForm({
                                 <div>
                                   <span className={cn(
                                     "text-[9px] font-bold uppercase tracking-wider mr-1",
-                                    isDebit ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+                                    isDebit ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"
                                   )}>
                                     {isDebit ? "DR" : "CR"}
                                   </span>
                                   <span className={cn(
                                     "inline-flex max-w-fit items-center rounded-md border px-1.5 py-0.5 font-mono text-[9px] font-bold shadow-sm",
-                                    isDebit ? "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/30 dark:bg-emerald-950/20 dark:text-emerald-300" :
-                                    "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800/30 dark:bg-rose-950/20 dark:text-rose-300"
+                                    isDebit ? "border-rose-200 bg-rose-50 text-rose-700 dark:border-rose-800/30 dark:bg-rose-950/20 dark:text-rose-300" :
+                                    "border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800/30 dark:bg-emerald-950/20 dark:text-emerald-300"
                                   )}>
                                     {line.account_number || "—"}
                                   </span>
                                   <span className={cn(
                                     "text-[10px] font-bold mt-0.5 line-clamp-2 block",
-                                    isDebit ? "text-emerald-900 dark:text-emerald-100" : "text-rose-900 dark:text-rose-100"
+                                    isDebit ? "text-rose-900 dark:text-rose-100" : "text-emerald-900 dark:text-emerald-100"
                                   )}>
                                     {line.ledgers?.name || "—"}
                                   </span>
@@ -2904,11 +3057,13 @@ export function CashEntryForm({
                           <td className="p-3 text-center whitespace-nowrap border border-slate-200 dark:border-slate-800">
                             {typeBadge}
                           </td>
-                          <td className={cn(
-                            "p-3 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800",
-                            isDebit ? "text-emerald-700 dark:text-emerald-450" : isCredit ? "text-red-650 dark:text-red-400" : "text-slate-900 dark:text-slate-100"
-                          )}>
-                            {amountStr}
+                          {/* Debit (Dr) — red, matching the Ledger */}
+                          <td className="p-3 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-rose-700 dark:text-rose-400">
+                            {isDebit ? `${fmtAmount(Number(line.debit))} ${line.currency || ""}` : <span className="text-slate-300 dark:text-slate-700">—</span>}
+                          </td>
+                          {/* Credit (Cr / Jama) — green, positive with + sign, matching the Ledger */}
+                          <td className="p-3 text-right font-black whitespace-nowrap border border-slate-200 dark:border-slate-800 text-emerald-700 dark:text-emerald-400">
+                            {isCredit ? `+${fmtAmount(Number(line.credit))} ${line.currency || ""}` : <span className="text-slate-300 dark:text-slate-700">—</span>}
                           </td>
                           <td className="p-3 text-center border border-slate-200 dark:border-slate-800">
                             {idx === 0 ? (
