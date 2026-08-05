@@ -830,6 +830,7 @@ export function ExpensesBillEntryForm({ lang }: { lang: SupportedLanguage }) {
       <div className="print:hidden">
       {/* Page Header Portal */}
       {portalNode && createPortal(
+        <div className="flex items-center gap-3">
           <h1 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 mr-2">
             <FileText className="h-4 w-4 text-primary" />
             Office / Home Expenses Bill

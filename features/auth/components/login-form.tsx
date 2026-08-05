@@ -346,7 +346,7 @@ export function LoginForm({ lang: initialLang }: { lang?: SupportedLanguage }) {
       )}
 
       {/* ── Login Form ── */}
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form method="post" action="/api/erp/auth/login" onSubmit={handleSubmit} className="space-y-4">
         {needsCountry && (
           <SelectField
             label="Country Scope"
