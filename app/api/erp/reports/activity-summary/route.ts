@@ -43,7 +43,7 @@ export async function GET(request: NextRequest) {
       // Purchase Orders
       admin
         .from("purchase_orders")
-        .select("id, country_branch_id, country_id, order_status, created_at")
+        .select("id, country_branch_id, country_id, status, created_at")
         .is("deleted_at", null),
 
       // Sales Orders
@@ -136,7 +136,7 @@ export async function GET(request: NextRequest) {
         (r: any) => r.type === "payment" || r.type === "expense"
       );
       const transfers = brPurchases.filter(
-        (r: any) => r.order_status === "transferred" || r.order_status === "completed"
+        (r: any) => r.status === "transferred" || r.status === "completed"
       );
 
       // Last activity from all tables
@@ -224,7 +224,7 @@ export async function GET(request: NextRequest) {
       ledgerEntries: ledgers.length,
       loadingRecords: loading.length,
       transfers: purchases.filter(
-        (r: any) => r.order_status === "transferred" || r.order_status === "completed"
+        (r: any) => r.status === "transferred" || r.status === "completed"
       ).length,
       shippingRecords: shipping.length,
       lastActivity: latestDate([
