@@ -87,7 +87,7 @@ export function SearchableSelect({
             <CommandGroup>
               {value && !uniqueOptions.some((o) => o.value === value) && (
                 <CommandItem
-                  value={value}
+                  value={String(value || "")}
                   onSelect={() => setOpen(false)}
                   className="text-[11px] font-medium"
                 >
@@ -97,8 +97,8 @@ export function SearchableSelect({
               {uniqueOptions.map((opt) => (
                 <CommandItem
                   key={opt.value}
-                  value={opt.label}
-                  keywords={[opt.value]}
+                  value={String(opt.label || opt.value || "")}
+                  keywords={[String(opt.value || "")]}
                   onSelect={() => {
                     onChange(opt.value);
                     setOpen(false);
@@ -108,7 +108,7 @@ export function SearchableSelect({
                     value === opt.value && "font-semibold bg-slate-100 dark:bg-slate-800"
                   )}
                 >
-                  <span className="truncate">{opt.label}</span>
+                  <span className="truncate">{opt.label || opt.value}</span>
                   {value === opt.value && <Check className="h-3 w-3 text-primary ml-2 shrink-0" />}
                 </CommandItem>
               ))}

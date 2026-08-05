@@ -181,7 +181,13 @@ const RenderAccountDetail = ({ ledger, colorClass, borderColorClass }: { ledger:
   );
 };
 
-export function ExpensesBillEntryForm({ lang }: { lang: SupportedLanguage }) {
+export function ExpensesBillEntryForm({ 
+  lang, 
+  initialBillCategory = "office_home" 
+}: { 
+  lang: SupportedLanguage;
+  initialBillCategory?: "office_home" | "daily_expenses";
+}) {
   const [viewMode, setViewMode] = useState<"list" | "form">("list");
   const [portalNode, setPortalNode] = useState<HTMLElement | null>(null);
 
@@ -226,7 +232,7 @@ export function ExpensesBillEntryForm({ lang }: { lang: SupportedLanguage }) {
   const [billSerial, setBillSerial] = useState("");
   const [billDate, setBillDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [billMode, setBillMode] = useState("new"); // "new" | "attached"
-  const [billTitle, setBillTitle] = useState("purchase");
+  const [billTitle, setBillTitle] = useState(initialBillCategory === "daily_expenses" ? "daily_expenses" : "office_home");
   const [referenceNo, setReferenceNo] = useState("");
 
   const detailsRef = useRef<HTMLInputElement>(null);
@@ -654,11 +660,14 @@ export function ExpensesBillEntryForm({ lang }: { lang: SupportedLanguage }) {
       alert("Please Lock the Header first.");
       return;
     }
-    if (billMode === "attached" && !referenceNo.trim()) {
+    const cleanRef = (referenceNo || "").trim();
+    const cleanDetails = (details || "").trim();
+
+    if (billMode === "attached" && !cleanRef) {
       alert("Linked Reference No is required for attached bills.");
       return;
     }
-    if (!details.trim()) {
+    if (!cleanDetails) {
       alert("Enter details for the bill.");
       return;
     }
@@ -678,8 +687,8 @@ export function ExpensesBillEntryForm({ lang }: { lang: SupportedLanguage }) {
       branch,
       date: billDate,
       title: billMode === "attached" ? billTitle : "-",
-      referenceNo: billMode === "attached" ? referenceNo : "-",
-      details: details.trim(),
+      referenceNo: billMode === "attached" ? cleanRef : "-",
+      details: cleanDetails,
       qty: Number(qty),
       unitPrice: Number(unitPrice),
       amount,
@@ -833,7 +842,7 @@ export function ExpensesBillEntryForm({ lang }: { lang: SupportedLanguage }) {
         <div className="flex items-center gap-3">
           <h1 className="text-sm font-black text-slate-800 dark:text-slate-100 flex items-center gap-2 mr-2">
             <FileText className="h-4 w-4 text-primary" />
-            Office / Home Expenses Bill
+            {initialBillCategory === "daily_expenses" ? "Daily Operational Expenses Bill" : "Office / Home Expenses Bill"}
             <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">NEW</span>
           </h1>
           {viewMode === "list" ? (
@@ -981,18 +990,22 @@ export function ExpensesBillEntryForm({ lang }: { lang: SupportedLanguage }) {
               <CardContent className="p-3 space-y-2">
                 <div className="flex justify-between items-center text-xs pb-2 border-b border-slate-100">
                   <select 
-                    className="appearance-none bg-transparent font-bold text-slate-700 text-xs focus:ring-0 cursor-pointer w-[100px]"
+                    className="appearance-none bg-transparent font-bold text-slate-700 text-xs focus:ring-0 cursor-pointer w-[140px]"
                     value={`${billMode}-${billTitle}`}
                     onChange={(e) => {
-                       const [mode, title] = e.target.value.split('-');
+                       const parts = e.target.value.split('-');
+                       const mode = parts[0];
+                       const title = parts.slice(1).join('-');
                        setBillMode(mode);
                        setBillTitle(title);
                     }}
                     disabled={headerLocked}
                   >
-                    <option value="new-purchase">New Bill</option>
-                    <option value="attached-purchase">Purchase</option>
-                    <option value="attached-sale">Sale</option>
+                    <option value="new-office_home">Office / Home Bill</option>
+                    <option value="new-daily_expenses">Daily Operational Bill</option>
+                    <option value="new-purchase">General Purchase Bill</option>
+                    <option value="attached-purchase">Attached (Purchase)</option>
+                    <option value="attached-sale">Attached (Sale)</option>
                   </select>
                   <Input placeholder="Search Bill No..." className="h-6 text-xs w-[130px] border-slate-200" disabled={headerLocked || billMode === 'new'} />
                 </div>

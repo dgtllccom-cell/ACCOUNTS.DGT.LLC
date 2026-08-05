@@ -32,9 +32,23 @@ try {
 // Step 2: Git commit & push
 try {
   console.log("\n[2/4] Staging and committing all local code changes...");
+  
+  const lockFile = path.join(process.cwd(), '.git', 'index.lock');
+  if (fs.existsSync(lockFile)) {
+    try {
+      fs.unlinkSync(lockFile);
+      console.log("Removed stale .git/index.lock file.");
+    } catch (e) {
+      try {
+        execSync('taskkill /F /IM git.exe /T 2>nul', { stdio: 'ignore' });
+        if (fs.existsSync(lockFile)) fs.unlinkSync(lockFile);
+      } catch (e2) {}
+    }
+  }
+
   execSync('git add -A', { stdio: 'inherit' });
   try {
-    execSync('git commit -m "fix(deploy): test candidate DB URLs cleanly with SELECT 1 and fallback to VPS API execution"', { stdio: 'inherit' });
+    execSync('git commit -m "feat(roznamcha): implement role-aware country-wise and branch-wise cash entry summary cards for Super Admin and Branch In-Charge"', { stdio: 'inherit' });
   } catch (e) {
     console.log("No new changes to commit or commit already up to date.");
   }

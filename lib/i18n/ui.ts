@@ -868,6 +868,8 @@ const en: Dict = {
   "nav.journal_branch_report": "Journal Branch Report",
   "nav.roznamcha": "Daily Payment Entry",
   "nav.expenses_bill": "Expenses Bill",
+  "nav.daily_expenses_bill": "Daily Expenses Bill",
+  "nav.office_home_expenses_bill": "Office / Home Expenses Bill",
   "nav.all_roznamcha": "All Roznamcha",
   "nav.roznamcha_all_report": "Roznamcha All Report",
   "nav.super_admin_roznamcha": "Super Admin Roznamcha",
