@@ -149,7 +149,12 @@ export const roznamchaPostingSchema = scopeSchema
     referenceNo: z.string().max(120).optional(),
     narration: z.string().max(5000).optional(),
     lines: z.array(roznamchaLineSchema).min(1),
-    paymentDetails: z.record(z.string(), z.unknown()).optional().nullable()
+    paymentDetails: z.record(z.string(), z.unknown()).optional().nullable(),
+    sourceModule: z.string().max(60).optional().nullable(),
+    sourceTransactionType: z.string().max(60).optional().nullable(),
+    sourceTransactionId: optionalUuidSchema,
+    sourceReferenceNo: z.string().max(120).optional().nullable(),
+    roznamchaCategory: z.enum(["business", "bank", "cash", "invoice", "transfer"]).optional().nullable()
   })
   .superRefine((input, context) => {
     if (input.mode === "post" && input.lines.some((line) => !line.ledgerId)) {

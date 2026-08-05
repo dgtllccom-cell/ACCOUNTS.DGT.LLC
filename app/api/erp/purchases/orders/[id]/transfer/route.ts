@@ -150,6 +150,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const form = formData.form || {};
     const workflow = formData.workflow || {};
 
+    // Idempotency guard: block re-transferring a bill that was already posted, mirroring the
+    // guard the Sales transfer route already applies (sales/orders/[id]/transfer/route.ts).
+    if (orderRow.ledger_posting_status === "posted" && !orderRow.is_edited_since_transfer) {
+      throw new Error("This purchase order has already been transferred to Roznamcha and cannot be transferred again.");
+    }
+
     const systemBillNumber = String(orderRow.purchase_order_no || form.purchaseOrderNo || "").trim();
     const manualBillNumber = String(
       form.manualBillNumber || form.manual_bill_number || form.billNo || form.purchaseContractNo || orderRow.purchase_contract_no || ""
@@ -273,6 +279,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
           source_module: "purchase",
           source_transaction_type: "purchase_booking_transfer",
           source_transaction_id: params.id,
+          entry_category: "business",
           created_by: session.userId,
           created_at: now,
           updated_at: now
@@ -316,58 +323,16 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         country_branch_id: effectiveCountryBranchId,
         city_branch_id: effectiveCityBranchId,
         type: rozType,
-        status: "posted"
+        status: "posted",
+        entry_category: "business"
       }).eq("id", roznamchaEntryId);
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // 3. Post to Journal Entries & Journal Lines (General Ledger)
-    // ─────────────────────────────────────────────────────────────
-    try {
-      const { data: existingJE } = await adminSupabase
-        .from("journal_entries")
-        .select("id")
-        .eq("source_id", params.id)
-        .maybeSingle();
-
-      if (!existingJE) {
-        const { data: newJE } = await adminSupabase
-          .from("journal_entries")
-          .insert({
-            entry_no: `JV-PURCHASE-${systemBillNumber}`,
-            entry_date: now.slice(0, 10),
-            status: "posted",
-            memo: `Purchase Transfer - ${systemBillNumber} (${goodsAuditRemark})`,
-            source_type: "purchase_order",
-            source_id: params.id,
-            posted_at: now,
-            posted_by: session.userId,
-          })
-          .select("id")
-          .single();
-
-        if (newJE?.id) {
-          await adminSupabase.from("journal_lines").insert([
-            {
-              journal_entry_id: newJE.id,
-              account_id: debitAccountObj.id,
-              description: `DR: Purchase Account (${systemBillNumber}) - ${goodsAuditRemark}`,
-              debit: localAmount,
-              credit: 0,
-            },
-            {
-              journal_entry_id: newJE.id,
-              account_id: creditAccountObj.id,
-              description: `CR: Payable Account (${systemBillNumber}) - ${goodsAuditRemark}`,
-              debit: 0,
-              credit: localAmount,
-            }
-          ]);
-        }
-      }
-    } catch (jeErr) {
-      console.warn("Journal entry creation fallback notice:", jeErr);
-    }
+    // NOTE: A separate journal_entries/journal_lines posting used to be written here for the same
+    // bill. That duplicated the debit/credit already posted to roznamcha_entries/roznamcha_lines
+    // above (via the RPC or the direct insert), doubling every purchase transfer's ledger impact.
+    // roznamcha_entries/roznamcha_lines is the single authoritative posting for this transfer,
+    // matching how the Sales Order transfer route already works.
 
     // ─────────────────────────────────────────────────────────────
     // 4. Create purchase_order_payments record if still missing

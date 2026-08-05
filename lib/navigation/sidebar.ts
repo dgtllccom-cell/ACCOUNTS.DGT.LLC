@@ -301,10 +301,40 @@ export const sidebarTree: SidebarNode[] = [
             iconKey: "scroll-text",
             children: [
               {
-                key: "roz-all",
+                key: "roz-report-business",
+                labelKey: "Business Report" as any,
+                href: "/dashboard/roznamcha/reports/business" as Route,
+                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+              },
+              {
+                key: "roz-report-bank",
+                labelKey: "Bank Report" as any,
+                href: "/dashboard/roznamcha/reports/bank" as Route,
+                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+              },
+              {
+                key: "roz-report-cash-entry",
+                labelKey: "Cash Entry Report" as any,
+                href: "/dashboard/roznamcha/reports/cash-entry" as Route,
+                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+              },
+              {
+                key: "roz-report-invoice",
+                labelKey: "Invoice Report" as any,
+                href: "/dashboard/roznamcha/reports/invoice" as Route,
+                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+              },
+              {
+                key: "roz-report-transfer",
+                labelKey: "Transfer Report" as any,
+                href: "/dashboard/roznamcha/reports/transfer" as Route,
+                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+              },
+              {
+                key: "roz-report-all",
                 labelKey: "nav.roznamcha_all_report",
-                href: "/dashboard/roznamcha/all" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "cashier"]
+                href: "/dashboard/roznamcha/reports/all" as Route,
+                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
               },
               {
                 key: "roz-cash-entry",

@@ -561,13 +561,26 @@ export class LedgerReportService {
     const rozLines = (rozRes.data ?? []) as any[];
     const jlLines = (jlRes.data ?? []) as any[];
 
-    // Build a map of roznamcha voucher_no / entry_date to avoid duplicating journal_lines that mirror roznamcha
+    // Build a map of roznamcha voucher_no to avoid double-counting journal_lines that MIRROR a
+    // roznamcha entry. Purchase/Sales transfers post the same double-entry to BOTH roznamcha_lines
+    // (voucher_no = VO-PURCHASE-<bill>) and journal_lines (entry_no = JV-PURCHASE-<bill>). The old
+    // exact/prefix checks never matched JV-* against VO-*, so the mirrored journal line was counted
+    // on top of the roznamcha line -> doubled debit/credit. Normalizing the voucher-type prefix
+    // (VO-/JV-/…) so both reduce to the same core (PURCHASE-<bill>) fixes the duplicate posting.
+    const stripVoucherTypePrefix = (value: string | null | undefined) =>
+      String(value ?? "").trim().toUpperCase().replace(/^(VO|JV|VOU|VCH|JRN|GJ|CV|BV)-/, "");
     const rozVouchers = new Set(rozLines.map(r => r.roznamcha_entries?.voucher_no).filter(Boolean));
+    const rozVoucherCores = new Set(
+      [...rozVouchers].map((v) => stripVoucherTypePrefix(v as string)).filter(Boolean)
+    );
 
     const extraJlLines = jlLines.filter(jl => {
       const entryNo = jl.journal_entries?.entry_no;
       if (!entryNo) return false;
+      // Legacy exact/prefix variants
       if (rozVouchers.has(entryNo) || rozVouchers.has(`VO-${entryNo}`) || rozVouchers.has(`VO-PURCHASE-${entryNo}`)) return false;
+      // Robust: JV-PURCHASE-<bill> mirrors VO-PURCHASE-<bill> once the voucher-type prefix is stripped
+      if (rozVoucherCores.has(stripVoucherTypePrefix(entryNo))) return false;
       return true;
     });
 

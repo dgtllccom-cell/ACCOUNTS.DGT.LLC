@@ -320,7 +320,18 @@ export async function postRoznamchaWithErpSession(input: {
       entry_serial_number: transactionSerials.entrySerialNumber,
       source_module: body.sourceModule ?? null,
       source_transaction_type: body.sourceTransactionType ?? null,
+      source_transaction_id: body.sourceTransactionId ?? null,
       source_reference_no: body.sourceReferenceNo ?? null,
+      // The Cash Entry form sends its Business/Bank/Cash/Invoice/Transfer selection nested inside
+      // paymentDetails.roznamchaCategory (a free-form jsonb blob), not as a top-level field — this
+      // was previously dropped entirely since nothing read it back out of paymentDetails.
+      entry_category: (body.roznamchaCategory || (body.paymentDetails as any)?.roznamchaCategory || null) as
+        | "business"
+        | "bank"
+        | "cash"
+        | "invoice"
+        | "transfer"
+        | null,
       posted_at: new Date().toISOString()
     })
     .select("id")

@@ -5,6 +5,7 @@ import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -227,12 +228,13 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     if (orderRow.city_branch_id) rozType = "branch";
     else if (orderRow.country_branch_id || orderRow.country_id) rozType = "country";
 
-    const adminSupabase = createSupabaseAdminClient();
+    const adminSupabase = createSupabaseAdminClient() as any;
     await adminSupabase.from("roznamcha_entries").update({
       country_id: orderRow.country_id || null,
       country_branch_id: orderRow.country_branch_id || null,
       city_branch_id: orderRow.city_branch_id || null,
-      type: rozType
+      type: rozType,
+      entry_category: "business"
     }).eq("id", paymentRecord.roznamcha_entry_id);
 
     const journalRecord = await requireSupabaseData(

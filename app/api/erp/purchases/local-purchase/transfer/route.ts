@@ -243,6 +243,7 @@ export async function POST(request: NextRequest) {
           source_transaction_id: purchase.id,
           source_reference_no: journalSerial,
           entry_serial_number: journalSerial,
+          entry_category: "transfer",
           created_by: session.userId,
           posted_at: new Date().toISOString(),
         })
