@@ -82,13 +82,17 @@ export async function GET(request: Request) {
       countryBranchesRes,
       cityBranchesRes,
       usersRes,
-      accountsRes
+      enterpriseAccountsRes,
+      companiesRes,
+      customersRes
     ] = await Promise.all([
       supabase.from("countries").select("id, name, iso2, currency_code, official_email, admin_email, created_at").is("deleted_at", null),
       supabase.from("country_branches").select("id, country_id, name, code, is_main, address, phone, email, whatsapp_number, owner_name, documents, contacts, created_at").is("deleted_at", null),
       supabase.from("city_branches").select("id, country_id, country_branch_id, name, code, address, phone, email, contacts, documents, created_at").is("deleted_at", null),
       supabase.from("profiles").select("id, full_name, preferred_language_code, created_at").limit(50),
-      supabase.from("accounts").select("id, account_number, title, account_type_id, status, created_at").is("deleted_at", null).limit(50)
+      supabase.from("enterprise_accounts").select("id, code, name, country_id, created_at").is("deleted_at", null).order("created_at", { ascending: false }).limit(100),
+      supabase.from("companies").select("id, company_name, registration_number, phone, email, address, created_at").is("deleted_at", null).limit(50),
+      supabase.from("customers").select("id, customer_name, phone, email, address, created_at").is("deleted_at", null).limit(50)
     ]);
 
     const countriesMap = new Map<string, string>();
@@ -195,22 +199,23 @@ export async function GET(request: Request) {
       });
     });
 
-    // 4. Process Commercial / New Accounts
-    (accountsRes.data ?? []).forEach((acc: any) => {
+    // 4. Process Commercial / New Enterprise Accounts (including newly created ones)
+    (enterpriseAccountsRes.data ?? []).forEach((acc: any) => {
       const missing: string[] = [];
-      if (!acc.title) missing.push("Missing Account Title");
+      if (!acc.name) missing.push("Missing Account Title");
       missing.push("Missing Commercial Tax / NTN Registration");
       missing.push("Missing Owner ID Proof");
 
+      const countryName = countriesMap.get(acc.country_id) || "General Ledger";
       const grace = calculateGraceStatus(acc.created_at, missing);
 
       items.push({
         id: acc.id,
-        name: acc.title || `Account #${acc.account_number}`,
-        code: acc.account_number || "ACC-NEW",
+        name: acc.name || `Account ${acc.code}`,
+        code: acc.code || "ACC-NEW",
         type: "new_account",
         typeLabel: "New Ledger Account",
-        countryName: "General Ledger",
+        countryName,
         status: grace.status,
         statusBadge: grace.statusBadge,
         missingRequirements: missing,

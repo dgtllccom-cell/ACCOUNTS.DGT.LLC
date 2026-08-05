@@ -148,6 +148,18 @@ export default function KycReportsPage() {
 
   const tUI = (key: string) => KYC_UI[key]?.[activeLang] || KYC_UI[key]?.en || key;
 
+  function handleSystemLanguageChange(code: SupportedLanguage) {
+    setActiveLang(code);
+    try {
+      localStorage.setItem("erp_lang", code);
+      document.cookie = `erp_lang=${encodeURIComponent(code)}; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+      window.dispatchEvent(new Event("erp_lang_changed"));
+      window.location.reload();
+    } catch (err) {
+      console.error("Failed to change global system language:", err);
+    }
+  }
+
   async function fetchKycData() {
     setLoading(true);
     try {
@@ -165,6 +177,19 @@ export default function KycReportsPage() {
   }
 
   useEffect(() => {
+    try {
+      const stored = localStorage.getItem("erp_lang") as SupportedLanguage | null;
+      if (stored && ["en", "ur", "ps", "ar", "fa"].includes(stored)) {
+        setActiveLang(stored);
+      } else {
+        const match = document.cookie.match(/erp_lang=([^;]+)/);
+        if (match && match[1] && ["en", "ur", "ps", "ar", "fa"].includes(match[1])) {
+          setActiveLang(match[1] as SupportedLanguage);
+        }
+      }
+    } catch {
+      // ignore SSR errors
+    }
     fetchKycData();
   }, []);
 
@@ -265,7 +290,7 @@ export default function KycReportsPage() {
               <button
                 key={l.code}
                 type="button"
-                onClick={() => setActiveLang(l.code as SupportedLanguage)}
+                onClick={() => handleSystemLanguageChange(l.code as SupportedLanguage)}
                 className={`rounded-xl px-2.5 py-1 text-xs font-bold transition-all ${
                   activeLang === l.code
                     ? "bg-rose-600 text-white shadow-md shadow-rose-600/30"

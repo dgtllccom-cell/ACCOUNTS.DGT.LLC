@@ -1431,7 +1431,7 @@ export function CashEntryForm({
       setCounterLedgerId(firstLine.ledger_id);
       
       const type = firstLine.payment_entry_type || "";
-      const isDebit = ["cash_receipt", "bank_deposit", "debit"].includes(type);
+      const isDebit = Number(firstLine.debit || 0) > 0 || ["cash_receipt", "bank_deposit", "debit"].includes(type);
       
       setPaymentMode(isDebit ? "DEBIT" : "CREDIT");
       
@@ -1629,8 +1629,8 @@ export function CashEntryForm({
             enterpriseAccountId: selectedCounterLedger?.accountId || null,
             ledgerId: counterLedgerId || "",
             description: finalNarration.trim() ? finalNarration.trim() : undefined,
-            debit: paymentMode === "CREDIT" ? amount : 0,
-            credit: paymentMode === "DEBIT" ? amount : 0,
+            debit: paymentMode === "DEBIT" ? amount : 0,
+            credit: paymentMode === "CREDIT" ? amount : 0,
             currency: targetAccountCurrency.trim().toUpperCase(),
             exchangeRate: Number(exchangeRate),
             accountNumber: selectedCounterLedger?.accountCode || selectedCounterLedger?.rawAccountCode || null,
@@ -2756,28 +2756,28 @@ export function CashEntryForm({
               <table className="w-full min-w-[700px] border-collapse border border-slate-200 dark:border-slate-800 text-xs">
                 <thead className="bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-300">
                   <tr className="text-left">
-                    <th className="p-3 font-bold border border-slate-200 dark:border-slate-800">Date & History</th>
-                    <th className="p-3 font-bold border border-slate-200 dark:border-slate-800">Serials & Vouchers</th>
-                    <th className="p-3 font-bold border border-slate-200 dark:border-slate-800">Roznamcha Category</th>
-                    <th className="p-3 font-bold border border-slate-200 dark:border-slate-800">Account Details</th>
-                    <th className="p-3 font-bold border border-slate-200 dark:border-slate-800">Numbers</th>
-                    <th className="p-3 font-bold border border-slate-200 dark:border-slate-800">Details</th>
-                    <th className="p-3 font-bold text-center border border-slate-200 dark:border-slate-800">Credit/Debit</th>
-                    <th className="p-3 font-bold text-right border border-slate-200 dark:border-slate-800">Payment</th>
-                    <th className="p-3 font-bold text-center border border-slate-200 dark:border-slate-800">Actions</th>
+                    <th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "تاریخ اور ہسٹری" : lang === "ps" ? "نیټه او تاریخچه" : lang === "ar" ? "التاريخ والتأريخ" : lang === "fa" ? "تاریخ و سوابق" : "Date & History"}</th>
+                    <th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "سیریلز اور واؤچرز" : lang === "ps" ? "سیریلونه او واوچرونه" : lang === "ar" ? "الأرقام التسلسلية والسندات" : lang === "fa" ? "سریال‌ها و اسناد" : "Serials & Vouchers"}</th>
+                    <th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "روزنامچہ کیٹگری" : lang === "ps" ? "د روزنامچې برخه" : lang === "ar" ? "فئة روزنامجة" : lang === "fa" ? "دسته‌بندی روزنامچه" : "Roznamcha Category"}</th>
+                    <th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "اکاؤنٹ تفصیلات" : lang === "ps" ? "د حساب تفصیلات" : lang === "ar" ? "تفاصيل الحساب" : lang === "fa" ? "جزئیات حساب" : "Account Details"}</th>
+                    <th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "نمبرز" : lang === "ps" ? "شمېرې" : lang === "ar" ? "الأرقام" : lang === "fa" ? "شماره‌ها" : "Numbers"}</th>
+                    <th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "تفصیلات" : lang === "ps" ? "تفصیلات" : lang === "ar" ? "التفاصيل" : lang === "fa" ? "جزئیات" : "Details"}</th>
+                    <th className="p-3 font-bold text-center border border-slate-200 dark:border-slate-800">{lang === "ur" ? "کریڈٹ / ڈیبٹ" : lang === "ps" ? "کریډیټ / ډیبیټ" : lang === "ar" ? "دائن / مدين" : lang === "fa" ? "بستانکار / بدهکار" : "Credit/Debit"}</th>
+                    <th className="p-3 font-bold text-right border border-slate-200 dark:border-slate-800">{lang === "ur" ? "رقم / ادائیگی" : lang === "ps" ? "تادیه / پیسې" : lang === "ar" ? "المبلغ / الدفع" : lang === "fa" ? "مبلغ / پرداخت" : "Payment"}</th>
+                    <th className="p-3 font-bold text-center border border-slate-200 dark:border-slate-800">{lang === "ur" ? "کارروائی" : lang === "ps" ? "کړنې" : lang === "ar" ? "الإجراءات" : lang === "fa" ? "عملیات" : "Actions"}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {loadingEntries ? (
                     <tr>
                       <td colSpan={9} className="p-8 text-center text-slate-400 font-medium italic border border-slate-200 dark:border-slate-800">
-                        Loading entries...
+                        {lang === "ur" ? "لوڈ ہو رہا ہے..." : lang === "ps" ? "بارول کیږي..." : lang === "ar" ? "جار التحميل..." : lang === "fa" ? "در حال بارگذاری..." : "Loading entries..."}
                       </td>
                     </tr>
                   ) : recentEntries.length === 0 ? (
                     <tr>
                       <td colSpan={9} className="p-8 text-center text-slate-400 font-medium italic border border-slate-200 dark:border-slate-800">
-                        No entries recorded yet.
+                        {lang === "ur" ? "کوئی اندراج موجود نہیں ہے۔" : lang === "ps" ? "هیڅ اندراج شتون نلري." : lang === "ar" ? "لا توجد إدخالات." : lang === "fa" ? "هیچ ورودی ثبت نشده است." : "No entries recorded yet."}
                       </td>
                     </tr>
                   ) : (
@@ -2791,13 +2791,16 @@ export function CashEntryForm({
                         const sign = isDebit ? "+" : isCredit ? "-" : "";
                         const amountStr = `${sign}${fmtAmount(amountVal)} ${line.currency || ""}`;
                         
+                        const debitText = lang === "ur" ? "ڈیبٹ (وصولی)" : lang === "ps" ? "ډیبیټ (ترلاسه شوی)" : lang === "ar" ? "مدين (مستلم)" : lang === "fa" ? "بدهکار (دریافتی)" : "Debit";
+                        const creditText = lang === "ur" ? "کریڈٹ (ادائیگی)" : lang === "ps" ? "کریډیټ (تادیه شوی)" : lang === "ar" ? "دائن (مدفوع)" : lang === "fa" ? "بستانکار (پرداختی)" : "Credit";
+
                         const typeBadge = isDebit ? (
                           <span className="rounded bg-emerald-50 px-2.5 py-0.5 font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
-                            Debit
+                            {debitText}
                           </span>
                         ) : isCredit ? (
                           <span className="rounded bg-rose-50 px-2.5 py-0.5 font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
-                            Credit
+                            {creditText}
                           </span>
                         ) : (
                           <span className="rounded bg-slate-50 px-2.5 py-0.5 font-bold text-slate-600 dark:bg-slate-900/40 dark:text-slate-400">
