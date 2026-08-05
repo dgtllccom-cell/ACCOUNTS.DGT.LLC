@@ -37,11 +37,15 @@ function collectAutoOpenKeys(nodes: SidebarNode[], pathname: string) {
 }
 
 const CHANGED_KEYS = new Set<string>([
+  "inter-country-trade",
+  "inter-country-booking",
+  "inter-country-transfer-payment",
+  "inter-country-verification",
+  "receiving-country-workflow",
   "roz-expenses-bill-direct",
   "roz-expenses-bill",
   "local-purchase-management",
   "local-purchase",
-  "local-purchase-transfer-payment",
   "purchase-transfer-verification",
   "local-goods-received",
   "mgmt-location-workspace",

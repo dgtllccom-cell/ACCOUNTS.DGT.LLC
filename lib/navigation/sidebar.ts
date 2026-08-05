@@ -335,6 +335,42 @@ export const sidebarTree: SidebarNode[] = [
         ]
       },
   {
+    key: "inter-country-trade",
+    labelKey: "Inter-Country Trade & Transfers" as any,
+    iconKey: "globe",
+    roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
+    children: [
+      {
+        key: "inter-country-booking",
+        labelKey: "Inter-Country Purchase Booking" as any,
+        iconKey: "clipboard-list",
+        href: "/dashboard/purchase/local-purchase" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "inter-country-transfer-payment",
+        labelKey: "Inter-Country Transfer Payment" as any,
+        iconKey: "send",
+        href: "/dashboard/purchase/local-purchase-transfer-payment" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "inter-country-verification",
+        labelKey: "Inter-Country Transfer Verification" as any,
+        iconKey: "shield-check",
+        href: "/dashboard/purchase/purchase-transfer-verification" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "receiving-country-workflow",
+        labelKey: "Receiving Country Workflow (Goods Received)" as any,
+        iconKey: "package",
+        href: "/dashboard/purchase/local-goods-received" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      }
+    ]
+  },
+  {
     key: "purchase",
     labelKey: "nav.purchase",
     iconKey: "gantt",

@@ -23,11 +23,15 @@ import { SidebarIcon } from "@/components/layout/sidebar-icon";
  */
 const CHANGED_KEYS = new Set<string>([
   // Recently added & updated features
+  "inter-country-trade",
+  "inter-country-booking",
+  "inter-country-transfer-payment",
+  "inter-country-verification",
+  "receiving-country-workflow",
   "roz-expenses-bill-direct",
   "roz-expenses-bill",
   "local-purchase-management",
   "local-purchase",
-  "local-purchase-transfer-payment",
   "purchase-transfer-verification",
   "local-goods-received",
   "mgmt-location-workspace",
