@@ -161,10 +161,12 @@ export default async function SuperAdminDashboardPage() {
   const session = await getCurrentErpSession();
   if (!session) redirect("/auth/login");
   if (!session.isSuperAdmin) {
-    const fallbackTarget = session.roles.length ? (dashboardByRole[session.roles[0]] || "/dashboard/country") : "/auth/login";
-    if (fallbackTarget !== "/dashboard/super-admin") {
-      redirect(fallbackTarget as Route);
-    }
+    const role = session.roles?.[0];
+    const target = role ? dashboardByRole[role] : null;
+    const fallbackTarget = (target && target !== "/dashboard/super-admin" && target !== "/dashboard")
+      ? target
+      : "/dashboard/country";
+    redirect(fallbackTarget as Route);
   }
 
   const data = await loadDashboard();

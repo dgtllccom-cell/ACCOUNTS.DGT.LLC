@@ -1,7 +1,7 @@
 @echo off
 cd /d "%~dp0"
 echo =======================================================================
-echo   1-CLICK GITHUB PUSH & SERVER DEPLOYMENT (dgtllccom-cell/ACCOUNTS.DGT.LLC)
+echo   1-CLICK GITHUB PUSH ^& SERVER DEPLOYMENT (dgtllccom-cell/ACCOUNTS.DGT.LLC)
 echo =======================================================================
 echo.
 
@@ -17,7 +17,7 @@ echo [3/5] Committing changes...
 git commit -m "fix(auth): resolve Super Admin login fallback and session verification"
 
 echo.
-echo [4/5] Pulling remote updates & Pushing to GitHub (dgtllccom-cell/ACCOUNTS.DGT.LLC)...
+echo [4/5] Pulling remote updates ^& Pushing to GitHub (dgtllccom-cell/ACCOUNTS.DGT.LLC)...
 git pull origin main --rebase
 git push origin main
 

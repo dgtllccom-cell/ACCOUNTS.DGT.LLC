@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
 
   if (isBootstrapSuperAdmin && (isDemoAuthEnabled() || !isSupabaseConfigured())) {
     await setTempSuperAdminSession({ remember: true });
-    return respondSuccess("/dashboard");
+    return respondSuccess("/dashboard/super-admin");
   }
 
   if (!isSupabaseConfigured()) {
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
       if (!profileId) {
         if (isBootstrapSuperAdmin) {
           await setTempSuperAdminSession({ remember: true });
-          return respondSuccess("/dashboard");
+          return respondSuccess("/dashboard/super-admin");
         }
         return respondError("Invalid User ID or Password.", 401);
       }
@@ -108,7 +108,7 @@ export async function POST(request: NextRequest) {
       if (!resolvedEmail) {
         if (isBootstrapSuperAdmin) {
           await setTempSuperAdminSession({ remember: true });
-          return respondSuccess("/dashboard");
+          return respondSuccess("/dashboard/super-admin");
         }
         return respondError("Invalid User ID or Password.", 401);
       }
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
     } catch {
       if (isBootstrapSuperAdmin) {
         await setTempSuperAdminSession({ remember: true });
-        return respondSuccess("/dashboard");
+        return respondSuccess("/dashboard/super-admin");
       }
       return respondError("Invalid User ID or Password.", 401);
     }
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
   if (error) {
     if (isBootstrapSuperAdmin) {
       await setTempSuperAdminSession({ remember: true });
-      return respondSuccess("/dashboard");
+      return respondSuccess("/dashboard/super-admin");
     }
     return respondError("Invalid User ID or Password.", 401);
   }

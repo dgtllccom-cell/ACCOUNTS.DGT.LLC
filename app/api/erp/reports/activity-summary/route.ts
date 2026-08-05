@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     // 1. Get all branches (country_branches) with their country
     const { data: branches, error: brErr } = await admin
       .from("country_branches")
-      .select("id, name, code, country_id, countries(name)")
+      .select("id, name, code, country_id, countries!country_branches_country_id_fkey(name)")
       .is("deleted_at", null)
       .order("name");
 
