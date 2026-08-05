@@ -14,7 +14,7 @@ export function getSupabaseSecretKey(): string {
   if (secret && secret.trim() !== "") {
     return secret.trim();
   }
-  return "";
+  return getSupabasePublicKey();
 }
 
 export function isSupabaseConfigured(): boolean {

@@ -14791,3 +14791,1050 @@ ZodError: [
     at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
     at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\purchases\orders\route.js:68:11073)
     at async Q (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\purchases\orders\route.js:68:12195)
+
+[2026-08-05T12:41:26.867Z] ApiClientError: userId is required.
+ApiClientError: userId is required.
+    at J (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\users\route.js:1:6938)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\users\route.js:1:16224)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\users\route.js:1:17227)
+    at async R (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\users\route.js:1:18349)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async NextNodeServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+
+[2026-08-05T12:41:27.384Z] ApiClientError: Unsupported master-data entity: missing
+ApiClientError: Unsupported master-data entity: missing
+    at E (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\master-data\lookup\route.js:1:10247)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\master-data\lookup\route.js:1:14502)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\master-data\lookup\route.js:1:15505)
+    at async K (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\master-data\lookup\route.js:1:16627)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async NextNodeServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+
+[2026-08-05T12:41:27.921Z] ApiClientError: conversationId parameter is required
+ApiClientError: conversationId parameter is required
+    at C (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\return-sms-reply\messages\route.js:1:9591)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\return-sms-reply\messages\route.js:1:19206)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\return-sms-reply\messages\route.js:1:20209)
+    at async J (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\return-sms-reply\messages\route.js:1:21331)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async NextNodeServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+
+[2026-08-05T12:42:19.337Z] ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "q"
+    ],
+    "message": "Required"
+  }
+]
+ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "q"
+    ],
+    "message": "Required"
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at G (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\lookup\route.js:1:3544)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\lookup\route.js:1:7525)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\lookup\route.js:1:8528)
+    at async M (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\lookup\route.js:1:9650)
+
+[2026-08-05T12:42:19.529Z] ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "fromDate"
+    ],
+    "message": "Expected string, received null"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "toDate"
+    ],
+    "message": "Expected string, received null"
+  }
+]
+ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "fromDate"
+    ],
+    "message": "Expected string, received null"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "toDate"
+    ],
+    "message": "Expected string, received null"
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at z (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\global-consolidation\route.js:1:2114)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\global-consolidation\route.js:1:5287)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\global-consolidation\route.js:1:6290)
+    at async F (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\global-consolidation\route.js:1:7412)
+
+[2026-08-05T12:42:19.966Z] ZodError: [
+  {
+    "code": "too_small",
+    "minimum": 1,
+    "type": "string",
+    "inclusive": true,
+    "exact": false,
+    "message": "String must contain at least 1 character(s)",
+    "path": [
+      "ids"
+    ]
+  }
+]
+ZodError: [
+  {
+    "code": "too_small",
+    "minimum": 1,
+    "type": "string",
+    "inclusive": true,
+    "exact": false,
+    "message": "String must contain at least 1 character(s)",
+    "path": [
+      "ids"
+    ]
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at A (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\ledger\balances\route.js:1:744)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\ledger\balances\route.js:1:4927)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\ledger\balances\route.js:1:5930)
+    at async G (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\ledger\balances\route.js:1:7052)
+
+[2026-08-05T12:42:20.509Z] ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "fromDate"
+    ],
+    "message": "Expected string, received null"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "toDate"
+    ],
+    "message": "Expected string, received null"
+  },
+  {
+    "code": "too_small",
+    "minimum": 1,
+    "type": "string",
+    "inclusive": true,
+    "exact": false,
+    "message": "String must contain at least 1 character(s)",
+    "path": [
+      "ledgerId"
+    ]
+  }
+]
+ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "fromDate"
+    ],
+    "message": "Expected string, received null"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "toDate"
+    ],
+    "message": "Expected string, received null"
+  },
+  {
+    "code": "too_small",
+    "minimum": 1,
+    "type": "string",
+    "inclusive": true,
+    "exact": false,
+    "message": "String must contain at least 1 character(s)",
+    "path": [
+      "ledgerId"
+    ]
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at C (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\ledger\statement\route.js:1:1491)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\ledger\statement\route.js:1:5298)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\ledger\statement\route.js:1:6301)
+    at async I (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\ledger\statement\route.js:1:7423)
+
+[2026-08-05T12:42:20.740Z] ZodError: [
+  {
+    "expected": "'super_admin' | 'country' | 'main_branch' | 'city_branch'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [
+      "scope"
+    ],
+    "message": "Expected 'super_admin' | 'country' | 'main_branch' | 'city_branch', received null"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "asOfDate"
+    ],
+    "message": "Expected string, received null"
+  }
+]
+ZodError: [
+  {
+    "expected": "'super_admin' | 'country' | 'main_branch' | 'city_branch'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [
+      "scope"
+    ],
+    "message": "Expected 'super_admin' | 'country' | 'main_branch' | 'city_branch', received null"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "asOfDate"
+    ],
+    "message": "Expected string, received null"
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at z (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\trial-balance\route.js:1:2057)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\trial-balance\route.js:1:5733)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\trial-balance\route.js:1:6736)
+    at async F (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\trial-balance\route.js:1:7858)
+
+[2026-08-05T12:42:23.007Z] ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "table"
+    ],
+    "message": "Required"
+  }
+]
+ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "table"
+    ],
+    "message": "Required"
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at C (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\data\table\route.js:1:6304)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\data\table\route.js:1:10591)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\data\table\route.js:1:11594)
+    at async I (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\data\table\route.js:1:12716)
+
+[2026-08-05T12:42:23.330Z] ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "entityType"
+    ],
+    "message": "Expected string, received null"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "entityId"
+    ],
+    "message": "Expected string, received null"
+  }
+]
+ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "entityType"
+    ],
+    "message": "Expected string, received null"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "entityId"
+    ],
+    "message": "Expected string, received null"
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at E (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\documents\route.js:1:906)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\documents\route.js:1:5883)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\documents\route.js:1:6886)
+    at async L (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\documents\route.js:1:8008)
+
+[2026-08-05T12:42:23.486Z] ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "id"
+    ],
+    "message": "Expected string, received null"
+  }
+]
+ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "id"
+    ],
+    "message": "Expected string, received null"
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at D (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\documents\download\route.js:1:1100)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\documents\download\route.js:1:4691)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\documents\download\route.js:1:5694)
+    at async J (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\documents\download\route.js:1:6816)
+
+[2026-08-05T12:42:26.692Z] ApiClientError: Unsupported master-data entity: missing
+ApiClientError: Unsupported master-data entity: missing
+    at E (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\master-data\lookup\route.js:1:10247)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\master-data\lookup\route.js:1:14502)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\master-data\lookup\route.js:1:15505)
+    at async K (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\master-data\lookup\route.js:1:16627)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async NextNodeServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+
+[2026-08-05T12:42:30.192Z] ZodError: [
+  {
+    "expected": "'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'exchange-rates' | 'branch-transactions' | 'user-activity' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register' | 'daily-comprehensive'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [
+      "reportType"
+    ],
+    "message": "Expected 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'exchange-rates' | 'branch-transactions' | 'user-activity' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register' | 'daily-comprehensive', received null"
+  }
+]
+ZodError: [
+  {
+    "expected": "'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'exchange-rates' | 'branch-transactions' | 'user-activity' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register' | 'daily-comprehensive'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [
+      "reportType"
+    ],
+    "message": "Expected 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'exchange-rates' | 'branch-transactions' | 'user-activity' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register' | 'daily-comprehensive', received null"
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at A (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\reports\general\route.js:1:2361)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\reports\general\route.js:1:28331)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\reports\general\route.js:1:29334)
+    at async G (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\reports\general\route.js:1:30456)
+
+[2026-08-05T12:42:31.380Z] ApiClientError: conversationId parameter is required
+ApiClientError: conversationId parameter is required
+    at C (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\return-sms-reply\messages\route.js:1:9591)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\return-sms-reply\messages\route.js:1:19206)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\return-sms-reply\messages\route.js:1:20209)
+    at async J (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\return-sms-reply\messages\route.js:1:21331)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async NextNodeServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+
+[2026-08-05T12:42:32.282Z] ZodError: [
+  {
+    "code": "too_small",
+    "minimum": 1,
+    "type": "string",
+    "inclusive": true,
+    "exact": false,
+    "message": "String must contain at least 1 character(s)",
+    "path": [
+      "q"
+    ]
+  }
+]
+ZodError: [
+  {
+    "code": "too_small",
+    "minimum": 1,
+    "type": "string",
+    "inclusive": true,
+    "exact": false,
+    "message": "String must contain at least 1 character(s)",
+    "path": [
+      "q"
+    ]
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at K (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\search\route.js:1:12850)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\search\route.js:1:15724)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\search\route.js:1:16727)
+    at async Q (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\search\route.js:1:17849)
+
+[2026-08-05T12:42:33.580Z] ApiClientError: userId is required.
+ApiClientError: userId is required.
+    at J (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\users\route.js:1:6938)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\users\route.js:1:16224)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\users\route.js:1:17227)
+    at async R (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\users\route.js:1:18349)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async NextNodeServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+
+[2026-08-05T12:42:33.657Z] ZodError: [
+  {
+    "expected": "'super_admin' | 'country_admin' | 'country_user' | 'main_branch_admin' | 'city_branch_admin' | 'accountant' | 'cashier' | 'agent_user' | 'staff_user' | 'auditor_viewer'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [
+      "role"
+    ],
+    "message": "Expected 'super_admin' | 'country_admin' | 'country_user' | 'main_branch_admin' | 'city_branch_admin' | 'accountant' | 'cashier' | 'agent_user' | 'staff_user' | 'auditor_viewer', received null"
+  }
+]
+ZodError: [
+  {
+    "expected": "'super_admin' | 'country_admin' | 'country_user' | 'main_branch_admin' | 'city_branch_admin' | 'accountant' | 'cashier' | 'agent_user' | 'staff_user' | 'auditor_viewer'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [
+      "role"
+    ],
+    "message": "Expected 'super_admin' | 'country_admin' | 'country_user' | 'main_branch_admin' | 'city_branch_admin' | 'accountant' | 'cashier' | 'agent_user' | 'staff_user' | 'auditor_viewer', received null"
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at B (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\users\next-code\route.js:1:1105)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\users\next-code\route.js:1:4415)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\users\next-code\route.js:1:5418)
+    at async H (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\users\next-code\route.js:1:6540)
+
+[2026-08-05T12:49:35.831Z] ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "q"
+    ],
+    "message": "Required"
+  }
+]
+ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "q"
+    ],
+    "message": "Required"
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at G (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\lookup\route.js:1:3544)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\lookup\route.js:1:7525)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\lookup\route.js:1:8528)
+    at async M (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\accounts\lookup\route.js:1:9650)
+
+[2026-08-05T12:49:36.100Z] ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "fromDate"
+    ],
+    "message": "Expected string, received null"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "toDate"
+    ],
+    "message": "Expected string, received null"
+  }
+]
+ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "fromDate"
+    ],
+    "message": "Expected string, received null"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "toDate"
+    ],
+    "message": "Expected string, received null"
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at z (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\global-consolidation\route.js:1:2114)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\global-consolidation\route.js:1:5287)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\global-consolidation\route.js:1:6290)
+    at async F (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\global-consolidation\route.js:1:7412)
+
+[2026-08-05T12:49:36.375Z] ZodError: [
+  {
+    "code": "too_small",
+    "minimum": 1,
+    "type": "string",
+    "inclusive": true,
+    "exact": false,
+    "message": "String must contain at least 1 character(s)",
+    "path": [
+      "ids"
+    ]
+  }
+]
+ZodError: [
+  {
+    "code": "too_small",
+    "minimum": 1,
+    "type": "string",
+    "inclusive": true,
+    "exact": false,
+    "message": "String must contain at least 1 character(s)",
+    "path": [
+      "ids"
+    ]
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at A (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\ledger\balances\route.js:1:744)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\ledger\balances\route.js:1:4927)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\ledger\balances\route.js:1:5930)
+    at async G (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\ledger\balances\route.js:1:7052)
+
+[2026-08-05T12:49:36.876Z] ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "fromDate"
+    ],
+    "message": "Expected string, received null"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "toDate"
+    ],
+    "message": "Expected string, received null"
+  },
+  {
+    "code": "too_small",
+    "minimum": 1,
+    "type": "string",
+    "inclusive": true,
+    "exact": false,
+    "message": "String must contain at least 1 character(s)",
+    "path": [
+      "ledgerId"
+    ]
+  }
+]
+ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "fromDate"
+    ],
+    "message": "Expected string, received null"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "toDate"
+    ],
+    "message": "Expected string, received null"
+  },
+  {
+    "code": "too_small",
+    "minimum": 1,
+    "type": "string",
+    "inclusive": true,
+    "exact": false,
+    "message": "String must contain at least 1 character(s)",
+    "path": [
+      "ledgerId"
+    ]
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at C (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\ledger\statement\route.js:1:1491)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\ledger\statement\route.js:1:5298)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\ledger\statement\route.js:1:6301)
+    at async I (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\ledger\statement\route.js:1:7423)
+
+[2026-08-05T12:49:36.998Z] ZodError: [
+  {
+    "expected": "'super_admin' | 'country' | 'main_branch' | 'city_branch'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [
+      "scope"
+    ],
+    "message": "Expected 'super_admin' | 'country' | 'main_branch' | 'city_branch', received null"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "asOfDate"
+    ],
+    "message": "Expected string, received null"
+  }
+]
+ZodError: [
+  {
+    "expected": "'super_admin' | 'country' | 'main_branch' | 'city_branch'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [
+      "scope"
+    ],
+    "message": "Expected 'super_admin' | 'country' | 'main_branch' | 'city_branch', received null"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "asOfDate"
+    ],
+    "message": "Expected string, received null"
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at z (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\trial-balance\route.js:1:2057)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\trial-balance\route.js:1:5733)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\trial-balance\route.js:1:6736)
+    at async F (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\accounting\reports\trial-balance\route.js:1:7858)
+
+[2026-08-05T12:49:39.136Z] ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "table"
+    ],
+    "message": "Required"
+  }
+]
+ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "table"
+    ],
+    "message": "Required"
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at C (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\data\table\route.js:1:6304)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\data\table\route.js:1:10591)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\data\table\route.js:1:11594)
+    at async I (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\data\table\route.js:1:12716)
+
+[2026-08-05T12:49:39.686Z] ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "entityType"
+    ],
+    "message": "Expected string, received null"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "entityId"
+    ],
+    "message": "Expected string, received null"
+  }
+]
+ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "entityType"
+    ],
+    "message": "Expected string, received null"
+  },
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "entityId"
+    ],
+    "message": "Expected string, received null"
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at E (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\documents\route.js:1:906)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\documents\route.js:1:5883)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\documents\route.js:1:6886)
+    at async L (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\documents\route.js:1:8008)
+
+[2026-08-05T12:49:39.723Z] ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "id"
+    ],
+    "message": "Expected string, received null"
+  }
+]
+ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "null",
+    "path": [
+      "id"
+    ],
+    "message": "Expected string, received null"
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at D (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\documents\download\route.js:1:1100)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\documents\download\route.js:1:4691)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\documents\download\route.js:1:5694)
+    at async J (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\documents\download\route.js:1:6816)
+
+[2026-08-05T12:49:42.801Z] ApiClientError: Unsupported master-data entity: missing
+ApiClientError: Unsupported master-data entity: missing
+    at E (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\master-data\lookup\route.js:1:10247)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\master-data\lookup\route.js:1:14502)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\master-data\lookup\route.js:1:15505)
+    at async K (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\master-data\lookup\route.js:1:16627)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async NextNodeServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+
+[2026-08-05T12:49:46.156Z] ZodError: [
+  {
+    "expected": "'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'exchange-rates' | 'branch-transactions' | 'user-activity' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register' | 'daily-comprehensive'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [
+      "reportType"
+    ],
+    "message": "Expected 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'exchange-rates' | 'branch-transactions' | 'user-activity' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register' | 'daily-comprehensive', received null"
+  }
+]
+ZodError: [
+  {
+    "expected": "'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'exchange-rates' | 'branch-transactions' | 'user-activity' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register' | 'daily-comprehensive'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [
+      "reportType"
+    ],
+    "message": "Expected 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'exchange-rates' | 'branch-transactions' | 'user-activity' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register' | 'daily-comprehensive', received null"
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at A (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\reports\general\route.js:1:2361)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\reports\general\route.js:1:28331)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\reports\general\route.js:1:29334)
+    at async G (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\reports\general\route.js:1:30456)
+
+[2026-08-05T12:49:46.935Z] ApiClientError: conversationId parameter is required
+ApiClientError: conversationId parameter is required
+    at C (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\return-sms-reply\messages\route.js:1:9591)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\return-sms-reply\messages\route.js:1:19206)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\return-sms-reply\messages\route.js:1:20209)
+    at async J (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\return-sms-reply\messages\route.js:1:21331)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async NextNodeServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+
+[2026-08-05T12:49:47.672Z] ZodError: [
+  {
+    "code": "too_small",
+    "minimum": 1,
+    "type": "string",
+    "inclusive": true,
+    "exact": false,
+    "message": "String must contain at least 1 character(s)",
+    "path": [
+      "q"
+    ]
+  }
+]
+ZodError: [
+  {
+    "code": "too_small",
+    "minimum": 1,
+    "type": "string",
+    "inclusive": true,
+    "exact": false,
+    "message": "String must contain at least 1 character(s)",
+    "path": [
+      "q"
+    ]
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at K (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\search\route.js:1:12850)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\search\route.js:1:15724)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\search\route.js:1:16727)
+    at async Q (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\search\route.js:1:17849)
+
+[2026-08-05T12:49:48.586Z] ApiClientError: userId is required.
+ApiClientError: userId is required.
+    at J (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\users\route.js:1:6938)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\users\route.js:1:16224)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\users\route.js:1:17227)
+    at async R (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\users\route.js:1:18349)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async NextNodeServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+
+[2026-08-05T12:49:48.638Z] ZodError: [
+  {
+    "expected": "'super_admin' | 'country_admin' | 'country_user' | 'main_branch_admin' | 'city_branch_admin' | 'accountant' | 'cashier' | 'agent_user' | 'staff_user' | 'auditor_viewer'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [
+      "role"
+    ],
+    "message": "Expected 'super_admin' | 'country_admin' | 'country_user' | 'main_branch_admin' | 'city_branch_admin' | 'accountant' | 'cashier' | 'agent_user' | 'staff_user' | 'auditor_viewer', received null"
+  }
+]
+ZodError: [
+  {
+    "expected": "'super_admin' | 'country_admin' | 'country_user' | 'main_branch_admin' | 'city_branch_admin' | 'accountant' | 'cashier' | 'agent_user' | 'staff_user' | 'auditor_viewer'",
+    "received": "null",
+    "code": "invalid_type",
+    "path": [
+      "role"
+    ],
+    "message": "Expected 'super_admin' | 'country_admin' | 'country_user' | 'main_branch_admin' | 'city_branch_admin' | 'accountant' | 'cashier' | 'agent_user' | 'staff_user' | 'auditor_viewer', received null"
+  }
+]
+    at get error (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:5190)
+    at Y.parse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\5376.js:1:6401)
+    at B (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\users\next-code\route.js:1:1105)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\users\next-code\route.js:1:4415)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\users\next-code\route.js:1:5418)
+    at async H (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\users\next-code\route.js:1:6540)
