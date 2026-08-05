@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
 
       // Loading Records
       admin
-        .from("loading_records")
+        .from("purchase_loading_records")
         .select("id, country_branch_id, country_id, created_at")
         .is("deleted_at", null)
         .then((res) => res)
