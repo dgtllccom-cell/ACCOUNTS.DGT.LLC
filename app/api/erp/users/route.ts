@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
+import { apiCreated, apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
 import { auditApiAction } from "@/lib/api/audit";
 import { requireErpSession } from "@/lib/auth/session";
 import { userCreateSchema, uuidSchema } from "@/lib/api/erp-validation";
@@ -292,7 +292,7 @@ export async function GET(request: NextRequest) {
     const session = await requireErpSession();
     const userId = request.nextUrl.searchParams.get("userId");
     if (!userId) {
-      throw new Error("userId is required.");
+      throw new ApiClientError("userId is required.");
     }
 
     const isCountryManager = session.roles.some((r) => r === "country_admin" || r === "main_branch_admin");
@@ -529,7 +529,7 @@ export async function DELETE(request: NextRequest) {
     const session = await requireErpSession();
     const userId = request.nextUrl.searchParams.get("userId");
     if (!userId) {
-      throw new Error("userId is required.");
+      throw new ApiClientError("userId is required.");
     }
 
     const isCountryManager = session.roles.some((r) => r === "country_admin" || r === "main_branch_admin");

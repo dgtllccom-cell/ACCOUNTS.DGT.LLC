@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { apiOk, handleApiError } from "@/lib/api/response";
+import { apiOk, handleApiError, ApiClientError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { getCentralMasterDefinition } from "@/lib/master-data/central-master-tables";
@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const entity = clean(request.nextUrl.searchParams.get("entity"));
     const definition = getCentralMasterDefinition(entity);
     if (!definition) {
-      throw new Error(`Unsupported master-data entity: ${entity || "missing"}`);
+      throw new ApiClientError(`Unsupported master-data entity: ${entity || "missing"}`);
     }
 
     const language = getMasterLanguage(

@@ -15,6 +15,19 @@ export type ApiErrorBody = {
   };
 };
 
+/**
+ * Client/validation error for bad requests (missing/invalid params, unsupported
+ * inputs). handleApiError maps this to HTTP 400 instead of the default 500.
+ */
+export class ApiClientError extends Error {
+  status = 400;
+  code = "BAD_REQUEST";
+  constructor(message: string) {
+    super(message);
+    this.name = "ApiClientError";
+  }
+}
+
 export function translateToUrdu(message: string): string {
   const msg = message.toLowerCase();
 
@@ -137,7 +150,11 @@ export async function handleApiError(error: unknown) {
   let status = 500;
   let details: unknown;
 
-  if (error instanceof ZodError) {
+  if (error instanceof ApiClientError) {
+    code = error.code;
+    message = error.message;
+    status = error.status;
+  } else if (error instanceof ZodError) {
     code = "VALIDATION_ERROR";
     const issues = error.errors.map(err => {
       const path = err.path.join(".");

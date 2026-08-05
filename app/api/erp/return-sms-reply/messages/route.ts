@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { apiOk, apiCreated, handleApiError } from "@/lib/api/response";
+import { apiOk, apiCreated, handleApiError, ApiClientError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorize } from "@/lib/permissions/middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
 
     const conversationId = request.nextUrl.searchParams.get("conversationId");
     if (!conversationId) {
-      return handleApiError(new Error("conversationId parameter is required"));
+      return handleApiError(new ApiClientError("conversationId parameter is required"));
     }
 
     const admin = createSupabaseAdminClient();
