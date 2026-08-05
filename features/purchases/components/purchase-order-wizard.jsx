@@ -2208,12 +2208,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
   const buildPurchaseOrderPayload = (ledgerPostingStatus = "Pending", customOrderNo = null) => {
     const usdRate = Number(form.exchangeRate || 1);
+    const cleanUuid = (val) => (val && typeof val === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val.trim()) ? val.trim() : null);
 
     return {
-      countryId: form.countryId || null,
-      countryBranchId: form.countryBranchId || null,
-      cityBranchId: form.cityBranchId || null,
-      supplierCompanyId: form.purchaseCompanyId || null,
+      countryId: cleanUuid(form.countryId),
+      countryBranchId: cleanUuid(form.countryBranchId),
+      cityBranchId: cleanUuid(form.cityBranchId),
+      supplierCompanyId: cleanUuid(form.purchaseCompanyId),
       purchaseOrderNo: customOrderNo || form.purchaseOrderNo,
       purchaseContractNo: form.purchaseContractNo || form.purchaseOrderNo,
       currencyCode: form.currencyType || "USD",

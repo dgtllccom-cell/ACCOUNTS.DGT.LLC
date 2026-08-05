@@ -3,11 +3,23 @@ import { approvalActions, approvalStatuses } from "@/lib/approval/approval-actio
 import { paymentEntryTypes, roznamchaTypes } from "@/lib/accounting/roznamcha-flow";
 import { enterpriseRoles } from "@/lib/permissions/enterprise-roles";
 
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 export const uuidSchema = z.string().uuid();
-export const optionalUuidSchema = z.preprocess(
-  (val) => (val === "" || val === undefined ? null : val),
-  uuidSchema.nullish()
-);
+export const optionalUuidSchema = z.preprocess((val) => {
+  if (val === null || val === undefined || val === "") return null;
+  if (typeof val === "string") {
+    const trimmed = val.trim();
+    if (!trimmed || trimmed === "none" || trimmed === "all" || trimmed === "null" || trimmed === "undefined") {
+      return null;
+    }
+    if (UUID_REGEX.test(trimmed)) {
+      return trimmed;
+    }
+    return null;
+  }
+  return null;
+}, z.string().uuid().nullable().optional());
 export const supportedLanguageSchema = z.enum(["en", "ar", "ur", "fa", "ps"]);
 
 export const scopeSchema = z.object({
