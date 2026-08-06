@@ -288,6 +288,15 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
   purchase_order_payments: [{ field: "narration", mode: "translate" }],
   sales_order_payments: [{ field: "remarks", mode: "translate" }],
   approval_status_history: [{ field: "note", mode: "translate" }],
+  clearing_customer_orders: [
+    { field: "customer_name", mode: "transliterate" },
+    { field: "route_name", mode: "translate" },
+    { field: "loading_country_name", mode: "transliterate" },
+    { field: "receiving_country_name", mode: "transliterate" },
+    { field: "loading_port_name", mode: "transliterate" },
+    { field: "destination_port_name", mode: "transliterate" },
+    { field: "cargo_details", mode: "translate" },
+  ],
 };
 
 /** Fields for a given table, or an empty array if the table has none registered. */

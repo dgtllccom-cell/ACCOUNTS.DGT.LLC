@@ -707,6 +707,13 @@ export const sidebarTree: SidebarNode[] = [
     iconKey: "truck",
     children: [
       {
+        key: "clearing-customer-order",
+        labelKey: "nav.customer_order",
+        href: "/dashboard/clearing-agent/customer-order" as Route,
+        roles: ["super_admin", "agent_user"],
+        permission: { resource: "shipping_records", action: "read" }
+      },
+      {
         key: "shipping-shipment-details",
         labelKey: "nav.shipment_details",
         href: "/dashboard/shipping-line/shipment-details" as Route,
@@ -740,18 +747,6 @@ export const sidebarTree: SidebarNode[] = [
         key: "clearing-truck-loading",
         labelKey: "nav.truck_loading",
         href: "/dashboard/clearing-agent/truck-loading" as Route,
-        permission: { resource: "shipping_records", action: "read" }
-      },
-      {
-        key: "clearing-import-loading",
-        labelKey: "nav.import_loading",
-        href: "/dashboard/clearing-agent/import-loading" as Route,
-        permission: { resource: "shipping_records", action: "read" }
-      },
-      {
-        key: "clearing-transit-loading",
-        labelKey: "nav.transit_loading",
-        href: "/dashboard/clearing-agent/transit-loading" as Route,
         permission: { resource: "shipping_records", action: "read" }
       },
       {

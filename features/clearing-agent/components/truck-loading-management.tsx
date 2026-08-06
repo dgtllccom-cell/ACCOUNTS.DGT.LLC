@@ -104,6 +104,7 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
   const dir = getLanguageDirection(lang);
   const [rows, setRows] = useState<Loading[]>([]);
   const [trucks, setTrucks] = useState<TruckOpt[]>([]);
+  const [pendingOrders, setPendingOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -111,27 +112,38 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"parties" | "bl" | "goods" | "carrier">("parties");
+  const [transportModeFilter, setTransportModeFilter] = useState<string>("all");
+  const [movementTypeFilter, setMovementTypeFilter] = useState<string>("all");
 
   async function load() {
     setLoading(true); setError(null);
     try {
-      const [r1, r2] = await Promise.all([
+      const [r1, r2, r3] = await Promise.all([
         fetch("/api/erp/clearing-agent/truck-loading"),
         fetch("/api/erp/master-data/trucks?selectable=true"),
+        fetch("/api/erp/clearing-agent/customer-order?status=pending"),
       ]);
-      const j1 = await r1.json(); const j2 = await r2.json();
+      const j1 = await r1.json(); const j2 = await r2.json(); const j3 = await r3.json();
       if (!r1.ok) throw new Error(j1.error || "Failed to load");
       setRows(j1.records || []);
       setTrucks(r2.ok ? (j2.trucks || []) : []);
+      if (j3.success) setPendingOrders(j3.data || []);
     } catch (e: any) { setError(e.message); } finally { setLoading(false); }
   }
   useEffect(() => { load(); }, []);
 
   const filtered = useMemo(() => {
+    let result = rows;
+    if (transportModeFilter !== "all") {
+      result = result.filter((r: any) => (r.shippingType || "").toLowerCase().replace(/\s+/g, "_") === transportModeFilter || (r.transport_mode || "").toLowerCase() === transportModeFilter);
+    }
+    if (movementTypeFilter !== "all") {
+      result = result.filter((r: any) => (r.shipmentType || "").toLowerCase() === movementTypeFilter || (r.movement_type || "").toLowerCase() === movementTypeFilter);
+    }
     const q = query.trim().toLowerCase();
-    if (!q) return rows;
-    return rows.filter((r) => [r.truck_number, r.driver_name, r.goods_name, r.loading_serial].some((v) => (v || "").toLowerCase().includes(q)));
-  }, [rows, query]);
+    if (!q) return result;
+    return result.filter((r) => [r.truck_number, r.driver_name, r.goods_name, r.loading_serial].some((v) => (v || "").toLowerCase().includes(q)));
+  }, [rows, query, transportModeFilter, movementTypeFilter]);
 
   function startAdd() { setForm(EMPTY); setActiveTab("parties"); setEditing(true); }
   function startEdit(r: Loading) { setForm({ ...EMPTY, ...r, quantity: r.quantity ?? "", net_weight: r.net_weight ?? "", gross_weight: r.gross_weight ?? "", loading_date: r.loading_date ?? "" }); setActiveTab("parties"); setEditing(true); }
@@ -200,6 +212,105 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
           </button>
         </div>
       </div>
+
+      {/* Workflow Selection: Transport Mode & Movement Type */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 dark:border-slate-800 dark:bg-slate-900 shadow-sm space-y-3">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-3">
+          <span className="text-xs font-bold uppercase text-slate-500">1. Transport Mode:</span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {[
+              { key: "all", label: "All Modes" },
+              { key: "by_sea", label: "By Sea" },
+              { key: "by_road", label: "By Road" },
+              { key: "by_truck", label: "By Truck" },
+              { key: "by_air", label: "By Air" },
+            ].map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setTransportModeFilter(key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  transportModeFilter === key
+                    ? "bg-blue-600 text-white shadow-sm"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <span className="text-xs font-bold uppercase text-slate-500">2. Movement Type:</span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {[
+              { key: "all", label: "All Types" },
+              { key: "import", label: "Import Loading" },
+              { key: "transit", label: "Transit Loading" },
+              { key: "export", label: "Export Loading" },
+            ].map(({ key, label }) => (
+              <button
+                key={key}
+                onClick={() => setMovementTypeFilter(key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                  movementTypeFilter === key
+                    ? "bg-indigo-600 text-white shadow-sm"
+                    : "bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Pending Customer Orders Ribbon */}
+      {pendingOrders.length > 0 && (
+        <div className="rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase text-amber-500 flex items-center gap-2">
+              <FileText className="w-4 h-4" />
+              Pending Customer Orders Ready for Loading ({pendingOrders.length})
+            </span>
+            <span className="text-[11px] text-amber-400">Click to autofill loading entry</span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            {pendingOrders.map((ord) => (
+              <button
+                key={ord.id}
+                onClick={() => {
+                  setForm({
+                    ...EMPTY,
+                    customerAccountNo: ord.customer_name,
+                    importer: ord.customer_name,
+                    shippingType: ord.transport_mode === "by_sea" ? "By Sea" : ord.transport_mode === "by_air" ? "By Air" : "By Road",
+                    shipmentType: ord.movement_type === "import" ? "Import" : ord.movement_type === "transit" ? "Transit" : "Export",
+                    loadCountry: ord.loading_country_name || "",
+                    loadPlace: ord.loading_port_name || "",
+                    receiveCountry: ord.receiving_country_name || "",
+                    receivePlace: ord.destination_port_name || "",
+                    routeCountry: ord.route_name || "",
+                    remarks: ord.cargo_details ? `Cargo: ${ord.cargo_details}` : "",
+                  });
+                  setActiveTab("parties");
+                  setEditing(true);
+                }}
+                className="text-left p-3 rounded-xl bg-white dark:bg-slate-900 border border-amber-500/20 hover:border-amber-500/50 transition-all text-xs space-y-1 shadow-sm"
+              >
+                <div className="flex items-center justify-between font-bold">
+                  <span className="text-indigo-400 font-mono">{ord.order_no}</span>
+                  <span className="capitalize text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">
+                    {ord.transport_mode?.replace("_", " ")}
+                  </span>
+                </div>
+                <div className="text-slate-900 dark:text-white font-medium truncate">{ord.customer_name}</div>
+                <div className="text-[11px] text-slate-400 truncate">{ord.route_name || `${ord.loading_country_name || "-"} → ${ord.receiving_country_name || "-"}`}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Search Bar */}
       <div className="relative">
