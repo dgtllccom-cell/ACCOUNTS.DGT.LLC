@@ -263,8 +263,31 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "message", mode: "translate" },
   ],
   whatsapp_accounts: [{ field: "display_name", mode: "translate" }],
-  whatsapp_contacts: [{ field: "display_name", mode: "translate" }],
+  whatsapp_contacts: [
+    { field: "display_name", mode: "translate" },
+    { field: "notes", mode: "translate" },
+  ],
   whatsapp_messages: [{ field: "template_name", mode: "translate" }],
+
+  // ── Transaction & operational descriptive text (narration / description / notes /
+  //    remarks / memo). Enrolled as original-fallback (status "pending") — never
+  //    machine-mangled; a human/engine translates later. Runtime source of truth is the
+  //    DB table `translation_field_registry` (migrations 20260808 + 20260809). ──
+  roznamcha_entries: [{ field: "narration", mode: "translate" }],
+  roznamcha_lines: [{ field: "description", mode: "translate" }],
+  journal_entries: [{ field: "memo", mode: "translate" }],
+  journal_lines: [{ field: "description", mode: "translate" }],
+  ledger_posting_batches: [{ field: "narration", mode: "translate" }],
+  ledger_posting_lines: [
+    { field: "description", mode: "translate" },
+    { field: "remarks", mode: "translate" },
+  ],
+  transactions: [{ field: "description", mode: "translate" }],
+  inter_branch_ledger_transfers: [{ field: "remarks", mode: "translate" }],
+  purchase_order_expenses: [{ field: "description", mode: "translate" }],
+  purchase_order_payments: [{ field: "narration", mode: "translate" }],
+  sales_order_payments: [{ field: "remarks", mode: "translate" }],
+  approval_status_history: [{ field: "note", mode: "translate" }],
 };
 
 /** Fields for a given table, or an empty array if the table has none registered. */

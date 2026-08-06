@@ -15,6 +15,8 @@
     "mobile:ios": "next build && npx cap sync ios && npx cap open ios",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
+    "i18n:scan": "node scripts/i18n-scan.mjs",
+    "i18n:fix": "node scripts/i18n-scan.mjs --fix",
     "pretest": "node scripts/patch-vite-net-use.cjs",
     "test": "vitest run --configLoader runner",
     "pretest:watch": "node scripts/patch-vite-net-use.cjs",
