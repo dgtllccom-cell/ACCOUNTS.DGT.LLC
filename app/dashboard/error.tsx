@@ -54,11 +54,13 @@ export default function DashboardError({
 
     if (isChunkError) {
       const routeKey = "erp_chunk_reload_" + window.location.pathname;
-      const lastReload = sessionStorage.getItem(routeKey) || sessionStorage.getItem("chunk_reload_attempt");
+      const countKey = "erp_chunk_count_" + window.location.pathname;
+      const currentCount = parseInt(sessionStorage.getItem(countKey) || "0", 10);
       const now = Date.now();
 
-      if (!lastReload || now - parseInt(lastReload, 10) > 15000) {
+      if (currentCount < 3) {
         clearChunkReloadCache();
+        sessionStorage.setItem(countKey, String(currentCount + 1));
         sessionStorage.setItem(routeKey, String(now));
         sessionStorage.setItem("chunk_reload_attempt", String(now));
         window.location.href = window.location.pathname + "?_t=" + now;

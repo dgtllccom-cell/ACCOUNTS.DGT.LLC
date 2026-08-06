@@ -50,6 +50,37 @@ export function DashboardFrame({
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    function handleChunkError(event: PromiseRejectionEvent | ErrorEvent) {
+      const reason = "reason" in event ? event.reason : event.error;
+      const msg = String(reason?.message || reason || "");
+      const isChunkError =
+        reason?.name === "ChunkLoadError" ||
+        msg.includes("Loading chunk") ||
+        msg.includes("ChunkLoadError") ||
+        msg.includes("Failed to fetch dynamically imported module");
+
+      if (isChunkError) {
+        const countKey = "erp_chunk_count_" + window.location.pathname;
+        const count = parseInt(sessionStorage.getItem(countKey) || "0", 10);
+        if (count < 3) {
+          sessionStorage.setItem(countKey, String(count + 1));
+          if ("caches" in window) {
+            caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {});
+          }
+          window.location.href = window.location.pathname + "?_t=" + Date.now();
+        }
+      }
+    }
+
+    window.addEventListener("unhandledrejection", handleChunkError);
+    window.addEventListener("error", handleChunkError);
+    return () => {
+      window.removeEventListener("unhandledrejection", handleChunkError);
+      window.removeEventListener("error", handleChunkError);
+    };
+  }, []);
+
+  useEffect(() => {
     const query = searchQuery.trim();
     if (query.length < 2) {
       setDbResults([]);

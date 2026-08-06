@@ -165,6 +165,18 @@ export async function POST(request: NextRequest) {
 
     if (updateErr) throw updateErr;
 
+    // Synchronous 5-language database storage across dedicated tables
+    try {
+      const { syncRecordTranslations } = await import("@/lib/i18n/record-translation-sync");
+      await syncRecordTranslations({
+        table: "local_purchases",
+        recordId: updated.id,
+        record: updated,
+      });
+    } catch (i18nErr) {
+      console.warn("Multilingual sync notice:", i18nErr);
+    }
+
     const resPayload = {
       ok: true,
       data: {

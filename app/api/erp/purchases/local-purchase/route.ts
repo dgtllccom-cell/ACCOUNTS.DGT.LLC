@@ -190,9 +190,17 @@ export async function POST(request: NextRequest) {
 
     if (error) throw error;
 
-    // NOTE: Journal posting has been moved to the /accept and /transfer endpoints.
-    // Bills are saved as 'draft' here. The workflow is:
-    // Draft → Accept (generates serial numbers) → Transfer (posts to journal/roznamcha/ledger)
+    // Synchronous 5-language database storage across dedicated tables
+    try {
+      const { syncRecordTranslations } = await import("@/lib/i18n/record-translation-sync");
+      await syncRecordTranslations({
+        table: "local_purchases",
+        recordId: inserted.id,
+        record: inserted,
+      });
+    } catch (i18nErr) {
+      console.warn("Multilingual sync notice:", i18nErr);
+    }
 
     return NextResponse.json({
       ok: true,
