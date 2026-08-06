@@ -6,6 +6,7 @@ import { Menu, Search } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { SidebarNode } from "@/lib/navigation/sidebar";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { t } from "@/lib/i18n/ui";
 import { filterSidebarTree } from "@/lib/navigation/sidebar";
 import { enterpriseRoles, type EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { cn } from "@/lib/utils";
@@ -113,36 +114,36 @@ export function DashboardFrame({
   // Command palette search database
   const searchItems = useMemo(() => {
     return [
-      { title: "Dashboard Overview", category: "Navigation", href: "/dashboard", keywords: "home main landing dashboard overview" },
-      { title: "Super Admin Dashboard", category: "Navigation", href: "/dashboard/super-admin", keywords: "super admin dashboard summary stats" },
-      { title: "Country Admin Dashboard", category: "Navigation", href: "/dashboard/country", keywords: "country admin dashboard summary stats" },
-      { title: "City Branch Dashboard", category: "Navigation", href: "/dashboard/city", keywords: "city branch dashboard summary stats" },
-      
-      { title: "Customers Directory List", category: "Modules", href: "/dashboard/settings/customers", keywords: "customers directory clients list accounts" },
-      { title: "Add New Customer Profile", category: "Actions", href: "/dashboard/settings/customers/setup", keywords: "create add new customer account client profile" },
-      
-      { title: "Country Branch Setup", category: "Modules", href: "/dashboard/new-entry/branch-entry/country-branch", keywords: "country branch office setup creation edit" },
-      { title: "City Branch Setup", category: "Modules", href: "/dashboard/new-entry/branch-entry/city-branch", keywords: "city branch office setup creation edit" },
-      { title: "Super Admin Branch Registry", category: "Modules", href: "/dashboard/new-entry/branches/super-admin", keywords: "super admin branch registry setup" },
-      
-      { title: "User Registration / Management", category: "Modules", href: "/dashboard/new-entry/users/registration", keywords: "register user employee create edit staff role assignment" },
-      { title: "User Journal Log Report", category: "Modules", href: "/dashboard/new-entry/users/journal-report", keywords: "user journal log activity report auditing" },
-      
-      { title: "Daily Exchange Rate Manager", category: "Modules", href: "/dashboard/reports/exchange-rate", keywords: "daily exchange rate usd foreign currency update converter settings" },
-      { title: "Credit & Debit Entries (Cash Entry)", category: "Modules", href: "/dashboard/roznamcha/cash-entry", keywords: "cash entry debit credit roznamcha entries post transaction" },
-      { title: "Expenses Bill (Bill Entry)", category: "Modules", href: "/dashboard/roznamcha/expenses-bill", keywords: "expenses bill entry roznamcha tax invoice" },
-      { title: "Money Changer (Currency Exchange)", category: "Modules", href: "/dashboard/roznamcha/money-exchange", keywords: "money changer currency exchange buy sell profit loss roznamcha" },
-      { title: "Roznamcha All Report Ledger", category: "Modules", href: "/dashboard/roznamcha/all", keywords: "roznamcha all report transaction logs ledger postings" },
-      
-      { title: "Accounts Master General Report", category: "Modules", href: "/dashboard/accounts", keywords: "accounts master general report setup balance" },
-      { title: "Create New Account Item", category: "Actions", href: "/dashboard/accounts/setup", keywords: "create add account category chart of accounts asset liability equity" },
-      { title: "Ledger Statement General Report", category: "Modules", href: "/dashboard/ledger/general-report", keywords: "ledger general statement report balance credit debit logs" },
-      
-      { title: "Purchase Order Advance Payment", category: "Modules", href: "/dashboard/journal/purchase-order-payment/advance", keywords: "purchase order advance payment entries history" },
-      { title: "Purchase Order Remaining Payment", category: "Modules", href: "/dashboard/journal/purchase-order-payment/remaining", keywords: "purchase order remaining payment balance entries history" },
-      
-      { title: "Settings - Location Nodes Setup", category: "Settings", href: "/dashboard/settings/location", keywords: "settings location setup country state city area" },
-      { title: "Settings - Enterprise Company Profile", category: "Settings", href: "/dashboard/settings/company", keywords: "settings company setup legal profile tax registry" }
+      { title: "Dashboard Overview", titleKey: "cmd.dashboard_overview", category: "Navigation", href: "/dashboard", keywords: "home main landing dashboard overview" },
+      { title: "Super Admin Dashboard", titleKey: "cmd.super_admin_dashboard", category: "Navigation", href: "/dashboard/super-admin", keywords: "super admin dashboard summary stats" },
+      { title: "Country Admin Dashboard", titleKey: "cmd.country_admin_dashboard", category: "Navigation", href: "/dashboard/country", keywords: "country admin dashboard summary stats" },
+      { title: "City Branch Dashboard", titleKey: "cmd.city_branch_dashboard", category: "Navigation", href: "/dashboard/city", keywords: "city branch dashboard summary stats" },
+
+      { title: "Customers Directory List", titleKey: "cmd.customers_directory", category: "Modules", href: "/dashboard/settings/customers", keywords: "customers directory clients list accounts" },
+      { title: "Add New Customer Profile", titleKey: "cmd.add_customer", category: "Actions", href: "/dashboard/settings/customers/setup", keywords: "create add new customer account client profile" },
+
+      { title: "Country Branch Setup", titleKey: "cmd.country_branch_setup", category: "Modules", href: "/dashboard/new-entry/branch-entry/country-branch", keywords: "country branch office setup creation edit" },
+      { title: "City Branch Setup", titleKey: "cmd.city_branch_setup", category: "Modules", href: "/dashboard/new-entry/branch-entry/city-branch", keywords: "city branch office setup creation edit" },
+      { title: "Super Admin Branch Registry", titleKey: "cmd.super_admin_branch_registry", category: "Modules", href: "/dashboard/new-entry/branches/super-admin", keywords: "super admin branch registry setup" },
+
+      { title: "User Registration / Management", titleKey: "cmd.user_registration", category: "Modules", href: "/dashboard/new-entry/users/registration", keywords: "register user employee create edit staff role assignment" },
+      { title: "User Journal Log Report", titleKey: "cmd.user_journal_log", category: "Modules", href: "/dashboard/new-entry/users/journal-report", keywords: "user journal log activity report auditing" },
+
+      { title: "Daily Exchange Rate Manager", titleKey: "cmd.daily_exchange_rate", category: "Modules", href: "/dashboard/reports/exchange-rate", keywords: "daily exchange rate usd foreign currency update converter settings" },
+      { title: "Credit & Debit Entries (Cash Entry)", titleKey: "cmd.cash_entry", category: "Modules", href: "/dashboard/roznamcha/cash-entry", keywords: "cash entry debit credit roznamcha entries post transaction" },
+      { title: "Expenses Bill (Bill Entry)", titleKey: "cmd.expenses_bill", category: "Modules", href: "/dashboard/roznamcha/expenses-bill", keywords: "expenses bill entry roznamcha tax invoice" },
+      { title: "Money Changer (Currency Exchange)", titleKey: "cmd.money_changer", category: "Modules", href: "/dashboard/roznamcha/money-exchange", keywords: "money changer currency exchange buy sell profit loss roznamcha" },
+      { title: "Roznamcha All Report Ledger", titleKey: "cmd.roznamcha_all", category: "Modules", href: "/dashboard/roznamcha/all", keywords: "roznamcha all report transaction logs ledger postings" },
+
+      { title: "Accounts Master General Report", titleKey: "cmd.accounts_master", category: "Modules", href: "/dashboard/accounts", keywords: "accounts master general report setup balance" },
+      { title: "Create New Account Item", titleKey: "cmd.create_account", category: "Actions", href: "/dashboard/accounts/setup", keywords: "create add account category chart of accounts asset liability equity" },
+      { title: "Ledger Statement General Report", titleKey: "cmd.ledger_statement", category: "Modules", href: "/dashboard/ledger/general-report", keywords: "ledger general statement report balance credit debit logs" },
+
+      { title: "Purchase Order Advance Payment", titleKey: "cmd.po_advance_payment", category: "Modules", href: "/dashboard/journal/purchase-order-payment/advance", keywords: "purchase order advance payment entries history" },
+      { title: "Purchase Order Remaining Payment", titleKey: "cmd.po_remaining_payment", category: "Modules", href: "/dashboard/journal/purchase-order-payment/remaining", keywords: "purchase order remaining payment balance entries history" },
+
+      { title: "Settings - Location Nodes Setup", titleKey: "cmd.settings_location", category: "Settings", href: "/dashboard/settings/location", keywords: "settings location setup country state city area" },
+      { title: "Settings - Enterprise Company Profile", titleKey: "cmd.settings_company", category: "Settings", href: "/dashboard/settings/company", keywords: "settings company setup legal profile tax registry" }
     ];
   }, []);
 
@@ -476,11 +477,11 @@ export function DashboardFrame({
                         ? "bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
                         : "bg-primary/5 border-primary/10 text-primary dark:bg-primary/15"
                   )}>
-                    {item.category === "Actions" ? "+" : item.title.substring(0, 1)}
+                    {item.category === "Actions" ? "+" : t(lang, item.titleKey).substring(0, 1)}
                   </span>
                   <div>
-                    <p className="text-xs font-bold">{item.title}</p>
-                    <p className="text-[10px] text-muted-foreground">{item.category}</p>
+                    <p className="text-xs font-bold">{t(lang, item.titleKey)}</p>
+                    <p className="text-[10px] text-muted-foreground">{t(lang, `cmd.cat_${item.category.toLowerCase()}`)}</p>
                   </div>
                 </CommandItem>
               ))}

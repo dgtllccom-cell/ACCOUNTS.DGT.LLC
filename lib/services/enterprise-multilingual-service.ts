@@ -102,24 +102,28 @@ export async function saveEnterpriseRecordTranslations(
     const originalText = String(field.value).trim();
     const { autoTranslateText } = await import("./auto-translation-service");
     const translations = await autoTranslateText(originalText, input.originalLanguage);
-    const payload = {
-      record_table: input.recordTable,
-      record_id: input.recordId,
-      field_name: field.fieldName,
-      original_text: originalText,
-      original_language_code: input.originalLanguage,
-      ...columnPayload(translations),
-      source: input.source ?? "auto",
-      corrected_by: input.source === "manual" ? input.actorId ?? null : null,
-      corrected_at: input.source === "manual" ? new Date().toISOString() : null,
-      updated_at: new Date().toISOString()
-    };
-
-    const { data, error } = await db
-      .from("record_translations")
-      .upsert(payload, { onConflict: "record_table,record_id,field_name" })
-      .select("*")
-      .single();
+    // Upsert via the dedicated RPC. Direct supabase-js .upsert({ onConflict }) cannot be
+    // used here because the unique index on record_translations is PARTIAL
+    // (WHERE deleted_at IS NULL); PostgREST omits the predicate and Postgres raises 42P10.
+    // upsert_record_translation() runs the correct ON CONFLICT (...) WHERE deleted_at IS NULL.
+    const columns = columnPayload(translations);
+    const { data, error } = await db.rpc("upsert_record_translation", {
+      p_record_table: input.recordTable,
+      p_record_id: input.recordId,
+      p_field_name: field.fieldName,
+      p_original_text: originalText,
+      p_original_language_code: input.originalLanguage,
+      p_english: translations.en ?? originalText,
+      p_urdu: translations.ur ?? originalText,
+      p_arabic: translations.ar ?? originalText,
+      p_persian: translations.fa ?? originalText,
+      p_pashto: translations.ps ?? originalText,
+      p_language_texts: columns.language_texts,
+      p_source: input.source ?? "auto",
+      p_translation_status: columns.translation_status,
+      p_translated_by_engine: columns.translated_by_engine,
+      p_actor_id: input.source === "manual" ? input.actorId ?? null : null
+    });
 
     if (error) throw new Error(error.message);
     saved.push(data);

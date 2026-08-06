@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 
 /**
  * Product Categories master — list + create (secure-by-default).
@@ -68,7 +68,8 @@ export async function POST(req: Request) {
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-    void translateMasterRecord("product_categories", data.id, { category_name: data.category_name }, "en", session.userId);
+    // Registry-driven: syncs category_name + description into record_translations (all 5 languages).
+    void syncRecordTranslations({ table: "product_categories", recordId: data.id, record: data, originalLanguage: "en", actorId: session.userId });
 
     return NextResponse.json({
       id: data.id,

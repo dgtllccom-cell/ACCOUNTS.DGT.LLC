@@ -13,56 +13,18 @@
 
 import { saveEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { TRANSLATABLE_FIELDS as FIELD_REGISTRY } from "@/lib/i18n/translatable-fields";
 
 /**
- * Defines which fields should be auto-translated for each master table.
- * Only text fields that users see in the UI should be listed here.
+ * Single source of truth for translatable fields: the curated Phase 1 registry
+ * (`lib/i18n/translatable-fields.ts`). Derived here as table -> field-name[] so the
+ * existing trigger keeps working, but there is now ONE field list for the whole ERP
+ * (no duplicate map). The registry excludes technical fields, transaction narration,
+ * and reporting views by design.
  */
-const TRANSLATABLE_FIELDS: Record<string, string[]> = {
-  // Location hierarchy
-  countries: ["name"],
-  country_branches: ["name"],
-  city_branches: ["name", "city_name"],
-
-  // Accounts & Ledgers
-  enterprise_accounts: ["name"],
-  accounts: ["name"],
-  ledgers: ["name"],
-
-  // Products & Goods
-  goods: ["goods_name"],
-  goods_variations: ["size", "brand"],
-
-  // Contacts
-  customers: ["customer_name", "company_name"],
-  suppliers: ["customer_name", "company_name", "name"],
-  contact_persons: ["full_name"],
-
-  // Payment & Tax
-  payment_methods: ["name"],
-  tax_codes: ["name", "description"],
-
-  // Company
-  companies: ["name", "legal_name"],
-
-  // Location detail (extended coverage)
-  states_provinces: ["name"],
-  districts: ["name"],
-  cities: ["name"],
-  areas_locations: ["name"],
-
-  // Products & inventory (extended coverage — field names aligned with
-  // lib/master-data/central-master-tables.ts legacyNameColumns)
-  products: ["name", "product_name", "goods_name"],
-  product_brands: ["name", "brand_name"],
-  product_categories: ["name", "category_name"],
-  product_units: ["name", "unit_name", "symbol"],
-  warehouses: ["name", "warehouse_name"],
-
-  // Banking & HR (extended coverage)
-  banks: ["bank_name", "short_name", "branch_name"],
-  employees: ["name", "full_name"],
-};
+const TRANSLATABLE_FIELDS: Record<string, string[]> = Object.fromEntries(
+  Object.entries(FIELD_REGISTRY).map(([table, defs]) => [table, defs.map((d) => d.field)])
+);
 
 /**
  * Translates a master data record's translatable fields into all 5 languages.

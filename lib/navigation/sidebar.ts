@@ -157,12 +157,12 @@ export const sidebarTree: SidebarNode[] = [
   },
   {
     key: "general-office",
-    labelKey: "General Office Menu" as any,
+    labelKey: "nav.general_office_menu",
     iconKey: "users",
     children: [
       {
         key: "employee-general-office-form",
-        labelKey: "General Office Employee Management" as any,
+        labelKey: "nav.general_office_employee_mgmt",
         href: "/dashboard/employees" as Route,
         roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
       }
@@ -290,14 +290,14 @@ export const sidebarTree: SidebarNode[] = [
           },
           {
             key: "roz-daily-expenses-bill-direct",
-            labelKey: "Daily Operational Expenses Bill" as any,
+            labelKey: "nav.daily_operational_expenses",
             iconKey: "receipt",
             href: "/dashboard/roznamcha/daily-expenses-bill" as Route,
             roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
           },
           {
             key: "roz-expenses-bill-direct",
-            labelKey: "Office / Home Expenses Bill" as any,
+            labelKey: "nav.office_home_expenses_bill",
             iconKey: "receipt",
             href: "/dashboard/roznamcha/expenses-bill" as Route,
             roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
@@ -309,31 +309,31 @@ export const sidebarTree: SidebarNode[] = [
             children: [
               {
                 key: "roz-report-business",
-                labelKey: "Business Report" as any,
+                labelKey: "nav.business_report",
                 href: "/dashboard/roznamcha/reports/business" as Route,
                 roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
               },
               {
                 key: "roz-report-bank",
-                labelKey: "Bank Report" as any,
+                labelKey: "nav.bank_report_roz",
                 href: "/dashboard/roznamcha/reports/bank" as Route,
                 roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
               },
               {
                 key: "roz-report-cash-entry",
-                labelKey: "Cash Entry Report" as any,
+                labelKey: "nav.cash_entry_report",
                 href: "/dashboard/roznamcha/reports/cash-entry" as Route,
                 roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
               },
               {
                 key: "roz-report-invoice",
-                labelKey: "Invoice Report" as any,
+                labelKey: "nav.invoice_report",
                 href: "/dashboard/roznamcha/reports/invoice" as Route,
                 roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
               },
               {
                 key: "roz-report-transfer",
-                labelKey: "Transfer Report" as any,
+                labelKey: "report.transfer",
                 href: "/dashboard/roznamcha/reports/transfer" as Route,
                 roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
               },
@@ -345,25 +345,25 @@ export const sidebarTree: SidebarNode[] = [
               },
               {
                 key: "roz-cash-entry",
-                labelKey: "Cash & Journal Entry (Roznamcha Bill)" as any,
+                labelKey: "nav.cash_journal_entry",
                 href: "/dashboard/roznamcha/cash-entry" as Route,
                 roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
               },
               {
                 key: "roz-daily-expenses-bill",
-                labelKey: "Daily Operational Expenses Bill" as any,
+                labelKey: "nav.daily_operational_expenses",
                 href: "/dashboard/roznamcha/daily-expenses-bill" as Route,
                 roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
               },
               {
                 key: "roz-expenses-bill",
-                labelKey: "Office / Home Expenses Bill" as any,
+                labelKey: "nav.office_home_expenses_bill",
                 href: "/dashboard/roznamcha/expenses-bill" as Route,
                 roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
               },
               {
                 key: "roz-money-exchange",
-                labelKey: "Money Changer" as any,
+                labelKey: "nav.money_changer_short",
                 href: "/dashboard/roznamcha/money-exchange" as Route,
                 roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
               }
@@ -379,34 +379,34 @@ export const sidebarTree: SidebarNode[] = [
       },
   {
     key: "inter-country-trade",
-    labelKey: "Inter-Country Trade & Transfers" as any,
+    labelKey: "nav.inter_country_trade",
     iconKey: "globe",
     roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
     children: [
       {
         key: "inter-country-booking",
-        labelKey: "Inter-Country Purchase Booking" as any,
+        labelKey: "nav.inter_country_purchase_booking",
         iconKey: "clipboard-list",
         href: "/dashboard/purchase/local-purchase" as Route,
         roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
       },
       {
         key: "inter-country-transfer-payment",
-        labelKey: "Inter-Country Transfer Payment" as any,
+        labelKey: "nav.inter_country_transfer_payment",
         iconKey: "send",
         href: "/dashboard/purchase/local-purchase-transfer-payment" as Route,
         roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
       },
       {
         key: "inter-country-verification",
-        labelKey: "Inter-Country Transfer Verification" as any,
+        labelKey: "nav.inter_country_transfer_verification",
         iconKey: "shield-check",
         href: "/dashboard/purchase/purchase-transfer-verification" as Route,
         roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
       },
       {
         key: "receiving-country-workflow",
-        labelKey: "Receiving Country Workflow (Goods Received)" as any,
+        labelKey: "nav.receiving_country_workflow",
         iconKey: "package",
         href: "/dashboard/purchase/local-goods-received" as Route,
         roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
@@ -419,13 +419,13 @@ export const sidebarTree: SidebarNode[] = [
     iconKey: "gantt",
     children: [
       {
-        key: "purchase-order-management",
-        labelKey: "nav.purchase_order_management",
-        iconKey: "clipboard-list",
+        key: "branch-purchase-management",
+        labelKey: "nav.branch_purchase",
+        iconKey: "shopping-bag",
         children: [
           {
             key: "purchase-new-booking-order",
-            labelKey: "nav.new_purchase_order",
+            labelKey: "nav.new_purchase_booking",
             href: "/dashboard/purchase/new-purchase-booking-order" as Route
           },
           {
@@ -435,37 +435,32 @@ export const sidebarTree: SidebarNode[] = [
           },
           {
             key: "purchase-booking-orders",
-            labelKey: "nav.booking_purchase_orders",
+            labelKey: "nav.purchase_entry",
             href: "/dashboard/purchase/purchase-order?stage=booking" as Route
           },
           {
             key: "purchase-confirmed-orders",
-            labelKey: "nav.confirmed_purchase_orders",
+            labelKey: "nav.booking_purchase_confirmation",
             href: "/dashboard/purchase/purchase-confirm" as Route
           },
           {
             key: "purchase-container-loading",
-            labelKey: "nav.container_loading",
+            labelKey: "nav.local_loading",
             href: "/dashboard/purchase/purchase-loading-records" as Route
           },
           {
-            key: "purchase-loading-form",
-            labelKey: "Ready for Loading (Form)" as any,
-            href: "/dashboard/purchase/loading-form" as Route
-          },
-          {
             key: "purchase-bill-of-lading",
-            labelKey: "nav.bl_entry",
+            labelKey: "nav.clearing_bill_entry",
             href: "/dashboard/purchase/bill-of-lading" as Route
           },
           {
             key: "purchase-finalized-orders",
-            labelKey: "nav.finalized_purchase_orders",
+            labelKey: "nav.final_purchase_order",
             href: "/dashboard/purchase/finalized-purchase-orders" as Route
           },
           {
             key: "completed-purchase-bills",
-            labelKey: "Completed Purchase Bills" as any,
+            labelKey: "nav.completed_purchase_bills",
             href: "/dashboard/purchase/completed-purchase-bills" as Route
           },
           {
@@ -476,34 +471,51 @@ export const sidebarTree: SidebarNode[] = [
         ]
       },
       {
-        key: "local-purchase-management",
-        labelKey: "Inter-Country / Local Purchase Management" as any,
-        iconKey: "clipboard-list",
+        key: "local-branch-purchase-management",
+        labelKey: "nav.local_branch_purchase",
+        iconKey: "building-2",
         children: [
           {
             key: "local-purchase",
-            labelKey: "Inter-Country / Local Purchase Booking" as any,
+            labelKey: "nav.local_purchase",
             href: "/dashboard/purchase/local-purchase" as Route
           },
           {
-            key: "local-purchase-journal-report",
-            labelKey: "Local Purchase Journal Report" as any,
-            href: "/dashboard/purchase/local-purchase-journal-report" as Route
-          },
-          {
-            key: "local-purchase-transfer-payment",
-            labelKey: "Inter-Country Transfer Payment" as any,
+            key: "local-branch-transfer",
+            labelKey: "nav.local_transfer",
             href: "/dashboard/purchase/local-purchase-transfer-payment" as Route
           },
           {
-            key: "purchase-transfer-verification",
-            labelKey: "Inter-Country Transfer Verification" as any,
+            key: "local-branch-loading",
+            labelKey: "nav.local_loading",
+            href: "/dashboard/purchase/local-goods-received" as Route
+          }
+        ]
+      },
+      {
+        key: "country-purchase-management",
+        labelKey: "nav.country_purchase",
+        iconKey: "globe",
+        children: [
+          {
+            key: "country-branch-purchase",
+            labelKey: "nav.country_branch_purchase",
+            href: "/dashboard/purchase/local-purchase-journal-report" as Route
+          },
+          {
+            key: "country-local-purchase",
+            labelKey: "nav.country_local_purchase",
             href: "/dashboard/purchase/purchase-transfer-verification" as Route
           },
           {
-            key: "local-goods-received",
-            labelKey: "Receiving Country (Goods Received)" as any,
-            href: "/dashboard/purchase/local-goods-received" as Route
+            key: "country-transfer",
+            labelKey: "nav.country_transfer",
+            href: "/dashboard/purchase/local-goods-received?scope=country" as Route
+          },
+          {
+            key: "country-loading",
+            labelKey: "nav.country_loading",
+            href: "/dashboard/purchase/loading-form" as Route
           }
         ]
       }
@@ -521,22 +533,22 @@ export const sidebarTree: SidebarNode[] = [
         children: [
           {
             key: "sales-new-booking",
-            labelKey: "New Sales Booking" as any,
+            labelKey: "nav.new_sales_booking",
             href: "/dashboard/sales/new-sales-booking-order" as Route
           },
           {
             key: "sales-order",
-            labelKey: "Sales Transfer Payment" as any,
+            labelKey: "nav.sales_transfer_payment",
             href: "/dashboard/sales/sales-order" as Route
           },
           {
             key: "sales-confirm",
-            labelKey: "Confirmed Sales" as any,
+            labelKey: "nav.confirmed_sales",
             href: "/dashboard/sales/sales-confirm" as Route
           },
           {
             key: "sales-booking-register",
-            labelKey: "Sales Booking Register" as any,
+            labelKey: "nav.sales_booking_register",
             href: "/dashboard/sales/sales-booking-journal-report" as Route
           }
         ]
@@ -802,31 +814,31 @@ export const sidebarTree: SidebarNode[] = [
       // ─── Legacy: Enterprise Reporting Hub ───────────────────────────
       {
         key: "reports-general",
-        labelKey: "Enterprise Reporting Hub" as any,
+        labelKey: "nav.enterprise_reporting_hub",
         iconKey: "bar-chart",
         href: "/dashboard/reports" as Route,
         roles: ["super_admin", "auditor_viewer", "country_admin", "main_branch_admin"],
         children: [
-          { key: "rep-cash-entry", labelKey: "Cash Entry (Roznamcha)" as any, iconKey: "scroll-text", href: "/dashboard/reports?type=cash-entry" as Route },
-          { key: "rep-receipts", labelKey: "Receipts General Ledger" as any, iconKey: "file-text", href: "/dashboard/reports?type=receipts" as Route },
-          { key: "rep-payments", labelKey: "Payments Ledger" as any, iconKey: "banknote", href: "/dashboard/reports?type=payments" as Route },
-          { key: "rep-customer-accounts", labelKey: "Customer Account Details" as any, iconKey: "users", href: "/dashboard/reports?type=customer-accounts" as Route },
-          { key: "rep-customer-companies", labelKey: "Customer Company Registrations" as any, iconKey: "building-2", href: "/dashboard/reports?type=customer-companies" as Route },
-          { key: "rep-exchange-rates", labelKey: "Pakistan & Global Exchange Rates" as any, iconKey: "globe", href: "/dashboard/reports?type=exchange-rates" as Route },
-          { key: "rep-branch-transactions", labelKey: "Branch Transaction Performance" as any, iconKey: "bar-chart", href: "/dashboard/reports?type=branch-transactions" as Route },
-          { key: "rep-user-activity", labelKey: "User Live Activity Journal" as any, iconKey: "user-check", href: "/dashboard/reports?type=user-activity" as Route },
-          { key: "rep-audit-logs", labelKey: "Audit Trail Logs" as any, iconKey: "shield", href: "/dashboard/reports?type=audit-logs" as Route },
-          { key: "rep-approval-workflows", labelKey: "Approval Workflow States" as any, iconKey: "check-square", href: "/dashboard/reports?type=approval-workflows" as Route },
-          { key: "rep-expenses", labelKey: "Interval Expense Tracking" as any, iconKey: "coins", href: "/dashboard/reports?type=expenses" as Route },
-          { key: "rep-financial-summaries", labelKey: "Financial Balance Summaries" as any, iconKey: "calculator", href: "/dashboard/reports?type=financial-summaries" as Route },
-          { key: "rep-purchase-booking-register", labelKey: "Purchase Booking Register" as any, iconKey: "shopping-bag", href: "/dashboard/reports?type=purchase-booking-register" as Route },
-          { key: "rep-daily-comprehensive", labelKey: "Comprehensive Daily Report" as any, iconKey: "calendar", href: "/dashboard/reports?type=daily-comprehensive" as Route }
+          { key: "rep-cash-entry", labelKey: "nav.cash_entry_roznamcha", iconKey: "scroll-text", href: "/dashboard/reports?type=cash-entry" as Route },
+          { key: "rep-receipts", labelKey: "nav.receipts_general_ledger", iconKey: "file-text", href: "/dashboard/reports?type=receipts" as Route },
+          { key: "rep-payments", labelKey: "nav.payments_ledger", iconKey: "banknote", href: "/dashboard/reports?type=payments" as Route },
+          { key: "rep-customer-accounts", labelKey: "nav.customer_account_details", iconKey: "users", href: "/dashboard/reports?type=customer-accounts" as Route },
+          { key: "rep-customer-companies", labelKey: "nav.customer_company_registrations", iconKey: "building-2", href: "/dashboard/reports?type=customer-companies" as Route },
+          { key: "rep-exchange-rates", labelKey: "nav.global_exchange_rates", iconKey: "globe", href: "/dashboard/reports?type=exchange-rates" as Route },
+          { key: "rep-branch-transactions", labelKey: "nav.branch_transaction_performance", iconKey: "bar-chart", href: "/dashboard/reports?type=branch-transactions" as Route },
+          { key: "rep-user-activity", labelKey: "nav.user_live_activity", iconKey: "user-check", href: "/dashboard/reports?type=user-activity" as Route },
+          { key: "rep-audit-logs", labelKey: "nav.audit_trail_logs", iconKey: "shield", href: "/dashboard/reports?type=audit-logs" as Route },
+          { key: "rep-approval-workflows", labelKey: "nav.approval_workflow_states", iconKey: "check-square", href: "/dashboard/reports?type=approval-workflows" as Route },
+          { key: "rep-expenses", labelKey: "nav.interval_expense_tracking", iconKey: "coins", href: "/dashboard/reports?type=expenses" as Route },
+          { key: "rep-financial-summaries", labelKey: "nav.financial_balance_summaries", iconKey: "calculator", href: "/dashboard/reports?type=financial-summaries" as Route },
+          { key: "rep-purchase-booking-register", labelKey: "nav.purchase_booking_register", iconKey: "shopping-bag", href: "/dashboard/reports?type=purchase-booking-register" as Route },
+          { key: "rep-daily-comprehensive", labelKey: "report.daily_comprehensive", iconKey: "calendar", href: "/dashboard/reports?type=daily-comprehensive" as Route }
         ]
       },
 
       {
         key: "print-reports-hub",
-        labelKey: "Print Reports Hub (A4 PDF)" as any,
+        labelKey: "nav.print_reports_hub",
         iconKey: "file-text",
         href: "/dashboard/print-reports" as Route,
         roles: ["super_admin", "auditor_viewer", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
@@ -1001,19 +1013,19 @@ export const sidebarTree: SidebarNode[] = [
             children: [
               {
                 key: "rep-sales-super-admin",
-                labelKey: "Super Admin Sales Report" as any,
+                labelKey: "nav.sa_sales_report",
                 href: "/dashboard/reports?type=branch-transactions&scope=super-admin" as Route,
                 roles: ["super_admin"]
               },
               {
                 key: "rep-sales-country",
-                labelKey: "Country Sales Report" as any,
+                labelKey: "nav.ctry_sales_report",
                 href: "/dashboard/reports?type=branch-transactions&scope=country" as Route,
                 roles: ["super_admin", "country_admin", "country_user", "main_branch_admin"]
               },
               {
                 key: "rep-sales-branch",
-                labelKey: "Branch Sales Report" as any,
+                labelKey: "nav.br_sales_report",
                 href: "/dashboard/reports?type=branch-transactions&scope=branch" as Route,
                 roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "cashier"]
               }
@@ -1026,19 +1038,19 @@ export const sidebarTree: SidebarNode[] = [
             children: [
               {
                 key: "rep-pur-super-admin",
-                labelKey: "Super Admin Purchase Report" as any,
+                labelKey: "nav.sa_purchase_report",
                 href: "/dashboard/reports?type=purchase-booking-register&scope=super-admin" as Route,
                 roles: ["super_admin"]
               },
               {
                 key: "rep-pur-country",
-                labelKey: "Country Purchase Report" as any,
+                labelKey: "nav.ctry_purchase_report",
                 href: "/dashboard/reports?type=purchase-booking-register&scope=country" as Route,
                 roles: ["super_admin", "country_admin", "country_user", "main_branch_admin"]
               },
               {
                 key: "rep-pur-branch",
-                labelKey: "Branch Purchase Report" as any,
+                labelKey: "nav.br_purchase_report",
                 href: "/dashboard/reports?type=purchase-booking-register&scope=branch" as Route,
                 roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "cashier"]
               }
@@ -1051,19 +1063,19 @@ export const sidebarTree: SidebarNode[] = [
             children: [
               {
                 key: "rep-po-super-admin",
-                labelKey: "Super Admin Purchase Order Report" as any,
+                labelKey: "nav.sa_po_report",
                 href: "/dashboard/purchase/purchase-booking-journal-report?scope=super-admin" as Route,
                 roles: ["super_admin"]
               },
               {
                 key: "rep-po-country",
-                labelKey: "Country Purchase Order Report" as any,
+                labelKey: "nav.ctry_po_report",
                 href: "/dashboard/purchase/purchase-booking-journal-report?scope=country" as Route,
                 roles: ["super_admin", "country_admin", "country_user", "main_branch_admin"]
               },
               {
                 key: "rep-po-branch",
-                labelKey: "Branch Purchase Order Report" as any,
+                labelKey: "nav.br_po_report",
                 href: "/dashboard/purchase/purchase-booking-journal-report?scope=branch" as Route,
                 roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "cashier"]
               }
@@ -1076,19 +1088,19 @@ export const sidebarTree: SidebarNode[] = [
             children: [
               {
                 key: "rep-audit-super-admin",
-                labelKey: "Super Admin Audit Report" as any,
+                labelKey: "nav.sa_audit_report",
                 href: "/dashboard/reports?type=audit-logs&scope=super-admin" as Route,
                 roles: ["super_admin", "auditor_viewer"]
               },
               {
                 key: "rep-audit-country",
-                labelKey: "Country Audit Report" as any,
+                labelKey: "nav.ctry_audit_report",
                 href: "/dashboard/reports?type=audit-logs&scope=country" as Route,
                 roles: ["super_admin", "auditor_viewer", "country_admin", "main_branch_admin"]
               },
               {
                 key: "rep-audit-branch",
-                labelKey: "Branch Audit Report" as any,
+                labelKey: "nav.br_audit_report",
                 href: "/dashboard/reports?type=audit-logs&scope=branch" as Route,
                 roles: ["super_admin", "auditor_viewer", "country_admin", "main_branch_admin", "city_branch_admin"]
               }
@@ -1101,19 +1113,19 @@ export const sidebarTree: SidebarNode[] = [
             children: [
               {
                 key: "rep-pl-super-admin",
-                labelKey: "Super Admin Profit/Loss Report" as any,
+                labelKey: "nav.sa_pl_report",
                 href: "/dashboard/reports?type=financial-summaries&scope=super-admin" as Route,
                 roles: ["super_admin"]
               },
               {
                 key: "rep-pl-country",
-                labelKey: "Country Profit/Loss Report" as any,
+                labelKey: "nav.ctry_pl_report",
                 href: "/dashboard/reports?type=financial-summaries&scope=country" as Route,
                 roles: ["super_admin", "country_admin", "country_user", "main_branch_admin"]
               },
               {
                 key: "rep-pl-branch",
-                labelKey: "Branch Profit/Loss Report" as any,
+                labelKey: "nav.br_pl_report",
                 href: "/dashboard/reports?type=financial-summaries&scope=branch" as Route,
                 roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
               }
@@ -1126,19 +1138,19 @@ export const sidebarTree: SidebarNode[] = [
             children: [
               {
                 key: "rep-bs-super-admin",
-                labelKey: "Super Admin Balance Sheet" as any,
+                labelKey: "nav.sa_balance_sheet",
                 href: "/dashboard/reports?type=financial-summaries&scope=super-admin" as Route,
                 roles: ["super_admin"]
               },
               {
                 key: "rep-bs-country",
-                labelKey: "Country Balance Sheet" as any,
+                labelKey: "nav.ctry_balance_sheet",
                 href: "/dashboard/reports?type=financial-summaries&scope=country" as Route,
                 roles: ["super_admin", "country_admin", "country_user", "main_branch_admin"]
               },
               {
                 key: "rep-bs-branch",
-                labelKey: "Branch Balance Sheet" as any,
+                labelKey: "nav.br_balance_sheet",
                 href: "/dashboard/reports?type=financial-summaries&scope=branch" as Route,
                 roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
               }
@@ -1151,19 +1163,19 @@ export const sidebarTree: SidebarNode[] = [
             children: [
               {
                 key: "rep-tb-super-admin",
-                labelKey: "Super Admin Trial Balance" as any,
+                labelKey: "nav.sa_trial_balance",
                 href: "/dashboard/reports?type=financial-summaries&scope=super-admin" as Route,
                 roles: ["super_admin"]
               },
               {
                 key: "rep-tb-country",
-                labelKey: "Country Trial Balance" as any,
+                labelKey: "nav.ctry_trial_balance",
                 href: "/dashboard/reports?type=financial-summaries&scope=country" as Route,
                 roles: ["super_admin", "country_admin", "country_user", "main_branch_admin"]
               },
               {
                 key: "rep-tb-branch",
-                labelKey: "Branch Trial Balance" as any,
+                labelKey: "nav.br_trial_balance",
                 href: "/dashboard/reports?type=financial-summaries&scope=branch" as Route,
                 roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
               }
@@ -1185,12 +1197,12 @@ export const sidebarTree: SidebarNode[] = [
         children: [
           {
             key: "msg-email-inbox",
-            labelKey: "Email Inbox & Sent (ان باکس)" as any,
+            labelKey: "nav.email_inbox_sent",
             href: "/dashboard/messages/email" as Route
           },
           {
             key: "msg-email-setup",
-            labelKey: "Official Branch Email Setup (Titan SMTP)" as any,
+            labelKey: "nav.branch_email_setup",
             href: "/dashboard/settings/email-accounts" as Route
           }
         ]
@@ -1264,7 +1276,7 @@ export const sidebarTree: SidebarNode[] = [
           },
           {
             key: "mgmt-employees",
-            labelKey: "nav.employee_management" as any,
+            labelKey: "nav.employee_management",
             href: "/dashboard/settings/employees" as Route,
             roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
           },
