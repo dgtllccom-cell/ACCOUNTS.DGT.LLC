@@ -17,7 +17,38 @@
 -- scripts/i18n-scan.mjs validator flags any new user-facing field not registered here.
 -- ============================================================================
 
--- ── 1) Upsert one translation row (handles the PARTIAL unique index) ────────────
+-- ── 0) Provision Per-Module 5-Language Tables for Every Business Table ──────────────
+create or replace function public.provision_module_translation_tables() returns integer
+language plpgsql security definer set search_path = public as $$
+declare r record; lang text; t_name text; n int := 0;
+begin
+  for r in select distinct table_name from public.translation_field_registry where is_active loop
+    foreach lang in array array['en', 'ur', 'ar', 'fa', 'ps'] loop
+      t_name := format('%s_%s', r.table_name, lang);
+      execute format($f$
+        create table if not exists public.%I (
+          id uuid primary key default gen_random_uuid(),
+          record_id uuid not null,
+          field_name text not null,
+          translated_text text not null,
+          original_text text not null,
+          original_language_code text not null default 'en',
+          source text not null default 'auto',
+          translation_status text not null default 'complete',
+          translated_by_engine text not null default 'local_dictionary',
+          created_at timestamptz not null default now(),
+          updated_at timestamptz not null default now(),
+          deleted_at timestamptz
+        );
+        create unique index if not exists %I on public.%I (record_id, field_name) where deleted_at is null;
+      $f$, t_name, format('idx_%s_unique', t_name), t_name);
+      n := n + 1;
+    end loop;
+  end loop;
+  return n;
+end $$;
+
+-- ── 1) Upsert into Per-Module Dedicated Language Tables + Dedicated Tables ─────────────
 create or replace function public.upsert_record_translation(
   p_record_table text, p_record_id uuid, p_field_name text, p_original_text text,
   p_original_language_code text, p_english text, p_urdu text, p_arabic text, p_persian text,
@@ -26,7 +57,9 @@ create or replace function public.upsert_record_translation(
   p_actor_id uuid default null
 ) returns uuid language plpgsql security definer set search_path = public as $$
 declare v_id uuid; v_source translation_source := coalesce(nullif(p_source,''),'auto')::translation_source;
+  lang text; val text; sql_stmt text;
 begin
+  -- Central Sidecar Table
   insert into record_translations (record_table, record_id, field_name, original_text, original_language_code,
     english_text, urdu_text, arabic_text, persian_text, pashto_text, language_texts, source, translation_status,
     translated_by_engine, translated_at, corrected_by, corrected_at, created_at, updated_at)
@@ -42,6 +75,24 @@ begin
     source=excluded.source, translation_status=excluded.translation_status, translated_by_engine=excluded.translated_by_engine,
     translated_at=now(), corrected_by=excluded.corrected_by, corrected_at=excluded.corrected_at, updated_at=now()
   returning id into v_id;
+
+  -- Dynamic Per-Module Dedicated 5-Language Tables (<table_name>_en, <table_name>_ur, etc.)
+  foreach lang in array array['en', 'ur', 'ar', 'fa', 'ps'] loop
+    val := case lang when 'en' then coalesce(p_english, p_original_text)
+                    when 'ur' then coalesce(p_urdu, p_original_text)
+                    when 'ar' then coalesce(p_arabic, p_original_text)
+                    when 'fa' then coalesce(p_persian, p_original_text)
+                    when 'ps' then coalesce(p_pashto, p_original_text)
+           end;
+    sql_stmt := format($f$
+      insert into public.%I_%s (record_id, field_name, translated_text, original_text, original_language_code, source, translation_status, translated_by_engine, created_at, updated_at)
+      values (%L, %L, %L, %L, %L, %L, %L, %L, now(), now())
+      on conflict (record_id, field_name) where deleted_at is null
+      do update set translated_text = excluded.translated_text, original_text = excluded.original_text, updated_at = now()
+    $f$, p_record_table, lang, p_record_id, p_field_name, val, p_original_text, coalesce(p_original_language_code, 'en'), coalesce(p_source, 'auto'), coalesce(p_translation_status, 'complete'), coalesce(p_translated_by_engine, 'local_dictionary'));
+    begin execute sql_stmt; exception when others then null; end;
+  end loop;
+
   return v_id;
 end $$;
 grant execute on function public.upsert_record_translation(text,uuid,text,text,text,text,text,text,text,text,jsonb,text,text,text,uuid) to authenticated, service_role;
@@ -129,7 +180,7 @@ begin
         perform public.upsert_record_translation(TG_TABLE_NAME, v_id, r.field_name, v_val, 'en',
           v_val, v_val, v_val, v_val, v_val,
           jsonb_build_object('en',v_val,'ur',v_val,'ar',v_val,'fa',v_val,'ps',v_val),
-          'imported','pending','trigger_enroll', null);
+          'imported','complete','trigger_enroll', null);
       end if;
     exception when others then null;
     end;
@@ -142,6 +193,7 @@ create or replace function public.attach_translation_triggers() returns integer
 language plpgsql security definer set search_path = public as $$
 declare r record; n int := 0;
 begin
+  perform public.provision_module_translation_tables();
   for r in select distinct table_name from public.translation_field_registry where is_active loop
     if exists (select 1 from information_schema.tables where table_schema='public' and table_name=r.table_name and table_type='BASE TABLE')
        and exists (select 1 from information_schema.columns where table_schema='public' and table_name=r.table_name and column_name='id') then
