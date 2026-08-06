@@ -2,13 +2,25 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireErpSession } from "@/lib/auth/session";
 import { allocateFormSerials } from "@/lib/services/form-serials";
+import { ensureEmployeesTable } from "@/lib/services/ensure-employees-table";
 
 export const dynamic = "force-dynamic";
+
+function isSchemaCacheError(errMsg: string) {
+  if (!errMsg) return false;
+  const msg = errMsg.toLowerCase();
+  return (
+    msg.includes("schema cache") ||
+    msg.includes("could not find the table") ||
+    msg.includes("relation \"employees\" does not exist") ||
+    msg.includes("relation \"public.employees\" does not exist")
+  );
+}
 
 export async function GET(request: NextRequest) {
   try {
     await requireErpSession();
-    const supabase = createSupabaseAdminClient();
+    let supabase = createSupabaseAdminClient();
     
     const searchParams = request.nextUrl.searchParams;
     const countryId = searchParams.get("countryId");
@@ -54,7 +66,53 @@ export async function GET(request: NextRequest) {
     if (category) query = query.eq("category", category);
     if (status) query = query.eq("status", status);
 
-    const { data: employees, error } = await query.order("created_at", { ascending: false });
+    let { data: employees, error } = await query.order("created_at", { ascending: false });
+
+    if (error && isSchemaCacheError(error.message)) {
+      console.log("[HR-PAYROLL] Schema cache error detected on GET /employees, attempting auto-repair...");
+      await ensureEmployeesTable();
+      supabase = createSupabaseAdminClient();
+      let retryQuery = supabase
+        .from("employees")
+        .select(`
+          *,
+          person:customers!person_master_id (
+            id,
+            customer_name,
+            company_name,
+            contact_person,
+            mobile,
+            whatsapp,
+            email,
+            address
+          ),
+          country:countries (
+            id,
+            name,
+            currency_code
+          ),
+          country_branch:country_branches (
+            id,
+            name,
+            code
+          ),
+          city_branch:city_branches (
+            id,
+            name,
+            code
+          )
+        `)
+        .is("deleted_at", null);
+
+      if (countryId) retryQuery = retryQuery.eq("country_id", countryId);
+      if (branchId) retryQuery = retryQuery.eq("country_branch_id", branchId);
+      if (category) retryQuery = retryQuery.eq("category", category);
+      if (status) retryQuery = retryQuery.eq("status", status);
+
+      const retryRes = await retryQuery.order("created_at", { ascending: false });
+      employees = retryRes.data;
+      error = retryRes.error;
+    }
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
@@ -81,7 +139,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    const supabase = createSupabaseAdminClient();
+    let supabase = createSupabaseAdminClient();
     const body = await request.json();
 
     const {
@@ -149,78 +207,105 @@ export async function POST(request: NextRequest) {
     }
 
     // Auto-generate employee code
-    const { count, error: countError } = await supabase
+    let countRes = await supabase
       .from("employees")
       .select("id", { count: "exact", head: true });
     
-    if (countError) throw countError;
+    if (countRes.error && isSchemaCacheError(countRes.error.message)) {
+      console.log("[HR-PAYROLL] Schema cache error detected on count, auto-repairing...");
+      await ensureEmployeesTable();
+      supabase = createSupabaseAdminClient();
+      countRes = await supabase
+        .from("employees")
+        .select("id", { count: "exact", head: true });
+    }
 
+    if (countRes.error) {
+      return NextResponse.json({ error: countRes.error.message }, { status: 400 });
+    }
+
+    const count = countRes.count;
     const sequence = String((count ?? 0) + 1).padStart(4, "0");
     const employeeCode = `EMP-${sequence}`;
 
-    const { data: newEmployee, error: insertError } = await supabase
+    const insertPayload = {
+      person_master_id: personMasterId,
+      employee_code: employeeCode,
+      category,
+      designation,
+      department,
+      country_id: countryId || null,
+      country_branch_id: countryBranchId || null,
+      city_branch_id: cityBranchId || null,
+      reporting_manager_id: reportingManagerId || null,
+      joining_date: joiningDate || null,
+      probation_start_date: probationStartDate || null,
+      probation_end_date: probationEndDate || null,
+      employment_type: employmentType || null,
+      job_status: jobStatus || null,
+      working_shift: workingShift || null,
+      duty_start_time: dutyStartTime || null,
+      duty_end_time: dutyEndTime || null,
+      weekly_off_day: weeklyOffDay || null,
+      contract_start_date: contractStartDate || null,
+      contract_end_date: contractEndDate || null,
+      status: status || "Active",
+
+      // Salary components
+      salary_type: salaryType || "Monthly",
+      basic_salary: Number(basicSalary || 0),
+      salary_currency: salaryCurrency || "USD",
+      monthly_salary: Number(monthlySalary || 0),
+      daily_salary: Number(dailySalary || 0),
+      hourly_salary: Number(hourlySalary || 0),
+      overtime_rate: Number(overtimeRate || 0),
+      allowance: Number(allowance || 0),
+      accommodation_allowance: Number(accommodationAllowance || 0),
+      transport_allowance: Number(transportAllowance || 0),
+      food_allowance: Number(foodAllowance || 0),
+      mobile_allowance: Number(mobileAllowance || 0),
+      other_allowance: Number(otherAllowance || 0),
+      deduction: Number(deduction || 0),
+      advance_deduction: Number(advanceDeduction || 0),
+      loan_deduction: Number(loanDeduction || 0),
+      tax_deduction: Number(taxDeduction || 0),
+      net_salary: Number(netSalary || 0),
+      salary_start_date: salaryStartDate || null,
+      salary_payment_date: salaryPaymentDate || null,
+      salary_payment_method: salaryPaymentMethod || "Cash",
+      salary_schedule: salarySchedule || "Monthly",
+      salary_schedule_date: salaryScheduleDate || "last",
+
+      // Accounts linking
+      salary_expense_account_id: salaryExpenseAccountId || null,
+      employee_payable_account_id: employeePayableAccountId || null,
+      cash_account_id: cashAccountId || null,
+      bank_account_id: bankAccountId || null,
+      advance_salary_account_id: advanceSalaryAccountId || null,
+      loan_account_id: loanAccountId || null,
+      deduction_account_id: deductionAccountId || null,
+      
+      created_by: session.userId
+    };
+
+    let { data: newEmployee, error: insertError } = await supabase
       .from("employees")
-      .insert({
-        person_master_id: personMasterId,
-        employee_code: employeeCode,
-        category,
-        designation,
-        department,
-        country_id: countryId || null,
-        country_branch_id: countryBranchId || null,
-        city_branch_id: cityBranchId || null,
-        reporting_manager_id: reportingManagerId || null,
-        joining_date: joiningDate || null,
-        probation_start_date: probationStartDate || null,
-        probation_end_date: probationEndDate || null,
-        employment_type: employmentType || null,
-        job_status: jobStatus || null,
-        working_shift: workingShift || null,
-        duty_start_time: dutyStartTime || null,
-        duty_end_time: dutyEndTime || null,
-        weekly_off_day: weeklyOffDay || null,
-        contract_start_date: contractStartDate || null,
-        contract_end_date: contractEndDate || null,
-        status: status || "Active",
-
-        // Salary components
-        salary_type: salaryType || "Monthly",
-        basic_salary: Number(basicSalary || 0),
-        salary_currency: salaryCurrency || "USD",
-        monthly_salary: Number(monthlySalary || 0),
-        daily_salary: Number(dailySalary || 0),
-        hourly_salary: Number(hourlySalary || 0),
-        overtime_rate: Number(overtimeRate || 0),
-        allowance: Number(allowance || 0),
-        accommodation_allowance: Number(accommodationAllowance || 0),
-        transport_allowance: Number(transportAllowance || 0),
-        food_allowance: Number(foodAllowance || 0),
-        mobile_allowance: Number(mobileAllowance || 0),
-        other_allowance: Number(otherAllowance || 0),
-        deduction: Number(deduction || 0),
-        advance_deduction: Number(advanceDeduction || 0),
-        loan_deduction: Number(loanDeduction || 0),
-        tax_deduction: Number(taxDeduction || 0),
-        net_salary: Number(netSalary || 0),
-        salary_start_date: salaryStartDate || null,
-        salary_payment_date: salaryPaymentDate || null,
-        salary_payment_method: salaryPaymentMethod || "Cash",
-        salary_schedule: salarySchedule || "Monthly",
-        salary_schedule_date: salaryScheduleDate || "last",
-
-        // Accounts linking
-        salary_expense_account_id: salaryExpenseAccountId || null,
-        employee_payable_account_id: employeePayableAccountId || null,
-        cash_account_id: cashAccountId || null,
-        bank_account_id: bankAccountId || null,
-        advance_salary_account_id: advanceSalaryAccountId || null,
-        loan_account_id: loanAccountId || null,
-        deduction_account_id: deductionAccountId || null,
-        
-        created_by: session.userId
-      })
+      .insert(insertPayload)
       .select()
       .single();
+
+    if (insertError && isSchemaCacheError(insertError.message)) {
+      console.log("[HR-PAYROLL] Schema cache error detected on insert, auto-repairing...");
+      await ensureEmployeesTable();
+      supabase = createSupabaseAdminClient();
+      const retryInsert = await supabase
+        .from("employees")
+        .insert(insertPayload)
+        .select()
+        .single();
+      newEmployee = retryInsert.data;
+      insertError = retryInsert.error;
+    }
 
     if (insertError) {
       return NextResponse.json({ error: insertError.message }, { status: 400 });

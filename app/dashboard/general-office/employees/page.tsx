@@ -1,7 +1,7 @@
 "use client";
 
 import React, { Suspense } from "react";
-import { GeneralOfficeDashboardView } from "@/features/general-office/components/general-office-dashboard-view";
+import { GeneralOfficeDashboardView } from "@/features/general-office/components/general-office-dashboard-view-clean";
 
 export default function GeneralOfficeEmployeePage() {
   return (

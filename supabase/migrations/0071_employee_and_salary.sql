@@ -128,3 +128,11 @@ CREATE TABLE IF NOT EXISTS public.employee_advances_loans (
   updated_at timestamptz NOT NULL DEFAULT now(),
   deleted_at timestamptz
 );
+
+-- Permissions and PostgREST Schema Cache Reload
+GRANT ALL ON public.employees TO authenticated, service_role, postgres, anon;
+GRANT ALL ON public.employee_salaries_due TO authenticated, service_role, postgres, anon;
+GRANT ALL ON public.employee_advances_loans TO authenticated, service_role, postgres, anon;
+
+NOTIFY pgrst, 'reload schema';
+

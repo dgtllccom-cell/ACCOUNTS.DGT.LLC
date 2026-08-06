@@ -1,16 +1,28 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireErpSession } from "@/lib/auth/session";
+import { ensureEmployeesTable } from "@/lib/services/ensure-employees-table";
 
 export const dynamic = "force-dynamic";
+
+function isSchemaCacheError(errMsg: string) {
+  if (!errMsg) return false;
+  const msg = errMsg.toLowerCase();
+  return (
+    msg.includes("schema cache") ||
+    msg.includes("could not find the table") ||
+    msg.includes("relation \"employees\" does not exist") ||
+    msg.includes("relation \"public.employees\" does not exist")
+  );
+}
 
 export async function GET(request: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   try {
     await requireErpSession();
-    const supabase = createSupabaseAdminClient();
+    let supabase = createSupabaseAdminClient();
 
-    const { data: employee, error } = await supabase
+    let { data: employee, error } = await supabase
       .from("employees")
       .select(`
         *,
@@ -44,6 +56,47 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
       .is("deleted_at", null)
       .maybeSingle();
 
+    if (error && isSchemaCacheError(error.message)) {
+      console.log("[HR-PAYROLL] Schema cache error detected on GET /employees/[id], auto-repairing...");
+      await ensureEmployeesTable();
+      supabase = createSupabaseAdminClient();
+      const retryRes = await supabase
+        .from("employees")
+        .select(`
+          *,
+          person:customers!person_master_id (
+            id,
+            customer_name,
+            company_name,
+            contact_person,
+            mobile,
+            whatsapp,
+            email,
+            address
+          ),
+          country:countries (
+            id,
+            name,
+            currency_code
+          ),
+          country_branch:country_branches (
+            id,
+            name,
+            code
+          ),
+          city_branch:city_branches (
+            id,
+            name,
+            code
+          )
+        `)
+        .eq("id", params.id)
+        .is("deleted_at", null)
+        .maybeSingle();
+      employee = retryRes.data;
+      error = retryRes.error;
+    }
+
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
@@ -61,7 +114,7 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
   const params = await props.params;
   try {
     await requireErpSession();
-    const supabase = createSupabaseAdminClient();
+    let supabase = createSupabaseAdminClient();
     const body = await request.json();
 
     const {
@@ -178,12 +231,26 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
     if (loanAccountId !== undefined) updateData.loan_account_id = loanAccountId || null;
     if (deductionAccountId !== undefined) updateData.deduction_account_id = deductionAccountId || null;
 
-    const { data: updatedEmployee, error: updateError } = await supabase
+    let { data: updatedEmployee, error: updateError } = await supabase
       .from("employees")
       .update(updateData)
       .eq("id", params.id)
       .select()
       .single();
+
+    if (updateError && isSchemaCacheError(updateError.message)) {
+      console.log("[HR-PAYROLL] Schema cache error detected on PATCH /employees/[id], auto-repairing...");
+      await ensureEmployeesTable();
+      supabase = createSupabaseAdminClient();
+      const retryUpdate = await supabase
+        .from("employees")
+        .update(updateData)
+        .eq("id", params.id)
+        .select()
+        .single();
+      updatedEmployee = retryUpdate.data;
+      updateError = retryUpdate.error;
+    }
 
     if (updateError) {
       return NextResponse.json({ error: updateError.message }, { status: 400 });
@@ -199,14 +266,27 @@ export async function DELETE(request: NextRequest, props: { params: Promise<{ id
   const params = await props.params;
   try {
     await requireErpSession();
-    const supabase = createSupabaseAdminClient();
+    let supabase = createSupabaseAdminClient();
 
-    const { error: deleteError } = await supabase
+    let { error: deleteError } = await supabase
       .from("employees")
       .update({
         deleted_at: new Date().toISOString()
       })
       .eq("id", params.id);
+
+    if (deleteError && isSchemaCacheError(deleteError.message)) {
+      console.log("[HR-PAYROLL] Schema cache error detected on DELETE /employees/[id], auto-repairing...");
+      await ensureEmployeesTable();
+      supabase = createSupabaseAdminClient();
+      const retryDelete = await supabase
+        .from("employees")
+        .update({
+          deleted_at: new Date().toISOString()
+        })
+        .eq("id", params.id);
+      deleteError = retryDelete.error;
+    }
 
     if (deleteError) {
       return NextResponse.json({ error: deleteError.message }, { status: 400 });

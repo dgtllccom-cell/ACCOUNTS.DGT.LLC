@@ -7,6 +7,7 @@ import type { Route } from "next";
 import { Building2, Plus, Search, Eye, PencilLine, Printer, Trash2, X, MoreVertical, Loader2, ArrowLeft, Users, FileText, Layers, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { apiGet, apiDelete } from "@/lib/api/client";
 import type { CompanyRow } from "@/lib/repositories/companies-repository";
