@@ -61,7 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     const storedLang = localStorage.getItem('erp_lang');
     const lang = storedLang || 'en';
     document.documentElement.lang = lang;
-    document.documentElement.dir = rtl.has(lang) ? 'rtl' : 'ltr';
+    document.documentElement.dir = 'ltr';
   } catch {}
   try {
     if (window.isSecureContext && 'serviceWorker' in navigator) {

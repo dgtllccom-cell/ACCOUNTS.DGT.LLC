@@ -212,7 +212,7 @@ export function DashboardFrame({
     <div className="min-h-screen bg-background text-foreground">
       {/* Premium Desktop Sidebar */}
       <aside className={cn(
-        "erp-sidebar fixed inset-y-0 inset-s-0 hidden w-72 border-e border-border bg-card lg:flex lg:flex-col transition-all duration-300 shadow-xl z-30 text-card-foreground",
+        "erp-sidebar fixed inset-y-0 left-0 hidden w-72 border-r border-border bg-card lg:flex lg:flex-col transition-all duration-300 shadow-xl z-30 text-card-foreground",
         sidebarCollapsed && "lg:hidden"
       )}>
         <div className="border-b border-border/80 px-6 py-5 flex items-center justify-between gap-2">
@@ -275,7 +275,7 @@ export function DashboardFrame({
             aria-label="Close navigation"
             onClick={() => setMobileOpen(false)}
           />
-          <div className="erp-mobile-drawer absolute inset-y-0 inset-s-0 w-64 max-w-[85vw] border-e border-border bg-card shadow-2xl flex flex-col animate-in slide-in-from-left duration-300 text-card-foreground">
+          <div className="erp-mobile-drawer absolute inset-y-0 left-0 w-64 max-w-[85vw] border-r border-border bg-card shadow-2xl flex flex-col animate-in slide-in-from-left duration-300 text-card-foreground">
             <div className="border-b border-border px-6 py-5 flex items-center justify-between">
               <Link href="/dashboard" className="block" onClick={() => setMobileOpen(false)}>
                 <div className="flex items-center gap-2.5">
@@ -313,7 +313,7 @@ export function DashboardFrame({
         </div>
       ) : null}
 
-      <div className={cn("transition-all duration-300 min-h-screen flex flex-col", sidebarCollapsed ? "lg:ps-0" : "lg:ps-64")}>
+      <div className={cn("transition-all duration-300 min-h-screen flex flex-col", sidebarCollapsed ? "lg:pl-0" : "lg:pl-72")}>
         {/* Sticky Premium Layout Header */}
         <header className="erp-topbar sticky top-0 z-40 border-b border-border/80 bg-background/80 backdrop-blur-md">
           <div className={cn("flex items-center gap-2 sm:gap-4 px-3 sm:px-4 lg:px-6 transition-all duration-200 justify-between", isWizardPath ? "h-16" : "h-14")}>

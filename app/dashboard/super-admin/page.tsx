@@ -157,6 +157,9 @@ async function loadDashboard(): Promise<DashboardData> {
   }
 }
 
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
+
 export default async function SuperAdminDashboardPage() {
   const session = await getCurrentErpSession();
   if (!session) redirect("/auth/login");
@@ -169,22 +172,29 @@ export default async function SuperAdminDashboardPage() {
     redirect(fallbackTarget as Route);
   }
 
+  const lang = await getRequestLanguage();
+  const tr = (text: string) => {
+    if (!text) return text;
+    const res = autoTranslate5Languages(text);
+    return res[lang] || text;
+  };
+
   const data = await loadDashboard();
   const kpis = [
-    { title: "Total Countries", value: data.counts.countries, subtitle: "Live records", icon: Globe, color: "text-cyan-500" },
-    { title: "Total Branches", value: data.counts.branches, subtitle: "Main and city", icon: Building2, color: "text-emerald-500" },
-    { title: "Total Users", value: data.counts.users, subtitle: "Approved profiles", icon: Users2, color: "text-violet-500" },
-    { title: "Total Customers", value: data.counts.customers, subtitle: "Live records", icon: User, color: "text-amber-500" },
-    { title: "Companies / Suppliers", value: data.counts.suppliers, subtitle: "Live records", icon: Wrench, color: "text-cyan-500" },
-    { title: "Active Users", value: data.activeUsers, subtitle: "Active role assignments", icon: Activity, color: "text-blue-500" }
+    { title: tr("Total Countries"), value: data.counts.countries, subtitle: tr("Live records"), icon: Globe, color: "text-cyan-500" },
+    { title: tr("Total Branches"), value: data.counts.branches, subtitle: tr("Main and city"), icon: Building2, color: "text-emerald-500" },
+    { title: tr("Total Users"), value: data.counts.users, subtitle: tr("Approved profiles"), icon: Users2, color: "text-violet-500" },
+    { title: tr("Total Customers"), value: data.counts.customers, subtitle: tr("Live records"), icon: User, color: "text-amber-500" },
+    { title: tr("Companies / Suppliers"), value: data.counts.suppliers, subtitle: tr("Live records"), icon: Wrench, color: "text-cyan-500" },
+    { title: tr("Active Users"), value: data.activeUsers, subtitle: tr("Active role assignments"), icon: Activity, color: "text-blue-500" }
   ];
   const financial = [
-    ["Total Sales", data.totals.sales, "Sales order total"],
-    ["Total Purchase", data.totals.purchases, "Purchase order total"],
-    ["Total Receivables", data.totals.debit, "Ledger debit total"],
-    ["Total Payables", data.totals.credit, "Ledger credit total"],
-    ["Cash Balance", data.totals.debit - data.totals.credit, "Debit less credit"],
-    ["Ledger Balance", data.totals.balance, "Current ledger balance"]
+    [tr("Total Sales"), data.totals.sales, tr("Sales order total")],
+    [tr("Total Purchase"), data.totals.purchases, tr("Purchase order total")],
+    [tr("Total Receivables"), data.totals.debit, tr("Ledger debit total")],
+    [tr("Total Payables"), data.totals.credit, tr("Ledger credit total")],
+    [tr("Cash Balance"), data.totals.debit - data.totals.credit, tr("Debit less credit")],
+    [tr("Ledger Balance"), data.totals.balance, tr("Current ledger balance")]
   ] as const;
 
   return (
@@ -193,8 +203,8 @@ export default async function SuperAdminDashboardPage() {
         <SuperAdminDashboardLiveRefresh />
         <section className="flex flex-col gap-4 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="flex items-center gap-2 text-xl font-extrabold"><span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />Super Admin Control Center</h1>
-            <p className="mt-1 text-xs font-medium text-muted-foreground">Live database overview. No demo or fallback statistics.</p>
+            <h1 className="flex items-center gap-2 text-xl font-extrabold"><span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />{tr("Super Admin Control Center")}</h1>
+            <p className="mt-1 text-xs font-medium text-muted-foreground">{tr("Live database overview. No demo or fallback statistics.")}</p>
           </div>
           <div className="flex items-center gap-2"><SuperAdminDashboardSettingsPanel /><SyncLedgersButton /></div>
         </section>
@@ -214,7 +224,7 @@ export default async function SuperAdminDashboardPage() {
 
         <DashboardWidget id="finance">
           <section className="space-y-3">
-            <h2 className="px-1 text-xs font-black uppercase tracking-wider text-muted-foreground">Financial Overview (Live Records)</h2>
+            <h2 className="px-1 text-xs font-black uppercase tracking-wider text-muted-foreground">{tr("Financial Overview (Live Records)")}</h2>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
               {financial.map(([label, value, subtitle]) => <div key={label} className="rounded-2xl border border-border bg-card p-4 shadow-lg"><p className="text-[10px] font-bold text-muted-foreground">{label}</p><h3 className="mt-2 text-lg font-black">{money(value)}</h3><p className="mt-3 text-[10px] font-semibold text-muted-foreground">{subtitle}</p></div>)}
             </div>
