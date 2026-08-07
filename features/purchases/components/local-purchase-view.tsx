@@ -6,6 +6,14 @@ import {
   ShoppingCart, Plus, Search, Scale, Coins,
   TrendingUp, User, CalendarDays, CheckCircle2,
   Trash2, Loader2, ArrowLeftRight, Check, Package,
+"use client";
+
+import React, { useMemo, useState, useEffect, useRef } from "react";
+import { fetchWarehouses } from "@/features/warehouses/warehouse-api";
+import {
+  ShoppingCart, Plus, Search, Scale, Coins,
+  TrendingUp, User, CalendarDays, CheckCircle2,
+  Trash2, Loader2, ArrowLeftRight, Check, Package,
   Building2, FileText, ArrowDownLeft, ArrowUpRight,
   Pin, X, Layers, Tag, Globe, Pencil, ShieldAlert,
   CreditCard, Truck, Flag, UserCheck, ChevronDown,
@@ -14,12 +22,6 @@ import {
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Th } from "@/components/ui/translated-th";
-
-const CURRENCIES = ["USD", "AED", "PKR", "AFN", "INR", "IRR"];
-const QUANTITY_NAMES = ["Bags", "Cartons", "Boxes", "Crates", "Bales", "Drums", "Pieces", "Custom"];
-const PAYMENT_MODES = [
-  { value: "Cash", label: "Cash" },
   { value: "Credit", label: "Credit" },
   { value: "Advance", label: "Advance" },
   { value: "Bank Transfer", label: "Bank Transfer" },
@@ -448,7 +450,8 @@ export function LocalPurchaseView({
   // Scoped Country Branches
   const filteredCountryBranches = useMemo(() => {
     if (!selectedCountryId) return countryBranches;
-    return countryBranches.filter(b => (b.countryId || b.country_id) === selectedCountryId);
+    const res = countryBranches.filter(b => String(b.countryId || b.country_id) === String(selectedCountryId));
+    return res.length > 0 ? res : countryBranches;
   }, [countryBranches, selectedCountryId]);
 
   const activeBranch = useMemo(() => {
@@ -463,7 +466,8 @@ export function LocalPurchaseView({
   // Scope modal-local filtered lists (independent of global selectedCountryId / selectedBranchId)
   const scopeFilteredBranches = useMemo(() => {
     if (!scopeCountryId) return countryBranches;
-    return countryBranches.filter(b => String(b.countryId || b.country_id) === String(scopeCountryId));
+    const res = countryBranches.filter(b => String(b.countryId || b.country_id) === String(scopeCountryId));
+    return res.length > 0 ? res : countryBranches;
   }, [countryBranches, scopeCountryId]);
 
   const scopeCityBranches = useMemo(() => {
