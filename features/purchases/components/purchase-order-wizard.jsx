@@ -5062,10 +5062,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       )}
 
       {activeTab === "report" && (
-        <div className="w-full space-y-6 p-2 sm:p-4 md:p-6 animate-in fade-in duration-300">
+        <div className="w-full mt-4 animate-in fade-in duration-300">
+          <div className="mx-auto w-full max-w-[1180px] space-y-6 print:max-w-none">
 
-          {/* Step 5 Top Header & Action Toolbar */}
-          <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            {/* Step 5 Top Header & Action Toolbar */}
+            <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-center gap-3.5">
               <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-600">
                 <CheckCircle2 className="h-6 w-6" />
