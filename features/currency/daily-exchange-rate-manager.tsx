@@ -12,6 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiGet, apiPost } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 type CountryRate = {
   id: string;
@@ -543,15 +544,15 @@ export function DailyExchangeRateManager() {
               <table className="w-full text-xs text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-black uppercase text-[9px] border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
-                    <th className="py-2.5 px-3 text-center">SR NO</th>
-                    <th className="py-2.5 px-3">COUNTRY NAME</th>
-                    <th className="py-2.5 px-3">BRANCH NAME</th>
-                    <th className="py-2.5 px-3">USER NAME</th>
-                    <th className="py-2.5 px-3 text-center">CURRENCY</th>
-                    <th className="py-2.5 px-3">DATE & TIME</th>
-                    <th className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400">CREDIT RATE ($)</th>
-                    <th className="py-2.5 px-3 text-right text-blue-600 dark:text-blue-400">DEBIT RATE ($)</th>
-                    <th className="py-2.5 px-3 text-right">LAST UPDATED</th>
+                    <Th className="py-2.5 px-3 text-center">SR NO</Th>
+                    <Th className="py-2.5 px-3">COUNTRY NAME</Th>
+                    <Th className="py-2.5 px-3">BRANCH NAME</Th>
+                    <Th className="py-2.5 px-3">USER NAME</Th>
+                    <Th className="py-2.5 px-3 text-center">CURRENCY</Th>
+                    <Th className="py-2.5 px-3">DATE & TIME</Th>
+                    <Th className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400">CREDIT RATE ($)</Th>
+                    <Th className="py-2.5 px-3 text-right text-blue-600 dark:text-blue-400">DEBIT RATE ($)</Th>
+                    <Th className="py-2.5 px-3 text-right">LAST UPDATED</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-150 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-200">

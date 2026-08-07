@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 type ShippingLineStagePageProps = {
   title: string;
@@ -624,16 +625,16 @@ export function ShippingLineStagePage({
             <table className="min-w-full text-xs text-left text-foreground">
               <thead className="bg-muted/40 text-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-border/60">
                 <tr>
-                  <th className="px-5 py-4">B/L Number</th>
-                  <th className="px-5 py-4">Shipping Line</th>
-                  <th className="px-5 py-4">Vessel / Voyage</th>
-                  <th className="px-5 py-4">Container No</th>
-                  <th className="px-5 py-4">Loading Port</th>
-                  <th className="px-5 py-4">Discharge Port</th>
-                  <th className="px-5 py-4">ETD</th>
-                  <th className="px-5 py-4">ETA</th>
-                  <th className="px-5 py-4">Status</th>
-                  <th className="px-5 py-4">Remarks</th>
+                  <Th className="px-5 py-4">B/L Number</Th>
+                  <Th className="px-5 py-4">Shipping Line</Th>
+                  <Th className="px-5 py-4">Vessel / Voyage</Th>
+                  <Th className="px-5 py-4">Container No</Th>
+                  <Th className="px-5 py-4">Loading Port</Th>
+                  <Th className="px-5 py-4">Discharge Port</Th>
+                  <Th className="px-5 py-4">ETD</Th>
+                  <Th className="px-5 py-4">ETA</Th>
+                  <Th className="px-5 py-4">Status</Th>
+                  <Th className="px-5 py-4">Remarks</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40">

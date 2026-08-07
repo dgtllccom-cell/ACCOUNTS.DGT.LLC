@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 interface OfficeDocument {
   id: string;
@@ -439,13 +440,13 @@ export function DocumentManager() {
                 <table className="w-full text-left text-xs border-collapse">
                   <thead>
                     <tr className="bg-slate-900 text-white font-black text-[9px] uppercase tracking-wider text-center">
-                      <th className="p-3 text-left">Document Title</th>
-                      <th className="p-3">File Type</th>
-                      <th className="p-3">Module Category</th>
-                      <th className="p-3">Location</th>
-                      <th className="p-3">Created By</th>
-                      <th className="p-3">Date</th>
-                      <th className="p-3">Actions</th>
+                      <Th className="p-3 text-left">Document Title</Th>
+                      <Th className="p-3">File Type</Th>
+                      <Th className="p-3">Module Category</Th>
+                      <Th className="p-3">Location</Th>
+                      <Th className="p-3">Created By</Th>
+                      <Th className="p-3">Date</Th>
+                      <Th className="p-3">Actions</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">

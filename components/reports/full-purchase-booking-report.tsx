@@ -4,6 +4,7 @@ import React from "react";
 import { FileText, Ship, Anchor } from "lucide-react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
+import { Th } from "@/components/ui/translated-th";
 
 export type KVRow = { k: string; v: string; muted?: boolean; pill?: boolean; sub?: string };
 export type GoodsRow = {
@@ -163,15 +164,15 @@ export function FullPurchaseBookingReport({
               <table className="tbl">
                 <thead>
                   <tr>
-                    <th style={{ width: 26 }}>#</th>
-                    <th>{tr("Name")}</th>
-                    <th>{tr("Spec")}</th>
-                    <th>{tr("Unit")}</th>
-                    <th className="num">{tr("Qty")}</th>
-                    <th className="num">{tr("Gross")}</th>
-                    <th className="num">{tr("Net")}</th>
-                    <th className="num">{tr("Price")}</th>
-                    <th className="num">{tr("Amount")}</th>
+                    <Th style={{ width: 26 }}>#</Th>
+                    <Th>{tr("Name")}</Th>
+                    <Th>{tr("Spec")}</Th>
+                    <Th>{tr("Unit")}</Th>
+                    <Th className="num">{tr("Qty")}</Th>
+                    <Th className="num">{tr("Gross")}</Th>
+                    <Th className="num">{tr("Net")}</Th>
+                    <Th className="num">{tr("Price")}</Th>
+                    <Th className="num">{tr("Amount")}</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -238,15 +239,15 @@ export function FullPurchaseBookingReport({
               <table className="tbl">
                 <thead>
                   <tr>
-                    <th style={{ width: 26 }}>#</th>
-                    <th>Term</th>
-                    <th className="num">%</th>
-                    <th>Mode</th>
-                    <th>Bank / ATM</th>
-                    <th>A/C</th>
-                    <th className="num">Amount</th>
-                    <th className="num">Balance</th>
-                    <th>Date</th>
+                    <Th style={{ width: 26 }}>#</Th>
+                    <Th>Term</Th>
+                    <Th className="num">%</Th>
+                    <Th>Mode</Th>
+                    <Th>Bank / ATM</Th>
+                    <Th>A/C</Th>
+                    <Th className="num">Amount</Th>
+                    <Th className="num">Balance</Th>
+                    <Th>Date</Th>
                   </tr>
                 </thead>
                 <tbody>

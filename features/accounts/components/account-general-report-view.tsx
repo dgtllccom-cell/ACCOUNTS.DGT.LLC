@@ -35,6 +35,7 @@ import { ReportPageHeader } from "@/components/reports/report-page-header";
 import { ReportTd, ReportTh } from "@/components/reports/report-primitives";
 import { cn } from "@/lib/utils";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { Th } from "@/components/ui/translated-th";
 
 type AccountGeneralReportRow = {
   accountId: string;
@@ -1576,13 +1577,13 @@ export function AccountGeneralReportView({
                       { label: "Start & Status", span: 2, cls: "bg-amber-50/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-400 border-t-2 border-t-amber-500" },
                       { label: "Actions", span: 1, cls: "bg-slate-100 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-t-2 border-t-slate-300" },
                     ].map((group) => (
-                      <th
+                      <Th
                         key={group.label}
                         colSpan={group.span}
                         className={`${group.cls} px-3 py-2 text-[10px] font-extrabold uppercase tracking-widest text-center border-r border-slate-200 dark:border-slate-800 last:border-r-0`}
                       >
                         {group.label}
-                      </th>
+                      </Th>
                     ))}
                   </tr>
                   <tr className="bg-white dark:bg-slate-950 text-[9px] font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 border-b-2 border-slate-200 dark:border-slate-800">
@@ -1593,9 +1594,9 @@ export function AccountGeneralReportView({
                       "DEBIT", "CREDIT", "BALANCE", "START DATE",
                       "STATUS", "ACTIONS"
                     ].map((header, i) => (
-                      <th key={i} className="px-3 py-3 border-r border-slate-100 dark:border-slate-800/50 last:border-r-0 whitespace-nowrap text-center align-middle">
+                      <Th key={i} className="px-3 py-3 border-r border-slate-100 dark:border-slate-800/50 last:border-r-0 whitespace-nowrap text-center align-middle">
                         {header}
-                      </th>
+                      </Th>
                     ))}
                   </tr>
                 </thead>

@@ -26,6 +26,7 @@ import {
 } from "@/features/roznamcha/roznamcha-api";
 import { parseNarration } from "@/lib/accounting/narration-parser";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
+import { Th } from "@/components/ui/translated-th";
 
 type SessionInfo = {
   scopes: {
@@ -684,11 +685,11 @@ export function RoznamchaReportView({
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-900 text-white dark:bg-slate-800">
                     <tr>
-                      <th className="px-3 py-2">Type</th>
-                      <th className="px-3 py-2">Account Code & Name</th>
-                      <th className="px-3 py-2 text-right">Debit</th>
-                      <th className="px-3 py-2 text-right">Credit</th>
-                      <th className="px-3 py-2 text-right">USD Amount</th>
+                      <Th className="px-3 py-2">Type</Th>
+                      <Th className="px-3 py-2">Account Code & Name</Th>
+                      <Th className="px-3 py-2 text-right">Debit</Th>
+                      <Th className="px-3 py-2 text-right">Credit</Th>
+                      <Th className="px-3 py-2 text-right">USD Amount</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y dark:divide-slate-800">

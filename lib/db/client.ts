@@ -13,12 +13,15 @@ export function createDbClient() {
     throw new Error("DATABASE_URL is required for database operations.");
   }
 
+  // Local Postgres (localhost/127.0.0.1) has no TLS; Supabase pooler requires it.
+  const isLocal = /@(localhost|127\.0\.0\.1|\[::1\])[:/]/i.test(dbUrl);
+
   const queryClient = postgres(dbUrl, {
     max: 10,
     idle_timeout: 20,
     connect_timeout: 15,
     prepare: false,
-    ssl: "require"
+    ssl: isLocal ? false : "require"
   });
 
   return drizzle(queryClient, { schema });

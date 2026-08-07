@@ -15,6 +15,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import {
+import { Th } from "@/components/ui/translated-th";
   Building2, Calendar, Phone, Mail, MapPin, Printer, FileDown, Eye,
   Pencil, Send, Check, FileText, Hash,
 } from "lucide-react";
@@ -268,15 +269,15 @@ export function QuotationView({
               <table className="w-full text-xs">
                 <thead className="bg-slate-900 text-white">
                   <tr>
-                    <th className="px-2 py-2 text-left font-medium">#</th>
-                    <th className="px-2 py-2 text-left font-medium">Code</th>
-                    <th className="px-2 py-2 text-left font-medium">Description</th>
-                    <th className="px-2 py-2 text-right font-medium">Qty</th>
-                    <th className="px-2 py-2 text-left font-medium">Unit</th>
-                    <th className="px-2 py-2 text-right font-medium">Price</th>
-                    <th className="px-2 py-2 text-right font-medium">Disc%</th>
-                    <th className="px-2 py-2 text-right font-medium">Tax%</th>
-                    <th className="px-2 py-2 text-right font-medium">Total</th>
+                    <Th className="px-2 py-2 text-left font-medium">#</Th>
+                    <Th className="px-2 py-2 text-left font-medium">Code</Th>
+                    <Th className="px-2 py-2 text-left font-medium">Description</Th>
+                    <Th className="px-2 py-2 text-right font-medium">Qty</Th>
+                    <Th className="px-2 py-2 text-left font-medium">Unit</Th>
+                    <Th className="px-2 py-2 text-right font-medium">Price</Th>
+                    <Th className="px-2 py-2 text-right font-medium">Disc%</Th>
+                    <Th className="px-2 py-2 text-right font-medium">Tax%</Th>
+                    <Th className="px-2 py-2 text-right font-medium">Total</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 bg-white">

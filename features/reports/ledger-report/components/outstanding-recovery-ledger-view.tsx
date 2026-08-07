@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Loader2, RefreshCcw, Search, AlertTriangle } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
 import { ReportActions } from "@/components/ui/report-actions";
+import { Th } from "@/components/ui/translated-th";
 
 type Row = {
   id: string;
@@ -152,14 +153,14 @@ export function OutstandingRecoveryLedgerView({ lang = "en", pageTitle }: { lang
         <table className="w-full min-w-[720px] text-sm">
           <thead className="bg-slate-50 text-left text-xs font-bold uppercase text-slate-500 dark:bg-slate-800">
             <tr>
-              <th className="px-3 py-2">Code</th>
-              <th className="px-3 py-2">Account</th>
-              <th className="px-3 py-2">Curr</th>
-              <th className="px-3 py-2 text-right">Outstanding</th>
-              <th className="px-3 py-2">Type</th>
-              <th className="px-3 py-2">Last Movement</th>
-              <th className="px-3 py-2 text-right">Days</th>
-              <th className="px-3 py-2">Status</th>
+              <Th className="px-3 py-2">Code</Th>
+              <Th className="px-3 py-2">Account</Th>
+              <Th className="px-3 py-2">Curr</Th>
+              <Th className="px-3 py-2 text-right">Outstanding</Th>
+              <Th className="px-3 py-2">Type</Th>
+              <Th className="px-3 py-2">Last Movement</Th>
+              <Th className="px-3 py-2 text-right">Days</Th>
+              <Th className="px-3 py-2">Status</Th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

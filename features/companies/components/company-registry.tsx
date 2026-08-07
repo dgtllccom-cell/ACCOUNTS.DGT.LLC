@@ -14,6 +14,7 @@ import type { CompanyRow } from "@/lib/repositories/companies-repository";
 import { ReportFilterBar, type ReportFilterValues } from "@/features/reports/components/report-filter-bar";
 import { ReportPagination } from "@/features/reports/components/report-pagination";
 import { ReportStatusLegend } from "@/features/reports/components/report-status-legend";
+import { Th } from "@/components/ui/translated-th";
 
 export type CompanyDisplayRecord = {
   id: string;
@@ -384,15 +385,15 @@ export function CompanyRegistry() {
           <table className="w-full text-xs text-left">
             <thead className="bg-slate-50 text-slate-500 uppercase text-[10px] font-black tracking-wider border-b border-slate-200 dark:bg-slate-950/60 dark:border-slate-800">
               <tr>
-                <th className="px-4 py-3.5">SR#</th>
-                <th className="px-4 py-3.5">Owner Name (اونر کا نام)</th>
-                <th className="px-4 py-3.5 text-center">Company Count (تعداد)</th>
-                <th className="px-4 py-3.5">Company / Business Name</th>
-                <th className="px-4 py-3.5">Country</th>
-                <th className="px-4 py-3.5">State / Province</th>
-                <th className="px-4 py-3.5">City</th>
-                <th className="px-4 py-3.5 text-center">Contacts & Regs</th>
-                <th className="px-4 py-3.5 text-end">Actions</th>
+                <Th className="px-4 py-3.5">SR#</Th>
+                <Th className="px-4 py-3.5">Owner Name (اونر کا نام)</Th>
+                <Th className="px-4 py-3.5 text-center">Company Count (تعداد)</Th>
+                <Th className="px-4 py-3.5">Company / Business Name</Th>
+                <Th className="px-4 py-3.5">Country</Th>
+                <Th className="px-4 py-3.5">State / Province</Th>
+                <Th className="px-4 py-3.5">City</Th>
+                <Th className="px-4 py-3.5 text-center">Contacts & Regs</Th>
+                <Th className="px-4 py-3.5 text-end">Actions</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

@@ -9,6 +9,7 @@ import { apiGet } from "@/lib/api/client";
 import { ReportKpiCards } from "@/features/reports/components/report-kpi-cards";
 import { ReportPagination } from "@/features/reports/components/report-pagination";
 import { ReportStatusLegend } from "@/features/reports/components/report-status-legend";
+import { Th } from "@/components/ui/translated-th";
 
 type SalesReport = {
   id: string;
@@ -241,16 +242,16 @@ export function SalesBookingJournalReportView() {
         <table className="min-w-full text-xs text-left">
           <thead className="bg-muted/70 text-muted-foreground border-b border-border uppercase text-[11px] font-bold tracking-wider">
             <tr>
-              <th className="px-6 py-3.5">SO Number</th>
-              <th className="px-6 py-3.5">Date</th>
-              <th className="px-6 py-3.5">Customer Details</th>
-              <th className="px-6 py-3.5">Products / Description</th>
-              <th className="px-6 py-3.5">Quantity</th>
-              <th className="px-6 py-3.5">Weight</th>
-              <th className="px-6 py-3.5">Containers</th>
-              <th className="px-6 py-3.5">Sales Total</th>
-              <th className="px-6 py-3.5">Status</th>
-              <th className="px-6 py-3.5 text-center">Print</th>
+              <Th className="px-6 py-3.5">SO Number</Th>
+              <Th className="px-6 py-3.5">Date</Th>
+              <Th className="px-6 py-3.5">Customer Details</Th>
+              <Th className="px-6 py-3.5">Products / Description</Th>
+              <Th className="px-6 py-3.5">Quantity</Th>
+              <Th className="px-6 py-3.5">Weight</Th>
+              <Th className="px-6 py-3.5">Containers</Th>
+              <Th className="px-6 py-3.5">Sales Total</Th>
+              <Th className="px-6 py-3.5">Status</Th>
+              <Th className="px-6 py-3.5 text-center">Print</Th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">

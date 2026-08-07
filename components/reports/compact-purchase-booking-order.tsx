@@ -2,6 +2,7 @@
 
 import React from "react";
 import type { GoodsRow } from "./full-purchase-booking-report";
+import { Th } from "@/components/ui/translated-th";
 
 export interface CompactPurchaseBookingOrderProps {
   goods?: GoodsRow[];
@@ -44,7 +45,7 @@ export function CompactPurchaseBookingOrder({ goods = [] }: CompactPurchaseBooki
               <thead>
                 <tr className="bg-slate-900 text-[10px] uppercase tracking-widest text-white">
                   {["#", "Item", "Spec", "Qty", "Price", "Net Amount"].map((h) => (
-                    <th key={h} className="whitespace-nowrap px-2.5 py-2 text-left font-semibold">{h}</th>
+                    <Th key={h} className="whitespace-nowrap px-2.5 py-2 text-left font-semibold">{h}</Th>
                   ))}
                 </tr>
               </thead>

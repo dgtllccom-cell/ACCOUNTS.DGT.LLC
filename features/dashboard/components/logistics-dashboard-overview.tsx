@@ -36,6 +36,7 @@ import {
   YAxis,
 } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Th } from "@/components/ui/translated-th";
 
 export type LogisticsShipment = {
   id: string;
@@ -327,12 +328,12 @@ export function LogisticsDashboardOverview({ data }: { data: LogisticsDashboardD
             <table className="w-full text-[11px] text-left">
               <thead>
                 <tr className="bg-muted/40 text-[9px] uppercase font-bold text-muted-foreground">
-                  <th className="px-4 py-3">BL No</th>
-                  <th className="px-4 py-3">Shipping Line</th>
-                  <th className="px-4 py-3">Container</th>
-                  <th className="px-4 py-3">Vessel</th>
-                  <th className="px-4 py-3">ETA</th>
-                  <th className="px-4 py-3 text-center">Status</th>
+                  <Th className="px-4 py-3">BL No</Th>
+                  <Th className="px-4 py-3">Shipping Line</Th>
+                  <Th className="px-4 py-3">Container</Th>
+                  <Th className="px-4 py-3">Vessel</Th>
+                  <Th className="px-4 py-3">ETA</Th>
+                  <Th className="px-4 py-3 text-center">Status</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">

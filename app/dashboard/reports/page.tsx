@@ -30,6 +30,7 @@ import { ReportFilterBar, type ReportFilterValues } from "@/features/reports/com
 import { ReportPagination } from "@/features/reports/components/report-pagination";
 import { ReportStatusLegend } from "@/features/reports/components/report-status-legend";
 import { ComprehensiveDailyReportView } from "@/features/reports/components/comprehensive-daily-report";
+import { Th } from "@/components/ui/translated-th";
 
 type ReportType =
   | "cash-entry"
@@ -456,9 +457,9 @@ function ReportsHubContent() {
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-950/60 text-[10px] font-black uppercase text-slate-500 border-b border-slate-200 dark:border-slate-800">
                   {Object.keys(paginatedRows[0]).filter((k) => k !== "id").map((k) => (
-                    <th key={k} className="px-4 py-3.5 whitespace-nowrap">
+                    <Th key={k} className="px-4 py-3.5 whitespace-nowrap">
                       {k.replace(/([A-Z])/g, " $1").toUpperCase()}
-                    </th>
+                    </Th>
                   ))}
                 </tr>
               </thead>

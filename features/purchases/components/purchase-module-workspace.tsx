@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 type PurchaseModuleType = "purchase" | "stock";
 
@@ -452,7 +453,7 @@ export function PurchaseModuleWorkspace({
             <thead className="sticky top-0 z-10 bg-slate-50 text-[10px] uppercase tracking-wide text-slate-600">
               <tr>
                 {["Order ID", "Super S/N", "Cty S/N", "Br. S/N", "Bill & Date", "Branch & Country", "Purchase Account", "Sales Account", "Goods & Brand", "Weights & Qty", "Total & Exchange", "Advance Details", "Remaining Balance", "Action"].map((head) => (
-                  <th key={head} className="border-b px-3 py-3 text-left font-black">{head}</th>
+                  <Th key={head} className="border-b px-3 py-3 text-left font-black">{head}</Th>
                 ))}
               </tr>
             </thead>

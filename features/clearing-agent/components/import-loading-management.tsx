@@ -8,6 +8,7 @@ import { getLanguageDirection } from "@/lib/i18n/languages";
 import { LocationHierarchySelect } from "@/features/locations/components/location-hierarchy-select";
 import { ReportActions } from "@/components/ui/report-actions";
 import { TruckAttachments } from "@/features/clearing-agent/components/truck-attachments";
+import { Th } from "@/components/ui/translated-th";
 
 type Row = {
   id: string; import_date: string | null; import_serial: string | null; import_bill_number: string | null;
@@ -112,13 +113,13 @@ export function ImportLoadingManagementView({ lang }: { lang: SupportedLanguage 
         <table className="w-full text-start text-sm">
           <thead className="bg-slate-50 text-[11px] font-black uppercase tracking-wide text-slate-500 dark:bg-slate-950/60">
             <tr>
-              <th className="px-3 py-3 text-start">{t(lang, "il.bill")}</th>
-              <th className="px-3 py-3 text-start">{t(lang, "il.date")}</th>
-              <th className="px-3 py-3 text-start">{t(lang, "il.importer")}</th>
-              <th className="px-3 py-3 text-start">Truck</th>
-              <th className="px-3 py-3 text-start">{t(lang, "il.goods")}</th>
-              <th className="px-3 py-3 text-start">{t(lang, "il.customs")}</th>
-              <th className="px-3 py-3 text-end"></th>
+              <Th className="px-3 py-3 text-start">{t(lang, "il.bill")}</Th>
+              <Th className="px-3 py-3 text-start">{t(lang, "il.date")}</Th>
+              <Th className="px-3 py-3 text-start">{t(lang, "il.importer")}</Th>
+              <Th className="px-3 py-3 text-start">Truck</Th>
+              <Th className="px-3 py-3 text-start">{t(lang, "il.goods")}</Th>
+              <Th className="px-3 py-3 text-start">{t(lang, "il.customs")}</Th>
+              <Th className="px-3 py-3 text-end"></Th>
             </tr>
           </thead>
           <tbody>

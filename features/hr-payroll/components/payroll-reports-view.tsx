@@ -5,6 +5,7 @@ import { apiGet, apiPost } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { SalaryTransferModal } from "./salary-transfer-modal";
+import { Th } from "@/components/ui/translated-th";
 
 export function PayrollReportsView() {
   const [loading, setLoading] = useState(false);
@@ -246,16 +247,16 @@ export function PayrollReportsView() {
         <table className="min-w-full text-sm text-left text-slate-300">
           <thead className="bg-slate-950 text-slate-450 uppercase text-xs font-semibold">
             <tr>
-              <th className="px-6 py-4">Employee Code</th>
-              <th className="px-6 py-4">Name / Designation</th>
-              <th className="px-6 py-4">Month</th>
-              <th className="px-6 py-4">Basic</th>
-              <th className="px-6 py-4">Allowances</th>
-              <th className="px-6 py-4">Recoveries (Adv/Loan)</th>
-              <th className="px-6 py-4">General Deductions</th>
-              <th className="px-6 py-4">Net Payroll</th>
-              <th className="px-6 py-4">Status</th>
-              <th className="px-6 py-4 text-center">Action</th>
+              <Th className="px-6 py-4">Employee Code</Th>
+              <Th className="px-6 py-4">Name / Designation</Th>
+              <Th className="px-6 py-4">Month</Th>
+              <Th className="px-6 py-4">Basic</Th>
+              <Th className="px-6 py-4">Allowances</Th>
+              <Th className="px-6 py-4">Recoveries (Adv/Loan)</Th>
+              <Th className="px-6 py-4">General Deductions</Th>
+              <Th className="px-6 py-4">Net Payroll</Th>
+              <Th className="px-6 py-4">Status</Th>
+              <Th className="px-6 py-4 text-center">Action</Th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-850">

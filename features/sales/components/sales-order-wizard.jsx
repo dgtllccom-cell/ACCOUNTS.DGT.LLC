@@ -51,6 +51,7 @@ import { SimpleModal } from "@/components/ui/simple-modal";
 import { openTradeDocumentWindow } from "@/lib/reports/open-trade-document-window";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
 import { SalesBookingJournalReportView } from "./sales-booking-journal-report-view";
+import { Th } from "@/components/ui/translated-th";
 
 // Ã¢â€â‚¬Ã¢â€â‚¬ Non-location constants (static values, not from master forms) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 const CURRENCY_OPTIONS = ["USD", "AED", "EUR", "GBP", "PKR", "AFN", "INR", "CNY", "SAR"];
@@ -427,12 +428,12 @@ function LightTable({ headers, children }) {
         <thead className="bg-slate-50 text-[10px] uppercase font-bold tracking-wide text-slate-650 border-b border-slate-200">
           <tr>
             {headers.map((header, idx) => (
-              <th
+              <Th
                 key={idx}
                 className="whitespace-nowrap border-r border-slate-200 px-3 py-3 text-left font-black last:border-r-0"
               >
                 {header}
-              </th>
+              </Th>
             ))}
           </tr>
         </thead>
@@ -3013,13 +3014,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       <table className="w-full text-[10px] text-foreground border-collapse text-left whitespace-nowrap">
                         <thead className="bg-slate-950 text-white">
                           <tr className="font-bold uppercase tracking-wider text-[9px]">
-                            <th className="px-3 py-2.5 text-left">Lot No</th>
-                            <th className="px-3 py-2.5 text-left">Goods / Brand</th>
-                            <th className="px-3 py-2.5 text-right">Available</th>
-                            <th className="px-3 py-2.5 text-right">Net KG</th>
-                            <th className="px-3 py-2.5 text-left">Location</th>
-                            <th className="px-3 py-2.5 text-left">Status</th>
-                            <th className="px-3 py-2.5 text-center w-36">Action</th>
+                            <Th className="px-3 py-2.5 text-left">Lot No</Th>
+                            <Th className="px-3 py-2.5 text-left">Goods / Brand</Th>
+                            <Th className="px-3 py-2.5 text-right">Available</Th>
+                            <Th className="px-3 py-2.5 text-right">Net KG</Th>
+                            <Th className="px-3 py-2.5 text-left">Location</Th>
+                            <Th className="px-3 py-2.5 text-left">Status</Th>
+                            <Th className="px-3 py-2.5 text-center w-36">Action</Th>
                           </tr>
                         </thead>
                         <tbody>
@@ -3087,12 +3088,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                           <table className="w-full text-[9px] text-slate-700 border-collapse">
                                             <thead className="bg-slate-100 text-slate-600 font-bold uppercase tracking-wider text-[8px] border-b border-slate-200">
                                               <tr>
-                                                <th className="px-3 py-1.5 text-left">Transaction Ref</th>
-                                                <th className="px-3 py-1.5 text-left">Sale Date</th>
-                                                <th className="px-3 py-1.5 text-left">Customer / Debtor</th>
-                                                <th className="px-3 py-1.5 text-right">Qty Deducted</th>
-                                                <th className="px-3 py-1.5 text-right">Weight Deducted</th>
-                                                <th className="px-3 py-1.5 text-left">Status</th>
+                                                <Th className="px-3 py-1.5 text-left">Transaction Ref</Th>
+                                                <Th className="px-3 py-1.5 text-left">Sale Date</Th>
+                                                <Th className="px-3 py-1.5 text-left">Customer / Debtor</Th>
+                                                <Th className="px-3 py-1.5 text-right">Qty Deducted</Th>
+                                                <Th className="px-3 py-1.5 text-right">Weight Deducted</Th>
+                                                <Th className="px-3 py-1.5 text-left">Status</Th>
                                               </tr>
                                             </thead>
                                             <tbody>
@@ -3165,19 +3166,19 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       <table className="w-full text-[9px] text-foreground border-collapse text-left whitespace-nowrap">
                         <thead>
                           <tr className="bg-muted/80 text-muted-foreground border-b border-border font-bold uppercase tracking-wider">
-                            <th className="px-3 py-2.5 text-center w-8">#</th>
-                            <th className="px-3 py-2.5">Goods Name</th>
-                            <th className="px-3 py-2.5 text-center">Size</th>
-                            <th className="px-3 py-2.5 text-center">Brand</th>
-                            <th className="px-3 py-2.5 text-center">HS Code</th>
-                            <th className="px-3 py-2.5 text-center">Origin</th>
-                            <th className="px-3 py-2.5 text-right">Qty</th>
-                            <th className="px-3 py-2.5 text-center">Unit</th>
-                            <th className="px-3 py-2.5 text-right">Price ({form.currencyType || "USD"})</th>
-                            <th className="px-3 py-2.5 text-right">Amount ({form.currencyType || "USD"})</th>
-                            <th className="px-3 py-2.5 text-center">Ex. Rate</th>
-                            <th className="px-3 py-2.5 text-right bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">Final ({form.secondaryCurrency || "PKR"})</th>
-                            <th className="px-3 py-2.5 text-center w-10">Action</th>
+                            <Th className="px-3 py-2.5 text-center w-8">#</Th>
+                            <Th className="px-3 py-2.5">Goods Name</Th>
+                            <Th className="px-3 py-2.5 text-center">Size</Th>
+                            <Th className="px-3 py-2.5 text-center">Brand</Th>
+                            <Th className="px-3 py-2.5 text-center">HS Code</Th>
+                            <Th className="px-3 py-2.5 text-center">Origin</Th>
+                            <Th className="px-3 py-2.5 text-right">Qty</Th>
+                            <Th className="px-3 py-2.5 text-center">Unit</Th>
+                            <Th className="px-3 py-2.5 text-right">Price ({form.currencyType || "USD"})</Th>
+                            <Th className="px-3 py-2.5 text-right">Amount ({form.currencyType || "USD"})</Th>
+                            <Th className="px-3 py-2.5 text-center">Ex. Rate</Th>
+                            <Th className="px-3 py-2.5 text-right bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">Final ({form.secondaryCurrency || "PKR"})</Th>
+                            <Th className="px-3 py-2.5 text-center w-10">Action</Th>
                           </tr>
                         </thead>
                         <tbody>
@@ -4429,9 +4430,9 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               <table className="w-full text-left text-[9px] mt-1">
                 <thead>
                   <tr className="border-b border-slate-150 text-slate-400 font-bold uppercase tracking-wider">
-                    <th className="pb-1.5">Role Name</th>
-                    <th className="pb-1.5">Users</th>
-                    <th className="pb-1.5 text-right">Permissions</th>
+                    <Th className="pb-1.5">Role Name</Th>
+                    <Th className="pb-1.5">Users</Th>
+                    <Th className="pb-1.5 text-right">Permissions</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 font-semibold">
@@ -4488,15 +4489,15 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               <table className="w-full text-[10px] text-left border-collapse border border-slate-200">
                 <thead className="bg-slate-50 text-slate-650 font-bold uppercase tracking-wider text-[8px] border-b border-slate-200">
                   <tr>
-                    <th className="p-2 border-r border-slate-200">Goods</th>
-                    <th className="p-2 border-r border-slate-200">Brand</th>
-                    <th className="p-2 border-r border-slate-200">Origin</th>
-                    <th className="p-2 border-r border-slate-200 text-right">Qty</th>
-                    <th className="p-2 border-r border-slate-200 text-right">G.Wt</th>
-                    <th className="p-2 border-r border-slate-200 text-right">N.Wt</th>
-                    <th className="p-2 border-r border-slate-200 text-right">Rate</th>
-                    <th className="p-2 border-r border-slate-200 text-right">Amount ({form.currencyType || "USD"})</th>
-                    <th className="p-2 text-right text-emerald-800">Final ({form.secondaryCurrency || "PKR"})</th>
+                    <Th className="p-2 border-r border-slate-200">Goods</Th>
+                    <Th className="p-2 border-r border-slate-200">Brand</Th>
+                    <Th className="p-2 border-r border-slate-200">Origin</Th>
+                    <Th className="p-2 border-r border-slate-200 text-right">Qty</Th>
+                    <Th className="p-2 border-r border-slate-200 text-right">G.Wt</Th>
+                    <Th className="p-2 border-r border-slate-200 text-right">N.Wt</Th>
+                    <Th className="p-2 border-r border-slate-200 text-right">Rate</Th>
+                    <Th className="p-2 border-r border-slate-200 text-right">Amount ({form.currencyType || "USD"})</Th>
+                    <Th className="p-2 text-right text-emerald-800">Final ({form.secondaryCurrency || "PKR"})</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-150 font-semibold">
@@ -4738,15 +4739,15 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <table className="w-full text-[9px] border-collapse border border-slate-300">
                     <thead>
                       <tr className="bg-slate-100 border-b border-slate-300">
-                        <th className="border-r border-slate-300 p-1.5 text-left">#</th>
-                        <th className="border-r border-slate-300 p-1.5 text-left">Goods Name</th>
-                        <th className="border-r border-slate-300 p-1.5 text-center">HS Code</th>
-                        <th className="border-r border-slate-300 p-1.5 text-center">Origin</th>
-                        <th className="border-r border-slate-300 p-1.5 text-right">Qty</th>
-                        <th className="border-r border-slate-300 p-1.5 text-center">Unit</th>
-                        <th className="border-r border-slate-300 p-1.5 text-right">Price ({form.currencyType || "USD"})</th>
-                        <th className="border-r border-slate-300 p-1.5 text-center">Ex. Rate</th>
-                        <th className="p-1.5 text-right">Final ({form.secondaryCurrency || "PKR"})</th>
+                        <Th className="border-r border-slate-300 p-1.5 text-left">#</Th>
+                        <Th className="border-r border-slate-300 p-1.5 text-left">Goods Name</Th>
+                        <Th className="border-r border-slate-300 p-1.5 text-center">HS Code</Th>
+                        <Th className="border-r border-slate-300 p-1.5 text-center">Origin</Th>
+                        <Th className="border-r border-slate-300 p-1.5 text-right">Qty</Th>
+                        <Th className="border-r border-slate-300 p-1.5 text-center">Unit</Th>
+                        <Th className="border-r border-slate-300 p-1.5 text-right">Price ({form.currencyType || "USD"})</Th>
+                        <Th className="border-r border-slate-300 p-1.5 text-center">Ex. Rate</Th>
+                        <Th className="p-1.5 text-right">Final ({form.secondaryCurrency || "PKR"})</Th>
                       </tr>
                     </thead>
                     <tbody>

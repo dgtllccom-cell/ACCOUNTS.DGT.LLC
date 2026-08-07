@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowLeft, FileText } from "lucide-react";
 import { PrintButton } from "@/components/documents/print-button";
+import { Th } from "@/components/ui/translated-th";
 
 function InfoBox({ label, children }: { label: string; children: ReactNode }) {
   return (
@@ -179,12 +180,12 @@ export default function BillOfLadingPage() {
             <table className="w-full border-collapse text-xs">
               <thead>
                 <tr className="bg-neutral-100 text-left print:bg-white">
-                  <th className="w-[28%] border border-neutral-800 p-2 font-black">Rate</th>
-                  <th className="w-[12%] border border-neutral-800 p-2 font-black">Unit</th>
-                  <th className="w-[12%] border border-neutral-800 p-2 font-black">Currency</th>
-                  <th className="w-[12%] border border-neutral-800 p-2 font-black">Prepaid</th>
-                  <th className="w-[12%] border border-neutral-800 p-2 font-black">Collect</th>
-                  <th className="border border-neutral-800 p-2 font-black">Notes</th>
+                  <Th className="w-[28%] border border-neutral-800 p-2 font-black">Rate</Th>
+                  <Th className="w-[12%] border border-neutral-800 p-2 font-black">Unit</Th>
+                  <Th className="w-[12%] border border-neutral-800 p-2 font-black">Currency</Th>
+                  <Th className="w-[12%] border border-neutral-800 p-2 font-black">Prepaid</Th>
+                  <Th className="w-[12%] border border-neutral-800 p-2 font-black">Collect</Th>
+                  <Th className="border border-neutral-800 p-2 font-black">Notes</Th>
                 </tr>
               </thead>
               <tbody>

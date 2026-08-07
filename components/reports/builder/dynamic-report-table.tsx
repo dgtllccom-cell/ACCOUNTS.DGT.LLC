@@ -3,6 +3,7 @@ import React from "react";
 import { type ReportColumnConfig, type ReportFieldDefinition, type ReportSortConfig } from "./types";
 import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 type DynamicReportTableProps = {
   data: any[];
@@ -46,7 +47,7 @@ export function DynamicReportTable({
               const isSorted = sortConfig?.fieldId === col.id;
 
               return (
-                <th
+                <Th
                   key={col.id}
                   className={cn(
                     "px-4 py-3 font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap",
@@ -76,7 +77,7 @@ export function DynamicReportTable({
                       </span>
                     )}
                   </div>
-                </th>
+                </Th>
               );
             })}
           </tr>

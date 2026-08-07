@@ -13,6 +13,7 @@ import {
 import { useRouter } from "next/navigation";
 import { rtlLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 /* Types */
 type AccountRow = {
@@ -641,7 +642,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
                   "Contact",
                   "Actions",
                 ].map(h => (
-                  <th key={h} className="asr-th">{h}</th>
+                  <Th key={h} className="asr-th">{h}</Th>
                 ))}
               </tr>
             </thead>

@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { printStore } from "@/lib/store/print-store";
+import { Th } from "@/components/ui/translated-th";
 
 type LanguageCode = "en" | "ur" | "ar" | "fa" | "ps";
 
@@ -189,20 +190,20 @@ export function CompletedPurchaseBillsView() {
 
         <table>
           <tr>
-            <th>Supplier Name</th><td>${details.supplierName}</td>
-            <th>Country & Branch</th><td>${details.countryName} (${details.branchName})</td>
+            <Th>Supplier Name</Th><td>${details.supplierName}</td>
+            <Th>Country & Branch</Th><td>${details.countryName} (${details.branchName})</td>
           </tr>
           <tr>
-            <th>B/L Number(s)</th><td>${details.blNumbers}</td>
-            <th>Exchange Rate</th><td>1 USD = ${details.exRate.toFixed(2)} AED/PKR</td>
+            <Th>B/L Number(s)</Th><td>${details.blNumbers}</td>
+            <Th>Exchange Rate</Th><td>1 USD = ${details.exRate.toFixed(2)} AED/PKR</td>
           </tr>
           <tr>
-            <th>Contract Quantity</th><td>${details.contractQty.toLocaleString()} ${details.unitLabel}</td>
-            <th>Loaded Quantity</th><td>${details.loadedQty.toLocaleString()} ${details.unitLabel}</td>
+            <Th>Contract Quantity</Th><td>${details.contractQty.toLocaleString()} ${details.unitLabel}</td>
+            <Th>Loaded Quantity</Th><td>${details.loadedQty.toLocaleString()} ${details.unitLabel}</td>
           </tr>
           <tr>
-            <th>Completion Date</th><td>${details.completedAt}</td>
-            <th>Completed By</th><td>${details.completedBy}</td>
+            <Th>Completion Date</Th><td>${details.completedAt}</td>
+            <Th>Completed By</Th><td>${details.completedBy}</td>
           </tr>
         </table>
 
@@ -482,19 +483,19 @@ export function CompletedPurchaseBillsView() {
           <table className="w-full text-left text-xs whitespace-nowrap">
             <thead className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-900/60 dark:border-slate-800">
               <tr>
-                <th className="px-4 py-3">{tr("poNo")}</th>
-                <th className="px-4 py-3">{tr("manualNo")}</th>
-                <th className="px-4 py-3">{tr("blNo")}</th>
-                <th className="px-4 py-3">{tr("supplier")}</th>
-                <th className="px-4 py-3">{tr("countryBranch")}</th>
-                <th className="px-4 py-3 text-right">{tr("contractQty")}</th>
-                <th className="px-4 py-3 text-right">{tr("loadedQty")}</th>
-                <th className="px-4 py-3 text-right">{tr("purchaseAmount")}</th>
-                <th className="px-4 py-3 text-right">{tr("totalPaid")}</th>
-                <th className="px-4 py-3 text-right">{tr("remainingBalance")}</th>
-                <th className="px-4 py-3">{tr("completionDate")}</th>
-                <th className="px-4 py-3">{tr("completedBy")}</th>
-                <th className="px-4 py-3 text-center">{tr("actions")}</th>
+                <Th className="px-4 py-3">{tr("poNo")}</Th>
+                <Th className="px-4 py-3">{tr("manualNo")}</Th>
+                <Th className="px-4 py-3">{tr("blNo")}</Th>
+                <Th className="px-4 py-3">{tr("supplier")}</Th>
+                <Th className="px-4 py-3">{tr("countryBranch")}</Th>
+                <Th className="px-4 py-3 text-right">{tr("contractQty")}</Th>
+                <Th className="px-4 py-3 text-right">{tr("loadedQty")}</Th>
+                <Th className="px-4 py-3 text-right">{tr("purchaseAmount")}</Th>
+                <Th className="px-4 py-3 text-right">{tr("totalPaid")}</Th>
+                <Th className="px-4 py-3 text-right">{tr("remainingBalance")}</Th>
+                <Th className="px-4 py-3">{tr("completionDate")}</Th>
+                <Th className="px-4 py-3">{tr("completedBy")}</Th>
+                <Th className="px-4 py-3 text-center">{tr("actions")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

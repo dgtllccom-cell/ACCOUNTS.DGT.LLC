@@ -6,6 +6,7 @@ import { Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContai
 import { BarChart3, TableProperties, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardWidget } from "@/features/dashboard/components/super-admin-dashboard-settings";
+import { Th } from "@/components/ui/translated-th";
 
 export type CountryFinancialSummary = {
   id: string;
@@ -101,7 +102,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
           <CardContent className="px-4 pb-4 pt-0">
             <div className="max-h-[270px] overflow-auto rounded-xl border border-border/80">
               <table className="w-full min-w-[620px] text-left text-[11px]">
-                <thead className="sticky top-0 bg-muted"><tr className="border-b border-border"><th className="p-2.5">Country</th><th className="p-2.5 text-center">Branches</th><th className="p-2.5 text-center">Users</th><th className="p-2.5 text-right">Sales</th><th className="p-2.5 text-right">Purchase</th><th className="p-2.5 text-center">Status</th></tr></thead>
+                <thead className="sticky top-0 bg-muted"><tr className="border-b border-border"><Th className="p-2.5">Country</Th><Th className="p-2.5 text-center">Branches</Th><Th className="p-2.5 text-center">Users</Th><Th className="p-2.5 text-right">Sales</Th><Th className="p-2.5 text-right">Purchase</Th><Th className="p-2.5 text-center">Status</Th></tr></thead>
                 <tbody className="divide-y divide-border/60">
                   {countrySummaries.length === 0 && <tr><td colSpan={6} className="py-12 text-center font-semibold text-muted-foreground">No Records Found</td></tr>}
                   {countrySummaries.map((row) => (

@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 export type ReportColumn<T = any> = {
   key: string;
@@ -248,9 +249,9 @@ export function ProfessionalReportViewer<T>({
                         <thead>
                           <tr className="border-y-2 border-gray-800 bg-gray-50">
                             {columns.map((c) => (
-                              <th key={c.key} className={cn("py-2 px-1.5 font-bold text-gray-800", c.align === 'right' && 'text-right', c.align === 'center' && 'text-center')} style={{ width: c.width }}>
+                              <Th key={c.key} className={cn("py-2 px-1.5 font-bold text-gray-800", c.align === 'right' && 'text-right', c.align === 'center' && 'text-center')} style={{ width: c.width }}>
                                 {c.header}
-                              </th>
+                              </Th>
                             ))}
                           </tr>
                         </thead>

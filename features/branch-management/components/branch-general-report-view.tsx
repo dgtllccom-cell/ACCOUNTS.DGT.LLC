@@ -33,6 +33,7 @@ import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 type CityBranchNode = {
   id: string;
@@ -335,18 +336,18 @@ function BranchUsersPanel({
             <table className="w-full border-collapse text-[9px]">
               <thead>
                 <tr className="border-b bg-slate-50 text-center font-black uppercase tracking-wide text-slate-500">
-                  <th className="border-r p-2">SR.</th>
-                  <th className="border-r p-2 text-left">User ID</th>
-                  <th className="border-r p-2">Country</th>
-                  <th className="border-r p-2">City</th>
-                  <th className="border-r p-2">Branch</th>
-                  <th className="border-r p-2 text-left">User Name</th>
-                  <th className="border-r p-2">Login ID</th>
-                  <th className="border-r p-2">Temp Password</th>
-                  <th className="border-r p-2">Email</th>
-                  <th className="border-r p-2">Role</th>
-                  <th className="border-r p-2">Status</th>
-                  <th className="p-2">Actions</th>
+                  <Th className="border-r p-2">SR.</Th>
+                  <Th className="border-r p-2 text-left">User ID</Th>
+                  <Th className="border-r p-2">Country</Th>
+                  <Th className="border-r p-2">City</Th>
+                  <Th className="border-r p-2">Branch</Th>
+                  <Th className="border-r p-2 text-left">User Name</Th>
+                  <Th className="border-r p-2">Login ID</Th>
+                  <Th className="border-r p-2">Temp Password</Th>
+                  <Th className="border-r p-2">Email</Th>
+                  <Th className="border-r p-2">Role</Th>
+                  <Th className="border-r p-2">Status</Th>
+                  <Th className="p-2">Actions</Th>
                 </tr>
               </thead>
               <tbody>
@@ -467,16 +468,16 @@ function LoginListPanel({ users, onClose }: { users: BranchUserDetail[]; onClose
           <table className="min-w-[1250px] w-full border-collapse text-[9px]">
             <thead>
               <tr className="border-b bg-slate-50 text-center font-black uppercase tracking-wide text-slate-500">
-                <th className="border-r p-2 text-left">Country Login</th>
-                <th className="border-r p-2 text-left">Main Branch Login</th>
-                <th className="border-r p-2 text-left">City Branch Login</th>
-                <th className="border-r p-2">Username</th>
-                <th className="border-r p-2">Password</th>
-                <th className="border-r p-2">Role</th>
-                <th className="border-r p-2">User Name</th>
-                <th className="border-r p-2">Email</th>
-                <th className="border-r p-2">Status</th>
-                <th className="p-2">Action</th>
+                <Th className="border-r p-2 text-left">Country Login</Th>
+                <Th className="border-r p-2 text-left">Main Branch Login</Th>
+                <Th className="border-r p-2 text-left">City Branch Login</Th>
+                <Th className="border-r p-2">Username</Th>
+                <Th className="border-r p-2">Password</Th>
+                <Th className="border-r p-2">Role</Th>
+                <Th className="border-r p-2">User Name</Th>
+                <Th className="border-r p-2">Email</Th>
+                <Th className="border-r p-2">Status</Th>
+                <Th className="p-2">Action</Th>
               </tr>
             </thead>
             <tbody>
@@ -1425,18 +1426,18 @@ export function BranchGeneralReportView({
             <table className="w-full min-w-[980px] border-separate border-spacing-0 text-left bg-white">
               <thead>
                 <tr className="sticky top-0 z-10 bg-slate-950 text-white font-black text-[10px] tracking-[0.14em] text-center uppercase shadow-sm">
-                  <th className="p-2.5 border-r border-slate-200 text-left">Super Code</th>
-                  <th className="p-2.5 border-r border-slate-200">Main Branch</th>
-                  <th className="p-2.5 border-r border-slate-200">Company</th>
-                  <th className="p-2.5 border-r border-slate-200">Owner</th>
-                  <th className="p-2.5 border-r border-slate-700/70">Countries</th>
-                  <th className="p-2.5 border-r border-slate-200">Curr</th>
-                  <th className="p-2.5 border-r border-slate-200">Main Acc</th>
-                  <th className="p-2.5 border-r border-slate-700/70">Code</th>
-                  <th className="p-2.5 border-r border-slate-200">City</th>
-                  <th className="p-2.5 border-r border-slate-200">User</th>
-                  <th className="p-2.5 border-r border-slate-200">Contacts</th>
-                  <th className="p-2.5">Action</th>
+                  <Th className="p-2.5 border-r border-slate-200 text-left">Super Code</Th>
+                  <Th className="p-2.5 border-r border-slate-200">Main Branch</Th>
+                  <Th className="p-2.5 border-r border-slate-200">Company</Th>
+                  <Th className="p-2.5 border-r border-slate-200">Owner</Th>
+                  <Th className="p-2.5 border-r border-slate-700/70">Countries</Th>
+                  <Th className="p-2.5 border-r border-slate-200">Curr</Th>
+                  <Th className="p-2.5 border-r border-slate-200">Main Acc</Th>
+                  <Th className="p-2.5 border-r border-slate-700/70">Code</Th>
+                  <Th className="p-2.5 border-r border-slate-200">City</Th>
+                  <Th className="p-2.5 border-r border-slate-200">User</Th>
+                  <Th className="p-2.5 border-r border-slate-200">Contacts</Th>
+                  <Th className="p-2.5">Action</Th>
                 </tr>
               </thead>
               <tbody>
@@ -1603,20 +1604,20 @@ export function BranchGeneralReportView({
             <table className="w-full min-w-[980px] border-separate border-spacing-0 text-left bg-white">
               <thead>
                 <tr className="sticky top-0 z-10 bg-slate-950 text-white font-black text-[10px] tracking-[0.14em] text-center uppercase shadow-sm">
-                  <th className="p-2.5 border-r border-slate-700/70">Main Branch Code</th>
-                  <th className="p-2.5 border-r border-slate-200 text-left">Country Name</th>
-                  <th className="p-2.5 border-r border-slate-200">SA Code</th>
-                  <th className="p-2.5 border-r border-slate-200">Branch Code</th>
-                  <th className="p-2.5 border-r border-slate-200 text-left">Branch Name</th>
-                  <th className="p-2.5 border-r border-slate-200">Company Name</th>
-                  <th className="p-2.5 border-r border-slate-200">Owner Name</th>
-                  <th className="p-2.5 border-r border-slate-200">Currency</th>
-                  <th className="p-2.5 border-r border-slate-200">Main Branch Acc</th>
-                  <th className="p-2.5 border-r border-slate-200">City Branches</th>
-                  <th className="p-2.5 border-r border-slate-200">Users</th>
-                  <th className="p-2.5 border-r border-slate-200">Email / WhatsApp</th>
-                  <th className="p-2.5 border-r border-slate-200">Status</th>
-                  <th className="p-2.5">Actions</th>
+                  <Th className="p-2.5 border-r border-slate-700/70">Main Branch Code</Th>
+                  <Th className="p-2.5 border-r border-slate-200 text-left">Country Name</Th>
+                  <Th className="p-2.5 border-r border-slate-200">SA Code</Th>
+                  <Th className="p-2.5 border-r border-slate-200">Branch Code</Th>
+                  <Th className="p-2.5 border-r border-slate-200 text-left">Branch Name</Th>
+                  <Th className="p-2.5 border-r border-slate-200">Company Name</Th>
+                  <Th className="p-2.5 border-r border-slate-200">Owner Name</Th>
+                  <Th className="p-2.5 border-r border-slate-200">Currency</Th>
+                  <Th className="p-2.5 border-r border-slate-200">Main Branch Acc</Th>
+                  <Th className="p-2.5 border-r border-slate-200">City Branches</Th>
+                  <Th className="p-2.5 border-r border-slate-200">Users</Th>
+                  <Th className="p-2.5 border-r border-slate-200">Email / WhatsApp</Th>
+                  <Th className="p-2.5 border-r border-slate-200">Status</Th>
+                  <Th className="p-2.5">Actions</Th>
                 </tr>
               </thead>
               <tbody>
@@ -1826,14 +1827,14 @@ export function BranchGeneralReportView({
                                 <table className="w-full text-left border-collapse">
                                   <thead>
                                     <tr className="bg-slate-100 border-b text-slate-600 font-black text-[9px] text-center tracking-[0.14em] uppercase">
-                                      <th className="p-2 border-r border-slate-200 text-left">Country</th>
-                                      <th className="p-2 border-r border-slate-200 text-left">Main Branch</th>
-                                      <th className="p-2 border-r border-slate-200 text-left">City Branch</th>
-                                      <th className="p-2 border-r border-slate-200 text-left">Branch Code</th>
-                                      <th className="p-2 border-r border-slate-200">Currency</th>
-                                      <th className="p-2 border-r border-slate-200 text-left">Country User</th>
-                                      <th className="p-2 border-r border-slate-200 text-left">Branch User</th>
-                                      <th className="p-2">Contact / Action</th>
+                                      <Th className="p-2 border-r border-slate-200 text-left">Country</Th>
+                                      <Th className="p-2 border-r border-slate-200 text-left">Main Branch</Th>
+                                      <Th className="p-2 border-r border-slate-200 text-left">City Branch</Th>
+                                      <Th className="p-2 border-r border-slate-200 text-left">Branch Code</Th>
+                                      <Th className="p-2 border-r border-slate-200">Currency</Th>
+                                      <Th className="p-2 border-r border-slate-200 text-left">Country User</Th>
+                                      <Th className="p-2 border-r border-slate-200 text-left">Branch User</Th>
+                                      <Th className="p-2">Contact / Action</Th>
                                     </tr>
                                   </thead>
                                   <tbody>
@@ -2042,14 +2043,14 @@ export function BranchGeneralReportView({
                     <table className="w-full min-w-[900px] border-separate border-spacing-0 text-left bg-white">
                       <thead>
                         <tr className="sticky top-0 z-10 bg-slate-900 text-white font-black text-[9px] tracking-[0.14em] text-center uppercase shadow-sm">
-                          <th className="p-2.5 border-r border-slate-700/70">SR.</th>
-                          <th className="p-2.5 border-r border-slate-200">City Branch Code</th>
-                          <th className="p-2.5 border-r border-slate-200 text-left">City Branch Name</th>
-                          <th className="p-2.5 border-r border-slate-200">Manager</th>
-                          <th className="p-2.5 border-r border-slate-200">Users</th>
-                          <th className="p-2.5 border-r border-slate-200">Accounts</th>
-                          <th className="p-2.5 border-r border-slate-200">Status</th>
-                          <th className="p-2.5">Contact Information</th>
+                          <Th className="p-2.5 border-r border-slate-700/70">SR.</Th>
+                          <Th className="p-2.5 border-r border-slate-200">City Branch Code</Th>
+                          <Th className="p-2.5 border-r border-slate-200 text-left">City Branch Name</Th>
+                          <Th className="p-2.5 border-r border-slate-200">Manager</Th>
+                          <Th className="p-2.5 border-r border-slate-200">Users</Th>
+                          <Th className="p-2.5 border-r border-slate-200">Accounts</Th>
+                          <Th className="p-2.5 border-r border-slate-200">Status</Th>
+                          <Th className="p-2.5">Contact Information</Th>
                         </tr>
                       </thead>
                       <tbody>

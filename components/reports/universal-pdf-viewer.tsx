@@ -29,6 +29,7 @@ import { Label } from "@/components/ui/label";
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 export type UniversalPDFRow = {
   srNo?: number | string;
@@ -471,18 +472,18 @@ export function UniversalPDFViewer({
                 <table className="w-full text-xs border-collapse border border-slate-300">
                   <thead>
                     <tr className="bg-slate-100 text-slate-800 font-bold border-b-2 border-slate-400">
-                      <th className="border border-slate-300 p-2 text-center w-12">Sr. No.</th>
-                      <th className="border border-slate-300 p-2 text-left">Transfer Ref No.</th>
-                      <th className="border border-slate-300 p-2 text-center">Transfer Date</th>
-                      <th className="border border-slate-300 p-2 text-left">From Country</th>
-                      <th className="border border-slate-300 p-2 text-left">To Country</th>
-                      <th className="border border-slate-300 p-2 text-left">Person / Company</th>
-                      <th className="border border-slate-300 p-2 text-center">Original Currency</th>
-                      <th className="border border-slate-300 p-2 text-right">Original Amount</th>
-                      <th className="border border-slate-300 p-2 text-right">Exchange Rate</th>
-                      <th className="border border-slate-300 p-2 text-right">From Country Currency (Converted)</th>
-                      <th className="border border-slate-300 p-2 text-right">To Country Currency (Converted)</th>
-                      <th className="border border-slate-300 p-2 text-left">Remarks</th>
+                      <Th className="border border-slate-300 p-2 text-center w-12">Sr. No.</Th>
+                      <Th className="border border-slate-300 p-2 text-left">Transfer Ref No.</Th>
+                      <Th className="border border-slate-300 p-2 text-center">Transfer Date</Th>
+                      <Th className="border border-slate-300 p-2 text-left">From Country</Th>
+                      <Th className="border border-slate-300 p-2 text-left">To Country</Th>
+                      <Th className="border border-slate-300 p-2 text-left">Person / Company</Th>
+                      <Th className="border border-slate-300 p-2 text-center">Original Currency</Th>
+                      <Th className="border border-slate-300 p-2 text-right">Original Amount</Th>
+                      <Th className="border border-slate-300 p-2 text-right">Exchange Rate</Th>
+                      <Th className="border border-slate-300 p-2 text-right">From Country Currency (Converted)</Th>
+                      <Th className="border border-slate-300 p-2 text-right">To Country Currency (Converted)</Th>
+                      <Th className="border border-slate-300 p-2 text-left">Remarks</Th>
                     </tr>
                   </thead>
                   <tbody>
@@ -527,8 +528,8 @@ export function UniversalPDFViewer({
                   <table className="w-full text-xs">
                     <thead>
                       <tr className="bg-slate-100 font-bold border-b">
-                        <th className="p-2 border-r text-left">From Country Currency Total</th>
-                        <th className="p-2 text-left">To Country Currency Total</th>
+                        <Th className="p-2 border-r text-left">From Country Currency Total</Th>
+                        <Th className="p-2 text-left">To Country Currency Total</Th>
                       </tr>
                     </thead>
                     <tbody>

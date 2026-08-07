@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import {
+import { Th } from "@/components/ui/translated-th";
   Package, Building2, Download, Printer, Coins,
   Globe, Loader2, X, Eye, CheckCircle, Clock, Plane, Truck, Calendar, User, ChevronDown, ChevronUp, MapPin, Filter
 } from "lucide-react";
@@ -764,23 +765,23 @@ export default function JournalReport({
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-slate-850 bg-slate-50 dark:bg-slate-850 text-[10px] font-black uppercase tracking-wider text-slate-400 dark:text-slate-500 whitespace-nowrap">
-                    <th className="py-3 px-4 w-12 text-center">#</th>
-                    <th className="py-3 px-4">Journal Stock No</th>
-                    <th className="py-3 px-4">BRANCH NO</th>
-                    <th className="py-3 px-4">BRANCH CODE</th>
-                    <th className="py-3 px-4">Date</th>
-                    <th className="py-3 px-4">SUPPLIER DETAILS</th>
-                    <th className="py-3 px-4">BUYER DETAILS</th>
-                    <th className="py-3 px-4">Shipment Type</th>
-                    <th className="py-3 px-4">GOODS DESCRIPTION</th>
-                    <th className="py-3 px-4">ORIGIN</th>
-                    <th className="py-3 px-4 text-right">QUANTITY</th>
-                    <th className="py-3 px-4 text-right">NET WT</th>
-                    <th className="py-3 px-4 text-right">PURCH. AMOUNT</th>
-                    <th className="py-3 px-4 text-right">TOTAL AMOUNT (FINAL CURRENCY)</th>
-                    <th className="py-3 px-4">Current Status</th>
-                    <th className="py-3 px-4">Next Step</th>
-                    <th className="py-3 px-4 w-16 text-center print:hidden">Actions</th>
+                    <Th className="py-3 px-4 w-12 text-center">#</Th>
+                    <Th className="py-3 px-4">Journal Stock No</Th>
+                    <Th className="py-3 px-4">BRANCH NO</Th>
+                    <Th className="py-3 px-4">BRANCH CODE</Th>
+                    <Th className="py-3 px-4">Date</Th>
+                    <Th className="py-3 px-4">SUPPLIER DETAILS</Th>
+                    <Th className="py-3 px-4">BUYER DETAILS</Th>
+                    <Th className="py-3 px-4">Shipment Type</Th>
+                    <Th className="py-3 px-4">GOODS DESCRIPTION</Th>
+                    <Th className="py-3 px-4">ORIGIN</Th>
+                    <Th className="py-3 px-4 text-right">QUANTITY</Th>
+                    <Th className="py-3 px-4 text-right">NET WT</Th>
+                    <Th className="py-3 px-4 text-right">PURCH. AMOUNT</Th>
+                    <Th className="py-3 px-4 text-right">TOTAL AMOUNT (FINAL CURRENCY)</Th>
+                    <Th className="py-3 px-4">Current Status</Th>
+                    <Th className="py-3 px-4">Next Step</Th>
+                    <Th className="py-3 px-4 w-16 text-center print:hidden">Actions</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-850 text-xs font-semibold">
@@ -1188,17 +1189,17 @@ export default function JournalReport({
                             <table className="w-full text-left border-collapse text-[8.5px]">
                               <thead>
                                 <tr className="bg-slate-100 dark:bg-slate-800 text-slate-600 font-extrabold uppercase text-[7.5px] border-b border-slate-200 dark:border-slate-700">
-                                  <th className="py-1.5 px-2 text-center">NO</th>
-                                  <th className="py-1.5 px-2">GOODS DESCRIPTION</th>
-                                  <th className="py-1.5 px-2 text-center">ORIGIN</th>
-                                  <th className="py-1.5 px-2 text-right">QUANTITY</th>
-                                  <th className="py-1.5 px-2 text-right">NET WT</th>
-                                  <th className="py-1.5 px-2 text-center">PURCH CURRENCY</th>
-                                  <th className="py-1.5 px-2 text-right">RATE</th>
-                                  <th className="py-1.5 px-2 text-right">AMOUNT</th>
-                                  <th className="py-1.5 px-2 text-right">EX. RATE</th>
-                                  <th className="py-1.5 px-2 text-center">FINAL CURR</th>
-                                  <th className="py-1.5 px-2 text-right">FINAL AMOUNT</th>
+                                  <Th className="py-1.5 px-2 text-center">NO</Th>
+                                  <Th className="py-1.5 px-2">GOODS DESCRIPTION</Th>
+                                  <Th className="py-1.5 px-2 text-center">ORIGIN</Th>
+                                  <Th className="py-1.5 px-2 text-right">QUANTITY</Th>
+                                  <Th className="py-1.5 px-2 text-right">NET WT</Th>
+                                  <Th className="py-1.5 px-2 text-center">PURCH CURRENCY</Th>
+                                  <Th className="py-1.5 px-2 text-right">RATE</Th>
+                                  <Th className="py-1.5 px-2 text-right">AMOUNT</Th>
+                                  <Th className="py-1.5 px-2 text-right">EX. RATE</Th>
+                                  <Th className="py-1.5 px-2 text-center">FINAL CURR</Th>
+                                  <Th className="py-1.5 px-2 text-right">FINAL AMOUNT</Th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-slate-150 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-200">
@@ -1332,16 +1333,16 @@ export default function JournalReport({
                         <table className="w-full text-left border-collapse text-[8px]">
                           <thead>
                             <tr className="bg-slate-100 dark:bg-slate-800 text-slate-500 font-black uppercase text-[7px] border-b border-slate-200 dark:border-slate-700">
-                              <th className="py-1 px-2">JOURNAL SERIAL NO.</th>
-                              <th className="py-1 px-2">DATE</th>
-                              <th className="py-1 px-2">ACCOUNT NAME / DETAILS</th>
-                              <th className="py-1 px-2">DETAILS / REMARKS</th>
-                              <th className="py-1 px-2 text-right">DEBIT AMOUNT (PKR)</th>
-                              <th className="py-1 px-2 text-right">CREDIT AMOUNT (PKR)</th>
-                              <th className="py-1 px-2 text-center">CURRENCY</th>
-                              <th className="py-1 px-2">USER NAME</th>
-                              <th className="py-1 px-2">BRANCH</th>
-                              <th className="py-1 px-2">COUNTRY</th>
+                              <Th className="py-1 px-2">JOURNAL SERIAL NO.</Th>
+                              <Th className="py-1 px-2">DATE</Th>
+                              <Th className="py-1 px-2">ACCOUNT NAME / DETAILS</Th>
+                              <Th className="py-1 px-2">DETAILS / REMARKS</Th>
+                              <Th className="py-1 px-2 text-right">DEBIT AMOUNT (PKR)</Th>
+                              <Th className="py-1 px-2 text-right">CREDIT AMOUNT (PKR)</Th>
+                              <Th className="py-1 px-2 text-center">CURRENCY</Th>
+                              <Th className="py-1 px-2">USER NAME</Th>
+                              <Th className="py-1 px-2">BRANCH</Th>
+                              <Th className="py-1 px-2">COUNTRY</Th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-150 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-200">
@@ -1392,19 +1393,19 @@ export default function JournalReport({
                         <table className="w-full text-left border-collapse text-[9px] leading-tight">
                           <thead>
                             <tr className="bg-slate-50 dark:bg-slate-850 text-slate-400 font-extrabold uppercase text-[8px] border-b border-slate-200 dark:border-slate-800 whitespace-nowrap">
-                              <th className="py-2 px-2.5 text-center">SR. NO.</th>
-                              <th className="py-2 px-2">BRANCH NAME</th>
-                              <th className="py-2 px-2">USER NAME</th>
-                              <th className="py-2 px-2">DATE</th>
-                              <th className="py-2 px-2">CHECK TYPE</th>
-                              <th className="py-2 px-2">CHECK / REF NO.</th>
-                              <th className="py-2 px-2.5">DETAILS / REMARKS</th>
-                              <th className="py-2 px-2">ACCOUNT CODE</th>
-                              <th className="py-2 px-2">ACCOUNT NAME</th>
-                              <th className="py-2 px-2 text-center">CURRENCY</th>
-                              <th className="py-2 px-2 text-right">DEBIT (PKR)</th>
-                              <th className="py-2 px-2 text-right">CREDIT (PKR)</th>
-                              <th className="py-2 px-2 text-right">FINAL AMOUNT (PKR)</th>
+                              <Th className="py-2 px-2.5 text-center">SR. NO.</Th>
+                              <Th className="py-2 px-2">BRANCH NAME</Th>
+                              <Th className="py-2 px-2">USER NAME</Th>
+                              <Th className="py-2 px-2">DATE</Th>
+                              <Th className="py-2 px-2">CHECK TYPE</Th>
+                              <Th className="py-2 px-2">CHECK / REF NO.</Th>
+                              <Th className="py-2 px-2.5">DETAILS / REMARKS</Th>
+                              <Th className="py-2 px-2">ACCOUNT CODE</Th>
+                              <Th className="py-2 px-2">ACCOUNT NAME</Th>
+                              <Th className="py-2 px-2 text-center">CURRENCY</Th>
+                              <Th className="py-2 px-2 text-right">DEBIT (PKR)</Th>
+                              <Th className="py-2 px-2 text-right">CREDIT (PKR)</Th>
+                              <Th className="py-2 px-2 text-right">FINAL AMOUNT (PKR)</Th>
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-150 dark:divide-slate-800 font-semibold text-slate-750 dark:text-slate-300">
@@ -1771,19 +1772,19 @@ export default function JournalReport({
                 <table className="w-full text-left border-collapse text-[9px] leading-tight">
                   <thead>
                     <tr className="bg-slate-50 text-slate-500 font-extrabold uppercase text-[8px] border-b border-slate-300 whitespace-nowrap">
-                      <th className="py-2 px-2 text-center">Sr. No.</th>
-                      <th className="py-2 px-2">Branch Name</th>
-                      <th className="py-2 px-2">User Name</th>
-                      <th className="py-2 px-2">Date</th>
-                      <th className="py-2 px-2">Check Type</th>
-                      <th className="py-2 px-2">Check / Ref No.</th>
-                      <th className="py-2 px-2.5">Details Remarks</th>
-                      <th className="py-2 px-2">Account Code</th>
-                      <th className="py-2 px-2">Account Name</th>
-                      <th className="py-2 px-2 text-center">Currency</th>
-                      <th className="py-2 px-2 text-right">Debit (PKR)</th>
-                      <th className="py-2 px-2 text-right">Credit (PKR)</th>
-                      <th className="py-2 px-2 text-right">Final Amount (PKR)</th>
+                      <Th className="py-2 px-2 text-center">Sr. No.</Th>
+                      <Th className="py-2 px-2">Branch Name</Th>
+                      <Th className="py-2 px-2">User Name</Th>
+                      <Th className="py-2 px-2">Date</Th>
+                      <Th className="py-2 px-2">Check Type</Th>
+                      <Th className="py-2 px-2">Check / Ref No.</Th>
+                      <Th className="py-2 px-2.5">Details Remarks</Th>
+                      <Th className="py-2 px-2">Account Code</Th>
+                      <Th className="py-2 px-2">Account Name</Th>
+                      <Th className="py-2 px-2 text-center">Currency</Th>
+                      <Th className="py-2 px-2 text-right">Debit (PKR)</Th>
+                      <Th className="py-2 px-2 text-right">Credit (PKR)</Th>
+                      <Th className="py-2 px-2 text-right">Final Amount (PKR)</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-300 font-semibold text-slate-800">

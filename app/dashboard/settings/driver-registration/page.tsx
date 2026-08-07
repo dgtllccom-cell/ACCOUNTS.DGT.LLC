@@ -4,6 +4,7 @@ import { useState } from "react";
 import { UserCheck, Plus, Search, Trash2, Edit3 } from "lucide-react";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 interface DriverRecord {
   id: string;
@@ -225,15 +226,15 @@ export default function DriverRegistrationPage() {
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-100/70 dark:bg-slate-950 text-slate-500 font-black uppercase tracking-wider">
               <tr>
-                <th className="px-5 py-3.5">#</th>
-                <th className="px-5 py-3.5">Driver Name</th>
-                <th className="px-5 py-3.5">License Number</th>
-                <th className="px-5 py-3.5">Category</th>
-                <th className="px-5 py-3.5">CNIC / Passport</th>
-                <th className="px-5 py-3.5">Mobile</th>
-                <th className="px-5 py-3.5">Transport Company</th>
-                <th className="px-5 py-3.5 text-center">Status</th>
-                <th className="px-5 py-3.5 text-center">Actions</th>
+                <Th className="px-5 py-3.5">#</Th>
+                <Th className="px-5 py-3.5">Driver Name</Th>
+                <Th className="px-5 py-3.5">License Number</Th>
+                <Th className="px-5 py-3.5">Category</Th>
+                <Th className="px-5 py-3.5">CNIC / Passport</Th>
+                <Th className="px-5 py-3.5">Mobile</Th>
+                <Th className="px-5 py-3.5">Transport Company</Th>
+                <Th className="px-5 py-3.5 text-center">Status</Th>
+                <Th className="px-5 py-3.5 text-center">Actions</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">

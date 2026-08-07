@@ -46,6 +46,8 @@ import { useRouter } from "next/navigation";
 import { openPurchaseA4ReportWindow } from "@/lib/reports/open-purchase-a4-report-window";
 import { openProformaInvoiceWindow } from "@/lib/reports/open-proforma-invoice-window";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type PurchaseReport = {
   id: string;
@@ -1910,6 +1912,7 @@ function DashboardSummaryHeader({
 
 export function PurchaseOrderManagementDashboard() {
   const router = useRouter();
+  const activeLang = useActiveLanguage();
   const [reports, setReports] = useState<PurchaseReport[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -2545,7 +2548,7 @@ export function PurchaseOrderManagementDashboard() {
                       colSpan={group.span}
                       className={`${group.cls} px-3 py-2 text-[10px] font-extrabold uppercase tracking-widest text-center border-r border-slate-200 dark:border-slate-800 last:border-r-0`}
                     >
-                      {group.label}
+                      {translateHeader(activeLang, group.label)}
                     </th>
                   ))}
                 </tr>
@@ -2564,7 +2567,7 @@ export function PurchaseOrderManagementDashboard() {
                     "DOCS", "ACTIONS"
                   ].map((header, i) => (
                     <th key={i} className="px-3 py-3 border-r border-slate-100 dark:border-slate-800/50 last:border-r-0 whitespace-nowrap text-center align-middle">
-                      {header}
+                      {translateHeader(activeLang, header)}
                     </th>
                   ))}
                 </tr>

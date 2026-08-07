@@ -9,6 +9,7 @@ import { AdvanceLoanModal } from "./advance-loan-modal";
 import { EmployeeLedgerPanel } from "./employee-ledger-panel";
 import { PayrollReportsView } from "./payroll-reports-view";
 import { printEmployeeCertificate } from "@/components/ui/employee-certificate-print";
+import { Th } from "@/components/ui/translated-th";
 
 export function EmployeeManagementView() {
   const [activeTab, setActiveTab] = useState<"master" | "payroll">("master");
@@ -223,16 +224,16 @@ export function EmployeeManagementView() {
             <table className="min-w-full text-xs text-left text-slate-700 dark:text-slate-300">
               <thead className="bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-800">
                 <tr>
-                  <th className="px-6 py-3.5">Emp Code</th>
-                  <th className="px-6 py-3.5">Employee / Person Name</th>
-                  <th className="px-6 py-3.5">Assigned Country / Branch</th>
-                  <th className="px-6 py-3.5">Category</th>
-                  <th className="px-6 py-3.5">Designation / Department</th>
-                  <th className="px-6 py-3.5">Joining Date</th>
-                  <th className="px-6 py-3.5">Net Payroll</th>
-                  <th className="px-6 py-3.5">Deductions (Adv/Loan)</th>
-                  <th className="px-6 py-3.5">Status</th>
-                  <th className="px-6 py-3.5 text-right">Actions</th>
+                  <Th className="px-6 py-3.5">Emp Code</Th>
+                  <Th className="px-6 py-3.5">Employee / Person Name</Th>
+                  <Th className="px-6 py-3.5">Assigned Country / Branch</Th>
+                  <Th className="px-6 py-3.5">Category</Th>
+                  <Th className="px-6 py-3.5">Designation / Department</Th>
+                  <Th className="px-6 py-3.5">Joining Date</Th>
+                  <Th className="px-6 py-3.5">Net Payroll</Th>
+                  <Th className="px-6 py-3.5">Deductions (Adv/Loan)</Th>
+                  <Th className="px-6 py-3.5">Status</Th>
+                  <Th className="px-6 py-3.5 text-right">Actions</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800">

@@ -145,6 +145,10 @@ async function logApiErrorForSuperAdmin(code: string, message: string, details?:
 }
 
 export async function handleApiError(error: unknown) {
+  if ((error as any)?.digest?.startsWith("NEXT_REDIRECT") || (error as any)?.message === "NEXT_REDIRECT") {
+    throw error;
+  }
+
   let code = "SERVER_ERROR";
   let message = messageFromError(error);
   let status = 500;

@@ -50,6 +50,7 @@ import { cn } from "@/lib/utils";
 import { BankPicker } from "@/features/banks/components/bank-picker";
 import { getBankById } from "@/features/banks/bank-api";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
+import { Th } from "@/components/ui/translated-th";
 
 function getRoznamchaCategoryLabel(row: any) {
   const sm = (row.source_module || "").toLowerCase();
@@ -3201,16 +3202,16 @@ export function CashEntryForm({
               <table className="w-full min-w-[700px] border-collapse border border-slate-200 dark:border-slate-800 text-xs">
                 <thead className="bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-300">
                   <tr className="text-left">
-                    <th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "تاریخ اور ہسٹری" : lang === "ps" ? "نیټه او تاریخچه" : lang === "ar" ? "التاريخ والتأريخ" : lang === "fa" ? "تاریخ و سوابق" : "Date & History"}</th>
-                    <th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "سیریلز اور واؤچرز" : lang === "ps" ? "سیریلونه او واوچرونه" : lang === "ar" ? "الأرقام التسلسلية والسندات" : lang === "fa" ? "سریال‌ها و اسناد" : "Serials & Vouchers"}</th>
-                    <th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "روزنامچہ کیٹگری" : lang === "ps" ? "د روزنامچې برخه" : lang === "ar" ? "فئة روزنامجة" : lang === "fa" ? "دسته‌بندی روزنامچه" : "Roznamcha Category"}</th>
-                    <th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "اکاؤنٹ تفصیلات" : lang === "ps" ? "د حساب تفصیلات" : lang === "ar" ? "تفاصيل الحساب" : lang === "fa" ? "جزئیات حساب" : "Account Details"}</th>
-                    <th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "نمبرز" : lang === "ps" ? "شمېرې" : lang === "ar" ? "الأرقام" : lang === "fa" ? "شماره‌ها" : "Numbers"}</th>
-                    <th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "تفصیلات" : lang === "ps" ? "تفصیلات" : lang === "ar" ? "التفاصيل" : lang === "fa" ? "جزئیات" : "Details"}</th>
-                    <th className="p-3 font-bold text-center border border-slate-200 dark:border-slate-800">{lang === "ur" ? "کریڈٹ / ڈیبٹ" : lang === "ps" ? "کریډیټ / ډیبیټ" : lang === "ar" ? "دائن / مدين" : lang === "fa" ? "بستانکار / بدهکار" : "Credit/Debit"}</th>
-                    <th className="p-3 font-bold text-right border border-slate-200 dark:border-slate-800">{lang === "ur" ? "ڈیبٹ (وصولی)" : lang === "ps" ? "ډیبیټ" : lang === "ar" ? "مدين" : lang === "fa" ? "بدهکار" : "Debit"}</th>
-                    <th className="p-3 font-bold text-right border border-slate-200 dark:border-slate-800">{lang === "ur" ? "کریڈٹ (ادائیگی)" : lang === "ps" ? "کریډیټ" : lang === "ar" ? "دائن" : lang === "fa" ? "بستانکار" : "Credit"}</th>
-                    <th className="p-3 font-bold text-center border border-slate-200 dark:border-slate-800">{lang === "ur" ? "کارروائی" : lang === "ps" ? "کړنې" : lang === "ar" ? "الإجراءات" : lang === "fa" ? "عملیات" : "Actions"}</th>
+                    <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "تاریخ اور ہسٹری" : lang === "ps" ? "نیټه او تاریخچه" : lang === "ar" ? "التاريخ والتأريخ" : lang === "fa" ? "تاریخ و سوابق" : "Date & History"}</Th>
+                    <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "سیریلز اور واؤچرز" : lang === "ps" ? "سیریلونه او واوچرونه" : lang === "ar" ? "الأرقام التسلسلية والسندات" : lang === "fa" ? "سریال‌ها و اسناد" : "Serials & Vouchers"}</Th>
+                    <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "روزنامچہ کیٹگری" : lang === "ps" ? "د روزنامچې برخه" : lang === "ar" ? "فئة روزنامجة" : lang === "fa" ? "دسته‌بندی روزنامچه" : "Roznamcha Category"}</Th>
+                    <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "اکاؤنٹ تفصیلات" : lang === "ps" ? "د حساب تفصیلات" : lang === "ar" ? "تفاصيل الحساب" : lang === "fa" ? "جزئیات حساب" : "Account Details"}</Th>
+                    <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "نمبرز" : lang === "ps" ? "شمېرې" : lang === "ar" ? "الأرقام" : lang === "fa" ? "شماره‌ها" : "Numbers"}</Th>
+                    <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "تفصیلات" : lang === "ps" ? "تفصیلات" : lang === "ar" ? "التفاصيل" : lang === "fa" ? "جزئیات" : "Details"}</Th>
+                    <Th className="p-3 font-bold text-center border border-slate-200 dark:border-slate-800">{lang === "ur" ? "کریڈٹ / ڈیبٹ" : lang === "ps" ? "کریډیټ / ډیبیټ" : lang === "ar" ? "دائن / مدين" : lang === "fa" ? "بستانکار / بدهکار" : "Credit/Debit"}</Th>
+                    <Th className="p-3 font-bold text-right border border-slate-200 dark:border-slate-800">{lang === "ur" ? "ڈیبٹ (وصولی)" : lang === "ps" ? "ډیبیټ" : lang === "ar" ? "مدين" : lang === "fa" ? "بدهکار" : "Debit"}</Th>
+                    <Th className="p-3 font-bold text-right border border-slate-200 dark:border-slate-800">{lang === "ur" ? "کریڈٹ (ادائیگی)" : lang === "ps" ? "کریډیټ" : lang === "ar" ? "دائن" : lang === "fa" ? "بستانکار" : "Credit"}</Th>
+                    <Th className="p-3 font-bold text-center border border-slate-200 dark:border-slate-800">{lang === "ur" ? "کارروائی" : lang === "ps" ? "کړنې" : lang === "ar" ? "الإجراءات" : lang === "fa" ? "عملیات" : "Actions"}</Th>
                   </tr>
                 </thead>
                 <tbody>

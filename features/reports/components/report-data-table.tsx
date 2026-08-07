@@ -5,6 +5,7 @@ import { Search, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { t, type UiKey } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 type SortDirection = "asc" | "desc" | null;
 
@@ -201,7 +202,7 @@ export function ReportDataTable({
             <thead>
               <tr className="bg-slate-900 dark:bg-slate-950">
                 {columns.map((col) => (
-                  <th
+                  <Th
                     key={col.key}
                     className={cn(
                       "px-4 py-3 font-black uppercase tracking-wider text-slate-100 whitespace-nowrap select-none",
@@ -224,7 +225,7 @@ export function ReportDataTable({
                         </span>
                       )}
                     </div>
-                  </th>
+                  </Th>
                 ))}
               </tr>
             </thead>

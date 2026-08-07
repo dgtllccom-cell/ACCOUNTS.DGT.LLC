@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Th } from "@/components/ui/translated-th";
 
 type AccountRow = {
   accountId: string;
@@ -288,17 +289,17 @@ export function AccountsSummaryDashboard() {
           <table className="w-full text-left border-collapse text-xs">
             <thead>
               <tr className="bg-slate-100 border-b text-slate-500 uppercase tracking-wider text-[10px]">
-                <th className="px-3 py-2.5 font-bold border-r border-slate-200">Sr#</th>
-                <th className="px-3 py-2.5 font-bold border-r border-slate-200">Account No.</th>
-                <th className="px-3 py-2.5 font-bold border-r border-slate-200">Account Name</th>
-                <th className="px-3 py-2.5 font-bold border-r border-slate-200">Type</th>
-                <th className="px-3 py-2.5 font-bold border-r border-slate-200">Sub Type</th>
-                <th className="px-3 py-2.5 font-bold border-r border-slate-200">Status</th>
-                <th className="px-3 py-2.5 font-bold border-r border-slate-200">Branch</th>
-                <th className="px-3 py-2.5 font-bold border-r border-slate-200">Country</th>
-                <th className="px-3 py-2.5 font-bold border-r border-slate-200 text-right">Balance</th>
-                <th className="px-3 py-2.5 font-bold border-r border-slate-200">Created</th>
-                <th className="px-3 py-2.5 font-bold text-center">View</th>
+                <Th className="px-3 py-2.5 font-bold border-r border-slate-200">Sr#</Th>
+                <Th className="px-3 py-2.5 font-bold border-r border-slate-200">Account No.</Th>
+                <Th className="px-3 py-2.5 font-bold border-r border-slate-200">Account Name</Th>
+                <Th className="px-3 py-2.5 font-bold border-r border-slate-200">Type</Th>
+                <Th className="px-3 py-2.5 font-bold border-r border-slate-200">Sub Type</Th>
+                <Th className="px-3 py-2.5 font-bold border-r border-slate-200">Status</Th>
+                <Th className="px-3 py-2.5 font-bold border-r border-slate-200">Branch</Th>
+                <Th className="px-3 py-2.5 font-bold border-r border-slate-200">Country</Th>
+                <Th className="px-3 py-2.5 font-bold border-r border-slate-200 text-right">Balance</Th>
+                <Th className="px-3 py-2.5 font-bold border-r border-slate-200">Created</Th>
+                <Th className="px-3 py-2.5 font-bold text-center">View</Th>
               </tr>
             </thead>
             <tbody>

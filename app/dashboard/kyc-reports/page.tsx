@@ -32,6 +32,7 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
+import { Th } from "@/components/ui/translated-th";
 
 type KycEntityType = "country_branch" | "city_branch" | "user_account" | "new_account";
 
@@ -465,12 +466,12 @@ export default function KycReportsPage() {
           <table className="w-full text-xs text-left text-foreground">
             <thead className="bg-muted/40 text-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-border/60">
               <tr>
-                <th className="px-5 py-3.5">Entity & Record Title</th>
-                <th className="px-5 py-3.5">Type & Location</th>
-                <th className="px-5 py-3.5">Missing Profile Requirements</th>
-                <th className="px-5 py-3.5">Grace Period (15 Days)</th>
-                <th className="px-5 py-3.5">Status</th>
-                <th className="px-5 py-3.5 text-right">Actions</th>
+                <Th className="px-5 py-3.5">Entity & Record Title</Th>
+                <Th className="px-5 py-3.5">Type & Location</Th>
+                <Th className="px-5 py-3.5">Missing Profile Requirements</Th>
+                <Th className="px-5 py-3.5">Grace Period (15 Days)</Th>
+                <Th className="px-5 py-3.5">Status</Th>
+                <Th className="px-5 py-3.5 text-right">Actions</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border/40">

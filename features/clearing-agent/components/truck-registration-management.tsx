@@ -8,6 +8,7 @@ import { getLanguageDirection } from "@/lib/i18n/languages";
 import { LocationHierarchySelect } from "@/features/locations/components/location-hierarchy-select";
 import { TruckAttachments } from "@/features/clearing-agent/components/truck-attachments";
 import { ReportActions } from "@/components/ui/report-actions";
+import { Th } from "@/components/ui/translated-th";
 
 type Truck = {
   id: string;
@@ -128,14 +129,14 @@ export function TruckRegistrationManagementView({ lang }: { lang: SupportedLangu
         <table className="w-full text-start text-sm">
           <thead className="bg-slate-50 text-[11px] font-black uppercase tracking-wide text-slate-500 dark:bg-slate-950/60">
             <tr>
-              <th className="px-3 py-3 text-start">{t(lang, "tr.number")}</th>
-              <th className="px-3 py-3 text-start">{t(lang, "tr.reg_no")}</th>
-              <th className="px-3 py-3 text-start">{t(lang, "tr.owner")}</th>
-              <th className="px-3 py-3 text-start">{t(lang, "tr.driver")}</th>
-              <th className="px-3 py-3 text-start">{t(lang, "tr.status")}</th>
-              <th className="px-3 py-3 text-start">{t(lang, "tr.reg_expiry")}</th>
-              <th className="px-3 py-3 text-start">{t(lang, "tr.ins_expiry")}</th>
-              <th className="px-3 py-3 text-end"></th>
+              <Th className="px-3 py-3 text-start">{t(lang, "tr.number")}</Th>
+              <Th className="px-3 py-3 text-start">{t(lang, "tr.reg_no")}</Th>
+              <Th className="px-3 py-3 text-start">{t(lang, "tr.owner")}</Th>
+              <Th className="px-3 py-3 text-start">{t(lang, "tr.driver")}</Th>
+              <Th className="px-3 py-3 text-start">{t(lang, "tr.status")}</Th>
+              <Th className="px-3 py-3 text-start">{t(lang, "tr.reg_expiry")}</Th>
+              <Th className="px-3 py-3 text-start">{t(lang, "tr.ins_expiry")}</Th>
+              <Th className="px-3 py-3 text-end"></Th>
             </tr>
           </thead>
           <tbody>

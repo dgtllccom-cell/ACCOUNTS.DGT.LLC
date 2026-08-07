@@ -25,6 +25,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Th } from "@/components/ui/translated-th";
 
 const CHART_COLORS = ["#2563eb", "#3b82f6", "#06b6d4", "#f59e0b", "#10b981", "#6366f1"];
 
@@ -335,15 +336,15 @@ export function CountryDashboardOverview({ data }: CountryDashboardOverviewProps
             <table className="w-full text-[11px] text-left">
               <thead>
                 <tr className="bg-muted/40 text-[10px] uppercase font-bold text-muted-foreground">
-                  <th className="px-4 py-3">Branch Name</th>
-                  <th className="px-4 py-3">Code</th>
-                  <th className="px-4 py-3">Currency</th>
-                  <th className="px-4 py-3 text-right">Sales</th>
-                  <th className="px-4 py-3 text-right">Purchases</th>
-                  <th className="px-4 py-3 text-right">Debit</th>
-                  <th className="px-4 py-3 text-right">Credit</th>
-                  <th className="px-4 py-3 text-right">Balance</th>
-                  <th className="px-4 py-3 text-center">Status</th>
+                  <Th className="px-4 py-3">Branch Name</Th>
+                  <Th className="px-4 py-3">Code</Th>
+                  <Th className="px-4 py-3">Currency</Th>
+                  <Th className="px-4 py-3 text-right">Sales</Th>
+                  <Th className="px-4 py-3 text-right">Purchases</Th>
+                  <Th className="px-4 py-3 text-right">Debit</Th>
+                  <Th className="px-4 py-3 text-right">Credit</Th>
+                  <Th className="px-4 py-3 text-right">Balance</Th>
+                  <Th className="px-4 py-3 text-center">Status</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">

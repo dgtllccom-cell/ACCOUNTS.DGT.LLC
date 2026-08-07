@@ -10,6 +10,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { apiGet } from "@/lib/api/client";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLabel } from "./translations";
+import { Th } from "@/components/ui/translated-th";
 
 type CustomerRow = {
   id: string;
@@ -275,8 +276,8 @@ export function CustomerProfile({
               <table className="w-full text-xs text-left">
                 <thead className="bg-slate-50 text-slate-600 uppercase font-bold border-b dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800">
                   <tr>
-                    <th className="px-3 py-1">Type</th>
-                    <th className="px-3 py-1 font-mono">Value</th>
+                    <Th className="px-3 py-1">Type</Th>
+                    <Th className="px-3 py-1 font-mono">Value</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y dark:divide-slate-800">
@@ -298,8 +299,8 @@ export function CustomerProfile({
               <table className="w-full text-xs text-left">
                 <thead className="bg-slate-50 text-slate-600 uppercase font-bold border-b dark:bg-slate-900 dark:text-slate-400 dark:border-slate-800">
                   <tr>
-                    <th className="px-3 py-1">Type</th>
-                    <th className="px-3 py-1 font-mono">Number</th>
+                    <Th className="px-3 py-1">Type</Th>
+                    <Th className="px-3 py-1 font-mono">Number</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y dark:divide-slate-800">
@@ -497,9 +498,9 @@ export function CustomerProfile({
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-50 text-slate-600 uppercase font-bold border-b">
                     <tr>
-                      <th className="px-4 py-2">#</th>
-                      <th className="px-4 py-2">Contact Type</th>
-                      <th className="px-4 py-2 font-mono">Contact Details / Value</th>
+                      <Th className="px-4 py-2">#</Th>
+                      <Th className="px-4 py-2">Contact Type</Th>
+                      <Th className="px-4 py-2 font-mono">Contact Details / Value</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -527,10 +528,10 @@ export function CustomerProfile({
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-50 text-slate-600 uppercase font-bold border-b">
                     <tr>
-                      <th className="px-4 py-2">#</th>
-                      <th className="px-4 py-2">Document Type</th>
-                      <th className="px-4 py-2 font-mono">Number</th>
-                      <th className="px-4 py-2">Scan Attachment Reference</th>
+                      <Th className="px-4 py-2">#</Th>
+                      <Th className="px-4 py-2">Document Type</Th>
+                      <Th className="px-4 py-2 font-mono">Number</Th>
+                      <Th className="px-4 py-2">Scan Attachment Reference</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">

@@ -53,6 +53,7 @@ import { ReportPagination } from "@/features/reports/components/report-paginatio
 import { ReportStatusLegend } from "@/features/reports/components/report-status-legend";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
+import { Th } from "@/components/ui/translated-th";
 
 type PurchaseReport = {
   id: string;
@@ -1347,6 +1348,8 @@ export function PurchaseBookingJournalReportView({
     } finally {
       setAccepting(false);
     }
+  };
+
   const activeLang = useActiveLanguage();
   const trField = useCallback((row: any, fieldName: string, fallback: string) => {
     if (!fallback || fallback === "-") return fallback;
@@ -3267,19 +3270,19 @@ export function PurchaseBookingJournalReportView({
                     <table className="w-full text-[8px] text-left border-collapse">
                       <thead>
                         <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-black uppercase">
-                          <th className="p-1 border-r border-slate-200 text-center w-[3%]">SR.</th>
-                          <th className="p-1 border-r border-slate-200 w-[17%]">GOODS NAME</th>
-                          <th className="p-1 border-r border-slate-200 text-center w-[8%]">BRAND</th>
-                          <th className="p-1 border-r border-slate-200 text-center w-[8%]">SIZE</th>
-                          <th className="p-1 border-r border-slate-200 text-center w-[8%]">ORIGIN</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[8%]">QUANTITY</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[8%]">QTY (KGS)</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[8%]">GROSS WT</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[8%]">NET WT</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[8%]">RATE / KG</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[10%]">AMOUNT ({purchaseCurrency})</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[6%]">EX. RATE</th>
-                          <th className="p-1 text-right w-[10%]">FINAL AMOUNT</th>
+                          <Th className="p-1 border-r border-slate-200 text-center w-[3%]">SR.</Th>
+                          <Th className="p-1 border-r border-slate-200 w-[17%]">GOODS NAME</Th>
+                          <Th className="p-1 border-r border-slate-200 text-center w-[8%]">BRAND</Th>
+                          <Th className="p-1 border-r border-slate-200 text-center w-[8%]">SIZE</Th>
+                          <Th className="p-1 border-r border-slate-200 text-center w-[8%]">ORIGIN</Th>
+                          <Th className="p-1 border-r border-slate-200 text-right w-[8%]">QUANTITY</Th>
+                          <Th className="p-1 border-r border-slate-200 text-right w-[8%]">QTY (KGS)</Th>
+                          <Th className="p-1 border-r border-slate-200 text-right w-[8%]">GROSS WT</Th>
+                          <Th className="p-1 border-r border-slate-200 text-right w-[8%]">NET WT</Th>
+                          <Th className="p-1 border-r border-slate-200 text-right w-[8%]">RATE / KG</Th>
+                          <Th className="p-1 border-r border-slate-200 text-right w-[10%]">AMOUNT ({purchaseCurrency})</Th>
+                          <Th className="p-1 border-r border-slate-200 text-right w-[6%]">EX. RATE</Th>
+                          <Th className="p-1 text-right w-[10%]">FINAL AMOUNT</Th>
                         </tr>
                       </thead>
                       <tbody>
@@ -3657,19 +3660,19 @@ function DarkTable({ headers, tableGroups, children }: { headers: string[]; tabl
           {/* Group header row */}
           <tr>
             {tableGroups.map((group) => (
-              <th
+              <Th
                 key={group.label}
                 colSpan={group.span}
                 className={`${group.cls} px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-center border-r border-white/20 last:border-r-0`}
               >
                 {group.label}
-              </th>
+              </Th>
             ))}
           </tr>
           {/* Column header row */}
           <tr className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-600">
             {headers.map((header, idx) => (
-              <th key={`${header}-${idx}`} className="whitespace-nowrap border-r border-slate-200 px-3 py-2.5 text-left font-black last:border-r-0">{header}</th>
+              <Th key={`${header}-${idx}`} className="whitespace-nowrap border-r border-slate-200 px-3 py-2.5 text-left font-black last:border-r-0">{header}</Th>
             ))}
           </tr>
         </thead>

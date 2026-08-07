@@ -1,9 +1,10 @@
 import React from "react";
 
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 export function ReportTh({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <th className={cn("px-2 py-2 text-center text-[11px] font-semibold", className)}>{children}</th>;
+  return <Th className={cn("px-2 py-2 text-center text-[11px] font-semibold", className)}>{children}</Th>;
 }
 
 export function ReportTd({ children, className }: { children: React.ReactNode; className?: string }) {

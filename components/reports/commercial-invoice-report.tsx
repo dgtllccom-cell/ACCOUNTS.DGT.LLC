@@ -2,6 +2,7 @@
 
 import React from "react";
 import { FileText, Printer, Building2, MapPin, Globe, ShieldCheck } from "lucide-react";
+import { Th } from "@/components/ui/translated-th";
 
 export interface CommercialInvoiceReportProps {
   data?: any;
@@ -84,11 +85,11 @@ export function CommercialInvoiceReport({ data }: CommercialInvoiceReportProps) 
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-y-2 border-slate-900 bg-slate-100 dark:bg-slate-800 dark:border-slate-700">
-                <th className="p-3 font-black uppercase text-slate-700 dark:text-slate-200">SR#</th>
-                <th className="p-3 font-black uppercase text-slate-700 dark:text-slate-200">Description of Goods</th>
-                <th className="p-3 font-black uppercase text-right text-slate-700 dark:text-slate-200">Quantity</th>
-                <th className="p-3 font-black uppercase text-right text-slate-700 dark:text-slate-200">Unit Price ({currency})</th>
-                <th className="p-3 font-black uppercase text-right text-slate-700 dark:text-slate-200">Total ({currency})</th>
+                <Th className="p-3 font-black uppercase text-slate-700 dark:text-slate-200">SR#</Th>
+                <Th className="p-3 font-black uppercase text-slate-700 dark:text-slate-200">Description of Goods</Th>
+                <Th className="p-3 font-black uppercase text-right text-slate-700 dark:text-slate-200">Quantity</Th>
+                <Th className="p-3 font-black uppercase text-right text-slate-700 dark:text-slate-200">Unit Price ({currency})</Th>
+                <Th className="p-3 font-black uppercase text-right text-slate-700 dark:text-slate-200">Total ({currency})</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">

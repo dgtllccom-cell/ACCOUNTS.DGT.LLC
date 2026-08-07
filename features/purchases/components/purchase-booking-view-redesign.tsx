@@ -21,6 +21,7 @@
  */
 import { useEffect, useRef, useState } from "react";
 import {
+import { Th } from "@/components/ui/translated-th";
   Menu, Building2, Calendar, Globe, Languages, Bell, HelpCircle, ChevronDown,
   Save, Check, ArrowRightLeft, Printer, MoreHorizontal, Pencil, Trash2, Upload,
   X, FileText, LayoutDashboard, ShoppingCart, Package, Users, Wallet, BarChart3,
@@ -570,7 +571,7 @@ function GoodsTable({ goods }: { goods: GoodsRow[] }) {
           <thead>
             <tr className="border-b border-border/60 bg-slate-50 text-[10.5px] uppercase tracking-wider text-muted-foreground">
               {["#", "Code", "Name", "Spec / Size", "Unit", "Qty", "Price", "Gross Wt", "Net Wt", "Gross Amt", "Disc.", "Net Amt"].map((h) => (
-                <th key={h} className="whitespace-nowrap px-2.5 py-2.5 text-left font-semibold">{h}</th>
+                <Th key={h} className="whitespace-nowrap px-2.5 py-2.5 text-left font-semibold">{h}</Th>
               ))}
             </tr>
           </thead>
@@ -617,9 +618,9 @@ function PaymentTable({ paymentSchedule }: { paymentSchedule: PaymentRow[] }) {
           <thead>
             <tr className="border-b border-border/60 bg-slate-50 text-[10.5px] uppercase tracking-wider text-muted-foreground">
               {["#", "Term", "%", "Mode", "Bank / ATM", "Amount", "Balance", "Date"].map((h) => (
-                <th key={h} className="whitespace-nowrap px-2.5 py-2.5 text-left font-semibold">{h}</th>
+                <Th key={h} className="whitespace-nowrap px-2.5 py-2.5 text-left font-semibold">{h}</Th>
               ))}
-              <th className="px-2.5 py-2.5"></th>
+              <Th className="px-2.5 py-2.5"></Th>
             </tr>
           </thead>
           <tbody>
@@ -660,7 +661,7 @@ function LoadingTable() {
           <thead>
             <tr className="border-b border-border/60 bg-slate-50 text-[10.5px] uppercase tracking-wider text-muted-foreground">
               {["#", "Mode", "Vessel", "Loading", "Discharge", "ETD", "ETA", "Loaded", "Balance"].map((h) => (
-                <th key={h} className="whitespace-nowrap px-2.5 py-2.5 text-left font-semibold">{h}</th>
+                <Th key={h} className="whitespace-nowrap px-2.5 py-2.5 text-left font-semibold">{h}</Th>
               ))}
             </tr>
           </thead>
@@ -817,16 +818,16 @@ function FullReport({
               <table className="tbl">
                 <thead>
                   <tr>
-                    <th style={{ width: 26 }}>#</th>
-                    <th>Name</th>
-                    <th>Spec</th>
-                    <th>Unit</th>
-                    <th className="num">Qty</th>
-                    <th className="num">Gross</th>
+                    <Th style={{ width: 26 }}>#</Th>
+                    <Th>Name</Th>
+                    <Th>Spec</Th>
+                    <Th>Unit</Th>
+                    <Th className="num">Qty</Th>
+                    <Th className="num">Gross</Th>
 
-                    <th className="num">Net</th>
-                    <th className="num">Price</th>
-                    <th className="num">Amount</th>
+                    <Th className="num">Net</Th>
+                    <Th className="num">Price</Th>
+                    <Th className="num">Amount</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -893,15 +894,15 @@ function FullReport({
               <table className="tbl">
                 <thead>
                   <tr>
-                    <th style={{ width: 26 }}>#</th>
-                    <th>Term</th>
-                    <th className="num">%</th>
-                    <th>Mode</th>
-                    <th>Bank / ATM</th>
-                    <th>A/C</th>
-                    <th className="num">Amount</th>
-                    <th className="num">Balance</th>
-                    <th>Date</th>
+                    <Th style={{ width: 26 }}>#</Th>
+                    <Th>Term</Th>
+                    <Th className="num">%</Th>
+                    <Th>Mode</Th>
+                    <Th>Bank / ATM</Th>
+                    <Th>A/C</Th>
+                    <Th className="num">Amount</Th>
+                    <Th className="num">Balance</Th>
+                    <Th>Date</Th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1006,7 +1007,7 @@ function CompactOrder({ goods }: { goods: GoodsRow[] }) {
               <thead>
                 <tr className="bg-slate-100 text-[10px] uppercase tracking-widest text-slate-700">
                   {["#", "Item", "Qty", "Price", "Amount", "Ex.Rate", "Final (AED)"].map((h) => (
-                    <th key={h} className="whitespace-nowrap px-2.5 py-2 text-left font-semibold">{h}</th>
+                    <Th key={h} className="whitespace-nowrap px-2.5 py-2 text-left font-semibold">{h}</Th>
                   ))}
                 </tr>
               </thead>

@@ -147,6 +147,7 @@ export function InstallAppBanner() {
           </Button>
 
           <button
+            suppressHydrationWarning
             type="button"
             onClick={handleDismiss}
             className="p-1 rounded-lg text-blue-300 hover:text-white hover:bg-white/10 transition-colors"

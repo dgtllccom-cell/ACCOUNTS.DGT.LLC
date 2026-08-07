@@ -24,6 +24,8 @@ import {
   type LedgerStatementLine
 } from "@/features/reports/ledger-report/ledger-report-api";
 import { ProfessionalReportViewer, type ReportColumn } from "@/components/reports/professional-report-viewer";
+import { useHeaderLanguage } from "@/components/ui/translated-th";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type GeneralReportRow = LedgerLookupRow & {
   branch: string;
@@ -1280,9 +1282,11 @@ function ReportTable({ headers, children }: { headers: string[]; children: React
 }
 
 function Th({ children, className }: { children: React.ReactNode; className?: string }) {
+  const lang = useHeaderLanguage();
+  const content = typeof children === "string" ? translateHeader(lang, children) : children;
   return (
     <th className={cn("whitespace-nowrap px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500", className)}>
-      {children}
+      {content}
     </th>
   );
 }

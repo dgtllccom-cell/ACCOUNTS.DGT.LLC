@@ -45,6 +45,7 @@ import { ReportFilterMenu } from "@/components/reports/report-filter-menu";
 import { ReportPageHeader } from "@/components/reports/report-page-header";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 type EmailFolder = "inbox" | "sent" | "draft" | "trash" | "spam" | "attachments" | "notifications";
 type EmailChannel = "email" | "whatsapp" | "internal" | "notifications";
@@ -899,12 +900,12 @@ export function EmailManagementWorkspace({ channel }: { channel: EmailChannel })
                 <table className="w-full text-xs text-left border-collapse">
                   <thead className="bg-muted/50 text-muted-foreground uppercase text-[10px] tracking-wider border-b">
                     <tr>
-                      <th className="p-3 font-semibold">Country</th>
-                      <th className="p-3 font-semibold">Branch</th>
-                      <th className="p-3 font-semibold">Official Email</th>
-                      <th className="p-3 font-semibold">SMTP Status</th>
-                      <th className="p-3 font-semibold">Email Status</th>
-                      <th className="p-3 font-semibold text-center">Action</th>
+                      <Th className="p-3 font-semibold">Country</Th>
+                      <Th className="p-3 font-semibold">Branch</Th>
+                      <Th className="p-3 font-semibold">Official Email</Th>
+                      <Th className="p-3 font-semibold">SMTP Status</Th>
+                      <Th className="p-3 font-semibold">Email Status</Th>
+                      <Th className="p-3 font-semibold text-center">Action</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">

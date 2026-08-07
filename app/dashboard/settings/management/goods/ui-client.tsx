@@ -8,6 +8,7 @@ import { SimpleModal } from "@/components/ui/simple-modal";
 import { apiDelete, apiPatch, apiPost } from "@/lib/api/client";
 import { listCountries } from "@/features/locations/location-api";
 import { listGoods, type GoodsListRow } from "@/features/inventory/goods-api";
+import { Th } from "@/components/ui/translated-th";
 
 type GoodsVariation = {
   id: string;
@@ -372,13 +373,13 @@ export default function GoodsManagementClient({ session }: { session: any }) {
             <table className="w-full min-w-[760px] text-sm">
               <thead className="bg-muted/40 text-xs text-muted-foreground">
                 <tr className="border-b border-border">
-                  <th className="w-10 px-3 py-3"></th>
-                  <th className="px-3 py-3 text-start font-semibold uppercase tracking-wider">CHS Code</th>
-                  <th className="px-3 py-3 text-start font-semibold uppercase tracking-wider">Goods Name</th>
-                  <th className="px-3 py-3 text-start font-semibold uppercase tracking-wider">Origin Country</th>
-                  <th className="px-3 py-3 text-center font-semibold uppercase tracking-wider">Total Sizes</th>
-                  <th className="px-3 py-3 text-center font-semibold uppercase tracking-wider">Total Brands</th>
-                  <th className="px-3 py-3 text-end font-semibold uppercase tracking-wider">Actions</th>
+                  <Th className="w-10 px-3 py-3"></Th>
+                  <Th className="px-3 py-3 text-start font-semibold uppercase tracking-wider">CHS Code</Th>
+                  <Th className="px-3 py-3 text-start font-semibold uppercase tracking-wider">Goods Name</Th>
+                  <Th className="px-3 py-3 text-start font-semibold uppercase tracking-wider">Origin Country</Th>
+                  <Th className="px-3 py-3 text-center font-semibold uppercase tracking-wider">Total Sizes</Th>
+                  <Th className="px-3 py-3 text-center font-semibold uppercase tracking-wider">Total Brands</Th>
+                  <Th className="px-3 py-3 text-end font-semibold uppercase tracking-wider">Actions</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -441,9 +442,9 @@ export default function GoodsManagementClient({ session }: { session: any }) {
                                   <table className="w-full text-xs text-start">
                                     <thead>
                                       <tr className="text-muted-foreground border-b font-medium">
-                                        <th className="py-2 text-start">Size</th>
-                                        <th className="py-2 text-start">Brand</th>
-                                        <th className="py-2 text-end">Actions</th>
+                                        <Th className="py-2 text-start">Size</Th>
+                                        <Th className="py-2 text-start">Brand</Th>
+                                        <Th className="py-2 text-end">Actions</Th>
                                       </tr>
                                     </thead>
                                     <tbody className="divide-y divide-border/60">

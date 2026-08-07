@@ -5,6 +5,7 @@ import { BarChart3, RefreshCw, Save, Shield, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { apiGet, apiPost } from "@/lib/api/client";
+import { Th } from "@/components/ui/translated-th";
 
 type CountryCurrencyRow = {
   countryId: string;
@@ -325,21 +326,21 @@ export function CurrencyMonitoringDashboard() {
             <table className="min-w-[1100px] w-full text-left text-sm">
               <thead className="sticky top-0 bg-muted/70 text-[11px] uppercase tracking-wide text-muted-foreground">
                 <tr>
-                  <th className="px-3 py-2">Country</th>
-                  <th className="px-3 py-2">Currency</th>
-                  <th className="px-3 py-2">Date</th>
-                  <th className="px-3 py-2">Time</th>
-                  <th className="px-3 py-2 text-right">Sales Rate</th>
-                  <th className="px-3 py-2 text-right">Purchase Rate</th>
-                  <th className="px-3 py-2 text-right">Credit Rate</th>
-                  <th className="px-3 py-2 text-right">Debit Rate</th>
-                  <th className="px-3 py-2 text-right">Local Debit</th>
-                  <th className="px-3 py-2 text-right">Local Credit</th>
-                  <th className="px-3 py-2 text-right">Local Balance</th>
-                  <th className="px-3 py-2 text-right">USD Debit</th>
-                  <th className="px-3 py-2 text-right">USD Credit</th>
-                  <th className="px-3 py-2 text-right">USD Balance</th>
-                  <th className="px-3 py-2 text-right">Entries</th>
+                  <Th className="px-3 py-2">Country</Th>
+                  <Th className="px-3 py-2">Currency</Th>
+                  <Th className="px-3 py-2">Date</Th>
+                  <Th className="px-3 py-2">Time</Th>
+                  <Th className="px-3 py-2 text-right">Sales Rate</Th>
+                  <Th className="px-3 py-2 text-right">Purchase Rate</Th>
+                  <Th className="px-3 py-2 text-right">Credit Rate</Th>
+                  <Th className="px-3 py-2 text-right">Debit Rate</Th>
+                  <Th className="px-3 py-2 text-right">Local Debit</Th>
+                  <Th className="px-3 py-2 text-right">Local Credit</Th>
+                  <Th className="px-3 py-2 text-right">Local Balance</Th>
+                  <Th className="px-3 py-2 text-right">USD Debit</Th>
+                  <Th className="px-3 py-2 text-right">USD Credit</Th>
+                  <Th className="px-3 py-2 text-right">USD Balance</Th>
+                  <Th className="px-3 py-2 text-right">Entries</Th>
                 </tr>
               </thead>
               <tbody>

@@ -19,6 +19,7 @@ import {
 import { t, type UiKey } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 type Props = {
   lang: SupportedLanguage;
@@ -104,12 +105,12 @@ export function CommunicationReportsView({ lang }: Props) {
         <table className="w-full text-xs border-collapse">
           <thead>
             <tr className="bg-slate-900 text-slate-100 dark:bg-slate-950">
-              <th className="px-4 py-3 text-left font-black uppercase">Timestamp</th>
-              <th className="px-4 py-3 text-left font-black uppercase">User</th>
-              <th className="px-4 py-3 text-left font-black uppercase">Action</th>
-              <th className="px-4 py-3 text-center font-black uppercase">Channel</th>
-              <th className="px-4 py-3 text-left font-black uppercase">Recipient</th>
-              <th className="px-4 py-3 text-center font-black uppercase">Delivery Result</th>
+              <Th className="px-4 py-3 text-left font-black uppercase">Timestamp</Th>
+              <Th className="px-4 py-3 text-left font-black uppercase">User</Th>
+              <Th className="px-4 py-3 text-left font-black uppercase">Action</Th>
+              <Th className="px-4 py-3 text-center font-black uppercase">Channel</Th>
+              <Th className="px-4 py-3 text-left font-black uppercase">Recipient</Th>
+              <Th className="px-4 py-3 text-center font-black uppercase">Delivery Result</Th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

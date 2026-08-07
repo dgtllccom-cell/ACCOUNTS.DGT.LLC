@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Package, Printer, Truck, Anchor, ShieldCheck } from "lucide-react";
+import { Th } from "@/components/ui/translated-th";
 
 export interface PackingListReportProps {
   data?: any;
@@ -82,11 +83,11 @@ export function PackingListReport({ data }: PackingListReportProps) {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-y-2 border-slate-900 bg-slate-100 dark:bg-slate-800 dark:border-slate-700">
-                <th className="p-3 font-black uppercase text-slate-700 dark:text-slate-200">Package #</th>
-                <th className="p-3 font-black uppercase text-slate-700 dark:text-slate-200">Item Description</th>
-                <th className="p-3 font-black uppercase text-right text-slate-700 dark:text-slate-200">Total Packages</th>
-                <th className="p-3 font-black uppercase text-right text-slate-700 dark:text-slate-200">Net Weight (KG)</th>
-                <th className="p-3 font-black uppercase text-right text-slate-700 dark:text-slate-200">Gross Weight (KG)</th>
+                <Th className="p-3 font-black uppercase text-slate-700 dark:text-slate-200">Package #</Th>
+                <Th className="p-3 font-black uppercase text-slate-700 dark:text-slate-200">Item Description</Th>
+                <Th className="p-3 font-black uppercase text-right text-slate-700 dark:text-slate-200">Total Packages</Th>
+                <Th className="p-3 font-black uppercase text-right text-slate-700 dark:text-slate-200">Net Weight (KG)</Th>
+                <Th className="p-3 font-black uppercase text-right text-slate-700 dark:text-slate-200">Gross Weight (KG)</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">

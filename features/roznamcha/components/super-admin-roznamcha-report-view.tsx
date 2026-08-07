@@ -21,6 +21,7 @@ import { cn } from "@/lib/utils";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
+import { Th } from "@/components/ui/translated-th";
   getRoznamchaEntry,
   listRoznamchaEntries,
   type RoznamchaEntryRow,
@@ -2173,9 +2174,9 @@ function SuperAdminRoznamchaReportViewContent({
                 <thead className="sticky top-0 z-10 bg-[#071327] text-white">
                   <tr className="whitespace-nowrap text-left">
                     {columns.map((c) => (
-                      <th key={c.key} className={cn("border border-slate-200 px-3 py-2.5 font-black dark:border-slate-800", c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : "")} style={{ width: c.width }}>
+                      <Th key={c.key} className={cn("border border-slate-200 px-3 py-2.5 font-black dark:border-slate-800", c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : "")} style={{ width: c.width }}>
                         {c.header}
-                      </th>
+                      </Th>
                     ))}
                   </tr>
                 </thead>
@@ -2302,11 +2303,11 @@ function SuperAdminRoznamchaReportViewContent({
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-900 text-white dark:bg-slate-800">
                     <tr>
-                      <th className="px-3 py-2">Type</th>
-                      <th className="px-3 py-2">Account Code & Name</th>
-                      <th className="px-3 py-2 text-right">Debit</th>
-                      <th className="px-3 py-2 text-right">Credit</th>
-                      <th className="px-3 py-2 text-right">USD Amount</th>
+                      <Th className="px-3 py-2">Type</Th>
+                      <Th className="px-3 py-2">Account Code & Name</Th>
+                      <Th className="px-3 py-2 text-right">Debit</Th>
+                      <Th className="px-3 py-2 text-right">Credit</Th>
+                      <Th className="px-3 py-2 text-right">USD Amount</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y dark:divide-slate-800">

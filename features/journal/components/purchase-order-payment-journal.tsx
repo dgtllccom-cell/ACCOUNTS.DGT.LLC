@@ -51,6 +51,7 @@ import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { openPurchaseA4ReportWindow, type PurchaseReportData } from "@/lib/reports/open-purchase-a4-report-window";
 import { PaymentEditModal } from "./payment-edit-modal";
+import { Th } from "@/components/ui/translated-th";
 function isUuid(value: any): boolean {
   if (!value || typeof value !== "string") return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim());
@@ -186,48 +187,48 @@ function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCu
         <div class="section-title">Purchase & Vendor Details</div>
         <table>
           <tr>
-            <th>Purchase Order No</th><td><strong>${poNo}</strong></td>
-            <th>Contract / GRN No</th><td>${contractNo}</td>
+            <Th>Purchase Order No</Th><td><strong>${poNo}</strong></td>
+            <Th>Contract / GRN No</Th><td>${contractNo}</td>
           </tr>
           <tr>
-            <th>Supplier Name</th><td colspan="3"><strong>${vendorName}</strong></td>
+            <Th>Supplier Name</Th><td colspan="3"><strong>${vendorName}</strong></td>
           </tr>
           <tr>
-            <th>Purchase Date</th><td>${purchaseDate}</td>
-            <th>Currency</th><td><strong>${currency}</strong></td>
+            <Th>Purchase Date</Th><td>${purchaseDate}</td>
+            <Th>Currency</Th><td><strong>${currency}</strong></td>
           </tr>
         </table>
 
         <div class="section-title">Purchase Financial Summary</div>
         <table>
           <tr>
-            <th>Goods Total Amount</th><td class="text-right">${Number(goodsTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-            <th>Discount</th><td class="text-right">${Number(discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <Th>Goods Total Amount</Th><td class="text-right">${Number(goodsTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <Th>Discount</Th><td class="text-right">${Number(discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
           </tr>
           <tr>
-            <th>Freight Charges</th><td class="text-right">${Number(freight).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-            <th>Grand Total (${currency})</th><td class="text-right font-bold">${Number(grandTotalFC).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <Th>Freight Charges</Th><td class="text-right">${Number(freight).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <Th>Grand Total (${currency})</Th><td class="text-right font-bold">${Number(grandTotalFC).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
           </tr>
         </table>
 
         <div class="section-title">Accounting & Audit Trail</div>
         <table>
           <tr>
-            <th>Debit Ledger (Dr)</th><td colspan="3">${drLabel}</td>
+            <Th>Debit Ledger (Dr)</Th><td colspan="3">${drLabel}</td>
           </tr>
           <tr>
-            <th>Credit Ledger (Cr)</th><td colspan="3">${crLabel}</td>
+            <Th>Credit Ledger (Cr)</Th><td colspan="3">${crLabel}</td>
           </tr>
           <tr>
-            <th>Payment Date</th><td>${paymentDate}</td>
-            <th>Posted By</th><td>${re.profiles?.full_name ? re.profiles.full_name.toUpperCase() : "SUPER ADMIN"}</td>
+            <Th>Payment Date</Th><td>${paymentDate}</td>
+            <Th>Posted By</Th><td>${re.profiles?.full_name ? re.profiles.full_name.toUpperCase() : "SUPER ADMIN"}</td>
           </tr>
           <tr>
-            <th>Reference No</th><td>${payment.reference_no || "-"}</td>
-            <th>Journal Serial</th><td>${re.super_admin_serial_number || "-"}</td>
+            <Th>Reference No</Th><td>${payment.reference_no || "-"}</td>
+            <Th>Journal Serial</Th><td>${re.super_admin_serial_number || "-"}</td>
           </tr>
           <tr>
-            <th>Remarks</th><td colspan="3">${displayNarration || "-"}</td>
+            <Th>Remarks</Th><td colspan="3">${displayNarration || "-"}</td>
           </tr>
         </table>
 
@@ -1281,17 +1282,17 @@ function NestedPaymentHistory({
           <table className="w-full min-w-[1320px] text-left border-collapse text-[11px]">
             <thead>
               <tr className="bg-slate-100 dark:bg-slate-900 border-b font-bold text-slate-600 uppercase text-[10px] tracking-wider">
-                <th className="px-3 py-2.5 border-r">General Serial / Date</th>
-                <th className="px-3 py-2.5 border-r">Reference / User</th>
-                <th className="px-3 py-2.5 border-r">Debit & Credit Ledger Account</th>
-                <th className="px-3 py-2.5 text-right border-r">Advance Required ({purchaseCurrency})</th>
-                <th className="px-3 py-2.5 text-right border-r">Received ({purchaseCurrency})</th>
-                <th className="px-3 py-2.5 text-right border-r">Balance ({purchaseCurrency})</th>
-                <th className="px-3 py-2.5 text-center border-r">Exchange Rate</th>
-                <th className="px-3 py-2.5 text-right border-r">Advance Required ({calcs.finalCurr})</th>
-                <th className="px-3 py-2.5 text-right border-r">Received ({calcs.finalCurr})</th>
-                <th className="px-3 py-2.5 text-right border-r">Balance ({calcs.finalCurr})</th>
-                <th className="px-3 py-2.5 text-center w-28">Actions</th>
+                <Th className="px-3 py-2.5 border-r">General Serial / Date</Th>
+                <Th className="px-3 py-2.5 border-r">Reference / User</Th>
+                <Th className="px-3 py-2.5 border-r">Debit & Credit Ledger Account</Th>
+                <Th className="px-3 py-2.5 text-right border-r">Advance Required ({purchaseCurrency})</Th>
+                <Th className="px-3 py-2.5 text-right border-r">Received ({purchaseCurrency})</Th>
+                <Th className="px-3 py-2.5 text-right border-r">Balance ({purchaseCurrency})</Th>
+                <Th className="px-3 py-2.5 text-center border-r">Exchange Rate</Th>
+                <Th className="px-3 py-2.5 text-right border-r">Advance Required ({calcs.finalCurr})</Th>
+                <Th className="px-3 py-2.5 text-right border-r">Received ({calcs.finalCurr})</Th>
+                <Th className="px-3 py-2.5 text-right border-r">Balance ({calcs.finalCurr})</Th>
+                <Th className="px-3 py-2.5 text-center w-28">Actions</Th>
               </tr>
             </thead>
             <tbody>
@@ -1636,9 +1637,9 @@ function DashboardSummaryHeader({
         <table className={cn("w-full text-[10.5px] border-collapse bg-white dark:bg-slate-900", dir === "rtl" ? "text-right" : "text-left")}>
             <thead>
               <tr className="bg-slate-100 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-[9.5px] text-slate-700 dark:text-slate-350 font-bold uppercase tracking-wider">
-                <th className={cn("px-2.5 py-2.5 font-extrabold", dir === "rtl" ? "text-right" : "text-left")}>{t("country", lang)}</th>
-                <th className={cn("px-2.5 py-2.5 font-extrabold", dir === "rtl" ? "text-right" : "text-left")}>{t("col_currency", lang)}</th>
-                <th className={cn("px-2.5 py-2.5 font-extrabold", dir === "rtl" ? "text-left" : "text-right")}>{t("col_total_value", lang)}</th>
+                <Th className={cn("px-2.5 py-2.5 font-extrabold", dir === "rtl" ? "text-right" : "text-left")}>{t("country", lang)}</Th>
+                <Th className={cn("px-2.5 py-2.5 font-extrabold", dir === "rtl" ? "text-right" : "text-left")}>{t("col_currency", lang)}</Th>
+                <Th className={cn("px-2.5 py-2.5 font-extrabold", dir === "rtl" ? "text-left" : "text-right")}>{t("col_total_value", lang)}</Th>
               </tr>
             </thead>
             <tbody>
@@ -1689,12 +1690,12 @@ function DashboardSummaryHeader({
                               <table className="w-full text-left text-[10px] border-collapse">
                                 <thead>
                                   <tr className="border-b text-slate-450 font-bold uppercase text-[9px] tracking-wider bg-slate-50/80 dark:bg-slate-900/50">
-                                    <th className="px-2 py-1.5">{t("branch", lang)}</th>
-                                    <th className="px-2 py-1.5 text-right">Total Purchase</th>
-                                    <th className="px-2 py-1.5 text-right">Required Adv</th>
-                                    <th className="px-2 py-1.5 text-right">Paid Adv</th>
-                                    <th className="px-2 py-1.5 text-right">Remaining Adv</th>
-                                    <th className="px-2 py-1.5 text-right">Remaining Due (Baqaya)</th>
+                                    <Th className="px-2 py-1.5">{t("branch", lang)}</Th>
+                                    <Th className="px-2 py-1.5 text-right">Total Purchase</Th>
+                                    <Th className="px-2 py-1.5 text-right">Required Adv</Th>
+                                    <Th className="px-2 py-1.5 text-right">Paid Adv</Th>
+                                    <Th className="px-2 py-1.5 text-right">Remaining Adv</Th>
+                                    <Th className="px-2 py-1.5 text-right">Remaining Due (Baqaya)</Th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -4086,7 +4087,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   "Invoice Amount", "Remaining Purchase", "Exchange Rate", "Local Currency Amount", 
                   "Local Currency Advance", "Remaining Local Currency", "Payment Status", "Action"
                 ].map((h) => (
-                  <th key={h} className={cn("px-3 py-4 text-[10px] font-black uppercase tracking-widest text-slate-605 dark:text-slate-350 whitespace-nowrap", isRtl ? "text-right" : "text-left")}>{getPurchaseOrderTableHeader(h, currentLanguage)}</th>
+                  <Th key={h} className={cn("px-3 py-4 text-[10px] font-black uppercase tracking-widest text-slate-605 dark:text-slate-350 whitespace-nowrap", isRtl ? "text-right" : "text-left")}>{getPurchaseOrderTableHeader(h, currentLanguage)}</Th>
                 ))}
               </tr>
             </thead>
@@ -4175,7 +4176,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                       "GOODS NAME", "TOTAL QTY", "WT (KG)", "NET WT (KG)",
                                       "TOTAL PURCHASE", "REQ. ADVANCE", "PAID ADVANCE", "REM. ADVANCE", "FINAL BALANCE", "ACTIONS"
                                     ].map((h, i) => (
-                                      <th key={i} className="px-3 py-2.5 text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 whitespace-nowrap border-r border-slate-200 dark:border-slate-700 last:border-0 align-middle text-center">{h}</th>
+                                      <Th key={i} className="px-3 py-2.5 text-[9px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 whitespace-nowrap border-r border-slate-200 dark:border-slate-700 last:border-0 align-middle text-center">{h}</Th>
                                     ))}
                                   </tr>
                                 </thead>
@@ -5431,19 +5432,19 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         <table className="w-full min-w-[1320px] text-left text-xs border-collapse">
                           <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 text-[9px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                             <tr>
-                              <th className="px-3 py-2 text-center w-10">#</th>
-                              <th className="px-3 py-2">General Serial / Date</th>
-                              <th className="px-3 py-2">Reference / User</th>
-                              <th className="px-3 py-2">Debit & Credit Ledger Accounts</th>
-                              <th className="px-3 py-2 text-right">Advance Required ({poCurrency})</th>
-                              <th className="px-3 py-2 text-right">Received ({poCurrency})</th>
-                              <th className="px-3 py-2 text-right">Balance ({poCurrency})</th>
-                              <th className="px-3 py-2 text-right">Exchange Rate</th>
-                              <th className="px-3 py-2 text-right">Advance Required ({baseCurrency})</th>
-                              <th className="px-3 py-2 text-right">Received ({baseCurrency})</th>
-                              <th className="px-3 py-2 text-right">Balance ({baseCurrency})</th>
-                              <th className="px-3 py-2 text-right">Total Received</th>
-                              <th className="px-3 py-2 text-center w-12">Actions</th>
+                              <Th className="px-3 py-2 text-center w-10">#</Th>
+                              <Th className="px-3 py-2">General Serial / Date</Th>
+                              <Th className="px-3 py-2">Reference / User</Th>
+                              <Th className="px-3 py-2">Debit & Credit Ledger Accounts</Th>
+                              <Th className="px-3 py-2 text-right">Advance Required ({poCurrency})</Th>
+                              <Th className="px-3 py-2 text-right">Received ({poCurrency})</Th>
+                              <Th className="px-3 py-2 text-right">Balance ({poCurrency})</Th>
+                              <Th className="px-3 py-2 text-right">Exchange Rate</Th>
+                              <Th className="px-3 py-2 text-right">Advance Required ({baseCurrency})</Th>
+                              <Th className="px-3 py-2 text-right">Received ({baseCurrency})</Th>
+                              <Th className="px-3 py-2 text-right">Balance ({baseCurrency})</Th>
+                              <Th className="px-3 py-2 text-right">Total Received</Th>
+                              <Th className="px-3 py-2 text-center w-12">Actions</Th>
                             </tr>
                           </thead>
                           <tbody>
@@ -5538,10 +5539,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                             <table className="w-full min-w-[620px] text-[10px]">
                               <thead className="sticky top-0 bg-blue-50 text-left uppercase tracking-[0.08em] text-blue-800 dark:bg-blue-950/40 dark:text-blue-200">
                                 <tr>
-                                  <th className="px-3 py-2">Serial / Date</th>
-                                  <th className="px-3 py-2">Debit Account</th>
-                                  <th className="px-3 py-2 text-right">Amount ({poCurrency})</th>
-                                  <th className="px-3 py-2 text-right">Amount ({baseCurrency})</th>
+                                  <Th className="px-3 py-2">Serial / Date</Th>
+                                  <Th className="px-3 py-2">Debit Account</Th>
+                                  <Th className="px-3 py-2 text-right">Amount ({poCurrency})</Th>
+                                  <Th className="px-3 py-2 text-right">Amount ({baseCurrency})</Th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -5581,10 +5582,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                             <table className="w-full min-w-[620px] text-[10px]">
                               <thead className="sticky top-0 bg-rose-50 text-left uppercase tracking-[0.08em] text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
                                 <tr>
-                                  <th className="px-3 py-2">Serial / Date</th>
-                                  <th className="px-3 py-2">Credit Account</th>
-                                  <th className="px-3 py-2 text-right">Amount ({poCurrency})</th>
-                                  <th className="px-3 py-2 text-right">Amount ({baseCurrency})</th>
+                                  <Th className="px-3 py-2">Serial / Date</Th>
+                                  <Th className="px-3 py-2">Credit Account</Th>
+                                  <Th className="px-3 py-2 text-right">Amount ({poCurrency})</Th>
+                                  <Th className="px-3 py-2 text-right">Amount ({baseCurrency})</Th>
                                 </tr>
                               </thead>
                               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -6252,11 +6253,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   <table className="w-full text-xs border-collapse">
                     <thead>
                       <tr className="bg-muted/60 border-b border-border text-[10px] uppercase font-black tracking-wider text-muted-foreground">
-                        <th className="px-3 py-2.5 text-left w-16">DR / CR</th>
-                        <th className="px-3 py-2.5 text-left">{currentLanguage === "en" ? "Account" : "اکاؤنٹ"}</th>
-                        <th className="px-3 py-2.5 text-right">{currentLanguage === "en" ? "Amount" : "رقم"} ({poCurrency})</th>
-                        <th className="px-3 py-2.5 text-right">{currentLanguage === "en" ? "Amount" : "رقم"} ({baseCurrency})</th>
-                        <th className="px-2 py-2.5 text-center">✓</th>
+                        <Th className="px-3 py-2.5 text-left w-16">DR / CR</Th>
+                        <Th className="px-3 py-2.5 text-left">{currentLanguage === "en" ? "Account" : "اکاؤنٹ"}</Th>
+                        <Th className="px-3 py-2.5 text-right">{currentLanguage === "en" ? "Amount" : "رقم"} ({poCurrency})</Th>
+                        <Th className="px-3 py-2.5 text-right">{currentLanguage === "en" ? "Amount" : "رقم"} ({baseCurrency})</Th>
+                        <Th className="px-2 py-2.5 text-center">✓</Th>
                       </tr>
                     </thead>
                     <tbody>
@@ -6594,12 +6595,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         <table className="w-full text-left border-collapse text-xs">
                           <thead>
                             <tr className="border-b text-slate-400 font-bold uppercase text-[10px]">
-                              <th className="pb-2">Goods Name</th>
-                              <th className="pb-2 text-right">Qty</th>
-                              <th className="pb-2 text-right">Gross Wt</th>
-                              <th className="pb-2 text-right">Net Wt</th>
-                              <th className="pb-2 text-right">Unit Price</th>
-                              <th className="pb-2 text-right">Total FC</th>
+                              <Th className="pb-2">Goods Name</Th>
+                              <Th className="pb-2 text-right">Qty</Th>
+                              <Th className="pb-2 text-right">Gross Wt</Th>
+                              <Th className="pb-2 text-right">Net Wt</Th>
+                              <Th className="pb-2 text-right">Unit Price</Th>
+                              <Th className="pb-2 text-right">Total FC</Th>
                             </tr>
                           </thead>
                           <tbody>
@@ -6693,17 +6694,17 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                     <table className="min-w-[1280px] w-full border-collapse text-xs">
                       <thead>
                         <tr className="bg-slate-950 text-white dark:bg-slate-900">
-                          <th className="px-3 py-3 text-left">Entry</th>
-                          <th className="px-3 py-3 text-left">Serial / Date</th>
-                          <th className="px-3 py-3 text-left">User</th>
-                          <th className="px-3 py-3 text-left">Debit Ledger</th>
-                          <th className="px-3 py-3 text-left">Credit Ledger</th>
-                          <th className="px-3 py-3 text-right">Payment ({viewingRow.currency_code || "FC"})</th>
-                          <th className="px-3 py-3 text-right">Rate</th>
-                          <th className="px-3 py-3 text-right">Local Amount ({viewingLocalCurrency})</th>
-                          <th className="px-3 py-3 text-right">Running Balance</th>
-                          <th className="px-3 py-3 text-left">Journal Reference</th>
-                          <th className="px-3 py-3 text-center">Status</th>
+                          <Th className="px-3 py-3 text-left">Entry</Th>
+                          <Th className="px-3 py-3 text-left">Serial / Date</Th>
+                          <Th className="px-3 py-3 text-left">User</Th>
+                          <Th className="px-3 py-3 text-left">Debit Ledger</Th>
+                          <Th className="px-3 py-3 text-left">Credit Ledger</Th>
+                          <Th className="px-3 py-3 text-right">Payment ({viewingRow.currency_code || "FC"})</Th>
+                          <Th className="px-3 py-3 text-right">Rate</Th>
+                          <Th className="px-3 py-3 text-right">Local Amount ({viewingLocalCurrency})</Th>
+                          <Th className="px-3 py-3 text-right">Running Balance</Th>
+                          <Th className="px-3 py-3 text-left">Journal Reference</Th>
+                          <Th className="px-3 py-3 text-center">Status</Th>
                         </tr>
                       </thead>
                       <tbody>

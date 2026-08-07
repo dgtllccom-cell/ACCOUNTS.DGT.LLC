@@ -33,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 type EmailAccountRow = {
   id: string;
@@ -380,16 +381,16 @@ export function EmailAccountsManagement() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/30">
-                  <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Country</th>
-                  <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Company</th>
-                  <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Branch</th>
-                  <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Official Email</th>
-                  <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Provider</th>
-                  <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">SMTP Status</th>
-                  <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Email Status</th>
-                  <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Last Tested</th>
-                  <th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Last Sent</th>
-                  <th className="px-4 py-3 text-center font-semibold text-xs uppercase tracking-wider text-muted-foreground">Actions</th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Country</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Company</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Branch</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Official Email</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Provider</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">SMTP Status</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Email Status</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Last Tested</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs uppercase tracking-wider text-muted-foreground">Last Sent</Th>
+                  <Th className="px-4 py-3 text-center font-semibold text-xs uppercase tracking-wider text-muted-foreground">Actions</Th>
                 </tr>
               </thead>
               <tbody>

@@ -17,6 +17,7 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { ExpensesInvoicePrint } from "@/components/reports/expenses-invoice-print";
 import { ExpensesInvoicePrintStyle2 } from "@/components/reports/expenses-invoice-print-style2";
 import { apiGet, apiPost } from "@/lib/api/client";
+import { Th } from "@/components/ui/translated-th";
 
 type TaxCodeRow = {
   id: string;
@@ -1317,19 +1318,19 @@ export function ExpensesBillEntryForm({
           <table className="w-full text-sm text-left">
             <thead className="bg-slate-50 text-xs uppercase text-slate-500 border-b">
               <tr>
-                <th className="px-3 py-3 font-semibold text-center w-10">No.</th>
-                <th className="px-3 py-3 font-semibold">Details</th>
-                <th className="px-3 py-3 font-semibold text-right">Qty</th>
-                <th className="px-3 py-3 font-semibold text-right">Unit Price</th>
-                <th className="px-3 py-3 font-semibold text-right">Amount</th>
-                <th className="px-3 py-3 font-semibold text-center">Cur</th>
-                <th className="px-3 py-3 font-semibold text-center">Op</th>
-                <th className="px-3 py-3 font-semibold text-right">Rate</th>
-                <th className="px-3 py-3 font-semibold text-right">Final</th>
-                <th className="px-3 py-3 font-semibold text-right">Tax %</th>
-                <th className="px-3 py-3 font-semibold text-right">Tax Amt</th>
-                <th className="px-3 py-3 font-black text-slate-800 text-right bg-slate-100">Total</th>
-                <th className="px-3 py-3 font-semibold text-center">Act</th>
+                <Th className="px-3 py-3 font-semibold text-center w-10">No.</Th>
+                <Th className="px-3 py-3 font-semibold">Details</Th>
+                <Th className="px-3 py-3 font-semibold text-right">Qty</Th>
+                <Th className="px-3 py-3 font-semibold text-right">Unit Price</Th>
+                <Th className="px-3 py-3 font-semibold text-right">Amount</Th>
+                <Th className="px-3 py-3 font-semibold text-center">Cur</Th>
+                <Th className="px-3 py-3 font-semibold text-center">Op</Th>
+                <Th className="px-3 py-3 font-semibold text-right">Rate</Th>
+                <Th className="px-3 py-3 font-semibold text-right">Final</Th>
+                <Th className="px-3 py-3 font-semibold text-right">Tax %</Th>
+                <Th className="px-3 py-3 font-semibold text-right">Tax Amt</Th>
+                <Th className="px-3 py-3 font-black text-slate-800 text-right bg-slate-100">Total</Th>
+                <Th className="px-3 py-3 font-semibold text-center">Act</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -1402,15 +1403,15 @@ export function ExpensesBillEntryForm({
             <table className="w-full text-sm text-left">
               <thead className="bg-slate-50 text-xs uppercase text-slate-500 border-b">
                 <tr>
-                  <th className="px-4 py-3 font-semibold">Serial</th>
-                  <th className="px-4 py-3 font-semibold">Date</th>
-                  <th className="px-4 py-3 font-semibold">Country</th>
-                  <th className="px-4 py-3 font-semibold">Branch</th>
-                  <th className="px-4 py-3 font-semibold">Type</th>
-                  <th className="px-4 py-3 font-semibold">User</th>
-                  <th className="px-4 py-3 font-semibold text-right">Total Amount</th>
-                  <th className="px-4 py-3 font-semibold text-center w-32">Transfer Status</th>
-                  <th className="px-4 py-3 font-semibold text-center w-10"></th>
+                  <Th className="px-4 py-3 font-semibold">Serial</Th>
+                  <Th className="px-4 py-3 font-semibold">Date</Th>
+                  <Th className="px-4 py-3 font-semibold">Country</Th>
+                  <Th className="px-4 py-3 font-semibold">Branch</Th>
+                  <Th className="px-4 py-3 font-semibold">Type</Th>
+                  <Th className="px-4 py-3 font-semibold">User</Th>
+                  <Th className="px-4 py-3 font-semibold text-right">Total Amount</Th>
+                  <Th className="px-4 py-3 font-semibold text-center w-32">Transfer Status</Th>
+                  <Th className="px-4 py-3 font-semibold text-center w-10"></Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

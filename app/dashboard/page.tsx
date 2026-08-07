@@ -11,6 +11,7 @@ import { isDemoAuthEnabled } from "@/lib/supabase/config";
 import { redirect } from "next/navigation";
 import { dashboardByRole } from "@/lib/permissions/enterprise-roles";
 import type { Route } from "next";
+import { Th } from "@/components/ui/translated-th";
 
 
 type CountMap = {
@@ -326,11 +327,11 @@ export default async function DashboardPage() {
               <table className="w-full text-sm">
                 <thead className="text-xs uppercase text-muted-foreground">
                   <tr className="border-b">
-                    <th className="py-2 text-start font-semibold">Voucher</th>
-                    <th className="py-2 text-start font-semibold">Date</th>
-                    <th className="py-2 text-start font-semibold">Type</th>
-                    <th className="py-2 text-start font-semibold">Status</th>
-                    <th className="py-2 text-start font-semibold">Record ID</th>
+                    <Th className="py-2 text-start font-semibold">Voucher</Th>
+                    <Th className="py-2 text-start font-semibold">Date</Th>
+                    <Th className="py-2 text-start font-semibold">Type</Th>
+                    <Th className="py-2 text-start font-semibold">Status</Th>
+                    <Th className="py-2 text-start font-semibold">Record ID</Th>
                   </tr>
                 </thead>
                 <tbody>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { apiGet } from "@/lib/api/client";
+import { Th } from "@/components/ui/translated-th";
 
 type EmployeeLedgerPanelProps = {
   employeeId: string;
@@ -46,14 +47,14 @@ export function EmployeeLedgerPanel({ employeeId }: EmployeeLedgerPanelProps) {
           <table className="min-w-full text-sm text-left text-slate-300">
             <thead className="bg-slate-950 text-slate-400 uppercase text-xs font-semibold">
               <tr>
-                <th className="px-6 py-3">Month</th>
-                <th className="px-6 py-3">Basic</th>
-                <th className="px-6 py-3">Allowances</th>
-                <th className="px-6 py-3">Recoveries (Adv/Loan)</th>
-                <th className="px-6 py-3">Net Paid</th>
-                <th className="px-6 py-3">Status</th>
-                <th className="px-6 py-3">Payment Date</th>
-                <th className="px-6 py-3">Roznamcha Serials</th>
+                <Th className="px-6 py-3">Month</Th>
+                <Th className="px-6 py-3">Basic</Th>
+                <Th className="px-6 py-3">Allowances</Th>
+                <Th className="px-6 py-3">Recoveries (Adv/Loan)</Th>
+                <Th className="px-6 py-3">Net Paid</Th>
+                <Th className="px-6 py-3">Status</Th>
+                <Th className="px-6 py-3">Payment Date</Th>
+                <Th className="px-6 py-3">Roznamcha Serials</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-850">
@@ -98,14 +99,14 @@ export function EmployeeLedgerPanel({ employeeId }: EmployeeLedgerPanelProps) {
           <table className="min-w-full text-sm text-left text-slate-300">
             <thead className="bg-slate-950 text-slate-400 uppercase text-xs font-semibold">
               <tr>
-                <th className="px-6 py-3">Type</th>
-                <th className="px-6 py-3">Date Issued</th>
-                <th className="px-6 py-3">Principal Amount</th>
-                <th className="px-6 py-3">Monthly Deduction</th>
-                <th className="px-6 py-3">Remaining Balance</th>
-                <th className="px-6 py-3">Start Month</th>
-                <th className="px-6 py-3">Status</th>
-                <th className="px-6 py-3">Ledger Code</th>
+                <Th className="px-6 py-3">Type</Th>
+                <Th className="px-6 py-3">Date Issued</Th>
+                <Th className="px-6 py-3">Principal Amount</Th>
+                <Th className="px-6 py-3">Monthly Deduction</Th>
+                <Th className="px-6 py-3">Remaining Balance</Th>
+                <Th className="px-6 py-3">Start Month</Th>
+                <Th className="px-6 py-3">Status</Th>
+                <Th className="px-6 py-3">Ledger Code</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-850">

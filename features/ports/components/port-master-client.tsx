@@ -24,6 +24,7 @@ import { SimpleModal } from "@/components/ui/simple-modal";
 import { SearchSelect } from "@/components/ui/search-select";
 import { LocationQuickCreateModal } from "@/features/master-forms";
 import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api/client";
+import { Th } from "@/components/ui/translated-th";
 
 export type PortRecord = {
   id: string;
@@ -341,12 +342,12 @@ export function PortMasterClient({
             <table className="w-full border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b bg-muted/30 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  <th className="px-5 py-3">Name / Label</th>
-                  <th className="px-5 py-3">Transport Mode</th>
-                  <th className="px-5 py-3">Country</th>
-                  <th className="px-5 py-3">Port Code</th>
-                  <th className="px-5 py-3">Status</th>
-                  <th className="px-5 py-3 text-right">Actions</th>
+                  <Th className="px-5 py-3">Name / Label</Th>
+                  <Th className="px-5 py-3">Transport Mode</Th>
+                  <Th className="px-5 py-3">Country</Th>
+                  <Th className="px-5 py-3">Port Code</Th>
+                  <Th className="px-5 py-3">Status</Th>
+                  <Th className="px-5 py-3 text-right">Actions</Th>
                 </tr>
               </thead>
               <tbody className="divide-y">

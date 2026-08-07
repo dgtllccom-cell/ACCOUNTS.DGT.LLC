@@ -42,6 +42,7 @@ import { apiGet } from "@/lib/api/client";
 import type { SearchSelectOption } from "@/components/ui/search-select";
 import { cn } from "@/lib/utils";
 import { UserLiveReportPanel } from "./user-live-report-panel";
+import { Th } from "@/components/ui/translated-th";
 
 type UserJournalRow = {
   userId: string;
@@ -664,7 +665,7 @@ export function UserJournalReport() {
               <thead>
                 <tr className="bg-[var(--ujr-table-head)] text-[11px] font-black uppercase tracking-wide text-[var(--ujr-title)] text-center">
                   {["#", "Country", "Branch", "Branch Code", "User Name", "User ID", "Login User ID", "Email", "Role", "Password", "Purpose / Work", "Status", "Actions"].map((head) => (
-                    <th key={head} className="border-b border-r border-[var(--ujr-line)] px-3 py-2.5 last:border-r-0 whitespace-nowrap">{head}</th>
+                    <Th key={head} className="border-b border-r border-[var(--ujr-line)] px-3 py-2.5 last:border-r-0 whitespace-nowrap">{head}</Th>
                   ))}
                 </tr>
               </thead>

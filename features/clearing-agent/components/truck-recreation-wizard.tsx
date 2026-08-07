@@ -30,6 +30,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { autoTranslate5Languages, resolveActiveText, type MultilingualText } from "@/lib/i18n/multilingual-translator";
 import { PersonPicker } from "@/features/hr-payroll/components/person-picker";
+import { Th } from "@/components/ui/translated-th";
 
 interface DocumentItem {
   id: string;
@@ -901,13 +902,13 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                   <table className="w-full text-start text-xs">
                     <thead className="bg-slate-50 font-black text-slate-500 uppercase tracking-wide dark:bg-slate-950">
                       <tr>
-                        <th className="p-3 text-start">#</th>
-                        <th className="p-3 text-start">Document Type</th>
-                        <th className="p-3 text-start">Document Number</th>
-                        <th className="p-3 text-start">Issue Date</th>
-                        <th className="p-3 text-start">Expiry Date</th>
-                        <th className="p-3 text-start">Document File</th>
-                        <th className="p-3 text-center">Actions</th>
+                        <Th className="p-3 text-start">#</Th>
+                        <Th className="p-3 text-start">Document Type</Th>
+                        <Th className="p-3 text-start">Document Number</Th>
+                        <Th className="p-3 text-start">Issue Date</Th>
+                        <Th className="p-3 text-start">Expiry Date</Th>
+                        <Th className="p-3 text-start">Document File</Th>
+                        <Th className="p-3 text-center">Actions</Th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1308,10 +1309,10 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                   <table className="w-full text-start text-xs">
                     <thead className="bg-slate-50 font-black text-slate-500 uppercase tracking-wide dark:bg-slate-950">
                       <tr>
-                        <th className="p-3 text-start">Contract Type</th>
-                        <th className="p-3 text-start">Contract No.</th>
-                        <th className="p-3 text-start">Duration</th>
-                        <th className="p-3 text-start">Terms</th>
+                        <Th className="p-3 text-start">Contract Type</Th>
+                        <Th className="p-3 text-start">Contract No.</Th>
+                        <Th className="p-3 text-start">Duration</Th>
+                        <Th className="p-3 text-start">Terms</Th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

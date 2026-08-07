@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import DashboardFrame from "@/components/layout/dashboard-frame";
 import { Anchor, Truck, Plane, Navigation, Plus, CheckCircle2, ShieldCheck, ArrowRight, RefreshCw, FileText } from "lucide-react";
+import { Th } from "@/components/ui/translated-th";
 
 type TransportMode = "by_sea" | "by_road" | "by_truck" | "by_air";
 type MovementType = "import" | "transit" | "export";
@@ -439,13 +440,13 @@ export default function CustomerOrderPage() {
               <table className="w-full text-left text-sm text-slate-300">
                 <thead className="bg-slate-950 text-slate-400 text-xs uppercase font-semibold border-b border-slate-800">
                   <tr>
-                    <th className="px-4 py-3">Order No</th>
-                    <th className="px-4 py-3">Customer</th>
-                    <th className="px-4 py-3">Transport Mode</th>
-                    <th className="px-4 py-3">Type</th>
-                    <th className="px-4 py-3">Route</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3 text-right">Created</th>
+                    <Th className="px-4 py-3">Order No</Th>
+                    <Th className="px-4 py-3">Customer</Th>
+                    <Th className="px-4 py-3">Transport Mode</Th>
+                    <Th className="px-4 py-3">Type</Th>
+                    <Th className="px-4 py-3">Route</Th>
+                    <Th className="px-4 py-3">Status</Th>
+                    <Th className="px-4 py-3 text-right">Created</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/50">

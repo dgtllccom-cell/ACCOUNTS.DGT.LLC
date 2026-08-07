@@ -6,6 +6,7 @@ import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { ReportActions } from "@/components/ui/report-actions";
+import { Th } from "@/components/ui/translated-th";
 
 type Unit = {
   id: string;
@@ -117,12 +118,12 @@ export function ProductUnitsManagementView({ lang }: { lang: SupportedLanguage }
         <table className="w-full text-start text-sm">
           <thead className="bg-slate-50 text-[11px] font-black uppercase tracking-wide text-slate-500 dark:bg-slate-950/60">
             <tr>
-              <th className="px-4 py-3 text-start">{t(lang, "pu.code")}</th>
-              <th className="px-4 py-3 text-start">{t(lang, "pu.name")}</th>
-              <th className="px-4 py-3 text-start">{t(lang, "pu.base")}</th>
-              <th className="px-4 py-3 text-start">{t(lang, "pu.factor")}</th>
-              <th className="px-4 py-3 text-start">{t(lang, "pu.active")}</th>
-              <th className="px-4 py-3 text-end"></th>
+              <Th className="px-4 py-3 text-start">{t(lang, "pu.code")}</Th>
+              <Th className="px-4 py-3 text-start">{t(lang, "pu.name")}</Th>
+              <Th className="px-4 py-3 text-start">{t(lang, "pu.base")}</Th>
+              <Th className="px-4 py-3 text-start">{t(lang, "pu.factor")}</Th>
+              <Th className="px-4 py-3 text-start">{t(lang, "pu.active")}</Th>
+              <Th className="px-4 py-3 text-end"></Th>
             </tr>
           </thead>
           <tbody>

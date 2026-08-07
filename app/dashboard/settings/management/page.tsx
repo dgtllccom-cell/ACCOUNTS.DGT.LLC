@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 type CountryRecord = {
   id: string;
@@ -355,11 +356,11 @@ export default function ManagementSettingsPage() {
                 <table className="w-full text-xs text-left text-foreground">
                   <thead className="bg-muted/40 text-muted-foreground uppercase text-[10px] font-bold tracking-wider border-b border-border/60">
                     <tr>
-                      <th className="px-5 py-3.5">Country Name</th>
-                      <th className="px-5 py-3.5">ISO</th>
-                      <th className="px-5 py-3.5">Currency</th>
-                      <th className="px-5 py-3.5">Official Email</th>
-                      <th className="px-5 py-3.5">Status</th>
+                      <Th className="px-5 py-3.5">Country Name</Th>
+                      <Th className="px-5 py-3.5">ISO</Th>
+                      <Th className="px-5 py-3.5">Currency</Th>
+                      <Th className="px-5 py-3.5">Official Email</Th>
+                      <Th className="px-5 py-3.5">Status</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-border/40">

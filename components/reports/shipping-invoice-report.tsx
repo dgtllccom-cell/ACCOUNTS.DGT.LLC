@@ -2,6 +2,7 @@
 
 import React from "react";
 import { Ship, Printer, MapPin, Globe, Compass, ShieldCheck } from "lucide-react";
+import { Th } from "@/components/ui/translated-th";
 
 export interface ShippingInvoiceReportProps {
   data?: any;
@@ -99,10 +100,10 @@ export function ShippingInvoiceReport({ data }: ShippingInvoiceReportProps) {
           <table className="w-full text-left text-xs border-collapse">
             <thead>
               <tr className="border-y-2 border-slate-900 bg-slate-100 dark:bg-slate-800 dark:border-slate-700">
-                <th className="p-3 font-black uppercase text-slate-700 dark:text-slate-200">SR#</th>
-                <th className="p-3 font-black uppercase text-slate-700 dark:text-slate-200">Freight Particulars</th>
-                <th className="p-3 font-black uppercase text-right text-slate-700 dark:text-slate-200">Quantity</th>
-                <th className="p-3 font-black uppercase text-right text-slate-700 dark:text-slate-200">Amount ({currency})</th>
+                <Th className="p-3 font-black uppercase text-slate-700 dark:text-slate-200">SR#</Th>
+                <Th className="p-3 font-black uppercase text-slate-700 dark:text-slate-200">Freight Particulars</Th>
+                <Th className="p-3 font-black uppercase text-right text-slate-700 dark:text-slate-200">Quantity</Th>
+                <Th className="p-3 font-black uppercase text-right text-slate-700 dark:text-slate-200">Amount ({currency})</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800">

@@ -24,6 +24,7 @@ import {
   type LedgerStatementLine
 } from "@/features/reports/ledger-report/ledger-report-api";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
+import { Th } from "@/components/ui/translated-th";
 
 type LookupResponse = {
   found: boolean;
@@ -607,9 +608,9 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
                     "Branch Code", "User Name", "No.", "Details", "Dr.", "Cr.", "Total",
                     ...(isSuperAdmin ? ["Ex. Rate", "Dr. (USD)", "Cr. (USD)", "Total (USD)"] : [])
                   ].map((head) => (
-                    <th key={head} className="border-b border-slate-700 px-4 py-3 text-left font-semibold uppercase tracking-wide">
+                    <Th key={head} className="border-b border-slate-700 px-4 py-3 text-left font-semibold uppercase tracking-wide">
                       {head}
-                    </th>
+                    </Th>
                   ))}
                 </tr>
               </thead>

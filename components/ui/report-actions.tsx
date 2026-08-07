@@ -2,6 +2,7 @@
 
 import { Printer, FileDown, FileSpreadsheet } from "lucide-react";
 import { fetchBranding, brandingFooter, brandingName, type Branding } from "@/lib/branding/client";
+import { Th } from "@/components/ui/translated-th";
 
 /**
  * Universal report actions — Print, PDF (print-to-PDF), Excel (CSV) — drop into
@@ -88,7 +89,7 @@ export async function printRecord(
 ) {
   const b = await fetchBranding(opts?.countryId);
   const lang = opts?.lang || "en";
-  const rows = columns.map((c) => `<tr><th>${esc(c.label)}</th><td>${esc(cell(record[c.key]))}</td></tr>`).join("");
+  const rows = columns.map((c) => `<tr><Th>${esc(c.label)}</Th><td>${esc(cell(record[c.key]))}</td></tr>`).join("");
   openPrint(title, `<table class="kv"><tbody>${rows}</tbody></table>`, b, lang, subtitle);
 }
 
@@ -125,7 +126,7 @@ export function ReportActions({
 
   async function printDoc() {
     const b = await fetchBranding(countryId);
-    const head = columns.map((c) => `<th>${esc(c.label)}</th>`).join("");
+    const head = columns.map((c) => `<Th>${esc(c.label)}</Th>`).join("");
     const body = rows.map((r) => `<tr>${columns.map((c) => `<td>${esc(cell(r[c.key]))}</td>`).join("")}</tr>`).join("");
     const footer = brandingFooter(b, lang) || watermarkOf(b, lang);
     const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title>

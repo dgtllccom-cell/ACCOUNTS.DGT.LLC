@@ -37,6 +37,7 @@ import { SearchSelect } from "@/components/ui/search-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { apiGet, apiPatch, apiPost, apiDelete } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 type CountryRow = {
   id: string;
@@ -1243,13 +1244,13 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b bg-muted/40 font-semibold text-muted-foreground">
-                      <th className="px-4 py-3">Country Code</th>
-                      <th className="px-4 py-3">Country Name</th>
-                      <th className="px-4 py-3 text-center">Total States</th>
-                      <th className="px-4 py-3 text-center">Total Cities</th>
-                      <th className="px-4 py-3 text-center">Total Districts / Tehsils</th>
-                      <th className="px-4 py-3">Status</th>
-                      <th className="px-4 py-3 text-center">Actions</th>
+                      <Th className="px-4 py-3">Country Code</Th>
+                      <Th className="px-4 py-3">Country Name</Th>
+                      <Th className="px-4 py-3 text-center">Total States</Th>
+                      <Th className="px-4 py-3 text-center">Total Cities</Th>
+                      <Th className="px-4 py-3 text-center">Total Districts / Tehsils</Th>
+                      <Th className="px-4 py-3">Status</Th>
+                      <Th className="px-4 py-3 text-center">Actions</Th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1329,12 +1330,12 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b bg-muted/40 font-semibold text-muted-foreground">
-                      <th className="px-4 py-3">State Code</th>
-                      <th className="px-4 py-3">State Name</th>
-                      <th className="px-4 py-3 text-center">Total Cities</th>
-                      <th className="px-4 py-3 text-center">Total Districts / Tehsils</th>
-                      <th className="px-4 py-3">Status</th>
-                      <th className="px-4 py-3 text-center">Actions</th>
+                      <Th className="px-4 py-3">State Code</Th>
+                      <Th className="px-4 py-3">State Name</Th>
+                      <Th className="px-4 py-3 text-center">Total Cities</Th>
+                      <Th className="px-4 py-3 text-center">Total Districts / Tehsils</Th>
+                      <Th className="px-4 py-3">Status</Th>
+                      <Th className="px-4 py-3 text-center">Actions</Th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1416,11 +1417,11 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b bg-muted/40 font-semibold text-muted-foreground">
-                      <th className="px-4 py-3">City Code</th>
-                      <th className="px-4 py-3">City Name</th>
-                      <th className="px-4 py-3 text-center">Total Districts / Tehsils</th>
-                      <th className="px-4 py-3">Status</th>
-                      <th className="px-4 py-3 text-center">Actions</th>
+                      <Th className="px-4 py-3">City Code</Th>
+                      <Th className="px-4 py-3">City Name</Th>
+                      <Th className="px-4 py-3 text-center">Total Districts / Tehsils</Th>
+                      <Th className="px-4 py-3">Status</Th>
+                      <Th className="px-4 py-3 text-center">Actions</Th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1499,11 +1500,11 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
                 <table className="w-full text-left text-sm">
                   <thead>
                     <tr className="border-b bg-muted/40 font-semibold text-muted-foreground">
-                      <th className="px-4 py-3">District / Tehsil Code</th>
-                      <th className="px-4 py-3">District / Tehsil Name</th>
-                      <th className="px-4 py-3">ZIP Code</th>
-                      <th className="px-4 py-3">Status</th>
-                      <th className="px-4 py-3 text-center">Actions</th>
+                      <Th className="px-4 py-3">District / Tehsil Code</Th>
+                      <Th className="px-4 py-3">District / Tehsil Name</Th>
+                      <Th className="px-4 py-3">ZIP Code</Th>
+                      <Th className="px-4 py-3">Status</Th>
+                      <Th className="px-4 py-3 text-center">Actions</Th>
                     </tr>
                   </thead>
                   <tbody>

@@ -2,6 +2,7 @@
 import React, { useState } from "react";
 import { Download, Printer, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Th } from "@/components/ui/translated-th";
 
 export type LoadingSlipData = {
   // Header
@@ -230,15 +231,15 @@ export function LoadingSlipViewer({ data, onClose }: LoadingSlipViewerProps) {
               </tr>
               {/* Table Headers */}
               <tr className="bg-slate-50 text-xs font-bold uppercase text-center">
-                <th className="border-r-2 border-black p-2 w-10">Sr.</th>
-                <th className="border-r-2 border-black p-2 w-[25%] text-left">Description of Goods</th>
-                <th className="border-r-2 border-black p-2 w-20">HS Code</th>
-                <th className="border-r-2 border-black p-2 w-20">Rate</th>
-                <th className="border-r-2 border-black p-2 w-20">Qty</th>
-                <th className="border-r-2 border-black p-2 w-16">Unit</th>
-                <th className="border-r-2 border-black p-2 w-20">Net Wt</th>
-                <th className="border-r-2 border-black p-2 w-20">Gross Wt</th>
-                <th className="p-2 w-24">Amount</th>
+                <Th className="border-r-2 border-black p-2 w-10">Sr.</Th>
+                <Th className="border-r-2 border-black p-2 w-[25%] text-left">Description of Goods</Th>
+                <Th className="border-r-2 border-black p-2 w-20">HS Code</Th>
+                <Th className="border-r-2 border-black p-2 w-20">Rate</Th>
+                <Th className="border-r-2 border-black p-2 w-20">Qty</Th>
+                <Th className="border-r-2 border-black p-2 w-16">Unit</Th>
+                <Th className="border-r-2 border-black p-2 w-20">Net Wt</Th>
+                <Th className="border-r-2 border-black p-2 w-20">Gross Wt</Th>
+                <Th className="p-2 w-24">Amount</Th>
               </tr>
             </thead>
 

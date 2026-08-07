@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 type OptionRow = {
   id: string;
@@ -691,7 +692,7 @@ export function BlEntryView({ context = "purchase" }: { context?: "purchase" }) 
                   <thead className="bg-slate-900 text-white dark:bg-[#020817]">
                     <tr>
                       {["SR#", "Good Name", "Size", "Brand", "Origin", "HS Code", "Allot Name", "Warehouse", "Qty Name", "Qty No", "Total Gross KG", "Empty/Bag KG", "Total Empty KG", "Net Weight KG", "Container Type", "Container Name", "Container No", "Seal No"].map((head) => (
-                        <th key={head} className="px-3 py-2 text-left text-[10px] font-black uppercase tracking-wide">{head}</th>
+                        <Th key={head} className="px-3 py-2 text-left text-[10px] font-black uppercase tracking-wide">{head}</Th>
                       ))}
                     </tr>
                   </thead>

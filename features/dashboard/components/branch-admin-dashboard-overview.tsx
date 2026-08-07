@@ -32,6 +32,7 @@ import {
 import Link from "next/link";
 import type { Route } from "next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Th } from "@/components/ui/translated-th";
 
 type LedgerRow = {
   id: string;
@@ -317,10 +318,10 @@ export function BranchAdminDashboardOverview({ data }: BranchDashboardOverviewPr
               <table className="w-full text-left text-[11px]">
                 <thead>
                   <tr className="bg-muted/40 text-[9px] uppercase font-bold text-muted-foreground">
-                    <th className="px-4 py-2.5">Voucher</th>
-                    <th className="px-4 py-2.5">Date</th>
-                    <th className="px-4 py-2.5">Type</th>
-                    <th className="px-4 py-2.5 text-center">Status</th>
+                    <Th className="px-4 py-2.5">Voucher</Th>
+                    <Th className="px-4 py-2.5">Date</Th>
+                    <Th className="px-4 py-2.5">Type</Th>
+                    <Th className="px-4 py-2.5 text-center">Status</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">

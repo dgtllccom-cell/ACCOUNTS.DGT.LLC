@@ -26,6 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
 import { apiGet, apiPatch } from "@/lib/api/client";
+import { Th } from "@/components/ui/translated-th";
 
 type SalesOrder = {
   id: string;
@@ -313,51 +314,51 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
           <thead className="bg-slate-150 text-slate-800 text-[10px] font-black uppercase tracking-wider">
             {/* Group Header Row */}
             <tr className="border-b border-slate-200 text-center">
-              <th colSpan={9} className="px-3 py-2.5 bg-blue-50/70 text-blue-900 font-extrabold border-r border-slate-200">General Information</th>
-              <th colSpan={2} className="px-3 py-2.5 bg-purple-50/70 text-purple-900 font-extrabold border-r border-slate-200">Account Mappings</th>
-              <th colSpan={7} className="px-3 py-2.5 bg-emerald-50/70 text-emerald-900 font-extrabold border-r border-slate-200">Product Details</th>
-              <th colSpan={9} className="px-3 py-2.5 bg-indigo-50/70 text-indigo-900 font-extrabold border-r border-slate-200">Financial Metrics</th>
-              <th colSpan={1} className="px-3 py-2.5 bg-slate-100 text-slate-800 font-extrabold">Actions</th>
+              <Th colSpan={9} className="px-3 py-2.5 bg-blue-50/70 text-blue-900 font-extrabold border-r border-slate-200">General Information</Th>
+              <Th colSpan={2} className="px-3 py-2.5 bg-purple-50/70 text-purple-900 font-extrabold border-r border-slate-200">Account Mappings</Th>
+              <Th colSpan={7} className="px-3 py-2.5 bg-emerald-50/70 text-emerald-900 font-extrabold border-r border-slate-200">Product Details</Th>
+              <Th colSpan={9} className="px-3 py-2.5 bg-indigo-50/70 text-indigo-900 font-extrabold border-r border-slate-200">Financial Metrics</Th>
+              <Th colSpan={1} className="px-3 py-2.5 bg-slate-100 text-slate-800 font-extrabold">Actions</Th>
             </tr>
             {/* Column Headers Row */}
             <tr className="bg-slate-50 border-b border-slate-250 text-[9px]">
               {/* General */}
-              <th className="px-3 py-2.5 border-r border-slate-200">Journal Serial</th>
-              <th className="px-3 py-2.5 border-r border-slate-200">Country Serial</th>
-              <th className="px-3 py-2.5 border-r border-slate-200">Branch Serial</th>
-              <th className="px-3 py-2.5 border-r border-slate-200">Sales Order No</th>
-              <th className="px-3 py-2.5 border-r border-slate-200">Date</th>
-              <th className="px-3 py-2.5 border-r border-slate-200">Customer</th>
-              <th className="px-3 py-2.5 border-r border-slate-200">User</th>
-              <th className="px-3 py-2.5 border-r border-slate-200">Branch</th>
-              <th className="px-3 py-2.5 border-r border-slate-200">Country</th>
+              <Th className="px-3 py-2.5 border-r border-slate-200">Journal Serial</Th>
+              <Th className="px-3 py-2.5 border-r border-slate-200">Country Serial</Th>
+              <Th className="px-3 py-2.5 border-r border-slate-200">Branch Serial</Th>
+              <Th className="px-3 py-2.5 border-r border-slate-200">Sales Order No</Th>
+              <Th className="px-3 py-2.5 border-r border-slate-200">Date</Th>
+              <Th className="px-3 py-2.5 border-r border-slate-200">Customer</Th>
+              <Th className="px-3 py-2.5 border-r border-slate-200">User</Th>
+              <Th className="px-3 py-2.5 border-r border-slate-200">Branch</Th>
+              <Th className="px-3 py-2.5 border-r border-slate-200">Country</Th>
               
               {/* Accounts */}
-              <th className="px-3 py-2.5 border-r border-slate-200">Sales Account</th>
-              <th className="px-3 py-2.5 border-r border-slate-200">Purchase Account</th>
+              <Th className="px-3 py-2.5 border-r border-slate-200">Sales Account</Th>
+              <Th className="px-3 py-2.5 border-r border-slate-200">Purchase Account</Th>
               
               {/* Product */}
-              <th className="px-3 py-2.5 border-r border-slate-200">Goods Name</th>
-              <th className="px-3 py-2.5 border-r border-slate-200">Brand</th>
-              <th className="px-3 py-2.5 border-r border-slate-200">Goods Size</th>
-              <th className="px-3 py-2.5 text-right border-r border-slate-200">Quantity</th>
-              <th className="px-3 py-2.5 border-r border-slate-200">Unit</th>
-              <th className="px-3 py-2.5 text-right border-r border-slate-200">Gross Wt (KG)</th>
-              <th className="px-3 py-2.5 text-right border-r border-slate-200">Net Wt (KG)</th>
+              <Th className="px-3 py-2.5 border-r border-slate-200">Goods Name</Th>
+              <Th className="px-3 py-2.5 border-r border-slate-200">Brand</Th>
+              <Th className="px-3 py-2.5 border-r border-slate-200">Goods Size</Th>
+              <Th className="px-3 py-2.5 text-right border-r border-slate-200">Quantity</Th>
+              <Th className="px-3 py-2.5 border-r border-slate-200">Unit</Th>
+              <Th className="px-3 py-2.5 text-right border-r border-slate-200">Gross Wt (KG)</Th>
+              <Th className="px-3 py-2.5 text-right border-r border-slate-200">Net Wt (KG)</Th>
 
               {/* Financials */}
-              <th className="px-3 py-2.5 border-r border-slate-200">Pur Currency</th>
-              <th className="px-3 py-2.5 text-right border-r border-slate-200">Ex. Rate</th>
-              <th className="px-3 py-2.5 border-r border-slate-200">Final Currency</th>
-              <th className="px-3 py-2.5 text-right border-r border-slate-200">Pur Amount</th>
-              <th className="px-3 py-2.5 text-right border-r border-slate-200">Invoice %</th>
-              <th className="px-3 py-2.5 text-right border-r border-slate-200">Invoice Amount</th>
-              <th className="px-3 py-2.5 text-right border-r border-slate-200">Final Invoice Amount</th>
-              <th className="px-3 py-2.5 border-r border-slate-200">Payment Status</th>
-              <th className="px-3 py-2.5 border-r border-slate-200">Transfer Status</th>
+              <Th className="px-3 py-2.5 border-r border-slate-200">Pur Currency</Th>
+              <Th className="px-3 py-2.5 text-right border-r border-slate-200">Ex. Rate</Th>
+              <Th className="px-3 py-2.5 border-r border-slate-200">Final Currency</Th>
+              <Th className="px-3 py-2.5 text-right border-r border-slate-200">Pur Amount</Th>
+              <Th className="px-3 py-2.5 text-right border-r border-slate-200">Invoice %</Th>
+              <Th className="px-3 py-2.5 text-right border-r border-slate-200">Invoice Amount</Th>
+              <Th className="px-3 py-2.5 text-right border-r border-slate-200">Final Invoice Amount</Th>
+              <Th className="px-3 py-2.5 border-r border-slate-200">Payment Status</Th>
+              <Th className="px-3 py-2.5 border-r border-slate-200">Transfer Status</Th>
 
               {/* Actions */}
-              <th className="px-3 py-2.5 text-center">Actions</th>
+              <Th className="px-3 py-2.5 text-center">Actions</Th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-150">

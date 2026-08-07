@@ -8,6 +8,7 @@ import { Download, FileText, Link2, MoreVertical, Plus, Printer, RefreshCcw, Sea
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 function asRecordArray<T = any>(value: unknown): T[] {
   if (Array.isArray(value)) return value.filter(Boolean) as T[];
   if (value && typeof value === "object") {
@@ -1287,11 +1288,11 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           <table className="w-full text-left text-[9px] border-collapse bg-white dark:bg-slate-950 rounded-lg overflow-hidden border dark:border-slate-850">
                             <thead>
                               <tr className="border-b text-slate-400 font-bold uppercase tracking-wider bg-slate-50/80 dark:bg-slate-900/50">
-                                <th className="px-2 py-1.5">Item</th>
-                                <th className="px-2 py-1.5 text-right">PO Qty</th>
-                                <th className="px-2 py-1.5 text-right">Loaded</th>
-                                <th className="px-2 py-1.5 text-right">Balance</th>
-                                <th className="px-2 py-1.5 text-right">Rate</th>
+                                <Th className="px-2 py-1.5">Item</Th>
+                                <Th className="px-2 py-1.5 text-right">PO Qty</Th>
+                                <Th className="px-2 py-1.5 text-right">Loaded</Th>
+                                <Th className="px-2 py-1.5 text-right">Balance</Th>
+                                <Th className="px-2 py-1.5 text-right">Rate</Th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1683,21 +1684,21 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   <table className="w-full min-w-[1280px] text-left text-xs">
                     <thead>
                       <tr className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-900/60">
-                        <th className="px-4 py-3">SR#</th>
-                        <th className="px-4 py-3">Goods</th>
-                        <th className="px-4 py-3 text-right">Contract Qty</th>
-                        <th className="px-4 py-3 text-right">Loaded Qty</th>
-                        <th className="px-4 py-3 text-right">Remaining Qty</th>
-                        <th className="px-4 py-3 text-right">Net Weight</th>
-                        <th className="px-4 py-3 text-right">Gross Weight</th>
-                        <th className="px-4 py-3 text-right">Purchase Rate</th>
-                        <th className="px-4 py-3 text-right">Loaded Purchase</th>
-                        <th className="px-4 py-3 text-right">Exchange Rate</th>
-                        <th className="px-4 py-3 text-right">Final Amount ({localCurrency})</th>
-                        <th className="px-4 py-3 text-right">Approved Advance</th>
-                        <th className="px-4 py-3 text-right">Balance</th>
-                        <th className="px-4 py-3">Route / Dates</th>
-                        <th className="px-4 py-3 text-center">Action</th>
+                        <Th className="px-4 py-3">SR#</Th>
+                        <Th className="px-4 py-3">Goods</Th>
+                        <Th className="px-4 py-3 text-right">Contract Qty</Th>
+                        <Th className="px-4 py-3 text-right">Loaded Qty</Th>
+                        <Th className="px-4 py-3 text-right">Remaining Qty</Th>
+                        <Th className="px-4 py-3 text-right">Net Weight</Th>
+                        <Th className="px-4 py-3 text-right">Gross Weight</Th>
+                        <Th className="px-4 py-3 text-right">Purchase Rate</Th>
+                        <Th className="px-4 py-3 text-right">Loaded Purchase</Th>
+                        <Th className="px-4 py-3 text-right">Exchange Rate</Th>
+                        <Th className="px-4 py-3 text-right">Final Amount ({localCurrency})</Th>
+                        <Th className="px-4 py-3 text-right">Approved Advance</Th>
+                        <Th className="px-4 py-3 text-right">Balance</Th>
+                        <Th className="px-4 py-3">Route / Dates</Th>
+                        <Th className="px-4 py-3 text-center">Action</Th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1756,28 +1757,28 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
               <table className="w-full text-left text-xs whitespace-nowrap">
                 <thead className="bg-slate-50/50 dark:bg-slate-900/20">
                   <tr className="border-b border-slate-200 dark:border-slate-800">
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 w-10">SR#</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Country</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Loading No</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Purchase Booking No.</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Sales Account</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Purchase Account</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Goods</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Quantity</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Net Weight</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Gross Weight</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Purchase Amount ({localCurrency})</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Exchange Rate</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Advance Amount ({localCurrency})</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Balance Amount ({localCurrency})</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Payment Date</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Loading Country</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Loading Port</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Loading Date</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Received Country</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Received Port</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Received Date</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Action</th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 w-10">SR#</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Country</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Loading No</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Purchase Booking No.</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Sales Account</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Purchase Account</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Goods</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Quantity</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Net Weight</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Gross Weight</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Purchase Amount ({localCurrency})</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Exchange Rate</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Advance Amount ({localCurrency})</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Balance Amount ({localCurrency})</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Payment Date</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Loading Country</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Loading Port</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Loading Date</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Received Country</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Received Port</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Received Date</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Action</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1888,20 +1889,20 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
               <table className="w-full min-w-[1180px] text-left text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-900/60">
-                    <th className="px-4 py-3">SR#</th>
-                    <th className="px-4 py-3">BL Number</th>
-                    <th className="px-4 py-3">Container</th>
-                    <th className="px-4 py-3">Vessel / Vehicle</th>
-                    <th className="px-4 py-3 text-right">Load Qty</th>
-                    <th className="px-4 py-3 text-right">Purchase Rate</th>
-                    <th className="px-4 py-3 text-right">Purchase Amount</th>
-                    <th className="px-4 py-3 text-right">Exchange Rate</th>
-                    <th className="px-4 py-3 text-right">Final Amount ({localCurrency})</th>
-                    <th className="px-4 py-3 text-right">Advance Paid</th>
-                    <th className="px-4 py-3 text-right">Balance Remaining</th>
-                    <th className="px-4 py-3">Ports / Dates</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3 text-center">Actions</th>
+                    <Th className="px-4 py-3">SR#</Th>
+                    <Th className="px-4 py-3">BL Number</Th>
+                    <Th className="px-4 py-3">Container</Th>
+                    <Th className="px-4 py-3">Vessel / Vehicle</Th>
+                    <Th className="px-4 py-3 text-right">Load Qty</Th>
+                    <Th className="px-4 py-3 text-right">Purchase Rate</Th>
+                    <Th className="px-4 py-3 text-right">Purchase Amount</Th>
+                    <Th className="px-4 py-3 text-right">Exchange Rate</Th>
+                    <Th className="px-4 py-3 text-right">Final Amount ({localCurrency})</Th>
+                    <Th className="px-4 py-3 text-right">Advance Paid</Th>
+                    <Th className="px-4 py-3 text-right">Balance Remaining</Th>
+                    <Th className="px-4 py-3">Ports / Dates</Th>
+                    <Th className="px-4 py-3">Status</Th>
+                    <Th className="px-4 py-3 text-center">Actions</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1996,20 +1997,20 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
               <table className="w-full text-left text-xs whitespace-nowrap">
                 <thead className="bg-slate-50/50 dark:bg-slate-900/20">
                   <tr className="border-b border-slate-200 dark:border-slate-800">
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 w-10 text-center">Action</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 w-10">SR#</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">BL Number</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Vessel Name</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Load Qty</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Purchase Payment</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Exchange Rate</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Final Payment ({localCurrency})</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Advance Paid ({localCurrency})</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Balance Remaining ({localCurrency})</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Loading Port</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Load Date</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Receive Port</th>
-                    <th className="px-6 py-3 font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Receive Date</th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 w-10 text-center">Action</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 w-10">SR#</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">BL Number</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500">Vessel Name</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Load Qty</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Purchase Payment</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Exchange Rate</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Final Payment ({localCurrency})</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Advance Paid ({localCurrency})</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-slate-500 text-right">Balance Remaining ({localCurrency})</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Loading Port</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">Load Date</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Receive Port</Th>
+                    <Th className="px-6 py-3 font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Receive Date</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -3148,9 +3149,9 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                       "Loading Status",
                       "Action"
                     ].map((head) => (
-                      <th key={head} className="whitespace-nowrap px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+                      <Th key={head} className="whitespace-nowrap px-4 py-3 border-b border-slate-100 dark:border-slate-800">
                         {head}
-                      </th>
+                      </Th>
                     ))}
                   </tr>
                 </thead>
@@ -3324,18 +3325,18 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                       <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
                                         <thead>
                                           <tr className="bg-slate-50 text-[9px] font-black uppercase tracking-wider text-slate-500 border-b dark:bg-slate-950">
-                                            <th className="px-3 py-2">Loading #</th>
-                                            <th className="px-3 py-2">BL Number</th>
-                                            <th className="px-3 py-2">Container #</th>
-                                            <th className="px-3 py-2">Vessel / Carrier</th>
-                                            <th className="px-3 py-2 text-right">Loaded Qty</th>
-                                            <th className="px-3 py-2 text-right">Net Wt</th>
-                                            <th className="px-3 py-2 text-right">Gross Wt</th>
-                                            <th className="px-3 py-2 text-right">Loaded Purchase</th>
-                                            <th className="px-3 py-2 text-right">Advance Applied</th>
-                                            <th className="px-3 py-2 text-right">Remaining Balance</th>
-                                            <th className="px-3 py-2">Loading Route & Date</th>
-                                            <th className="px-3 py-2 text-center">Action</th>
+                                            <Th className="px-3 py-2">Loading #</Th>
+                                            <Th className="px-3 py-2">BL Number</Th>
+                                            <Th className="px-3 py-2">Container #</Th>
+                                            <Th className="px-3 py-2">Vessel / Carrier</Th>
+                                            <Th className="px-3 py-2 text-right">Loaded Qty</Th>
+                                            <Th className="px-3 py-2 text-right">Net Wt</Th>
+                                            <Th className="px-3 py-2 text-right">Gross Wt</Th>
+                                            <Th className="px-3 py-2 text-right">Loaded Purchase</Th>
+                                            <Th className="px-3 py-2 text-right">Advance Applied</Th>
+                                            <Th className="px-3 py-2 text-right">Remaining Balance</Th>
+                                            <Th className="px-3 py-2">Loading Route & Date</Th>
+                                            <Th className="px-3 py-2 text-center">Action</Th>
                                           </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

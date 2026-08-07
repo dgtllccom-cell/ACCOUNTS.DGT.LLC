@@ -4,6 +4,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 
 import {
+import { Th } from "@/components/ui/translated-th";
   FileText, Package, Scale, Gauge, Coins, MapPin, Building2,
   ChevronDown, ChevronUp, Download, Printer,
   Globe, Loader2, Filter, X, ArrowUpRight, ArrowDownLeft, User
@@ -735,17 +736,17 @@ export default function JournalStockReportDashboard({
           <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
             <thead className="bg-slate-900 text-white text-[9px] font-extrabold uppercase tracking-wider border-b border-slate-700">
               <tr>
-                <th className="p-3 border-r border-slate-700">
+                <Th className="p-3 border-r border-slate-700">
                   {activeTab === "salesman" ? "Salesman Name" : activeTab === "country" ? "Country Name" : "Branch Name"}
-                </th>
-                <th className="p-3 text-center border-r border-slate-700">No. of Bills</th>
-                <th className="p-3 text-right border-r border-slate-700">Net Weight (Kg)</th>
-                <th className="p-3 text-right border-r border-slate-700">DC (Cartons)</th>
-                <th className="p-3 text-right border-r border-slate-700">Total Purchase (PKR)</th>
-                <th className="p-3 text-right border-r border-slate-700">Purchase Payment (PKR)</th>
-                <th className="p-3 text-right border-r border-slate-700">Invoice Payment (PKR)</th>
-                <th className="p-3 text-right border-r border-slate-700">Remaining Payment (PKR)</th>
-                <th className="p-3 text-center print:hidden">Actions</th>
+                </Th>
+                <Th className="p-3 text-center border-r border-slate-700">No. of Bills</Th>
+                <Th className="p-3 text-right border-r border-slate-700">Net Weight (Kg)</Th>
+                <Th className="p-3 text-right border-r border-slate-700">DC (Cartons)</Th>
+                <Th className="p-3 text-right border-r border-slate-700">Total Purchase (PKR)</Th>
+                <Th className="p-3 text-right border-r border-slate-700">Purchase Payment (PKR)</Th>
+                <Th className="p-3 text-right border-r border-slate-700">Invoice Payment (PKR)</Th>
+                <Th className="p-3 text-right border-r border-slate-700">Remaining Payment (PKR)</Th>
+                <Th className="p-3 text-center print:hidden">Actions</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[10px] font-semibold">
@@ -971,24 +972,24 @@ export default function JournalStockReportDashboard({
                   <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
                     <thead className="bg-slate-900 text-white text-[9px] font-extrabold uppercase tracking-wider border-b border-slate-700">
                       <tr>
-                        <th className="p-3 border-r border-slate-700">#</th>
-                        <th className="p-3 border-r border-slate-700">Date</th>
-                        <th className="p-3 border-r border-slate-700">Journal Serial</th>
-                        <th className="p-3 border-r border-slate-700">Country Serial</th>
-                        <th className="p-3 border-r border-slate-700">Branch Serial</th>
-                        <th className="p-3 border-r border-slate-700">Purchase Account</th>
-                        <th className="p-3 border-r border-slate-700">Sales Account</th>
-                        <th className="p-3 border-r border-slate-700">Goods Name</th>
-                        <th className="p-3 text-center border-r border-slate-700">Quantity (No / Name)</th>
-                        <th className="p-3 text-right border-r border-slate-700">Gross Wt (Kg)</th>
-                        <th className="p-3 text-right border-r border-slate-700">Empty KGs</th>
-                        <th className="p-3 text-right border-r border-slate-700">Net Wt (Kg)</th>
-                        <th className="p-3 text-center border-r border-slate-700">Purchase Curr</th>
-                        <th className="p-3 text-right border-r border-slate-700">Pur Curr Advance</th>
-                        <th className="p-3 text-right border-r border-slate-700">Final Curr Total</th>
-                        <th className="p-3 text-right border-r border-slate-700">Final Curr Advance</th>
-                        <th className="p-3 text-right border-r border-slate-700">Rem (Pur Curr)</th>
-                        <th className="p-3 text-right">Rem (Final Curr)</th>
+                        <Th className="p-3 border-r border-slate-700">#</Th>
+                        <Th className="p-3 border-r border-slate-700">Date</Th>
+                        <Th className="p-3 border-r border-slate-700">Journal Serial</Th>
+                        <Th className="p-3 border-r border-slate-700">Country Serial</Th>
+                        <Th className="p-3 border-r border-slate-700">Branch Serial</Th>
+                        <Th className="p-3 border-r border-slate-700">Purchase Account</Th>
+                        <Th className="p-3 border-r border-slate-700">Sales Account</Th>
+                        <Th className="p-3 border-r border-slate-700">Goods Name</Th>
+                        <Th className="p-3 text-center border-r border-slate-700">Quantity (No / Name)</Th>
+                        <Th className="p-3 text-right border-r border-slate-700">Gross Wt (Kg)</Th>
+                        <Th className="p-3 text-right border-r border-slate-700">Empty KGs</Th>
+                        <Th className="p-3 text-right border-r border-slate-700">Net Wt (Kg)</Th>
+                        <Th className="p-3 text-center border-r border-slate-700">Purchase Curr</Th>
+                        <Th className="p-3 text-right border-r border-slate-700">Pur Curr Advance</Th>
+                        <Th className="p-3 text-right border-r border-slate-700">Final Curr Total</Th>
+                        <Th className="p-3 text-right border-r border-slate-700">Final Curr Advance</Th>
+                        <Th className="p-3 text-right border-r border-slate-700">Rem (Pur Curr)</Th>
+                        <Th className="p-3 text-right">Rem (Final Curr)</Th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[10px] font-semibold">

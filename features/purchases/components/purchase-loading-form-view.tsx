@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Th } from "@/components/ui/translated-th";
 
 const CONTAINER_TYPES = ["20 FT", "40 FT", "20 FT Reefer", "40 FT Reefer", "Reefer Container", "Non Reefer", "Open Top", "Flat Rack", "LCL / Bulk"];
 
@@ -208,17 +209,17 @@ export function PurchaseLoadingFormView() {
             <table className="w-full text-left text-xs whitespace-nowrap">
               <thead className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-900/60 dark:border-slate-800">
                 <tr>
-                  <th className="px-4 py-3">PO / Bill Serial</th>
-                  <th className="px-4 py-3">B/L & Vessel</th>
-                  <th className="px-4 py-3">Loading & Receiving Ports</th>
-                  <th className="px-4 py-3 text-right">Contract Qty</th>
-                  <th className="px-4 py-3 text-right">Loaded Qty</th>
-                  <th className="px-4 py-3 text-right">Balance Qty</th>
-                  <th className="px-4 py-3 text-right">Gross Wt / Net Wt</th>
-                  <th className="px-4 py-3 text-right">Purchase Amount</th>
-                  <th className="px-4 py-3 text-right">Advance Paid</th>
-                  <th className="px-4 py-3 text-right">Balance Remaining</th>
-                  <th className="px-4 py-3 text-center">Actions</th>
+                  <Th className="px-4 py-3">PO / Bill Serial</Th>
+                  <Th className="px-4 py-3">B/L & Vessel</Th>
+                  <Th className="px-4 py-3">Loading & Receiving Ports</Th>
+                  <Th className="px-4 py-3 text-right">Contract Qty</Th>
+                  <Th className="px-4 py-3 text-right">Loaded Qty</Th>
+                  <Th className="px-4 py-3 text-right">Balance Qty</Th>
+                  <Th className="px-4 py-3 text-right">Gross Wt / Net Wt</Th>
+                  <Th className="px-4 py-3 text-right">Purchase Amount</Th>
+                  <Th className="px-4 py-3 text-right">Advance Paid</Th>
+                  <Th className="px-4 py-3 text-right">Balance Remaining</Th>
+                  <Th className="px-4 py-3 text-center">Actions</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -610,9 +611,9 @@ export function PurchaseLoadingFormView() {
               <table className="w-full text-left text-xs whitespace-nowrap">
                 <thead className="bg-slate-50 border-b border-slate-200">
                   <tr>
-                    <th className="px-4 py-2 font-bold uppercase tracking-wider text-slate-500 text-[10px]">Date</th>
-                    <th className="px-4 py-2 font-bold uppercase tracking-wider text-slate-500 text-[10px]">Container</th>
-                    <th className="px-4 py-2 font-bold uppercase tracking-wider text-slate-500 text-[10px] text-right">Loaded Qty</th>
+                    <Th className="px-4 py-2 font-bold uppercase tracking-wider text-slate-500 text-[10px]">Date</Th>
+                    <Th className="px-4 py-2 font-bold uppercase tracking-wider text-slate-500 text-[10px]">Container</Th>
+                    <Th className="px-4 py-2 font-bold uppercase tracking-wider text-slate-500 text-[10px] text-right">Loaded Qty</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">

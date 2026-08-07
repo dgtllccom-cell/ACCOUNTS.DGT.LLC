@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { FullPurchaseBookingReport } from "./reports/full-purchase-booking-report";
 import { CompactPurchaseBookingOrder } from "./reports/compact-purchase-booking-order";
+import { Th } from "@/components/ui/translated-th";
 
 /* ---------------- types ---------------- */
 
@@ -526,7 +527,7 @@ function GoodsTable({ goods }: { goods: GoodsRow[] }) {
           <thead>
             <tr className="border-b border-border/60 bg-slate-50 text-[10.5px] uppercase tracking-wider text-muted-foreground">
               {["#", "Code", "Name", "Spec / Size", "Unit", "Qty", "Price", "Gross Wt", "Net Wt", "Gross Amt", "Disc.", "Net Amt"].map((h) => (
-                <th key={h} className="whitespace-nowrap px-2.5 py-2.5 text-left font-semibold">{h}</th>
+                <Th key={h} className="whitespace-nowrap px-2.5 py-2.5 text-left font-semibold">{h}</Th>
               ))}
             </tr>
           </thead>
@@ -574,9 +575,9 @@ function PaymentTable({ paymentSchedule }: { paymentSchedule: PaymentRow[] }) {
           <thead>
             <tr className="border-b border-border/60 bg-slate-50 text-[10.5px] uppercase tracking-wider text-muted-foreground">
               {["#", "Term", "%", "Mode", "Bank / ATM", "Amount", "Balance", "Date"].map((h) => (
-                <th key={h} className="whitespace-nowrap px-2.5 py-2.5 text-left font-semibold">{h}</th>
+                <Th key={h} className="whitespace-nowrap px-2.5 py-2.5 text-left font-semibold">{h}</Th>
               ))}
-              <th className="px-2.5 py-2.5"></th>
+              <Th className="px-2.5 py-2.5"></Th>
             </tr>
           </thead>
           <tbody>
@@ -617,7 +618,7 @@ function LoadingTable() {
           <thead>
             <tr className="border-b border-border/60 bg-slate-50 text-[10.5px] uppercase tracking-wider text-muted-foreground">
               {["#", "Mode", "Vessel", "Loading", "Discharge", "ETD", "ETA", "Loaded", "Balance"].map((h) => (
-                <th key={h} className="whitespace-nowrap px-2.5 py-2.5 text-left font-semibold">{h}</th>
+                <Th key={h} className="whitespace-nowrap px-2.5 py-2.5 text-left font-semibold">{h}</Th>
               ))}
             </tr>
           </thead>

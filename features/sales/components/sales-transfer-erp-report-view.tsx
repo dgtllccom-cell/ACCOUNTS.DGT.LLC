@@ -23,6 +23,7 @@ import {
   PenLine
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Th } from "@/components/ui/translated-th";
 
 /* ─────────────────────── helpers ─────────────────────── */
 
@@ -453,9 +454,9 @@ function getCurrencySymbol(c: string) {
               <thead>
                 <tr className="bg-[#0f2942] text-white text-[10px] font-black uppercase tracking-wider">
                   {["#", "Product Name", "Qty", "Unit", "Gross Wt (kg)", "Net Wt (kg)", "Rate", "Total Amount"].map((h) => (
-                    <th key={h} className="px-3 py-2 text-right first:text-left border-r border-white/10 last:border-r-0 whitespace-nowrap">
+                    <Th key={h} className="px-3 py-2 text-right first:text-left border-r border-white/10 last:border-r-0 whitespace-nowrap">
                       {h}
-                    </th>
+                    </Th>
                   ))}
                 </tr>
               </thead>
@@ -574,10 +575,10 @@ function getCurrencySymbol(c: string) {
                 <table className="w-full text-xs border-collapse">
                   <thead>
                     <tr className="bg-slate-100 text-[10px] font-black uppercase tracking-wider text-slate-650 border-b border-slate-200">
-                      <th className="px-4 py-2.5 text-left">GL Code</th>
-                      <th className="px-4 py-2.5 text-left">Account Name</th>
-                      <th className="px-4 py-2.5 text-right">Debit</th>
-                      <th className="px-4 py-2.5 text-right">Credit</th>
+                      <Th className="px-4 py-2.5 text-left">GL Code</Th>
+                      <Th className="px-4 py-2.5 text-left">Account Name</Th>
+                      <Th className="px-4 py-2.5 text-right">Debit</Th>
+                      <Th className="px-4 py-2.5 text-right">Credit</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">

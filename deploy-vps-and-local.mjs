@@ -22,9 +22,9 @@ try {
 
 // Step 1: Run Database Migration
 try {
-  console.log("[1/4] Applying Return SMS Reply Database Migrations to Supabase...");
-  execSync('node apply-return-sms-reply-migration.mjs', { stdio: 'inherit' });
-  console.log("✅ Database Migration completed successfully!");
+  console.log("[1/4] Applying 5-Language Dedicated Tables Database Migration to Supabase...");
+  execSync('node scripts/db-apply-per-language-tables.mjs', { stdio: 'inherit' });
+  console.log("✅ 5-Language Dedicated Tables Migration completed successfully!");
 } catch (err) {
   console.error("Migration warning/error:", err.message);
 }
@@ -48,7 +48,7 @@ try {
 
   execSync('git add -A', { stdio: 'inherit' });
   try {
-    execSync('git commit -m "feat(roznamcha): implement role-aware country-wise and branch-wise cash entry summary cards for Super Admin and Branch In-Charge"', { stdio: 'inherit' });
+    execSync('git commit -m "feat(i18n): deploy 5 dedicated per-language tables architecture and multilingual auto-translation sync"', { stdio: 'inherit' });
   } catch (e) {
     console.log("No new changes to commit or commit already up to date.");
   }
@@ -110,7 +110,7 @@ chmod 600 .env.local .env
 
 echo "[VPS 3b/7] Installing Dependencies & Running Database Migration..."
 npm install --include=dev
-node apply-return-sms-reply-migration.mjs || true
+node scripts/db-apply-per-language-tables.mjs || true
 
 echo "[VPS 4/7] Cleaning Stale Build Cache & Compiling Next.js..."
 rm -rf .next

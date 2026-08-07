@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Th } from "@/components/ui/translated-th";
 
 type LocalGoodsReceiptType = "warehouse" | "loading" | "export";
 
@@ -374,14 +375,14 @@ export function LocalGoodsReceivedView({
               <table className="w-full text-xs text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 font-black uppercase text-[9px] border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
-                    <th className="py-2.5 px-3">PURCHASE BILL</th>
-                    <th className="py-2.5 px-3">SUPPLIER</th>
-                    <th className="py-2.5 px-3">GOODS / ITEM</th>
-                    <th className="py-2.5 px-3 text-right">QUANTITY</th>
-                    <th className="py-2.5 px-3 text-right">TOTAL AMOUNT</th>
-                    <th className="py-2.5 px-3">SHIPMENT / TRUCK</th>
-                    <th className="py-2.5 px-3 text-center">STATUS</th>
-                    <th className="py-2.5 px-3 text-center">ACTION</th>
+                    <Th className="py-2.5 px-3">PURCHASE BILL</Th>
+                    <Th className="py-2.5 px-3">SUPPLIER</Th>
+                    <Th className="py-2.5 px-3">GOODS / ITEM</Th>
+                    <Th className="py-2.5 px-3 text-right">QUANTITY</Th>
+                    <Th className="py-2.5 px-3 text-right">TOTAL AMOUNT</Th>
+                    <Th className="py-2.5 px-3">SHIPMENT / TRUCK</Th>
+                    <Th className="py-2.5 px-3 text-center">STATUS</Th>
+                    <Th className="py-2.5 px-3 text-center">ACTION</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-150 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-200">

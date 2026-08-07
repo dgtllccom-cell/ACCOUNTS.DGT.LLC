@@ -7,6 +7,7 @@ import { SearchSelect } from "@/components/ui/search-select";
 import { Download, Printer, Filter, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RoznamchaEntryRow } from "@/features/roznamcha/roznamcha-api";
+import { Th } from "@/components/ui/translated-th";
 
 type TabType = "summary" | "branch" | "user";
 
@@ -278,31 +279,31 @@ export function ComprehensiveDailyReportView() {
                 <tr>
                   {activeTab === "summary" && (
                     <>
-                      <th className="px-4 py-3 font-black uppercase text-slate-500">Date</th>
-                      <th className="px-4 py-3 font-black uppercase text-slate-500">Transactions</th>
-                      <th className="px-4 py-3 font-black uppercase text-slate-500 text-right">Total Debit ({targetCurrency})</th>
-                      <th className="px-4 py-3 font-black uppercase text-slate-500 text-right">Total Credit ({targetCurrency})</th>
-                      <th className="px-4 py-3 font-black uppercase text-slate-500 text-right">Net Balance ({targetCurrency})</th>
+                      <Th className="px-4 py-3 font-black uppercase text-slate-500">Date</Th>
+                      <Th className="px-4 py-3 font-black uppercase text-slate-500">Transactions</Th>
+                      <Th className="px-4 py-3 font-black uppercase text-slate-500 text-right">Total Debit ({targetCurrency})</Th>
+                      <Th className="px-4 py-3 font-black uppercase text-slate-500 text-right">Total Credit ({targetCurrency})</Th>
+                      <Th className="px-4 py-3 font-black uppercase text-slate-500 text-right">Net Balance ({targetCurrency})</Th>
                     </>
                   )}
                   {activeTab === "branch" && (
                     <>
-                      <th className="px-4 py-3 font-black uppercase text-slate-500">Branch Name</th>
-                      <th className="px-4 py-3 font-black uppercase text-slate-500">Branch Code</th>
-                      <th className="px-4 py-3 font-black uppercase text-slate-500">Country</th>
-                      <th className="px-4 py-3 font-black uppercase text-slate-500">Transactions</th>
-                      <th className="px-4 py-3 font-black uppercase text-slate-500 text-right">Total Debit ({targetCurrency})</th>
-                      <th className="px-4 py-3 font-black uppercase text-slate-500 text-right">Total Credit ({targetCurrency})</th>
-                      <th className="px-4 py-3 font-black uppercase text-slate-500 text-right">Net Balance ({targetCurrency})</th>
+                      <Th className="px-4 py-3 font-black uppercase text-slate-500">Branch Name</Th>
+                      <Th className="px-4 py-3 font-black uppercase text-slate-500">Branch Code</Th>
+                      <Th className="px-4 py-3 font-black uppercase text-slate-500">Country</Th>
+                      <Th className="px-4 py-3 font-black uppercase text-slate-500">Transactions</Th>
+                      <Th className="px-4 py-3 font-black uppercase text-slate-500 text-right">Total Debit ({targetCurrency})</Th>
+                      <Th className="px-4 py-3 font-black uppercase text-slate-500 text-right">Total Credit ({targetCurrency})</Th>
+                      <Th className="px-4 py-3 font-black uppercase text-slate-500 text-right">Net Balance ({targetCurrency})</Th>
                     </>
                   )}
                   {activeTab === "user" && (
                     <>
-                      <th className="px-4 py-3 font-black uppercase text-slate-500">User Name</th>
-                      <th className="px-4 py-3 font-black uppercase text-slate-500">Transactions Created</th>
-                      <th className="px-4 py-3 font-black uppercase text-slate-500 text-right">Total Debit ({targetCurrency})</th>
-                      <th className="px-4 py-3 font-black uppercase text-slate-500 text-right">Total Credit ({targetCurrency})</th>
-                      <th className="px-4 py-3 font-black uppercase text-slate-500 text-right">Net Balance ({targetCurrency})</th>
+                      <Th className="px-4 py-3 font-black uppercase text-slate-500">User Name</Th>
+                      <Th className="px-4 py-3 font-black uppercase text-slate-500">Transactions Created</Th>
+                      <Th className="px-4 py-3 font-black uppercase text-slate-500 text-right">Total Debit ({targetCurrency})</Th>
+                      <Th className="px-4 py-3 font-black uppercase text-slate-500 text-right">Total Credit ({targetCurrency})</Th>
+                      <Th className="px-4 py-3 font-black uppercase text-slate-500 text-right">Net Balance ({targetCurrency})</Th>
                     </>
                   )}
                 </tr>

@@ -25,6 +25,7 @@ import {
   type LedgerStatementLine
 } from "@/features/reports/ledger-report/ledger-report-api";
 import { ProfessionalReportViewer, type ReportColumn } from "@/components/reports/professional-report-viewer";
+import { Th } from "@/components/ui/translated-th";
 
 function fmtNumber(value: number) {
   const n = Number.isFinite(value) ? value : 0;
@@ -875,9 +876,9 @@ export function LedgerReportView({
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50/80 dark:border-slate-800 dark:bg-slate-900">
                     {columns.map((c) => (
-                      <th key={c.key} className={cn("whitespace-nowrap px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500", c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : "")}>
+                      <Th key={c.key} className={cn("whitespace-nowrap px-4 py-3 text-[10px] font-bold uppercase tracking-widest text-slate-500", c.align === "right" ? "text-right" : c.align === "center" ? "text-center" : "")}>
                         {c.header}
-                      </th>
+                      </Th>
                     ))}
                   </tr>
                 </thead>

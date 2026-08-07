@@ -19,6 +19,7 @@ import { EmployeeForm } from "@/features/hr-payroll/components/employee-form";
 import { AdvanceLoanModal } from "@/features/hr-payroll/components/advance-loan-modal";
 import { EmployeeLedgerPanel } from "@/features/hr-payroll/components/employee-ledger-panel";
 import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
+import { Th } from "@/components/ui/translated-th";
 
 /* ──────────────────────────────────────────────────────────────
 const dict = {
@@ -309,7 +310,7 @@ export function GeneralOfficeDashboardView() {
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
   const [lang, setLang] = useState<SupportedLanguage>("en");
   const [isRtl, setIsRtl] = useState(false);
-  const t = dict[lang] || dict.en;�شط",
+  const t = dict[lang] || dict.en;�شط",
     inactive: "غير نشط",
     onLeave: "في إجازة",
     suspended: "موقوف",
@@ -791,15 +792,15 @@ export function GeneralOfficeDashboardView() {
                 <table className="min-w-full text-xs text-left">
                   <thead className="bg-muted text-muted-foreground uppercase font-bold text-[11px] border-b">
                     <tr>
-                      <th className="px-4 py-3.5">{t.colEmpCode}</th>
-                      <th className="px-4 py-3.5">{t.colName}</th>
-                      <th className="px-4 py-3.5">{t.colCategory}</th>
-                      <th className="px-4 py-3.5">{t.colDesigDept}</th>
-                      <th className="px-4 py-3.5">{t.colJoining}</th>
-                      <th className="px-4 py-3.5">{t.colNetSalary}</th>
-                      <th className="px-4 py-3.5">{t.colDeductions}</th>
-                      <th className="px-4 py-3.5">{t.colStatus}</th>
-                      <th className="px-4 py-3.5 text-right">{t.colActions}</th>
+                      <Th className="px-4 py-3.5">{t.colEmpCode}</Th>
+                      <Th className="px-4 py-3.5">{t.colName}</Th>
+                      <Th className="px-4 py-3.5">{t.colCategory}</Th>
+                      <Th className="px-4 py-3.5">{t.colDesigDept}</Th>
+                      <Th className="px-4 py-3.5">{t.colJoining}</Th>
+                      <Th className="px-4 py-3.5">{t.colNetSalary}</Th>
+                      <Th className="px-4 py-3.5">{t.colDeductions}</Th>
+                      <Th className="px-4 py-3.5">{t.colStatus}</Th>
+                      <Th className="px-4 py-3.5 text-right">{t.colActions}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -926,10 +927,10 @@ export function GeneralOfficeDashboardView() {
                 <table className="min-w-full text-xs text-left">
                   <thead className="bg-muted font-bold border-b">
                     <tr>
-                      <th className="px-4 py-3">Designation Title</th>
-                      <th className="px-4 py-3">Department</th>
-                      <th className="px-4 py-3">Pay Grade</th>
-                      <th className="px-4 py-3">Min Base Scale</th>
+                      <Th className="px-4 py-3">Designation Title</Th>
+                      <Th className="px-4 py-3">Department</Th>
+                      <Th className="px-4 py-3">Pay Grade</Th>
+                      <Th className="px-4 py-3">Min Base Scale</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -969,12 +970,12 @@ export function GeneralOfficeDashboardView() {
                 <table className="min-w-full text-xs text-left">
                   <thead className="bg-muted font-bold border-b">
                     <tr>
-                      <th className="px-4 py-3">Emp Code</th>
-                      <th className="px-4 py-3">Employee Name</th>
-                      <th className="px-4 py-3">Time In</th>
-                      <th className="px-4 py-3">Time Out</th>
-                      <th className="px-4 py-3">Duration</th>
-                      <th className="px-4 py-3">Status</th>
+                      <Th className="px-4 py-3">Emp Code</Th>
+                      <Th className="px-4 py-3">Employee Name</Th>
+                      <Th className="px-4 py-3">Time In</Th>
+                      <Th className="px-4 py-3">Time Out</Th>
+                      <Th className="px-4 py-3">Duration</Th>
+                      <Th className="px-4 py-3">Status</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -1018,12 +1019,12 @@ export function GeneralOfficeDashboardView() {
                 <table className="min-w-full text-xs text-left">
                   <thead className="bg-muted font-bold border-b">
                     <tr>
-                      <th className="px-4 py-3">Emp Code</th>
-                      <th className="px-4 py-3">Employee Name</th>
-                      <th className="px-4 py-3">Leave Type</th>
-                      <th className="px-4 py-3">Duration</th>
-                      <th className="px-4 py-3">Days</th>
-                      <th className="px-4 py-3">Status</th>
+                      <Th className="px-4 py-3">Emp Code</Th>
+                      <Th className="px-4 py-3">Employee Name</Th>
+                      <Th className="px-4 py-3">Leave Type</Th>
+                      <Th className="px-4 py-3">Duration</Th>
+                      <Th className="px-4 py-3">Days</Th>
+                      <Th className="px-4 py-3">Status</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -1091,12 +1092,12 @@ export function GeneralOfficeDashboardView() {
                 <table className="min-w-full text-xs text-left">
                   <thead className="bg-muted font-bold border-b">
                     <tr>
-                      <th className="px-4 py-3">Asset Tag</th>
-                      <th className="px-4 py-3">Item Description</th>
-                      <th className="px-4 py-3">Category</th>
-                      <th className="px-4 py-3">Assigned To</th>
-                      <th className="px-4 py-3">Serial No</th>
-                      <th className="px-4 py-3">Status</th>
+                      <Th className="px-4 py-3">Asset Tag</Th>
+                      <Th className="px-4 py-3">Item Description</Th>
+                      <Th className="px-4 py-3">Category</Th>
+                      <Th className="px-4 py-3">Assigned To</Th>
+                      <Th className="px-4 py-3">Serial No</Th>
+                      <Th className="px-4 py-3">Status</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">

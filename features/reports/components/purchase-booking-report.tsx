@@ -1,5 +1,6 @@
 import React from "react";
 import { CurrencyService } from "@/lib/services/currency-service";
+import { Th } from "@/components/ui/translated-th";
 
 /**
  * Standardized Purchase Booking Report (Requirement 8)
@@ -92,13 +93,13 @@ export function PurchaseBookingReport({ data }: { data: PurchaseOrderReportData 
         <table className="w-full text-sm border-collapse">
           <thead>
             <tr className="bg-slate-800 text-white text-left">
-              <th className="p-2 border border-slate-700">Item</th>
-              <th className="p-2 border border-slate-700">HS Code</th>
-              <th className="p-2 border border-slate-700">Origin</th>
-              <th className="p-2 border border-slate-700">Brand / Size</th>
-              <th className="p-2 border border-slate-700 text-right">Qty</th>
-              <th className="p-2 border border-slate-700 text-right">Price ({data.purchaseCurrency})</th>
-              <th className="p-2 border border-slate-700 text-right">Amount ({data.purchaseCurrency})</th>
+              <Th className="p-2 border border-slate-700">Item</Th>
+              <Th className="p-2 border border-slate-700">HS Code</Th>
+              <Th className="p-2 border border-slate-700">Origin</Th>
+              <Th className="p-2 border border-slate-700">Brand / Size</Th>
+              <Th className="p-2 border border-slate-700 text-right">Qty</Th>
+              <Th className="p-2 border border-slate-700 text-right">Price ({data.purchaseCurrency})</Th>
+              <Th className="p-2 border border-slate-700 text-right">Amount ({data.purchaseCurrency})</Th>
             </tr>
           </thead>
           <tbody>

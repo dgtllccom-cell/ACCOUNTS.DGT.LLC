@@ -156,7 +156,7 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
-    key: "general-office",
+    key: "general-office-form",
     labelKey: "nav.general_office_menu",
     iconKey: "users",
     children: [

@@ -17,6 +17,7 @@ export type TaxCodeRow = {
 };
 
 import { apiGet, apiPost, apiDelete } from "@/lib/api/client";
+import { Th } from "@/components/ui/translated-th";
 
 export default function TaxesManagementClient({ session }: { session: any }) {
   const [taxes, setTaxes] = useState<TaxCodeRow[]>([]);
@@ -93,10 +94,10 @@ export default function TaxesManagementClient({ session }: { session: any }) {
           <table className="w-full text-left text-sm whitespace-nowrap">
             <thead className="bg-slate-50 border-b">
               <tr>
-                <th className="px-4 py-3 font-semibold text-slate-600">Country</th>
-                <th className="px-4 py-3 font-semibold text-slate-600">Tax Name</th>
-                <th className="px-4 py-3 font-semibold text-right text-slate-600">Percentage</th>
-                <th className="px-4 py-3 w-[60px]"></th>
+                <Th className="px-4 py-3 font-semibold text-slate-600">Country</Th>
+                <Th className="px-4 py-3 font-semibold text-slate-600">Tax Name</Th>
+                <Th className="px-4 py-3 font-semibold text-right text-slate-600">Percentage</Th>
+                <Th className="px-4 py-3 w-[60px]"></Th>
               </tr>
             </thead>
             <tbody className="divide-y">

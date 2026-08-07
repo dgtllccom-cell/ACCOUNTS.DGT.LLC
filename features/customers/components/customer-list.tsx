@@ -16,6 +16,7 @@ import { DocumentAttachmentIcon } from "@/components/documents/document-attachme
 import { apiGet, apiDelete } from "@/lib/api/client";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLabel } from "./translations";
+import { Th } from "@/components/ui/translated-th";
 
 type CustomerRow = {
   id: string;
@@ -542,18 +543,18 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
             <table className="w-full text-xs text-left">
               <thead className="bg-slate-50 text-slate-700 uppercase font-bold border-b border-slate-200">
                 <tr>
-                  <th className="px-5 py-3.5">#</th>
-                  <th className="px-5 py-3.5">{getLabel("customerCode", lang)}</th>
-                  <th className="px-5 py-3.5">{getLabel("customerName", lang)}</th>
-                  <th className="px-5 py-3.5">{getLabel("customerType", lang)}</th>
-                  <th className="px-5 py-3.5">{getLabel("country", lang)}</th>
-                  <th className="px-5 py-3.5">State / Province</th>
-                  <th className="px-5 py-3.5">{getLabel("city", lang)}</th>
-                  <th className="px-5 py-3.5">Contacts</th>
-                  <th className="px-5 py-3.5">Documents</th>
-                  <th className="px-5 py-3.5">{getLabel("status", lang)}</th>
-                  <th className="px-5 py-3.5">{getLabel("createdDate", lang)}</th>
-                  <th className="px-5 py-3.5 text-center">{getLabel("actions", lang)}</th>
+                  <Th className="px-5 py-3.5">#</Th>
+                  <Th className="px-5 py-3.5">{getLabel("customerCode", lang)}</Th>
+                  <Th className="px-5 py-3.5">{getLabel("customerName", lang)}</Th>
+                  <Th className="px-5 py-3.5">{getLabel("customerType", lang)}</Th>
+                  <Th className="px-5 py-3.5">{getLabel("country", lang)}</Th>
+                  <Th className="px-5 py-3.5">State / Province</Th>
+                  <Th className="px-5 py-3.5">{getLabel("city", lang)}</Th>
+                  <Th className="px-5 py-3.5">Contacts</Th>
+                  <Th className="px-5 py-3.5">Documents</Th>
+                  <Th className="px-5 py-3.5">{getLabel("status", lang)}</Th>
+                  <Th className="px-5 py-3.5">{getLabel("createdDate", lang)}</Th>
+                  <Th className="px-5 py-3.5 text-center">{getLabel("actions", lang)}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

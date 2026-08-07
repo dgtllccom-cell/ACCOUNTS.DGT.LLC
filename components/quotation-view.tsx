@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import {
+import { Th } from "@/components/ui/translated-th";
   Menu, Building2, Calendar, Globe, Languages, Bell, HelpCircle, ChevronDown,
   Save, Check, ArrowRightLeft, Printer, MoreHorizontal, Pencil, Trash2, Upload,
   X, FileText, ShoppingCart, Package, Users, Wallet, BarChart3, Settings, Warehouse,
@@ -207,13 +208,13 @@ export function QuotationView({
             <table className="w-full text-[11.5px]">
               <thead>
                 <tr className="bg-slate-900 text-white text-[10px] uppercase tracking-wider">
-                  <th className="px-3 py-2 text-left">#</th>
-                  <th className="px-3 py-2 text-left">Item Description</th>
-                  <th className="px-3 py-2 text-left">Spec</th>
-                  <th className="px-3 py-2 text-right">Qty</th>
-                  <th className="px-3 py-2 text-right">Unit Price</th>
-                  <th className="px-3 py-2 text-right">Disc</th>
-                  <th className="px-3 py-2 text-right">Total (AED)</th>
+                  <Th className="px-3 py-2 text-left">#</Th>
+                  <Th className="px-3 py-2 text-left">Item Description</Th>
+                  <Th className="px-3 py-2 text-left">Spec</Th>
+                  <Th className="px-3 py-2 text-right">Qty</Th>
+                  <Th className="px-3 py-2 text-right">Unit Price</Th>
+                  <Th className="px-3 py-2 text-right">Disc</Th>
+                  <Th className="px-3 py-2 text-right">Total (AED)</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">

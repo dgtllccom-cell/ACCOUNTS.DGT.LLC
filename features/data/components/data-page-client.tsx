@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { apiGet } from "@/lib/api/client";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { Th } from "@/components/ui/translated-th";
 
 type SessionResponse = { user: { id: string; email: string | null; fullName: string | null }; roles: string[]; scopes: { countryIds: string[]; countryBranchIds: string[]; cityBranchIds: string[]; isSuperAdmin: boolean } };
 type TableMeta = { name: string; label: string; scope: boolean };
@@ -145,7 +146,7 @@ export function DataPageClient({ lang: _lang }: { lang: SupportedLanguage }) {
         <CardHeader className="flex-row items-center justify-between pb-3"><div><CardTitle className="text-sm">{data?.label || tableMeta?.label || "Table"}</CardTitle><p className="text-xs text-muted-foreground">Showing {rows.length} live rows from {selectedTable}</p></div></CardHeader>
         <CardContent className="overflow-auto px-0">
           <table className="min-w-full border-y text-xs">
-            <thead className="sticky top-0 bg-muted/80 text-muted-foreground"><tr>{columns.map((column) => <th key={column} className="whitespace-nowrap border-r px-3 py-2 text-left font-bold uppercase">{column}</th>)}</tr></thead>
+            <thead className="sticky top-0 bg-muted/80 text-muted-foreground"><tr>{columns.map((column) => <Th key={column} className="whitespace-nowrap border-r px-3 py-2 text-left font-bold uppercase">{column}</Th>)}</tr></thead>
             <tbody>{loading ? <tr><td className="px-4 py-8 text-center text-muted-foreground" colSpan={Math.max(columns.length, 1)}>Loading live database rows...</td></tr> : rows.length ? rows.map((row, index) => <tr key={String(row.id ?? index)} className="border-b hover:bg-muted/40">{columns.map((column) => <td key={column} className="max-w-[260px] truncate border-r px-3 py-2 align-top text-foreground" title={valueText(row[column])}>{valueText(row[column])}</td>)}</tr>) : <tr><td className="px-4 py-8 text-center text-muted-foreground" colSpan={Math.max(columns.length, 1)}>No records found for this table and scope.</td></tr>}</tbody>
           </table>
         </CardContent>

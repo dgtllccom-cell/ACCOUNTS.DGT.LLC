@@ -22,6 +22,7 @@ import {
 import { t, type UiKey } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 type CountryOption = {
   id: string;
@@ -420,15 +421,15 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
           <table className="w-full text-xs border-collapse">
             <thead>
               <tr className="bg-slate-900 text-slate-100 dark:bg-slate-950">
-                <th className="px-4 py-3 text-left font-black uppercase tracking-wider">Country</th>
-                <th className="px-4 py-3 text-left font-black uppercase tracking-wider">{_("tax.tax_name")}</th>
-                <th className="px-4 py-3 text-center font-black uppercase tracking-wider">{_("tax.tax_code")}</th>
-                <th className="px-4 py-3 text-right font-black uppercase tracking-wider">{_("tax.tax_rate")}</th>
-                <th className="px-4 py-3 text-left font-black uppercase tracking-wider">{_("tax.trn_number")}</th>
-                <th className="px-4 py-3 text-center font-black uppercase tracking-wider">{_("tax.applies_to")}</th>
-                <th className="px-4 py-3 text-center font-black uppercase tracking-wider">Default</th>
-                <th className="px-4 py-3 text-center font-black uppercase tracking-wider">Status</th>
-                <th className="px-4 py-3 text-right font-black uppercase tracking-wider">{_("tax.actions")}</th>
+                <Th className="px-4 py-3 text-left font-black uppercase tracking-wider">Country</Th>
+                <Th className="px-4 py-3 text-left font-black uppercase tracking-wider">{_("tax.tax_name")}</Th>
+                <Th className="px-4 py-3 text-center font-black uppercase tracking-wider">{_("tax.tax_code")}</Th>
+                <Th className="px-4 py-3 text-right font-black uppercase tracking-wider">{_("tax.tax_rate")}</Th>
+                <Th className="px-4 py-3 text-left font-black uppercase tracking-wider">{_("tax.trn_number")}</Th>
+                <Th className="px-4 py-3 text-center font-black uppercase tracking-wider">{_("tax.applies_to")}</Th>
+                <Th className="px-4 py-3 text-center font-black uppercase tracking-wider">Default</Th>
+                <Th className="px-4 py-3 text-center font-black uppercase tracking-wider">Status</Th>
+                <Th className="px-4 py-3 text-right font-black uppercase tracking-wider">{_("tax.actions")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">

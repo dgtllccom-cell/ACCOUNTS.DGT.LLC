@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+import { Th } from "@/components/ui/translated-th";
   AlertTriangle,
   BarChart3,
   Building2,
@@ -223,12 +224,12 @@ export function CommunicationCenterDashboard({ session }: Props) {
                   <table className="w-full min-w-[760px] text-left text-sm">
                     <thead className="bg-slate-900 text-xs uppercase tracking-wide text-white">
                       <tr>
-                        <th className="px-4 py-3">Channel</th>
-                        <th className="px-4 py-3">Recipient</th>
-                        <th className="px-4 py-3">Subject</th>
-                        <th className="px-4 py-3">Module</th>
-                        <th className="px-4 py-3">Status</th>
-                        <th className="px-4 py-3">Date</th>
+                        <Th className="px-4 py-3">Channel</Th>
+                        <Th className="px-4 py-3">Recipient</Th>
+                        <Th className="px-4 py-3">Subject</Th>
+                        <Th className="px-4 py-3">Module</Th>
+                        <Th className="px-4 py-3">Status</Th>
+                        <Th className="px-4 py-3">Date</Th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 bg-white">

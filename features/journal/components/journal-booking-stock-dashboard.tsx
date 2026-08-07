@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
+import { Th } from "@/components/ui/translated-th";
   FileText, Package, Scale, Gauge, Container, MessageSquare,
   Search, ChevronDown, ChevronUp, Download, Upload, Printer,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
@@ -461,7 +462,7 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
               <thead>
                 <tr className="bg-[#0d2d6b] text-white">
                   {["Sr.#", "Receipt Date", "Purchase Bill No", "Goods Name", "HS Code", "Unit", "Qty", "Gross Wt (KG)", "Net Wt (KG)", "Purchase Country", "Purchase Branch", "Purchase Account", "Sales Account", "Imp / Exp", "Action"].map(h => (
-                    <th key={h} className="px-3 py-3 text-left font-bold text-[11px] uppercase tracking-wide whitespace-nowrap first:text-center">{h}</th>
+                    <Th key={h} className="px-3 py-3 text-left font-bold text-[11px] uppercase tracking-wide whitespace-nowrap first:text-center">{h}</Th>
                   ))}
                 </tr>
               </thead>
@@ -568,12 +569,12 @@ export function JournalBookingStockDashboard({ session }: { session: any }) {
                                   <table className="w-full text-[9px] text-slate-700 border-collapse">
                                     <thead className="bg-slate-100 text-slate-600 font-bold uppercase tracking-wider text-[8px] border-b border-slate-200">
                                       <tr>
-                                        <th className="px-3 py-1.5 text-left">Transaction Ref</th>
-                                        <th className="px-3 py-1.5 text-left">Sale Date</th>
-                                        <th className="px-3 py-1.5 text-left">Customer / Debtor</th>
-                                        <th className="px-3 py-1.5 text-right">Qty Deducted</th>
-                                        <th className="px-3 py-1.5 text-right">Weight Deducted</th>
-                                        <th className="px-3 py-1.5 text-left">Status</th>
+                                        <Th className="px-3 py-1.5 text-left">Transaction Ref</Th>
+                                        <Th className="px-3 py-1.5 text-left">Sale Date</Th>
+                                        <Th className="px-3 py-1.5 text-left">Customer / Debtor</Th>
+                                        <Th className="px-3 py-1.5 text-right">Qty Deducted</Th>
+                                        <Th className="px-3 py-1.5 text-right">Weight Deducted</Th>
+                                        <Th className="px-3 py-1.5 text-left">Status</Th>
                                       </tr>
                                     </thead>
                                     <tbody>

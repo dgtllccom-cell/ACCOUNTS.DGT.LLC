@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 type ProductRow = {
   id: string;
@@ -367,17 +368,17 @@ export function CountryProductsDashboard() {
             <table className="w-full min-w-[1120px] text-sm">
               <thead className="bg-slate-950 text-xs uppercase tracking-wide text-white dark:bg-slate-900">
                 <tr>
-                  <th className="px-3 py-3 text-left">Product Code</th>
-                  <th className="px-3 py-3 text-left">Product Name</th>
-                  <th className="px-3 py-3 text-left">Category</th>
-                  <th className="px-3 py-3 text-left">Country</th>
-                  <th className="px-3 py-3 text-left">Main Branch</th>
-                  <th className="px-3 py-3 text-left">City Branch</th>
-                  <th className="px-3 py-3 text-right">Stock Qty</th>
-                  <th className="px-3 py-3 text-left">Unit</th>
-                  <th className="px-3 py-3 text-right">Cost Price</th>
-                  <th className="px-3 py-3 text-right">Sale Price</th>
-                  <th className="px-3 py-3 text-left">Status</th>
+                  <Th className="px-3 py-3 text-left">Product Code</Th>
+                  <Th className="px-3 py-3 text-left">Product Name</Th>
+                  <Th className="px-3 py-3 text-left">Category</Th>
+                  <Th className="px-3 py-3 text-left">Country</Th>
+                  <Th className="px-3 py-3 text-left">Main Branch</Th>
+                  <Th className="px-3 py-3 text-left">City Branch</Th>
+                  <Th className="px-3 py-3 text-right">Stock Qty</Th>
+                  <Th className="px-3 py-3 text-left">Unit</Th>
+                  <Th className="px-3 py-3 text-right">Cost Price</Th>
+                  <Th className="px-3 py-3 text-right">Sale Price</Th>
+                  <Th className="px-3 py-3 text-left">Status</Th>
                 </tr>
               </thead>
               <tbody>

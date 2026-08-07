@@ -12,6 +12,7 @@ import { createPortal } from "react-dom";
 import { numberToWords } from "@/lib/utils/number-to-words";
 
 import { Suspense } from "react";
+import { Th } from "@/components/ui/translated-th";
 
 function PurchaseLoadingRecordDetailsViewContent({ recordId }: { recordId: string }) {
   const searchParams = useSearchParams();
@@ -221,13 +222,13 @@ function PurchaseLoadingRecordDetailsViewContent({ recordId }: { recordId: strin
             <table className="w-full text-sm">
               <thead className="bg-slate-100/50">
                 <tr>
-                  <th className="px-4 py-3 text-left font-semibold text-xs text-slate-500 uppercase">Goods Name</th>
-                  <th className="px-4 py-3 text-left font-semibold text-xs text-slate-500 uppercase">Details (Brand/Size)</th>
-                  <th className="px-4 py-3 text-left font-semibold text-xs text-slate-500 uppercase">Quantity</th>
-                  <th className="px-4 py-3 text-left font-semibold text-xs text-slate-500 uppercase">Net Weight</th>
-                  <th className="px-4 py-3 text-left font-semibold text-xs text-slate-500 uppercase">Gross Weight</th>
-                  <th className="px-4 py-3 text-right font-semibold text-xs text-slate-500 uppercase">Unit Price</th>
-                  <th className="px-4 py-3 text-right font-semibold text-xs text-slate-500 uppercase">Total Amount</th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs text-slate-500 uppercase">Goods Name</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs text-slate-500 uppercase">Details (Brand/Size)</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs text-slate-500 uppercase">Quantity</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs text-slate-500 uppercase">Net Weight</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs text-slate-500 uppercase">Gross Weight</Th>
+                  <Th className="px-4 py-3 text-right font-semibold text-xs text-slate-500 uppercase">Unit Price</Th>
+                  <Th className="px-4 py-3 text-right font-semibold text-xs text-slate-500 uppercase">Total Amount</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">

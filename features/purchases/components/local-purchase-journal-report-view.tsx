@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Th } from "@/components/ui/translated-th";
 
 const UAE_COUNTRY_MATCHERS = ["UNITED ARAB", "UAE", "EMIRATES", "AE"];
 
@@ -481,27 +482,27 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
             <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
               <thead className="sticky top-0 z-10 bg-slate-900 text-white text-[9px] font-extrabold uppercase tracking-wider border-b border-slate-700">
                 <tr>
-                  <th className="p-2.5 text-center border-r border-slate-700"></th>
-                  <th className="p-2.5 border-r border-slate-700 text-center">SUPER S/N</th>
-                  <th className="p-2.5 border-r border-slate-700 text-center">CTY S/N</th>
-                  <th className="p-2.5 border-r border-slate-700 text-center">BR S/N</th>
-                  <th className="p-2.5 border-r border-slate-700">VOUCHER NO</th>
-                  <th className="p-2.5 border-r border-slate-700">DATE</th>
-                  <th className="p-2.5 border-r border-slate-700">BRANCH NAME</th>
-                  <th className="p-2.5 border-r border-slate-700">COUNTRY</th>
-                  <th className="p-2.5 border-r border-slate-700">PURCHASE ACC (DR)</th>
-                  <th className="p-2.5 border-r border-slate-700">SALES ACC (CR)</th>
-                  <th className="p-2.5 border-r border-slate-700">GOODS NAME</th>
-                  <th className="p-2.5 border-r border-slate-700">BRAND</th>
-                  <th className="p-2.5 border-r border-slate-700">ORIGIN</th>
-                  <th className="p-2.5 border-r border-slate-700 text-right">QTY</th>
-                  <th className="p-2.5 border-r border-slate-700">UNIT</th>
-                  <th className="p-2.5 border-r border-slate-700 text-right">GROSS WT</th>
-                  <th className="p-2.5 border-r border-slate-700 text-right">NET WT</th>
-                  <th className="p-2.5 border-r border-slate-700 text-right">PRICE</th>
-                  <th className="p-2.5 border-r border-slate-700 text-right font-black">TOTAL COST</th>
-                  <th className="p-2.5 border-r border-slate-700 text-center">PAY MODE</th>
-                  <th className="p-2.5 text-center">ACTIONS</th>
+                  <Th className="p-2.5 text-center border-r border-slate-700"></Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-center">SUPER S/N</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-center">CTY S/N</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-center">BR S/N</Th>
+                  <Th className="p-2.5 border-r border-slate-700">VOUCHER NO</Th>
+                  <Th className="p-2.5 border-r border-slate-700">DATE</Th>
+                  <Th className="p-2.5 border-r border-slate-700">BRANCH NAME</Th>
+                  <Th className="p-2.5 border-r border-slate-700">COUNTRY</Th>
+                  <Th className="p-2.5 border-r border-slate-700">PURCHASE ACC (DR)</Th>
+                  <Th className="p-2.5 border-r border-slate-700">SALES ACC (CR)</Th>
+                  <Th className="p-2.5 border-r border-slate-700">GOODS NAME</Th>
+                  <Th className="p-2.5 border-r border-slate-700">BRAND</Th>
+                  <Th className="p-2.5 border-r border-slate-700">ORIGIN</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-right">QTY</Th>
+                  <Th className="p-2.5 border-r border-slate-700">UNIT</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-right">GROSS WT</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-right">NET WT</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-right">PRICE</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-right font-black">TOTAL COST</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-center">PAY MODE</Th>
+                  <Th className="p-2.5 text-center">ACTIONS</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[10px]">
@@ -760,18 +761,18 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                           <table className="w-full border-collapse overflow-hidden rounded-xl border border-slate-200 text-[9px]">
                             <thead className="bg-slate-900 text-white">
                               <tr>
-                                <th className="border border-slate-800 p-2 text-left">Sr.</th>
-                                <th className="border border-slate-800 p-2 text-left">Goods Name</th>
-                                <th className="border border-slate-800 p-2 text-left">HS Code</th>
-                                <th className="border border-slate-800 p-2 text-left">Brand</th>
-                                <th className="border border-slate-800 p-2 text-left">Size</th>
-                                <th className="border border-slate-800 p-2 text-right">Quantity</th>
-                                <th className="border border-slate-800 p-2 text-left">Unit</th>
-                                <th className="border border-slate-800 p-2 text-right">Unit Price</th>
-                                <th className="border border-slate-800 p-2 text-right">Taxable Amount</th>
-                                <th className="border border-slate-800 p-2 text-right">VAT %</th>
-                                <th className="border border-slate-800 p-2 text-right">VAT Amount</th>
-                                <th className="border border-slate-800 p-2 text-right">Total Amount</th>
+                                <Th className="border border-slate-800 p-2 text-left">Sr.</Th>
+                                <Th className="border border-slate-800 p-2 text-left">Goods Name</Th>
+                                <Th className="border border-slate-800 p-2 text-left">HS Code</Th>
+                                <Th className="border border-slate-800 p-2 text-left">Brand</Th>
+                                <Th className="border border-slate-800 p-2 text-left">Size</Th>
+                                <Th className="border border-slate-800 p-2 text-right">Quantity</Th>
+                                <Th className="border border-slate-800 p-2 text-left">Unit</Th>
+                                <Th className="border border-slate-800 p-2 text-right">Unit Price</Th>
+                                <Th className="border border-slate-800 p-2 text-right">Taxable Amount</Th>
+                                <Th className="border border-slate-800 p-2 text-right">VAT %</Th>
+                                <Th className="border border-slate-800 p-2 text-right">VAT Amount</Th>
+                                <Th className="border border-slate-800 p-2 text-right">Total Amount</Th>
                               </tr>
                             </thead>
                             <tbody>
@@ -888,12 +889,12 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                       <table className="w-full text-left text-xs border border-slate-200">
                         <thead className="bg-slate-100 text-slate-700 text-[9px] font-bold uppercase">
                           <tr>
-                            <th className="p-2 border-b">Goods Item</th>
-                            <th className="p-2 border-b">Brand/Origin</th>
-                            <th className="p-2 border-b text-right">Qty</th>
-                            <th className="p-2 border-b text-right">Net Weight</th>
-                            <th className="p-2 border-b text-right">Rate</th>
-                            <th className="p-2 border-b text-right font-black">Final Amount</th>
+                            <Th className="p-2 border-b">Goods Item</Th>
+                            <Th className="p-2 border-b">Brand/Origin</Th>
+                            <Th className="p-2 border-b text-right">Qty</Th>
+                            <Th className="p-2 border-b text-right">Net Weight</Th>
+                            <Th className="p-2 border-b text-right">Rate</Th>
+                            <Th className="p-2 border-b text-right font-black">Final Amount</Th>
                           </tr>
                         </thead>
                         <tbody className="text-[10px]">

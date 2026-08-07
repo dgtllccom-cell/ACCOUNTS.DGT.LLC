@@ -30,6 +30,7 @@ import { Label } from "@/components/ui/label";
 import { apiGet } from "@/lib/api/client";
 import { listCountries, type LocationCountry, listCities, type LocationCity } from "@/features/locations/location-api";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 type CustomerResult = {
   id: string;
@@ -544,14 +545,14 @@ export default function SearchPage() {
                 <table className="w-full text-xs text-left">
                   <thead className="bg-slate-50 uppercase text-[10px] font-black text-slate-500 border-b dark:bg-slate-900 dark:border-slate-850 dark:text-slate-400">
                     <tr>
-                      <th className="px-4 py-3">Voucher</th>
-                      <th className="px-4 py-3">Triple Sequence Serials</th>
-                      <th className="px-4 py-3">Date</th>
-                      <th className="px-4 py-3">Lines & Accounts</th>
-                      <th className="px-4 py-3 text-right">Debit Amount</th>
-                      <th className="px-4 py-3 text-right">Credit Amount</th>
-                      <th className="px-4 py-3 text-center">Status</th>
-                      <th className="px-4 py-3 text-right">Actions</th>
+                      <Th className="px-4 py-3">Voucher</Th>
+                      <Th className="px-4 py-3">Triple Sequence Serials</Th>
+                      <Th className="px-4 py-3">Date</Th>
+                      <Th className="px-4 py-3">Lines & Accounts</Th>
+                      <Th className="px-4 py-3 text-right">Debit Amount</Th>
+                      <Th className="px-4 py-3 text-right">Credit Amount</Th>
+                      <Th className="px-4 py-3 text-center">Status</Th>
+                      <Th className="px-4 py-3 text-right">Actions</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y dark:divide-slate-850 font-medium text-slate-800 dark:text-slate-200">

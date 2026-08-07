@@ -8,6 +8,7 @@ import { getLanguageDirection } from "@/lib/i18n/languages";
 import { LocationHierarchySelect } from "@/features/locations/components/location-hierarchy-select";
 import { ReportActions } from "@/components/ui/report-actions";
 import { TruckAttachments } from "@/features/clearing-agent/components/truck-attachments";
+import { Th } from "@/components/ui/translated-th";
 
 type Row = {
   id: string; transit_date: string | null; transit_serial: string | null; transit_company: string | null;
@@ -113,13 +114,13 @@ export function TransitLoadingManagementView({ lang }: { lang: SupportedLanguage
         <table className="w-full text-start text-sm">
           <thead className="bg-slate-50 text-[11px] font-black uppercase tracking-wide text-slate-500 dark:bg-slate-950/60">
             <tr>
-              <th className="px-3 py-3 text-start">{t(lang, "tt.date")}</th>
-              <th className="px-3 py-3 text-start">{t(lang, "tt.company")}</th>
-              <th className="px-3 py-3 text-start">Truck</th>
-              <th className="px-3 py-3 text-start">{t(lang, "tt.goods")}</th>
-              <th className="px-3 py-3 text-start">{t(lang, "tt.route")}</th>
-              <th className="px-3 py-3 text-start">{t(lang, "tt.container")}</th>
-              <th className="px-3 py-3 text-end"></th>
+              <Th className="px-3 py-3 text-start">{t(lang, "tt.date")}</Th>
+              <Th className="px-3 py-3 text-start">{t(lang, "tt.company")}</Th>
+              <Th className="px-3 py-3 text-start">Truck</Th>
+              <Th className="px-3 py-3 text-start">{t(lang, "tt.goods")}</Th>
+              <Th className="px-3 py-3 text-start">{t(lang, "tt.route")}</Th>
+              <Th className="px-3 py-3 text-start">{t(lang, "tt.container")}</Th>
+              <Th className="px-3 py-3 text-end"></Th>
             </tr>
           </thead>
           <tbody>

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { getLedgerStatement, listLedgerReportLedgers, type LedgerLookupRow, type LedgerStatementLine } from "@/features/reports/ledger-report/ledger-report-api";
 import { Loader2 } from "lucide-react";
+import { Th } from "@/components/ui/translated-th";
 
 type SessionInfo = {
   user: { id: string; email: string | null; fullName: string | null };
@@ -300,14 +301,14 @@ export function CountryDetailedLedgerView() {
         <table className="w-full text-left border-collapse entry-table">
           <thead>
             <tr>
-              <th>Date</th>
-              <th>Serial</th>
-              <th>Name</th>
-              <th>No.</th>
-              <th>Details</th>
-              <th>Dr.</th>
-              <th>Cr.</th>
-              <th>Total</th>
+              <Th>Date</Th>
+              <Th>Serial</Th>
+              <Th>Name</Th>
+              <Th>No.</Th>
+              <Th>Details</Th>
+              <Th>Dr.</Th>
+              <Th>Cr.</Th>
+              <Th>Total</Th>
             </tr>
           </thead>
           <tbody>

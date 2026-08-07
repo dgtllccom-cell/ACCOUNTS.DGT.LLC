@@ -18,6 +18,7 @@ import { ReportExportToolbar } from "@/components/ui/report-export-toolbar";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { Th } from "@/components/ui/translated-th";
 
 type AccountGeneralReportRow = {
   accountId: string;
@@ -774,15 +775,15 @@ export function AccountProfileView({
                 <table className="w-full text-xs text-left border-collapse">
                   <thead>
                     <tr className="bg-slate-100 dark:bg-slate-800/40 text-slate-500 font-bold border-b border-slate-200 dark:border-slate-800">
-                      <th className="px-4 py-2.5 font-bold">#</th>
-                      <th className="px-4 py-2.5 font-bold">Source</th>
-                      <th className="px-4 py-2.5 font-bold">Entry Date</th>
-                      <th className="px-4 py-2.5 font-bold">Voucher / Ref No</th>
-                      <th className="px-4 py-2.5 font-bold text-right">Debit</th>
-                      <th className="px-4 py-2.5 font-bold text-right">Credit</th>
-                      <th className="px-4 py-2.5 font-bold text-center">Currency</th>
-                      <th className="px-4 py-2.5 font-bold text-right">USD Rate</th>
-                      <th className="px-4 py-2.5 font-bold text-right">USD Amount</th>
+                      <Th className="px-4 py-2.5 font-bold">#</Th>
+                      <Th className="px-4 py-2.5 font-bold">Source</Th>
+                      <Th className="px-4 py-2.5 font-bold">Entry Date</Th>
+                      <Th className="px-4 py-2.5 font-bold">Voucher / Ref No</Th>
+                      <Th className="px-4 py-2.5 font-bold text-right">Debit</Th>
+                      <Th className="px-4 py-2.5 font-bold text-right">Credit</Th>
+                      <Th className="px-4 py-2.5 font-bold text-center">Currency</Th>
+                      <Th className="px-4 py-2.5 font-bold text-right">USD Rate</Th>
+                      <Th className="px-4 py-2.5 font-bold text-right">USD Amount</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-850">

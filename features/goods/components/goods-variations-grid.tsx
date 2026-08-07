@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
+import { Th } from "@/components/ui/translated-th";
 
 export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
   const [goods, setGoods] = useState<any>(null);
@@ -186,10 +187,10 @@ export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
             <table className="w-full text-left text-sm">
               <thead className="bg-slate-50 border-b border-border">
                 <tr>
-                  <th className="px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Goods Name</th>
-                  <th className="px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Origin</th>
-                  <th className="px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Size</th>
-                  <th className="px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Brand</th>
+                  <Th className="px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Goods Name</Th>
+                  <Th className="px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Origin</Th>
+                  <Th className="px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Size</Th>
+                  <Th className="px-4 py-3 font-semibold text-xs text-muted-foreground uppercase tracking-wider">Brand</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">

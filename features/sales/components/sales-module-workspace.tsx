@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
+import { Th } from "@/components/ui/translated-th";
 
 type SalesModuleType = "sales" | "stock";
 
@@ -404,7 +405,7 @@ export function SalesModuleWorkspace({
             <thead className="bg-slate-950 text-[10px] uppercase tracking-wide text-slate-400 border-b border-slate-800">
               <tr>
                 {["Order ID", "Super S/N", "Cty S/N", "Br. S/N", "Contract & Date", "Branch & Country", "Customer Account", "Sales Account", "Goods & Brand", "Weights & Qty", "Total & Exchange", "Paid Details", "Receivable Balance", "Action"].map((head) => (
-                  <th key={head} className="px-3 py-3 text-left font-black border-slate-800">{head}</th>
+                  <Th key={head} className="px-3 py-3 text-left font-black border-slate-800">{head}</Th>
                 ))}
               </tr>
             </thead>

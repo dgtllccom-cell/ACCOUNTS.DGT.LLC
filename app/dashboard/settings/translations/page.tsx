@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+import { Th } from "@/components/ui/translated-th";
   Dialog,
   DialogContent,
   DialogDescription,
@@ -338,13 +339,13 @@ export default function TranslationsManagementPage() {
           <table className="w-full text-left text-sm">
             <thead className="bg-muted/50 border-b text-xs font-bold uppercase tracking-wider text-muted-foreground">
               <tr>
-                <th className="p-3">Module / Key</th>
-                <th className="p-3">English (en)</th>
-                <th className="p-3">Urdu (ur)</th>
-                <th className="p-3">Pashto (ps)</th>
-                <th className="p-3">Farsi (fa)</th>
-                <th className="p-3">Arabic (ar)</th>
-                <th className="p-3 text-right">Actions</th>
+                <Th className="p-3">Module / Key</Th>
+                <Th className="p-3">English (en)</Th>
+                <Th className="p-3">Urdu (ur)</Th>
+                <Th className="p-3">Pashto (ps)</Th>
+                <Th className="p-3">Farsi (fa)</Th>
+                <Th className="p-3">Arabic (ar)</Th>
+                <Th className="p-3 text-right">Actions</Th>
               </tr>
             </thead>
             <tbody className="divide-y">

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { apiGet, apiPost } from "@/lib/api/client";
 import { listCities, listCountries, listStates, type LocationCity, type LocationCountry, type LocationState } from "@/features/locations/location-api";
+import { Th } from "@/components/ui/translated-th";
 
 type SessionLike = {
   preferredLanguage?: string | null;
@@ -510,15 +511,15 @@ export default function ProductMasterClient({ session }: { session: SessionLike 
             <table className="w-full min-w-[1050px] text-sm">
               <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
                 <tr className="border-b border-border">
-                  <th className="px-3 py-3 text-start font-semibold">Product Code</th>
-                  <th className="px-3 py-3 text-start font-semibold">Product Name</th>
-                  <th className="px-3 py-3 text-start font-semibold">Category</th>
-                  <th className="px-3 py-3 text-start font-semibold">Brand</th>
-                  <th className="px-3 py-3 text-start font-semibold">Country</th>
-                  <th className="px-3 py-3 text-start font-semibold">Main Branch</th>
-                  <th className="px-3 py-3 text-start font-semibold">City Branch</th>
-                  <th className="px-3 py-3 text-start font-semibold">Size</th>
-                  <th className="px-3 py-3 text-center font-semibold">Status</th>
+                  <Th className="px-3 py-3 text-start font-semibold">Product Code</Th>
+                  <Th className="px-3 py-3 text-start font-semibold">Product Name</Th>
+                  <Th className="px-3 py-3 text-start font-semibold">Category</Th>
+                  <Th className="px-3 py-3 text-start font-semibold">Brand</Th>
+                  <Th className="px-3 py-3 text-start font-semibold">Country</Th>
+                  <Th className="px-3 py-3 text-start font-semibold">Main Branch</Th>
+                  <Th className="px-3 py-3 text-start font-semibold">City Branch</Th>
+                  <Th className="px-3 py-3 text-start font-semibold">Size</Th>
+                  <Th className="px-3 py-3 text-center font-semibold">Status</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">

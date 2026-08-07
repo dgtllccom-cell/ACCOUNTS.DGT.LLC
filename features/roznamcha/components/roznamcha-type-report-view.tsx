@@ -14,6 +14,7 @@ import { ReportPagination } from "@/features/reports/components/report-paginatio
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 export type RoznamchaEntryCategory = "business" | "bank" | "cash" | "invoice" | "transfer";
 
@@ -172,8 +173,8 @@ function printReportTable(opts: { title: string; subtitle: string; rows: ReportR
     <p class="sub">${opts.subtitle}</p>
     <table>
       <thead><tr>
-        <th>#</th><th>Date</th><th>Type</th><th>Account</th><th>Narration</th>
-        <th>Debit</th><th>Credit</th><th>Currency</th><th>Branch</th><th>Bill/Ref No</th><th>Status</th>
+        <Th>#</Th><Th>Date</Th><Th>Type</Th><Th>Account</Th><Th>Narration</Th>
+        <Th>Debit</Th><Th>Credit</Th><Th>Currency</Th><Th>Branch</Th><Th>Bill/Ref No</Th><Th>Status</Th>
       </tr></thead>
       <tbody>${bodyRows}</tbody>
       <tfoot><tr>

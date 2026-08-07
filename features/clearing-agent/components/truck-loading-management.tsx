@@ -9,6 +9,7 @@ import { LocationHierarchySelect } from "@/features/locations/components/locatio
 import { ReportActions } from "@/components/ui/report-actions";
 import { TruckAttachments } from "@/features/clearing-agent/components/truck-attachments";
 import { cn } from "@/lib/utils";
+import { Th } from "@/components/ui/translated-th";
 
 type Loading = {
   id: string;
@@ -325,14 +326,14 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
         <table className="w-full text-start text-sm">
           <thead className="bg-slate-50 text-[11px] font-black uppercase tracking-wide text-slate-500 dark:bg-slate-950/60">
             <tr>
-              <th className="px-4 py-3 text-start">Serial #</th>
-              <th className="px-4 py-3 text-start">Loading Date</th>
-              <th className="px-4 py-3 text-start">Truck #</th>
-              <th className="px-4 py-3 text-start">Driver</th>
-              <th className="px-4 py-3 text-start">Goods</th>
-              <th className="px-4 py-3 text-start">Qty</th>
-              <th className="px-4 py-3 text-start">Destination</th>
-              <th className="px-4 py-3 text-end">Actions</th>
+              <Th className="px-4 py-3 text-start">Serial #</Th>
+              <Th className="px-4 py-3 text-start">Loading Date</Th>
+              <Th className="px-4 py-3 text-start">Truck #</Th>
+              <Th className="px-4 py-3 text-start">Driver</Th>
+              <Th className="px-4 py-3 text-start">Goods</Th>
+              <Th className="px-4 py-3 text-start">Qty</Th>
+              <Th className="px-4 py-3 text-start">Destination</Th>
+              <Th className="px-4 py-3 text-end">Actions</Th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -913,17 +914,17 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
                     <table className="w-full text-left text-xs whitespace-nowrap">
                       <thead className="bg-slate-900 text-white font-black text-[10px] uppercase tracking-wider dark:bg-slate-950">
                         <tr>
-                          <th className="p-2.5">SR#</th>
-                          <th className="p-2.5">Goods Name</th>
-                          <th className="p-2.5">Size</th>
-                          <th className="p-2.5">Brand</th>
-                          <th className="p-2.5">Origin</th>
-                          <th className="p-2.5">HS Code</th>
-                          <th className="p-2.5">Warehouse</th>
-                          <th className="p-2.5">Qty (Bags)</th>
-                          <th className="p-2.5">Gross KG</th>
-                          <th className="p-2.5">Empty KG</th>
-                          <th className="p-2.5 text-right">Net Weight KG</th>
+                          <Th className="p-2.5">SR#</Th>
+                          <Th className="p-2.5">Goods Name</Th>
+                          <Th className="p-2.5">Size</Th>
+                          <Th className="p-2.5">Brand</Th>
+                          <Th className="p-2.5">Origin</Th>
+                          <Th className="p-2.5">HS Code</Th>
+                          <Th className="p-2.5">Warehouse</Th>
+                          <Th className="p-2.5">Qty (Bags)</Th>
+                          <Th className="p-2.5">Gross KG</Th>
+                          <Th className="p-2.5">Empty KG</Th>
+                          <Th className="p-2.5 text-right">Net Weight KG</Th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-slate-100 dark:divide-slate-800 font-medium">

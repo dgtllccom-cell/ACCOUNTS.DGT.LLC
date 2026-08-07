@@ -240,6 +240,7 @@ function paymentConfigFor(scope: JournalScope): { postingType: RoznamchaType; sc
 }
 
 import { Suspense } from "react";
+import { Th } from "@/components/ui/translated-th";
 
 function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguage; scope: JournalScope }) {
   const searchParams = useSearchParams();
@@ -651,29 +652,29 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
             <thead className="bg-[#0f2942] text-white">
               {scope === "country" ? (
                 <tr>
-                  <th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center w-14 border-r border-white/10">SR. NO.</th>
-                  <th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">BRANCH NAME</th>
-                  <th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">BRANCH CODE</th>
-                  <th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">BRANCH TYPE</th>
-                  <th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">TOTAL TRANSACTIONS</th>
-                  <th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">TOTAL DEBIT (BASE CURR)</th>
-                  <th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">TOTAL CREDIT (BASE CURR)</th>
-                  <th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">BALANCE (BASE CURR)</th>
-                  <th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center">STATUS</th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center w-14 border-r border-white/10">SR. NO.</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">BRANCH NAME</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">BRANCH CODE</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">BRANCH TYPE</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">TOTAL TRANSACTIONS</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">TOTAL DEBIT (BASE CURR)</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">TOTAL CREDIT (BASE CURR)</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">BALANCE (BASE CURR)</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center">STATUS</Th>
                 </tr>
               ) : (
                 <tr>
-                  <th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center w-14 border-r border-white/10">SR. NO.</th>
-                  <th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">DATE</th>
-                  <th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">VOUCHER NO.</th>
-                  <th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">VOUCHER TYPE</th>
-                  <th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider border-r border-white/10">ACCOUNT / PARTY</th>
-                  <th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider border-r border-white/10">DETAILS / NARRATION</th>
-                  <th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">CURR.</th>
-                  <th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">DEBIT (BASE CURR)</th>
-                  <th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">CREDIT (BASE CURR)</th>
-                  <th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">BALANCE (BASE CURR)</th>
-                  <th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center">DR / CR</th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center w-14 border-r border-white/10">SR. NO.</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">DATE</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">VOUCHER NO.</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">VOUCHER TYPE</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider border-r border-white/10">ACCOUNT / PARTY</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider border-r border-white/10">DETAILS / NARRATION</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">CURR.</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">DEBIT (BASE CURR)</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">CREDIT (BASE CURR)</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">BALANCE (BASE CURR)</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center">DR / CR</Th>
                 </tr>
               )}
             </thead>

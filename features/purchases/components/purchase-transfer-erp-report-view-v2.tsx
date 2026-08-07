@@ -36,6 +36,7 @@ import {
   Scale
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Th } from "@/components/ui/translated-th";
 
 function money(value: unknown, decimals = 2) {
   return Number(value || 0).toLocaleString("en-US", {
@@ -676,10 +677,10 @@ function PurchaseTransferErpReportViewContent({
               <table className="w-full border-collapse text-[7.5px]">
                 <thead>
                   <tr className="bg-slate-800 text-white text-[7px] font-extrabold uppercase">
-                    <th className="p-1.5 border border-slate-800 text-left w-20">GL CODE</th>
-                    <th className="p-1.5 border border-slate-800 text-left">ACCOUNT TITLE & HIERARCHICAL SERIAL AUDIT CHAIN</th>
-                    <th className="p-1.5 border border-slate-800 text-right w-28">DEBIT ({currencyLc})</th>
-                    <th className="p-1.5 border border-slate-800 text-right w-28">CREDIT ({currencyLc})</th>
+                    <Th className="p-1.5 border border-slate-800 text-left w-20">GL CODE</Th>
+                    <Th className="p-1.5 border border-slate-800 text-left">ACCOUNT TITLE & HIERARCHICAL SERIAL AUDIT CHAIN</Th>
+                    <Th className="p-1.5 border border-slate-800 text-right w-28">DEBIT ({currencyLc})</Th>
+                    <Th className="p-1.5 border border-slate-800 text-right w-28">CREDIT ({currencyLc})</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 border border-slate-300">
@@ -742,18 +743,18 @@ function PurchaseTransferErpReportViewContent({
               <table className="w-full border-collapse text-[7px]">
                 <thead>
                   <tr className="bg-slate-800 text-white font-extrabold uppercase">
-                    <th className="p-1 border border-slate-800 text-center">SR</th>
-                    <th className="p-1 border border-slate-800 text-left">DESCRIPTION & GOODS NAME</th>
-                    <th className="p-1 border border-slate-800 text-center">HS CODE</th>
-                    <th className="p-1 border border-slate-800 text-center">BRAND</th>
-                    <th className="p-1 border border-slate-800 text-center">ORIGIN</th>
-                    <th className="p-1 border border-slate-800 text-right">QUANTITY</th>
-                    <th className="p-1 border border-slate-800 text-right">GROSS WT</th>
-                    <th className="p-1 border border-slate-800 text-right">NET WT</th>
-                    <th className="p-1 border border-slate-800 text-right">RATE ({currencyFc})</th>
-                    <th className="p-1 border border-slate-800 text-right">TOTAL ({currencyFc})</th>
-                    <th className="p-1 border border-slate-800 text-center">EX. RATE</th>
-                    <th className="p-1 border border-slate-800 text-right">FINAL ({currencyLc})</th>
+                    <Th className="p-1 border border-slate-800 text-center">SR</Th>
+                    <Th className="p-1 border border-slate-800 text-left">DESCRIPTION & GOODS NAME</Th>
+                    <Th className="p-1 border border-slate-800 text-center">HS CODE</Th>
+                    <Th className="p-1 border border-slate-800 text-center">BRAND</Th>
+                    <Th className="p-1 border border-slate-800 text-center">ORIGIN</Th>
+                    <Th className="p-1 border border-slate-800 text-right">QUANTITY</Th>
+                    <Th className="p-1 border border-slate-800 text-right">GROSS WT</Th>
+                    <Th className="p-1 border border-slate-800 text-right">NET WT</Th>
+                    <Th className="p-1 border border-slate-800 text-right">RATE ({currencyFc})</Th>
+                    <Th className="p-1 border border-slate-800 text-right">TOTAL ({currencyFc})</Th>
+                    <Th className="p-1 border border-slate-800 text-center">EX. RATE</Th>
+                    <Th className="p-1 border border-slate-800 text-right">FINAL ({currencyLc})</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-200 border border-slate-300">

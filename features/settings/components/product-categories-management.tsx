@@ -6,6 +6,7 @@ import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { ReportActions } from "@/components/ui/report-actions";
+import { Th } from "@/components/ui/translated-th";
 
 type Category = {
   id: string;
@@ -108,11 +109,11 @@ export function ProductCategoriesManagementView({ lang }: { lang: SupportedLangu
         <table className="w-full text-start text-sm">
           <thead className="bg-slate-50 text-[11px] font-black uppercase tracking-wide text-slate-500 dark:bg-slate-950/60">
             <tr>
-              <th className="px-4 py-3 text-start">{t(lang, "pc.code")}</th>
-              <th className="px-4 py-3 text-start">{t(lang, "pc.name")}</th>
-              <th className="px-4 py-3 text-start">{t(lang, "pc.description")}</th>
-              <th className="px-4 py-3 text-start">{t(lang, "pc.active")}</th>
-              <th className="px-4 py-3 text-end"></th>
+              <Th className="px-4 py-3 text-start">{t(lang, "pc.code")}</Th>
+              <Th className="px-4 py-3 text-start">{t(lang, "pc.name")}</Th>
+              <Th className="px-4 py-3 text-start">{t(lang, "pc.description")}</Th>
+              <Th className="px-4 py-3 text-start">{t(lang, "pc.active")}</Th>
+              <Th className="px-4 py-3 text-end"></Th>
             </tr>
           </thead>
           <tbody>

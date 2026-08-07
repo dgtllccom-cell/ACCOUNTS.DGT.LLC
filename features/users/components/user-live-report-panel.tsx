@@ -24,6 +24,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { openUserA4ReportWindow, type UserReportData } from "@/lib/reports/open-user-a4-report-window";
+import { Th } from "@/components/ui/translated-th";
 
 type UserLiveReportPanelProps = {
   fullName: string;
@@ -513,12 +514,12 @@ export function UserLiveReportPanel({
                 <table className="w-full border-collapse text-left text-[10px] min-w-[500px]">
                   <thead>
                     <tr className="bg-slate-50 border-b border-slate-100 text-slate-500 font-extrabold uppercase tracking-wider">
-                      <th className="px-3 py-2 border-r border-slate-100">#</th>
-                      <th className="px-3 py-2 border-r border-slate-100">Date & Time</th>
-                      <th className="px-3 py-2 border-r border-slate-100">Description</th>
-                      <th className="px-3 py-2 border-r border-slate-100">Ref No.</th>
-                      <th className="px-3 py-2 border-r border-slate-100">Session IP</th>
-                      <th className="px-3 py-2">Session Status</th>
+                      <Th className="px-3 py-2 border-r border-slate-100">#</Th>
+                      <Th className="px-3 py-2 border-r border-slate-100">Date & Time</Th>
+                      <Th className="px-3 py-2 border-r border-slate-100">Description</Th>
+                      <Th className="px-3 py-2 border-r border-slate-100">Ref No.</Th>
+                      <Th className="px-3 py-2 border-r border-slate-100">Session IP</Th>
+                      <Th className="px-3 py-2">Session Status</Th>
                     </tr>
                   </thead>
                   <tbody>

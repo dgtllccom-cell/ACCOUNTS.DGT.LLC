@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, RefreshCw } from "lucide-react";
 import { apiGet } from "@/lib/api/client";
+import { Th } from "@/components/ui/translated-th";
 
 type AccountRow = {
   id: string;
@@ -65,11 +66,11 @@ export function AccountsTable() {
         <table className="w-full text-sm">
           <thead className="bg-muted/70 text-left text-muted-foreground">
             <tr>
-              <th className="px-5 py-3 font-medium">Code</th>
-              <th className="px-5 py-3 font-medium">Name</th>
-              <th className="px-5 py-3 font-medium">Type</th>
-              <th className="px-5 py-3 font-medium">Currency</th>
-              <th className="px-5 py-3 font-medium">Status</th>
+              <Th className="px-5 py-3 font-medium">Code</Th>
+              <Th className="px-5 py-3 font-medium">Name</Th>
+              <Th className="px-5 py-3 font-medium">Type</Th>
+              <Th className="px-5 py-3 font-medium">Currency</Th>
+              <Th className="px-5 py-3 font-medium">Status</Th>
             </tr>
           </thead>
           <tbody>

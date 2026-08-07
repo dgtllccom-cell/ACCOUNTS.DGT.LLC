@@ -19,7 +19,7 @@ export default async function LoginPage({
   const lang = await getRequestLanguage();
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-950 dark:text-slate-50">
+    <div suppressHydrationWarning className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-950 dark:text-slate-50">
       <InstallAppBanner />
       <main className="flex-1 flex flex-col justify-center">
         <div className="grid min-h-screen w-full lg:grid-cols-[1fr_1.1fr]">
