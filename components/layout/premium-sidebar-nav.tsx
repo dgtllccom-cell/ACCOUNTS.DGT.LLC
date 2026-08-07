@@ -132,7 +132,12 @@ function PremiumNodeItem({
         {href ? (
           <Link
             href={href}
-            onClick={onNavigate}
+            onClick={(e) => {
+              if (hasChildren) {
+                onToggle(node.key);
+              }
+              onNavigate?.();
+            }}
             className={labelClass}
             title={labelText}
           >
@@ -217,6 +222,17 @@ function PremiumNodeItem({
   );
 }
 
+function findNodeByKey(list: SidebarNode[], key: string): SidebarNode | null {
+  for (const item of list) {
+    if (item.key === key) return item;
+    if (item.children?.length) {
+      const found = findNodeByKey(item.children, key);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
 export function PremiumSidebarNav({
   nodes,
   lang,
@@ -241,8 +257,21 @@ export function PremiumSidebarNav({
   function toggle(key: string) {
     setOpenKeys((prev) => {
       const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
+      const isOpening = !next.has(key);
+      if (isOpening) {
+        next.add(key);
+        // Auto-expand any nested sub-wrapper nodes that also contain children
+        const node = findNodeByKey(nodes, key);
+        if (node?.children) {
+          for (const child of node.children) {
+            if (child.children?.length) {
+              next.add(child.key);
+            }
+          }
+        }
+      } else {
+        next.delete(key);
+      }
       return next;
     });
   }

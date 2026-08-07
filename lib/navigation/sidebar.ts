@@ -417,11 +417,13 @@ export const sidebarTree: SidebarNode[] = [
     key: "purchase",
     labelKey: "nav.purchase",
     iconKey: "gantt",
+    href: "/dashboard/purchase/new-purchase-booking-order" as Route,
     children: [
       {
         key: "branch-purchase-management",
         labelKey: "nav.branch_purchase",
         iconKey: "shopping-bag",
+        href: "/dashboard/purchase/new-purchase-booking-order" as Route,
         children: [
           {
             key: "purchase-new-booking-order",

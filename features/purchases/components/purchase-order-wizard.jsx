@@ -39,7 +39,9 @@ import {
   Truck,
   MessageSquare,
   Loader2,
-  Users
+  Users,
+  ShieldCheck,
+  ArrowRightLeft
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5313,14 +5315,111 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               </div>
             </div>
 
-            {/* User & Session Info Card */}
+            {/* User, Branch & 4-Tier Serial Hierarchy Audit Card */}
             <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
-              <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-2">User & Audit Session</h4>
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-blue-600" /> User Audit & Branch 4-Tier Serial Hierarchy
+                </h4>
+                <span className="text-[9px] font-mono font-bold text-slate-500 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                  SYSTEM AUDIT LOG
+                </span>
+              </div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/70"><span className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">User ID</span><span className="font-mono font-bold text-slate-900">{form.userId || "USR-1001"}</span></div>
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/70"><span className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">User Name</span><span className="font-bold text-slate-900 uppercase">{form.userName || "ADMIN"}</span></div>
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/70"><span className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">Team Name</span><span className="font-bold text-slate-900">Logistics & Operations</span></div>
-                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/70"><span className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">Verification Date</span><span className="font-bold text-slate-900 font-mono">{form.purchaseDate || new Date().toISOString().slice(0, 10)}</span></div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/70">
+                  <span className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">Created By User ID</span>
+                  <span className="font-mono font-bold text-slate-900">{form.userId || session?.userId || "USR-1001"}</span>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/70">
+                  <span className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">User Name</span>
+                  <span className="font-bold text-slate-900 uppercase">{form.userName || session?.fullName || "SUPER ADMIN"}</span>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/70">
+                  <span className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">Working Branch</span>
+                  <span className="font-bold text-slate-900 truncate block">{form.branchName || "Main Branch"}</span>
+                </div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/70">
+                  <span className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">Verification Date</span>
+                  <span className="font-bold text-slate-900 font-mono">{form.purchaseDate || new Date().toISOString().slice(0, 10)}</span>
+                </div>
+              </div>
+
+              {/* 4-Tier Booking Serial Numbers */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-1 text-xs">
+                <div className="bg-blue-50/60 p-3 rounded-xl border border-blue-100">
+                  <span className="block text-[9px] font-black uppercase text-blue-700 mb-0.5">1. Super Admin Serial</span>
+                  <span className="font-mono font-black text-blue-950">{form.superAdminSerialNumber || `SA-${new Date().getFullYear()}-0082`}</span>
+                </div>
+                <div className="bg-indigo-50/60 p-3 rounded-xl border border-indigo-100">
+                  <span className="block text-[9px] font-black uppercase text-indigo-700 mb-0.5">2. Country Serial</span>
+                  <span className="font-mono font-black text-indigo-950">{form.countryTransactionSerialNumber || `UAE-${new Date().getFullYear()}-0042`}</span>
+                </div>
+                <div className="bg-sky-50/60 p-3 rounded-xl border border-sky-100">
+                  <span className="block text-[9px] font-black uppercase text-sky-700 mb-0.5">3. Branch Serial</span>
+                  <span className="font-mono font-black text-sky-950">{form.branchTransactionSerialNumber || `ARE-MAIN-${new Date().getFullYear()}-0021`}</span>
+                </div>
+                <div className="bg-slate-100/80 p-3 rounded-xl border border-slate-200">
+                  <span className="block text-[9px] font-black uppercase text-slate-600 mb-0.5">4. City / Entry Serial</span>
+                  <span className="font-mono font-black text-slate-900">{form.cashEntrySerial || form.journalNumber || `CB-${new Date().getFullYear()}-00421`}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Transfer Destination & Roznamcha Debit / Credit Serials */}
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+              <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
+                  <ArrowRightLeft className="h-4 w-4 text-emerald-600" /> Transfer Destination & Business Roznamcha Serials
+                </h4>
+                <span className={`text-[9px] font-mono font-black px-2 py-0.5 rounded uppercase border ${isTransferred ? "bg-emerald-100 text-emerald-800 border-emerald-300" : "bg-amber-100 text-amber-900 border-amber-300"}`}>
+                  {isTransferred ? "TRANSFER LOCKED & COMPLETED" : "PENDING TRANSFER"}
+                </span>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+                {/* Transfer Destination & Status */}
+                <div className="bg-slate-50 p-4 rounded-xl border border-slate-200 space-y-2">
+                  <span className="block text-[9.5px] font-black uppercase text-slate-500 tracking-wider">Transfer Destination Module</span>
+                  <div className="font-bold text-slate-900 text-xs">
+                    {isTransferred ? "Purchase Advance Payment Module & Business Roznamcha" : "Ready for Transfer to Payment Records"}
+                  </div>
+                  <div className="text-[10px] text-slate-500 pt-1 border-t border-slate-200/60">
+                    <span className="block font-semibold">Target Route:</span>
+                    <code className="font-mono text-blue-700 bg-blue-50 px-1 py-0.5 rounded font-bold">/dashboard/journal/purchase-order-payment/advance</code>
+                  </div>
+                  <div className="text-[10px] text-slate-500">
+                    <span>Transfer Timestamp: </span>
+                    <strong className="font-mono text-slate-800">{form.transferTimestamp || (isTransferred ? new Date().toLocaleString() : "Not Transferred Yet")}</strong>
+                  </div>
+                </div>
+
+                {/* Roznamcha Debit 4 Serials */}
+                <div className="bg-blue-50/50 p-4 rounded-xl border border-blue-200/80 space-y-2">
+                  <div className="flex justify-between items-center border-b border-blue-200/60 pb-1.5">
+                    <span className="font-black text-blue-800 uppercase text-[9.5px] tracking-wider">Debit Roznamcha Serials (DR)</span>
+                    <span className="bg-blue-600 text-white text-[8.5px] font-black px-1.5 py-0.2 rounded">DR</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5 text-[10px] font-mono">
+                    <div><span className="block font-sans font-bold text-slate-500 text-[8.5px]">SA SERIAL:</span><strong className="text-slate-900">{form.purchaseDrSaSerial || `DR-SA-0082`}</strong></div>
+                    <div><span className="block font-sans font-bold text-slate-500 text-[8.5px]">COUNTRY SERIAL:</span><strong className="text-slate-900">{form.purchaseDrCountrySerial || `DR-UAE-0042`}</strong></div>
+                    <div><span className="block font-sans font-bold text-slate-500 text-[8.5px]">BRANCH SERIAL:</span><strong className="text-slate-900">{form.purchaseDrBranchSerial || `DR-MAIN-0021`}</strong></div>
+                    <div><span className="block font-sans font-bold text-slate-500 text-[8.5px]">CITY SERIAL:</span><strong className="text-slate-900">{form.purchaseDrCitySerial || `DR-CB-00421`}</strong></div>
+                  </div>
+                </div>
+
+                {/* Roznamcha Credit 4 Serials */}
+                <div className="bg-emerald-50/50 p-4 rounded-xl border border-emerald-200/80 space-y-2">
+                  <div className="flex justify-between items-center border-b border-emerald-200/60 pb-1.5">
+                    <span className="font-black text-emerald-800 uppercase text-[9.5px] tracking-wider">Credit Roznamcha Serials (CR)</span>
+                    <span className="bg-emerald-600 text-white text-[8.5px] font-black px-1.5 py-0.2 rounded">CR</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5 text-[10px] font-mono">
+                    <div><span className="block font-sans font-bold text-slate-500 text-[8.5px]">SA SERIAL:</span><strong className="text-slate-900">{form.salesCrSaSerial || `CR-SA-0082`}</strong></div>
+                    <div><span className="block font-sans font-bold text-slate-500 text-[8.5px]">COUNTRY SERIAL:</span><strong className="text-slate-900">{form.salesCrCountrySerial || `CR-UAE-0042`}</strong></div>
+                    <div><span className="block font-sans font-bold text-slate-500 text-[8.5px]">BRANCH SERIAL:</span><strong className="text-slate-900">{form.salesCrBranchSerial || `CR-MAIN-0021`}</strong></div>
+                    <div><span className="block font-sans font-bold text-slate-500 text-[8.5px]">CITY SERIAL:</span><strong className="text-slate-900">{form.salesCrCitySerial || `CR-CB-00421`}</strong></div>
+                  </div>
+                </div>
               </div>
             </div>
 
