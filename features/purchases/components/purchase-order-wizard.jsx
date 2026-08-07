@@ -3608,7 +3608,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           </div>
         </div>
       ) : (
-        <>
+        <div className="w-full">
           {titlePortal && actionsPortal ? (
             <>
               {createPortal(headerTitle, titlePortal)}
@@ -5055,6 +5055,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     <Button type="button" variant="outline" onClick={() => setActiveTab("goods")} className="font-bold text-[10px] h-8 px-6 text-slate-600">Back</Button>
                     <Button type="button" onClick={() => setActiveTab("reports_tab")} className="font-bold text-[10px] h-8 px-6 bg-primary text-primary-foreground">Next</Button>
                   </div>
+                </fieldset>
               )}
             </main>
           </div>
@@ -5403,6 +5404,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           </div>
         </div>
       )}
+    </div>
+  )}
 
       {previewModalOpen && (
         <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm animate-in fade-in duration-200">
@@ -6108,8 +6111,6 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             </div>
           </div>
         </div>
-      )}
-        </>
       )}
 
       {/* Ã¢â€â‚¬Ã¢â€â‚¬ TRANSFER CONFIRMATION MODAL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
