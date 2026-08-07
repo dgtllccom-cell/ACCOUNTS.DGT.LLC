@@ -161,6 +161,9 @@ export function PreferencesControls() {
 
     setLanguage(next);
     injectWebFonts(next);
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new Event("erp_language_changed"));
+    }
     router.refresh();
   }
 

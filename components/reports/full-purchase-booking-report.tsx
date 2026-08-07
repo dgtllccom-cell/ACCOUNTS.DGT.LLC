@@ -2,6 +2,8 @@
 
 import React from "react";
 import { FileText, Ship, Anchor } from "lucide-react";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 
 export type KVRow = { k: string; v: string; muted?: boolean; pill?: boolean; sub?: string };
 export type GoodsRow = {
@@ -50,12 +52,15 @@ export function FullPurchaseBookingReport({
   goods = [],
   paymentSchedule = [],
 }: FullPurchaseBookingReportProps) {
+  const activeLang = useActiveLanguage();
+  const tr = (str: string) => autoTranslate5Languages(str)[activeLang] || str;
+
   const findV = (rows: KVRow[], key: string) =>
     rows.find((r) => r.k.toLowerCase() === key.toLowerCase())?.v ?? "—";
   const bookingNo = findV(billDetails, "System Serial");
   const bookingDate = findV(billDetails, "Booking Date");
   const statusRow = billDetails.find((r) => r.pill);
-  const status = statusRow?.v ?? "ACCEPTED";
+  const status = tr(statusRow?.v ?? "ACCEPTED");
 
   return (
     <div className="mx-auto max-w-[900px]">
@@ -86,13 +91,13 @@ export function FullPurchaseBookingReport({
                 <FileText className="h-5 w-5" />
               </div>
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">Digital Dock ERP</div>
-                <div className="text-[15px] font-black uppercase tracking-wider text-slate-900 leading-tight">Purchase Booking — Complete Report</div>
+                <div className="text-[10px] font-bold uppercase tracking-[0.22em] text-slate-500">{tr("Digital Dock ERP")}</div>
+                <div className="text-[15px] font-black uppercase tracking-wider text-slate-900 leading-tight">{tr("Purchase Booking — Complete Report")}</div>
               </div>
             </div>
             <div className="text-right text-[10.5px] leading-tight">
-              <div><span className="text-slate-500">Booking No: </span><span className="font-bold text-slate-900">{bookingNo}</span></div>
-              <div><span className="text-slate-500">Date: </span><span className="font-semibold">{bookingDate}</span></div>
+              <div><span className="text-slate-500">{tr("Booking No")}: </span><span className="font-bold text-slate-900">{bookingNo}</span></div>
+              <div><span className="text-slate-500">{tr("Date")}: </span><span className="font-semibold">{bookingDate}</span></div>
               <div className="mt-1"><StatusPill>{status}</StatusPill></div>
             </div>
           </div>
@@ -101,23 +106,23 @@ export function FullPurchaseBookingReport({
           {/* ---------- BRANCH & BILL (side-by-side) ---------- */}
           <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
             <div>
-              <div className="sec">Branch & User Info</div>
+              <div className="sec">{tr("Branch & User Info")}</div>
               <table>
                 <tbody>
                   {branchDetails.map((r) => (
-                    <tr key={r.k}><td className="cell lbl">{r.k}</td><td className="cell val">{r.v}</td></tr>
+                    <tr key={r.k}><td className="cell lbl">{tr(r.k)}</td><td className="cell val">{tr(r.v)}</td></tr>
                   ))}
                 </tbody>
               </table>
             </div>
             <div>
-              <div className="sec">Bill Details</div>
+              <div className="sec">{tr("Bill Details")}</div>
               <table>
                 <tbody>
                   {billDetails.map((r) => (
                     <tr key={r.k}>
-                      <td className="cell lbl">{r.k}</td>
-                      <td className="cell val">{r.pill ? <StatusPill>{r.v}</StatusPill> : r.v}</td>
+                      <td className="cell lbl">{tr(r.k)}</td>
+                      <td className="cell val">{r.pill ? <StatusPill>{tr(r.v)}</StatusPill> : tr(r.v)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -128,24 +133,24 @@ export function FullPurchaseBookingReport({
           <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
             <div className="avoid-break">
               <div className="sec flex items-center justify-between" style={{ background: "#7f1d1d", borderColor: "#7f1d1d" }}>
-                <span>Purchase Account</span><span className="rounded bg-white/15 px-1.5 py-0.5 text-[9.5px]">DR</span>
+                <span>{tr("Purchase Account")}</span><span className="rounded bg-white/15 px-1.5 py-0.5 text-[9.5px]">DR</span>
               </div>
               <table>
                 <tbody>
                   {purchaseAccount.map((r) => (
-                    <tr key={r.k}><td className="cell lbl">{r.k}</td><td className="cell val">{r.v}</td></tr>
+                    <tr key={r.k}><td className="cell lbl">{tr(r.k)}</td><td className="cell val">{tr(r.v)}</td></tr>
                   ))}
                 </tbody>
               </table>
             </div>
             <div className="avoid-break">
               <div className="sec flex items-center justify-between" style={{ background: "#065f46", borderColor: "#065f46" }}>
-                <span>Sales Account</span><span className="rounded bg-white/15 px-1.5 py-0.5 text-[9.5px]">CR</span>
+                <span>{tr("Sales Account")}</span><span className="rounded bg-white/15 px-1.5 py-0.5 text-[9.5px]">CR</span>
               </div>
               <table>
                 <tbody>
                   {salesAccount.map((r) => (
-                    <tr key={r.k}><td className="cell lbl">{r.k}</td><td className="cell val">{r.v}</td></tr>
+                    <tr key={r.k}><td className="cell lbl">{tr(r.k)}</td><td className="cell val">{tr(r.v)}</td></tr>
                   ))}
                 </tbody>
               </table>
@@ -153,29 +158,29 @@ export function FullPurchaseBookingReport({
           </div>
           {/* ---------- GOODS ---------- */}
           <div className="avoid-break">
-            <div className="sec">Goods Details</div>
+            <div className="sec">{tr("Goods Details")}</div>
             <div className="overflow-x-auto">
               <table className="tbl">
                 <thead>
                   <tr>
                     <th style={{ width: 26 }}>#</th>
-                    <th>Name</th>
-                    <th>Spec</th>
-                    <th>Unit</th>
-                    <th className="num">Qty</th>
-                    <th className="num">Gross</th>
-                    <th className="num">Net</th>
-                    <th className="num">Price</th>
-                    <th className="num">Amount</th>
+                    <th>{tr("Name")}</th>
+                    <th>{tr("Spec")}</th>
+                    <th>{tr("Unit")}</th>
+                    <th className="num">{tr("Qty")}</th>
+                    <th className="num">{tr("Gross")}</th>
+                    <th className="num">{tr("Net")}</th>
+                    <th className="num">{tr("Price")}</th>
+                    <th className="num">{tr("Amount")}</th>
                   </tr>
                 </thead>
                 <tbody>
                   {goods.map((g) => (
                     <tr key={g.sr}>
                       <td>{g.sr}</td>
-                      <td className="font-semibold">{g.name}</td>
-                      <td className="text-slate-500">{g.spec}</td>
-                      <td>{g.unit}</td>
+                      <td className="font-semibold">{tr(g.name)}</td>
+                      <td className="text-slate-500">{tr(g.spec)}</td>
+                      <td>{tr(g.unit)}</td>
                       <td className="num">{g.qty}</td>
                       <td className="num">{g.gw}</td>
                       <td className="num">{g.nw}</td>

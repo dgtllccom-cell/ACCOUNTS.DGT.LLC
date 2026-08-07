@@ -6,6 +6,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { ensurePurchaseSchemaAndEnums } from "@/lib/services/purchase-table-manager";
+import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 
 const querySchema = z.object({
   purchaseOrderNo: z.string().trim().max(140).optional(),
@@ -128,16 +129,30 @@ function normalizeOrder(row: any) {
     bookingDate: row.created_at,
     purchaseAccountName: form.purchaseAccountName ?? "-",
     purchaseAccountNumber: form.purchaseAccountNo ?? "-",
-        salesAccountName: form.salesAccountName ?? "-",
-        salesAccountNumber: form.salesAccountNo ?? "-",
-        supplierName: form.supplierName ?? row.companies?.name ?? "-",
-        buyerName: form.customerName ?? "-",
-        productName: goods.map((item: any) => item.goodsName).filter(Boolean).join(", ") || "-",
-        goodsDescription: goods
-          .map((item: any) => [item.goodsName, item.size, item.brand, item.origin, item.hsCode ? `HS ${item.hsCode}` : ""].filter(Boolean).join(" / "))
-          .filter(Boolean)
-          .join("; ") || "-",
-        quantity,
+    salesAccountName: form.salesAccountName ?? "-",
+    salesAccountNumber: form.salesAccountNo ?? "-",
+    supplierName: form.supplierName ?? row.companies?.name ?? "-",
+    buyerName: form.customerName ?? "-",
+    productName: goods.map((item: any) => item.goodsName).filter(Boolean).join(", ") || "-",
+    goodsDescription: goods
+      .map((item: any) => [item.goodsName, item.size, item.brand, item.origin, item.hsCode ? `HS ${item.hsCode}` : ""].filter(Boolean).join(" / "))
+      .filter(Boolean)
+      .join("; ") || "-",
+    translations: {
+      productName: autoTranslate5Languages(goods.map((item: any) => item.goodsName).filter(Boolean).join(", ") || "-"),
+      goodsDescription: autoTranslate5Languages(
+        goods.map((item: any) => [item.goodsName, item.size, item.brand, item.origin].filter(Boolean).join(" / ")).join("; ") || "-"
+      ),
+      purchaseAccountName: autoTranslate5Languages(form.purchaseAccountName ?? "-"),
+      salesAccountName: autoTranslate5Languages(form.salesAccountName ?? "-"),
+      supplierName: autoTranslate5Languages(form.supplierName ?? row.companies?.name ?? "-"),
+      buyerName: autoTranslate5Languages(form.customerName ?? "-"),
+      remarks: autoTranslate5Languages(form.orderReportRemarks || form.remarks || "-"),
+      branchName: autoTranslate5Languages(finalBranchName),
+      countryName: autoTranslate5Languages(finalCountryName),
+      status: autoTranslate5Languages(workflow.lifecycleStatus ?? purchaseBooking.loadingStatus ?? row.payment_status ?? form.salesStatus ?? "Draft")
+    },
+    quantity,
         unit: form.qtyName ?? goods[0]?.qtyName ?? "-",
         totalWeight,
         totalGrossWeight,

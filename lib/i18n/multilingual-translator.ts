@@ -28,6 +28,24 @@ const COMMON_TRANSLITERATION_MAP: Record<string, MultilingualText> = {
   "karachi": { en: "Karachi", ur: "کراچی", ar: "كراتشي", fa: "کرچی", ps: "کراچۍ" },
   "peshawar": { en: "Peshawar", ur: "پشاور", ar: "بيشاور", fa: "پیشاور", ps: "پېښور" },
   "transport": { en: "Transport Co.", ur: "ٹرانسپورٹ کمپنی", ar: "شركة النقل", fa: "شرکت حمل و نقل", ps: "د ټرانسپورټ شرکت" },
+  // Common ERP Status & Modules
+  "accepted": { en: "Accepted", ur: "منظور شدہ", ar: "مقبول", fa: "تایید شده", ps: "منل شوی" },
+  "transferred": { en: "Transferred", ur: "منتقل شدہ", ar: "محول", fa: "منتقل شده", ps: "لیږدول شوی" },
+  "pending": { en: "Pending", ur: "زیر التواء", ar: "معلق", fa: "در انتظار", ps: "پاتې" },
+  "completed": { en: "Completed", ur: "مکمل", ar: "مكتمل", fa: "تکمیل شده", ps: "بشپړ شوی" },
+  "draft": { en: "Draft", ur: "ڈرافٹ", ar: "مسودة", fa: "پیش‌نویس", ps: "مسوده" },
+  "purchase account": { en: "Purchase Account", ur: "خریداری اکاؤنٹ", ar: "حساب الشراء", fa: "حساب خرید", ps: "د پیرودلو حساب" },
+  "sales account": { en: "Sales Account", ur: "فروخت اکاؤنٹ", ar: "حساب المبيعات", fa: "حساب فروش", ps: "د پلورلو حساب" },
+  "booking date": { en: "Booking Date", ur: "تاریخ بکنگ", ar: "تاريخ الحجز", fa: "تاریخ رزرو", ps: "د بکینګ نیټه" },
+  "supplier": { en: "Supplier", ur: "سپلائر", ar: "المورد", fa: "تامین کننده", ps: "ورکونکی" },
+  "buyer": { en: "Buyer", ur: "خریدار", ar: "المشتري", fa: "خریدار", ps: "اخیستونکی" },
+  "goods": { en: "Goods", ur: "مال / اشیاء", ar: "البضائع", fa: "کالاها", ps: "مالونه" },
+  "quantity": { en: "Quantity", ur: "تعداد / مقدار", ar: "الكمية", fa: "مقدار", ps: "شمیر" },
+  "united arab emirates": { en: "United Arab Emirates", ur: "متحدہ عرب امارات", ar: "الإمارات العربية المتحدة", fa: "امارات متحده عربی", ps: "متحده عربي امارات" },
+  "pakistan": { en: "Pakistan", ur: "پاکستان", ar: "باكستان", fa: "پاکستان", ps: "پاکستان" },
+  "afghanistan": { en: "Afghanistan", ur: "افغانستان", ar: "أفغانستان", fa: "افغانستان", ps: "افغانستان" },
+  "iran": { en: "Iran", ur: "ایران", ar: "إيران", fa: "ایران", ps: "ایران" },
+  "india": { en: "India", ur: "بھارت", ar: "الهند", fa: "هند", ps: "هند" },
 };
 
 /**

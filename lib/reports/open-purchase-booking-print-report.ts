@@ -1,4 +1,5 @@
 import { generateReportHtml, escapeHtml, formatMoney, formatNumber, formatDate, type ERPCompanyInfo } from "./erp-report-template-builder";
+import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 
 export type PurchaseBookingGoodsItem = {
   srNo: number;
@@ -67,7 +68,14 @@ export function openPurchaseBookingOrderPrintReport(input: {
 }) {
   if (typeof window === "undefined") return;
 
-  const { order: o, companyInfo = {}, lang = "en" } = input;
+  const { order: o, companyInfo = {} } = input;
+  const targetLang = (input.lang || (typeof document !== "undefined" ? (localStorage.getItem("erp_lang") || document.documentElement.lang || "en") : "en")) as "en" | "ur" | "ar" | "fa" | "ps";
+  const tr = (str: string) => {
+    if (!str || str === "-") return str;
+    const res = autoTranslate5Languages(str);
+    return res[targetLang] || str;
+  };
+
   const items = o.goodsItems && o.goodsItems.length > 0 ? o.goodsItems : [];
 
   const totalQty = items.reduce((sum, item) => sum + (item.quantity || 0), 0);
@@ -82,43 +90,43 @@ export function openPurchaseBookingOrderPrintReport(input: {
       <!-- Card 1: Order Details -->
       <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; background: #ffffff;">
         <div style="font-size: 7.5px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 6px;">
-          📋 Order & Reference Serials
+          📋 ${tr("Order & Reference Serials")}
         </div>
         <table style="width: 100%; font-size: 7.5px;">
-          <tr><td style="color: #64748b;">System Bill No:</td><td style="font-family: monospace; font-weight: 900; color: #1e3a8a;">${escapeHtml(o.systemBillNo)}</td></tr>
-          <tr><td style="color: #64748b;">Purchase Contract No:</td><td style="font-family: monospace; font-weight: 800;">${escapeHtml(o.manualBillNo || "-")}</td></tr>
-          <tr><td style="color: #64748b;">Super S/N:</td><td style="font-family: monospace; color: #0d9488;">${escapeHtml(o.superAdminSerialNo || "-")}</td></tr>
-          <tr><td style="color: #64748b;">Country S/N:</td><td style="font-family: monospace; color: #d97706;">${escapeHtml(o.countrySerialNo || "-")}</td></tr>
-          <tr><td style="color: #64748b;">Branch S/N:</td><td style="font-family: monospace; color: #0284c7;">${escapeHtml(o.branchSerialNo || "-")}</td></tr>
-          <tr><td style="color: #64748b;">Booking Date:</td><td style="font-weight: 700;">${formatDate(o.bookingDate)}</td></tr>
+          <tr><td style="color: #64748b;">${tr("System Bill No")}:</td><td style="font-family: monospace; font-weight: 900; color: #1e3a8a;">${escapeHtml(o.systemBillNo)}</td></tr>
+          <tr><td style="color: #64748b;">${tr("Purchase Contract No")}:</td><td style="font-family: monospace; font-weight: 800;">${escapeHtml(o.manualBillNo || "-")}</td></tr>
+          <tr><td style="color: #64748b;">${tr("Super S/N")}:</td><td style="font-family: monospace; color: #0d9488;">${escapeHtml(o.superAdminSerialNo || "-")}</td></tr>
+          <tr><td style="color: #64748b;">${tr("Country S/N")}:</td><td style="font-family: monospace; color: #d97706;">${escapeHtml(o.countrySerialNo || "-")}</td></tr>
+          <tr><td style="color: #64748b;">${tr("Branch S/N")}:</td><td style="font-family: monospace; color: #0284c7;">${escapeHtml(o.branchSerialNo || "-")}</td></tr>
+          <tr><td style="color: #64748b;">${tr("Booking Date")}:</td><td style="font-weight: 700;">${formatDate(o.bookingDate)}</td></tr>
         </table>
       </div>
 
       <!-- Card 2: Supplier & Counterparty -->
       <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; background: #ffffff;">
         <div style="font-size: 7.5px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 6px;">
-          🏢 Supplier & Counterparty
+          🏢 ${tr("Supplier & Counterparty")}
         </div>
         <table style="width: 100%; font-size: 7.5px;">
-          <tr><td style="color: #64748b;">Supplier Name:</td><td style="font-weight: 800;">${escapeHtml(o.supplierName)}</td></tr>
-          <tr><td style="color: #64748b;">Contact:</td><td>${escapeHtml(o.supplierContact || "-")}</td></tr>
-          <tr><td style="color: #64748b;">Buyer Name:</td><td style="font-weight: 700;">${escapeHtml(o.buyerName || companyInfo.name || "DGT LLC")}</td></tr>
-          <tr><td style="color: #64748b;">Country / Branch:</td><td style="font-weight: 800;">${escapeHtml(o.countryName)} / ${escapeHtml(o.branchName)}</td></tr>
-          <tr><td style="color: #64748b;">Order Status:</td><td><span class="badge badge-green">${escapeHtml(o.status)}</span></td></tr>
+          <tr><td style="color: #64748b;">${tr("Supplier Name")}:</td><td style="font-weight: 800;">${escapeHtml(tr(o.supplierName))}</td></tr>
+          <tr><td style="color: #64748b;">${tr("Contact")}:</td><td>${escapeHtml(o.supplierContact || "-")}</td></tr>
+          <tr><td style="color: #64748b;">${tr("Buyer Name")}:</td><td style="font-weight: 700;">${escapeHtml(tr(o.buyerName || companyInfo.name || "DGT LLC"))}</td></tr>
+          <tr><td style="color: #64748b;">${tr("Country / Branch")}:</td><td style="font-weight: 800;">${escapeHtml(tr(o.countryName))} / ${escapeHtml(tr(o.branchName))}</td></tr>
+          <tr><td style="color: #64748b;">${tr("Order Status")}:</td><td><span class="badge badge-green">${escapeHtml(tr(o.status))}</span></td></tr>
         </table>
       </div>
 
       <!-- Card 3: Logistics & Shipping -->
       <div style="border: 1px solid #cbd5e1; border-radius: 6px; padding: 8px; background: #ffffff;">
         <div style="font-size: 7.5px; font-weight: 900; color: #1e3a8a; text-transform: uppercase; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin-bottom: 6px;">
-          🚢 Logistics & Shipping Details
+          🚢 ${tr("Logistics & Shipping Details")}
         </div>
         <table style="width: 100%; font-size: 7.5px;">
-          <tr><td style="color: #64748b;">Shipping Mode:</td><td style="font-weight: 800;">${escapeHtml(o.shippingMode || "By Sea")}</td></tr>
-          <tr><td style="color: #64748b;">Containers:</td><td>${escapeHtml(o.containerNumbers || "N/A")}</td></tr>
-          <tr><td style="color: #64748b;">Vessel / Carrier:</td><td>${escapeHtml(o.vesselName || "N/A")}</td></tr>
-          <tr><td style="color: #64748b;">Loading Port:</td><td>${escapeHtml(o.loadingCountryPort || "N/A")}</td></tr>
-          <tr><td style="color: #64748b;">Received Port:</td><td>${escapeHtml(o.receivedCountryPort || "N/A")}</td></tr>
+          <tr><td style="color: #64748b;">${tr("Shipping Mode")}:</td><td style="font-weight: 800;">${escapeHtml(tr(o.shippingMode || "By Sea"))}</td></tr>
+          <tr><td style="color: #64748b;">${tr("Containers")}:</td><td>${escapeHtml(o.containerNumbers || "N/A")}</td></tr>
+          <tr><td style="color: #64748b;">${tr("Vessel / Carrier")}:</td><td>${escapeHtml(o.vesselName || "N/A")}</td></tr>
+          <tr><td style="color: #64748b;">${tr("Loading Port")}:</td><td>${escapeHtml(tr(o.loadingCountryPort || "N/A"))}</td></tr>
+          <tr><td style="color: #64748b;">${tr("Received Port")}:</td><td>${escapeHtml(tr(o.receivedCountryPort || "N/A"))}</td></tr>
         </table>
       </div>
 
@@ -127,29 +135,29 @@ export function openPurchaseBookingOrderPrintReport(input: {
     <!-- Goods Specification Items Table -->
     <div style="margin-bottom: 10px;">
       <h3 style="font-size: 8.5px; font-weight: 900; text-transform: uppercase; color: #0f172a; margin-bottom: 4px;">
-        📦 GOODS SPECIFICATION & PRICING BREAKDOWN
+        📦 ${tr("GOODS SPECIFICATION & PRICING BREAKDOWN")}
       </h3>
       <table class="data-table">
         <thead>
           <tr>
             <th style="width: 20px;">SR</th>
-            <th>Goods Specification</th>
-            <th>Origin</th>
-            <th>Quantity</th>
-            <th>Gross Wt</th>
-            <th>Net Wt</th>
-            <th>Rate / KG</th>
-            <th>Purchase Amt (FC)</th>
-            <th>Ex. Rate</th>
-            <th>Final Amt (LC)</th>
+            <th>${tr("Goods Specification")}</th>
+            <th>${tr("Origin")}</th>
+            <th>${tr("Quantity")}</th>
+            <th>${tr("Gross Wt")}</th>
+            <th>${tr("Net Wt")}</th>
+            <th>${tr("Rate / KG")}</th>
+            <th>${tr("Purchase Amt (FC)")}</th>
+            <th>${tr("Ex. Rate")}</th>
+            <th>${tr("Final Amt (LC)")}</th>
           </tr>
         </thead>
         <tbody>
           ${items.map((item, index) => `
             <tr>
               <td style="text-align: center; font-weight: 800;">${index + 1}</td>
-              <td style="font-weight: 800; color: #1e3a8a;">${escapeHtml(item.goodsName)}</td>
-              <td style="text-align: center;">${escapeHtml(item.origin || "-")}</td>
+              <td style="font-weight: 800; color: #1e3a8a;">${escapeHtml(tr(item.goodsName))}</td>
+              <td style="text-align: center;">${escapeHtml(tr(item.origin || "-"))}</td>
               <td style="text-align: right; font-weight: 800;">${formatNumber(item.quantity)} ${escapeHtml(item.unit || "BAGS")}</td>
               <td style="text-align: right;">${formatNumber(item.grossWeight)} KG</td>
               <td style="text-align: right; font-weight: 800;">${formatNumber(item.netWeight)} KG</td>

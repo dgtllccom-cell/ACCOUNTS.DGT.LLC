@@ -51,6 +51,8 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { ReportPagination } from "@/features/reports/components/report-pagination";
 import { ReportStatusLegend } from "@/features/reports/components/report-status-legend";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 
 type PurchaseReport = {
   id: string;
@@ -1345,7 +1347,17 @@ export function PurchaseBookingJournalReportView({
     } finally {
       setAccepting(false);
     }
-  };
+  const activeLang = useActiveLanguage();
+  const trField = useCallback((row: any, fieldName: string, fallback: string) => {
+    if (!fallback || fallback === "-") return fallback;
+    const transObj = row?.translations?.[fieldName];
+    if (transObj && transObj[activeLang]) {
+      return transObj[activeLang];
+    }
+    const auto = autoTranslate5Languages(fallback);
+    return auto[activeLang] || fallback;
+  }, [activeLang]);
+
   const [searchText, setSearchText] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [session, setSession] = useState<any>(null);
@@ -2394,17 +2406,17 @@ export function PurchaseBookingJournalReportView({
                       <Td center className={cn("font-mono text-[10px]", rowTextColor)}>{manualBillNo}</Td>
                       <Td className={cn("text-[10px] whitespace-nowrap", rowTextColor)}>
                         <span className="mr-1.5">{countryFlag}</span>
-                        <span className="font-semibold">{countryName}</span>
+                        <span className="font-semibold">{trField(report, "countryName", countryName)}</span>
                       </Td>
-                      <Td className={cn("font-semibold text-[10px] whitespace-nowrap", rowTextColor)}>{branchName}</Td>
-                      <Td className={cn("font-bold text-[10px] whitespace-nowrap", rowTextColor)}>{supplierName}</Td>
-                      <Td className={cn("font-mono text-[10px] whitespace-nowrap", rowTextColor)}>{purchaseAcc}</Td>
-                      <Td className={cn("font-mono text-[10px] whitespace-nowrap", rowTextColor)}>{salesAcc}</Td>
+                      <Td className={cn("font-semibold text-[10px] whitespace-nowrap", rowTextColor)}>{trField(report, "branchName", branchName)}</Td>
+                      <Td className={cn("font-bold text-[10px] whitespace-nowrap", rowTextColor)}>{trField(report, "supplierName", supplierName)}</Td>
+                      <Td className={cn("font-mono text-[10px] whitespace-nowrap", rowTextColor)}>{trField(report, "purchaseAccountName", purchaseAcc)}</Td>
+                      <Td className={cn("font-mono text-[10px] whitespace-nowrap", rowTextColor)}>{trField(report, "salesAccountName", salesAcc)}</Td>
                       <Td center className={cn("font-semibold whitespace-nowrap text-[10px]", rowTextColor)}>{bookingDateStr}</Td>
                       <Td right className={cn("font-mono font-bold text-[10px]", isAccepted ? "text-red-600 font-black" : "text-slate-900")}>{formatMoney(totalAmountNum)}</Td>
                       <Td center>
                         <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-[9px] uppercase tracking-wider ${statusBadgeClass}`}>
-                          {statusLabel}
+                          {autoTranslate5Languages(statusLabel)[activeLang] || statusLabel}
                         </span>
                       </Td>
                       <Td center className={cn("font-bold text-[10px] uppercase", isAccepted ? "text-red-600 font-black" : "text-slate-700 dark:text-slate-300")}>{userName}</Td>
@@ -2501,7 +2513,8 @@ export function PurchaseBookingJournalReportView({
                                   name: "DIGITAL DOCK ERP",
                                   branch: report.branchName || "AL_RAS",
                                   printedBy: session?.fullName || session?.email || "SUPER ADMIN"
-                                }
+                                },
+                                lang: activeLang
                               });
                             }}
                             className="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition shadow-sm"
