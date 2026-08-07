@@ -5403,9 +5403,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             </div>
           </div>
         </div>
-      )}
-    </div>
-  )}
+      </div>
+    )}
+  </div>
+)}
 
       {previewModalOpen && (
         <div className="fixed inset-0 z-[100] grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm animate-in fade-in duration-200">
