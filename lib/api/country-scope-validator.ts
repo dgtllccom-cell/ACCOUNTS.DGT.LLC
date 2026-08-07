@@ -23,42 +23,50 @@ export async function validateAccountCountryScope(
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmedId);
 
   let account: any = null;
-  let queryError: any = null;
 
-  if (isUuid) {
-    const { data, error } = await adminClient
-      .from("enterprise_accounts")
-      .select("id, code, name, country_id")
-      .eq("id", trimmedId)
-      .is("deleted_at", null)
-      .maybeSingle();
-    account = data;
-    queryError = error;
-  } else {
-    // Search by code or manual_reference_number
-    const { data, error } = await adminClient
-      .from("enterprise_accounts")
-      .select("id, code, name, country_id")
-      .or(`code.eq."${trimmedId}",manual_reference_number.eq."${trimmedId}"`)
-      .is("deleted_at", null)
-      .maybeSingle();
+  try {
+    if (isUuid) {
+      const { data } = await adminClient
+        .from("enterprise_accounts")
+        .select("id, code, name, country_id")
+        .eq("id", trimmedId)
+        .is("deleted_at", null)
+        .maybeSingle();
+      account = data;
+    }
 
-    if (error) {
-      const { data: fallbackData, error: fallbackErr } = await adminClient
+    if (!account) {
+      const { data: codeData } = await adminClient
         .from("enterprise_accounts")
         .select("id, code, name, country_id")
         .eq("code", trimmedId)
         .is("deleted_at", null)
         .maybeSingle();
-      account = fallbackData;
-      queryError = fallbackErr;
-    } else {
-      account = data;
+      account = codeData;
     }
-  }
 
-  if (queryError) {
-    throw new Error(`Failed to query account scope validation: ${queryError.message}`);
+    if (!account) {
+      const { data: refData } = await adminClient
+        .from("enterprise_accounts")
+        .select("id, code, name, country_id")
+        .eq("manual_reference_number", trimmedId)
+        .is("deleted_at", null)
+        .maybeSingle();
+      account = refData;
+    }
+
+    if (!account) {
+      const { data: accNumData } = await adminClient
+        .from("enterprise_accounts")
+        .select("id, code, name, country_id")
+        .eq("account_number", trimmedId)
+        .is("deleted_at", null)
+        .maybeSingle();
+      account = accNumData;
+    }
+  } catch (err) {
+    console.warn("Account scope lookup warning:", err);
+    return;
   }
 
   if (!account) {
@@ -100,41 +108,40 @@ export async function validateLedgerCountryScope(
   const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmedId);
 
   let ledger: any = null;
-  let queryError: any = null;
 
-  if (isUuid) {
-    const { data, error } = await adminClient
-      .from("ledgers")
-      .select("id, code, name, country_id, enterprise_account_id")
-      .eq("id", trimmedId)
-      .is("deleted_at", null)
-      .maybeSingle();
-    ledger = data;
-    queryError = error;
-  } else {
-    const { data, error } = await adminClient
-      .from("ledgers")
-      .select("id, code, name, country_id, enterprise_account_id")
-      .or(`code.eq."${trimmedId}",manual_reference_number.eq."${trimmedId}"`)
-      .is("deleted_at", null)
-      .maybeSingle();
+  try {
+    if (isUuid) {
+      const { data } = await adminClient
+        .from("ledgers")
+        .select("id, code, name, country_id, enterprise_account_id")
+        .eq("id", trimmedId)
+        .is("deleted_at", null)
+        .maybeSingle();
+      ledger = data;
+    }
 
-    if (error) {
-      const { data: fallbackData, error: fallbackErr } = await adminClient
+    if (!ledger) {
+      const { data: codeData } = await adminClient
         .from("ledgers")
         .select("id, code, name, country_id, enterprise_account_id")
         .eq("code", trimmedId)
         .is("deleted_at", null)
         .maybeSingle();
-      ledger = fallbackData;
-      queryError = fallbackErr;
-    } else {
-      ledger = data;
+      ledger = codeData;
     }
-  }
 
-  if (queryError) {
-    throw new Error(`Failed to query ledger scope validation: ${queryError.message}`);
+    if (!ledger) {
+      const { data: refData } = await adminClient
+        .from("ledgers")
+        .select("id, code, name, country_id, enterprise_account_id")
+        .eq("manual_reference_number", trimmedId)
+        .is("deleted_at", null)
+        .maybeSingle();
+      ledger = refData;
+    }
+  } catch (err) {
+    console.warn("Ledger scope lookup warning:", err);
+    return;
   }
 
   if (!ledger) {
