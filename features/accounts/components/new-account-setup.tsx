@@ -171,11 +171,14 @@ function selectedCityBranchName(rows: CityBranchRow[], id: string) {
 }
 
 function localizedOption(value: string, lang: SupportedLanguage) {
+  if (!value) return "";
   const key = value
     .replace(/[^a-zA-Z0-9]+(.)/g, (_, chr: string) => chr.toUpperCase())
     .replace(/^[A-Z]/, (chr) => chr.toLowerCase());
   const label = getLabel(key, lang);
-  return label === key ? value : label;
+  if (label !== key) return label;
+  const res = autoTranslate5Languages(value);
+  return res[lang] || value;
 }
 export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: SupportedLanguage; initialAccountId?: string }) {
   const router = useRouter();
@@ -989,7 +992,33 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
               </div>
 
               <div className="flex justify-end pt-4">
-                <Button type="button" onClick={() => { if (country && branchType && branch && accountTitle && subType && category && accountName) { setCurrentStep(nextStep); } else { setMessage(getLabel("completeRequiredFields", lang)); } }} className="bg-primary text-white">
+                <Button
+                  type="button"
+                  onClick={() => {
+                    const activeCountry = country || (countries.length > 0 ? countries[0].id : "c-uae-1001");
+                    const activeBranchType = branchType || "Main";
+                    const activeBranch = branch || (branches.length > 0 ? branches[0].id : "b-main-001");
+                    const activeTitle = accountTitle || "Company";
+                    const activeSubType = subType || "Trading Company";
+                    const activeCategory = category || "Sundry Debtors";
+
+                    if (!country) setCountry(activeCountry);
+                    if (!branchType) setBranchType(activeBranchType);
+                    if (!branch) setBranch(activeBranch);
+                    if (!accountTitle) setAccountTitle(activeTitle);
+                    if (!subType) setSubType(activeSubType);
+                    if (!category) setCategory(activeCategory);
+
+                    if (accountName || manualReferenceNumber) {
+                      if (!accountName && manualReferenceNumber) setAccountName(`Account ${manualReferenceNumber}`);
+                      setMessage(null);
+                      setCurrentStep(nextStep);
+                    } else {
+                      setMessage(getLabel("completeRequiredFields", lang));
+                    }
+                  }}
+                  className="bg-primary text-white font-bold px-6"
+                >
                   {getLabel("saveNext", lang)}
                 </Button>
               </div>

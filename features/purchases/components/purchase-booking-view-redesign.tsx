@@ -21,13 +21,14 @@
  */
 import { useEffect, useRef, useState } from "react";
 import {
-import { Th } from "@/components/ui/translated-th";
   Menu, Building2, Calendar, Globe, Languages, Bell, HelpCircle, ChevronDown,
   Save, Check, ArrowRightLeft, Printer, MoreHorizontal, Pencil, Trash2, Upload,
   X, FileText, LayoutDashboard, ShoppingCart, Package, Users, Wallet, BarChart3,
   Settings, Warehouse, Truck, Ship, Anchor, Eye, Download, FileDown, ClipboardList,
   Container,
 } from "lucide-react";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 /* ---------------- types ---------------- */
 export type KVRow = { k: string; v: string; muted?: boolean; pill?: boolean; sub?: string };
 export type GoodsRow = {
@@ -133,16 +134,22 @@ function StatusPill({
   );
 }
 function KV({ k, v, muted, pill, sub }: KVRow) {
+  const activeLang = useActiveLanguage();
+  const tr = (text: string) => {
+    if (!text || text === "-") return text;
+    const res = autoTranslate5Languages(text);
+    return res[activeLang] || text;
+  };
   return (
     <div className="flex items-start justify-between gap-3 py-1">
-      <span className="text-[11.5px] text-muted-foreground">{k}</span>
+      <span className="text-[11.5px] text-muted-foreground">{tr(k)}</span>
       <div className="min-w-0 text-right">
         {pill ? (
-          <StatusPill>{v}</StatusPill>
+          <StatusPill>{tr(v)}</StatusPill>
         ) : (
-          <div className={`truncate text-[12.5px] font-semibold ${muted ? "text-muted-foreground" : "text-foreground"}`}>{v}</div>
+          <div className={`truncate text-[12.5px] font-semibold ${muted ? "text-muted-foreground" : "text-foreground"}`}>{tr(v)}</div>
         )}
-        {sub ? <div className="text-[10.5px] text-muted-foreground">{sub}</div> : null}
+        {sub ? <div className="text-[10.5px] text-muted-foreground">{tr(sub)}</div> : null}
       </div>
     </div>
   );
@@ -153,6 +160,12 @@ function InfoCard({
   n: string; title: string; rows: KVRow[]; accent?: string;
   watermark?: string; watermarkTone?: "dr" | "cr"; footer?: React.ReactNode;
 }) {
+  const activeLang = useActiveLanguage();
+  const tr = (text: string) => {
+    if (!text || text === "-") return text;
+    const res = autoTranslate5Languages(text);
+    return res[activeLang] || text;
+  };
   const wmColor = watermarkTone === "dr" ? "text-rose-500/10"
     : watermarkTone === "cr" ? "text-emerald-500/10" : "text-slate-500/10";
   return (
@@ -160,12 +173,11 @@ function InfoCard({
       {watermark ? (
         <div aria-hidden className={`pointer-events-none absolute -right-2 top-1/2 -translate-y-1/2 select-none text-[96px] font-black leading-none tracking-tighter ${wmColor}`}>
           {watermark}
-
         </div>
       ) : null}
       <div className="relative mb-2.5 flex items-center gap-2.5 border-b border-border/60 pb-2.5">
         <span className={`inline-flex h-6 w-6 items-center justify-center rounded-md ${accent} text-[10.5px] font-bold text-primary-foreground`}>{n}</span>
-        <h3 className="text-[11.5px] font-semibold tracking-[0.14em] text-foreground">{title}</h3>
+        <h3 className="text-[11.5px] font-semibold tracking-[0.14em] text-foreground">{tr(title)}</h3>
       </div>
       <div className="relative flex-1 divide-y divide-border/50">
         {rows.map((r) => <KV key={r.k} {...r} />)}
@@ -177,17 +189,23 @@ function InfoCard({
 function AccountPaymentStrip({
   tone, amount, paid, balance, status,
 }: { tone: "dr" | "cr"; amount: string; paid: string; balance: string; status: string }) {
+  const activeLang = useActiveLanguage();
+  const tr = (text: string) => {
+    if (!text || text === "-") return text;
+    const res = autoTranslate5Languages(text);
+    return res[activeLang] || text;
+  };
   const colors = tone === "dr"
     ? { chip: "bg-rose-50 text-rose-700 ring-rose-200", bar: "bg-rose-500", balance: "text-rose-700" }
     : { chip: "bg-emerald-50 text-emerald-700 ring-emerald-200", bar: "bg-emerald-500", balance: "text-emerald-700" };
   return (
     <div>
       <div className="mb-1.5 flex items-center justify-between">
-        <span className="text-[9.5px] font-bold uppercase tracking-widest text-muted-foreground">Payment Summary</span>
-        <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-bold ring-1 ${colors.chip}`}>{status}</span>
+        <span className="text-[9.5px] font-bold uppercase tracking-widest text-muted-foreground">{tr("Payment Summary")}</span>
+        <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-bold ring-1 ${colors.chip}`}>{tr(status)}</span>
       </div>
       <div className="grid grid-cols-3 gap-1.5 text-center">
-        {[["Invoice", amount], ["Paid", paid], ["Balance", balance]].map(([k, v], i) => (
+        {[[tr("Invoice"), amount], [tr("Paid"), paid], [tr("Balance"), balance]].map(([k, v], i) => (
           <div key={i} className="rounded-md bg-slate-50 py-1">
             <div className="text-[8.5px] uppercase tracking-wider text-muted-foreground">{k}</div>
             <div className={`text-[10.5px] font-bold ${i === 2 ? colors.balance : "text-foreground"}`}>{v}</div>
@@ -232,9 +250,15 @@ function Chip({ icon: Icon, children }: { icon: React.ComponentType<{ className?
   );
 }
 function Field({ label, children, className = "" }: { label: string; children: React.ReactNode; className?: string }) {
+  const activeLang = useActiveLanguage();
+  const tr = (text: string) => {
+    if (!text || text === "-") return text;
+    const res = autoTranslate5Languages(text);
+    return res[activeLang] || text;
+  };
   return (
     <label className={`flex flex-col gap-1 ${className}`}>
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{label}</span>
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{tr(label)}</span>
       {children}
     </label>
   );

@@ -555,10 +555,94 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
   },
   updateAccount: {
     en: "Update Account",
-    ur: "\u0627\u06a9\u0627\u0624\u0646\u0679 \u0627\u067e\u0688\u06cc\u0679 \u06a9\u0631\u06cc\u06ba",
-    ar: "\u062a\u062d\u062f\u064a\u062b \u0627\u0644\u062d\u0633\u0627\u0628",
-    fa: "\u0628\u0647\u200c\u0631\u0648\u0632\u0631\u0633\u0627\u0646\u06cc \u062d\u0633\u0627\u0628",
-    ps: "\u062d\u0633\u0627\u0628 \u062a\u0627\u0632\u0647 \u06a9\u0693\u0626"
+    ur: "اکاؤنٹ اپ ڈیٹ کریں",
+    ar: "تحديث الحساب",
+    fa: "به‌روزرسانی حساب",
+    ps: "حساب تازه کړئ"
+  },
+  manualReferencePlaceholder: {
+    en: "e.g. REF-1001",
+    ur: "مثلاً REF-1001",
+    ar: "مثلاً REF-1001",
+    fa: "مثلا REF-1001",
+    ps: "مثلاً REF-1001"
+  },
+  accountNamePlaceholder: {
+    en: "Enter account name...",
+    ur: "اکاؤنٹ کا نام درج کریں...",
+    ar: "أدخل اسم الحساب...",
+    fa: "نام حساب را وارد کنید...",
+    ps: "د حساب نوم داخل کړئ..."
+  },
+  addContact: {
+    en: "+ Add Contact",
+    ur: "+ رابطہ شامل کریں",
+    ar: "+ إضافة جهة اتصال",
+    fa: "+ افزودن مخاطب",
+    ps: "+ اړیکه اضافه کړئ"
+  },
+  type: {
+    en: "Type",
+    ur: "قسم",
+    ar: "النوع",
+    fa: "نوع",
+    ps: "ډول"
+  },
+  mobile: {
+    en: "Mobile",
+    ur: "موبائل",
+    ar: "جوال",
+    fa: "موبایل",
+    ps: "موبایل"
+  },
+  whatsApp: {
+    en: "WhatsApp",
+    ur: "واٹس ایپ",
+    ar: "واتساب",
+    fa: "واتساپ",
+    ps: "واټساپ"
+  },
+  email: {
+    en: "Email",
+    ur: "ای میل",
+    ar: "البريد الإلكتروني",
+    fa: "ایمیل",
+    ps: "ایمیل"
+  },
+  landline: {
+    en: "Landline",
+    ur: "لینڈ لائن",
+    ar: "هاتف ثنائي",
+    fa: "تلفن ثابت",
+    ps: "سیم لرونکی تلیفون"
+  },
+  office: {
+    en: "Office",
+    ur: "دفتر",
+    ar: "مكتب",
+    fa: "دفتر",
+    ps: "دفتر"
+  },
+  customType: {
+    en: "Custom Type",
+    ur: "اپنی مرضی کی قسم",
+    ar: "نوع مخصص",
+    fa: "نوع سفارشی",
+    ps: "ځانګړی ډول"
+  },
+  saveNext: {
+    en: "Save & Continue",
+    ur: "محفوظ کریں اور آگے بڑھیں",
+    ar: "حفظ ومتابعة",
+    fa: "ذخیره و ادامه",
+    ps: "خوندي کړئ او پرمخ لاړشئ"
+  },
+  completeRequiredFields: {
+    en: "Please enter account name before proceeding.",
+    ur: "برائے مہربانی آگے بڑھنے سے پہلے اکاؤنٹ کا نام درج کریں۔",
+    ar: "يرجى إدخال اسم الحساب قبل المتابعة.",
+    fa: "لطفاً قبل از ادامه، نام حساب را وارد کنید.",
+    ps: "مهرباني وکړئ د پرمخ تګ دمخه د حساب نوم داخل کړئ."
   },
   noCompany: {
     en: "No",
