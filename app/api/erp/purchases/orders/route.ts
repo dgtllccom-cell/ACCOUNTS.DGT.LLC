@@ -396,12 +396,12 @@ export async function POST(request: NextRequest) {
         unit_weight: it.unitWeight || 0,
         gross_weight: it.grossWeight || 0,
         net_weight: it.netWeight || 0,
-        // rate_original: it.rateOriginal || 0,
-        // rate_local: it.rateLocal || 0,
-        // rate_usd: it.rateUsd || 0,
-        // total_original: it.totalOriginal || 0,
-        // total_local: it.totalLocal || 0,
-        // total_usd: it.totalUsd || 0
+        rate_original: it.rateOriginal || 0,
+        rate_local: it.rateLocal || 0,
+        rate_usd: it.rateUsd || 0,
+        total_original: it.totalOriginal || 0,
+        total_local: it.totalLocal || 0,
+        total_usd: it.totalUsd || 0
       }));
       try {
         await safeInsertPurchaseOrderItems(supabase, itemsPayload);

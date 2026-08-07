@@ -2210,6 +2210,59 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
     const usdRate = Number(form.exchangeRate || 1);
     const cleanUuid = (val) => (val && typeof val === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val.trim()) ? val.trim() : null);
 
+    let allEntries = [...goodsEntries];
+    const pendingGoodsName = (form.goodsName || "").trim();
+    if (pendingGoodsName) {
+      const calculated = calculateItemTotals(form);
+      const pendingLot = {
+        allotName: form.allotName || `ALT-${Math.floor(1000 + Math.random() * 9000)}`,
+        goodsName: form.goodsName,
+        size: form.size || "-",
+        brand: form.brand || "-",
+        origin: form.origin || "-",
+        hsCode: form.hsCode || "-",
+        qtyName: form.qtyName || "BAGS",
+        qtyNo: Number(form.qtyNo || 0),
+        qtyKgs: Number(form.qtyKgs || 0),
+        grossWeight: calculated.grossWeight,
+        emptyKgs: Number(form.emptyKgs || 0),
+        netWeight: calculated.netWeight,
+        priceType: form.priceType || "P/KGs",
+        divideType: form.divideType || "D/KGs",
+        divideWeight: Number(form.divideWeight || 1),
+        coursePrice: Number(form.coursePrice || 0),
+        currencyType: form.currencyType || "USD",
+        purchaseCurrency: form.purchaseCurrency || form.currencyType || "USD",
+        exchangeRate: Number(form.exchangeRate || 1),
+        totalAmount: form.manualTotalAmount !== undefined && form.manualTotalAmount !== "" ? Number(form.manualTotalAmount) : calculated.totalAmount,
+        op: form.operator || "*",
+        finalAmount: form.manualFinalAmount !== undefined && form.manualFinalAmount !== "" ? Number(form.manualFinalAmount) : calculated.finalAmount
+      };
+
+      const isAlreadyAdded = allEntries.some(
+        (e) =>
+          e.allotName === pendingLot.allotName &&
+          e.goodsName === pendingLot.goodsName &&
+          e.qtyNo === pendingLot.qtyNo &&
+          e.coursePrice === pendingLot.coursePrice
+      );
+      if (!isAlreadyAdded) {
+        allEntries.push(pendingLot);
+      }
+    }
+
+    const calculatedTotals = {
+      totalGross: allEntries.reduce((sum, item) => sum + Number(item.grossWeight || 0), 0),
+      totalNet: allEntries.reduce((sum, item) => sum + Number(item.netWeight || 0), 0),
+      grandFinal: allEntries.reduce((sum, item) => sum + Number(item.finalAmount || 0), 0),
+      grandPrimaryFinal: allEntries.reduce((sum, item) => sum + Number(item.totalAmount || 0), 0),
+      totalQty: allEntries.reduce((sum, item) => sum + Number(item.qtyNo || 0), 0),
+      totalDeductions: allEntries.reduce((sum, item) => sum + Number((item.qtyNo * item.emptyKgs) || 0), 0)
+    };
+
+    const finalOrderTotal = calculatedTotals.grandFinal || calculatedTotals.grandPrimaryFinal || reportTotals.grandFinal || reportTotals.grandPrimaryFinal;
+    const finalPrimaryTotal = calculatedTotals.grandPrimaryFinal || calculatedTotals.grandFinal || reportTotals.grandPrimaryFinal || reportTotals.grandFinal;
+
     return {
       countryId: cleanUuid(form.countryId),
       countryBranchId: cleanUuid(form.countryBranchId),
@@ -2220,11 +2273,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       currencyCode: form.currencyType || "USD",
       paymentCurrencyCode: form.secondaryCurrency?.split(" ")[0] || "PKR",
       exchangeRate: usdRate,
-      orderTotal: reportTotals.grandFinal || reportTotals.grandPrimaryFinal,
-      totalGoodsOriginal: reportTotals.grandPrimaryFinal || reportTotals.grandFinal,
-      totalGoodsLocal: reportTotals.grandFinal || reportTotals.grandPrimaryFinal,
-      totalGoodsUsd: reportTotals.grandPrimaryFinal || reportTotals.grandFinal,
-      items: goodsEntries.map(g => {
+      orderTotal: finalOrderTotal,
+      totalGoodsOriginal: finalPrimaryTotal,
+      totalGoodsLocal: finalOrderTotal,
+      totalGoodsUsd: finalPrimaryTotal,
+      items: allEntries.map(g => {
         const rateOrig = Number(g.coursePrice || 0);
         const rateLoc = rateOrig * usdRate;
         const totOrig = Number(g.totalAmount || 0);
@@ -2252,8 +2305,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       ledgerPostingStatus,
       formData: {
         form,
-        totals: reportTotals,
-        goodsEntries: goodsEntries,
+        totals: calculatedTotals,
+        goodsEntries: allEntries,
         reports: reportsList,
         workflow: {
           currentStep: ledgerPostingStatus === "Posted" ? "Journal Entry & Payment" : "Booking Purchase Order",
@@ -3612,349 +3665,395 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
           {activeTab !== "report" && (
             activeTab === "reports_tab" ? (
-              <div className="w-full space-y-4 mt-4 animate-in fade-in duration-300">
-                {/* Global Info Cards at the top */}
-                {renderGlobalInfoCards()}
-
-
-                <div className="mx-auto w-full max-w-[1180px] rounded-2xl border border-slate-200 bg-white p-4 shadow-sm print:max-w-none print:border-slate-300 print:p-0 print:shadow-none">
-                  <div className="mb-4 flex flex-col gap-2 border-b border-slate-200 pb-3 md:flex-row md:items-end md:justify-between">
+              <div className="w-full space-y-6 mt-4 animate-in fade-in duration-300">
+                {/* Step 4 Top Header Banner */}
+                <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                  <div className="flex items-center gap-3.5">
+                    <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl text-blue-600">
+                      <FileText className="h-6 w-6" />
+                    </div>
                     <div>
-                      <p className="text-[9px] font-black uppercase tracking-[0.28em] text-slate-400">Professional Printable Report</p>
-                      <h2 className="text-xl font-black uppercase tracking-[0.08em] text-slate-950">Purchase Booking Complete Report</h2>
-                      <p className="text-[10px] font-semibold text-slate-500">Booking, accounts, goods, payment, loading, user details, and remarks in one A4-ready report.</p>
-                    </div>
-                    <div className="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-right text-[9px] font-bold text-slate-600">
-                      <div>PO: <span className="font-black text-slate-950">{form.purchaseOrderNo || "-"}</span></div>
-                      <div>Generated: <span className="font-black text-slate-950">{new Date().toLocaleString()}</span></div>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 xl:grid-cols-[1.35fr_0.85fr] gap-4">
-                  <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-                    <div className="bg-slate-950 text-white px-4 py-3 flex items-center justify-between gap-3">
-                      <div>
-                        <p className="text-[9px] uppercase tracking-[0.24em] text-slate-300 font-black">Purchase Booking Header</p>
-                        <h3 className="text-base font-black tracking-wide">{form.purchaseOrderNo || "Purchase Booking"}</h3>
+                      <div className="flex items-center gap-2">
+                        <span className="text-[9px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">Step 4 of 5</span>
+                        <span className="text-[10px] font-semibold text-slate-400">Documentation & Audit</span>
                       </div>
-                      <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase ${isTransferred ? "bg-emerald-500/20 text-emerald-100" : "bg-amber-400/20 text-amber-100"}`}>
-                        {isTransferred ? "Transferred" : "Pending Transfer"}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-0 text-[10px]">
-                      {[
-                        ["Purchase Order No.", form.purchaseOrderNo || "-"],
-                        ["System Bill No.", form.billNo || "-"],
-                        ["Manual Bill No.", form.manualBillNo || form.purchaseContractNo || "-"],
-                        ["Booking Date", form.purchaseDate || "-"],
-                        ["Contract No.", form.purchaseContractNo || "-"],
-                        ["Country", form.branchCountry || form.originCountry || "-"],
-                        ["Branch", form.branchName || "-"],
-                        ["Currency", form.purchaseCurrency || form.secondaryCurrency || form.currencyType || "-"],
-                      ].map(([label, value]) => (
-                        <div key={label} className="border-b border-r border-slate-100 px-3 py-2 last:border-r-0">
-                          <span className="block text-[8px] font-black uppercase tracking-wider text-slate-400">{label}</span>
-                          <span className="font-bold text-slate-900 break-words">{value}</span>
-                        </div>
-                      ))}
+                      <h2 className="text-xl font-black uppercase tracking-tight text-slate-900 mt-0.5">Step 4: Review Reports & Notes</h2>
+                      <p className="text-xs font-semibold text-slate-500 mt-0.5">
+                        Verify printable document sections, account postings, goods manifest, payment terms, and loading schedules before final verification.
+                      </p>
                     </div>
                   </div>
-
-                  <div className="rounded-xl border border-amber-200 bg-amber-50 shadow-sm p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <CheckCircle2 className="h-4 w-4 text-amber-600" />
-                      <h3 className="text-[11px] font-black uppercase tracking-wider text-amber-900">Pending Transfer</h3>
-                    </div>
-                    <p className="text-[10px] leading-5 font-semibold text-amber-800">
-                      This Purchase Booking is saved as booking data only. No Roznamcha, Journal, Ledger, Cash Entry, Advance Payment, Debit, or Credit posting is created at this stage. Accounting starts only after Transfer to Payment and final payment save.
-                    </p>
+                  <div className="flex items-center gap-2.5">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => setActiveTab("others")}
+                      className="font-bold text-xs h-9 px-4 border-slate-200 hover:bg-slate-50 text-slate-700"
+                    >
+                      <ChevronLeft className="h-4 w-4 mr-1" /> Back
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => setActiveTab("report")}
+                      className="font-bold text-xs h-9 px-5 bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all flex items-center gap-1.5"
+                    >
+                      Next: Step 5 (Verify & Print) <ChevronRight className="h-4 w-4" />
+                    </Button>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                  {[
-                    ["Purchase Account Report", ArrowDownLeft, "DR", [
-                      ["Account Code", form.purchaseAccountNo || "-"],
-                      ["Manual Account No", form.purchaseAccountManualReferenceNumber || "-"],
-                      ["Account Name", form.purchaseAccountName || "-"],
-                      ["Company", form.purchaseCompanyName || "-"],
-                      ["Contact Person", supplierDetail?.contact_person || supplierDetail?.customer_name || "-"],
-                      ["Mobile Number", form.purchaseAccountMobile || supplierDetail?.mobile || "-"],
-                      ["Phone Number", supplierDetail?.phone || form.purchaseAccountWhatsapp || "-"],
-                      ["Email", supplierDetail?.email || "-"],
-                      ["Address", supplierDetail?.address || "-"],
-                      ["Tax / NTN / GST", supplierDetail?.tax_number || supplierDetail?.ntn || supplierDetail?.gst_number || "-"],
-                    ]],
-                    ["Sales Account Report", ArrowUpRight, "CR", [
-                      ["Account Code", form.salesAccountNo || "-"],
-                      ["Manual Account No", form.salesAccountManualReferenceNumber || "-"],
-                      ["Account Name", form.salesAccountName || "-"],
-                      ["Company", form.salesCompanyName || "-"],
-                      ["Contact Person", customerDetail?.contact_person || customerDetail?.customer_name || "-"],
-                      ["Mobile Number", form.salesAccountMobile || customerDetail?.mobile || "-"],
-                      ["Phone Number", customerDetail?.phone || form.salesAccountWhatsapp || "-"],
-                      ["Email", customerDetail?.email || "-"],
-                      ["Address", customerDetail?.address || "-"],
-                      ["Tax / NTN / GST", customerDetail?.tax_number || customerDetail?.ntn || customerDetail?.gst_number || "-"],
-                    ]]
-                  ].map(([title, Icon, badge, rows]) => (
-                    <div key={title} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                      <div className="flex items-center justify-between bg-slate-950 px-3 py-2 text-white">
-                        <h3 className="flex items-center gap-2 text-[10px] font-black uppercase tracking-wider"><Icon className="h-3.5 w-3.5" /> {title}</h3>
-                        <span className="rounded bg-white/10 px-2 py-0.5 text-[8px] font-black">{badge}</span>
+                {/* Global Info Cards at the top */}
+                {renderGlobalInfoCards()}
+
+                <div className="mx-auto w-full max-w-[1180px] space-y-6 print:max-w-none">
+                  {/* Complete Report Summary Container */}
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6 shadow-sm space-y-6">
+                    <div className="flex flex-col gap-2 border-b border-slate-200 pb-4 md:flex-row md:items-end md:justify-between">
+                      <div>
+                        <p className="text-[9px] font-black uppercase tracking-[0.28em] text-slate-400">Professional Printable Report</p>
+                        <h2 className="text-xl font-black uppercase tracking-[0.08em] text-slate-950">Purchase Booking Complete Summary</h2>
+                        <p className="text-xs font-semibold text-slate-500 mt-0.5">Booking, accounts, goods, payment, loading, user details, and remarks in one consolidated view.</p>
                       </div>
-                      <div className="grid grid-cols-1 sm:grid-cols-2 text-[9px]">
-                        {rows.map(([label, value]) => (
-                          <div key={label} className="border-b border-r border-slate-100 px-3 py-2 last:border-r-0">
-                            <span className="block text-[7.5px] font-black uppercase tracking-wider text-slate-400">{label}</span>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-right text-xs font-bold text-slate-600 shadow-xs">
+                        <div className="text-[10px] uppercase text-slate-400">PO Number</div>
+                        <div className="text-sm font-black text-slate-950 font-mono">{form.purchaseOrderNo || "-"}</div>
+                        <div className="text-[9px] text-slate-400 font-normal mt-0.5">Generated: {new Date().toLocaleString()}</div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 xl:grid-cols-[1.35fr_0.85fr] gap-5">
+                      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+                        <div className="bg-slate-950 text-white px-5 py-3.5 flex items-center justify-between gap-3">
+                          <div>
+                            <p className="text-[9px] uppercase tracking-[0.24em] text-slate-300 font-black">Purchase Booking Header</p>
+                            <h3 className="text-lg font-black tracking-wide">{form.purchaseOrderNo || "Purchase Booking"}</h3>
+                          </div>
+                          <span className={`rounded-full px-3 py-1 text-[10px] font-black uppercase tracking-wider ${isTransferred ? "bg-emerald-500/20 text-emerald-100 border border-emerald-400/30" : "bg-amber-400/20 text-amber-100 border border-amber-300/30"}`}>
+                            {isTransferred ? "Transferred" : "Pending Transfer"}
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-0 text-xs">
+                          {[
+                            ["Purchase Order No.", form.purchaseOrderNo || "-"],
+                            ["System Bill No.", form.billNo || "-"],
+                            ["Manual Bill No.", form.manualBillNo || form.purchaseContractNo || "-"],
+                            ["Booking Date", form.purchaseDate || "-"],
+                            ["Contract No.", form.purchaseContractNo || "-"],
+                            ["Country", form.branchCountry || form.originCountry || "-"],
+                            ["Branch", form.branchName || "-"],
+                            ["Currency", form.purchaseCurrency || form.secondaryCurrency || form.currencyType || "-"],
+                          ].map(([label, value]) => (
+                            <div key={label} className="border-b border-r border-slate-100 p-3 last:border-r-0 hover:bg-slate-50/60 transition-colors">
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-0.5">{label}</span>
+                              <span className="font-bold text-slate-900 break-words">{value}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="rounded-xl border border-amber-200 bg-amber-50/70 shadow-xs p-5 flex flex-col justify-center space-y-2">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-5 w-5 text-amber-600 flex-shrink-0" />
+                          <h3 className="text-xs font-black uppercase tracking-wider text-amber-900">Pending Transfer Status</h3>
+                        </div>
+                        <p className="text-xs leading-relaxed font-medium text-amber-800">
+                          This Purchase Booking is saved as booking data only. No Roznamcha, Journal, Ledger, Cash Entry, Advance Payment, Debit, or Credit posting is created at this stage. Accounting starts only after Transfer to Payment and final payment save.
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                      {[
+                        ["Purchase Account Report", ArrowDownLeft, "DR (DEBIT)", [
+                          ["Account Code", form.purchaseAccountNo || "-"],
+                          ["Manual Account No", form.purchaseAccountManualReferenceNumber || "-"],
+                          ["Account Name", form.purchaseAccountName || "-"],
+                          ["Company", form.purchaseCompanyName || "-"],
+                          ["Contact Person", supplierDetail?.contact_person || supplierDetail?.customer_name || "-"],
+                          ["Mobile Number", form.purchaseAccountMobile || supplierDetail?.mobile || "-"],
+                          ["Phone Number", supplierDetail?.phone || form.purchaseAccountWhatsapp || "-"],
+                          ["Email", supplierDetail?.email || "-"],
+                          ["Address", supplierDetail?.address || "-"],
+                          ["Tax / NTN / GST", supplierDetail?.tax_number || supplierDetail?.ntn || supplierDetail?.gst_number || "-"],
+                        ]],
+                        ["Sales Account Report", ArrowUpRight, "CR (CREDIT)", [
+                          ["Account Code", form.salesAccountNo || "-"],
+                          ["Manual Account No", form.salesAccountManualReferenceNumber || "-"],
+                          ["Account Name", form.salesAccountName || "-"],
+                          ["Company", form.salesCompanyName || "-"],
+                          ["Contact Person", customerDetail?.contact_person || customerDetail?.customer_name || "-"],
+                          ["Mobile Number", form.salesAccountMobile || customerDetail?.mobile || "-"],
+                          ["Phone Number", customerDetail?.phone || customerDetail?.whatsapp || "-"],
+                          ["Email", customerDetail?.email || "-"],
+                          ["Address", customerDetail?.address || "-"],
+                          ["Tax / NTN / GST", customerDetail?.tax_number || customerDetail?.ntn || customerDetail?.gst_number || "-"],
+                        ]]
+                      ].map(([title, Icon, badge, rows]) => (
+                        <div key={title} className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xs">
+                          <div className="flex items-center justify-between bg-slate-950 px-4 py-3 text-white">
+                            <h3 className="flex items-center gap-2 text-xs font-black uppercase tracking-wider"><Icon className="h-4 w-4 text-blue-400" /> {title}</h3>
+                            <span className="rounded-md bg-white/10 px-2.5 py-1 text-[9px] font-black tracking-wide">{badge}</span>
+                          </div>
+                          <div className="grid grid-cols-1 sm:grid-cols-2 text-xs">
+                            {rows.map(([label, value]) => (
+                              <div key={label} className="border-b border-r border-slate-100 p-3 last:border-r-0 hover:bg-slate-50/50 transition-colors">
+                                <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-0.5">{label}</span>
+                                <span className="font-bold text-slate-900 break-words">{value}</span>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    <div className="rounded-xl border border-slate-200 bg-white shadow-xs p-4 md:p-5 space-y-3">
+                      <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2 flex items-center gap-2">
+                        <User className="h-4 w-4 text-blue-600" /> User & Branch Information
+                      </h3>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-7 gap-3 text-xs">
+                        {[
+                          ["User ID", activeSession?.userId || activeSession?.id || "-"],
+                          ["User Name", activeSession?.name || activeSession?.fullName || form.userName || "Admin"],
+                          ["Team", activeSession?.team || "Accounts Team"],
+                          ["Role", (activeSession?.roles?.[0] || activeSession?.scopes?.roles?.[0] || "User").replace(/_/g, " ")],
+                          ["Branch", form.branchName || "-"],
+                          ["Country", form.branchCountry || "-"],
+                          ["Date & Time", `${form.purchaseDate || "-"} ${new Date().toLocaleTimeString()}`],
+                        ].map(([label, value]) => (
+                          <div key={label} className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 hover:border-slate-300 transition-colors">
+                            <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-0.5">{label}</span>
                             <span className="font-bold text-slate-900 break-words">{value}</span>
                           </div>
                         ))}
                       </div>
                     </div>
-                  ))}
-                </div>
 
-                <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-3">
-                  <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2 mb-2 flex items-center gap-2">
-                    <User className="h-3.5 w-3.5 text-blue-600" /> User & Branch Information
-                  </h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-7 gap-2 text-[9px]">
-                    {[
-                      ["User ID", activeSession?.userId || activeSession?.id || "-"],
-                      ["User Name", activeSession?.name || activeSession?.fullName || form.userName || "Admin"],
-                      ["Team", activeSession?.team || "Accounts Team"],
-                      ["Role", (activeSession?.roles?.[0] || activeSession?.scopes?.roles?.[0] || "User").replace(/_/g, " ")],
-                      ["Branch", form.branchName || "-"],
-                      ["Country", form.branchCountry || "-"],
-                      ["Date & Time", `${form.purchaseDate || "-"} ${new Date().toLocaleTimeString()}`],
-                    ].map(([label, value]) => (
-                      <div key={label} className="rounded-lg border border-slate-100 bg-slate-50 px-2 py-2">
-                        <span className="block text-[7.5px] font-black uppercase tracking-wider text-slate-400">{label}</span>
-                        <span className="font-bold text-slate-900 break-words">{value}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>                {/* Reports below the cards */}
-                <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="space-y-4 w-full">
-                  {/* Goods Table Read-Only View */}
-                  <div className="border border-slate-200 rounded-lg p-3 bg-white shadow-sm mb-4">
-                    <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2 mb-2 flex items-center gap-2">
-                      <ListChecks className="h-3.5 w-3.5 text-blue-600" /> Goods Overview
-                    </h3>
-                    <div className="overflow-x-auto custom-scrollbar pb-2">
-                      <table className="w-full min-w-[1100px] text-[9px] border-collapse">
-                        <thead>
-                          <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider">
-                            <th className="px-2 py-1.5 text-left font-bold">Goods Name</th>
-                            <th className="px-2 py-1.5 text-center font-bold">HS Code</th>
-                            <th className="px-2 py-1.5 text-center font-bold">Brand</th>
-                            <th className="px-2 py-1.5 text-center font-bold">Size</th>
-                            <th className="px-2 py-1.5 text-center font-bold">Origin Country</th>
-                            <th className="px-2 py-1.5 text-right font-bold">Quantity</th>
-                            <th className="px-2 py-1.5 text-center font-bold">Unit</th>
-                            <th className="px-2 py-1.5 text-right font-bold">Gross Wt</th>
-                            <th className="px-2 py-1.5 text-right font-bold">Net Wt</th>
-                            <th className="px-2 py-1.5 text-right font-bold">Price</th>
-                            <th className="px-2 py-1.5 text-right font-bold">Ex. Rate</th>
-                            <th className="px-2 py-1.5 text-right font-bold">Amount</th>
-                            <th className="px-2 py-1.5 text-right font-bold">Final ({form.secondaryCurrency || "PKR"})</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {goodsEntries.length === 0 ? (
-                            <tr><td colSpan={13} className="px-2 py-4 text-center text-slate-400 italic">No goods added yet.</td></tr>
-                          ) : (
-                            goodsEntries.map((g, i) => (
-                              <tr key={i} className="border-b border-slate-100 hover:bg-slate-50">
-                                <td className="px-2 py-1.5 font-bold text-slate-800">{g.goodsName || "-"}</td>
-                                <td className="px-2 py-1.5 text-center text-slate-600">{g.hsCode || "-"}</td>
-                                <td className="px-2 py-1.5 text-center text-slate-600">{g.brand || "-"}</td>
-                                <td className="px-2 py-1.5 text-center text-slate-600">{g.size || g.sizeSpec || "-"}</td>
-                                <td className="px-2 py-1.5 text-center text-slate-600">{g.origin || form.origin || "-"}</td>
-                                <td className="px-2 py-1.5 text-right font-mono font-bold text-slate-700">{Number(g.qtyNo || 0).toLocaleString()}</td>
-                                <td className="px-2 py-1.5 text-center text-slate-600">{g.qtyName || g.unit || "-"}</td>
-                                <td className="px-2 py-1.5 text-right font-mono text-slate-700">{Number(g.grossWeight || (Number(g.qtyNo || 0) * Number(g.qtyKgs || 0)) || 0).toLocaleString()}</td>
-                                <td className="px-2 py-1.5 text-right font-mono text-slate-700">{Number(g.netWeight || (Number(g.qtyNo || 0) * (Number(g.qtyKgs || 0) - Number(g.emptyKgs || 0))) || 0).toLocaleString()}</td>
-                                <td className="px-2 py-1.5 text-right font-mono text-slate-700">{Number(g.coursePrice || g.price || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                <td className="px-2 py-1.5 text-right font-mono text-slate-700">{Number(g.exchangeRate || form.exchangeRate || 1).toLocaleString()}</td>
-                                <td className="px-2 py-1.5 text-right font-mono text-slate-700">{Number(g.totalAmount || g.amount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                                <td className="px-2 py-1.5 text-right font-mono font-bold text-emerald-700">{Number(g.finalAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                    {/* Reports below the cards */}
+                    <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="space-y-6 w-full">
+                      {/* Goods Table Read-Only View */}
+                      <div className="border border-slate-200 rounded-xl p-4 md:p-5 bg-white shadow-xs">
+                        <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-3 mb-3 flex items-center gap-2">
+                          <ListChecks className="h-4 w-4 text-blue-600" /> Goods Overview Manifest
+                        </h3>
+                        <div className="overflow-x-auto custom-scrollbar pb-2">
+                          <table className="w-full min-w-[1000px] text-xs border-collapse">
+                            <thead>
+                              <tr className="bg-slate-50 border-b border-slate-200 text-slate-500 uppercase tracking-wider text-[10px]">
+                                <th className="px-3 py-2.5 text-left font-bold">Goods Name</th>
+                                <th className="px-3 py-2.5 text-center font-bold">HS Code</th>
+                                <th className="px-3 py-2.5 text-center font-bold">Brand</th>
+                                <th className="px-3 py-2.5 text-center font-bold">Size</th>
+                                <th className="px-3 py-2.5 text-center font-bold">Origin</th>
+                                <th className="px-3 py-2.5 text-right font-bold">Quantity</th>
+                                <th className="px-3 py-2.5 text-center font-bold">Unit</th>
+                                <th className="px-3 py-2.5 text-right font-bold">Gross Wt</th>
+                                <th className="px-3 py-2.5 text-right font-bold">Net Wt</th>
+                                <th className="px-3 py-2.5 text-right font-bold">Price</th>
+                                <th className="px-3 py-2.5 text-right font-bold">Ex. Rate</th>
+                                <th className="px-3 py-2.5 text-right font-bold">Amount ({form.currencyType || "USD"})</th>
+                                <th className="px-3 py-2.5 text-right font-bold text-emerald-800 bg-emerald-50/50">Final ({form.secondaryCurrency || "PKR"})</th>
                               </tr>
-                            ))
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 md:grid-cols-5 gap-2 text-[9px]">
-                    {[["Total Quantity", goodsEntries.reduce((sum, g) => sum + Number(g.qtyNo || 0), 0).toLocaleString()], ["Total Gross Weight", goodsEntries.reduce((sum, g) => sum + Number(g.grossWeight || (Number(g.qtyNo || 0) * Number(g.qtyKgs || 0)) || 0), 0).toLocaleString()], ["Total Net Weight", goodsEntries.reduce((sum, g) => sum + Number(g.netWeight || (Number(g.qtyNo || 0) * (Number(g.qtyKgs || 0) - Number(g.emptyKgs || 0))) || 0), 0).toLocaleString()], ["Origin Country", form.origin || goodsEntries[0]?.origin || "-"], ["Items", goodsEntries.length.toLocaleString()]].map(([label, value]) => (
-                      <div key={label} className="rounded-lg border border-slate-100 bg-slate-50 px-2 py-2">
-                        <span className="block text-[7.5px] font-black uppercase tracking-wider text-slate-400">{label}</span>
-                        <span className="font-black text-slate-900">{value}</span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Payment Details & Report */}
-                  <div className="border border-slate-200 rounded-lg p-3 bg-white shadow-sm mb-4">
-                    <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2 mb-2 flex items-center gap-2">
-                      <CreditCard className="h-3.5 w-3.5 text-blue-600" /> Report 1: Payment Details
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-slate-50 p-2 rounded border border-slate-100 text-[9px] space-y-2">
-                        <div className="flex justify-between"><span className="text-slate-500">Payment Type:</span> <span className="font-bold text-slate-800">{form.paymentType || "N/A"}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500">Payment Terms:</span> <span className="font-bold text-slate-800 text-right">{form.paymentCondition || form.paymentTerms || "N/A"}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500">Currency:</span> <span className="font-bold text-slate-800">{form.purchaseCurrency || form.currencyType || "N/A"}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500">Exchange Rate:</span> <span className="font-bold text-slate-800">{goodsEntries[0]?.exchangeRate || form.exchangeRate || 1}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500">Bank:</span> <span className="font-bold text-slate-800 text-right">{form.bankName || form.paymentBank || form.cashBankName || "N/A"}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500">Payment Method:</span> <span className="font-bold text-slate-800 text-right">{form.paymentDaysAndMethodDetails || form.paymentMethod || form.paymentType || "N/A"}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500">Payment Status:</span> <span className="font-bold text-amber-700">{isTransferred ? "Transferred" : "Pending Transfer"}</span></div>
-
-                        <div className="flex justify-between border-t border-slate-200 pt-1">
-                          <span className="text-slate-500">Advance ({form.advancePercent || 0}%):<br/><span className="text-[7px]">Due: {form.advancePaymentDate}</span></span>
-                          <span className="font-bold text-slate-800 text-right">
-                            <span className="block text-emerald-700">{form.currencyType || "USD"} {((reportTotals.grandPrimaryFinal || reportTotals.grandFinal || 0) * (form.advancePercent || 0) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                            <span className="block text-blue-600 mt-0.5">{form.purchaseCurrency || "AED"} {((reportTotals.grandFinal || 0) * (form.advancePercent || 0) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-[7px] text-slate-400 font-mono">(@ {goodsEntries[0]?.exchangeRate || form.exchangeRate || 1})</span></span>
-                          </span>
+                            </thead>
+                            <tbody>
+                              {goodsEntries.length === 0 ? (
+                                <tr><td colSpan={13} className="px-3 py-6 text-center text-slate-400 italic">No goods added yet.</td></tr>
+                              ) : (
+                                goodsEntries.map((g, i) => (
+                                  <tr key={i} className="border-b border-slate-100 hover:bg-slate-50/80 transition-colors">
+                                    <td className="px-3 py-2.5 font-bold text-slate-800">{g.goodsName || "-"}</td>
+                                    <td className="px-3 py-2.5 text-center text-slate-600 font-mono">{g.hsCode || "-"}</td>
+                                    <td className="px-3 py-2.5 text-center text-slate-600">{g.brand || "-"}</td>
+                                    <td className="px-3 py-2.5 text-center text-slate-600">{g.size || g.sizeSpec || "-"}</td>
+                                    <td className="px-3 py-2.5 text-center text-slate-600">{g.origin || form.origin || "-"}</td>
+                                    <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-800">{Number(g.qtyNo || 0).toLocaleString()}</td>
+                                    <td className="px-3 py-2.5 text-center text-slate-600">{g.qtyName || g.unit || "-"}</td>
+                                    <td className="px-3 py-2.5 text-right font-mono text-slate-700">{Number(g.grossWeight || (Number(g.qtyNo || 0) * Number(g.qtyKgs || 0)) || 0).toLocaleString()}</td>
+                                    <td className="px-3 py-2.5 text-right font-mono text-slate-700">{Number(g.netWeight || (Number(g.qtyNo || 0) * (Number(g.qtyKgs || 0) - Number(g.emptyKgs || 0))) || 0).toLocaleString()}</td>
+                                    <td className="px-3 py-2.5 text-right font-mono text-slate-700">{Number(g.coursePrice || g.price || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                    <td className="px-3 py-2.5 text-right font-mono text-slate-700">{Number(g.exchangeRate || form.exchangeRate || 1).toLocaleString()}</td>
+                                    <td className="px-3 py-2.5 text-right font-mono text-slate-800 font-bold">{Number(g.totalAmount || g.amount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                    <td className="px-3 py-2.5 text-right font-mono font-black text-emerald-700 bg-emerald-50/40">{Number(g.finalAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                                  </tr>
+                                ))
+                              )}
+                            </tbody>
+                          </table>
                         </div>
 
-                        <div className="flex justify-between border-t border-slate-200 pt-1">
-                          <span className="text-slate-500">Remaining ({100 - (form.advancePercent || 0)}%):<br/><span className="text-[7px]">Due: {form.paymentDate}</span></span>
-                          <span className="font-bold text-slate-800 text-right">
-                            <span className="block text-emerald-700">{form.currencyType || "USD"} {((reportTotals.grandPrimaryFinal || reportTotals.grandFinal || 0) * (100 - (form.advancePercent || 0)) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                            <span className="block text-blue-600 mt-0.5">{form.purchaseCurrency || "AED"} {((reportTotals.grandFinal || 0) * (100 - (form.advancePercent || 0)) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-[7px] text-slate-400 font-mono">(@ {goodsEntries[0]?.exchangeRate || form.exchangeRate || 1})</span></span>
-                          </span>
-                        </div>
-
-                        <div className="flex justify-between border-t border-slate-200 pt-1">
-                          <span className="text-slate-500">Grand Total:</span>
-                          <span className="font-bold text-right">
-                            <span className="block text-emerald-700">{form.currencyType || "USD"} {(reportTotals.grandPrimaryFinal || reportTotals.grandFinal || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                            <span className="block text-blue-600 mt-0.5">{form.purchaseCurrency || "AED"} {(reportTotals.grandFinal || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                          </span>
-                        </div>
-                      </div>
-                      <div>
-                        <label className="block text-[9px] font-bold text-slate-700 mb-1">Payment Report / Notes</label>
-                        <textarea
-                          rows={3}
-                          value={form.paymentReport || ""}
-                          onChange={(e) => setValue("paymentReport", e.target.value)}
-                          className="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-slate-900 outline-none focus:border-blue-500 resize-none text-[9px]"
-                          placeholder="Write notes regarding payment terms, conditions, or guarantees..."
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Loading Details & Report */}
-                  <div className="border border-slate-200 rounded-lg p-3 bg-white shadow-sm mb-4">
-                    <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-2 mb-2 flex items-center gap-2">
-                      <Truck className="h-3.5 w-3.5 text-blue-600" /> Report 2: Loading & Transit Details
-                    </h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-slate-50 p-2 rounded border border-slate-100 text-[9px] space-y-1">
-                        <div className="flex justify-between"><span className="text-slate-500">Shipping Mode:</span> <span className="font-bold text-slate-800">{form.shippingMode || "N/A"}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500">Shipping Line:</span> <span className="font-bold text-slate-800 text-right">{form.shippingLine || form.shippingCompany || "N/A"}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500">Loading From:</span> <span className="font-bold text-slate-800">{form.loadingPort || form.loadingBorder || form.airportName || "N/A"} ({form.origin || "N/A"})</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500">Destination:</span> <span className="font-bold text-slate-800">{form.receivedPort || form.receivedBorder || form.receivedPortName || "N/A"} ({form.receivedCountry || "N/A"})</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500">Loading Date:</span> <span className="font-bold text-slate-800">{form.loadingDate || "N/A"}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500">Receiving Date:</span> <span className="font-bold text-slate-800">{form.receivingDate || form.receivedDate || "N/A"}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500">Container No:</span> <span className="font-bold text-slate-800 text-right">{form.containerNumbers || "N/A"}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500">Container Type:</span> <span className="font-bold text-slate-800">{form.containerSize || "N/A"}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500">Vessel:</span> <span className="font-bold text-slate-800 text-right">{form.vesselName || "N/A"}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500">BL No:</span> <span className="font-bold text-slate-800 text-right">{form.blNo || form.billOfLadingNo || "N/A"}</span></div>
-                        <div className="flex justify-between"><span className="text-slate-500">ETA / ETD:</span> <span className="font-bold text-slate-800 text-right">{form.eta || form.etd || form.receivingDate || "N/A"}</span></div>
-                      </div>
-                      <div>
-                        <label className="block text-[9px] font-bold text-slate-700 mb-1">Loading Report / Notes</label>
-                        <textarea
-                          rows={3}
-                          value={form.loadingReport || ""}
-                          onChange={(e) => setValue("loadingReport", e.target.value)}
-                          className="w-full bg-slate-50 border border-slate-200 rounded px-2 py-1.5 text-slate-900 outline-none focus:border-blue-500 resize-none text-[9px]"
-                          placeholder="Write notes regarding loading, transit, agents, or customs..."
-                        />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Booking Remarks & Narration */}
-                  <div className="border border-slate-200 rounded-lg p-3 bg-white shadow-sm mb-4">
-                    <div className="border-b border-slate-100 pb-2 mb-2">
-                      <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                        <MessageSquare className="h-3.5 w-3.5 text-blue-600" /> Booking Remarks & Narration
-                      </h3>
-                    </div>
-                    <div>
-                      <textarea
-                        rows={6}
-                        value={form.remarks || ""}
-                        onChange={(e) => setValue("remarks", e.target.value)}
-                        className="w-full bg-slate-50 border border-slate-200 rounded px-3 py-1.5 text-slate-900 outline-none focus:border-blue-500 resize-none text-[10px]"
-                        placeholder="Write general transaction remarks and narration (Visible on Dashboard)..."
-                      />
-                    </div>
-                  </div>
-
-                  {/* Dynamic Reports */}
-                  <div className="border border-slate-200 rounded-lg p-3 bg-white shadow-sm">
-                    <div className="border-b border-slate-100 pb-2 mb-3 flex items-center justify-between">
-                      <h3 className="text-[10px] font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                        <FileText className="h-3.5 w-3.5 text-blue-600" /> Dynamic Reports & Notes
-                      </h3>
-                      <Button
-                        type="button"
-                        onClick={() => setIsNewReportModalOpen(true)}
-                        className="h-6 text-[9px] font-bold uppercase bg-emerald-600 hover:bg-emerald-700 text-white px-2 rounded shadow-sm"
-                      >
-                        + Add New Report
-                      </Button>
-                    </div>
-
-                    <div className="space-y-3">
-                      {reportsList.length === 0 ? (
-                        <div className="text-center py-6 text-muted-foreground text-[10px] italic bg-muted/30 rounded border border-border/50">
-                          No reports or notes added yet. Click "+ Add New Report" to create one.
-                        </div>
-                      ) : (
-                        reportsList.map((report) => (
-                          <div key={report.id} className="bg-card border border-border rounded-lg p-3 shadow-sm">
-                            <div className="flex justify-between items-start mb-2 border-b border-border/40 pb-2">
-                              <div>
-                                <h4 className="text-[11px] font-bold text-foreground">{report.name}</h4>
-                                {report.description && <p className="text-[9px] text-muted-foreground mt-0.5">{report.description}</p>}
-                              </div>
-                              <div className="flex gap-2 items-center">
-                                <span className="text-[8px] font-mono text-muted-foreground">{new Date(report.createdAt).toLocaleString()}</span>
-                                <button type="button" onClick={() => handleDeleteReport(report.id)} className="text-red-500 hover:text-red-700 p-1" title="Delete Report"><Trash2 className="h-3 w-3"/></button>
-                              </div>
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 text-xs mt-4">
+                          {[["Total Quantity", goodsEntries.reduce((sum, g) => sum + Number(g.qtyNo || 0), 0).toLocaleString()], ["Total Gross Weight", goodsEntries.reduce((sum, g) => sum + Number(g.grossWeight || (Number(g.qtyNo || 0) * Number(g.qtyKgs || 0)) || 0), 0).toLocaleString()], ["Total Net Weight", goodsEntries.reduce((sum, g) => sum + Number(g.netWeight || (Number(g.qtyNo || 0) * (Number(g.qtyKgs || 0) - Number(g.emptyKgs || 0))) || 0), 0).toLocaleString()], ["Origin Country", form.origin || goodsEntries[0]?.origin || "-"], ["Total Items", goodsEntries.length.toLocaleString()]].map(([label, value]) => (
+                            <div key={label} className="rounded-xl border border-slate-200 bg-slate-50/70 p-3">
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-0.5">{label}</span>
+                              <span className="font-black text-slate-900">{value}</span>
                             </div>
-                            <div className="text-[10px] text-foreground whitespace-pre-wrap">
-                              {report.notes}
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Payment Details & Report */}
+                      <div className="border border-slate-200 rounded-xl p-4 md:p-5 bg-white shadow-xs">
+                        <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-3 mb-3 flex items-center gap-2">
+                          <CreditCard className="h-4 w-4 text-blue-600" /> Report 1: Payment Details & Notes
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                          <div className="bg-slate-50/80 p-4 rounded-xl border border-slate-200/80 text-xs space-y-2.5">
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">Payment Type:</span> <span className="font-bold text-slate-800">{form.paymentType || "N/A"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">Payment Terms:</span> <span className="font-bold text-slate-800 text-right">{form.paymentCondition || form.paymentTerms || "N/A"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">Currency:</span> <span className="font-bold text-slate-800">{form.purchaseCurrency || form.currencyType || "N/A"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">Exchange Rate:</span> <span className="font-bold text-slate-800">{goodsEntries[0]?.exchangeRate || form.exchangeRate || 1}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">Bank:</span> <span className="font-bold text-slate-800 text-right">{form.bankName || form.paymentBank || form.cashBankName || "N/A"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">Payment Method:</span> <span className="font-bold text-slate-800 text-right">{form.paymentDaysAndMethodDetails || form.paymentMethod || form.paymentType || "N/A"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">Payment Status:</span> <span className="font-bold text-amber-700">{isTransferred ? "Transferred" : "Pending Transfer"}</span></div>
+
+                            <div className="flex justify-between border-t border-slate-200 pt-2">
+                              <span className="text-slate-500 font-semibold">Advance ({form.advancePercent || 0}%):<br/><span className="text-[9px] text-slate-400">Due: {form.advancePaymentDate || "-"}</span></span>
+                              <span className="font-bold text-slate-800 text-right">
+                                <span className="block text-emerald-700 font-mono">{form.currencyType || "USD"} {((reportTotals.grandPrimaryFinal || reportTotals.grandFinal || 0) * (form.advancePercent || 0) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                <span className="block text-blue-600 mt-0.5 font-mono">{form.purchaseCurrency || "AED"} {((reportTotals.grandFinal || 0) * (form.advancePercent || 0) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-[9px] text-slate-400 font-mono">(@ {goodsEntries[0]?.exchangeRate || form.exchangeRate || 1})</span></span>
+                              </span>
+                            </div>
+
+                            <div className="flex justify-between border-t border-slate-200 pt-2">
+                              <span className="text-slate-500 font-semibold">Remaining ({100 - (form.advancePercent || 0)}%):<br/><span className="text-[9px] text-slate-400">Due: {form.paymentDate || "-"}</span></span>
+                              <span className="font-bold text-slate-800 text-right">
+                                <span className="block text-emerald-700 font-mono">{form.currencyType || "USD"} {((reportTotals.grandPrimaryFinal || reportTotals.grandFinal || 0) * (100 - (form.advancePercent || 0)) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                <span className="block text-blue-600 mt-0.5 font-mono">{form.purchaseCurrency || "AED"} {((reportTotals.grandFinal || 0) * (100 - (form.advancePercent || 0)) / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} <span className="text-[9px] text-slate-400 font-mono">(@ {goodsEntries[0]?.exchangeRate || form.exchangeRate || 1})</span></span>
+                              </span>
+                            </div>
+
+                            <div className="flex justify-between border-t border-slate-200 pt-2">
+                              <span className="text-slate-700 font-black">Grand Total:</span>
+                              <span className="font-bold text-right">
+                                <span className="block text-emerald-700 font-mono font-black">{form.currencyType || "USD"} {(reportTotals.grandPrimaryFinal || reportTotals.grandFinal || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                                <span className="block text-blue-600 mt-0.5 font-mono font-black">{form.purchaseCurrency || "AED"} {(reportTotals.grandFinal || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                              </span>
                             </div>
                           </div>
-                        ))
-                      )}
+                          <div className="flex flex-col">
+                            <label className="block text-xs font-bold text-slate-700 mb-1.5">Payment Report / Notes</label>
+                            <textarea
+                              rows={8}
+                              value={form.paymentReport || ""}
+                              onChange={(e) => setValue("paymentReport", e.target.value)}
+                              className="w-full flex-1 bg-slate-50/80 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 outline-none focus:border-blue-500 focus:bg-white resize-none text-xs leading-relaxed"
+                              placeholder="Write notes regarding payment terms, conditions, guarantees, or special payment instructions..."
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Loading Details & Report */}
+                      <div className="border border-slate-200 rounded-xl p-4 md:p-5 bg-white shadow-xs">
+                        <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 border-b border-slate-100 pb-3 mb-3 flex items-center gap-2">
+                          <Truck className="h-4 w-4 text-blue-600" /> Report 2: Loading & Transit Details
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                          <div className="bg-slate-50/80 p-4 rounded-xl border border-slate-200/80 text-xs space-y-2">
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">Shipping Mode:</span> <span className="font-bold text-slate-800">{form.shippingMode || "N/A"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">Shipping Line:</span> <span className="font-bold text-slate-800 text-right">{form.shippingLine || form.shippingCompany || "N/A"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">Loading From:</span> <span className="font-bold text-slate-800">{form.loadingPort || form.loadingBorder || form.airportName || "N/A"} ({form.origin || "N/A"})</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">Destination:</span> <span className="font-bold text-slate-800">{form.receivedPort || form.receivedBorder || form.receivedPortName || "N/A"} ({form.receivedCountry || "N/A"})</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">Loading Date:</span> <span className="font-bold text-slate-800">{form.loadingDate || "N/A"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">Receiving Date:</span> <span className="font-bold text-slate-800">{form.receivingDate || form.receivedDate || "N/A"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">Container No:</span> <span className="font-bold text-slate-800 text-right font-mono">{form.containerNumbers || "N/A"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">Container Type:</span> <span className="font-bold text-slate-800">{form.containerSize || "N/A"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">Vessel:</span> <span className="font-bold text-slate-800 text-right">{form.vesselName || "N/A"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">BL No:</span> <span className="font-bold text-slate-800 text-right font-mono">{form.blNo || form.billOfLadingNo || "N/A"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">ETA / ETD:</span> <span className="font-bold text-slate-800 text-right">{form.eta || form.etd || form.receivingDate || "N/A"}</span></div>
+                          </div>
+                          <div className="flex flex-col">
+                            <label className="block text-xs font-bold text-slate-700 mb-1.5">Loading Report / Notes</label>
+                            <textarea
+                              rows={8}
+                              value={form.loadingReport || ""}
+                              onChange={(e) => setValue("loadingReport", e.target.value)}
+                              className="w-full flex-1 bg-slate-50/80 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 outline-none focus:border-blue-500 focus:bg-white resize-none text-xs leading-relaxed"
+                              placeholder="Write notes regarding loading, transit, freight agents, or customs clearance..."
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Booking Remarks & Narration */}
+                      <div className="border border-slate-200 rounded-xl p-4 md:p-5 bg-white shadow-xs">
+                        <div className="border-b border-slate-100 pb-2 mb-3">
+                          <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                            <MessageSquare className="h-4 w-4 text-blue-600" /> Booking Remarks & Narration
+                          </h3>
+                        </div>
+                        <div>
+                          <textarea
+                            rows={4}
+                            value={form.remarks || ""}
+                            onChange={(e) => setValue("remarks", e.target.value)}
+                            className="w-full bg-slate-50/80 border border-slate-200 rounded-xl px-3 py-2.5 text-slate-900 outline-none focus:border-blue-500 focus:bg-white resize-none text-xs leading-relaxed"
+                            placeholder="Write general transaction remarks and narration (Visible on Dashboard and Ledger Overview)..."
+                          />
+                        </div>
+                      </div>
+
+                      {/* Dynamic Reports */}
+                      <div className="border border-slate-200 rounded-xl p-4 md:p-5 bg-white shadow-xs">
+                        <div className="border-b border-slate-100 pb-3 mb-4 flex items-center justify-between">
+                          <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
+                            <FileText className="h-4 w-4 text-blue-600" /> Dynamic Reports & Attachments
+                          </h3>
+                          <Button
+                            type="button"
+                            onClick={() => setIsNewReportModalOpen(true)}
+                            className="h-8 text-xs font-bold uppercase bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 rounded-lg shadow-sm"
+                          >
+                            + Add New Report
+                          </Button>
+                        </div>
+
+                        <div className="space-y-3">
+                          {reportsList.length === 0 ? (
+                            <div className="text-center py-8 text-muted-foreground text-xs italic bg-slate-50/80 rounded-xl border border-slate-200/80">
+                              No additional custom reports added yet. Click "+ Add New Report" to attach notes.
+                            </div>
+                          ) : (
+                            reportsList.map((report) => (
+                              <div key={report.id} className="bg-slate-50/80 border border-slate-200 rounded-xl p-4 shadow-xs">
+                                <div className="flex justify-between items-start mb-2 border-b border-slate-200/80 pb-2">
+                                  <div>
+                                    <h4 className="text-xs font-bold text-slate-900">{report.name}</h4>
+                                    {report.description && <p className="text-[10px] text-slate-500 mt-0.5">{report.description}</p>}
+                                  </div>
+                                  <div className="flex gap-2 items-center">
+                                    <span className="text-[9px] font-mono text-slate-400">{new Date(report.createdAt).toLocaleString()}</span>
+                                    <button type="button" onClick={() => handleDeleteReport(report.id)} className="text-red-500 hover:text-red-700 p-1" title="Delete Report"><Trash2 className="h-3.5 w-3.5"/></button>
+                                  </div>
+                                </div>
+                                <div className="text-xs text-slate-800 whitespace-pre-wrap leading-relaxed">
+                                  {report.notes}
+                                </div>
+                              </div>
+                            ))
+                          )}
+                        </div>
+                      </div>
+                    </fieldset>
+
+                    {/* Step 4 Footer Navigation */}
+                    <div className="pt-4 border-t border-slate-200 flex items-center justify-between gap-4 mt-6">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setActiveTab("others")}
+                        className="font-bold text-xs h-10 px-6 border-slate-200 text-slate-700 hover:bg-slate-50"
+                      >
+                        <ChevronLeft className="h-4 w-4 mr-1.5" /> Back to Step 3 (Others)
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => setActiveTab("report")}
+                        className="font-black text-xs h-10 px-8 bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all uppercase tracking-wider flex items-center gap-2"
+                      >
+                        Proceed to Step 5: Final Review & Verify <ChevronRight className="h-4 w-4" />
+                      </Button>
                     </div>
                   </div>
-
-
-                  <div className="pt-3 border-t border-border flex flex-col gap-1.5 mt-4">
-                    <Button
-                      type="button"
-                      onClick={() => setActiveTab("report")}
-                      className="w-full font-bold h-7.5 text-[10px] py-1 shadow uppercase tracking-wider bg-blue-600 hover:bg-blue-700 text-white"
-                    >
-                      Next Step (Verify & Print)
-                    </Button>
-                    <div className="flex gap-1.5">
-                      <Button type="button" variant="outline" onClick={() => setActiveTab("others")} className="flex-1 font-bold h-7.5 text-[10px] py-1">Back</Button>
-                    </div>
-                  </div>
-                </fieldset>
                 </div>
               </div>
             ) : (
@@ -4956,23 +5055,6 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     <Button type="button" variant="outline" onClick={() => setActiveTab("goods")} className="font-bold text-[10px] h-8 px-6 text-slate-600">Back</Button>
                     <Button type="button" onClick={() => setActiveTab("reports_tab")} className="font-bold text-[10px] h-8 px-6 bg-primary text-primary-foreground">Next</Button>
                   </div>
-                </fieldset>
-              )}
-              {activeTab === "reports_tab" && (
-                <div className="space-y-4 order-2 w-full mt-4 animate-in fade-in zoom-in-95 duration-200">
-                  <div className="bg-slate-50 border border-slate-200 rounded-lg p-4 text-center space-y-3">
-                    <h3 className="text-[11px] font-black uppercase text-slate-800">
-                      Step 4: Review Reports
-                    </h3>
-                    <p className="text-[9px] text-slate-500 font-semibold">
-                      Review all generated reports and notes before final verification.
-                    </p>
-                    <div className="flex justify-between gap-2 pt-2 border-t border-slate-200 mt-2">
-                      <Button type="button" variant="outline" onClick={() => setActiveTab("others")} className="font-bold text-[10px] h-8 px-6 text-slate-600">Back</Button>
-                      <Button type="button" onClick={() => setActiveTab("report")} className="font-bold text-[10px] h-8 px-6 bg-primary text-primary-foreground">Next</Button>
-                    </div>
-                  </div>
-                </div>
               )}
             </main>
           </div>
@@ -4980,211 +5062,344 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       )}
 
       {activeTab === "report" && (
-              <div className="flex-1 overflow-y-auto p-3 space-y-4">
+        <div className="w-full space-y-6 p-2 sm:p-4 md:p-6 animate-in fade-in duration-300">
 
-                  {/* Transfer / Journal Status Block */}
-                  {isTransferred ? (
-                      <div className="bg-emerald-50 border border-emerald-200 rounded-lg p-3 shadow-sm">
-                        <div className="flex items-center gap-2 mb-2 border-b border-emerald-100 pb-2">
-                          <CheckCircle2 className="h-4 w-4 text-emerald-600" />
-                          <h4 className="text-[10px] font-black uppercase tracking-wider text-emerald-800">Transfer Completed</h4>
-                        </div>
-                        <p className="text-[9px] text-emerald-700 font-semibold mb-3 leading-relaxed">
-                          This bill has been automatically transferred and posted to the business journal (Roznamcha). All associated ledger accounts have been updated.
-                        </p>
+          {/* Step 5 Top Header & Action Toolbar */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-xl text-emerald-600">
+                <CheckCircle2 className="h-6 w-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[9px] font-black uppercase tracking-widest text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-100">Step 5 of 5</span>
+                  <span className="text-[10px] font-semibold text-slate-400">Final Verification</span>
+                </div>
+                <h2 className="text-xl font-black uppercase tracking-tight text-slate-900 mt-0.5">Purchase Booking Final Verification</h2>
+                <p className="text-xs font-semibold text-slate-500 mt-0.5">
+                  Inspect the complete Purchase Order Voucher, account ledger routing, goods manifest, and audit details before saving or transferring.
+                </p>
+              </div>
+            </div>
 
-                        <div className="space-y-1.5 text-[9px] font-mono bg-white/60 p-2 rounded border border-emerald-100/50">
-                          <div className="flex justify-between"><span className="text-emerald-700/80 uppercase font-sans font-bold text-[8px]">General Serial No:</span> <span className="font-bold text-emerald-900">{form.generalSerialNumber || `GSN-${new Date().getFullYear()}-0001`}</span></div>
-                          <div className="flex justify-between"><span className="text-emerald-700/80 uppercase font-sans font-bold text-[8px]">Roznamcha (Journal) No:</span> <span className="font-bold text-emerald-900">{form.journalNumber || `JRN-${new Date().getFullYear()}-8821`}</span></div>
-                          <div className="flex justify-between"><span className="text-emerald-700/80 uppercase font-sans font-bold text-[8px]">Branch Roznamcha No:</span> <span className="font-bold text-emerald-900">{form.branchJournalNumber || `BR-JRN-402`}</span></div>
-                          <div className="flex justify-between"><span className="text-emerald-700/80 uppercase font-sans font-bold text-[8px]">Cash Entry Serial:</span> <span className="font-bold text-emerald-900">{form.cashEntrySerial || `CE-9921`}</span></div>
-                          <div className="flex justify-between border-t border-emerald-100/50 pt-1 mt-1"><span className="text-emerald-700/80 uppercase font-sans font-bold text-[8px]">Business Entry Ref:</span> <span className="font-bold text-emerald-900 uppercase">{form.businessEntryRef || `BUS-ENT-PURCHASE`}</span></div>
-                        </div>
-                      </div>
-                  ) : (
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 shadow-sm">
-                      <div className="flex items-center gap-2 mb-1">
-                        <CheckCircle2 className="h-4 w-4 text-amber-600" />
-                        <h4 className="text-[10px] font-black uppercase tracking-wider text-amber-800">Pending Transfer</h4>
-                      </div>
-                      <p className="text-[9px] text-amber-700 font-semibold mt-1">
-                        This booking is pending verification. Once transferred, the journal (Roznamcha) and serial details will automatically appear here.
-                      </p>
-                    </div>
-                  )}
+            <div className="flex flex-wrap items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setActiveTab("reports_tab")}
+                className="font-bold text-xs h-9 px-4 border-slate-200 hover:bg-slate-50 text-slate-700"
+              >
+                <ChevronLeft className="h-4 w-4 mr-1" /> Back to Step 4
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handlePrintA4Report(true)}
+                className="font-bold text-xs h-9 px-4 border-slate-200 hover:bg-slate-50 text-slate-800"
+              >
+                <Printer className="h-4 w-4 mr-1.5 text-blue-600" /> Print A4 Voucher
+              </Button>
+              {!savedOrderId && (
+                <Button
+                  type="button"
+                  onClick={() => handleSavePurchaseOrder(false)}
+                  disabled={savingOrder}
+                  className="font-bold text-xs h-9 px-5 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all flex items-center gap-1.5"
+                >
+                  {savingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  {savingOrder ? "Saving..." : "Save Purchase Order"}
+                </Button>
+              )}
+              {savedOrderId && !isTransferred && (
+                <Button
+                  type="button"
+                  onClick={() => setTransferConfirmModal(true)}
+                  disabled={savingOrder}
+                  className="font-bold text-xs h-9 px-5 bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all flex items-center gap-1.5"
+                >
+                  <ArrowRight className="h-4 w-4" /> Transfer to Payment
+                </Button>
+              )}
+            </div>
+          </div>
 
-                  {/* Inline Bill View */}
-                  <div className="rounded-2xl border border-slate-200 bg-slate-100/70 p-4 shadow-sm overflow-x-auto">
-                    <div className="mx-auto w-full max-w-5xl bg-white border border-slate-200 p-5 md:p-6 shadow-sm print:max-w-none print:border-0 print:p-0 print:shadow-none">
-                          <div className="mb-6 overflow-hidden rounded-xl border border-slate-200">
-                            <div className="flex flex-col gap-4 bg-slate-950 px-5 py-4 text-white md:flex-row md:items-center md:justify-between">
-                              <div>
-                                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-cyan-300">Damaan Business Group</p>
-                                <h1 className="mt-1 text-xl font-black uppercase tracking-[0.22em]">Purchase Booking Order</h1>
-                                <p className="mt-1 text-[10px] font-semibold text-slate-300">Professional verification, account routing, goods, payment and audit template</p>
-                              </div>
-                              <div className="grid grid-cols-2 gap-x-5 gap-y-1 text-right text-[10px] font-bold md:min-w-[360px]">
-                                <span className="text-slate-400">PO No</span><span>{form.purchaseOrderNo || "N/A"}</span>
-                                <span className="text-slate-400">Bill No</span><span>{form.billNo || "N/A"}</span>
-                                <span className="text-slate-400">Date</span><span>{form.purchaseDate || "N/A"}</span>
-                                <span className="text-slate-400">Status</span><span className={isTransferred ? "text-emerald-300" : "text-amber-300"}>{isTransferred ? "Transferred" : "Pending Transfer"}</span>
-                              </div>
-                            </div>
-                            <div className="grid gap-0 border-t border-slate-200 bg-white text-[10px] font-semibold text-slate-700 md:grid-cols-4">
-                              <div className="border-b border-slate-200 p-3 md:border-b-0 md:border-r"><span className="block text-[8px] uppercase tracking-wider text-slate-400">Country</span>{form.branchCountry || form.origin || "N/A"}</div>
-                              <div className="border-b border-slate-200 p-3 md:border-b-0 md:border-r"><span className="block text-[8px] uppercase tracking-wider text-slate-400">Branch</span>{form.branchName || "N/A"}</div>
-                              <div className="border-b border-slate-200 p-3 md:border-b-0 md:border-r"><span className="block text-[8px] uppercase tracking-wider text-slate-400">Branch Code</span>{form.branchCode || "N/A"}</div>
-                              <div className="p-3"><span className="block text-[8px] uppercase tracking-wider text-slate-400">Currency</span>{form.purchaseCurrency || form.currencyType || "N/A"}</div>
-                            </div>
-                          </div>
-                          
-                          <div className="grid gap-4 mb-6 text-[10px] md:grid-cols-2">
-                            <div className="border border-slate-300 p-3 rounded">
-                              <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800 text-[10px]">Purchase Account (DR)</h3>
-                              <div className="grid grid-cols-[80px_1fr] gap-1">
-                                <span className="text-slate-500 font-semibold">Account Code:</span><span className="font-bold">{form.purchaseAccountNo || "N/A"}</span>
-                                <span className="text-slate-500 font-semibold">Account Name:</span><span className="font-bold">{form.purchaseAccountName || "N/A"}</span>
-                                <span className="text-slate-500 font-semibold">Company:</span><span className="font-bold">{form.purchaseCompanyName || "N/A"}</span>
-                              </div>
-                            </div>
-                            <div className="border border-slate-300 p-3 rounded">
-                              <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800 text-[10px]">Sales Account (CR)</h3>
-                              <div className="grid grid-cols-[80px_1fr] gap-1">
-                                <span className="text-slate-500 font-semibold">Account Code:</span><span className="font-bold">{form.salesAccountNo || "N/A"}</span>
-                                <span className="text-slate-500 font-semibold">Account Name:</span><span className="font-bold">{form.salesAccountName || "N/A"}</span>
-                                <span className="text-slate-500 font-semibold">Company:</span><span className="font-bold">{form.salesCompanyName || "N/A"}</span>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="mb-6">
-                            <h3 className="font-black text-[10px] border-b border-slate-800 pb-1 mb-2 uppercase text-slate-800 flex items-center gap-2">
-                              <Package className="h-3.5 w-3.5" /> Goods Details
-                            </h3>
-                            <table className="w-full text-[10px] text-left border border-slate-300">
-                              <thead className="bg-slate-100 border-b border-slate-300">
-                                <tr>
-                                  <th className="p-1.5 font-bold uppercase border-r border-slate-300">Goods</th>
-                                  <th className="p-1.5 font-bold uppercase border-r border-slate-300">Brand</th>
-                                  <th className="p-1.5 font-bold uppercase border-r border-slate-300">Origin</th>
-                                  <th className="p-1.5 text-right font-bold uppercase border-r border-slate-300">Qty</th>
-                                  <th className="p-1.5 text-right font-bold uppercase border-r border-slate-300">G.Wt</th>
-                                  <th className="p-1.5 text-right font-bold uppercase border-r border-slate-300">N.Wt</th>
-                                  <th className="p-1.5 text-right font-bold uppercase border-r border-slate-300">Rate</th>
-                                  <th className="p-1.5 text-right font-bold uppercase border-r border-slate-300">Amount ({form.currencyType || "USD"})</th>
-                                  <th className="p-1.5 text-right font-bold uppercase text-emerald-800">Final ({form.secondaryCurrency || "PKR"})</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {goodsEntries.map((row, idx) => (
-                                  <tr key={idx} className="border-b border-slate-200">
-                                    <td className="p-1.5 font-bold border-r border-slate-300">{row.goodsName}</td>
-                                    <td className="p-1.5 border-r border-slate-300">{row.brand}</td>
-                                    <td className="p-1.5 border-r border-slate-300">{row.origin}</td>
-                                    <td className="p-1.5 text-right border-r border-slate-300 font-mono font-bold">{row.qtyNo.toLocaleString()} {row.qtyName}</td>
-                                    <td className="p-1.5 text-right border-r border-slate-300 font-mono">{row.grossWeight.toFixed(2)}</td>
-                                    <td className="p-1.5 text-right border-r border-slate-300 font-mono font-bold">{row.netWeight.toFixed(2)}</td>
-                                    <td className="p-1.5 text-right border-r border-slate-300 font-mono">{row.coursePrice.toFixed(2)}</td>
-                                    <td className="p-1.5 text-right border-r border-slate-300 font-mono font-bold text-slate-700">{row.totalAmount.toLocaleString()}</td>
-                                    <td className="p-1.5 text-right font-mono font-bold text-emerald-700 bg-emerald-50">
-                                      {row.finalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </td>
-                                  </tr>
-                                ))}
-                                {goodsEntries.length > 0 && (
-                                  <tr className="bg-slate-50 font-bold border-t-2 border-slate-400">
-                                    <td colSpan={3} className="p-1.5 text-right border-r border-slate-300">TOTALS:</td>
-                                    <td className="p-1.5 text-right border-r border-slate-300">{reportTotals.totalQty.toLocaleString()} {goodsEntries[0]?.qtyName || ""}</td>
-                                    <td className="p-1.5 text-right border-r border-slate-300">{reportTotals.totalGross.toFixed(2)}</td>
-                                    <td className="p-1.5 text-right border-r border-slate-300">{reportTotals.totalNet.toFixed(2)}</td>
-                                    <td className="p-1.5 text-right border-r border-slate-300 bg-slate-200">-</td>
-                                    <td className="p-1.5 text-right border-r border-slate-300 text-slate-800">{reportTotals.grandPrimaryFinal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                                    <td className="p-1.5 text-right text-emerald-800 bg-emerald-100">{reportTotals.grandFinal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                                  </tr>
-                                )}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      </div>
+          {/* Transfer / Journal Status Callout Banner */}
+          {isTransferred ? (
+            <div className="bg-emerald-50/90 border border-emerald-200 rounded-2xl p-5 shadow-xs space-y-3">
+              <div className="flex items-center gap-2 border-b border-emerald-200/80 pb-2.5">
+                <CheckCircle2 className="h-5 w-5 text-emerald-600 flex-shrink-0" />
+                <h4 className="text-xs font-black uppercase tracking-wider text-emerald-900">Transfer Completed & Posted</h4>
+              </div>
+              <p className="text-xs text-emerald-800 font-medium leading-relaxed">
+                This Purchase Booking has been automatically transferred and posted to the business journal (Roznamcha). All associated ledger accounts and serial numbers have been logged.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 text-xs font-mono bg-white/80 p-3.5 rounded-xl border border-emerald-200/60">
+                <div>
+                  <span className="block text-[9px] uppercase font-sans font-bold text-emerald-700/80">General Serial No:</span>
+                  <span className="font-black text-emerald-950">{form.generalSerialNumber || `GSN-${new Date().getFullYear()}-0001`}</span>
+                </div>
+                <div>
+                  <span className="block text-[9px] uppercase font-sans font-bold text-emerald-700/80">Roznamcha (Journal) No:</span>
+                  <span className="font-black text-emerald-950">{form.journalNumber || `JRN-${new Date().getFullYear()}-8821`}</span>
+                </div>
+                <div>
+                  <span className="block text-[9px] uppercase font-sans font-bold text-emerald-700/80">Branch Roznamcha:</span>
+                  <span className="font-black text-emerald-950">{form.branchJournalNumber || `BR-JRN-402`}</span>
+                </div>
+                <div>
+                  <span className="block text-[9px] uppercase font-sans font-bold text-emerald-700/80">Cash Entry Serial:</span>
+                  <span className="font-black text-emerald-950">{form.cashEntrySerial || `CE-9921`}</span>
+                </div>
+                <div>
+                  <span className="block text-[9px] uppercase font-sans font-bold text-emerald-700/80">Business Entry Ref:</span>
+                  <span className="font-black text-emerald-950 uppercase">{form.businessEntryRef || `BUS-ENT-PURCHASE`}</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-3">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="h-5 w-5 text-amber-600 flex-shrink-0" />
+                <div>
+                  <h4 className="text-xs font-black uppercase tracking-wider text-amber-900">Pending Transfer Status</h4>
+                  <p className="text-xs text-amber-800 font-medium mt-0.5">
+                    This booking is verified and ready. Transfer to Payment will generate Roznamcha journal entries and update supplier/customer ledgers.
+                  </p>
+                </div>
+              </div>
+              <span className="px-3 py-1 bg-amber-200/60 text-amber-900 text-[10px] font-black uppercase rounded-full border border-amber-300 self-start md:self-auto">
+                Pending Verification
+              </span>
+            </div>
+          )}
 
-                      {/* Account Verification & Transfer Info */}
-                  <div className="mx-auto w-full max-w-5xl rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                    <h4 className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-1">Ledger Routing Details</h4>
-                    <div className="space-y-3 text-[9px]">
-                      <div className="bg-slate-50 border border-slate-200 rounded p-3">
-                        <div className="flex justify-between items-center mb-1"><span className="font-bold text-rose-700 uppercase text-[8px] bg-rose-100 px-1.5 py-0.5 rounded">Purchase Account (DR)</span> <span className="text-slate-600 font-mono text-[8px]">{form.purchaseAccountNo || "N/A"}</span></div>
-                        <div className="font-bold text-slate-900 mb-1 truncate text-[10px]" title={form.purchaseAccountName}>{form.purchaseAccountName || "N/A"}</div>
-                        <div className="flex justify-between items-center text-[8px] text-slate-500 mb-0.5">
-                          <span>Branch: <strong className="text-slate-700">{form.purchaseAccountBranch || "-"}</strong></span>
-                          <span>Country: <strong className="text-slate-700">{form.origin || "-"}</strong></span>
-                        </div>
-                        <div className="flex justify-between items-center text-[8px] text-slate-500 mb-3">
-                          <span>Currency: <strong className="text-slate-700">{form.purchaseCurrency || form.purchaseAccountCurrency || "-"}</strong></span>
-                          <span>Contact: <strong className="text-slate-700">{form.purchaseAccountMobile || form.purchaseAccountWhatsapp || "-"}</strong></span>
-                        </div>
+          {/* Printable Voucher Document Container */}
+          <div className="mx-auto w-full max-w-6xl bg-white border border-slate-200 rounded-2xl p-6 md:p-8 shadow-sm space-y-6">
+            {/* Voucher Header Banner */}
+            <div className="overflow-hidden rounded-xl border border-slate-200 shadow-sm">
+              <div className="bg-slate-950 px-6 py-5 text-white flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                  <p className="text-[9px] font-black uppercase tracking-[0.28em] text-cyan-400">Damaan Business Group</p>
+                  <h1 className="mt-1 text-2xl font-black uppercase tracking-[0.18em] text-white">Purchase Booking Voucher</h1>
+                  <p className="mt-1 text-xs font-medium text-slate-300">Official ERP Verification, Account Routing & Goods Manifest Voucher</p>
+                </div>
+                <div className="grid grid-cols-2 gap-x-6 gap-y-1.5 text-xs font-bold md:min-w-[340px] text-right bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+                  <span className="text-slate-400">PO Number:</span><span className="font-mono text-cyan-300 font-black">{form.purchaseOrderNo || "N/A"}</span>
+                  <span className="text-slate-400">Bill Number:</span><span className="font-mono text-white">{form.billNo || "N/A"}</span>
+                  <span className="text-slate-400">Booking Date:</span><span>{form.purchaseDate || "N/A"}</span>
+                  <span className="text-slate-400">Status:</span><span className={isTransferred ? "text-emerald-400 font-black" : "text-amber-400 font-black"}>{isTransferred ? "Transferred" : "Pending Transfer"}</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-0 bg-slate-50 text-xs font-semibold text-slate-700 border-t border-slate-200">
+                <div className="p-3 border-r border-b md:border-b-0 border-slate-200"><span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-0.5">Country</span>{form.branchCountry || form.origin || "N/A"}</div>
+                <div className="p-3 border-r border-b md:border-b-0 border-slate-200"><span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-0.5">Branch</span>{form.branchName || "N/A"}</div>
+                <div className="p-3 border-r border-slate-200"><span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-0.5">Branch Code</span><span className="font-mono">{form.branchCode || "N/A"}</span></div>
+                <div className="p-3"><span className="block text-[9px] font-black uppercase tracking-wider text-slate-400 mb-0.5">Currency</span><span className="font-black text-slate-900">{form.purchaseCurrency || form.currencyType || "N/A"}</span></div>
+              </div>
+            </div>
 
-                        <div className="flex justify-between items-center mb-1 border-t border-slate-200 pt-3"><span className="font-bold text-emerald-700 uppercase text-[8px] bg-emerald-100 px-1.5 py-0.5 rounded">Sales Account (CR)</span> <span className="text-slate-600 font-mono text-[8px]">{form.salesAccountNo || "N/A"}</span></div>
-                        <div className="font-bold text-slate-900 mb-1 truncate text-[10px]" title={form.salesAccountName}>{form.salesAccountName || "N/A"}</div>
-                        <div className="flex justify-between items-center text-[8px] text-slate-500 mb-0.5">
-                          <span>Branch: <strong className="text-slate-700">{form.salesAccountBranch || "-"}</strong></span>
-                          <span>Country: <strong className="text-slate-700">{form.branchCountry || "-"}</strong></span>
-                        </div>
-                        <div className="flex justify-between items-center text-[8px] text-slate-500 mb-2">
-                          <span>Currency: <strong className="text-slate-700">{form.salesAccountCurrency || "-"}</strong></span>
-                          <span>Contact: <strong className="text-slate-700">{form.salesAccountMobile || form.salesAccountWhatsapp || "-"}</strong></span>
-                        </div>
+            {/* Accounts Routing Cards (DR & CR) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div className="border border-slate-200 bg-slate-50/70 p-4 rounded-xl space-y-2">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                  <h3 className="font-black uppercase text-slate-900 text-xs tracking-wider flex items-center gap-1.5">
+                    <ArrowDownLeft className="h-4 w-4 text-blue-600" /> Purchase Account
+                  </h3>
+                  <span className="bg-blue-100 text-blue-800 text-[9px] font-black px-2 py-0.5 rounded uppercase">DR (Debit)</span>
+                </div>
+                <div className="grid grid-cols-[100px_1fr] gap-1.5 text-xs">
+                  <span className="text-slate-500 font-semibold">Account Code:</span><span className="font-mono font-bold text-slate-900">{form.purchaseAccountNo || "N/A"}</span>
+                  <span className="text-slate-500 font-semibold">Account Name:</span><span className="font-bold text-slate-900">{form.purchaseAccountName || "N/A"}</span>
+                  <span className="text-slate-500 font-semibold">Company:</span><span className="font-bold text-slate-800">{form.purchaseCompanyName || "N/A"}</span>
+                </div>
+              </div>
 
-                        <div className="border-t border-slate-200 pt-3 mt-3 space-y-1.5">
-                          <div className="flex justify-between items-center"><span className="text-slate-500 font-bold uppercase text-[8px]">Transfer Date:</span> <span className="font-bold text-slate-900 font-mono">{form.purchaseDate}</span></div>
-                          <div className="flex justify-between items-center"><span className="text-slate-500 font-bold uppercase text-[8px]">Transferred To:</span> <span className="font-black text-blue-600 uppercase">Purchase Accounts</span></div>
-                        </div>
-                      </div>
-                    </div>
+              <div className="border border-slate-200 bg-slate-50/70 p-4 rounded-xl space-y-2">
+                <div className="flex items-center justify-between border-b border-slate-200 pb-2">
+                  <h3 className="font-black uppercase text-slate-900 text-xs tracking-wider flex items-center gap-1.5">
+                    <ArrowUpRight className="h-4 w-4 text-emerald-600" /> Sales Account
+                  </h3>
+                  <span className="bg-emerald-100 text-emerald-800 text-[9px] font-black px-2 py-0.5 rounded uppercase">CR (Credit)</span>
+                </div>
+                <div className="grid grid-cols-[100px_1fr] gap-1.5 text-xs">
+                  <span className="text-slate-500 font-semibold">Account Code:</span><span className="font-mono font-bold text-slate-900">{form.salesAccountNo || "N/A"}</span>
+                  <span className="text-slate-500 font-semibold">Account Name:</span><span className="font-bold text-slate-900">{form.salesAccountName || "N/A"}</span>
+                  <span className="text-slate-500 font-semibold">Company:</span><span className="font-bold text-slate-800">{form.salesCompanyName || "N/A"}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Goods Details Table */}
+            <div className="space-y-3">
+              <h3 className="font-black text-xs border-b border-slate-200 pb-2.5 uppercase text-slate-900 flex items-center gap-2 tracking-wider">
+                <Package className="h-4 w-4 text-blue-600" /> Goods Overview Manifest
+              </h3>
+              <div className="overflow-x-auto rounded-xl border border-slate-200">
+                <table className="w-full text-xs text-left border-collapse">
+                  <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase text-[10px] tracking-wider">
+                    <tr>
+                      <th className="p-2.5 font-bold border-r border-slate-200">Goods</th>
+                      <th className="p-2.5 font-bold border-r border-slate-200">Brand</th>
+                      <th className="p-2.5 font-bold border-r border-slate-200 text-center">Origin</th>
+                      <th className="p-2.5 text-right font-bold border-r border-slate-200">Quantity</th>
+                      <th className="p-2.5 text-right font-bold border-r border-slate-200">Gross Wt</th>
+                      <th className="p-2.5 text-right font-bold border-r border-slate-200">Net Wt</th>
+                      <th className="p-2.5 text-right font-bold border-r border-slate-200">Rate</th>
+                      <th className="p-2.5 text-right font-bold border-r border-slate-200">Amount ({form.currencyType || "USD"})</th>
+                      <th className="p-2.5 text-right font-bold text-emerald-800 bg-emerald-50/50">Final ({form.secondaryCurrency || "PKR"})</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {goodsEntries.map((row, idx) => (
+                      <tr key={idx} className="border-b border-slate-100 hover:bg-slate-50/60 transition-colors">
+                        <td className="p-2.5 font-bold text-slate-900 border-r border-slate-200">{row.goodsName}</td>
+                        <td className="p-2.5 border-r border-slate-200 text-slate-700">{row.brand}</td>
+                        <td className="p-2.5 border-r border-slate-200 text-center text-slate-700">{row.origin}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-bold text-slate-900">{row.qtyNo.toLocaleString()} {row.qtyName}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 font-mono text-slate-700">{row.grossWeight.toFixed(2)}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-bold text-slate-800">{row.netWeight.toFixed(2)}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 font-mono text-slate-700">{row.coursePrice.toFixed(2)}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-bold text-slate-800">{row.totalAmount.toLocaleString()}</td>
+                        <td className="p-2.5 text-right font-mono font-black text-emerald-700 bg-emerald-50/40">
+                          {row.finalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                        </td>
+                      </tr>
+                    ))}
+                    {goodsEntries.length > 0 && (
+                      <tr className="bg-slate-50 font-bold border-t-2 border-slate-300 text-xs">
+                        <td colSpan={3} className="p-2.5 text-right border-r border-slate-200 font-black uppercase text-slate-700">TOTALS:</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-black">{reportTotals.totalQty.toLocaleString()} {goodsEntries[0]?.qtyName || ""}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 font-mono">{reportTotals.totalGross.toFixed(2)}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-black">{reportTotals.totalNet.toFixed(2)}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 bg-slate-100 text-slate-400">-</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-black text-slate-900">{reportTotals.grandPrimaryFinal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                        <td className="p-2.5 text-right font-mono font-black text-emerald-800 bg-emerald-100/70">{reportTotals.grandFinal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            {/* Ledger Routing Details Card */}
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+              <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-2">Ledger Routing & Post Details</h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 space-y-1.5">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-bold text-blue-700 uppercase text-[9px] bg-blue-100 px-2 py-0.5 rounded">Purchase Account (DR)</span>
+                    <span className="text-slate-600 font-mono font-bold">{form.purchaseAccountNo || "N/A"}</span>
                   </div>
-
-                  {/* User Info */}
-                  <div className="mx-auto w-full max-w-5xl rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                    <h4 className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-1">User & Session Information</h4>
-                    <div className="bg-slate-50 border border-slate-200 rounded p-3 space-y-2 text-[9px]">
-                      <div className="flex justify-between"><span className="text-slate-500 font-bold uppercase text-[8px]">User ID:</span> <span className="font-semibold text-slate-900 font-mono">{form.userId || "USR-1001"}</span></div>
-                      <div className="flex justify-between"><span className="text-slate-500 font-bold uppercase text-[8px]">User Name:</span> <span className="font-bold text-slate-900 uppercase">{form.userName || "ADMIN"}</span></div>
-                      <div className="flex justify-between border-t border-slate-200 pt-1.5 mt-0.5"><span className="text-slate-500 font-bold uppercase text-[8px]">Team Name:</span> <span className="font-semibold text-slate-900">Logistics & Operations</span></div>
-                      <div className="flex justify-between"><span className="text-slate-500 font-bold uppercase text-[8px]">Team Code:</span> <span className="font-semibold text-slate-900 font-mono">TR-LOG</span></div>
-                    </div>
+                  <div className="font-bold text-slate-900 text-xs truncate" title={form.purchaseAccountName}>{form.purchaseAccountName || "N/A"}</div>
+                  <div className="flex justify-between text-[10px] text-slate-500">
+                    <span>Branch: <strong className="text-slate-700">{form.purchaseAccountBranch || "-"}</strong></span>
+                    <span>Currency: <strong className="text-slate-700">{form.purchaseCurrency || form.purchaseAccountCurrency || "-"}</strong></span>
                   </div>
+                </div>
 
-                  {/* Remarks Input */}
-                  <div className="mx-auto w-full max-w-5xl rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-                    <span className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-2 block border-b border-slate-100 pb-1">Remarks (Report)</span>
-                    <textarea
-                      value={form.orderReportRemarks}
-                      onChange={(e) => handleTextChange("orderReportRemarks", e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 rounded p-2 text-slate-900 outline-none focus:border-blue-500 resize-none h-20 text-[9px] font-semibold"
-                      placeholder="Type verification or audit remarks here..."
-                    />
+                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-200/80 space-y-1.5">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-bold text-emerald-700 uppercase text-[9px] bg-emerald-100 px-2 py-0.5 rounded">Sales Account (CR)</span>
+                    <span className="text-slate-600 font-mono font-bold">{form.salesAccountNo || "N/A"}</span>
                   </div>
+                  <div className="font-bold text-slate-900 text-xs truncate" title={form.salesAccountName}>{form.salesAccountName || "N/A"}</div>
+                  <div className="flex justify-between text-[10px] text-slate-500">
+                    <span>Branch: <strong className="text-slate-700">{form.salesAccountBranch || "-"}</strong></span>
+                    <span>Currency: <strong className="text-slate-700">{form.salesAccountCurrency || "-"}</strong></span>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-                  {/* Saved Reports */}
-                  {reportsList.length > 0 && (
-                    <div>
-                      <h4 className="text-[9px] font-bold text-slate-500 uppercase tracking-wider mb-2 border-b border-slate-100 pb-1">Saved Reports</h4>
-                      <div className="space-y-2 mb-4">
-                        {reportsList.map((report) => (
-                          <div key={report.id} className="bg-slate-50 border border-slate-200 rounded p-2 text-[9px]">
-                            <div className="flex justify-between items-start mb-1">
-                              <span className="font-bold text-slate-800">{report.name}</span>
-                              <button type="button" onClick={() => handleDeleteReport(report.id)} className="text-red-500 hover:text-red-700">
-                                <Trash2 className="h-3 w-3" />
-                              </button>
-                            </div>
-                            {report.description && <p className="text-slate-600 mb-1 font-semibold">{report.description}</p>}
-                            <p className="text-slate-500 font-mono text-[8px]">{formatShortDate(report.createdAt)}</p>
-                          </div>
-                        ))}
+            {/* User & Session Info Card */}
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+              <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-2">User & Audit Session</h4>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/70"><span className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">User ID</span><span className="font-mono font-bold text-slate-900">{form.userId || "USR-1001"}</span></div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/70"><span className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">User Name</span><span className="font-bold text-slate-900 uppercase">{form.userName || "ADMIN"}</span></div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/70"><span className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">Team Name</span><span className="font-bold text-slate-900">Logistics & Operations</span></div>
+                <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/70"><span className="block text-[9px] font-black uppercase text-slate-400 mb-0.5">Verification Date</span><span className="font-bold text-slate-900 font-mono">{form.purchaseDate || new Date().toISOString().slice(0, 10)}</span></div>
+              </div>
+            </div>
+
+            {/* Audit Remarks Input */}
+            <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-2">
+              <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-2">Audit & Final Remarks</h4>
+              <textarea
+                value={form.orderReportRemarks || ""}
+                onChange={(e) => handleTextChange("orderReportRemarks", e.target.value)}
+                className="w-full bg-slate-50/80 border border-slate-200 rounded-xl p-3 text-slate-900 outline-none focus:border-blue-500 focus:bg-white resize-none h-24 text-xs font-medium leading-relaxed"
+                placeholder="Type verification, approval, or audit remarks before saving/transferring..."
+              />
+            </div>
+
+            {/* Saved Reports */}
+            {reportsList.length > 0 && (
+              <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-xs space-y-3">
+                <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider border-b border-slate-100 pb-2">Saved Custom Reports ({reportsList.length})</h4>
+                <div className="space-y-2.5">
+                  {reportsList.map((report) => (
+                    <div key={report.id} className="bg-slate-50 border border-slate-200 rounded-xl p-3.5 text-xs">
+                      <div className="flex justify-between items-start mb-1">
+                        <span className="font-bold text-slate-900">{report.name}</span>
+                        <button type="button" onClick={() => handleDeleteReport(report.id)} className="text-red-500 hover:text-red-700 p-1">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </button>
                       </div>
+                      {report.description && <p className="text-slate-600 mb-1 font-medium text-[11px]">{report.description}</p>}
+                      <p className="text-slate-400 font-mono text-[9px]">{formatShortDate(report.createdAt)}</p>
                     </div>
-                  )}
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Step 5 Footer Action Toolbar */}
+          <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setActiveTab("reports_tab")}
+              className="font-bold text-xs h-10 px-6 border-slate-200 text-slate-700 hover:bg-slate-50"
+            >
+              <ChevronLeft className="h-4 w-4 mr-1.5" /> Back to Step 4 (Reports)
+            </Button>
+
+            <div className="flex flex-wrap items-center gap-2.5">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => handlePrintA4Report(true)}
+                className="font-bold text-xs h-10 px-5 border-slate-200 hover:bg-slate-50 text-slate-800"
+              >
+                <Printer className="h-4 w-4 mr-1.5 text-blue-600" /> Print A4 Voucher
+              </Button>
+
+              {!savedOrderId && (
+                <Button
+                  type="button"
+                  onClick={() => handleSavePurchaseOrder(false)}
+                  disabled={savingOrder}
+                  className="font-black text-xs h-10 px-7 bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all uppercase tracking-wider flex items-center gap-2"
+                >
+                  {savingOrder ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                  {savingOrder ? "Saving..." : "Save Purchase Order"}
+                </Button>
+              )}
+
+              {savedOrderId && !isTransferred && (
+                <Button
+                  type="button"
+                  onClick={() => setTransferConfirmModal(true)}
+                  disabled={savingOrder}
+                  className="font-black text-xs h-10 px-7 bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all uppercase tracking-wider flex items-center gap-2"
+                >
+                  <ArrowRight className="h-4 w-4" /> Transfer to Payment
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       )}
 
