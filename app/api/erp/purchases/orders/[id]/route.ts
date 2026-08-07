@@ -14,6 +14,8 @@ import {
   safeDeletePurchaseOrderExpenses,
   ensurePurchaseSchemaAndEnums
 } from "@/lib/services/purchase-table-manager";
+import { saveEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
+import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 import { revalidatePath } from "next/cache";
 
 const paramsSchema = z.object({
@@ -305,6 +307,58 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
           // amount_usd: ex.amountUsd || 0
         }));
         await safeInsertPurchaseOrderExpenses(supabase, expPayload);
+      }
+    }
+
+    // Save 5-language DB translations to 'record_translations' and form_data.translations
+    if (body.formData !== undefined || body.items !== undefined) {
+      try {
+        const adminSupabase = createSupabaseAdminClient() as any;
+        const form = body.formData?.form || (before as any)?.form_data?.form || {};
+        const itemsList = body.items || [];
+        const goodsNames = itemsList.map((i: any) => i.goodsName).filter(Boolean).join(", ") || form.goodsName || form.productName || "";
+        const remarksText = form.orderReportRemarks || form.remarks || "";
+        const purchaseAcc = form.purchaseAccountName || "";
+        const salesAcc = form.salesAccountName || "";
+        const supplier = form.supplierName || "";
+        const buyer = form.customerName || "";
+
+        const translationsMap = {
+          productName: autoTranslate5Languages(goodsNames, "en"),
+          purchaseAccountName: autoTranslate5Languages(purchaseAcc, "en"),
+          salesAccountName: autoTranslate5Languages(salesAcc, "en"),
+          supplierName: autoTranslate5Languages(supplier, "en"),
+          buyerName: autoTranslate5Languages(buyer, "en"),
+          remarks: autoTranslate5Languages(remarksText, "en")
+        };
+
+        await saveEnterpriseRecordTranslations({
+          recordTable: "purchase_orders",
+          recordId: params.id,
+          originalLanguage: "en",
+          fields: [
+            { fieldName: "product_name", value: goodsNames },
+            { fieldName: "purchase_account_name", value: purchaseAcc },
+            { fieldName: "sales_account_name", value: salesAcc },
+            { fieldName: "supplier_name", value: supplier },
+            { fieldName: "buyer_name", value: buyer },
+            { fieldName: "remarks", value: remarksText }
+          ],
+          source: "auto"
+        });
+
+        const currentFormData = patch.form_data || (before as any)?.form_data || {};
+        const updatedFormData = {
+          ...currentFormData,
+          translations: translationsMap
+        };
+
+        await adminSupabase
+          .from("purchase_orders")
+          .update({ form_data: updatedFormData })
+          .eq("id", params.id);
+      } catch (transErr) {
+        console.warn("Non-fatal error saving record translations on PATCH:", transErr);
       }
     }
 

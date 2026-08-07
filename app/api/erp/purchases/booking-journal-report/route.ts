@@ -422,6 +422,53 @@ function normalizeOrder(row: any) {
       }
       const topCurrency = Object.entries(currencyFreq).sort(([, a], [, b]) => b - a)[0]?.[0] ?? "AED";
 
+      // Query record_translations database table for returned order IDs
+      const orderIds = reports.map((r: any) => r.id).filter(Boolean);
+      if (orderIds.length > 0) {
+        try {
+          const { data: recTrans } = await adminSupabase
+            .from("record_translations")
+            .select("record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text, language_texts")
+            .in("record_id", orderIds)
+            .eq("record_table", "purchase_orders")
+            .is("deleted_at", null);
+
+          if (recTrans && recTrans.length > 0) {
+            const transMapByOrder: Record<string, Record<string, any>> = {};
+            for (const row of recTrans) {
+              if (!transMapByOrder[row.record_id]) transMapByOrder[row.record_id] = {};
+              const fName = row.field_name === "product_name" ? "productName"
+                : row.field_name === "purchase_account_name" ? "purchaseAccountName"
+                : row.field_name === "sales_account_name" ? "salesAccountName"
+                : row.field_name === "supplier_name" ? "supplierName"
+                : row.field_name === "buyer_name" ? "buyerName"
+                : row.field_name === "remarks" ? "remarks"
+                : row.field_name;
+
+              const tObj = row.language_texts || {
+                en: row.english_text,
+                ur: row.urdu_text,
+                ar: row.arabic_text,
+                fa: row.persian_text,
+                ps: row.pashto_text
+              };
+              transMapByOrder[row.record_id][fName] = tObj;
+            }
+
+            for (const report of reports) {
+              if (transMapByOrder[report.id]) {
+                report.translations = {
+                  ...report.translations,
+                  ...transMapByOrder[report.id]
+                };
+              }
+            }
+          }
+        } catch (dbTransErr) {
+          console.warn("Non-fatal: Error querying record_translations:", dbTransErr);
+        }
+      }
+
       return apiOk({
         reports,
         selected: reports[0] ?? null,
