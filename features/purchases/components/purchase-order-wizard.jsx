@@ -3665,47 +3665,47 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
           {activeTab !== "report" && (
             activeTab === "reports_tab" ? (
-              <div className="w-full space-y-6 mt-4 animate-in fade-in duration-300">
-                {/* Step 4 Top Header Banner */}
-                <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
-                  <div className="flex items-center gap-3.5">
-                    <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl text-blue-600">
-                      <FileText className="h-6 w-6" />
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">Step 4 of 5</span>
-                        <span className="text-[10px] font-semibold text-slate-400">Documentation & Audit</span>
-                      </div>
-                      <h2 className="text-xl font-black uppercase tracking-tight text-slate-900 mt-0.5">Step 4: Review Reports & Notes</h2>
-                      <p className="text-xs font-semibold text-slate-500 mt-0.5">
-                        Verify printable document sections, account postings, goods manifest, payment terms, and loading schedules before final verification.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2.5">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setActiveTab("others")}
-                      className="font-bold text-xs h-9 px-4 border-slate-200 hover:bg-slate-50 text-slate-700"
-                    >
-                      <ChevronLeft className="h-4 w-4 mr-1" /> Back
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={() => setActiveTab("report")}
-                      className="font-bold text-xs h-9 px-5 bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all flex items-center gap-1.5"
-                    >
-                      Next: Step 5 (Verify & Print) <ChevronRight className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Global Info Cards at the top */}
-                {renderGlobalInfoCards()}
-
+              <div className="w-full mt-4 animate-in fade-in duration-300">
                 <div className="mx-auto w-full max-w-[1180px] space-y-6 print:max-w-none">
+                  {/* Step 4 Top Header Banner */}
+                  <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div className="flex items-center gap-3.5">
+                      <div className="p-3 bg-blue-50 border border-blue-100 rounded-xl text-blue-600">
+                        <FileText className="h-6 w-6" />
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[9px] font-black uppercase tracking-widest text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-100">Step 4 of 5</span>
+                          <span className="text-[10px] font-semibold text-slate-400">Documentation & Audit</span>
+                        </div>
+                        <h2 className="text-xl font-black uppercase tracking-tight text-slate-900 mt-0.5">Step 4: Review Reports & Notes</h2>
+                        <p className="text-xs font-semibold text-slate-500 mt-0.5">
+                          Verify printable document sections, account postings, goods manifest, payment terms, and loading schedules before final verification.
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2.5">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => setActiveTab("others")}
+                        className="font-bold text-xs h-9 px-4 border-slate-200 hover:bg-slate-50 text-slate-700"
+                      >
+                        <ChevronLeft className="h-4 w-4 mr-1" /> Back
+                      </Button>
+                      <Button
+                        type="button"
+                        onClick={() => setActiveTab("report")}
+                        className="font-bold text-xs h-9 px-5 bg-blue-600 hover:bg-blue-700 text-white shadow-md transition-all flex items-center gap-1.5"
+                      >
+                        Next: Step 5 (Verify & Print) <ChevronRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Global Info Cards aligned with report width */}
+                  {renderGlobalInfoCards()}
+
                   {/* Complete Report Summary Container */}
                   <div className="rounded-2xl border border-slate-200 bg-white p-5 md:p-6 shadow-sm space-y-6">
                     <div className="flex flex-col gap-2 border-b border-slate-200 pb-4 md:flex-row md:items-end md:justify-between">

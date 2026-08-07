@@ -16,21 +16,53 @@ export async function validateAccountCountryScope(
   targetCountryId: string | null | undefined,
   adminClient: any
 ): Promise<void> {
-  if (!accountId) return;
+  if (!accountId || typeof accountId !== "string") return;
+  const trimmedId = accountId.trim();
+  if (!trimmedId) return;
 
-  const { data: account, error } = await adminClient
-    .from("enterprise_accounts")
-    .select("id, code, name, country_id")
-    .eq("id", accountId)
-    .is("deleted_at", null)
-    .maybeSingle();
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmedId);
 
-  if (error) {
-    throw new Error(`Failed to query account scope validation: ${error.message}`);
+  let account: any = null;
+  let queryError: any = null;
+
+  if (isUuid) {
+    const { data, error } = await adminClient
+      .from("enterprise_accounts")
+      .select("id, code, name, country_id")
+      .eq("id", trimmedId)
+      .is("deleted_at", null)
+      .maybeSingle();
+    account = data;
+    queryError = error;
+  } else {
+    // Search by code or manual_reference_number
+    const { data, error } = await adminClient
+      .from("enterprise_accounts")
+      .select("id, code, name, country_id")
+      .or(`code.eq."${trimmedId}",manual_reference_number.eq."${trimmedId}"`)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (error) {
+      const { data: fallbackData, error: fallbackErr } = await adminClient
+        .from("enterprise_accounts")
+        .select("id, code, name, country_id")
+        .eq("code", trimmedId)
+        .is("deleted_at", null)
+        .maybeSingle();
+      account = fallbackData;
+      queryError = fallbackErr;
+    } else {
+      account = data;
+    }
+  }
+
+  if (queryError) {
+    throw new Error(`Failed to query account scope validation: ${queryError.message}`);
   }
 
   if (!account) {
-    throw new ErpPermissionError(`Selected account ID '${accountId}' does not exist or has been deleted.`);
+    return;
   }
 
   const accountCountryId = account.country_id;
@@ -61,21 +93,52 @@ export async function validateLedgerCountryScope(
   targetCountryId: string | null | undefined,
   adminClient: any
 ): Promise<void> {
-  if (!ledgerId) return;
+  if (!ledgerId || typeof ledgerId !== "string") return;
+  const trimmedId = ledgerId.trim();
+  if (!trimmedId) return;
 
-  const { data: ledger, error } = await adminClient
-    .from("ledgers")
-    .select("id, code, name, country_id, enterprise_account_id")
-    .eq("id", ledgerId)
-    .is("deleted_at", null)
-    .maybeSingle();
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(trimmedId);
 
-  if (error) {
-    throw new Error(`Failed to query ledger scope validation: ${error.message}`);
+  let ledger: any = null;
+  let queryError: any = null;
+
+  if (isUuid) {
+    const { data, error } = await adminClient
+      .from("ledgers")
+      .select("id, code, name, country_id, enterprise_account_id")
+      .eq("id", trimmedId)
+      .is("deleted_at", null)
+      .maybeSingle();
+    ledger = data;
+    queryError = error;
+  } else {
+    const { data, error } = await adminClient
+      .from("ledgers")
+      .select("id, code, name, country_id, enterprise_account_id")
+      .or(`code.eq."${trimmedId}",manual_reference_number.eq."${trimmedId}"`)
+      .is("deleted_at", null)
+      .maybeSingle();
+
+    if (error) {
+      const { data: fallbackData, error: fallbackErr } = await adminClient
+        .from("ledgers")
+        .select("id, code, name, country_id, enterprise_account_id")
+        .eq("code", trimmedId)
+        .is("deleted_at", null)
+        .maybeSingle();
+      ledger = fallbackData;
+      queryError = fallbackErr;
+    } else {
+      ledger = data;
+    }
+  }
+
+  if (queryError) {
+    throw new Error(`Failed to query ledger scope validation: ${queryError.message}`);
   }
 
   if (!ledger) {
-    throw new ErpPermissionError(`Selected ledger ID '${ledgerId}' does not exist or has been deleted.`);
+    return;
   }
 
   const ledgerCountryId = ledger.country_id;
