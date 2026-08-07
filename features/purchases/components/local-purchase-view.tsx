@@ -6,14 +6,6 @@ import {
   ShoppingCart, Plus, Search, Scale, Coins,
   TrendingUp, User, CalendarDays, CheckCircle2,
   Trash2, Loader2, ArrowLeftRight, Check, Package,
-"use client";
-
-import React, { useMemo, useState, useEffect, useRef } from "react";
-import { fetchWarehouses } from "@/features/warehouses/warehouse-api";
-import {
-  ShoppingCart, Plus, Search, Scale, Coins,
-  TrendingUp, User, CalendarDays, CheckCircle2,
-  Trash2, Loader2, ArrowLeftRight, Check, Package,
   Building2, FileText, ArrowDownLeft, ArrowUpRight,
   Pin, X, Layers, Tag, Globe, Pencil, ShieldAlert,
   CreditCard, Truck, Flag, UserCheck, ChevronDown,
@@ -22,6 +14,14 @@ import {
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
+
+const CURRENCIES = ["USD", "AED", "PKR", "AFN", "INR", "IRR"];
+const QUANTITY_NAMES = ["Bags", "Cartons", "Boxes", "Crates", "Bales", "Drums", "Pieces", "Custom"];
+const PAYMENT_MODES = [
+  { value: "Cash", label: "Cash" },
   { value: "Credit", label: "Credit" },
   { value: "Advance", label: "Advance" },
   { value: "Bank Transfer", label: "Bank Transfer" },
