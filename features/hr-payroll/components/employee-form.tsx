@@ -342,16 +342,17 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
     }
   }
 
-  if (loading) {
-    return <div className="text-center py-12 text-slate-500 dark:text-slate-400 font-medium">Loading employee details...</div>;
-  }
-
+  // NOTE: hooks must run unconditionally — keep this above the `loading` early return.
   const lang = useActiveLanguage();
   const tr = (text: string) => {
     if (!text) return text;
     const res = autoTranslate5Languages(text);
     return res[lang] || text;
   };
+
+  if (loading) {
+    return <div className="text-center py-12 text-slate-500 dark:text-slate-400 font-medium">{t(lang, "hr.f_loading_details", "Loading employee details...")}</div>;
+  }
 
   const stepsList = [
     { number: 1, label: t(lang, "hr.f_step_lbl_1", "Step 1: Category & Identity"), icon: <UserCheck className="h-4 w-4" /> },
@@ -470,7 +471,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
                 type="text"
                 value={designation}
                 onChange={(e) => setDesignation(e.target.value)}
-                placeholder="e.g. Finance Manager / General Staff"
+                placeholder={t(lang, "hr.f_ph_designation", "e.g. Finance Manager / General Staff")}
                 className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
               />
             </div>
@@ -480,7 +481,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
                 type="text"
                 value={department}
                 onChange={(e) => setDepartment(e.target.value)}
-                placeholder="e.g. Accounts / Operations"
+                placeholder={t(lang, "hr.f_ph_department", "e.g. Accounts / Operations")}
                 className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
               />
             </div>
@@ -506,7 +507,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               <MapPin className="h-4 w-4 text-emerald-600" />
               <span>{t(lang, "hr.f_step2_title", "Step 2 Packet: Country, Branch Scopes & Reporting Manager")}</span>
             </h3>
-            <span className="text-xs font-semibold text-slate-400">Step 2 of 5</span>
+            <span className="text-xs font-semibold text-slate-400">{t(lang, "hr.f_step2_of5", "Step 2 of 5")}</span>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
@@ -575,15 +576,15 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
           {/* Packet Summary Box */}
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
-            <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Step 2 Packet Preview</div>
+            <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">{t(lang, "hr.f_step2_preview", "Step 2 Packet Preview")}</div>
             <div className="grid grid-cols-3 gap-2">
-              <div><span className="font-semibold text-slate-400">Country:</span> {selectedCountryObj?.name || "-"}</div>
+              <div><span className="font-semibold text-slate-400">{t(lang, "common.country", "Country")}:</span> {selectedCountryObj?.name || "-"}</div>
               <div>
-                <span className="font-semibold text-slate-400">Main Branch:</span>{" "}
+                <span className="font-semibold text-slate-400">{t(lang, "hr.f_main_branch", "Main Branch")}:</span>{" "}
                 {selectedMainBranchObj ? `${selectedMainBranchObj.name} ${selectedMainBranchObj.code ? `(${selectedMainBranchObj.code})` : ""}` : "-"}
               </div>
               <div>
-                <span className="font-semibold text-slate-400">City Branch:</span>{" "}
+                <span className="font-semibold text-slate-400">{t(lang, "hr.f_city_branch", "City Branch")}:</span>{" "}
                 {selectedCityBranchObj ? `${selectedCityBranchObj.name} ${selectedCityBranchObj.code ? `(${selectedCityBranchObj.code})` : ""}` : "-"}
               </div>
             </div>
@@ -599,7 +600,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               <Clock className="h-4 w-4 text-emerald-600" />
               <span>{t(lang, "hr.f_step3_title", "Step 3 Packet: Employment Type, Shift & Contract Timelines")}</span>
             </h3>
-            <span className="text-xs font-semibold text-slate-400">Step 3 of 5</span>
+            <span className="text-xs font-semibold text-slate-400">{t(lang, "hr.f_step3_of5", "Step 3 of 5")}</span>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -708,11 +709,11 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
           {/* Packet Summary Box */}
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
-            <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Step 3 Packet Preview</div>
+            <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">{t(lang, "hr.f_step3_preview", "Step 3 Packet Preview")}</div>
             <div className="grid grid-cols-3 gap-2">
-              <div><span className="font-semibold text-slate-400">Joining Date:</span> {joiningDate || "-"}</div>
-              <div><span className="font-semibold text-slate-400">Type:</span> {employmentType}</div>
-              <div><span className="font-semibold text-slate-400">Shift:</span> {workingShift} ({dutyStartTime} - {dutyEndTime})</div>
+              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_joining_date", "Joining Date")}:</span> {joiningDate || "-"}</div>
+              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_type", "Type")}:</span> {employmentType}</div>
+              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_shift", "Shift")}:</span> {workingShift} ({dutyStartTime} - {dutyEndTime})</div>
             </div>
           </div>
         </div>
@@ -726,7 +727,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               <BadgeDollarSign className="h-4 w-4 text-emerald-600" />
               <span>{t(lang, "hr.f_step4_title", "Step 4 Packet: Basic Salary, Allowances & GL Ledgers")}</span>
             </h3>
-            <span className="text-xs font-semibold text-slate-400">Step 4 of 5</span>
+            <span className="text-xs font-semibold text-slate-400">{t(lang, "hr.f_step4_of5", "Step 4 of 5")}</span>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
@@ -865,11 +866,11 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
           {/* Packet Summary Box */}
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
-            <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Step 4 Packet Preview</div>
+            <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">{t(lang, "hr.f_step4_preview", "Step 4 Packet Preview")}</div>
             <div className="grid grid-cols-3 gap-2">
-              <div><span className="font-semibold text-slate-400">Basic Salary:</span> {basicSalary} {salaryCurrency}</div>
-              <div><span className="font-semibold text-slate-400">Allowances:</span> +{totalAllowances}</div>
-              <div><span className="font-semibold text-slate-400">Net Payroll:</span> {netSalary.toLocaleString()} {salaryCurrency}</div>
+              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_basic_salary", "Basic Salary")}:</span> {basicSalary} {salaryCurrency}</div>
+              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_allowances", "Allowances")}:</span> +{totalAllowances}</div>
+              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_net_payroll", "Net Payroll")}:</span> {netSalary.toLocaleString()} {salaryCurrency}</div>
             </div>
           </div>
         </div>
@@ -884,7 +885,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               <span>{t(lang, "hr.f_step5_title", "Step 5 Packet: Employee Master Entry Verification Report")}</span>
             </h3>
             <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-              Verified & Ready
+              {t(lang, "hr.f_verified_ready", "Verified & Ready")}
             </span>
           </div>
 

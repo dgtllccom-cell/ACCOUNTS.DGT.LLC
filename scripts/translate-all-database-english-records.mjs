@@ -64,7 +64,7 @@ const sql = postgres(dbUrl, { max: 2, prepare: false, connect_timeout: 30 });
 // Target tables and their candidate translatable columns
 const TARGET_TABLES = [
   { name: "customers", idCol: "id", nameCols: ["customer_name", "name"] },
-  { name: "employees", idCol: "id", nameCols: ["full_name", "first_name", "name"] },
+  { name: "employees", idCol: "id", nameCols: ["designation", "department", "employee_code", "full_name", "name"] },
   { name: "companies", idCol: "id", nameCols: ["name", "company_name"] },
   { name: "banks", idCol: "id", nameCols: ["name", "bank_name"] },
   { name: "products", idCol: "id", nameCols: ["product_name", "name"] },

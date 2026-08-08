@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type AdvanceLoanModalProps = {
   employee: any;
@@ -18,6 +20,7 @@ type LedgerOption = {
 };
 
 export function AdvanceLoanModal({ employee, onClose, onSuccess }: AdvanceLoanModalProps) {
+  const lang = useActiveLanguage();
   const [loading, setLoading] = useState(false);
   const [ledgers, setLedgers] = useState<LedgerOption[]>([]);
   
@@ -58,19 +61,19 @@ export function AdvanceLoanModal({ employee, onClose, onSuccess }: AdvanceLoanMo
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!amount || amount <= 0) {
-      setError("Please enter a valid amount.");
+      setError(t(lang, "hr.m_err_amount", "Please enter a valid amount."));
       return;
     }
     if (!paymentAccountId) {
-      setError("Please select a Cash/Bank payment ledger.");
+      setError(t(lang, "hr.m_err_ledger", "Please select a Cash/Bank payment ledger."));
       return;
     }
     if (!monthlyDeduction || monthlyDeduction <= 0) {
-      setError("Please enter a valid monthly deduction rate.");
+      setError(t(lang, "hr.m_err_deduction", "Please enter a valid monthly deduction rate."));
       return;
     }
     if (!startMonth) {
-      setError("Please specify the recovery start month.");
+      setError(t(lang, "hr.m_err_start", "Please specify the recovery start month."));
       return;
     }
 
@@ -98,7 +101,7 @@ export function AdvanceLoanModal({ employee, onClose, onSuccess }: AdvanceLoanMo
         onSuccess();
       }
     } catch (err: any) {
-      setError(err.message || "Failed to record advance/loan.");
+      setError(err.message || t(lang, "hr.m_err_failed", "Failed to record advance/loan."));
     } finally {
       setLoading(false);
     }
@@ -114,27 +117,27 @@ export function AdvanceLoanModal({ employee, onClose, onSuccess }: AdvanceLoanMo
 
       <div className="bg-slate-950 p-4 rounded-xl border border-slate-850 flex justify-between items-center mb-2">
         <div>
-          <span className="text-xs text-slate-400 font-bold block">Employee</span>
+          <span className="text-xs text-slate-400 font-bold block">{t(lang, "hr.cat_employee", "Employee")}</span>
           <span className="text-base font-bold text-white">{personName} ({code})</span>
         </div>
         <span className="text-xs text-slate-500 uppercase tracking-widest bg-slate-900 border border-slate-800 px-2 py-1 rounded">
-          Target Currency: {currency}
+          {t(lang, "hr.m_target_currency", "Target Currency")}: {currency}
         </span>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-350 mb-1.5">Advance / Loan Type</label>
+          <label className="block text-sm font-medium text-slate-350 mb-1.5">{t(lang, "hr.m_advance_type", "Advance / Loan Type")}</label>
           <select
             value={type}
             onChange={(e) => setType(e.target.value)}
             className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm"
           >
-            <option value="Salary Advance">Salary Advance</option>
-            <option value="Employee Loan">Employee Loan</option>
-            <option value="Emergency Advance">Emergency Advance</option>
-            <option value="Travel Advance">Travel Advance</option>
-            <option value="Other Advance">Other Advance</option>
+            <option value="Salary Advance">{t(lang, "hr.m_salary_advance", "Salary Advance")}</option>
+            <option value="Employee Loan">{t(lang, "hr.m_employee_loan", "Employee Loan")}</option>
+            <option value="Emergency Advance">{t(lang, "hr.m_emergency_advance", "Emergency Advance")}</option>
+            <option value="Travel Advance">{t(lang, "hr.m_travel_advance", "Travel Advance")}</option>
+            <option value="Other Advance">{t(lang, "hr.m_other_advance", "Other Advance")}</option>
           </select>
         </div>
 

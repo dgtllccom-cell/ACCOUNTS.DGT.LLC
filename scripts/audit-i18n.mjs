@@ -67,8 +67,27 @@ function auditTableHeaders() {
   return { total: entries.length, incomplete };
 }
 
+// Guard: in ur/ar/fa/ps dicts, no translation key may appear BEFORE the `...en` spread —
+// anything before it is silently overridden by English at runtime.
+function auditSpreadOrder() {
+  const src = fs.readFileSync("lib/i18n/ui.ts", "utf8");
+  const lines = src.split("\n");
+  const bad = [];
+  for (let i = 0; i < lines.length; i++) {
+    const m = lines[i].match(/^const (ur|ar|fa|ps): Dict = \{/);
+    if (!m) continue;
+    for (let j = i + 1; j < lines.length; j++) {
+      if (/^\s*\.\.\.en,\s*$/.test(lines[j])) break;
+      if (/^\s*"[^"]+"\s*:/.test(lines[j])) { bad.push(`${m[1]}: line ${j + 1} — key before ...en spread (dead override)`); }
+      if (/^\};/.test(lines[j])) break;
+    }
+  }
+  return bad;
+}
+
 const ui = auditUi();
 const th = auditTableHeaders();
+const spreadIssues = auditSpreadOrder();
 
 console.log("═══ i18n Coverage Audit ═══\n");
 console.log(`UI dictionary (lib/i18n/ui.ts): ${ui.total} keys (English baseline)`);
@@ -88,8 +107,13 @@ if (listMode && th.incomplete.length) {
   for (const e of th.incomplete) console.log(`     ${e.key}  (has: ${e.has.join(",") || "none"})`);
 }
 
-console.log(`\nTOTAL UI GAPS: ${uiGap} | TABLE-HEADER GAPS: ${th.incomplete.length}`);
-if (uiGap > 0 || th.incomplete.length > 0) {
+if (spreadIssues.length) {
+  console.log(`\n⚠️ SPREAD-ORDER ISSUES (keys silently overridden by English):`);
+  for (const s of spreadIssues) console.log("   " + s);
+}
+
+console.log(`\nTOTAL UI GAPS: ${uiGap} | TABLE-HEADER GAPS: ${th.incomplete.length} | SPREAD ISSUES: ${spreadIssues.length}`);
+if (uiGap > 0 || th.incomplete.length > 0 || spreadIssues.length > 0) {
   console.log("\n❌ Localization incomplete — fill the gaps above.");
   process.exitCode = 1;
 } else {

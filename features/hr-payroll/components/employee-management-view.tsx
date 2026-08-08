@@ -298,7 +298,7 @@ export function EmployeeManagementView() {
                           }}
                           className="h-7 text-xs px-2.5"
                         >
-                          Edit
+                          {t(lang, "common.edit", "Edit")}
                         </Button>
                         <Button
                           variant="outline"
@@ -306,7 +306,7 @@ export function EmployeeManagementView() {
                           onClick={() => setSelectedEmployeeForLoan(emp)}
                           className="h-7 text-xs px-2.5"
                         >
-                          Loan/Adv
+                          {t(lang, "hr.l_loan_adv", "Loan/Adv")}
                         </Button>
                         <Button
                           variant="outline"
@@ -314,7 +314,7 @@ export function EmployeeManagementView() {
                           onClick={() => setSelectedEmployeeForHistory(emp)}
                           className="h-7 text-xs px-2.5 text-blue-600 dark:text-blue-400"
                         >
-                          Ledger
+                          {t(lang, "hr.l_ledger", "Ledger")}
                         </Button>
                         <Button
                           variant="outline"
@@ -348,7 +348,7 @@ export function EmployeeManagementView() {
                           }}
                           className="h-7 text-xs px-2.5 text-emerald-600 dark:text-emerald-400"
                         >
-                          Certificate
+                          {t(lang, "hr.l_certificate", "Certificate")}
                         </Button>
                         <Button
                           variant="outline"
@@ -356,7 +356,7 @@ export function EmployeeManagementView() {
                           onClick={() => handleDelete(emp.id)}
                           className="h-7 text-xs px-2.5 text-red-600 hover:text-red-700 dark:text-red-400"
                         >
-                          Delete
+                          {t(lang, "common.delete", "Delete")}
                         </Button>
                       </td>
                     </tr>
@@ -373,7 +373,7 @@ export function EmployeeManagementView() {
       {/* Forms Modal */}
       {showFormModal && (
         <SimpleModal
-          title={selectedEmployeeId ? "Edit Employee Profile Setup" : "Register New Employee Profile"}
+          title={selectedEmployeeId ? t(lang, "hr.edit_profile_title", "Edit Employee Profile Setup") : t(lang, "hr.register_profile_title", "Register New Employee Profile")}
           onClose={() => setShowFormModal(false)}
           className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto"
         >
@@ -391,7 +391,7 @@ export function EmployeeManagementView() {
       {/* Loan/Advance Modal */}
       {selectedEmployeeForLoan && (
         <SimpleModal
-          title="Issue Salary Advance / Loan"
+          title={t(lang, "hr.l_issue_advance", "Issue Salary Advance / Loan")}
           onClose={() => setSelectedEmployeeForLoan(null)}
           className="max-w-3xl w-[95vw]"
         >
@@ -409,7 +409,7 @@ export function EmployeeManagementView() {
       {/* History Ledger Modal */}
       {selectedEmployeeForHistory && (
         <SimpleModal
-          title={`Employee Statement Recovery History — ${selectedEmployeeForHistory?.person?.customer_name}`}
+          title={`${t(lang, "hr.l_statement_history", "Employee Statement Recovery History")} — ${selectedEmployeeForHistory?.person?.customer_name}`}
           onClose={() => setSelectedEmployeeForHistory(null)}
           className="max-w-5xl w-[95vw]"
         >

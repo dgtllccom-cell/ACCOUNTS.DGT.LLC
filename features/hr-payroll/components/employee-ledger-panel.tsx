@@ -3,12 +3,15 @@
 import { useEffect, useState } from "react";
 import { apiGet } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type EmployeeLedgerPanelProps = {
   employeeId: string;
 };
 
 export function EmployeeLedgerPanel({ employeeId }: EmployeeLedgerPanelProps) {
+  const lang = useActiveLanguage();
   const [loading, setLoading] = useState(false);
   const [salaries, setSalaries] = useState<any[]>([]);
   const [loans, setLoans] = useState<any[]>([]);
@@ -34,7 +37,7 @@ export function EmployeeLedgerPanel({ employeeId }: EmployeeLedgerPanelProps) {
   }, [employeeId]);
 
   if (loading) {
-    return <div className="text-center py-8 text-slate-400">Loading payroll history...</div>;
+    return <div className="text-center py-8 text-slate-400">{t(lang, "hr.l_loading_history", "Loading payroll history...")}</div>;
   }
 
   return (
@@ -42,7 +45,7 @@ export function EmployeeLedgerPanel({ employeeId }: EmployeeLedgerPanelProps) {
       
       {/* Table 1: Salary History */}
       <div>
-        <h4 className="text-base font-bold text-white mb-3">Salary History & Payment Registry</h4>
+        <h4 className="text-base font-bold text-white mb-3">{t(lang, "hr.l_salary_history", "Salary History & Payment Registry")}</h4>
         <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/40">
           <table className="min-w-full text-sm text-left text-slate-300">
             <thead className="bg-slate-950 text-slate-400 uppercase text-xs font-semibold">
@@ -60,7 +63,7 @@ export function EmployeeLedgerPanel({ employeeId }: EmployeeLedgerPanelProps) {
             <tbody className="divide-y divide-slate-850">
               {salaries.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-slate-500">No salary records generated.</td>
+                  <td colSpan={8} className="px-6 py-8 text-center text-slate-500">{t(lang, "hr.l_no_salary_records", "No salary records generated.")}</td>
                 </tr>
               ) : (
                 salaries.map((s) => (
@@ -94,7 +97,7 @@ export function EmployeeLedgerPanel({ employeeId }: EmployeeLedgerPanelProps) {
 
       {/* Table 2: Advances & Loans */}
       <div>
-        <h4 className="text-base font-bold text-white mb-3">Salary Advances & Loans Recovery Ledger</h4>
+        <h4 className="text-base font-bold text-white mb-3">{t(lang, "hr.l_advances_ledger", "Salary Advances & Loans Recovery Ledger")}</h4>
         <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/40">
           <table className="min-w-full text-sm text-left text-slate-300">
             <thead className="bg-slate-950 text-slate-400 uppercase text-xs font-semibold">
@@ -112,7 +115,7 @@ export function EmployeeLedgerPanel({ employeeId }: EmployeeLedgerPanelProps) {
             <tbody className="divide-y divide-slate-850">
               {loans.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-6 py-8 text-center text-slate-500">No active advances or loans recorded.</td>
+                  <td colSpan={8} className="px-6 py-8 text-center text-slate-500">{t(lang, "hr.l_no_advances", "No active advances or loans recorded.")}</td>
                 </tr>
               ) : (
                 loans.map((l) => (

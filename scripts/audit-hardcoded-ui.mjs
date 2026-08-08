@@ -65,6 +65,8 @@ function looksLikeUiText(s) {
 function preprocess(src) {
   let s = src.replace(/\/\*[\s\S]*?\*\//g, "");      // block comments
   s = s.replace(/^\s*\/\/.*$/gm, "");                // line comments
+  // <Th>string</Th> children are translated at runtime by translateHeader() — not hard-coded.
+  s = s.replace(/<Th\b[^>]*>\s*[^<>{}]*?\s*<\/Th>/g, "<Th></Th>");
   // drop lines that are clearly technical (imports, logs, type-only)
   s = s.split("\n").filter((line) => {
     const l = line.trim();

@@ -214,24 +214,37 @@ async function runSeed() {
             is_active = true;
         `;
 
-        // Upsert into Supabase profiles
-        await sql`
-          insert into public.profiles (
-            id, full_name, user_code, preferred_language_code, raw_password, updated_at
-          ) values (
-            ${userId}, ${u.name}, ${userCode}, 'en', 'User@123456', now()
-          )
-          on conflict (id) do update set
-            full_name = excluded.full_name,
-            user_code = excluded.user_code;
-        `;
+        // Retrieve inserted/existing user ID to avoid auth.users / profiles FK error
+        const userRow = await sql`select id from public.app_users where email = ${u.email} limit 1`;
+        const activeUserId = userRow[0]?.id || userId;
+
+        // Upsert into Supabase auth.users & profiles gracefully
+        try {
+          await sql`
+            insert into auth.users (
+              instance_id, id, aud, role, email, encrypted_password, email_confirmed_at, created_at, updated_at, confirmation_token, email_change, email_change_token_new, recovery_token
+            ) values (
+              '00000000-0000-0000-0000-000000000000', ${activeUserId}, 'authenticated', 'authenticated', ${u.email}, '', now(), now(), now(), '', '', '', ''
+            ) on conflict (id) do nothing;
+          `;
+          await sql`
+            insert into public.profiles (
+              id, full_name, user_code, preferred_language_code, raw_password, updated_at
+            ) values (
+              ${activeUserId}, ${u.name}, ${userCode}, 'en', 'User@123456', now()
+            )
+            on conflict (id) do update set
+              full_name = excluded.full_name,
+              user_code = excluded.user_code;
+          `;
+        } catch (pe) {}
 
         // Upsert User Role Assignment
         await sql`
           insert into public.user_role_assignments (
             id, user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at, updated_at
           ) values (
-            gen_random_uuid(), ${userId}, ${u.role}, ${branch.countryId}, ${branch.countryBranchId}, ${branch.cityBranchId}, true, now(), now()
+            gen_random_uuid(), ${activeUserId}, ${u.role}, ${branch.countryId}, ${branch.countryBranchId}, ${branch.cityBranchId}, true, now(), now()
           )
           on conflict do nothing;
         `;
@@ -274,12 +287,12 @@ async function runSeed() {
       const empCode = `EMP-${branch.code}-${String(j + 1).padStart(3, "0")}`;
 
       try {
-        // Insert Person Record in Customers
+        // Insert Person Record in Customers without invalid customer_type column
         await sql`
           insert into public.customers (
-            id, customer_name, customer_type, country_id, country_branch_id, city_branch_id, status, created_at
+            id, customer_name, country_id, country_branch_id, city_branch_id, status, created_at
           ) values (
-            ${customerPersonId}, ${emp.nameEn}, 'Employee', ${branch.countryId}, ${branch.countryBranchId}, ${branch.cityBranchId}, 'Active', now()
+            ${customerPersonId}, ${emp.nameEn}, ${branch.countryId}, ${branch.countryBranchId}, ${branch.cityBranchId}, 'Active', now()
           )
           on conflict do nothing;
         `;
