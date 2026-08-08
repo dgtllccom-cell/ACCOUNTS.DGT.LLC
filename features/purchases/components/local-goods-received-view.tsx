@@ -9,6 +9,9 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 type LocalGoodsReceiptType = "warehouse" | "loading" | "export";
 
@@ -19,16 +22,16 @@ function localGoodsReceiptTypeFromShipment(value: unknown): LocalGoodsReceiptTyp
   return "loading";
 }
 
-function localGoodsReceiptCompletedStatus(type: LocalGoodsReceiptType) {
-  if (type === "warehouse") return "Warehouse Received";
-  if (type === "export") return "Export Completed";
-  return "Loading Completed";
+function localGoodsReceiptCompletedStatus(type: LocalGoodsReceiptType, lang: SupportedLanguage) {
+  if (type === "warehouse") return t(lang, "purchase.lgr_status_warehouse_received", "Warehouse Received");
+  if (type === "export") return t(lang, "purchase.lgr_status_export_completed", "Export Completed");
+  return t(lang, "purchase.lgr_status_loading_completed", "Loading Completed");
 }
 
-function localGoodsReceiptLabel(type: LocalGoodsReceiptType) {
-  if (type === "warehouse") return "Warehouse";
-  if (type === "export") return "Export";
-  return "Loading";
+function localGoodsReceiptLabel(type: LocalGoodsReceiptType, lang: SupportedLanguage) {
+  if (type === "warehouse") return t(lang, "purchase.lgr_label_warehouse", "Warehouse");
+  if (type === "export") return t(lang, "purchase.lgr_label_export", "Export");
+  return t(lang, "purchase.lgr_label_loading", "Loading");
 }
 
 function money(value: unknown, currency?: string) {
@@ -47,6 +50,7 @@ export function LocalGoodsReceivedView({
   countryBranches,
   cityBranches,
 }: LocalGoodsReceivedViewProps) {
+  const lang = useActiveLanguage();
   const [purchases, setPurchases] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -206,7 +210,7 @@ export function LocalGoodsReceivedView({
     if (!activeGoodsReceipt?.row?.id) return;
     const formData = new FormData(event.currentTarget);
     const details = Object.fromEntries(Array.from(formData.entries()).map(([key, value]) => [key, String(value)]));
-    const status = localGoodsReceiptCompletedStatus(activeGoodsReceipt.type);
+    const status = localGoodsReceiptCompletedStatus(activeGoodsReceipt.type, lang);
 
     try {
       setSavingGoodsReceipt(true);
@@ -221,11 +225,11 @@ export function LocalGoodsReceivedView({
         }),
       });
       const data = await res.json();
-      if (!res.ok || !data.ok) throw new Error(data.error?.message || "Failed to save local goods receipt.");
+      if (!res.ok || !data.ok) throw new Error(data.error?.message || t(lang, "purchase.lgr_err_save_failed", "Failed to save local goods receipt."));
       setPurchases((prev: any[]) => prev.map((row: any) => row.id === activeGoodsReceipt.row.id ? data.data.purchase : row));
       setActiveGoodsReceipt(null);
     } catch (err: any) {
-      alert(err.message || "Failed to save local goods receipt.");
+      alert(err.message || t(lang, "purchase.lgr_err_save_failed", "Failed to save local goods receipt."));
     } finally {
       setSavingGoodsReceipt(false);
     }
@@ -239,8 +243,8 @@ export function LocalGoodsReceivedView({
         <div className="flex items-center gap-2">
           <Package className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           <h1 className="text-sm font-black uppercase tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
-            Receiving Country Workflow (Goods Received)
-            <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">NEW</span>
+            {t(lang, "purchase.lgr_page_title", "Receiving Country Workflow (Goods Received)")}
+            <span className="bg-amber-400 text-amber-950 text-[9px] font-black px-1.5 py-0.5 rounded shadow-xs uppercase tracking-wider">{t(lang, "purchase.lgr_new_badge", "NEW")}</span>
           </h1>
         </div>,
         titleSlot
@@ -257,7 +261,7 @@ export function LocalGoodsReceivedView({
               onChange={e => setSelectedCountryId(e.target.value)}
               className="h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 text-[11px] font-bold outline-none uppercase"
             >
-              <option value="">1. ALL COUNTRIES</option>
+              <option value="">{t(lang, "purchase.lgr_all_countries", "1. ALL COUNTRIES")}</option>
               {countryOptions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
             </select>
           )}
@@ -268,7 +272,7 @@ export function LocalGoodsReceivedView({
             onChange={e => setSelectedBranchId(e.target.value)}
             className="h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 text-[11px] font-bold outline-none uppercase max-w-[160px]"
           >
-            <option value="">2. ALL BRANCHES</option>
+            <option value="">{t(lang, "purchase.lgr_all_branches", "2. ALL BRANCHES")}</option>
             {filteredCountryBranches.map(b => (
               <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
             ))}
@@ -280,14 +284,14 @@ export function LocalGoodsReceivedView({
             onChange={e => setSelectedCityBranchId(e.target.value)}
             className="h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 text-[11px] font-bold outline-none uppercase max-w-[150px]"
           >
-            <option value="">3. ALL CITIES</option>
+            <option value="">{t(lang, "purchase.lgr_all_cities", "3. ALL CITIES")}</option>
             {activeCityBranches.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
 
           {/* 4. Date From */}
           <input
             type="date"
-            placeholder="Date From"
+            placeholder={t(lang, "purchase.lgr_date_from", "Date From")}
             value={dateFrom}
             onChange={e => setDateFrom(e.target.value)}
             className="h-8 text-[10px] font-bold bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-2"
@@ -309,7 +313,7 @@ export function LocalGoodsReceivedView({
             <Search className="h-3.5 w-3.5 absolute left-2.5 top-2.5 text-slate-400" />
             <input
               type="text"
-              placeholder="Search registry..."
+              placeholder={t(lang, "purchase.lgr_search_placeholder", "Search registry...")}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="h-8 w-36 sm:w-44 pl-8 pr-2 text-[11px] font-medium bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg outline-none focus:border-blue-500"
@@ -325,10 +329,10 @@ export function LocalGoodsReceivedView({
           <div>
             <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
               <Package className="h-4 w-4 text-emerald-600" />
-              LOCAL GOODS RECEIVED
+              {t(lang, "purchase.lgr_title", "LOCAL GOODS RECEIVED")}
             </CardTitle>
             <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-              Accepted / transferred local purchase bills are routed by shipment type into one receiving process only.
+              {t(lang, "purchase.lgr_subtitle", "Accepted / transferred local purchase bills are routed by shipment type into one receiving process only.")}
             </p>
           </div>
 
@@ -347,7 +351,7 @@ export function LocalGoodsReceivedView({
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
-                  {localGoodsReceiptLabel(tab)} ({count})
+                  {localGoodsReceiptLabel(tab, lang)} ({count})
                 </button>
               );
             })}
@@ -358,16 +362,16 @@ export function LocalGoodsReceivedView({
           {loadingHistory ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 text-slate-400">
               <Loader2 className="h-8 w-8 animate-spin text-emerald-600" />
-              <span className="text-xs font-bold uppercase tracking-wider">Loading receiving registry...</span>
+              <span className="text-xs font-bold uppercase tracking-wider">{t(lang, "purchase.lgr_loading_registry", "Loading receiving registry...")}</span>
             </div>
           ) : activeGoodsReceivedRows.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center space-y-2">
               <Package className="h-10 w-10 text-slate-300 dark:text-slate-700" />
               <p className="text-sm font-bold text-slate-700 dark:text-slate-300 uppercase">
-                No {localGoodsReceiptLabel(goodsReceivedTab)} Receipts Pending
+                {localGoodsReceiptLabel(goodsReceivedTab, lang)} {t(lang, "purchase.lgr_no_pending_suffix", "Receipts Pending")}
               </p>
               <p className="text-xs text-slate-400 max-w-sm">
-                No accepted local purchase bills matching "{goodsReceivedTab}" shipment type found for the selected branch.
+                {t(lang, "purchase.lgr_no_match_prefix", "No accepted local purchase bills matching")} "{goodsReceivedTab}" {t(lang, "purchase.lgr_no_match_suffix", "shipment type found for the selected branch.")}
               </p>
             </div>
           ) : (
@@ -396,19 +400,19 @@ export function LocalGoodsReceivedView({
                           {row.serialNo || row.serial_no || `#PO-${row.id.slice(0, 6)}`}
                         </td>
                         <td className="py-2.5 px-3 font-bold">
-                          {row.supplierName || row.supplier_name || "Local Vendor"}
+                          {row.supplierName || row.supplier_name || t(lang, "purchase.lgr_local_vendor", "Local Vendor")}
                         </td>
                         <td className="py-2.5 px-3 font-bold text-slate-700 dark:text-slate-300">
-                          {row.goodsName || row.goods_name || "General Goods"}
+                          {row.goodsName || row.goods_name || t(lang, "purchase.lgr_general_goods", "General Goods")}
                         </td>
                         <td className="py-2.5 px-3 text-right font-mono font-bold">
-                          {row.quantity || row.qty || 0} {row.unit || "Bag"}
+                          {row.quantity || row.qty || 0} {row.unit || t(lang, "purchase.lgr_unit_bag", "Bag")}
                         </td>
                         <td className="py-2.5 px-3 text-right font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
                           {money(row.totalAmount || row.total_amount, row.currency || localCurrency)}
                         </td>
                         <td className="py-2.5 px-3 font-mono text-[10px] text-slate-500">
-                          {row.truckNo || row.truck_no ? `Truck #${row.truckNo || row.truck_no}` : (row.shippingMode || row.shipping_mode || "Direct")}
+                          {row.truckNo || row.truck_no ? `${t(lang, "purchase.lgr_truck_hash", "Truck #")}${row.truckNo || row.truck_no}` : (row.shippingMode || row.shipping_mode || t(lang, "purchase.lgr_direct", "Direct"))}
                         </td>
                         <td className="py-2.5 px-3 text-center">
                           <span className={`inline-flex items-center gap-1 text-[9px] font-black uppercase px-2 py-0.5 rounded-md border ${
@@ -431,7 +435,7 @@ export function LocalGoodsReceivedView({
                                 : "bg-emerald-600 hover:bg-emerald-700 text-white"
                             }`}
                           >
-                            {isDone ? "Completed" : `Process ${localGoodsReceiptLabel(goodsReceivedTab)}`}
+                            {isDone ? t(lang, "purchase.lgr_completed", "Completed") : `${t(lang, "purchase.lgr_process_prefix", "Process")} ${localGoodsReceiptLabel(goodsReceivedTab, lang)}`}
                           </Button>
                         </td>
                       </tr>
@@ -452,7 +456,7 @@ export function LocalGoodsReceivedView({
               <div className="flex items-center gap-2">
                 <Package className="h-5 w-5 text-emerald-600" />
                 <h3 className="text-sm font-black uppercase tracking-tight text-slate-900 dark:text-white">
-                  Process {localGoodsReceiptLabel(activeGoodsReceipt.type)} Receipt
+                  {t(lang, "purchase.lgr_process_prefix", "Process")} {localGoodsReceiptLabel(activeGoodsReceipt.type, lang)} {t(lang, "purchase.lgr_receipt_suffix", "Receipt")}
                 </h3>
               </div>
               <button
@@ -465,22 +469,22 @@ export function LocalGoodsReceivedView({
 
             <form onSubmit={saveLocalGoodsReceipt} className="space-y-4">
               <div className="bg-slate-50 dark:bg-slate-850 p-3 rounded-xl border border-slate-200 dark:border-slate-800 text-xs space-y-1 font-semibold">
-                <p><span className="text-slate-400 uppercase">Bill No:</span> {activeGoodsReceipt.row.serialNo || activeGoodsReceipt.row.serial_no || `#PO-${activeGoodsReceipt.row.id.slice(0, 6)}`}</p>
-                <p><span className="text-slate-400 uppercase">Supplier:</span> {activeGoodsReceipt.row.supplierName || activeGoodsReceipt.row.supplier_name}</p>
-                <p><span className="text-slate-400 uppercase">Item:</span> {activeGoodsReceipt.row.goodsName || activeGoodsReceipt.row.goods_name} ({activeGoodsReceipt.row.quantity} {activeGoodsReceipt.row.unit || "Bag"})</p>
+                <p><span className="text-slate-400 uppercase">{t(lang, "purchase.lgr_bill_no", "Bill No:")}</span> {activeGoodsReceipt.row.serialNo || activeGoodsReceipt.row.serial_no || `#PO-${activeGoodsReceipt.row.id.slice(0, 6)}`}</p>
+                <p><span className="text-slate-400 uppercase">{t(lang, "purchase.lgr_supplier_label", "Supplier:")}</span> {activeGoodsReceipt.row.supplierName || activeGoodsReceipt.row.supplier_name}</p>
+                <p><span className="text-slate-400 uppercase">{t(lang, "purchase.lgr_item_label", "Item:")}</span> {activeGoodsReceipt.row.goodsName || activeGoodsReceipt.row.goods_name} ({activeGoodsReceipt.row.quantity} {activeGoodsReceipt.row.unit || t(lang, "purchase.lgr_unit_bag", "Bag")})</p>
               </div>
 
               {activeGoodsReceipt.type === "warehouse" && (
                 <div className="space-y-1">
                   <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400">
-                    Select Target Warehouse
+                    {t(lang, "purchase.lgr_select_warehouse", "Select Target Warehouse")}
                   </label>
                   <select
                     name="warehouseId"
                     required
                     className="w-full h-9 px-2 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-800 dark:text-slate-100 outline-none"
                   >
-                    <option value="">Choose Warehouse...</option>
+                    <option value="">{t(lang, "purchase.lgr_choose_warehouse", "Choose Warehouse...")}</option>
                     {warehousesList.map(w => (
                       <option key={w.id} value={w.id}>{w.name} ({w.code || w.city || "Main"})</option>
                     ))}
@@ -491,23 +495,23 @@ export function LocalGoodsReceivedView({
               {activeGoodsReceipt.type === "loading" && (
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
-                    <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400">Truck No</label>
+                    <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400">{t(lang, "purchase.lgr_truck_no", "Truck No")}</label>
                     <input
                       name="truckNo"
                       type="text"
                       required
-                      placeholder="e.g. KBL-7892"
+                      placeholder={t(lang, "purchase.lgr_ph_truck_no", "e.g. KBL-7892")}
                       defaultValue={activeGoodsReceipt.row.truckNo || activeGoodsReceipt.row.truck_no || ""}
                       className="w-full h-9 px-3 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850"
                     />
                   </div>
                   <div className="space-y-1">
-                    <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400">Driver Name</label>
+                    <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400">{t(lang, "purchase.lgr_driver_name", "Driver Name")}</label>
                     <input
                       name="driverName"
                       type="text"
                       required
-                      placeholder="Driver Name"
+                      placeholder={t(lang, "purchase.lgr_driver_name", "Driver Name")}
                       defaultValue={activeGoodsReceipt.row.driverName || activeGoodsReceipt.row.driver_name || ""}
                       className="w-full h-9 px-3 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850"
                     />
@@ -517,23 +521,23 @@ export function LocalGoodsReceivedView({
 
               {activeGoodsReceipt.type === "export" && (
                 <div className="space-y-1">
-                  <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400">Export Customs Reference / Declaration No</label>
+                  <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400">{t(lang, "purchase.lgr_export_ref_label", "Export Customs Reference / Declaration No")}</label>
                   <input
                     name="exportRef"
                     type="text"
                     required
-                    placeholder="e.g. EXP-2026-9901"
+                    placeholder={t(lang, "purchase.lgr_ph_export_ref", "e.g. EXP-2026-9901")}
                     className="w-full h-9 px-3 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850"
                   />
                 </div>
               )}
 
               <div className="space-y-1">
-                <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400">Receiving Remarks / Notes</label>
+                <label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400">{t(lang, "purchase.lgr_remarks_label", "Receiving Remarks / Notes")}</label>
                 <textarea
                   name="remarks"
                   rows={2}
-                  placeholder="Verification notes, weight check, condition..."
+                  placeholder={t(lang, "purchase.lgr_ph_remarks", "Verification notes, weight check, condition...")}
                   className="w-full p-2.5 text-xs font-medium rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-850 outline-none"
                 />
               </div>
@@ -545,14 +549,14 @@ export function LocalGoodsReceivedView({
                   onClick={() => setActiveGoodsReceipt(null)}
                   className="h-9 px-4 text-xs font-bold rounded-xl"
                 >
-                  Cancel
+                  {t(lang, "common.cancel", "Cancel")}
                 </Button>
                 <Button
                   type="submit"
                   disabled={savingGoodsReceipt}
                   className="h-9 px-5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md"
                 >
-                  {savingGoodsReceipt ? "Saving..." : "Confirm & Complete Receipt"}
+                  {savingGoodsReceipt ? t(lang, "purchase.lgr_saving", "Saving...") : t(lang, "purchase.lgr_confirm_complete", "Confirm & Complete Receipt")}
                 </Button>
               </div>
             </form>

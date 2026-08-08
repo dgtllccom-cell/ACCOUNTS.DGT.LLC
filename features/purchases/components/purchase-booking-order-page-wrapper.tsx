@@ -6,8 +6,11 @@ import { PurchaseBookingJournalReportView } from "@/features/purchases/component
 import { PurchaseOrderWizard } from "@/features/purchases/components/purchase-order-wizard.jsx";
 import { Button } from "@/components/ui/button";
 import { Plus, ArrowLeft, Table, FileSpreadsheet, Sparkles } from "lucide-react";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 function PurchaseBookingOrderPageWrapperContent({ session }: { session: any }) {
+  const lang = useActiveLanguage();
   const searchParams = useSearchParams();
   const router = useRouter();
   
@@ -52,12 +55,12 @@ function PurchaseBookingOrderPageWrapperContent({ session }: { session: any }) {
               onClick={handleBackToJournal}
               className="gap-2 font-black text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 border-slate-300 shadow-sm dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700"
             >
-              <ArrowLeft className="h-4 w-4" /> Back to Booking Journal Register
+              <ArrowLeft className="h-4 w-4" /> {t(lang, "purchase.pbo_back_to_register", "Back to Booking Journal Register")}
             </Button>
             <span className="hidden sm:inline-block h-4 w-px bg-slate-300 dark:bg-slate-700" />
             <div className="flex items-center gap-1.5 text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-200">
               <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-              {idParam ? `Editing Booking Order (${idParam})` : "New Purchase Booking Order Entry"}
+              {idParam ? `${t(lang, "purchase.pbo_editing_prefix", "Editing Booking Order")} (${idParam})` : t(lang, "purchase.pbo_new_entry_title", "New Purchase Booking Order Entry")}
             </div>
           </div>
           <div className="flex items-center gap-2">
@@ -68,7 +71,7 @@ function PurchaseBookingOrderPageWrapperContent({ session }: { session: any }) {
               onClick={handleBackToJournal}
               className="text-xs font-bold text-slate-500 hover:text-slate-900 dark:hover:text-slate-100"
             >
-              <Table className="h-4 w-4 mr-1 text-slate-500" /> View Register Table
+              <Table className="h-4 w-4 mr-1 text-slate-500" /> {t(lang, "purchase.pbo_view_register_table", "View Register Table")}
             </Button>
           </div>
         </div>
@@ -88,10 +91,10 @@ function PurchaseBookingOrderPageWrapperContent({ session }: { session: any }) {
           </div>
           <div>
             <h1 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
-              Purchase Booking Order Register
+              {t(lang, "purchase.pbo_register_title", "Purchase Booking Order Register")}
             </h1>
             <p className="text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-              Overview of all booked purchase bills, payment terms, and status
+              {t(lang, "purchase.pbo_overview", "Overview of all booked purchase bills, payment terms, and status")}
             </p>
           </div>
         </div>
@@ -103,20 +106,21 @@ function PurchaseBookingOrderPageWrapperContent({ session }: { session: any }) {
             onClick={handleOpenNewWizard}
             className="gap-2 font-black text-xs bg-emerald-600 hover:bg-emerald-700 text-white shadow-md transition-all uppercase tracking-wider px-4 h-9"
           >
-            <Plus className="h-4 w-4 stroke-[3]" /> New Purchase Booking
+            <Plus className="h-4 w-4 stroke-[3]" /> {t(lang, "purchase.pbo_new_booking", "New Purchase Booking")}
           </Button>
         </div>
       </div>
 
       {/* Main Journal Register Table */}
-      <PurchaseBookingJournalReportView lang="en" />
+      <PurchaseBookingJournalReportView lang={lang} />
     </div>
   );
 }
 
 export function PurchaseBookingOrderPageWrapper(props: { session: any }) {
+  const lang = useActiveLanguage();
   return (
-    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">Loading Purchase Booking Order...</div>}>
+    <Suspense fallback={<div className="p-8 text-center text-sm font-semibold text-slate-500">{t(lang, "purchase.pbo_loading", "Loading Purchase Booking Order...")}</div>}>
       <PurchaseBookingOrderPageWrapperContent {...props} />
     </Suspense>
   );
