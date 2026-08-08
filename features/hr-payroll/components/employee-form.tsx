@@ -23,6 +23,8 @@ import {
 import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
 import { PersonPicker } from "./person-picker";
 import { Button } from "@/components/ui/button";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 
 type EmployeeFormProps = {
   employeeId?: string | null;
@@ -343,12 +345,19 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
     return <div className="text-center py-12 text-slate-500 dark:text-slate-400 font-medium">Loading employee details...</div>;
   }
 
+  const lang = useActiveLanguage();
+  const tr = (text: string) => {
+    if (!text) return text;
+    const res = autoTranslate5Languages(text);
+    return res[lang] || text;
+  };
+
   const stepsList = [
-    { number: 1, label: "Step 1: Category & Identity", icon: <UserCheck className="h-4 w-4" /> },
-    { number: 2, label: "Step 2: Location & Scopes", icon: <MapPin className="h-4 w-4" /> },
-    { number: 3, label: "Step 3: Timelines & Shift", icon: <Clock className="h-4 w-4" /> },
-    { number: 4, label: "Step 4: Salary & Accounts", icon: <BadgeDollarSign className="h-4 w-4" /> },
-    { number: 5, label: "Step 5: Entry Verification Report", icon: <FileText className="h-4 w-4" /> }
+    { number: 1, label: tr("Step 1: Category & Identity"), icon: <UserCheck className="h-4 w-4" /> },
+    { number: 2, label: tr("Step 2: Location & Scopes"), icon: <MapPin className="h-4 w-4" /> },
+    { number: 3, label: tr("Step 3: Timelines & Shift"), icon: <Clock className="h-4 w-4" /> },
+    { number: 4, label: tr("Step 4: Salary & Accounts"), icon: <BadgeDollarSign className="h-4 w-4" /> },
+    { number: 5, label: tr("Step 5: Entry Verification Report"), icon: <FileText className="h-4 w-4" /> }
   ];
 
   return (
@@ -359,16 +368,16 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
             <Sparkles className="h-4 w-4 text-emerald-600" />
-            <span>Enterprise Employee Registration Wizard</span>
+            <span>{tr("Enterprise Employee Registration Wizard")}</span>
           </div>
           <h2 className="text-xl font-black text-slate-900 dark:text-slate-100">
-            {employeeId ? "Edit Employee Master Setup" : "Register New Employee Master Record"}
+            {employeeId ? tr("Edit Employee Master Setup") : tr("Register New Employee Master Record")}
           </h2>
         </div>
 
         {selectedPersonObj && (
           <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800">
-            {selectedPersonObj.customer_name || "Employee"} ({category})
+            {selectedPersonObj.customer_name || tr("Employee")} ({tr(category)})
           </span>
         )}
       </div>
@@ -417,14 +426,14 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <UserCheck className="h-4 w-4 text-emerald-600" />
-              <span>Step 1 Packet: Employee Category & Person Selection</span>
+              <span>{tr("Step 1 Packet: Employee Category & Person Selection")}</span>
             </h3>
-            <span className="text-xs font-semibold text-slate-400">Step 1 of 5</span>
+            <span className="text-xs font-semibold text-slate-400">{tr("Step 1 of 5")}</span>
           </div>
 
           <div>
             <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-2">
-              Select Employee Category *
+              {tr("Select Employee Category *")}
             </label>
             <div className="grid grid-cols-4 gap-2 bg-slate-100 dark:bg-slate-950 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
               {(["Manager", "Normal Staff", "Employee", "Others"] as const).map((cat) => (
@@ -438,7 +447,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-900"
                   }`}
                 >
-                  {cat}
+                  {tr(cat)}
                 </button>
               ))}
             </div>
@@ -446,7 +455,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
           <div>
             <PersonPicker
-              label="Select or Add Employee / Person Master Name *"
+              label={tr("Select or Add Employee / Person Master Name *")}
               value={personMasterId}
               onValueChange={setPersonMasterId}
               countryId={countryId}
@@ -455,7 +464,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Designation / Position *</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{tr("Designation / Position *")}</label>
               <input
                 type="text"
                 value={designation}
@@ -465,7 +474,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Department *</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{tr("Department *")}</label>
               <input
                 type="text"
                 value={department}
@@ -478,11 +487,11 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
           {/* Packet Summary Box */}
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
-            <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">Step 1 Packet Preview</div>
+            <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">{tr("STEP 1 PACKET PREVIEW")}</div>
             <div className="grid grid-cols-3 gap-2">
-              <div><span className="font-semibold text-slate-400">Category:</span> {category}</div>
-              <div><span className="font-semibold text-slate-400">Name:</span> {selectedPersonObj?.customer_name || "Not Selected"}</div>
-              <div><span className="font-semibold text-slate-400">Designation:</span> {designation || "-"}</div>
+              <div><span className="font-semibold text-slate-400">{tr("Category:")}</span> {tr(category)}</div>
+              <div><span className="font-semibold text-slate-400">{tr("Name:")}</span> {selectedPersonObj?.customer_name || tr("Not Selected")}</div>
+              <div><span className="font-semibold text-slate-400">{tr("Designation:")}</span> {designation || "-"}</div>
             </div>
           </div>
         </div>
@@ -941,7 +950,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
           variant="outline"
           className="text-xs font-semibold"
         >
-          Cancel
+          {tr("Cancel")}
         </Button>
 
         <div className="flex items-center gap-2">
@@ -953,7 +962,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               className="text-xs font-semibold gap-1"
             >
               <ChevronLeft className="h-4 w-4" />
-              <span>Previous Step</span>
+              <span>{tr("Previous Step")}</span>
             </Button>
           )}
 
@@ -963,7 +972,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               onClick={() => setActiveStep((s) => s + 1)}
               className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 gap-1"
             >
-              <span>Next Step</span>
+              <span>{tr("Next Step")}</span>
               <ChevronRight className="h-4 w-4" />
             </Button>
           )}
@@ -974,7 +983,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
             className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 shadow-sm gap-1.5"
           >
             <ShieldCheck className="h-4 w-4" />
-            <span>{saving ? "Saving..." : "Save & Finalize Employee"}</span>
+            <span>{saving ? tr("Saving...") : tr("Save & Finalize Employee")}</span>
           </Button>
         </div>
       </div>

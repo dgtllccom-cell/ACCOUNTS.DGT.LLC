@@ -226,66 +226,7 @@ const dict = {
     active: "فعال",
     inactive: "غیرفعال",
     onLeave: "مرخصی",
-    suspended: "معلق",
-    edit: "ویرایش",
-    loanAdv: "وام / مساعده",
-    ledger: "دفتر حساب",
-    delete: "حذف",
-    idCardPreview: "چاپ کارت شناسایی",
-    search: "جستجو",
-    filter: "فیلتر"
-  },
-  ar: {
-    title: "الإدارة العامة للمكتب",
-    subtitle: "المركز الشامل لإدارة الموظفين والرواتب والحضور وأصول الشركة",
-    searchPlaceholder: "البحث عن الموظفين، الأقسام، الأصول...",
-    masterSetup: "إعداد الموظفين الرئيسي",
-    empMgmt: "إدارة الموظفين",
-    departments: "الأقسام الإدارية",
-    designations: "المسميات الوظيفية",
-    attendance: "سجل الحضور والغياب",
-    leave: "إدارة الإجازات",
-    payroll: "مسير الرواتب",
-    assets: "أصول المكتب",
-    officeAssets: "أصول المكتب",
-    documents: "الوثائق الرسمية",
-    officeDocuments: "الوثائق الرسمية",
-    idCards: "بطاقات الموظفين",
-    reports: "تقارير الموظفين",
-    registerBtn: "تسجيل موظف جديد",
-    totalEmployees: "إجمالي الموظفين",
-    activeStaff: "الموظفون النشطون",
-    attendanceRate: "نسبة الحضور",
-    monthlyPayroll: "إجمالي الرواتب",
-    pendingLeaves: "الإجازات المعلقة",
-    assetsTracked: "الأصول المسجلة",
-    colEmpCode: "رمز الموظف",
-    colName: "اسم الموظف",
-    colCategory: "الفئة",
-    colDesigDept: "المسمى / القسم",
-    colJoining: "تاريخ الانضمام",
-    colNetSalary: "صافي الراتب",
-    colDeductions: "الاستقطاعات",
-    colStatus: "الحالة",
-    colActions: "الإجراءات",
-    view: "عرض",
-    print: "طباعة A4",
-    pdf: "تحميل PDF",
-    excel: "تصدير إكسل",
-    email: "إرسال بريد",
-    whatsapp: "واتساب",
-    allCategories: "جميع الفئات",
-    allStatuses: "جميع الحالات",
-    active: "نشط",
-    inactive: "غیر نشط",
-    onLeave: "في إجازة",
-    suspended: "موقوف",
-    edit: "تعديل",
-    loanAdv: "سلفة / قروض",
-    ledger: "كشف حساب",
-    delete: "حذف",
-    idCardPreview: "طباعة البطاقة",
-    search: "بحث",
+    suspended    search: "بحث",
     filter: "تصفية"
   }
 };
@@ -308,17 +249,28 @@ export function GeneralOfficeDashboardView() {
   const initialTab = (searchParams.get("tab") as TabKey) || "management";
 
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
-  const [lang, setLang] = useState<SupportedLanguage>("en");
-  const [isRtl, setIsRtl] = useState(false);
-  const t = dict[lang] || dict.en;�شط",
-    inactive: "غير نشط",
-    onLeave: "في إجازة",
-    suspended: "موقوف",
-    edit: "تعديل",
-    loanAdv: "سلفة / قروض",
-    ledger: "كشف حساب",
-    delete: "حذف",
-    idCardPreview: "طباعة البطاقة",
+  const lang = useActiveLanguage();
+  const isRtl = useMemo(() => ["ur", "ps", "fa", "ar"].includes(lang), [lang]);
+  const tr = useCallback((text: string) => {
+    if (!text) return text;
+    const res = autoTranslate5Languages(text);
+    return res[lang] || text;
+  }, [lang]);
+
+  const t = useMemo(() => {
+    const d = dict[lang] || dict.en;
+    return new Proxy(d, {
+      get(target, prop: string) {
+        if (prop in target) return target[prop as keyof typeof target];
+        const res = autoTranslate5Languages(prop);
+        return res[lang] || prop;
+      }
+    });
+  }, [lang]);
+
+  // Employees State
+  const [employees, setEmployees] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);�عة البطاقة",
     search: "بحث",
     filter: "تصفية"
   }
@@ -327,19 +279,6 @@ export function GeneralOfficeDashboardView() {
 type TabKey =
   | "master-setup"
   | "management"
-  | "departments"
-  | "designations"
-  | "attendance"
-  | "leave"
-  | "payroll"
-  | "assets"
-  | "documents"
-  | "id-cards"
-  | "reports";
-
-export function GeneralOfficeDashboardView() {
-  const searchParams = useSearchParams();
-  const initialTab = (searchParams.get("tab") as TabKey) || "management";
 
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
   const [lang, setLang] = useState<SupportedLanguage>("en");
