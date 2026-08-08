@@ -142,7 +142,7 @@ export function AdvanceLoanModal({ employee, onClose, onSuccess }: AdvanceLoanMo
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-350 mb-1.5">Principal Amount</label>
+          <label className="block text-sm font-medium text-slate-350 mb-1.5">{t(lang, "hr.m_principal", "Principal Amount")}</label>
           <input
             type="number"
             value={amount || ""}
@@ -155,7 +155,7 @@ export function AdvanceLoanModal({ employee, onClose, onSuccess }: AdvanceLoanMo
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-350 mb-1.5">Date Disbursed</label>
+          <label className="block text-sm font-medium text-slate-350 mb-1.5">{t(lang, "hr.m_date_disbursed", "Date Disbursed")}</label>
           <input
             type="date"
             value={paymentDate}
@@ -165,13 +165,13 @@ export function AdvanceLoanModal({ employee, onClose, onSuccess }: AdvanceLoanMo
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-350 mb-1.5">Payment Ledger Source</label>
+          <label className="block text-sm font-medium text-slate-350 mb-1.5">{t(lang, "hr.m_payment_ledger_source", "Payment Ledger Source")}</label>
           <select
             value={paymentAccountId}
             onChange={(e) => setPaymentAccountId(e.target.value)}
             className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-sm"
           >
-            <option value="">Select Cash/Bank Account</option>
+            <option value="">{t(lang, "hr.m_select_cash_bank", "Select Cash/Bank Account")}</option>
             {ledgers.map((l) => (
               <option key={l.id} value={l.id}>{l.code} - {l.name} ({l.currency})</option>
             ))}
@@ -181,18 +181,18 @@ export function AdvanceLoanModal({ employee, onClose, onSuccess }: AdvanceLoanMo
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-350 mb-1.5">Monthly Deduction Rate</label>
+          <label className="block text-sm font-medium text-slate-350 mb-1.5">{t(lang, "hr.m_monthly_deduction_rate", "Monthly Deduction Rate")}</label>
           <input
             type="number"
             value={monthlyDeduction || ""}
             onChange={(e) => setMonthlyDeduction(Number(e.target.value))}
-            placeholder="e.g. 500"
+            placeholder={t(lang, "hr.m_ph_500", "e.g. 500")}
             className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-sm"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-350 mb-1.5">Recovery Start Month</label>
+          <label className="block text-sm font-medium text-slate-350 mb-1.5">{t(lang, "hr.m_recovery_start", "Recovery Start Month")}</label>
           <input
             type="month"
             value={startMonth}
@@ -203,12 +203,12 @@ export function AdvanceLoanModal({ employee, onClose, onSuccess }: AdvanceLoanMo
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-slate-350 mb-1.5">Disbursement Remarks / Notes</label>
+        <label className="block text-sm font-medium text-slate-350 mb-1.5">{t(lang, "hr.m_remarks", "Disbursement Remarks / Notes")}</label>
         <textarea
           rows={2}
           value={remarks}
           onChange={(e) => setRemarks(e.target.value)}
-          placeholder="e.g. Emergency advance approved by management..."
+          placeholder={t(lang, "hr.m_ph_remarks", "e.g. Emergency advance approved by management...")}
           className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white text-sm"
         />
       </div>
@@ -222,7 +222,7 @@ export function AdvanceLoanModal({ employee, onClose, onSuccess }: AdvanceLoanMo
           className="w-4 h-4 text-indigo-600 border-slate-800 bg-slate-900 rounded focus:ring-indigo-500 focus:ring-2 focus:ring-offset-slate-900"
         />
         <label htmlFor="postToRoznamcha" className="text-sm font-medium text-slate-300 cursor-pointer">
-          Automatically post double-entry disbursement to Roznamcha
+          {t(lang, "hr.m_auto_post_roznamcha", "Automatically post double-entry disbursement to Roznamcha")}
         </label>
       </div>
 
@@ -233,14 +233,14 @@ export function AdvanceLoanModal({ employee, onClose, onSuccess }: AdvanceLoanMo
           variant="outline"
           className="bg-transparent border-slate-800 text-slate-400 hover:bg-slate-950"
         >
-          Cancel
+          {t(lang, "common.cancel", "Cancel")}
         </Button>
         <Button
           type="submit"
           disabled={loading}
           className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold"
         >
-          {loading ? "Recording..." : "Record Advance/Loan"}
+          {loading ? t(lang, "hr.m_recording", "Recording...") : t(lang, "hr.m_record_btn", "Record Advance/Loan")}
         </Button>
       </div>
 
