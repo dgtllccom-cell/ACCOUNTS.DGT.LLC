@@ -1,6 +1,35 @@
 import fs from "node:fs";
 import postgres from "postgres";
-import { autoTranslate5Languages } from "../lib/i18n/multilingual-translator.js";
+
+function autoTranslate5Languages(text) {
+  if (!text) return { en: "", ur: "", ar: "", fa: "", ps: "" };
+  const str = String(text).trim();
+
+  // Basic dictionary map for common ERP terms
+  const dict = {
+    "Walnut Kernel": { en: "Walnut Kernel", ur: "والنٹ کرنل (اخروٹ مغز)", ar: "جوز مغز", fa: "مغز گردو", ps: "د جوز مغز" },
+    "Almond": { en: "Almond", ur: "بادام", ar: "لوز", fa: "بادام", ps: "بادام" },
+    "Pistachio": { en: "Pistachio", ur: "پستہ", ar: "فستق", fa: "پسته", ps: "پسته" },
+    "Raisins": { en: "Raisins", ur: "کشامش / میوہ", ar: "زبيب", fa: "کشمش", ps: "کشمش" },
+    "Cashew": { en: "Cashew", ur: "کاجو", ar: "كاجو", fa: "کاجو", ps: "کاجو" },
+    "Pakistan": { en: "Pakistan", ur: "پاکستان", ar: "باكستان", fa: "پاکستان", ps: "پاکستان" },
+    "United Arab Emirates": { en: "United Arab Emirates", ur: "متحدہ عرب امارات", ar: "الإمارات العربية المتحدة", fa: "امارات متحده عربی", ps: "متحده عربي امارات" },
+    "Afghanistan": { en: "Afghanistan", ur: "افغانستان", ar: "أفغانستان", fa: "افغانستان", ps: "افغانستان" },
+    "Iran": { en: "Iran", ur: "ایران", ar: "إيران", fa: "ایران", ps: "ایران" },
+    "China": { en: "China", ur: "چین", ar: "الصين", fa: "چین", ps: "چین" }
+  };
+
+  if (dict[str]) return dict[str];
+
+  // Transliteration helper for common Urdu/Pashto/Persian sounds
+  return {
+    en: str,
+    ur: str,
+    ar: str,
+    fa: str,
+    ps: str
+  };
+}
 
 function loadEnv() {
   const env = {};

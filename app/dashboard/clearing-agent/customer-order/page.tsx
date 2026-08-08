@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import DashboardFrame from "@/components/layout/dashboard-frame";
+import { DashboardFrame } from "@/components/layout/dashboard-frame";
 import { Anchor, Truck, Plane, Navigation, Plus, CheckCircle2, ShieldCheck, ArrowRight, RefreshCw, FileText } from "lucide-react";
 import { Th } from "@/components/ui/translated-th";
 
