@@ -140,7 +140,7 @@ echo "\n\n=== VPS DEPLOYMENT & DATABASE MIGRATION COMPLETED SUCCESSFULLY ==="
 
 try {
   const out = execSync(`ssh -o StrictHostKeyChecking=no ${SERVER} "bash -s"`, {
-    input: remoteScript,
+    input: remoteScript.replace(/\r\n/g, '\n').replace(/\r/g, '\n'),
     encoding: 'utf8',
     timeout: 600000
   });

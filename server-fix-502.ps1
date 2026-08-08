@@ -150,7 +150,8 @@ echo "SUCCESS: ERP application is live on port 3000!"
 '@
 
 Write-Host "[2/5] Connecting via SSH to 72.60.209.121 and executing remote deployment..." -ForegroundColor Green
-$unifiedScript | ssh -o StrictHostKeyChecking=no $SERVER "bash -s"
+$cleanScript = $unifiedScript.Replace("`r`n", "`n").Replace("`r", "`n")
+$cleanScript | ssh -o StrictHostKeyChecking=no $SERVER "bash -s"
 
 if ($LASTEXITCODE -ne 0) {
     Write-Host "`n================================================================" -ForegroundColor Red

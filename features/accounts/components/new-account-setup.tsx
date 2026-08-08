@@ -28,6 +28,7 @@ import { BankPicker } from "@/features/banks/components/bank-picker";
 import { WarehousePicker } from "@/features/warehouses/components/warehouse-picker";
 import { fetchWarehouses } from "@/features/warehouses/warehouse-api";
 import { rtlLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
+import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 import { getLabel } from "./translations";
 import { AccountLiveReportPanel } from "./account-live-report-panel";
 import { openAccountA4ReportWindow } from "@/lib/reports/open-account-a4-report-window";
