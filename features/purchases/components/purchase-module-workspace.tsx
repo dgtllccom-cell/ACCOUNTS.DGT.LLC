@@ -18,6 +18,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type PurchaseModuleType = "purchase" | "stock";
 
@@ -187,6 +189,7 @@ export function PurchaseModuleWorkspace({
   description: string;
   type?: PurchaseModuleType;
 }) {
+  const lang = useActiveLanguage();
   const [orders, setOrders] = useState<PurchaseOrderRow[]>([]);
   const [query, setQuery] = useState("");
   const [countryFilter, setCountryFilter] = useState("");
@@ -205,7 +208,7 @@ export function PurchaseModuleWorkspace({
       const body = (await response.json().catch(() => ({}))) as OrdersPayload;
       if (!response.ok || body.ok === false) {
         const message = typeof body.error === "string" ? body.error : body.error?.message;
-        throw new Error(message || "Purchase records could not be loaded.");
+        throw new Error(message || t(lang, "purchase.pmw_err_load_failed", "Purchase records could not be loaded."));
       }
       let rows: PurchaseOrderRow[] = [];
       if (Array.isArray(body?.data)) {
@@ -218,7 +221,7 @@ export function PurchaseModuleWorkspace({
       setOrders(rows);
     } catch (err) {
       setOrders([]);
-      setError(err instanceof Error ? err.message : "Purchase records could not be loaded.");
+      setError(err instanceof Error ? err.message : t(lang, "purchase.pmw_err_load_failed", "Purchase records could not be loaded."));
     } finally {
       setLoading(false);
     }
@@ -291,12 +294,12 @@ export function PurchaseModuleWorkspace({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex min-w-0 items-center gap-2">
             <Button type="button" variant="outline" size="sm" className="h-8 px-2" onClick={() => window.history.back()}>
-              <ArrowLeft className="h-3.5 w-3.5" /> Back
+              <ArrowLeft className="h-3.5 w-3.5" /> {t(lang, "common.back", "Back")}
             </Button>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h1 className="truncate text-sm font-black text-foreground sm:text-base">{title}</h1>
-                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-black uppercase text-primary">Spreadsheet Dashboard</span>
+                <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-black uppercase text-primary">{t(lang, "purchase.pmw_spreadsheet_dashboard", "Spreadsheet Dashboard")}</span>
               </div>
               <p className="truncate text-[11px] text-muted-foreground">{description}</p>
             </div>
@@ -304,20 +307,20 @@ export function PurchaseModuleWorkspace({
           <div className="flex flex-wrap items-center gap-1.5">
             <div className="relative">
               <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search PO, Supplier..." className="h-8 w-56 rounded-lg border bg-background pl-7 pr-2 text-xs outline-none focus:ring-2 focus:ring-ring" />
+              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t(lang, "purchase.pmw_search_placeholder", "Search PO, Supplier...")} className="h-8 w-56 rounded-lg border bg-background pl-7 pr-2 text-xs outline-none focus:ring-2 focus:ring-ring" />
             </div>
             <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => setFiltersOpen((value) => !value)}>
-              <Filter className="h-3.5 w-3.5" /> Filter
+              <Filter className="h-3.5 w-3.5" /> {t(lang, "purchase.pmw_filter", "Filter")}
             </Button>
             <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => { setQuery(""); setCountryFilter(""); setStatusFilter(""); void loadOrders(); }}>
-              <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} /> Reset & Refresh
+              <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} /> {t(lang, "purchase.pmw_reset_refresh", "Reset & Refresh")}
             </Button>
             <span className="hidden h-8 items-center gap-1 rounded-lg border px-2 text-[10px] font-bold text-muted-foreground lg:inline-flex"><CalendarDays className="h-3.5 w-3.5" /> {reportNow ? `${reportNow.date}, ${reportNow.time}` : "-"}</span>
             <div className="relative">
-              <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => setActionsOpen((value) => !value)} aria-label="Actions"><MoreVertical className="h-4 w-4" /></Button>
+              <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => setActionsOpen((value) => !value)} aria-label={t(lang, "common.actions", "Actions")}><MoreVertical className="h-4 w-4" /></Button>
               {actionsOpen ? (
                 <div className="absolute right-0 z-20 mt-1 w-44 rounded-xl border bg-popover p-1 text-xs shadow-xl">
-                  <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left font-semibold hover:bg-muted" onClick={() => exportCsv(rows, title)}><FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" /> Export Excel</button>
+                  <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left font-semibold hover:bg-muted" onClick={() => exportCsv(rows, title)}><FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" /> {t(lang, "purchase.pmw_export_excel", "Export Excel")}</button>
                   <button
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left font-semibold hover:bg-muted"
                     onClick={() => {
@@ -367,9 +370,9 @@ export function PurchaseModuleWorkspace({
                       });
                     }}
                   >
-                    <Printer className="h-3.5 w-3.5 text-blue-600" /> Print / PDF
+                    <Printer className="h-3.5 w-3.5 text-blue-600" /> {t(lang, "purchase.pmw_print_pdf", "Print / PDF")}
                   </button>
-                  <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left font-semibold hover:bg-muted" onClick={() => exportCsv(rows, title)}><Download className="h-3.5 w-3.5 text-slate-600" /> Download CSV</button>
+                  <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left font-semibold hover:bg-muted" onClick={() => exportCsv(rows, title)}><Download className="h-3.5 w-3.5 text-slate-600" /> {t(lang, "purchase.pmw_download_csv", "Download CSV")}</button>
                 </div>
               ) : null}
             </div>
@@ -378,11 +381,11 @@ export function PurchaseModuleWorkspace({
         {filtersOpen ? (
           <div className="mt-3 grid gap-2 border-t pt-3 sm:grid-cols-3">
             <select value={countryFilter} onChange={(event) => setCountryFilter(event.target.value)} className="h-8 rounded-lg border bg-background px-2 text-xs">
-              <option value="">All Countries</option>
+              <option value="">{t(lang, "common.all_countries", "All Countries")}</option>
               {countries.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
             <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="h-8 rounded-lg border bg-background px-2 text-xs">
-              <option value="">All Status</option>
+              <option value="">{t(lang, "common.all_statuses", "All Statuses")}</option>
               {statuses.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
             <input type="date" className="h-8 rounded-lg border bg-background px-2 text-xs" />
@@ -392,8 +395,8 @@ export function PurchaseModuleWorkspace({
 
       <section className="rounded-xl border bg-card p-3 shadow-sm">
         <div className="mb-2 flex flex-wrap items-center gap-x-6 gap-y-1 border-b pb-2 text-[11px] font-bold uppercase text-muted-foreground">
-          <span>Branch Name: <b className="text-foreground">{rows[0] ? branch(rows[0]) : "All Branches"}</b></span>
-          <span>User Name: <b className="text-foreground">Super Admin</b></span>
+          <span>{t(lang, "purchase.pmw_branch_name_label", "Branch Name:")} <b className="text-foreground">{rows[0] ? branch(rows[0]) : t(lang, "common.all_branches", "All Branches")}</b></span>
+          <span>{t(lang, "purchase.pmw_user_name_label", "User Name:")} <b className="text-foreground">{t(lang, "purchase.pmw_super_admin", "Super Admin")}</b></span>
           <span>Date: <b className="text-foreground">{reportNow?.date || "-"}</b></span>
           <span>Time: <b className="text-foreground">{reportNow?.time || "-"}</b></span>
         </div>

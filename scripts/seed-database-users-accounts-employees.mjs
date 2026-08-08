@@ -55,7 +55,7 @@ const ACCOUNT_TEMPLATES = [
   { code: "5002", name: "Freight, Shipping & Container Handling Cost", category: "Expense", type: "Direct Cost", tr: { en: "Freight, Shipping & Container Handling Cost", ur: "کرایہ، جہاز رانی و کنٹینر ہینڈلنگ اخراجات", ar: "تكاليف الشحن وتناول الحاويات", fa: "هزینه حمل و نقل و جابجایی کانتینر", ps: "د باربري او کانټینرونو سمبالښت لګښت" } },
   { code: "5010", name: "Staff Payroll Salaries & Allowances Expense", category: "Expense", type: "Operating Expense", tr: { en: "Staff Payroll Salaries & Allowances Expense", ur: "ملازمین کی تنخواہیں و الاؤنسز اخراجات", ar: "مصروفات رواتب وبدلات الموظفين", fa: "هزینه حقوق و مزایای پرسنل", ps: "د کارمندانو میاشتنۍ تادیات او الونسونه" } },
   { code: "5011", name: "Office Warehouse Rent & Utilities Expense", category: "Expense", type: "Operating Expense", tr: { en: "Office Warehouse Rent & Utilities Expense", ur: "دفتر و گودام کا کرایہ و یوٹیلیٹیز اخراجات", ar: "مصاريف إيجار المكاتب والمستودعات والمرافق", fa: "هزینه اجاره دفتر و انبار و قبوض", ps: "د دفتر او ګودام کرایه او بریښنا لګښت" } },
-  { code: "5020", name: "Vehicle Fuel & Transport Logistics Expense", category: "Expense", type: "Operating Expense", tr: { en: "Vehicle Fuel & Transport Logistics Expense", ur: "گاڑیوں کا ایندھن و ٹرانسپورٹ لاجسٹکس", ar: "مصاريف وقود السيارات واللوجستيات", fa: "هزینه سوخت خودرو و لوجستیک", ps: "د وسایطو د تېلو او ټرانسپورټ لګښت" } },
+  { code: "5020", name: "Vehicle Fuel & Transport Logistics Expense", category: "Expense", type: "Operating Expense", tr: { en: "Vehicle Fuel & Transport Logistics Expense", ur: "گاڑیوں کا ایندھن و ٹرانسپورٹ لاجسٹکس", ar: "مصاريف وقود السيارات واللوجستيات", fa: "هزینه سوخت خودرو و لوجستیک", ps: "د وسایطو د تېلو او ٹرانسپورټ لګښت" } },
   { code: "5030", name: "General Office Administrative Expenses", category: "Expense", type: "Admin Expense", tr: { en: "General Office Administrative Expenses", ur: "جنرل آفس انتظامی اخراجات", ar: "المصاريف الإدارية العامة للمكتب", fa: "هزینه‌های عمومی و اداری دفتر", ps: "د عمومي دفتر اداري لګښتونه" } },
   { code: "5040", name: "Bank Charges & Exchange Foreign Currency Fees", category: "Expense", type: "Financial Expense", tr: { en: "Bank Charges & Exchange Foreign Currency Fees", ur: "بینک چارجز و تبادلہ زرمبادلہ فیس", ar: "رسوم البنك وفروق تحويل العملات الأجنبية", fa: "کارمزد بانکی و هزینه صرافی و ارز", ps: "د بانک چارجونه او اسعارو تبادلې لګښت" } }
 ];
@@ -193,7 +193,7 @@ async function runSeed() {
       {
         email: `user.${cleanCode}@dgt.llc`,
         name: `User - ${branch.name}`,
-        role: "staff_user",
+        role: "staff", // Valid app_role enum
         username: `user_${cleanCode}`
       }
     ];
@@ -239,12 +239,12 @@ async function runSeed() {
           `;
         } catch (pe) {}
 
-        // Upsert User Role Assignment
+        // Upsert User Role Assignment using valid app_role enum
         await sql`
           insert into public.user_role_assignments (
             id, user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at, updated_at
           ) values (
-            gen_random_uuid(), ${activeUserId}, ${u.role}, ${branch.countryId}, ${branch.countryBranchId}, ${branch.cityBranchId}, true, now(), now()
+            gen_random_uuid(), ${activeUserId}, ${u.role}::public.app_role, ${branch.countryId}, ${branch.countryBranchId}, ${branch.cityBranchId}, true, now(), now()
           )
           on conflict do nothing;
         `;
@@ -275,7 +275,9 @@ async function runSeed() {
             account_type = excluded.account_type;
         `;
         totalAccountsSeeded++;
-      } catch (ae) {}
+      } catch (ae) {
+        console.log(`   ⚠️ Account insert notice: ${ae.message}`);
+      }
     }
     console.log(`   ✅ 25 Chart of Accounts seeded for ${branch.name}.`);
 
@@ -287,12 +289,12 @@ async function runSeed() {
       const empCode = `EMP-${branch.code}-${String(j + 1).padStart(3, "0")}`;
 
       try {
-        // Insert Person Record in Customers without invalid customer_type column
+        // Insert Person Record in Customers matching exact table columns
         await sql`
           insert into public.customers (
-            id, customer_name, country_id, country_branch_id, city_branch_id, status, created_at
+            id, customer_name, country_id, status, created_at
           ) values (
-            ${customerPersonId}, ${emp.nameEn}, ${branch.countryId}, ${branch.countryBranchId}, ${branch.cityBranchId}, 'Active', now()
+            ${customerPersonId}, ${emp.nameEn}, ${branch.countryId}, 'Active', now()
           )
           on conflict do nothing;
         `;
