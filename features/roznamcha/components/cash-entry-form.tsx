@@ -1814,6 +1814,19 @@ export function CashEntryForm({
       fetchRecentEntries();
       fetchCashSummary();
       setLedgerRefreshCount((c) => c + 1);
+
+      // Auto-clear form fields for next entry
+      setCounterLedgerId("");
+      setSelectedLookupLedger(null);
+      setAmount(0);
+      setCalcAmount("");
+      setCalcPrice("");
+      setReferenceNo("");
+      setRemarks("");
+      setTypeDetails({});
+      setAttachmentFile(null);
+      setFinalPayment("");
+
       return res.entryId ?? null;
     } catch (e: any) {
       setMessage(e?.message || "Save failed");

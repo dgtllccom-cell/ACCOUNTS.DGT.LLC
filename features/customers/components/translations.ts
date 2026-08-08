@@ -405,6 +405,120 @@ export const customerTranslations: Record<string, Record<SupportedLanguage, stri
     ar: "أنشئت بواسطة",
     fa: "ایجاد شده توسط",
     ps: "لخوا جوړ شوی"
+  },
+
+  // KPI Summary Cards
+  branchUserDetails: {
+    en: "BRANCH & USER DETAILS",
+    ur: "برانچ و صارف کی تفصیلات",
+    ar: "تفاصيل الفرع والمستخدم",
+    fa: "جزئیات شعبه و کاربر",
+    ps: "د څانګې او کارونکي توضیحات"
+  },
+  personsSummary: {
+    en: "PERSONS SUMMARY",
+    ur: "افراد کا خلاصہ",
+    ar: "ملخص الأشخاص",
+    fa: "خلاصه افراد",
+    ps: "د کسانو لنډیز"
+  },
+  typeBreakdown: {
+    en: "TYPE BREAKDOWN",
+    ur: "اقسام کی تقسیم",
+    ar: "توزيع الأنواع",
+    fa: "تفکیک انواع",
+    ps: "د ډولونو ویش"
+  },
+  branchesTitle: {
+    en: "BRANCHES",
+    ur: "برانچیں",
+    ar: "الفروع",
+    fa: "شعبات",
+    ps: "څانګې"
+  },
+  quickInfoTitle: {
+    en: "QUICK INFO",
+    ur: "فوری معلومات",
+    ar: "معلومات سريعة",
+    fa: "اطلاعات سریع",
+    ps: "چټک معلومات"
+  },
+  totalPersonsLabel: {
+    en: "Total Persons",
+    ur: "کل افراد",
+    ar: "إجمالي الأشخاص",
+    fa: "کل افراد",
+    ps: "ټول کسان"
+  },
+  activePersonsLabel: {
+    en: "Active Persons",
+    ur: "فعال افراد",
+    ar: "الأشخاص النشطون",
+    fa: "افراد فعال",
+    ps: "فعال کسان"
+  },
+  inactivePersonsLabel: {
+    en: "Inactive Persons",
+    ur: "غیر فعال افراد",
+    ar: "الأشخاص غير النشطين",
+    fa: "افراد غیرفعال",
+    ps: "غیر فعال کسان"
+  },
+  corporateBusinessLabel: {
+    en: "Corporate / Business",
+    ur: "کارپوریٹ / کاروباری",
+    ar: "شركات / أعمال",
+    fa: "شرکتی / تجاری",
+    ps: "کارپوریټ / سوداګریز"
+  },
+  individualPersonalLabel: {
+    en: "Individual / Personal",
+    ur: "انفرادی / شخصی",
+    ar: "أفراد / شخصي",
+    fa: "فردی / شخصی",
+    ps: "انفراډي / شخصي"
+  },
+  totalBranchesLabel: {
+    en: "Total Branches",
+    ur: "کل برانچیں",
+    ar: "إجمالي الفروع",
+    fa: "کل شعبات",
+    ps: "ټولې څانګې"
+  },
+  activeBranchesLabel: {
+    en: "Active Branches",
+    ur: "فعال برانچیں",
+    ar: "الفروع النشطة",
+    fa: "شعبات فعال",
+    ps: "فعالې څانګې"
+  },
+  currencyLabel: {
+    en: "Currency",
+    ur: "کرنسی",
+    ar: "العملة",
+    fa: "ارز",
+    ps: "اسعار"
+  },
+  companyLabel: {
+    en: "Company",
+    ur: "کمپنی",
+    ar: "الشركة",
+    fa: "شرکت",
+    ps: "کمپنۍ"
+  },
+  financialYearLabel: {
+    en: "Financial Year",
+    ur: "مالی سال",
+    ar: "السنة المالية",
+    fa: "سال مالی",
+    ps: "مالي کال"
+  },
+  activeSessionText: {
+    en: "Active Session",
+    ur: "فعال سیشن",
+    ar: "جلسة نشطة",
+    fa: "نشست فعال",
+    ps: "فعال سیشن"
   }
 };
 

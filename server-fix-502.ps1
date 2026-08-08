@@ -95,6 +95,10 @@ fi
 echo "SUCCESS: Production build completed cleanly."
 
 echo ""
+echo "[Database] Seeding 1 Admin, 1 User, 20-25 Accounts, and Employees per Branch..."
+node scripts/seed-database-users-accounts-employees.mjs || true
+
+echo ""
 echo "[Final] Launching PM2 process & Nginx proxy..."
 pm2 delete dgt-nextjs 2>/dev/null || true
 pm2 start ecosystem.config.cjs

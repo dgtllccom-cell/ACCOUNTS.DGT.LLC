@@ -59,9 +59,31 @@ function toOptions<T extends { id: string; name: string }>(rows: T[]): SearchSel
   });
 }
 
+import type { SupportedLanguage } from "@/lib/i18n/languages";
+
+const locationLabels: Record<string, Record<SupportedLanguage, string>> = {
+  country: { en: "Country", ur: "ملک", ar: "الدولة", fa: "کشور", ps: "هیواد" },
+  state: { en: "State / Province", ur: "ریاست / صوبہ", ar: "الولاية / المقاطعة", fa: "استان / ایالت", ps: "ولایت / صوبه" },
+  district: { en: "District", ur: "ضلع", ar: "المديرية", fa: "شهرستان", ps: "ولسوالي" },
+  city: { en: "City / Town", ur: "شہر", ar: "المدينة", fa: "شهر", ps: "ښار" },
+  area: { en: "Area / Locality / Road", ur: "مقام / علاقہ / سڑک", ar: "المنطقة / الحي", fa: "منطقه / محله", ps: "سیمه / لاره" },
+  selectCountry: { en: "Select country", ur: "ملک منتخب کریں", ar: "اختر الدولة", fa: "انتخاب کشور", ps: "هیواد وټاکئ" },
+  selectState: { en: "Select state", ur: "صوبہ منتخب کریں", ar: "اختر الولاية", fa: "انتخاب استان", ps: "صوبه وټاکئ" },
+  selectCountryFirst: { en: "Select country first", ur: "پہلے ملک منتخب کریں", ar: "اختر الدولة أولاً", fa: "ابتدا کشور را انتخاب کنید", ps: "لومړی هیواد وټاکئ" },
+  selectStateFirst: { en: "Select state first", ur: "پہلے صوبہ منتخب کریں", ar: "اختر الولاية أولاً", fa: "ابتدا استان را انتخاب کنید", ps: "لومړی صوبه وټاکئ" },
+  selectCity: { en: "Select city", ur: "شہر منتخب کریں", ar: "اختر المدينة", fa: "انتخاب شهر", ps: "ښار وټاکئ" },
+  selectArea: { en: "Select area / locality", ur: "علاقہ منتخب کریں", ar: "اختر المنطقة", fa: "انتخاب منطقه", ps: "سیمه وټاکئ" },
+  newCountry: { en: "+ New Country", ur: "+ نیا ملک", ar: "+ دولة جديدة", fa: "+ کشور جدید", ps: "+ نوی هیواد" },
+  newState: { en: "+ New State", ur: "+ نیا صوبہ", ar: "+ ولاية جديدة", fa: "+ استان جدید", ps: "+ نوې صوبه" },
+  newCity: { en: "+ New City", ur: "+ نیا شہر", ar: "+ مدينة جديدة", fa: "+ شهر جدید", ps: "+ نوی ښار" },
+  newArea: { en: "+ New Area", ur: "+ نیا علاقہ", ar: "+ منطقة جديدة", fa: "+ منطقه جدید", ps: "+ نوې سیمه" },
+  manageLocations: { en: "Manage Locations", ur: "مقامات کا انتظام", ar: "إدارة المواقع", fa: "مدیریت موقعیت‌ها", ps: "د ځایونو مدیریت" }
+};
+
 export function LocationHierarchySelect({
   value,
   onChange,
+  lang,
   showArea = false,
   showCountry = true,
   showState = true,
@@ -72,6 +94,7 @@ export function LocationHierarchySelect({
 }: {
   value: LocationHierarchyValue;
   onChange: (next: LocationHierarchyValue, meta: LocationHierarchyMeta) => void;
+  lang?: SupportedLanguage;
   showArea?: boolean;
   showCountry?: boolean;
   showState?: boolean;
@@ -80,6 +103,17 @@ export function LocationHierarchySelect({
   allowManageLink?: boolean;
   disabled?: boolean;
 }) {
+  const activeLang = useMemo<SupportedLanguage>(() => {
+    if (lang) return lang;
+    if (typeof document !== "undefined") {
+      const docLang = document.documentElement.lang as SupportedLanguage;
+      if (["en", "ur", "ar", "fa", "ps"].includes(docLang)) return docLang;
+    }
+    return "en";
+  }, [lang]);
+
+  const loc = (key: string) => locationLabels[key]?.[activeLang] || locationLabels[key]?.["en"] || key;
+
   const [countries, setCountries] = useState<LocationCountry[]>([]);
   const [states, setStates] = useState<LocationState[]>([]);
   const [districts, setDistricts] = useState<LocationDistrict[]>([]);
@@ -282,9 +316,9 @@ export function LocationHierarchySelect({
           {showCountry && (
             <div className="space-y-2">
               <SearchSelect
-                label={loadingCountries ? "Country (Loading...)" : "Country"}
+                label={loadingCountries ? `${loc("country")} (...)` : loc("country")}
                 value={value.countryId}
-                placeholder="Select country"
+                placeholder={loc("selectCountry")}
                 disabled={disabled || loadingCountries}
                 options={toOptions(countries)}
                 onValueChange={(countryId) => {
@@ -297,7 +331,7 @@ export function LocationHierarchySelect({
                     area: null
                   });
                 }}
-                createLabel="+ New Country"
+                createLabel={loc("newCountry")}
                 createButtonPlacement="both"
                 onCreateNew={async () => setOpenCreateType("country")}
               />
@@ -306,7 +340,7 @@ export function LocationHierarchySelect({
                 <div className="flex justify-end">
                   <Button asChild type="button" variant="ghost" size="sm" className="h-8 px-2 text-xs">
                     <Link href="/dashboard/settings/location">
-                      Manage Locations <ExternalLink className="ms-1 h-3.5 w-3.5" aria-hidden />
+                      {loc("manageLocations")} <ExternalLink className="ms-1 h-3.5 w-3.5" aria-hidden />
                     </Link>
                   </Button>
                 </div>
@@ -316,9 +350,9 @@ export function LocationHierarchySelect({
 
           {showState && (
             <SearchSelect
-              label={loadingStates ? "State / Province (Loading...)" : "State / Province"}
+              label={loadingStates ? `${loc("state")} (...)` : loc("state")}
               value={value.stateProvinceId}
-              placeholder={value.countryId ? "Select state" : "Select country first"}
+              placeholder={value.countryId ? loc("selectState") : loc("selectCountryFirst")}
               disabled={disabled || !value.countryId || loadingStates}
               options={toOptions(states)}
               onValueChange={(stateProvinceId) => {
@@ -331,7 +365,7 @@ export function LocationHierarchySelect({
                   area: null
                 });
               }}
-              createLabel="+ New State"
+              createLabel={loc("newState")}
               createButtonPlacement="both"
               onCreateNew={async () => setOpenCreateType("state")}
             />
@@ -339,9 +373,9 @@ export function LocationHierarchySelect({
 
           {showDistrict && (
             <SearchSelect
-              label={loadingDistricts ? "District / City (Loading...)" : "District / City"}
+              label={loadingDistricts ? `${loc("district")} (...)` : loc("district")}
               value={value.districtId}
-              placeholder={value.stateProvinceId ? "Select district / city" : "Select state first"}
+              placeholder={value.stateProvinceId ? loc("district") : loc("selectStateFirst")}
               disabled={disabled || !value.stateProvinceId || loadingDistricts}
               options={toOptions(districts)}
               onValueChange={(districtId) => {
@@ -353,7 +387,7 @@ export function LocationHierarchySelect({
                   area: null
                 });
               }}
-              createLabel="+ New District / City"
+              createLabel={loc("district")}
               createButtonPlacement="both"
               onCreateNew={async () => setOpenCreateType("district")}
             />
@@ -365,9 +399,9 @@ export function LocationHierarchySelect({
         <div className={`grid gap-3 md:grid-cols-${secondRowItems.length}`}>
           {showCity && (
             <SearchSelect
-              label={loadingCities ? "City (Loading...)" : "City"}
+              label={loadingCities ? `${loc("city")} (...)` : loc("city")}
               value={value.cityId}
-              placeholder={value.countryId ? "Select city" : "Select country first"}
+              placeholder={value.countryId ? loc("selectCity") : loc("selectCountryFirst")}
               disabled={disabled || !value.countryId || loadingCities}
               options={toOptions(cities)}
               onValueChange={(cityId) => {
@@ -389,7 +423,7 @@ export function LocationHierarchySelect({
                   area: null
                 });
               }}
-              createLabel="+ New City"
+              createLabel={loc("newCity")}
               createButtonPlacement="both"
               onCreateNew={async () => setOpenCreateType("city")}
             />
@@ -398,16 +432,16 @@ export function LocationHierarchySelect({
           {showArea && (
             <div className="space-y-1.5">
               <SearchSelect
-                label={loadingAreas ? "Area / Town / Locality / Road (Loading...)" : "Area / Town / Locality / Road"}
+                label={loadingAreas ? `${loc("area")} (...)` : loc("area")}
                 value={value.areaId ?? ""}
-                placeholder={value.cityId ? "Select area, locality, road, or street" : "Select city first"}
+                placeholder={value.cityId ? loc("selectArea") : loc("selectCity")}
                 disabled={disabled || !value.cityId || loadingAreas}
                 options={toOptions(areas)}
                 onValueChange={(areaId) => {
                   const next: LocationHierarchyValue = { ...value, areaId };
                   onChange(next, { ...meta, area: areas.find((a) => a.id === areaId) ?? null });
                 }}
-                createLabel="+ New Area"
+                createLabel={loc("newArea")}
                 createButtonPlacement="both"
                 onCreateNew={async () => setOpenCreateType("area")}
               />

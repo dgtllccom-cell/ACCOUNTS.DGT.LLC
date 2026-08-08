@@ -405,24 +405,24 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Users className="h-4 w-4 text-blue-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. BRANCH & USER DETAILS</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. {getLabel("branchUserDetails", lang)}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             <div className="flex justify-between">
-              <span>Country:</span>
+              <span>{getLabel("country", lang)}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">Pakistan</span>
             </div>
             <div className="flex justify-between">
-              <span>Branch Name:</span>
+              <span>{getLabel("branchName", lang)}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 uppercase">Karachi Main</span>
             </div>
             <div className="flex justify-between">
-              <span>User ID / Name:</span>
+              <span>{getLabel("userIdName", lang)}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]" title="USR-001 (Admin User)">USR-001 (Admin)</span>
             </div>
             <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-              <span>Status:</span>
-              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px]">Active Session</span>
+              <span>{getLabel("status", lang)}:</span>
+              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px]">{getLabel("activeSessionText", lang)}</span>
             </div>
           </div>
         </div>
@@ -431,19 +431,19 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <UserCheck className="h-4 w-4 text-emerald-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">2. PERSONS SUMMARY</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">2. {getLabel("personsSummary", lang)}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>Total Persons:</span>
+              <span>{getLabel("totalPersonsLabel", lang)}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">{stats.total}</span>
             </div>
             <div className="flex justify-between text-emerald-600 font-bold">
-              <span>Active Persons:</span>
+              <span>{getLabel("activePersonsLabel", lang)}:</span>
               <span>{stats.active}</span>
             </div>
             <div className="flex justify-between text-slate-400">
-              <span>Inactive Persons:</span>
+              <span>{getLabel("inactivePersonsLabel", lang)}:</span>
               <span>{stats.inactive}</span>
             </div>
           </div>
@@ -453,15 +453,15 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Building2 className="h-4 w-4 text-purple-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. TYPE BREAKDOWN</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. {getLabel("typeBreakdown", lang)}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-amber-600 font-bold">
-              <span>Corporate / Business:</span>
+              <span>{getLabel("corporateBusinessLabel", lang)}:</span>
               <span>{stats.business}</span>
             </div>
             <div className="flex justify-between text-indigo-600 font-bold">
-              <span>Individual / Personal:</span>
+              <span>{getLabel("individualPersonalLabel", lang)}:</span>
               <span>{stats.individual}</span>
             </div>
           </div>
@@ -471,15 +471,15 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Building2 className="h-4 w-4 text-indigo-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. BRANCHES</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. {getLabel("branchesTitle", lang)}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>Total Branches:</span>
+              <span>{getLabel("totalBranchesLabel", lang)}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">12</span>
             </div>
             <div className="flex justify-between text-emerald-600 font-bold">
-              <span>Active Branches:</span>
+              <span>{getLabel("activeBranchesLabel", lang)}:</span>
               <span>10</span>
             </div>
           </div>
@@ -489,19 +489,19 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <FileText className="h-4 w-4 text-amber-500" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">5. QUICK INFO</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">5. {getLabel("quickInfoTitle", lang)}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             <div className="flex justify-between">
-              <span>Currency:</span>
+              <span>{getLabel("currencyLabel", lang)}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">USD</span>
             </div>
             <div className="flex justify-between">
-              <span>Company:</span>
+              <span>{getLabel("companyLabel", lang)}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]">DGT LLC</span>
             </div>
             <div className="flex justify-between">
-              <span>Financial Year:</span>
+              <span>{getLabel("financialYearLabel", lang)}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">2025-26</span>
             </div>
           </div>
