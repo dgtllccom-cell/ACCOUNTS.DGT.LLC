@@ -1818,7 +1818,6 @@ export function CashEntryForm({
       // Auto-clear form fields for next entry
       setCounterLedgerId("");
       setSelectedLookupLedger(null);
-      setAmount(0);
       setCalcAmount("");
       setCalcPrice("");
       setReferenceNo("");

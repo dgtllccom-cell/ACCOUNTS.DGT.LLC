@@ -97,6 +97,8 @@ echo "SUCCESS: Production build completed cleanly."
 echo ""
 echo "[Database] Seeding 1 Admin, 1 User, 20-25 Accounts, and Employees per Branch..."
 node scripts/seed-database-users-accounts-employees.mjs || true
+echo "[Database] Running 5-Language Translation Scan for all English DB values..."
+node scripts/translate-all-database-english-records.mjs || true
 
 echo ""
 echo "[Final] Launching PM2 process & Nginx proxy..."
