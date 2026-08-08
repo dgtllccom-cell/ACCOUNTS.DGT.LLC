@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { apiGet, apiPost } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type SalaryTransferModalProps = {
   dueRecord: any;
@@ -18,6 +20,7 @@ type LedgerOption = {
 };
 
 export function SalaryTransferModal({ dueRecord, onClose, onSuccess }: SalaryTransferModalProps) {
+  const lang = useActiveLanguage();
   const [loading, setLoading] = useState(false);
   const [ledgers, setLedgers] = useState<LedgerOption[]>([]);
   
@@ -74,7 +77,7 @@ export function SalaryTransferModal({ dueRecord, onClose, onSuccess }: SalaryTra
 
   async function handleTransfer() {
     if (!paymentLedgerId) {
-      setError("Please select a Cash/Bank payment account.");
+      setError(t(lang, "hr.stx_err_select_account", "Please select a Cash/Bank payment account."));
       return;
     }
     setLoading(true);
@@ -95,7 +98,7 @@ export function SalaryTransferModal({ dueRecord, onClose, onSuccess }: SalaryTra
         onSuccess();
       }
     } catch (err: any) {
-      setError(err.message || "An unexpected error occurred during transfer.");
+      setError(err.message || t(lang, "hr.stx_err_unexpected", "An unexpected error occurred during transfer."));
     } finally {
       setLoading(false);
     }
@@ -119,39 +122,39 @@ export function SalaryTransferModal({ dueRecord, onClose, onSuccess }: SalaryTra
             <span className="text-xs text-slate-400 font-semibold uppercase">{emp?.designation} • Code: {emp?.employee_code}</span>
           </div>
           <span className="px-3 py-1 bg-indigo-950 border border-indigo-900 rounded-lg text-indigo-400 text-xs font-bold uppercase">
-            Month: {dueRecord?.salary_month}
+            {t(lang, "hr.stx_month", "Month")}: {dueRecord?.salary_month}
           </span>
         </div>
 
         <div className="grid grid-cols-2 gap-y-3 gap-x-6 text-sm">
           <div className="flex justify-between">
-            <span className="text-slate-400">Basic Rate:</span>
+            <span className="text-slate-400">{t(lang, "hr.stx_basic_rate", "Basic Rate:")}</span>
             <span className="font-semibold">{dueRecord?.basic_salary?.toLocaleString()} {dueRecord?.currency}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Allowances:</span>
+            <span className="text-slate-400">{t(lang, "hr.stx_allowances", "Allowances:")}</span>
             <span className="font-semibold text-emerald-400">+{dueRecord?.allowances?.toLocaleString()} {dueRecord?.currency}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Overtime:</span>
+            <span className="text-slate-400">{t(lang, "hr.stx_overtime", "Overtime:")}</span>
             <span className="font-semibold text-emerald-400">+{dueRecord?.overtime?.toLocaleString()} {dueRecord?.currency}</span>
           </div>
           <div className="flex justify-between border-t border-slate-900 pt-2">
-            <span className="text-slate-400">Deductions (Tax/Gen):</span>
+            <span className="text-slate-400">{t(lang, "hr.stx_deductions", "Deductions (Tax/Gen):")}</span>
             <span className="font-semibold text-red-400">-{dueRecord?.deductions?.toLocaleString()} {dueRecord?.currency}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Advance Recovery:</span>
+            <span className="text-slate-400">{t(lang, "hr.stx_advance_recovery", "Advance Recovery:")}</span>
             <span className="font-semibold text-red-400">-{dueRecord?.advance_recovery?.toLocaleString()} {dueRecord?.currency}</span>
           </div>
           <div className="flex justify-between">
-            <span className="text-slate-400">Loan Recovery:</span>
+            <span className="text-slate-400">{t(lang, "hr.stx_loan_recovery", "Loan Recovery:")}</span>
             <span className="font-semibold text-red-400">-{dueRecord?.loan_recovery?.toLocaleString()} {dueRecord?.currency}</span>
           </div>
         </div>
 
         <div className="border-t border-slate-800 pt-4 flex justify-between items-baseline">
-          <span className="text-base font-bold text-white">Net Payable Salary:</span>
+          <span className="text-base font-bold text-white">{t(lang, "hr.stx_net_payable", "Net Payable Salary:")}</span>
           <span className="text-2xl font-black text-emerald-400">{netSalary?.toLocaleString()} {dueRecord?.currency}</span>
         </div>
       </div>
@@ -159,13 +162,13 @@ export function SalaryTransferModal({ dueRecord, onClose, onSuccess }: SalaryTra
       {/* Form Controls */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1.5">Payment Account (Cash/Bank)</label>
+          <label className="block text-sm font-medium text-slate-300 mb-1.5">{t(lang, "hr.stx_payment_account", "Payment Account (Cash/Bank)")}</label>
           <select
             value={paymentLedgerId}
             onChange={(e) => setPaymentLedgerId(e.target.value)}
             className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white focus:outline-none focus:border-indigo-500"
           >
-            <option value="">Select Cash/Bank Ledger</option>
+            <option value="">{t(lang, "hr.stx_select_ledger", "Select Cash/Bank Ledger")}</option>
             {ledgers.map((l) => (
               <option key={l.id} value={l.id}>{l.code} - {l.name} ({l.currency})</option>
             ))}
@@ -173,7 +176,7 @@ export function SalaryTransferModal({ dueRecord, onClose, onSuccess }: SalaryTra
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-slate-300 mb-1.5">Payment Date</label>
+          <label className="block text-sm font-medium text-slate-300 mb-1.5">{t(lang, "hr.stx_payment_date", "Payment Date")}</label>
           <input
             type="date"
             value={paymentDate}
@@ -187,7 +190,7 @@ export function SalaryTransferModal({ dueRecord, onClose, onSuccess }: SalaryTra
       {dueRecord?.currency !== "USD" && (
         <div className="grid grid-cols-2 gap-4 bg-slate-950/60 p-4 rounded-xl border border-slate-800/80">
           <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1">Exchange Rate (USD to {dueRecord?.currency})</label>
+            <label className="block text-xs font-semibold text-slate-400 mb-1">{t(lang, "hr.stx_exchange_rate_prefix", "Exchange Rate (USD to")} {dueRecord?.currency})</label>
             <input
               type="number"
               step="any"
@@ -197,7 +200,7 @@ export function SalaryTransferModal({ dueRecord, onClose, onSuccess }: SalaryTra
             />
           </div>
           <div>
-            <label className="block text-xs font-semibold text-slate-400 mb-1">Converted Payable Amount</label>
+            <label className="block text-xs font-semibold text-slate-400 mb-1">{t(lang, "hr.stx_converted_amount", "Converted Payable Amount")}</label>
             <div className="text-base font-black text-white pt-1.5">
               {convertedAmount.toLocaleString()} {dueRecord?.currency}
             </div>
@@ -206,12 +209,12 @@ export function SalaryTransferModal({ dueRecord, onClose, onSuccess }: SalaryTra
       )}
 
       <div>
-        <label className="block text-sm font-medium text-slate-300 mb-1.5">Remarks / Transfer Memo</label>
+        <label className="block text-sm font-medium text-slate-300 mb-1.5">{t(lang, "hr.stx_remarks_memo", "Remarks / Transfer Memo")}</label>
         <textarea
           rows={2}
           value={remarks}
           onChange={(e) => setRemarks(e.target.value)}
-          placeholder="e.g. Bank transfer reference ID..."
+          placeholder={t(lang, "hr.stx_ph_remarks", "e.g. Bank transfer reference ID...")}
           className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
         />
       </div>
@@ -223,7 +226,7 @@ export function SalaryTransferModal({ dueRecord, onClose, onSuccess }: SalaryTra
           variant="outline"
           className="bg-transparent border-slate-800 text-slate-400 hover:bg-slate-950"
         >
-          Cancel
+          {t(lang, "common.cancel", "Cancel")}
         </Button>
         <Button
           type="button"
@@ -231,7 +234,7 @@ export function SalaryTransferModal({ dueRecord, onClose, onSuccess }: SalaryTra
           onClick={handleTransfer}
           className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-6"
         >
-          {loading ? "Posting..." : "Confirm & Transfer Salary"}
+          {loading ? t(lang, "hr.stx_posting", "Posting...") : t(lang, "hr.stx_confirm_transfer", "Confirm & Transfer Salary")}
         </Button>
       </div>
 

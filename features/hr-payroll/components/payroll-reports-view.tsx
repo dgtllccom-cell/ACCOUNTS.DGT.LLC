@@ -6,8 +6,11 @@ import { Button } from "@/components/ui/button";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { SalaryTransferModal } from "./salary-transfer-modal";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 export function PayrollReportsView() {
+  const lang = useActiveLanguage();
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [records, setRecords] = useState<any[]>([]);
@@ -90,10 +93,10 @@ export function PayrollReportsView() {
         countryId: countryId || null,
         countryBranchId: branchId || null
       });
-      alert(res.message || "Salary due register generated.");
+      alert(res.message || t(lang, "hr.p_generated_msg", "Salary due register generated."));
       loadRecords().catch(() => null);
     } catch (err: any) {
-      alert("Error generating register: " + err.message);
+      alert(t(lang, "hr.p_generate_err", "Error generating register: ") + err.message);
     } finally {
       setGenerating(false);
     }
@@ -143,7 +146,7 @@ export function PayrollReportsView() {
       {/* Filters header bar */}
       <div className="bg-slate-900/40 p-5 rounded-2xl border border-slate-800 flex flex-wrap gap-4 items-end">
         <div>
-          <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Payroll Month</label>
+          <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">{t(lang, "hr.p_payroll_month", "Payroll Month")}</label>
           <input
             type="month"
             value={month}
@@ -153,13 +156,13 @@ export function PayrollReportsView() {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Country Scope</label>
+          <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">{t(lang, "hr.p_country_scope", "Country Scope")}</label>
           <select
             value={countryId}
             onChange={(e) => setCountryId(e.target.value)}
             className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500"
           >
-            <option value="">All Countries</option>
+            <option value="">{t(lang, "common.all_countries", "All Countries")}</option>
             {countries.map((c) => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
@@ -167,14 +170,14 @@ export function PayrollReportsView() {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Branch Scope</label>
+          <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">{t(lang, "hr.p_branch_scope", "Branch Scope")}</label>
           <select
             value={branchId}
             onChange={(e) => setBranchId(e.target.value)}
             disabled={!countryId}
             className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500 disabled:opacity-40"
           >
-            <option value="">All Branches</option>
+            <option value="">{t(lang, "common.all_branches", "All Branches")}</option>
             {branches.map((b) => (
               <option key={b.id} value={b.id}>{b.name}</option>
             ))}
@@ -182,15 +185,15 @@ export function PayrollReportsView() {
         </div>
 
         <div>
-          <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">Payment Status</label>
+          <label className="block text-xs font-semibold text-slate-400 mb-1.5 uppercase tracking-wider">{t(lang, "hr.p_payment_status", "Payment Status")}</label>
           <select
             value={status}
             onChange={(e) => setStatus(e.target.value)}
             className="bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500"
           >
-            <option value="">All Statuses</option>
-            <option value="Due">Due</option>
-            <option value="Paid">Paid</option>
+            <option value="">{t(lang, "common.all_statuses", "All Statuses")}</option>
+            <option value="Due">{t(lang, "hr.p_due", "Due")}</option>
+            <option value="Paid">{t(lang, "hr.p_paid", "Paid")}</option>
           </select>
         </div>
 
@@ -200,7 +203,7 @@ export function PayrollReportsView() {
             disabled={generating}
             className="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm px-5 py-2.5 rounded-xl transition-all"
           >
-            {generating ? "Generating..." : "🔄 Generate Due Register"}
+            {generating ? t(lang, "hr.p_generating", "Generating...") : "🔄 " + t(lang, "hr.p_generate_register", "Generate Due Register")}
           </Button>
 
           <Button
@@ -208,7 +211,7 @@ export function PayrollReportsView() {
             variant="outline"
             className="bg-transparent border-slate-800 text-slate-350 hover:bg-slate-950 text-sm px-4"
           >
-            Print
+            {t(lang, "common.print", "Print")}
           </Button>
 
           <Button
@@ -217,7 +220,7 @@ export function PayrollReportsView() {
             variant="outline"
             className="bg-transparent border-slate-800 text-slate-350 hover:bg-slate-950 text-sm px-4"
           >
-            Excel CSV
+            {t(lang, "hr.p_excel_csv", "Excel CSV")}
           </Button>
         </div>
       </div>
@@ -225,19 +228,19 @@ export function PayrollReportsView() {
       {/* Aggregate Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div className="bg-slate-950 border border-slate-850 p-4 rounded-xl">
-          <span className="text-xs text-slate-500 font-bold block uppercase tracking-wider mb-1">Basic payroll</span>
+          <span className="text-xs text-slate-500 font-bold block uppercase tracking-wider mb-1">{t(lang, "hr.p_basic_payroll", "Basic payroll")}</span>
           <span className="text-lg font-black text-white">{totalBasic.toLocaleString()} USD</span>
         </div>
         <div className="bg-slate-950 border border-slate-850 p-4 rounded-xl">
-          <span className="text-xs text-slate-500 font-bold block uppercase tracking-wider mb-1">Total allowances</span>
+          <span className="text-xs text-slate-500 font-bold block uppercase tracking-wider mb-1">{t(lang, "hr.p_total_allowances", "Total allowances")}</span>
           <span className="text-lg font-black text-emerald-400">+{totalAllowances.toLocaleString()} USD</span>
         </div>
         <div className="bg-slate-950 border border-slate-850 p-4 rounded-xl">
-          <span className="text-xs text-slate-500 font-bold block uppercase tracking-wider mb-1">Recoveries & Deds</span>
+          <span className="text-xs text-slate-500 font-bold block uppercase tracking-wider mb-1">{t(lang, "hr.p_recoveries_deds", "Recoveries & Deds")}</span>
           <span className="text-lg font-black text-red-400">-{totalDeductions.toLocaleString()} USD</span>
         </div>
         <div className="bg-slate-950 border border-indigo-950 p-4 rounded-xl bg-indigo-950/20">
-          <span className="text-xs text-indigo-400 font-bold block uppercase tracking-wider mb-1">Net payable payroll</span>
+          <span className="text-xs text-indigo-400 font-bold block uppercase tracking-wider mb-1">{t(lang, "hr.p_net_payable", "Net payable payroll")}</span>
           <span className="text-lg font-black text-white">{totalNet.toLocaleString()} USD</span>
         </div>
       </div>
@@ -262,11 +265,11 @@ export function PayrollReportsView() {
           <tbody className="divide-y divide-slate-850">
             {loading ? (
               <tr>
-                <td colSpan={10} className="px-6 py-12 text-center text-slate-400 font-medium">Loading register details...</td>
+                <td colSpan={10} className="px-6 py-12 text-center text-slate-400 font-medium">{t(lang, "hr.p_loading_register", "Loading register details...")}</td>
               </tr>
             ) : records.length === 0 ? (
               <tr>
-                <td colSpan={10} className="px-6 py-12 text-center text-slate-500">No records found. Click "Generate Due Register" to accrue this month's register.</td>
+                <td colSpan={10} className="px-6 py-12 text-center text-slate-500">{t(lang, "hr.p_no_records_cta", "No records found. Click \"Generate Due Register\" to accrue this month's register.")}</td>
               </tr>
             ) : (
               records.map((r) => (
@@ -297,10 +300,10 @@ export function PayrollReportsView() {
                         onClick={() => setSelectedRecord(r)}
                         className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs py-1.5 px-3 rounded-lg"
                       >
-                        Transfer Salary
+                        {t(lang, "hr.p_transfer_salary", "Transfer Salary")}
                       </Button>
                     ) : (
-                      <span className="text-slate-500 text-xs font-medium">✓ Transferred</span>
+                      <span className="text-slate-500 text-xs font-medium">✓ {t(lang, "hr.p_transferred", "Transferred")}</span>
                     )}
                   </td>
                 </tr>
@@ -313,7 +316,7 @@ export function PayrollReportsView() {
       {/* Salary Transfer Modal */}
       {selectedRecord && (
         <SimpleModal
-          title="Confirm Salary Transfer & GL Postings"
+          title={t(lang, "hr.p_confirm_transfer", "Confirm Salary Transfer & GL Postings")}
           onClose={() => setSelectedRecord(null)}
           className="max-w-2xl w-[95vw]"
         >

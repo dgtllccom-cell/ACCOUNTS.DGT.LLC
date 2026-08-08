@@ -5,6 +5,8 @@ import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-se
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { apiGet } from "@/lib/api/client";
 import { CustomerForm } from "@/features/customers/components/customer-form";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type PersonRow = {
   id: string;
@@ -49,6 +51,7 @@ export function PersonPicker({
   disabled?: boolean;
   placeholder?: string;
 }) {
+  const lang = useActiveLanguage();
   const [loading, setLoading] = useState(false);
   const [people, setPeople] = useState<PersonRow[]>([]);
   const [openCreate, setOpenCreate] = useState(false);
@@ -118,7 +121,7 @@ export function PersonPicker({
 
       {openCreate ? (
         <SimpleModal
-          title="New Person Registry — Customer Master"
+          title={t(lang, "hr.pp_new_person_registry", "New Person Registry — Customer Master")}
           onClose={() => setOpenCreate(false)}
           className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto"
         >
