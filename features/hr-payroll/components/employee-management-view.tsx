@@ -10,8 +10,11 @@ import { EmployeeLedgerPanel } from "./employee-ledger-panel";
 import { PayrollReportsView } from "./payroll-reports-view";
 import { printEmployeeCertificate } from "@/components/ui/employee-certificate-print";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 export function EmployeeManagementView() {
+  const lang = useActiveLanguage();
   const [activeTab, setActiveTab] = useState<"master" | "payroll">("master");
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -103,9 +106,9 @@ export function EmployeeManagementView() {
       <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white rounded-3xl border border-slate-800 p-6 md:p-8 shadow-md">
         <div className="relative z-10 flex justify-between items-center flex-wrap gap-4">
           <div>
-            <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white mb-2">Master Setup — Employee Management</h2>
+            <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white mb-2">{t(lang, "hr.title_master", "Master Setup — Employee Management")}</h2>
             <p className="text-slate-300 text-xs md:text-sm font-medium max-w-xl">
-              Register employees, structure categories (Manager, Staff, Employee, Other), define currency allowances, and map accounts with General Ledger (GL) integrations.
+              {t(lang, "hr.subtitle_master", "Register employees, structure categories (Manager, Staff, Employee, Other), define currency allowances, and map accounts with General Ledger (GL) integrations.")}
             </p>
           </div>
           {activeTab === "master" && (
@@ -116,7 +119,7 @@ export function EmployeeManagementView() {
               }}
               className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs md:text-sm px-6 py-3 rounded-2xl shadow-md transition-all flex items-center gap-2"
             >
-              <span className="text-lg font-black">+</span> Register New Employee
+              <span className="text-lg font-black">+</span> {t(lang, "hr.register_new_employee", "Register New Employee")}
             </Button>
           )}
         </div>
@@ -133,7 +136,7 @@ export function EmployeeManagementView() {
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
           }`}
         >
-          Employees Master Setup
+          {t(lang, "hr.tab_master", "Employees Master Setup")}
         </button>
         <button
           onClick={() => setActiveTab("payroll")}
@@ -143,7 +146,7 @@ export function EmployeeManagementView() {
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
           }`}
         >
-          Payroll Register & Reports
+          {t(lang, "hr.tab_payroll", "Payroll Register & Reports")}
         </button>
       </div>
 
@@ -157,7 +160,7 @@ export function EmployeeManagementView() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by Employee Code, Person Name, Passport..."
+                placeholder={t(lang, "hr.search_placeholder", "Search by Employee Code, Person Name, Passport...")}
                 className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-slate-900 dark:text-slate-100 placeholder-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
@@ -168,7 +171,7 @@ export function EmployeeManagementView() {
                 onChange={(e) => setCountryId(e.target.value)}
                 className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
               >
-                <option value="">All Countries</option>
+                <option value="">{t(lang, "common.all_countries", "All Countries")}</option>
                 {countriesList.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
@@ -182,7 +185,7 @@ export function EmployeeManagementView() {
                   onChange={(e) => setBranchId(e.target.value)}
                   className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
                 >
-                  <option value="">All Branches</option>
+                  <option value="">{t(lang, "common.all_branches", "All Branches")}</option>
                   {branchesList.map((b) => (
                     <option key={b.id} value={b.id}>{b.name} {b.code ? `(${b.code})` : ""}</option>
                   ))}
@@ -196,11 +199,11 @@ export function EmployeeManagementView() {
                 onChange={(e) => setCategory(e.target.value)}
                 className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
               >
-                <option value="">All Categories</option>
-                <option value="Manager">Manager</option>
-                <option value="Normal Staff">Normal Staff</option>
-                <option value="Employee">Employee</option>
-                <option value="Others">Others</option>
+                <option value="">{t(lang, "common.all_categories", "All Categories")}</option>
+                <option value="Manager">{t(lang, "hr.cat_manager", "Manager")}</option>
+                <option value="Normal Staff">{t(lang, "hr.cat_normal_staff", "Normal Staff")}</option>
+                <option value="Employee">{t(lang, "hr.cat_employee", "Employee")}</option>
+                <option value="Others">{t(lang, "hr.cat_others", "Others")}</option>
               </select>
             </div>
 
@@ -210,11 +213,11 @@ export function EmployeeManagementView() {
                 onChange={(e) => setStatus(e.target.value)}
                 className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
               >
-                <option value="">All Statuses</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-                <option value="On Leave">On Leave</option>
-                <option value="Suspended">Suspended</option>
+                <option value="">{t(lang, "common.all_statuses", "All Statuses")}</option>
+                <option value="Active">{t(lang, "common.active", "Active")}</option>
+                <option value="Inactive">{t(lang, "common.inactive", "Inactive")}</option>
+                <option value="On Leave">{t(lang, "common.on_leave", "On Leave")}</option>
+                <option value="Suspended">{t(lang, "common.suspended", "Suspended")}</option>
               </select>
             </div>
           </div>
@@ -239,11 +242,11 @@ export function EmployeeManagementView() {
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
                 {loading ? (
                   <tr>
-                    <td colSpan={10} className="px-6 py-12 text-center text-slate-500 font-medium">Loading registered employees...</td>
+                    <td colSpan={10} className="px-6 py-12 text-center text-slate-500 font-medium">{t(lang, "common.loading", "Loading...")}</td>
                   </tr>
                 ) : employees.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="px-6 py-12 text-center text-slate-500">No employees registered yet. Click "Register New Employee" to register.</td>
+                    <td colSpan={10} className="px-6 py-12 text-center text-slate-500">{t(lang, "hr.no_employees_cta", "No employees registered yet.")}</td>
                   </tr>
                 ) : (
                   employees.map((emp) => (

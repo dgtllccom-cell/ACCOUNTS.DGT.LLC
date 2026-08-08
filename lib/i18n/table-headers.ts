@@ -323,6 +323,14 @@ const HEADER_TRANSLATIONS: Record<string, Row> = {
   "BRANCH & LOCATION": { ur: "برانچ اور مقام", ar: "الفرع والموقع", fa: "شعبه و موقعیت", ps: "څانګه او ځای" },
   "START & STATUS": { ur: "آغاز اور حیثیت", ar: "البدء والحالة", fa: "شروع و وضعیت", ps: "پیل او حالت" },
   "BR S/N": { ur: "برانچ سیریل نمبر", ar: "الرقم التسلسلي للفرع", fa: "شماره سریال شعبه", ps: "د څانګې سریال نمبر" },
+
+  // ── HR / employee table headers ──────────────────────────────────────────
+  "EMPLOYEE / PERSON NAME": { ur: "ملازم / شخص کا نام", ar: "اسم الموظف / الشخص", fa: "نام کارمند / شخص", ps: "د کارمند / کس نوم" },
+  "ASSIGNED COUNTRY / BRANCH": { ur: "تفویض کردہ ملک / برانچ", ar: "الدولة / الفرع المخصص", fa: "کشور / شعبه تخصیص‌یافته", ps: "ټاکل شوی هېواد / څانګه" },
+  "DESIGNATION / DEPARTMENT": { ur: "عہدہ / شعبہ", ar: "المنصب / القسم", fa: "سمت / بخش", ps: "دنده / څانګه" },
+  "JOINING DATE": { ur: "شمولیت کی تاریخ", ar: "تاريخ الالتحاق", fa: "تاریخ استخدام", ps: "د شاملیدو نېټه" },
+  "DEDUCTIONS (ADV/LOAN)": { ur: "کٹوتیاں (ایڈوانس/قرض)", ar: "الخصومات (سلفة/قرض)", fa: "کسورات (پیش/وام)", ps: "کمښتونه (پیش/پور)" },
+  "DESIGNATION": { ur: "عہدہ", ar: "المنصب", fa: "سمت", ps: "دنده" },
 };
 
 /** Normalize an English header for lookup: trim, collapse whitespace, uppercase. */

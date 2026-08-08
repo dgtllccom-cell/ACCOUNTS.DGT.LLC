@@ -61,7 +61,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     const storedLang = localStorage.getItem('erp_lang');
     const lang = storedLang || 'en';
     document.documentElement.lang = lang;
-    document.documentElement.dir = 'ltr';
+    document.documentElement.dir = rtl.has(lang) ? 'rtl' : 'ltr';
+    if (rtl.has(lang)) {
+      var overrides = { ar: "'Cairo', sans-serif", fa: "'Vazirmatn', sans-serif", ur: "'Noto Nastaliq Urdu', 'Noto Naskh Arabic', serif", ps: "'Noto Naskh Arabic', 'Noto Nastaliq Urdu', serif" };
+      document.documentElement.style.setProperty('--font-family-override', overrides[lang] || "'Noto Naskh Arabic', serif");
+    }
   } catch {}
   try {
     if (window.isSecureContext && 'serviceWorker' in navigator) {
