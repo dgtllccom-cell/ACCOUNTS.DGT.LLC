@@ -413,16 +413,16 @@ export function PurchaseModuleWorkspace({
                   <div key={curr.currency} className="space-y-2">
                     <div className="text-[11px] font-black uppercase text-muted-foreground">{curr.currency} <span className="font-semibold lowercase text-slate-400">({curr.count} POs)</span></div>
                     <div className="grid grid-cols-2 gap-2 text-[10px]">
-                      <div className="rounded-lg bg-slate-50 p-2"><span className="block text-muted-foreground">Total Purchase</span><b className="text-slate-800">{money(curr.invoice, curr.currency)}</b></div>
-                      <div className="rounded-lg bg-emerald-50 p-2"><span className="block text-emerald-700">Advance</span><b className="text-emerald-800">{money(curr.advance, curr.currency)}</b></div>
-                      <div className="col-span-2 rounded-lg bg-red-50 p-2 text-red-700"><span className="block">Remaining Balance</span><b className="text-[11px]">{money(curr.remaining, curr.currency)}</b></div>
+                      <div className="rounded-lg bg-slate-50 p-2"><span className="block text-muted-foreground">{t(lang, "purchase.pmw_total_purchase", "Total Purchase")}</span><b className="text-slate-800">{money(curr.invoice, curr.currency)}</b></div>
+                      <div className="rounded-lg bg-emerald-50 p-2"><span className="block text-emerald-700">{t(lang, "purchase.pmw_advance", "Advance")}</span><b className="text-emerald-800">{money(curr.advance, curr.currency)}</b></div>
+                      <div className="col-span-2 rounded-lg bg-red-50 p-2 text-red-700"><span className="block">{t(lang, "purchase.pmw_remaining_balance", "Remaining Balance")}</span><b className="text-[11px]">{money(curr.remaining, curr.currency)}</b></div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
           )) : (
-            <div className="col-span-full rounded-xl border border-dashed p-4 text-sm text-muted-foreground">No purchase records found for this dashboard scope.</div>
+            <div className="col-span-full rounded-xl border border-dashed p-4 text-sm text-muted-foreground">{t(lang, "purchase.pmw_no_dashboard_records", "No purchase records found for this dashboard scope.")}</div>
           )}
         </div>
       </section>
@@ -430,24 +430,24 @@ export function PurchaseModuleWorkspace({
       <section className="rounded-xl border bg-card p-3 shadow-sm">
         <div className="mb-2 flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-black text-foreground">Quantity / Items Report</h2>
-            <p className="text-[11px] text-muted-foreground">Containers, quantity, weight, and workflow totals.</p>
+            <h2 className="text-sm font-black text-foreground">{t(lang, "purchase.pmw_quantity_items_report", "Quantity / Items Report")}</h2>
+            <p className="text-[11px] text-muted-foreground">{t(lang, "purchase.pmw_quantity_report_subtitle", "Containers, quantity, weight, and workflow totals.")}</p>
           </div>
-          <Button type="button" variant="outline" size="sm" className="h-8">View Full Report</Button>
+          <Button type="button" variant="outline" size="sm" className="h-8">{t(lang, "purchase.pmw_view_full_report", "View Full Report")}</Button>
         </div>
         <div className="grid gap-2 sm:grid-cols-4">
-          <MiniStat label="Purchase Orders" value={totals.orders.toLocaleString()} />
-          <MiniStat label="Total Quantity" value={totals.quantity.toLocaleString()} />
-          <MiniStat label="Total Containers" value={totals.containers.toLocaleString()} />
-          <MiniStat label="Total Weight" value={`${totals.weight.toLocaleString()} KG`} />
+          <MiniStat label={t(lang, "purchase.pmw_purchase_orders", "Purchase Orders")} value={totals.orders.toLocaleString()} />
+          <MiniStat label={t(lang, "purchase.pmw_total_quantity", "Total Quantity")} value={totals.quantity.toLocaleString()} />
+          <MiniStat label={t(lang, "purchase.pmw_total_containers", "Total Containers")} value={totals.containers.toLocaleString()} />
+          <MiniStat label={t(lang, "purchase.pmw_total_weight", "Total Weight")} value={`${totals.weight.toLocaleString()} KG`} />
         </div>
       </section>
 
       <section className="rounded-xl border bg-card p-0 shadow-sm">
         <div className="flex items-center justify-center border-b px-3 py-3 text-center">
           <div>
-            <h2 className="text-sm font-black text-foreground">Purchase Orders</h2>
-            <p className="text-[11px] text-muted-foreground">Spreadsheet report for this purchase workflow stage</p>
+            <h2 className="text-sm font-black text-foreground">{t(lang, "purchase.pmw_purchase_orders", "Purchase Orders")}</h2>
+            <p className="text-[11px] text-muted-foreground">{t(lang, "purchase.pmw_spreadsheet_report_subtitle", "Spreadsheet report for this purchase workflow stage")}</p>
           </div>
         </div>
         {error ? <div className="m-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800">{error}</div> : null}
@@ -462,7 +462,7 @@ export function PurchaseModuleWorkspace({
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={11} className="px-3 py-8 text-center text-muted-foreground">Loading purchase records...</td></tr>
+                <tr><td colSpan={11} className="px-3 py-8 text-center text-muted-foreground">{t(lang, "purchase.pmw_loading", "Loading purchase records...")}</td></tr>
               ) : rows.length ? rows.map((row) => (
                 <tr key={row.id} className="border-b hover:bg-muted/40">
                   <td className="px-3 py-3 font-mono font-black text-primary">{poNumber(row)}</td>
@@ -478,10 +478,10 @@ export function PurchaseModuleWorkspace({
                   <td className="px-3 py-3"><b>{money(amount(row), currency(row))}</b><br /><span className="text-muted-foreground">Rate: {Number(row.exchange_rate || form(row).exchangeRate || 1)}</span></td>
                   <td className="px-3 py-3"><b>{money(advance(row), currency(row))}</b><br /><span className={cn("inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold", statusClass(status(row)))}>{status(row)}</span></td>
                   <td className="px-3 py-3 font-black text-blue-700">{money(remaining(row), currency(row))}</td>
-                  <td className="px-3 py-3"><Button type="button" variant="outline" size="icon" className="h-8 w-8" title="View"><Eye className="h-3.5 w-3.5" /></Button></td>
+                  <td className="px-3 py-3"><Button type="button" variant="outline" size="icon" className="h-8 w-8" title={t(lang, "common.view", "View")}><Eye className="h-3.5 w-3.5" /></Button></td>
                 </tr>
               )) : (
-                <tr><td colSpan={14} className="px-3 py-8 text-center text-muted-foreground">No live purchase records found for this stage.</td></tr>
+                <tr><td colSpan={14} className="px-3 py-8 text-center text-muted-foreground">{t(lang, "purchase.pmw_no_live_records", "No live purchase records found for this stage.")}</td></tr>
               )}
             </tbody>
           </table>
