@@ -24,7 +24,7 @@ import {
   type LedgerStatementLine
 } from "@/features/reports/ledger-report/ledger-report-api";
 import { ProfessionalReportViewer, type ReportColumn } from "@/components/reports/professional-report-viewer";
-import { useHeaderLanguage } from "@/components/ui/translated-th";
+import { useActiveLanguage as useHeaderLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
 
 type GeneralReportRow = LedgerLookupRow & {
