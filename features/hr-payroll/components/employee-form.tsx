@@ -24,6 +24,7 @@ import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
 import { PersonPicker } from "./person-picker";
 import { Button } from "@/components/ui/button";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 
 type EmployeeFormProps = {
@@ -510,27 +511,27 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Country *</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "common.country", "Country")} *</label>
               <select
                 value={countryId}
                 onChange={(e) => setCountryId(e.target.value)}
                 className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
               >
-                <option value="">Select Country</option>
+                <option value="">{t(lang, "hr.f_select_country", "Select Country")}</option>
                 {countries.map((c) => (
                   <option key={c.id} value={c.id}>{c.name}</option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Main Branch</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_main_branch", "Main Branch")}</label>
               <select
                 value={countryBranchId}
                 onChange={(e) => setCountryBranchId(e.target.value)}
                 disabled={!countryId}
                 className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 disabled:opacity-40"
               >
-                <option value="">Select Main Branch</option>
+                <option value="">{t(lang, "hr.f_select_main_branch", "Select Main Branch")}</option>
                 {branches.map((b) => (
                   <option key={b.id} value={b.id}>
                     {b.name} {b.code ? `(${b.code})` : ""}
@@ -539,14 +540,14 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               </select>
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">City Branch</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_city_branch", "City Branch")}</label>
               <select
                 value={cityBranchId}
                 onChange={(e) => setCityBranchId(e.target.value)}
                 disabled={!countryId}
                 className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100 disabled:opacity-40"
               >
-                <option value="">Select City Branch</option>
+                <option value="">{t(lang, "hr.f_select_city_branch", "Select City Branch")}</option>
                 {cityBranches.map((cb) => (
                   <option key={cb.id} value={cb.id}>
                     {cb.name} {cb.code ? `(${cb.code})` : ""}
@@ -558,13 +559,13 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
           {category !== "Manager" && (
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Reporting Manager</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_reporting_manager", "Reporting Manager")}</label>
               <select
                 value={reportingManagerId}
                 onChange={(e) => setReportingManagerId(e.target.value)}
                 className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
               >
-                <option value="">Select Manager</option>
+                <option value="">{t(lang, "hr.f_select_manager", "Select Manager")}</option>
                 {managers.map((m) => (
                   <option key={m.id} value={m.id}>{m.person?.customer_name} ({m.employee_code})</option>
                 ))}
@@ -603,7 +604,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Joining Date *</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_joining_date", "Joining Date")} *</label>
               <input
                 type="date"
                 value={joiningDate}
@@ -613,16 +614,16 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Employment Type</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_employment_type", "Employment Type")}</label>
               <select
                 value={employmentType}
                 onChange={(e) => setEmploymentType(e.target.value)}
                 className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
               >
-                <option value="Full-time">Full-time</option>
-                <option value="Part-time">Part-time</option>
-                <option value="Contract">Contract</option>
-                <option value="Internship">Internship</option>
+                <option value="Full-time">{t(lang, "hr.f_full_time", "Full-time")}</option>
+                <option value="Part-time">{t(lang, "hr.f_part_time", "Part-time")}</option>
+                <option value="Contract">{t(lang, "hr.f_contract", "Contract")}</option>
+                <option value="Internship">{t(lang, "hr.f_internship", "Internship")}</option>
               </select>
             </div>
           </div>

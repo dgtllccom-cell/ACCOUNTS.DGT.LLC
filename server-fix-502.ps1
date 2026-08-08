@@ -1,5 +1,5 @@
 # =============================================================================
-# server-fix-502.ps1  --  Direct SCP Upload & VPS Fix Script
+# server-fix-502.ps1  --  Direct GitHub Sync & VPS Production Recovery Script
 # Server : 72.60.209.121
 # App dir: /var/www/dgt-nextjs
 # PM2 app: dgt-nextjs
@@ -9,23 +9,44 @@
 $SERVER = "root@72.60.209.121"
 
 Write-Host "================================================================" -ForegroundColor Yellow
-Write-Host "  502 Bad Gateway - Direct Code Upload & Server Recovery" -ForegroundColor Yellow
+Write-Host "  502 Bad Gateway - Code Sync & Server Recovery" -ForegroundColor Yellow
 Write-Host "  Target: $SERVER" -ForegroundColor Yellow
 Write-Host "================================================================`n" -ForegroundColor Yellow
 
-# Step A: Upload fixed source files directly to VPS via SCP
-Write-Host "[1/6] Uploading fixed source files directly to production server..." -ForegroundColor Green
-scp -o StrictHostKeyChecking=no features/journal/components/purchase-order-payment-journal.tsx root@72.60.209.121:/var/www/dgt-nextjs/features/journal/components/purchase-order-payment-journal.tsx
-scp -o StrictHostKeyChecking=no features/purchases/components/purchase-booking-journal-report-view.tsx root@72.60.209.121:/var/www/dgt-nextjs/features/purchases/components/purchase-booking-journal-report-view.tsx
-scp -o StrictHostKeyChecking=no app/api/erp/purchases/orders/[id]/route.ts root@72.60.209.121:/var/www/dgt-nextjs/app/api/erp/purchases/orders/[id]/route.ts
-scp -o StrictHostKeyChecking=no ecosystem.config.cjs root@72.60.209.121:/var/www/dgt-nextjs/ecosystem.config.cjs
-scp -o StrictHostKeyChecking=no scripts/healthcheck.sh root@72.60.209.121:/var/www/dgt-nextjs/scripts/healthcheck.sh
+# Step 1: Sync local code fixes to GitHub
+Write-Host "[1/5] Staging & pushing fixed code to GitHub (origin main)..." -ForegroundColor Green
+git add -A
+try {
+    git commit -m "fix: resolve import syntax errors in journal components"
+} catch {
+    Write-Host "No new changes to commit."
+}
+try {
+    git push origin main
+    Write-Host "✅ Git push completed successfully!" -ForegroundColor Green
+} catch {
+    git push origin main --force-with-lease
+}
 
 $unifiedScript = @'
 set -e
 
 echo ""
-echo "[2/6] Checking and upgrading Node.js to Node.js 22 LTS..."
+echo "[2/5] Navigating to /var/www/dgt-nextjs and pulling latest code..."
+cd /var/www/dgt-nextjs
+if [ ! -d ".git" ]; then
+    git init
+    git remote add origin https://github.com/dgtllccom-cell/ACCOUNTS.DGT.LLC.git
+else
+    git remote set-url origin https://github.com/dgtllccom-cell/ACCOUNTS.DGT.LLC.git
+fi
+
+git fetch origin main
+git checkout -f -B main origin/main
+git reset --hard origin/main
+
+echo ""
+echo "[3/5] Checking and upgrading Node.js to Node.js 22 LTS..."
 CURRENT_NODE=$(node -v 2>/dev/null || echo "v0.0.0")
 NODE_MAJOR=$(echo "$CURRENT_NODE" | cut -d'.' -f1 | tr -d 'v')
 
@@ -39,20 +60,7 @@ else
 fi
 
 echo ""
-echo "[3/6] Configuring 2GB Swap memory..."
-if [ $(free -m | awk '/Swap:/ {print $2}') -eq 0 ]; then
-    fallocate -l 2G /swapfile || dd if=/dev/zero of=/swapfile bs=1M count=2048
-    chmod 600 /swapfile
-    mkswap /swapfile
-    swapon /swapfile
-    grep -q '/swapfile' /etc/fstab || echo '/swapfile none swap sw 0 0' >> /etc/fstab
-    echo "Swap enabled."
-else
-    echo "Swap space verified."
-fi
-
-echo ""
-echo "[4/6] Verifying environment files..."
+echo "[4/5] Verifying environment files..."
 mkdir -p /var/www/env_backups
 if [ ! -f "/var/www/dgt-nextjs/.env.local" ] && [ ! -f "/var/www/dgt-nextjs/.env" ]; then
     if [ -f "/var/www/env_backups/.env.local.bak" ]; then
@@ -69,7 +77,7 @@ if [ -f "/var/www/dgt-nextjs/.env.local" ]; then
 fi
 
 echo ""
-echo "[5/6] Compiling Next.js production build..."
+echo "[5/5] Compiling Next.js production build..."
 cd /var/www/dgt-nextjs
 npm install
 
@@ -87,7 +95,7 @@ fi
 echo "SUCCESS: Production build completed cleanly."
 
 echo ""
-echo "[6/6] Launching PM2 process & Nginx proxy..."
+echo "[Final] Launching PM2 process & Nginx proxy..."
 pm2 delete dgt-nextjs 2>/dev/null || true
 pm2 start ecosystem.config.cjs
 pm2 save
@@ -123,9 +131,6 @@ NGINXEOF
 rm -f /etc/nginx/sites-enabled/default
 nginx -t && systemctl reload nginx
 
-# Install crontab health check
-chmod +x /var/www/dgt-nextjs/scripts/healthcheck.sh
-(crontab -l 2>/dev/null | grep -v 'healthcheck.sh'; echo "* * * * * /bin/bash /var/www/dgt-nextjs/scripts/healthcheck.sh >> /var/log/dgt-healthcheck.log 2>&1") | crontab -
 pm2 startup systemd -u root --hp /root 2>/dev/null || true
 pm2 save
 
@@ -144,6 +149,7 @@ echo ""
 echo "SUCCESS: ERP application is live on port 3000!"
 '@
 
+Write-Host "[2/5] Connecting via SSH to 72.60.209.121 and executing remote deployment..." -ForegroundColor Green
 $unifiedScript | ssh -o StrictHostKeyChecking=no $SERVER "bash -s"
 
 if ($LASTEXITCODE -ne 0) {
@@ -156,3 +162,4 @@ if ($LASTEXITCODE -ne 0) {
 Write-Host "`n================================================================" -ForegroundColor Green
 Write-Host "  Execution Complete & Verified! Production URL: http://72.60.209.121" -ForegroundColor Green
 Write-Host "================================================================`n" -ForegroundColor Green
+

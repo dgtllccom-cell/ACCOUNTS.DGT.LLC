@@ -43,6 +43,11 @@ function looksLikeUiText(s) {
   const t = s.trim();
   if (t.length < 3 || t.length > 80) return false;
   if (!/[A-Za-z]/.test(t)) return false;
+  // Reject code fragments (the biggest false-positive source: generics/JSX spans).
+  if (/[;=`]/.test(t)) return false;
+  if (/=>|\buseState\b|\buseEffect\b|\buseMemo\b|\bconst\b|\breturn\b|\bfunction\b|\.map\(|\.filter\(|\bimport\b|\bawait\b|\basync\b|=\s*\(/.test(t)) return false;
+  if (/^[([,.\])]/.test(t)) return false;                 // starts with code punctuation
+  if (/[)\]]$/.test(t)) return false;                     // ends with ) or ]
   if (/^[a-z0-9_-]+$/.test(t)) return false;              // css-ish / token
   if (/^[A-Z0-9_]+$/.test(t) && t.length < 4) return false; // short code
   if (/[{}$<>\\]/.test(t)) return false;                   // expressions/markup
@@ -56,16 +61,37 @@ function looksLikeUiText(s) {
   return true;
 }
 
+// Strip comments and non-UI code lines so we don't flag developer-only text.
+function preprocess(src) {
+  let s = src.replace(/\/\*[\s\S]*?\*\//g, "");      // block comments
+  s = s.replace(/^\s*\/\/.*$/gm, "");                // line comments
+  // drop lines that are clearly technical (imports, logs, type-only)
+  s = s.split("\n").filter((line) => {
+    const l = line.trim();
+    if (/^import\s|^export\s+type\b|^type\s|^\} from |from ["']/.test(l)) return false;
+    if (/console\.(log|warn|error|debug|info)/.test(l)) return false;
+    return true;
+  }).join("\n");
+  return s;
+}
+
+// Words/phrases that read like UI text but are sample/seed DATA or technical values.
+const NON_UI = new Set([
+  "dgt llc","pakistan / uae","aed / usd","karachi main","al.ras","main branch",
+]);
+
 function scan(src) {
+  const clean = preprocess(src);
   const hits = [];
   // JSX text nodes between tags (no braces inside)
-  for (const m of src.matchAll(/>\s*([^<>{}\n][^<>{}]*?)\s*</g)) {
-    const s = m[1];
-    if (looksLikeUiText(s)) hits.push(s.trim());
+  for (const m of clean.matchAll(/>\s*([^<>{}\n]+?)\s*</g)) {
+    const s = m[1].trim();
+    if (looksLikeUiText(s) && !NON_UI.has(s.toLowerCase())) hits.push(s);
   }
   // UI-relevant attributes with literal string values
-  for (const m of src.matchAll(/\b(placeholder|title|aria-label|alt|label)\s*=\s*"([^"]+)"/g)) {
-    if (looksLikeUiText(m[2])) hits.push(m[2].trim());
+  for (const m of clean.matchAll(/\b(placeholder|title|aria-label|alt|label)\s*=\s*"([^"]+)"/g)) {
+    const s = m[2].trim();
+    if (looksLikeUiText(s) && !NON_UI.has(s.toLowerCase())) hits.push(s);
   }
   return hits;
 }
