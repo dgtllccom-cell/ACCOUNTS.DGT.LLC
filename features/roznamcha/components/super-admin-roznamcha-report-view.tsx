@@ -35,6 +35,16 @@ import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { Th } from "@/components/ui/translated-th";
 import {
+  getRoznamchaEntry,
+  listRoznamchaEntries,
+  type RoznamchaEntryRow,
+  type RoznamchaLineRow,
+  type RoznamchaType
+} from "@/features/roznamcha/roznamcha-api";
+
+type SessionInfo = {
+  user?: {
+    id: string;
     email: string;
     fullName: string;
     preferredLanguage: string;
