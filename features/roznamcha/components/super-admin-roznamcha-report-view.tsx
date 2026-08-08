@@ -11,6 +11,19 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
+"use client";
+
+import { openRoznamchaVoucherPrintReport } from "@/lib/reports/open-roznamcha-voucher-print-report";
+import { DownloadActionIcon } from "@/components/ui/download-action-icon";
+import { Fragment, useEffect, useMemo, useState, useRef, Suspense } from "react";
+import { createPortal } from "react-dom";
+import { BookOpen, Download, Eye, FileText, Filter, Link2, Maximize2, MoreVertical, Printer, RefreshCcw, Search, Globe, Building2, ChevronDown } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { ReportTd, ReportTh } from "@/components/reports/report-primitives";
 import { ProfessionalReportViewer, type ReportColumn } from "@/components/reports/professional-report-viewer";
 import { CashReceiptViewer, type CashReceiptData } from "@/components/reports/cash-receipt-viewer";
@@ -20,18 +33,8 @@ import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
-import {
 import { Th } from "@/components/ui/translated-th";
-  getRoznamchaEntry,
-  listRoznamchaEntries,
-  type RoznamchaEntryRow,
-  type RoznamchaLineRow,
-  type RoznamchaType
-} from "@/features/roznamcha/roznamcha-api";
-
-type SessionInfo = {
-  user?: {
-    id: string;
+import {
     email: string;
     fullName: string;
     preferredLanguage: string;
