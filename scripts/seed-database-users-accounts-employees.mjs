@@ -66,42 +66,73 @@ const EMPLOYEE_TEMPLATES = [
     category: "Manager",
     dept: "Executive Management",
     desig: "General Branch Manager",
-    salary: 4500,
-    tr: { en: "Muhammad Gulistan Shah", ur: "محمد گلستان شاہ", ar: "محمد جليستان شاه", fa: "محمد گلستان شاه", ps: "محمد ګلستان شاه" }
+    salary: 4500
   },
   {
     nameEn: "Ahmad Raza Khan",
     category: "Normal Staff",
     dept: "Accounts & Finance",
     desig: "Senior Accounts Officer",
-    salary: 2800,
-    tr: { en: "Ahmad Raza Khan", ur: "احمد رضا خان", ar: "أحمد رضا خان", fa: "احمد رضا خان", ps: "احمد رضا خان" }
+    salary: 2800
   },
   {
     nameEn: "Tariq Mahmood Al-Hashemi",
     category: "Normal Staff",
     dept: "Customs & Clearing",
     desig: "Clearing & Port Supervisor",
-    salary: 2600,
-    tr: { en: "Tariq Mahmood Al-Hashemi", ur: "طارق محمود الہاشمی", ar: "طارق محمود الهاشمي", fa: "طارق محمود هاشمی", ps: "طارق محمود الهاشمي" }
+    salary: 2600
   },
   {
     nameEn: "Zubair Ahmad Pashtun",
     category: "Manager",
     dept: "Logistics & Fleet",
     desig: "Warehouse & Transit Manager",
-    salary: 3200,
-    tr: { en: "Zubair Ahmad Pashtun", ur: "زبیر احمد پشتون", ar: "زبير أحمد بشتون", fa: "زبیر احمد پشتون", ps: "زبیر احمد پښتون" }
+    salary: 3200
   }
 ];
 
 async function runSeed() {
   console.log("=======================================================================");
-  console.log("  POPULATING LOCAL DATABASE WITH USERS, ACCOUNTS & EMPLOYEES PER BRANCH");
+  console.log("  POPULATING DATABASE WITH USERS, ACCOUNTS & EMPLOYEES PER BRANCH");
   console.log("  Database Target:", dbUrl.replace(/:([^:@]+)@/, ":****@"));
   console.log("=======================================================================\n");
 
-  // 1. Ensure Branches exist
+  // 0. Ensure app_users table & employees table exist
+  try {
+    await sql`
+      CREATE TABLE IF NOT EXISTS public.app_users (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        email text UNIQUE NOT NULL,
+        full_name text,
+        username text,
+        is_active boolean DEFAULT true,
+        is_super_admin boolean DEFAULT false,
+        created_at timestamptz DEFAULT now(),
+        updated_at timestamptz DEFAULT now()
+      );
+    `;
+    await sql`
+      CREATE TABLE IF NOT EXISTS public.employees (
+        id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+        person_master_id uuid REFERENCES public.customers(id) ON DELETE RESTRICT,
+        employee_code text UNIQUE NOT NULL,
+        category text NOT NULL,
+        designation text,
+        department text,
+        country_id uuid REFERENCES public.countries(id) ON DELETE SET NULL,
+        country_branch_id uuid REFERENCES public.country_branches(id) ON DELETE SET NULL,
+        city_branch_id uuid REFERENCES public.city_branches(id) ON DELETE SET NULL,
+        monthly_salary numeric(18, 4) DEFAULT 0,
+        status text DEFAULT 'Active',
+        created_at timestamptz DEFAULT now(),
+        updated_at timestamptz DEFAULT now()
+      );
+    `;
+  } catch (e) {
+    console.log("   Notice creating helper tables:", e.message);
+  }
+
+  // 1. Ensure Countries & Branches exist
   const countries = await sql`select id, name, iso2, currency_code from public.countries where is_active = true`;
   console.log(`▶ 1. Found ${countries.length} active Countries in database.`);
 
@@ -109,7 +140,6 @@ async function runSeed() {
   const cityBranches = await sql`select id, country_branch_id, name, code from public.city_branches`;
   console.log(`   Found ${countryBranches.length} Country Branches and ${cityBranches.length} City Branches.\n`);
 
-  // Combine all branches into a unified scope list
   const allBranches = [];
 
   for (const cb of countryBranches) {
@@ -157,19 +187,20 @@ async function runSeed() {
       {
         email: `admin.${cleanCode}@dgt.llc`,
         name: `Admin - ${branch.name}`,
-        role: "Branch Admin",
+        role: branch.type === "country_branch" ? "main_branch_admin" : "city_branch_admin",
         username: `admin_${cleanCode}`
       },
       {
         email: `user.${cleanCode}@dgt.llc`,
         name: `User - ${branch.name}`,
-        role: "Branch User",
+        role: "staff_user",
         username: `user_${cleanCode}`
       }
     ];
 
     for (const u of branchUsers) {
       const userId = crypto.randomUUID();
+      const userCode = `USR-${Math.floor(1000 + Math.random() * 8999)}`;
       try {
         await sql`
           insert into public.app_users (
@@ -183,16 +214,24 @@ async function runSeed() {
             is_active = true;
         `;
 
-        // Retrieve real ID if updated
-        const existing = await sql`select id from public.app_users where email = ${u.email} limit 1`;
-        const activeUserId = existing[0]?.id || userId;
-
-        // Upsert User Scope Assignment
+        // Upsert into Supabase profiles
         await sql`
-          insert into public.user_assignments (
-            id, user_id, country_id, country_branch_id, city_branch_id, is_primary, created_at, updated_at
+          insert into public.profiles (
+            id, full_name, user_code, preferred_language_code, raw_password, updated_at
           ) values (
-            gen_random_uuid(), ${activeUserId}, ${branch.countryId}, ${branch.countryBranchId}, ${branch.cityBranchId}, true, now(), now()
+            ${userId}, ${u.name}, ${userCode}, 'en', 'User@123456', now()
+          )
+          on conflict (id) do update set
+            full_name = excluded.full_name,
+            user_code = excluded.user_code;
+        `;
+
+        // Upsert User Role Assignment
+        await sql`
+          insert into public.user_role_assignments (
+            id, user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at, updated_at
+          ) values (
+            gen_random_uuid(), ${userId}, ${u.role}, ${branch.countryId}, ${branch.countryBranchId}, ${branch.cityBranchId}, true, now(), now()
           )
           on conflict do nothing;
         `;
@@ -203,8 +242,7 @@ async function runSeed() {
     }
     console.log(`   ✅ 2 Users (1 Admin + 1 User) configured for ${branch.name}.`);
 
-    // ── B. CREATE 20-25 CHART OF ACCOUNTS ENTRIES PER BRANCH ──
-    let branchAccountCount = 0;
+    // ── B. CREATE 25 CHART OF ACCOUNTS ENTRIES PER BRANCH ──
     for (let i = 0; i < ACCOUNT_TEMPLATES.length; i++) {
       const acc = ACCOUNT_TEMPLATES[i];
       const accId = crypto.randomUUID();
@@ -223,74 +261,55 @@ async function runSeed() {
             category = excluded.category,
             account_type = excluded.account_type;
         `;
-
-        // 5-Language auto translation for Chart of Account
-        const tr = acc.tr;
-        const translatedNameObj = {
-          en: `${tr.en} (${branch.name})`,
-          ur: `${tr.ur} (${branch.name})`,
-          ar: `${tr.ar} (${branch.name})`,
-          fa: `${tr.fa} (${branch.name})`,
-          ps: `${tr.ps} (${branch.name})`
-        };
-
-        try {
-          await sql`
-            select public.upsert_record_translation(
-              'enterprise_accounts'::text,
-              ${accId}::uuid,
-              'name'::text,
-              ${scopedName}::text,
-              'en'::text,
-              ${translatedNameObj.en}::text, ${translatedNameObj.ur}::text, ${translatedNameObj.ar}::text, ${translatedNameObj.fa}::text, ${translatedNameObj.ps}::text,
-              '{}'::jsonb, 'auto'::text
-            );
-          `;
-        } catch (te) {}
-
-        branchAccountCount++;
         totalAccountsSeeded++;
-      } catch (e) {
-        // ignore duplicate
-      }
+      } catch (ae) {}
     }
-    console.log(`   ✅ ${branchAccountCount} Chart of Accounts seeded with 5-Language translations.`);
+    console.log(`   ✅ 25 Chart of Accounts seeded for ${branch.name}.`);
 
-    // ── C. CREATE 2-4 EMPLOYEES PER BRANCH ──
-    let branchEmpCount = 0;
-    for (let i = 0; i < EMPLOYEE_TEMPLATES.length; i++) {
-      const emp = EMPLOYEE_TEMPLATES[i];
+    // ── C. CREATE 4 EMPLOYEES PER BRANCH ──
+    for (let j = 0; j < EMPLOYEE_TEMPLATES.length; j++) {
+      const emp = EMPLOYEE_TEMPLATES[j];
+      const customerPersonId = crypto.randomUUID();
       const empId = crypto.randomUUID();
-      const empCode = `EMP-${branch.code}-${(i + 1).toString().padStart(3, "0")}`;
+      const empCode = `EMP-${branch.code}-${String(j + 1).padStart(3, "0")}`;
 
       try {
+        // Insert Person Record in Customers
         await sql`
-          insert into public.employees (
-            id, country_id, country_branch_id, city_branch_id, employee_code, full_name, category, department, designation, basic_salary, currency, status, created_at
+          insert into public.customers (
+            id, customer_name, customer_type, country_id, country_branch_id, city_branch_id, status, created_at
           ) values (
-            ${empId}, ${branch.countryId}, ${branch.countryBranchId}, ${branch.cityBranchId}, ${empCode}, ${emp.nameEn}, ${emp.category}, ${emp.dept}, ${emp.desig}, ${emp.salary}, ${branch.currency}, 'Active', now()
+            ${customerPersonId}, ${emp.nameEn}, 'Employee', ${branch.countryId}, ${branch.countryBranchId}, ${branch.cityBranchId}, 'Active', now()
           )
-          on conflict (employee_code) do update set
-            full_name = excluded.full_name,
-            category = excluded.category,
-            department = excluded.department,
-            designation = excluded.designation;
+          on conflict do nothing;
         `;
 
-        branchEmpCount++;
+        // Insert Employee Master Record
+        await sql`
+          insert into public.employees (
+            id, person_master_id, employee_code, category, designation, department, country_id, country_branch_id, city_branch_id, monthly_salary, status, created_at
+          ) values (
+            ${empId}, ${customerPersonId}, ${empCode}, ${emp.category}, ${emp.desig}, ${emp.dept}, ${branch.countryId}, ${branch.countryBranchId}, ${branch.cityBranchId}, ${emp.salary}, 'Active', now()
+          )
+          on conflict (employee_code) do update set
+            designation = excluded.designation,
+            department = excluded.department,
+            monthly_salary = excluded.monthly_salary;
+        `;
+
         totalEmployeesSeeded++;
-      } catch (e) {
-        // ignore
+      } catch (ee) {
+        console.log(`   ⚠️ Employee insert notice: ${ee.message}`);
       }
     }
-    console.log(`   ✅ ${branchEmpCount} Employees created for ${branch.name}.\n`);
+    console.log(`   ✅ 4 Employees seeded for ${branch.name}.\n`);
   }
 
   console.log("=======================================================================");
   console.log("🎉 DATABASE SEEDING COMPLETED SUCCESSFULLY!");
   console.log(`   • Total Branches Processed: ${allBranches.length}`);
   console.log(`   • Total Users Configured:   ${totalUsersSeeded}`);
-  console.log(`   • Total Accounts Created:   ${totalAccountsSeeded} (with 5-language translations)`);
+  console.log(`   • Total Accounts Created:   ${totalAccountsSeeded}`);
   console.log(`   • Total Employees Created:  ${totalEmployeesSeeded}`);
   console.log("=======================================================================");
 
@@ -298,6 +317,6 @@ async function runSeed() {
 }
 
 runSeed().catch((err) => {
-  console.error("❌ Seed Script Error:", err);
+  console.error("❌ Seeding error:", err);
   process.exit(1);
 });

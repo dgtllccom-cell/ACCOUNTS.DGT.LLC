@@ -354,11 +354,11 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
   };
 
   const stepsList = [
-    { number: 1, label: tr("Step 1: Category & Identity"), icon: <UserCheck className="h-4 w-4" /> },
-    { number: 2, label: tr("Step 2: Location & Scopes"), icon: <MapPin className="h-4 w-4" /> },
-    { number: 3, label: tr("Step 3: Timelines & Shift"), icon: <Clock className="h-4 w-4" /> },
-    { number: 4, label: tr("Step 4: Salary & Accounts"), icon: <BadgeDollarSign className="h-4 w-4" /> },
-    { number: 5, label: tr("Step 5: Entry Verification Report"), icon: <FileText className="h-4 w-4" /> }
+    { number: 1, label: t(lang, "hr.f_step_lbl_1", "Step 1: Category & Identity"), icon: <UserCheck className="h-4 w-4" /> },
+    { number: 2, label: t(lang, "hr.f_step_lbl_2", "Step 2: Location & Scopes"), icon: <MapPin className="h-4 w-4" /> },
+    { number: 3, label: t(lang, "hr.f_step_lbl_3", "Step 3: Timelines & Shift"), icon: <Clock className="h-4 w-4" /> },
+    { number: 4, label: t(lang, "hr.f_step_lbl_4", "Step 4: Salary & Accounts"), icon: <BadgeDollarSign className="h-4 w-4" /> },
+    { number: 5, label: t(lang, "hr.f_step_lbl_5", "Step 5: Entry Verification Report"), icon: <FileText className="h-4 w-4" /> }
   ];
 
   return (
@@ -504,7 +504,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <MapPin className="h-4 w-4 text-emerald-600" />
-              <span>Step 2 Packet: Country, Branch Scopes & Reporting Manager</span>
+              <span>{t(lang, "hr.f_step2_title", "Step 2 Packet: Country, Branch Scopes & Reporting Manager")}</span>
             </h3>
             <span className="text-xs font-semibold text-slate-400">Step 2 of 5</span>
           </div>
@@ -597,7 +597,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <Clock className="h-4 w-4 text-emerald-600" />
-              <span>Step 3 Packet: Employment Type, Shift & Contract Timelines</span>
+              <span>{t(lang, "hr.f_step3_title", "Step 3 Packet: Employment Type, Shift & Contract Timelines")}</span>
             </h3>
             <span className="text-xs font-semibold text-slate-400">Step 3 of 5</span>
           </div>
@@ -630,17 +630,17 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Duty Shift</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_duty_shift", "Duty Shift")}</label>
               <input
                 type="text"
                 value={workingShift}
                 onChange={(e) => setWorkingShift(e.target.value)}
-                placeholder="Day Shift"
+                placeholder={t(lang, "hr.f_ph_day_shift", "Day Shift")}
                 className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs text-slate-900 dark:text-slate-100"
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Duty Start Time</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_duty_start", "Duty Start Time")}</label>
               <input
                 type="time"
                 value={dutyStartTime}
@@ -649,7 +649,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Duty End Time</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_duty_end", "Duty End Time")}</label>
               <input
                 type="time"
                 value={dutyEndTime}
@@ -663,7 +663,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
           {(category === "Normal Staff" || category === "Employee") && (
             <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Probation Start Date</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "hr.f_probation_start", "Probation Start Date")}</label>
                 <input
                   type="date"
                   value={probationStartDate}
@@ -672,7 +672,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Probation End Date</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "hr.f_probation_end", "Probation End Date")}</label>
                 <input
                   type="date"
                   value={probationEndDate}
@@ -686,7 +686,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
           {(category === "Employee" || category === "Others") && (
             <div className="grid grid-cols-2 gap-4 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Contract Start Date</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "hr.f_contract_start", "Contract Start Date")}</label>
                 <input
                   type="date"
                   value={contractStartDate}
@@ -695,7 +695,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Contract End Date</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "hr.f_contract_end", "Contract End Date")}</label>
                 <input
                   type="date"
                   value={contractEndDate}
@@ -724,27 +724,27 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <BadgeDollarSign className="h-4 w-4 text-emerald-600" />
-              <span>Step 4 Packet: Basic Salary, Allowances & GL Ledgers</span>
+              <span>{t(lang, "hr.f_step4_title", "Step 4 Packet: Basic Salary, Allowances & GL Ledgers")}</span>
             </h3>
             <span className="text-xs font-semibold text-slate-400">Step 4 of 5</span>
           </div>
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Salary Basis</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_salary_basis", "Salary Basis")}</label>
               <select
                 value={salaryType}
                 onChange={(e) => setSalaryType(e.target.value)}
                 className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
               >
-                <option value="Monthly">Monthly</option>
-                <option value="Daily">Daily</option>
-                <option value="Hourly">Hourly</option>
-                <option value="Custom">Custom</option>
+                <option value="Monthly">{t(lang, "hr.f_monthly", "Monthly")}</option>
+                <option value="Daily">{t(lang, "hr.f_daily", "Daily")}</option>
+                <option value="Hourly">{t(lang, "hr.f_hourly", "Hourly")}</option>
+                <option value="Custom">{t(lang, "hr.f_custom", "Custom")}</option>
               </select>
             </div>
             <div className="col-span-2">
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Basic Salary Rate ({salaryCurrency})</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_basic_salary", "Basic Salary Rate")} ({salaryCurrency})</label>
               <div className="relative">
                 <input
                   type="number"
@@ -759,10 +759,10 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
           </div>
 
           <div>
-            <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-2">Monthly Allowances</label>
+            <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-2">{t(lang, "hr.f_monthly_allowances", "Monthly Allowances")}</label>
             <div className="grid grid-cols-2 gap-3 bg-slate-50 dark:bg-slate-950 p-4 rounded-xl border border-slate-200 dark:border-slate-800">
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Housing</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "hr.f_housing", "Housing")}</label>
                 <input
                   type="number"
                   value={accommodationAllowance || ""}
@@ -772,7 +772,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Transport</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "hr.f_transport", "Transport")}</label>
                 <input
                   type="number"
                   value={transportAllowance || ""}
@@ -782,7 +782,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Food</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "hr.f_food", "Food")}</label>
                 <input
                   type="number"
                   value={foodAllowance || ""}
@@ -792,7 +792,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
                 />
               </div>
               <div>
-                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">Mobile / Utility</label>
+                <label className="block text-xs font-bold text-slate-600 dark:text-slate-400 mb-1">{t(lang, "hr.f_mobile_utility", "Mobile / Utility")}</label>
                 <input
                   type="number"
                   value={mobileAllowance || ""}
@@ -806,7 +806,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">General Monthly Deduction</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_general_deduction", "General Monthly Deduction")}</label>
               <input
                 type="number"
                 value={deduction || ""}
@@ -816,7 +816,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">Tax / Social Security</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_tax_social", "Tax / Social Security")}</label>
               <input
                 type="number"
                 value={taxDeduction || ""}
@@ -829,18 +829,18 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
           <div className="space-y-3 pt-2">
             <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block border-b border-slate-200 dark:border-slate-800 pb-1">
-              General Ledger Accounts Mapping
+              {t(lang, "hr.f_gl_mapping", "General Ledger Accounts Mapping")}
             </label>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Salary Expense Account</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "hr.f_salary_expense_acc", "Salary Expense Account")}</label>
                 <select
                   value={salaryExpenseAccountId}
                   onChange={(e) => setSalaryExpenseAccountId(e.target.value)}
                   className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100"
                 >
-                  <option value="">Select Ledger</option>
+                  <option value="">{t(lang, "hr.f_select_ledger", "Select Ledger")}</option>
                   {ledgers.map((l) => (
                     <option key={l.id} value={l.id}>{l.code} - {l.name}</option>
                   ))}
@@ -848,13 +848,13 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">Employee Payable Account</label>
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">{t(lang, "hr.f_payable_acc", "Employee Payable Account")}</label>
                 <select
                   value={employeePayableAccountId}
                   onChange={(e) => setEmployeePayableAccountId(e.target.value)}
                   className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-2.5 py-2 text-xs text-slate-900 dark:text-slate-100"
                 >
-                  <option value="">Select Ledger</option>
+                  <option value="">{t(lang, "hr.f_select_ledger", "Select Ledger")}</option>
                   {ledgers.map((l) => (
                     <option key={l.id} value={l.id}>{l.code} - {l.name}</option>
                   ))}
@@ -881,7 +881,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <FileText className="h-4 w-4 text-emerald-600" />
-              <span>Step 5 Packet: Employee Master Entry Verification Report</span>
+              <span>{t(lang, "hr.f_step5_title", "Step 5 Packet: Employee Master Entry Verification Report")}</span>
             </h3>
             <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
               Verified & Ready
@@ -891,7 +891,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
           <div className="rounded-2xl border-2 border-emerald-500/20 bg-slate-900 text-white p-6 space-y-4 shadow-md">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Employee Master Report Card</div>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">{t(lang, "hr.f_master_report_card", "Employee Master Report Card")}</div>
                 <h2 className="text-lg font-black text-white">{selectedPersonObj?.customer_name || "Employee Name"}</h2>
                 <p className="text-xs text-slate-400">{designation || "Staff"} — {department || "General"}</p>
               </div>
@@ -904,38 +904,38 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
               <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Assigned Country</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t(lang, "hr.f_assigned_country", "Assigned Country")}</span>
                 <span className="font-bold text-white text-xs">{selectedCountryObj?.name || "-"}</span>
               </div>
               <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Main Branch</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t(lang, "hr.f_main_branch", "Main Branch")}</span>
                 <span className="font-bold text-white text-xs">
                   {selectedMainBranchObj ? `${selectedMainBranchObj.name} ${selectedMainBranchObj.code ? `(${selectedMainBranchObj.code})` : ""}` : "-"}
                 </span>
               </div>
               <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">City Branch</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t(lang, "hr.f_city_branch", "City Branch")}</span>
                 <span className="font-bold text-white text-xs">
                   {selectedCityBranchObj ? `${selectedCityBranchObj.name} ${selectedCityBranchObj.code ? `(${selectedCityBranchObj.code})` : ""}` : "-"}
                 </span>
               </div>
               <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Joining Date</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t(lang, "hr.f_joining_date", "Joining Date")}</span>
                 <span className="font-bold text-white text-xs">{joiningDate || "-"}</span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs pt-2">
               <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Employment & Shift</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t(lang, "hr.f_employment_shift", "Employment & Shift")}</span>
                 <span className="font-bold text-white text-xs">{employmentType} ({workingShift})</span>
               </div>
               <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Basic Salary Rate</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t(lang, "hr.f_basic_salary", "Basic Salary Rate")}</span>
                 <span className="font-bold text-emerald-400 text-xs">{basicSalary} {salaryCurrency}</span>
               </div>
               <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Net Payroll Estimate</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t(lang, "hr.f_net_payroll_estimate", "Net Payroll Estimate")}</span>
                 <span className="font-bold text-emerald-400 text-xs">{netSalary.toLocaleString()} {salaryCurrency}</span>
               </div>
             </div>
@@ -951,7 +951,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
           variant="outline"
           className="text-xs font-semibold"
         >
-          {tr("Cancel")}
+          {t(lang, "common.cancel", "Cancel")}
         </Button>
 
         <div className="flex items-center gap-2">
@@ -963,7 +963,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               className="text-xs font-semibold gap-1"
             >
               <ChevronLeft className="h-4 w-4" />
-              <span>{tr("Previous Step")}</span>
+              <span>{t(lang, "common.previous_step", "Previous Step")}</span>
             </Button>
           )}
 
@@ -973,7 +973,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               onClick={() => setActiveStep((s) => s + 1)}
               className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 gap-1"
             >
-              <span>{tr("Next Step")}</span>
+              <span>{t(lang, "common.next_step", "Next Step")}</span>
               <ChevronRight className="h-4 w-4" />
             </Button>
           )}
@@ -984,7 +984,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
             className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-6 shadow-sm gap-1.5"
           >
             <ShieldCheck className="h-4 w-4" />
-            <span>{saving ? tr("Saving...") : tr("Save & Finalize Employee")}</span>
+            <span>{saving ? t(lang, "common.saving", "Saving...") : t(lang, "hr.f_save_finalize_employee", "Save & Finalize Employee")}</span>
           </Button>
         </div>
       </div>

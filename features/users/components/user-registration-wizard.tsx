@@ -25,7 +25,11 @@ import {
   Search,
   UserCheck,
   BadgeCheck,
-  Shield
+  Shield,
+  FileCheck,
+  Calendar,
+  Home,
+  Info
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,6 +42,7 @@ import type { LocationCountry } from "@/features/locations/location-api";
 import { listCities, listCountries, type LocationCity } from "@/features/locations/location-api";
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { enterpriseRolePermissions } from "@/lib/permissions/enterprise-roles";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { apiPost } from "@/lib/api/client";
 import { normalizeUserCode } from "@/lib/services/user-identity-service";
 import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
@@ -45,7 +50,7 @@ import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window
 type MainBranchRow = { id: string; name: string; code: string; local_currency: string; is_main: boolean; city_id?: string | null };
 type CityBranchRow = { id: string; name: string; code: string; city_name: string; local_currency: string; country_branch_id: string };
 
-type WizardStep = 1 | 2 | 3;
+type WizardStep = 1 | 2 | 3 | 4;
 
 type Banner = { tone: "ok" | "err"; text: string } | null;
 
@@ -67,6 +72,59 @@ const roleOptions: Array<{ value: EnterpriseRole; label: string; help: string }>
   { value: "auditor_viewer", label: "Auditor / Viewer", help: "Read-only scope." }
 ];
 
+const userWizardTranslations: Record<string, Record<SupportedLanguage, string>> = {
+  headerTitleNew: {
+    en: "User Registration & Setup Wizard",
+    ur: "صارف رجسٹریشن فارم و ویژرڈ",
+    ar: "معالج تسجيل وإعداد المستخدم",
+    fa: "ویزارد ثبت نام و تنظیمات کاربر",
+    ps: "د کارونکي راجستر کولو فورمه"
+  },
+  headerTitleEdit: {
+    en: "Edit System User Record",
+    ur: "سسٹم صارف ریکارڈ ایڈٹ کریں",
+    ar: "تعديل سجل مستخدم النظام",
+    fa: "ویرایش حساب کاربر سیستم",
+    ps: "د سیسټم د کارونکي اډیټ فورمه"
+  },
+  headerDesc: {
+    en: "Link Employee master records, assign Country & Branch scopes, verify KYC identity, and issue System Login Credentials.",
+    ur: "ملازمین کے ماسٹر ریکارڈز، ملک اور برانچ کے اختیارات، KYC تصدیق اور لاگ ان کی تفصیلات مرتب کریں۔",
+    ar: "ربط سجلات الموظفين، وتعيين نطاقات الدولة والفرع، والتحقق من KYC وإصدار بيانات الدخول.",
+    fa: "اتصال به پرسنل، تعیین دسترسی‌های کشور و شعبه، احراز هویت KYC و صدور اطلاعات ورود.",
+    ps: "د کارمندانو اسناد، د هیواد او څانګې واکونه، د KYC تصدیق او ننوتلو سوابق برابرول."
+  },
+  step1Label: { en: "1. General Information", ur: "1. عام معلومات", ar: "1. المعلومات العامة", fa: "1. اطلاعات عمومی", ps: "1. عمومي معلومات" },
+  step2Label: { en: "2. Employee & Branch Access", ur: "2. ایمپلائی و برانچ رسائی", ar: "2. صلاحيات الموظف والفرع", fa: "2. دسترسی پرسنل و شعبه", ps: "2. د کارمند او څانګې لاسرسی" },
+  step3Label: { en: "3. KYC & Document Verification", ur: "3. کے وائی سی و دستاویزات", ar: "3. التحقق من الهوية (KYC)", fa: "3. احراز هویت (KYC)", ps: "3. د پیژندګلوۍ تصدیق (KYC)" },
+  step4Label: { en: "4. Review & Complete", ur: "4. ریویو و محفوظ کریں", ar: "4. المراجعة والإكمال", fa: "4. مرور و تکمیل", ps: "4. کتنه او بشپړول" },
+  next: { en: "Next Step", ur: "اگلا قدم", ar: "الخطوة التالية", fa: "مرحله بعد", ps: "بل ګام" },
+  previous: { en: "Previous", ur: "پچھلا", ar: "السابق", fa: "قبلی", ps: "پخوانی" },
+  saveUser: { en: "Save & Complete Registration", ur: "محفوظ کریں اور مکمل کریں", ar: "حفظ وإكمال التسجيل", fa: "ذخیره و تکمیل ثبت نام", ps: "خوندي او ثبت بشپړول" },
+  savingText: { en: "Saving User Record...", ur: "صارف محفوظ ہو رہا ہے...", ar: "جاري حفظ بيانات المستخدم...", fa: "در حال ذخیره...", ps: "د کارونکي معلومات خوندي کیږي..." },
+  printCard: { en: "Print A4 User Card", ur: "A4 یوزر کارڈ پرنٹ کریں", ar: "طباعة بطاقة المستخدم A4", fa: "چاپ کارت کاربر A4", ps: "د A4 د کارونکي کارت چاپول" },
+  addNewUser: { en: "+ New User Registration", ur: "+ نیا صارف رجسٹر کریں", ar: "+ تسجيل مستخدم جديد", fa: "+ ثبت کاربر جدید", ps: "+ نوی کارونکی ثبت کړئ" },
+  selectEmployee: { en: "Select Registered Employee", ur: "رجسٹرڈ ایمپلائی منتخب کریں", ar: "اختر الموظف المسجل", fa: "انتخاب پرسنل ثبت شده", ps: "ثبت شوی کارمند وټاکئ" },
+  fullName: { en: "User Full Name *", ur: "صارف کا مکمل نام *", ar: "الاسم الكامل للمستخدم *", fa: "نام کامل کاربر *", ps: "د کارونکي بشپړ نوم *" },
+  username: { en: "Login Username / Identifier *", ur: "لاگ ان یوزر نام *", ar: "اسم المستخدم للدخول *", fa: "نام کاربری ورود *", ps: "د ننوتلو کارن نوم *" },
+  designation: { en: "Designation / Role Title", ur: "عہدہ / ڈیزگنیشن", ar: "المسمى الوظيفي", fa: "عنوان شغلی", ps: "دندې سرلیک" },
+  department: { en: "Department", ur: "شعبہ / ڈیپارٹمنٹ", ar: "القسم", fa: "بخش / دپارتمان", ps: "څانګه / دیپارتمنت" },
+  phone: { en: "Contact Phone / WhatsApp", ur: "رابطہ فون / واٹس ایپ", ar: "رقم الهاتف / الواتساب", fa: "تلفن تماس / واتساپ", ps: "د اړیکې تلیفون / واټساپ" },
+  email: { en: "Personal Email / Identifier", ur: "ای میل ایڈریس", ar: "البريد الإلكتروني", fa: "ایمیل شخصی", ps: "برېښنالیک پته" },
+  role: { en: "System Role Privilege Assignment *", ur: "سسٹم رول اور اختیارات *", ar: "تعيين صلاحيات الدور *", fa: "تعیین نقش و دسترسی‌ها *", ps: "د کارونکي رول او واکونه *" },
+  country: { en: "Assigned Country Scope *", ur: "مقررہ ملک *", ar: "الدولة المعينة *", fa: "کشور مربوطه *", ps: "ټاکل شوی هیواد *" },
+  branchType: { en: "Branch Access Scope *", ur: "برانچ کی قسم *", ar: "نوع الفرع *", fa: "نوع دسترسی شعبه *", ps: "د څانګې ډول *" },
+  assignedBranch: { en: "Assigned Primary Branch *", ur: "مقررہ بنیادی برانچ *", ar: "الفرع الرئيسي المعين *", fa: "شعبه اصلی مربوطه *", ps: "ټاکل شوې اصلي څانګه *" },
+  cnicPassport: { en: "National ID / CNIC / Passport Number", ur: "شناختی کارڈ / پاسپورٹ نمبر", ar: "رقم الهوية الوطنية / الجواز", fa: "شماره ملی / پاسپورت", ps: "د تذکرې / پاسپورټ شمیره" },
+  expiryDate: { en: "Document Expiry Date", ur: "دستاویز کی تاریخ تنسیخ", ar: "تاريخ انتهاء الوثيقة", fa: "تاریخ انقضای مدرک", ps: "د سند د پای نیټه" },
+  kycStatus: { en: "KYC Verification Status", ur: "تصدیقی حیثیت (KYC Status)", ar: "حالة التحقق (KYC)", fa: "وضعیت تایید هویت", ps: "د پیژندګلوۍ حالت" },
+  address: { en: "Permanent Residential Address", ur: "مستقل رہائشی پتہ", ar: "العنوان السكني الدائم", fa: "آدرس کامل سکونت", ps: "د استوګنې بشپړ پته" },
+  verifiedCompliant: { en: "Verified & Compliant", ur: "تصدیق شدہ و مکمل", ar: "متحقق ومطابق", fa: "تایید شده و معتبر", ps: "تصدیق شوی او بشپړ" },
+  pendingVerification: { en: "Pending Document Verification", ur: "تصدیق زیر التوا", ar: "قيد التحقق من المستندات", fa: "در انتظار تایید مدارک", ps: "د اسنادو تصدیق پاتې" },
+  optionalHint: { en: "(Optional - Empty field will not block Next)", ur: "(اختیاری - خالی چھوڑنے پر فارم بلاک نہیں ہوگا)", ar: "(اختياري - لن يمنع الحقل الفارغ المتابعة)", fa: "(اختیاری - خالی بودن مانع ادامه نمی‌شود)", ps: "(اختیاري - تش پریښودل ګام نه بندوي)" },
+  requiredHint: { en: "* Mandatory field", ur: "* لازمی فیلڈ", ar: "* حقل إجباري", fa: "* فیلد الزامی", ps: "* اړین فیلډ" }
+};
+
 function makeAutoUserCode() {
   const rand = Math.floor(1000 + Math.random() * 8999);
   return `USR-${rand}`;
@@ -85,6 +143,16 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const searchParams = useSearchParams();
   const urlUserId = userIdProp || searchParams.get("userId");
 
+  const [activeLang, setActiveLang] = useState<SupportedLanguage>("en");
+  useEffect(() => {
+    if (typeof document !== "undefined") {
+      const docLang = document.documentElement.lang as SupportedLanguage;
+      if (["en", "ur", "ar", "fa", "ps"].includes(docLang)) setActiveLang(docLang);
+    }
+  }, []);
+
+  const tr = (key: string) => userWizardTranslations[key]?.[activeLang] || userWizardTranslations[key]?.["en"] || key;
+
   const [banner, setBanner] = useState<Banner>(null);
   const [saving, setSaving] = useState(false);
   const [step, setStep] = useState<WizardStep>(1);
@@ -97,7 +165,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const [hrEmployeesLoading, setHrEmployeesLoading] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
 
-  // User Core State
+  // Step 1: User Core State
   const [userCode, setUserCode] = useState(() => makeAutoUserCode());
   const [fullName, setFullName] = useState("");
   const [loginUsername, setLoginUsername] = useState("");
@@ -117,9 +185,15 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const [countryBranchId, setCountryBranchId] = useState("");
   const [cityBranchId, setCityBranchId] = useState("");
   const [currency, setCurrency] = useState("USD");
-
-  // Step 3: Login Credentials & Security
   const [role, setRole] = useState<EnterpriseRole>("staff_user");
+
+  // Step 3: KYC & Security
+  const [cnicPassportNo, setCnicPassportNo] = useState("");
+  const [idExpiryDate, setIdExpiryDate] = useState("");
+  const [kycStatus, setKycStatus] = useState<"VERIFIED" | "PENDING">("VERIFIED");
+  const [residentialAddress, setResidentialAddress] = useState("");
+
+  // Step 4: Login Password
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -249,54 +323,67 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
     if (!countryId) return;
 
+    let cancelled = false;
     (async () => {
-      const res = await fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(countryId)}`, { cache: "no-store" });
-      if (!res.ok) return;
-      const json = (await res.json()) as { countryBranches?: MainBranchRow[] };
-      const list = Array.isArray(json.countryBranches) ? json.countryBranches : [];
-      const mains = list.filter((b) => Boolean(b.is_main));
-      setMainBranches(mains);
-      if (mains.length > 0) {
-        setCountryBranchId((prev) => (mains.some((m) => m.id === prev) ? prev : mains[0].id));
-        if (mains[0].local_currency) setCurrency(mains[0].local_currency);
-      }
-    })().catch(() => null);
+      try {
+        const [cbRes, ctyRes, cityList] = await Promise.all([
+          fetch(`/api/branch-management/country-branches?countryId=${countryId}`).then((r) => r.json()),
+          fetch(`/api/branch-management/city-branches?countryId=${countryId}`).then((r) => r.json()),
+          listCities({ countryId })
+        ]);
 
-    (async () => {
-      const res = await fetch(`/api/branch-management/city-branches?countryId=${encodeURIComponent(countryId)}`, { cache: "no-store" });
-      if (!res.ok) return;
-      const json = (await res.json()) as { cityBranches?: CityBranchRow[] };
-      const cList = Array.isArray(json.cityBranches) ? json.cityBranches : [];
-      setCityBranches(cList);
-      if (cList.length > 0 && !cityBranchId) {
-        setCityBranchId(cList[0].id);
-        if (cList[0].country_branch_id) {
-          setCountryBranchId(cList[0].country_branch_id);
+        if (!cancelled) {
+          const mbRows: MainBranchRow[] = (cbRes?.data || cbRes || []).map((b: any) => ({
+            id: b.id,
+            name: b.name,
+            code: b.code,
+            local_currency: b.local_currency || "USD",
+            is_main: Boolean(b.is_main),
+            city_id: b.city_id
+          }));
+          setMainBranches(mbRows);
+
+          const cbRows: CityBranchRow[] = (ctyRes?.data || ctyRes || []).map((b: any) => ({
+            id: b.id,
+            name: b.name,
+            code: b.code,
+            cityName: b.city_name || b.cityName || "City",
+            local_currency: b.local_currency || "USD",
+            country_branch_id: b.country_branch_id
+          }));
+          setCityBranches(cbRows);
+          setCities(cityList);
+
+          if (mbRows.length > 0 && !countryBranchId) setCountryBranchId(mbRows[0].id);
+          if (cbRows.length > 0 && !cityBranchId) setCityBranchId(cbRows[0].id);
         }
+      } catch (err) {
+        console.error("Failed to load branches for country", err);
       }
-    })().catch(() => null);
+    })();
 
-    (async () => {
-      const rows = await listCities(countryId);
-      setCities(rows);
-    })().catch(() => null);
+    return () => {
+      cancelled = true;
+    };
   }, [countryId]);
 
   const countryOptions = useMemo(() => countries.map(toCountryOption), [countries]);
+
   const branchTypeSelectOptions = useMemo(
-    () => branchTypeOptions.map((o) => ({ value: o.value, label: o.label, keywords: o.label })),
+    () => branchTypeOptions.map((o) => ({ value: o.value, label: o.label })),
     []
   );
 
   const employeeOptions = useMemo(
     () =>
-      hrEmployees.map((emp) => {
-        const empName = emp.person?.customer_name || emp.name || emp.full_name || "Employee";
-        const code = emp.employee_code || "";
+      hrEmployees.map((e) => {
+        const empName = e.person?.customer_name || e.name || e.full_name || "Employee";
+        const empCode = e.employee_code || e.code || "EMP";
+        const desig = e.designation ? ` - ${e.designation}` : "";
         return {
-          value: emp.id,
-          label: code ? `${code} - ${empName}` : empName,
-          keywords: `${code} ${empName} ${emp.designation || ""} ${emp.department || ""}`
+          value: e.id,
+          label: `${empName} (${empCode}${desig})`,
+          keywords: `${empName} ${empCode} ${e.designation ?? ""}`
         };
       }),
     [hrEmployees]
@@ -305,8 +392,6 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const selectedCountry = useMemo(() => countries.find((c) => c.id === countryId) ?? null, [countries, countryId]);
   const selectedMainBranch = useMemo(() => mainBranches.find((b) => b.id === countryBranchId) ?? null, [mainBranches, countryBranchId]);
   const selectedCityBranch = useMemo(() => cityBranches.find((b) => b.id === cityBranchId) ?? null, [cityBranches, cityBranchId]);
-
-  const selectedEmployeeObj = useMemo(() => hrEmployees.find((e) => e.id === selectedEmployeeId) ?? null, [hrEmployees, selectedEmployeeId]);
 
   const branchCode = useMemo(() => {
     if (branchType === "main") return selectedMainBranch?.code ?? "";
@@ -332,11 +417,13 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     if (currentStep === 2) {
       if (role === "super_admin") return true;
       if (!countryId) return false;
-      if (branchType === "main" || role === "main_branch_admin") return Boolean(countryBranchId || mainBranches.length > 0);
-      if (branchType === "city" || role === "city_branch_admin") return Boolean(cityBranchId || cityBranches.length > 0);
       return true;
     }
     if (currentStep === 3) {
+      // Step 3 (KYC) is optional - always allows Next!
+      return true;
+    }
+    if (currentStep === 4) {
       if (!editUserId && (!password || password.length < 8)) return false;
       if (password && password !== confirmPassword) return false;
       return Boolean(userCode.trim());
@@ -345,7 +432,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   }
 
   function next() {
-    if (step < 3) setStep((s) => (s + 1) as WizardStep);
+    if (step < 4) setStep((s) => (s + 1) as WizardStep);
   }
 
   function prev() {
@@ -398,12 +485,11 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
       resolvedCountryBranchId = countryBranchId || (mainBranches[0]?.id ?? null);
       resolvedCityBranchId = null;
     } else {
-      // City branch scope role
       resolvedCityBranchId = cityBranchId || (cityBranches[0]?.id ?? null);
       resolvedCountryBranchId = countryBranchId || selectedCityBranch?.country_branch_id || (mainBranches[0]?.id ?? null);
     }
 
-    const preferredLanguage = (localStorage.getItem("erp_lang") || "en").toString();
+    const preferredLanguage = activeLang;
     const cleanUserCode = issuedCode.toLowerCase().replace(/[^a-z0-9]/g, "");
     const email = personalEmail.trim() || `${cleanUserCode}@dgt.llc`;
 
@@ -417,6 +503,12 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         countryBranchId: resolvedCountryBranchId,
         cityBranchId: resolvedCityBranchId,
         phone: contactPhone.trim(),
+        designation,
+        department,
+        cnicPassportNo: cnicPassportNo.trim(),
+        idExpiryDate,
+        kycStatus,
+        residentialAddress: residentialAddress.trim(),
         permissions: enterpriseRolePermissions[role] || []
       };
 
@@ -440,7 +532,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         res = await apiPost<{ userId: string; userCode: string }>("/api/erp/users", payload);
       }
 
-      setBanner({ tone: "ok", text: isEdit ? "User record updated successfully." : "User registered successfully." });
+      setBanner({ tone: "ok", text: isEdit ? "User record & KYC updated successfully." : "User registered & KYC linked successfully." });
     } catch (e: any) {
       const errMsg = e?.message || (typeof e === "string" ? e : "User registration operation failed.");
       if (errMsg.includes("already registered") || errMsg.includes("already exists")) {
@@ -457,9 +549,10 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   }
 
   const steps = [
-    { number: 1 as const, label: "Employee & Identity", icon: <Users className="h-4 w-4" /> },
-    { number: 2 as const, label: "Branch Access", icon: <MapPin className="h-4 w-4" /> },
-    { number: 3 as const, label: "Login & Security", icon: <Key className="h-4 w-4" /> }
+    { number: 1 as const, label: tr("step1Label"), icon: <Users className="h-4 w-4" /> },
+    { number: 2 as const, label: tr("step2Label"), icon: <MapPin className="h-4 w-4" /> },
+    { number: 3 as const, label: tr("step3Label"), icon: <FileCheck className="h-4 w-4" /> },
+    { number: 4 as const, label: tr("step4Label"), icon: <ShieldCheck className="h-4 w-4" /> }
   ];
 
   return (
@@ -469,13 +562,13 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
             <Users className="h-4 w-4 text-emerald-600" />
-            <span>User Management & Identity Module</span>
+            <span>{tr("headerTitleNew")}</span>
           </div>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            {editUserId ? "Edit System User Record" : "User Registration Form"}
+            {editUserId ? tr("headerTitleEdit") : tr("headerTitleNew")}
           </h1>
           <p className="text-xs text-slate-500 dark:text-slate-400">
-            Link Employee master records, assign Country & Branch scopes, and issue System Login Credentials.
+            {tr("headerDesc")}
           </p>
         </div>
 
@@ -496,7 +589,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               className="gap-1.5 text-xs font-semibold"
             >
               <UserPlus className="h-3.5 w-3.5 text-slate-500" />
-              <span>+ New User</span>
+              <span>{tr("addNewUser")}</span>
             </Button>
           )}
 
@@ -524,13 +617,13 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
             className="gap-1.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-sm"
           >
             <Printer className="h-3.5 w-3.5 text-emerald-400" />
-            <span>Print A4 User Card</span>
+            <span>{tr("printCard")}</span>
           </Button>
         </div>
       </div>
 
       {/* Progress Steps Header */}
-      <div className="grid gap-2 sm:grid-cols-3">
+      <div className="grid gap-2 sm:grid-cols-4">
         {steps.map((s) => {
           const isActive = step === s.number;
           const isDone = step > s.number;
@@ -589,8 +682,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
       {/* Main Split-Screen Section */}
       <div className="grid gap-6 lg:grid-cols-12">
-        {/* Left Side Form Wizard (6 Columns) */}
-        <div className="space-y-4 lg:col-span-6">
+        {/* Left Side Form Wizard (7 Columns) */}
+        <div className="space-y-4 lg:col-span-7">
           <Card className="rounded-xl border border-slate-200 dark:border-slate-800 bg-card shadow-sm overflow-hidden">
             <CardHeader className="border-b bg-slate-900 text-white px-5 py-3 flex flex-row items-center justify-between">
               <CardTitle className="text-xs font-bold uppercase tracking-wider flex items-center gap-2 text-slate-100">
@@ -602,76 +695,108 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               </span>
             </CardHeader>
 
-            <CardContent className="p-4 space-y-3">
-              {/* STEP 1: Select & Attach Employee */}
+            <CardContent className="p-4 space-y-4">
+              {/* STEP 1: General Information */}
               {step === 1 && (
                 <div className="space-y-3">
-                  <div className="flex flex-col gap-2">
-                    <div className="flex flex-col gap-1">
-                      <SearchSelect
-                        label={hrEmployeesLoading ? "Select Employee Record (Loading...)" : "Select Registered Employee *"}
-                        value={selectedEmployeeId}
-                        placeholder="Search employee by code, name, designation..."
-                        options={employeeOptions}
-                        disabled={hrEmployeesLoading}
-                        onValueChange={setSelectedEmployeeId}
-                        createLabel="+ Register New Employee Master"
-                        onCreateNew={() => setShowEmployeeModal(true)}
+                  <SearchSelect
+                    label={hrEmployeesLoading ? `${tr("selectEmployee")} (...)` : tr("selectEmployee")}
+                    value={selectedEmployeeId}
+                    placeholder="Search employee by code, name, designation..."
+                    options={employeeOptions}
+                    disabled={hrEmployeesLoading}
+                    onValueChange={setSelectedEmployeeId}
+                  />
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("fullName")}</Label>
+                      <Input
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="e.g. Muhammad Ali Shah"
+                        className="h-9 text-xs font-medium"
                       />
-                      <div className="flex justify-end">
-                        <button
-                          type="button"
-                          onClick={() => setShowEmployeeModal(true)}
-                          className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 hover:underline flex items-center gap-1"
-                        >
-                          <Plus className="h-3 w-3" />
-                          <span>+ Add New Employee</span>
-                        </button>
-                      </div>
                     </div>
 
-                    <div className="grid gap-2.5 sm:grid-cols-2 pt-1">
-                      <div className="space-y-1">
-                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">User Full Name *</Label>
-                        <Input
-                          value={fullName}
-                          onChange={(e) => setFullName(e.target.value)}
-                          placeholder="e.g. Muhammad Ali Shah"
-                          className="h-8.5 text-xs font-medium"
-                        />
-                      </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("username")}</Label>
+                      <Input
+                        value={loginUsername}
+                        onChange={(e) => setLoginUsername(e.target.value)}
+                        placeholder="e.g. ali.shah"
+                        className="h-9 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400"
+                      />
+                    </div>
 
-                      <div className="space-y-1">
-                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Login Username / Page Name *</Label>
-                        <Input
-                          value={loginUsername}
-                          onChange={(e) => setLoginUsername(e.target.value)}
-                          placeholder="e.g. ali.shah or USR-1001"
-                          className="h-8.5 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400"
-                        />
-                      </div>
+                    <div className="space-y-1">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex justify-between">
+                        <span>{tr("designation")}</span>
+                        <span className="text-[10px] text-slate-400 font-normal">{tr("optionalHint")}</span>
+                      </Label>
+                      <Input value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="e.g. Senior Accountant" className="h-9 text-xs" />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex justify-between">
+                        <span>{tr("department")}</span>
+                        <span className="text-[10px] text-slate-400 font-normal">{tr("optionalHint")}</span>
+                      </Label>
+                      <Input value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="e.g. Finance & Accounts" className="h-9 text-xs" />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex justify-between">
+                        <span>{tr("phone")}</span>
+                        <span className="text-[10px] text-slate-400 font-normal">{tr("optionalHint")}</span>
+                      </Label>
+                      <Input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="+92 300 1234567" className="h-9 text-xs" />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex justify-between">
+                        <span>{tr("email")}</span>
+                        <span className="text-[10px] text-slate-400 font-normal">{tr("optionalHint")}</span>
+                      </Label>
+                      <Input value={personalEmail} onChange={(e) => setPersonalEmail(e.target.value)} placeholder="user@dgt.llc" className="h-9 text-xs" />
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* STEP 2: Location & Branch Access (Compact 2-per-row) */}
+              {/* STEP 2: Employee & Branch Access */}
               {step === 2 && (
                 <div className="space-y-3">
-                  <div className="grid gap-2.5 sm:grid-cols-2">
+                  <div className="space-y-1">
+                    <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("role")}</Label>
+                    <select
+                      value={role}
+                      onChange={(e) => setRole(e.target.value as EnterpriseRole)}
+                      className="flex h-9 w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20"
+                    >
+                      {roleOptions.map((r) => (
+                        <option key={r.value} value={r.value}>
+                          {r.label} — {r.help}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
                     <SearchSelect
-                      label={loadingCountries ? "Country (Loading...)" : "Assigned Country *"}
+                      label={loadingCountries ? `${tr("country")} (...)` : tr("country")}
                       value={countryId}
                       placeholder="Select country"
-                      disabled={loadingCountries}
+                      disabled={loadingCountries || role === "super_admin"}
                       options={countryOptions}
                       onValueChange={setCountryId}
                     />
 
                     <SearchSelect
-                      label="Branch Type *"
+                      label={tr("branchType")}
                       value={branchType}
                       placeholder="Select branch type"
+                      disabled={role === "super_admin"}
                       options={branchTypeSelectOptions}
                       onValueChange={(v) => {
                         setBranchType(v as any);
@@ -682,171 +807,163 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
                     {branchType === "main" ? (
                       <SearchSelect
-                        label="Assigned Main Branch *"
+                        label={tr("assignedBranch")}
                         value={countryBranchId}
                         placeholder="Select main branch"
                         options={mainBranches.map((b) => ({ value: b.id, label: `${b.name} (${b.code})`, keywords: b.name }))}
-                        disabled={!countryId}
+                        disabled={!countryId || role === "super_admin"}
                         onValueChange={setCountryBranchId}
                       />
                     ) : (
                       <SearchSelect
-                        label="Assigned City Branch *"
+                        label={tr("assignedBranch")}
                         value={cityBranchId}
                         placeholder="Select city branch"
                         options={cityBranches.map((b) => ({ value: b.id, label: `${b.cityName} - ${b.name} (${b.code})`, keywords: `${b.name} ${b.cityName}` }))}
-                        disabled={!countryId}
+                        disabled={!countryId || role === "super_admin"}
                         onValueChange={setCityBranchId}
                       />
                     )}
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Branch Code (Auto)</Label>
-                      <Input value={branchCode} readOnly className="bg-slate-100 dark:bg-slate-900 font-mono font-bold h-9 text-xs text-emerald-600 dark:text-emerald-400 border-slate-200 dark:border-slate-700" />
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Work City / Country (Auto)</Label>
-                      <Input value={cityName || selectedCountry?.name || "-"} readOnly className="bg-slate-100 dark:bg-slate-900 font-bold h-9 text-xs text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700" />
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Currency Scope (Auto)</Label>
-                      <Input value={currency || "USD"} readOnly className="bg-slate-100 dark:bg-slate-900 font-bold h-9 text-xs text-slate-800 dark:text-slate-200 border-slate-200 dark:border-slate-700" />
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Branch Code & Scope</Label>
+                      <Input value={`${branchCode || "MAIN"} (${currency})`} readOnly className="bg-slate-100 dark:bg-slate-900 font-mono font-bold h-9 text-xs text-emerald-600 dark:text-emerald-400 border-slate-200" />
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* STEP 3: System Login Credentials & Role Privileges */}
+              {/* STEP 3: KYC & Document Verification */}
               {step === 3 && (
                 <div className="space-y-3">
-                  <div className="grid gap-2.5 sm:grid-cols-2">
+                  <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-2.5 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300 flex items-center gap-2">
+                    <Info className="h-4 w-4 text-amber-600 shrink-0" />
+                    <span>{tr("optionalHint")} — KYC details can be entered now or updated later without blocking registration.</span>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">User ID / System Code *</Label>
-                      <Input
-                        value={userCode}
-                        onChange={(e) => setUserCode(e.target.value)}
-                        placeholder="e.g. USR-1001"
-                        className="h-8.5 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400"
-                      />
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("cnicPassport")}</Label>
+                      <Input value={cnicPassportNo} onChange={(e) => setCnicPassportNo(e.target.value)} placeholder="e.g. 42101-1234567-1 or A1234567" className="h-9 text-xs font-mono font-bold" />
                     </div>
 
                     <div className="space-y-1">
-                      <div className="flex items-center justify-between">
-                        <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Login Email / Identifier *</Label>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            const cleanCode = (userCode || makeAutoUserCode()).toLowerCase().replace(/[^a-z0-9]/g, "");
-                            setPersonalEmail(`${cleanCode}@dgt.llc`);
-                          }}
-                          className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
-                        >
-                          <Plus className="h-3 w-3" /> Auto-Generate Unique Email
-                        </button>
-                      </div>
-                      <Input
-                        type="email"
-                        value={personalEmail}
-                        onChange={(e) => setPersonalEmail(e.target.value)}
-                        placeholder="user@dgt.com"
-                        className="h-8.5 text-xs font-medium"
-                      />
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("expiryDate")}</Label>
+                      <Input type="date" value={idExpiryDate} onChange={(e) => setIdExpiryDate(e.target.value)} className="h-9 text-xs" />
                     </div>
 
-                    <div className="space-y-1 sm:col-span-2">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">System Role Assignment *</Label>
+                    <div className="space-y-1">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("kycStatus")}</Label>
                       <select
-                        className="flex h-8.5 w-full rounded-lg border border-input bg-background px-3 text-xs shadow-sm font-medium"
-                        value={role}
-                        onChange={(e) => setRole(e.target.value as EnterpriseRole)}
+                        value={kycStatus}
+                        onChange={(e) => setKycStatus(e.target.value as any)}
+                        className="flex h-9 w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-900 outline-none focus:border-teal-500"
                       >
-                        {roleOptions.map((r) => (
-                          <option key={r.value} value={r.value}>
-                            {r.label} — {r.help}
-                          </option>
-                        ))}
+                        <option value="VERIFIED">✅ {tr("verifiedCompliant")}</option>
+                        <option value="PENDING">⏳ {tr("pendingVerification")}</option>
                       </select>
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                        {editUserId ? "New Password" : "Password *"}
-                      </Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("address")}</Label>
+                      <Input value={residentialAddress} onChange={(e) => setResidentialAddress(e.target.value)} placeholder="Enter street / city address" className="h-9 text-xs" />
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* STEP 4: Review & Complete Password */}
+              {step === 4 && (
+                <div className="space-y-3">
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2 text-xs">
+                    <div className="flex justify-between border-b pb-1">
+                      <span className="font-semibold text-slate-500">{tr("fullName")}:</span>
+                      <span className="font-bold text-slate-900">{fullName || "-"}</span>
+                    </div>
+                    <div className="flex justify-between border-b pb-1">
+                      <span className="font-semibold text-slate-500">{tr("username")}:</span>
+                      <span className="font-bold text-emerald-600 font-mono">{loginUsername || userCode}</span>
+                    </div>
+                    <div className="flex justify-between border-b pb-1">
+                      <span className="font-semibold text-slate-500">{tr("role")}:</span>
+                      <span className="font-bold text-slate-900 uppercase">{role}</span>
+                    </div>
+                    <div className="flex justify-between border-b pb-1">
+                      <span className="font-semibold text-slate-500">{tr("assignedBranch")}:</span>
+                      <span className="font-bold text-slate-900">{branchCode || selectedCountry?.name || "Global Scope"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="font-semibold text-slate-500">{tr("kycStatus")}:</span>
+                      <span className="font-bold text-emerald-600">{kycStatus === "VERIFIED" ? tr("verifiedCompliant") : tr("pendingVerification")}</span>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t">
+                    <div className="space-y-1">
+                      <Label className="text-xs font-bold text-slate-800">Account Password *</Label>
                       <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          placeholder="At least 8 chars"
-                          className="h-8.5 text-xs font-mono pr-8"
+                          placeholder="At least 8 characters"
+                          className="h-9 text-xs pr-8"
                         />
-                        <button
-                          type="button"
-                          onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-2 top-2 text-slate-400 hover:text-slate-600"
-                        >
-                          {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-2 top-2 text-slate-400">
+                          {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                         </button>
                       </div>
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Confirm Password</Label>
+                      <Label className="text-xs font-bold text-slate-800">Confirm Password *</Label>
                       <Input
-                        type={showPassword ? "text" : "password"}
+                        type="password"
                         value={confirmPassword}
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="Re-enter password"
-                        className="h-8.5 text-xs font-mono"
+                        className="h-9 text-xs"
                       />
                     </div>
                   </div>
                 </div>
               )}
 
-              {/* Step Navigation Controls */}
-              <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800">
+              {/* Wizard Footer Buttons */}
+              <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
-                  disabled={step === 1 || saving}
                   onClick={prev}
-                  className="gap-1.5 text-xs font-semibold h-8"
+                  disabled={step === 1}
+                  className="gap-1.5 text-xs font-semibold"
                 >
-                  <ChevronLeft className="h-3.5 w-3.5" />
-                  <span>Previous</span>
+                  <ChevronLeft className="h-4 w-4" />
+                  <span>{tr("previous")}</span>
                 </Button>
 
-                {step < 3 ? (
+                {step < 4 ? (
                   <Button
                     type="button"
                     size="sm"
-                    disabled={!isStepValid(step) || saving}
                     onClick={next}
-                    className="gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white h-8"
+                    disabled={!isStepValid(step)}
+                    className="gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
                   >
-                    <span>Next Step</span>
-                    <ChevronRight className="h-3.5 w-3.5" />
+                    <span>{tr("next")}</span>
+                    <ChevronRight className="h-4 w-4" />
                   </Button>
                 ) : (
                   <Button
                     type="button"
                     size="sm"
-                    disabled={!isStepValid(3) || saving}
                     onClick={finish}
-                    className="gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-5 h-8"
+                    disabled={saving || !isStepValid(4)}
+                    className="gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm px-4"
                   >
-                    {saving ? (
-                      <span>Saving User...</span>
-                    ) : (
-                      <>
-                        <ShieldCheck className="h-3.5 w-3.5" />
-                        <span>{editUserId ? "Update User" : "Register User Now"}</span>
-                      </>
-                    )}
+                    <CheckCircle2 className="h-4 w-4" />
+                    <span>{saving ? tr("savingText") : tr("saveUser")}</span>
                   </Button>
                 )}
               </div>
@@ -854,161 +971,52 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
           </Card>
         </div>
 
-        {/* Right Side Live User Summary Card - ENLARGED & RICH A4 PREVIEW (6 Columns) */}
-        <div className="space-y-4 lg:col-span-6">
-          <Card className="rounded-xl border-2 border-emerald-500/20 bg-card shadow-md overflow-hidden sticky top-6">
-            <CardHeader className="bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white px-5 py-4 flex flex-row items-center justify-between border-b border-slate-800">
-              <div className="flex items-center gap-3">
-                <div className="grid h-10 w-10 place-items-center rounded-xl bg-emerald-600/20 text-emerald-400 border border-emerald-500/30">
-                  <UserCheck className="h-5 w-5" />
-                </div>
-                <div>
-                  <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">Live User Card</div>
-                  <CardTitle className="text-sm font-black tracking-tight text-white">
-                    {fullName || "System User Preview"}
-                  </CardTitle>
-                </div>
+        {/* Right Side Live User ID Card & KYC Status (5 Columns) */}
+        <div className="space-y-4 lg:col-span-5">
+          <Card className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm space-y-3 dark:border-slate-800 dark:bg-slate-950">
+            <div className="flex items-center justify-between border-b pb-2">
+              <div className="flex items-center gap-2">
+                <UserCheck className="h-4 w-4 text-emerald-600" />
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Live User Card Preview</span>
               </div>
-              <span className="text-xs font-mono font-extrabold text-emerald-400 bg-slate-950 px-2.5 py-1 rounded-md border border-emerald-500/30">
-                {userCode}
+              <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold border border-emerald-200">
+                {kycStatus === "VERIFIED" ? "Verified" : "Pending KYC"}
               </span>
-            </CardHeader>
+            </div>
 
-            <CardContent className="p-5 space-y-4 text-xs">
-              {/* Profile Summary & Status Bar */}
-              <div className="flex items-center justify-between p-3.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/80">
-                <div className="space-y-0.5">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">System Role</div>
-                  <div className="font-extrabold text-sm text-slate-900 dark:text-slate-100 flex items-center gap-1.5">
-                    <Shield className="h-4 w-4 text-emerald-600" />
-                    <span>{roleOptions.find((r) => r.value === role)?.label || role}</span>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-600 text-white shadow-xs">
-                    <BadgeCheck className="h-3 w-3" /> Active User
-                  </span>
-                </div>
+            <div className="space-y-2 text-xs">
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-semibold">{tr("fullName")}:</span>
+                <span className="font-bold text-slate-900 dark:text-slate-100">{fullName || "User Name"}</span>
               </div>
-
-              {/* Identity & Login Details Grid */}
-              <div className="grid grid-cols-2 gap-3 text-xs">
-                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">User ID / Code</span>
-                  <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400 text-xs">{userCode}</div>
-                </div>
-
-                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Login Username</span>
-                  <div className="font-mono font-bold text-slate-900 dark:text-slate-100 text-xs truncate">
-                    {loginUsername || userCode.toLowerCase()}
-                  </div>
-                </div>
-
-                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Contact Mobile</span>
-                  <div className="font-mono font-bold text-slate-800 dark:text-slate-200 text-xs">{contactPhone || "-"}</div>
-                </div>
-
-                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 space-y-1">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Official Email</span>
-                  <div className="font-bold text-slate-800 dark:text-slate-200 text-xs truncate">{personalEmail || "-"}</div>
-                </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-semibold">{tr("username")}:</span>
+                <span className="font-mono font-bold text-emerald-600">{loginUsername || userCode}</span>
               </div>
-
-              {/* Employee & Location Scope Breakdown */}
-              <div className="rounded-xl bg-slate-900 text-slate-100 p-4 space-y-3 border border-slate-800">
-                <div className="flex items-center justify-between border-b border-slate-800 pb-2">
-                  <div className="flex items-center gap-2 font-bold text-xs text-emerald-400">
-                    <Building2 className="h-4 w-4" />
-                    <span>Location & Office Scope</span>
-                  </div>
-                  <span className="font-mono text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-300">
-                    {branchCode || "GLOBAL"}
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-xs">
-                  <div>
-                    <span className="text-slate-400 text-[11px] block">Assigned Country:</span>
-                    <span className="font-bold text-white">{selectedCountry?.name || "Global Scope"}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 text-[11px] block">Branch Scope:</span>
-                    <span className="font-bold text-white">
-                      {(branchType === "main" ? selectedMainBranch?.name : selectedCityBranch?.name) || "All Branches"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 text-[11px] block">Designation:</span>
-                    <span className="font-bold text-white">{designation || "Company Staff"}</span>
-                  </div>
-                  <div>
-                    <span className="text-slate-400 text-[11px] block">Department:</span>
-                    <span className="font-bold text-white">{department || "Operations"}</span>
-                  </div>
-                </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-semibold">{tr("designation")}:</span>
+                <span className="font-semibold text-slate-800">{designation}</span>
               </div>
-
-              {/* Quick Actions Footer */}
-              <div className="pt-2 flex justify-end">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    openUserA4ReportWindow({
-                      userId: editUserId || "USR-PREVIEW",
-                      userCode: userCode,
-                      fullName: fullName || "User Name",
-                      countryName: selectedCountry?.name || "Pakistan",
-                      branchName: (branchType === "main" ? selectedMainBranch?.name : selectedCityBranch?.name) || "Main Branch",
-                      branchCode: branchCode || "PK-MAIN-001",
-                      branchType: designation || "Company Staff",
-                      role: role,
-                      registrationDate: new Date().toISOString(),
-                      status: "Active",
-                      permissions: [],
-                      lastActivity: new Date().toISOString(),
-                      lastActivityAction: "user.registered",
-                      rawPassword: password || "••••••••",
-                      activityCounts: { logins: 1, transactions: 0, roznamcha: 0, purchases: 0, payments: 0, accounts: 0, approvals: 0, edits: 0 }
-                    });
-                  }}
-                  className="gap-1.5 text-xs font-bold text-slate-800 dark:text-slate-200"
-                >
-                  <Printer className="h-3.5 w-3.5 text-emerald-600" />
-                  <span>Print Full A4 Report</span>
-                </Button>
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-semibold">{tr("country")}:</span>
+                <span className="font-semibold text-slate-800">{selectedCountry?.name || "Pakistan"}</span>
               </div>
-            </CardContent>
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-semibold">{tr("cnicPassport")}:</span>
+                <span className="font-mono font-bold text-slate-800">{cnicPassportNo || "Not Provided"}</span>
+              </div>
+            </div>
           </Card>
         </div>
       </div>
-
-      {/* Modal for creating a new Employee directly from User Registration Form */}
-      {showEmployeeModal && (
-        <SimpleModal
-          title="Register New Employee Master Record"
-          onClose={() => setShowEmployeeModal(false)}
-          className="max-w-4xl"
-        >
-          <EmployeeForm
-            onSave={() => {
-              setShowEmployeeModal(false);
-              fetchHrEmployees();
-            }}
-            onCancel={() => setShowEmployeeModal(false)}
-          />
-        </SimpleModal>
-      )}
     </div>
   );
 }
 
-export function UserRegistrationWizard({ userIdProp }: { userIdProp?: string } = {}) {
+export function UserRegistrationWizard(props: { userIdProp?: string }) {
   return (
-    <Suspense fallback={<div className="p-8 text-slate-400">Loading User Registration Form...</div>}>
-      <UserRegistrationWizardContent userIdProp={userIdProp} />
+    <Suspense fallback={<div className="p-8 text-slate-400">Loading User Setup Wizard...</div>}>
+      <UserRegistrationWizardContent {...props} />
     </Suspense>
   );
 }

@@ -61,23 +61,23 @@ if (!dbUrl) {
 
 const sql = postgres(dbUrl, { max: 2, prepare: false, connect_timeout: 30 });
 
-// Target tables and their translatable columns
+// Target tables and their candidate translatable columns
 const TARGET_TABLES = [
-  { name: "customers", idCol: "id", nameCol: "customer_name" },
-  { name: "employees", idCol: "id", nameCol: "full_name" },
-  { name: "companies", idCol: "id", nameCol: "name" },
-  { name: "banks", idCol: "id", nameCol: "name" },
-  { name: "products", idCol: "id", nameCol: "product_name" },
-  { name: "warehouses", idCol: "id", nameCol: "warehouse_name" },
-  { name: "accounts", idCol: "id", nameCol: "name" },
-  { name: "enterprise_accounts", idCol: "id", nameCol: "name" },
-  { name: "countries", idCol: "id", nameCol: "name" },
-  { name: "states_provinces", idCol: "id", nameCol: "name" },
-  { name: "districts", idCol: "id", nameCol: "name" },
-  { name: "cities", idCol: "id", nameCol: "name" },
-  { name: "areas_locations", idCol: "id", nameCol: "name" },
-  { name: "purchase_orders", idCol: "id", nameCol: "product_name" },
-  { name: "sales_orders", idCol: "id", nameCol: "product_name" }
+  { name: "customers", idCol: "id", nameCols: ["customer_name", "name"] },
+  { name: "employees", idCol: "id", nameCols: ["full_name", "first_name", "name"] },
+  { name: "companies", idCol: "id", nameCols: ["name", "company_name"] },
+  { name: "banks", idCol: "id", nameCols: ["name", "bank_name"] },
+  { name: "products", idCol: "id", nameCols: ["product_name", "name"] },
+  { name: "warehouses", idCol: "id", nameCols: ["warehouse_name", "name"] },
+  { name: "accounts", idCol: "id", nameCols: ["name", "account_name"] },
+  { name: "enterprise_accounts", idCol: "id", nameCols: ["name", "account_name"] },
+  { name: "countries", idCol: "id", nameCols: ["name"] },
+  { name: "states_provinces", idCol: "id", nameCols: ["name"] },
+  { name: "districts", idCol: "id", nameCols: ["name"] },
+  { name: "cities", idCol: "id", nameCols: ["name"] },
+  { name: "areas_locations", idCol: "id", nameCols: ["name"] },
+  { name: "purchase_orders", idCol: "id", nameCols: ["product_name", "supplier_name"] },
+  { name: "sales_orders", idCol: "id", nameCols: ["product_name", "customer_name"] }
 ];
 
 async function runAutoTranslationScan() {
@@ -90,36 +90,46 @@ async function runAutoTranslationScan() {
 
   for (const item of TARGET_TABLES) {
     console.log(`🔍 Scanning table "${item.name}"...`);
-    try {
-      const rows = await sql.unsafe(`select ${item.idCol} as id, ${item.nameCol} as name_val from public.${item.name} where ${item.nameCol} is not null and trim(${item.nameCol}) != ''`);
-      
-      let count = 0;
-      for (const row of rows) {
-        if (!row.name_val || !row.id) continue;
-        
-        // Generate 5-language translation dictionary
-        const tr = autoTranslate5Languages(row.name_val);
+    let targetCol = null;
+    let rows = [];
 
-        try {
-          await sql`
-            select public.upsert_record_translation(
-              ${item.name}::text,
-              ${row.id}::uuid,
-              ${item.nameCol}::text,
-              ${row.name_val}::text,
-              'en'::text,
-              ${tr.en}::text, ${tr.ur}::text, ${tr.ar}::text, ${tr.fa}::text, ${tr.ps}::text,
-              '{}'::jsonb, 'auto'::text
-            );
-          `;
-          count++;
-          totalTranslatedRecords++;
-        } catch (te) {}
-      }
-      console.log(`   ✅ Translated & backfilled ${count} records for "${item.name}".`);
-    } catch (err) {
-      console.log(`   ℹ️ Notice for "${item.name}": ${err.message}`);
+    for (const col of item.nameCols) {
+      try {
+        rows = await sql.unsafe(`select ${item.idCol} as id, ${col} as name_val from public.${item.name} where ${col} is not null and trim(${col}) != ''`);
+        targetCol = col;
+        break;
+      } catch (e) {}
     }
+
+    if (!targetCol) {
+      console.log(`   ℹ️ Notice for "${item.name}": No matching candidate columns found (${item.nameCols.join(", ")}).`);
+      continue;
+    }
+
+    let count = 0;
+    for (const row of rows) {
+      if (!row.name_val || !row.id) continue;
+      
+      // Generate 5-language translation dictionary
+      const tr = autoTranslate5Languages(row.name_val);
+
+      try {
+        await sql`
+          select public.upsert_record_translation(
+            ${item.name}::text,
+            ${row.id}::uuid,
+            ${targetCol}::text,
+            ${row.name_val}::text,
+            'en'::text,
+            ${tr.en}::text, ${tr.ur}::text, ${tr.ar}::text, ${tr.fa}::text, ${tr.ps}::text,
+            '{}'::jsonb, 'auto'::text
+          );
+        `;
+        count++;
+        totalTranslatedRecords++;
+      } catch (te) {}
+    }
+    console.log(`   ✅ Translated & backfilled ${count} records for "${item.name}" (column: "${targetCol}").`);
   }
 
   console.log("\n=======================================================================");
