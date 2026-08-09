@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import type { RoznamchaEntryRow } from "@/features/roznamcha/roznamcha-api";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { Th } from "@/components/ui/translated-th";
 
 type TabType = "summary" | "branch" | "user";
 

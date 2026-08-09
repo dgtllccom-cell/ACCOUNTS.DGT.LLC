@@ -29,6 +29,7 @@ import {
 } from "lucide-react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
+import { Th } from "@/components/ui/translated-th";
 /* ---------------- types ---------------- */
 export type KVRow = { k: string; v: string; muted?: boolean; pill?: boolean; sub?: string };
 export type GoodsRow = {
