@@ -518,6 +518,7 @@ export type UiKey =
   | "roz.select_a_country"
   | "common.new"
   | "common.refresh"
+  | "common.user"
   | "pa.default_title"
   | "pa.back_to_previous_page"
   | "pa.back"
@@ -1481,6 +1482,7 @@ const en: Dict = {
   "roz.select_a_country": "Select a country",
   "common.new": "New",
   "common.refresh": "Refresh",
+  "common.user": "User",
   "pa.default_title": "Dashboard",
   "pa.back_to_previous_page": "Back to previous page",
   "pa.back": "Back",
@@ -2839,6 +2841,7 @@ const ur: Dict = {
   "roz.select_a_country": "ایک ملک منتخب کریں",
   "common.new": "نیا",
   "common.refresh": "تازہ کریں",
+  "common.user": "صارف",
   "pa.default_title": "ڈیش بورڈ",
   "pa.back_to_previous_page": "پچھلے صفحے پر جائیں",
   "pa.back": "پیچھے",
@@ -3918,6 +3921,7 @@ const ar: Dict = {
   "roz.select_a_country": "اختر دولة",
   "common.new": "جديد",
   "common.refresh": "تحديث",
+  "common.user": "المستخدم",
   "pa.default_title": "لوحة التحكم",
   "pa.back_to_previous_page": "العودة إلى الصفحة السابقة",
   "pa.back": "رجوع",
@@ -4984,6 +4988,7 @@ const fa: Dict = {
   "roz.select_a_country": "یک کشور انتخاب کنید",
   "common.new": "جدید",
   "common.refresh": "بروزرسانی",
+  "common.user": "کاربر",
   "pa.default_title": "داشبورد",
   "pa.back_to_previous_page": "بازگشت به صفحه قبلی",
   "pa.back": "بازگشت",
@@ -6077,6 +6082,7 @@ const ps: Dict = {
   "roz.select_a_country": "یو هیواد وټاکئ",
   "common.new": "نوی",
   "common.refresh": "تازه کول",
+  "common.user": "کارن",
   "pa.default_title": "ډشبورډ",
   "pa.back_to_previous_page": "مخکینۍ پاڼې ته بېرته ورشئ",
   "pa.back": "شاته",

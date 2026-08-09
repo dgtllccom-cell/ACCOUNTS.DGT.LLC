@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
 export type PortRow = {
   id: string;
@@ -118,6 +119,7 @@ export class LoadingPortsRepository {
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+    void translateMasterRecord("ports", (data as { id: string }).id, { port_name: input.portName }, "en", actorId ?? null);
     return (data as { id: string }).id;
   }
 
@@ -136,6 +138,9 @@ export class LoadingPortsRepository {
       .eq("id", id)
       .is("deleted_at", null);
     if (error) throw new Error(error.message);
+    if (typeof patch.port_name === "string") {
+      void translateMasterRecord("ports", id, { port_name: patch.port_name }, "en", _actorId ?? null);
+    }
   }
 
   async softDelete(id: string) {
@@ -243,6 +248,7 @@ export class ReceivedPortsRepository {
       .select("id")
       .single();
     if (error) throw new Error(error.message);
+    void translateMasterRecord("ports", (data as { id: string }).id, { port_name: input.portName }, "en", actorId ?? null);
     return (data as { id: string }).id;
   }
 
@@ -261,6 +267,9 @@ export class ReceivedPortsRepository {
       .eq("id", id)
       .is("deleted_at", null);
     if (error) throw new Error(error.message);
+    if (typeof patch.port_name === "string") {
+      void translateMasterRecord("ports", id, { port_name: patch.port_name }, "en", _actorId ?? null);
+    }
   }
 
   async softDelete(id: string) {

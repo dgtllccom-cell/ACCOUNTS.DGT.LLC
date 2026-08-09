@@ -3,6 +3,8 @@ import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { locationsRepository } from "@/lib/repositories/locations-repository";
 import { linkEmailAccount } from "@/lib/api/email-link";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest) {
   try {
@@ -22,6 +24,11 @@ export async function GET(request: NextRequest) {
       const filtered = countries.filter((c) => allowed.has(c.id));
       if (filtered.length > 0) countries = filtered;
     }
+
+    // Dropdown/report labels follow the active language; iso codes/emails/technical
+    // fields are left untouched (only `name` is a registered translatable field).
+    const lang = await getRequestLanguage();
+    countries = await localizeRecordNames(countries, "countries", "name", lang);
 
     return apiOk({ countries });
   } catch (error) {

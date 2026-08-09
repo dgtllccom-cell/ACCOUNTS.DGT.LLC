@@ -8,6 +8,7 @@ import { linkEmailAccount } from "@/lib/api/email-link";
 import { linkWhatsAppAccount } from "@/lib/api/whatsapp-link";
 import { encrypt } from "@/lib/crypto";
 import { translateToUrdu } from "@/lib/api/response";
+import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
 function formatError(message: string, isSuperAdmin: boolean) {
   if (isSuperAdmin) {
@@ -220,6 +221,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: formatError(error.message, session.isSuperAdmin) }, { status: 403 });
     }
 
+    void translateMasterRecord("city_branches", data.id, { name: payload.name, city_name: payload.city_name, owner_name: payload.owner_name }, "en");
+
     // Link/Upsert central email account
     const encryptedSmtpPass = parsed.data.emailServerSettings?.smtpPass
       ? encrypt(parsed.data.emailServerSettings.smtpPass)
@@ -379,6 +382,8 @@ export async function PUT(request: Request) {
     if (error) {
       return NextResponse.json({ error: formatError(error.message, session.isSuperAdmin) }, { status: 403 });
     }
+
+    void translateMasterRecord("city_branches", data.id, { name: payload.name, city_name: payload.city_name, owner_name: payload.owner_name }, "en");
 
     // Link/Upsert central email account
     const encryptedSmtpPass = parsed.data.emailServerSettings?.smtpPass

@@ -6,6 +6,7 @@ import { auditApiAction } from "@/lib/api/audit";
 import { allPermissionGroupKeys } from "@/lib/permissions/catalog";
 import { linkEmailAccount } from "@/lib/api/email-link";
 import { translateToUrdu } from "@/lib/api/response";
+import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
 function formatError(message: string, isSuperAdmin: boolean) {
   if (isSuperAdmin) {
@@ -188,6 +189,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: formatError(error.message, session.isSuperAdmin) }, { status: 403 });
     }
 
+    void translateMasterRecord("country_branches", data.id, { name: payload.name, owner_name: payload.owner_name }, "en");
+
     // Link/Upsert central email account
     await linkEmailAccount({
       countryId: parsed.data.countryId,
@@ -297,6 +300,10 @@ export async function PUT(request: Request) {
       .is("deleted_at", null)
       .select("id")
       .single();
+
+    if (!error && data?.id) {
+      void translateMasterRecord("country_branches", data.id, { name: payload.name, owner_name: payload.owner_name }, "en");
+    }
 
     if (error) {
       return NextResponse.json({ error: formatError(error.message, session.isSuperAdmin) }, { status: 403 });
