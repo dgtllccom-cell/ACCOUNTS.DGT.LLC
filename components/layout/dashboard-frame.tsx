@@ -60,14 +60,17 @@ export function DashboardFrame({
         msg.includes("Failed to fetch dynamically imported module");
 
       if (isChunkError) {
-        const countKey = "erp_chunk_count_" + window.location.pathname;
+        const countKey = "erp_auto_chunk_cnt";
         const count = parseInt(sessionStorage.getItem(countKey) || "0", 10);
         if (count < 3) {
           sessionStorage.setItem(countKey, String(count + 1));
+          if (window.isSecureContext && "serviceWorker" in navigator) {
+            navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister())).catch(() => {});
+          }
           if ("caches" in window) {
             caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {});
           }
-          window.location.href = window.location.pathname + "?_t=" + Date.now();
+          window.location.replace(window.location.pathname + "?_v=" + Date.now());
         }
       }
     }
@@ -123,16 +126,16 @@ export function DashboardFrame({
     if (!roles || roles.length === 0) return null;
 
     const labels: Record<EnterpriseRole, string> = {
-      super_admin: "Super Admin",
-      country_admin: "Country Admin",
-      country_user: "Country User",
-      main_branch_admin: "Main Branch Admin",
-      city_branch_admin: "City Branch Admin",
-      accountant: "Accountant",
-      cashier: "Cashier",
-      agent_user: "Agent User",
-      staff_user: "Staff User",
-      auditor_viewer: "Auditor / Viewer"
+      super_admin: t(lang, "role.super_admin", "Super Admin"),
+      country_admin: t(lang, "role.country_admin", "Country Admin"),
+      country_user: t(lang, "role.country_user", "Country User"),
+      main_branch_admin: t(lang, "role.main_branch_admin", "Main Branch Admin"),
+      city_branch_admin: t(lang, "role.city_branch_admin", "City Branch Admin"),
+      accountant: t(lang, "role.accountant", "Accountant"),
+      cashier: t(lang, "role.cashier", "Cashier"),
+      agent_user: t(lang, "role.agent_user", "Agent User"),
+      staff_user: t(lang, "role.staff_user", "Staff User"),
+      auditor_viewer: t(lang, "role.auditor_viewer", "Auditor / Viewer")
     };
 
     for (const role of enterpriseRoles) {
@@ -140,7 +143,7 @@ export function DashboardFrame({
     }
 
     return labels[roles[0]] ?? null;
-  }, [roles]);
+  }, [roles, lang]);
 
   // Command palette search database
   const searchItems = useMemo(() => {

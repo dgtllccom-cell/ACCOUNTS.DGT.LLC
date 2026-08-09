@@ -29,14 +29,26 @@ export default function GlobalClientError({
     console.error(`[GlobalClientError ${refId}] Uncaught client-side application error:`, error);
 
     if (isChunkError) {
-      try {
-        const lastReload = sessionStorage.getItem("chunk_reload_attempt");
-        const now = Date.now();
-        if (!lastReload || now - parseInt(lastReload, 10) > 15000) {
-          sessionStorage.setItem("chunk_reload_attempt", now.toString());
-          window.location.href = window.location.pathname + "?_t=" + now;
-        }
-      } catch {}
+      (async () => {
+        try {
+          if (typeof window !== "undefined") {
+            const countKey = "erp_auto_chunk_cnt";
+            const count = parseInt(sessionStorage.getItem(countKey) || "0", 10);
+            if (count < 3) {
+              sessionStorage.setItem(countKey, String(count + 1));
+              if (window.isSecureContext && "serviceWorker" in navigator) {
+                const regs = await navigator.serviceWorker.getRegistrations();
+                for (const r of regs) await r.unregister();
+              }
+              if ("caches" in window) {
+                const keys = await caches.keys();
+                for (const k of keys) await caches.delete(k);
+              }
+              window.location.replace(window.location.pathname + "?_v=" + Date.now());
+            }
+          }
+        } catch {}
+      })();
     }
   }, [error, isChunkError, refId]);
 

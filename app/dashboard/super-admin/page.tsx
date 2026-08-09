@@ -158,7 +158,7 @@ async function loadDashboard(): Promise<DashboardData> {
 }
 
 import { getRequestLanguage } from "@/lib/i18n/server";
-import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
+import { t } from "@/lib/i18n/ui";
 
 export default async function SuperAdminDashboardPage() {
   const session = await getCurrentErpSession();
@@ -173,28 +173,24 @@ export default async function SuperAdminDashboardPage() {
   }
 
   const lang = await getRequestLanguage();
-  const tr = (text: string) => {
-    if (!text) return text;
-    const res = autoTranslate5Languages(text);
-    return res[lang] || text;
-  };
+  const tr = (key: string, fallback: string) => t(lang, key, fallback);
 
   const data = await loadDashboard();
   const kpis = [
-    { title: tr("Total Countries"), value: data.counts.countries, subtitle: tr("Live records"), icon: Globe, color: "text-cyan-500" },
-    { title: tr("Total Branches"), value: data.counts.branches, subtitle: tr("Main and city"), icon: Building2, color: "text-emerald-500" },
-    { title: tr("Total Users"), value: data.counts.users, subtitle: tr("Approved profiles"), icon: Users2, color: "text-violet-500" },
-    { title: tr("Total Customers"), value: data.counts.customers, subtitle: tr("Live records"), icon: User, color: "text-amber-500" },
-    { title: tr("Companies / Suppliers"), value: data.counts.suppliers, subtitle: tr("Live records"), icon: Wrench, color: "text-cyan-500" },
-    { title: tr("Active Users"), value: data.activeUsers, subtitle: tr("Active role assignments"), icon: Activity, color: "text-blue-500" }
+    { title: tr("dash.total_countries", "Total Countries"), value: data.counts.countries, subtitle: tr("dash.live_records", "Live records"), icon: Globe, color: "text-cyan-500" },
+    { title: tr("dash.total_branches", "Total Branches"), value: data.counts.branches, subtitle: tr("dash.main_and_city", "Main and city"), icon: Building2, color: "text-emerald-500" },
+    { title: tr("dash.total_users", "Total Users"), value: data.counts.users, subtitle: tr("dash.approved_profiles", "Approved profiles"), icon: Users2, color: "text-violet-500" },
+    { title: tr("dash.total_customers", "Total Customers"), value: data.counts.customers, subtitle: tr("dash.live_records", "Live records"), icon: User, color: "text-amber-500" },
+    { title: tr("dash.companies_suppliers", "Companies / Suppliers"), value: data.counts.suppliers, subtitle: tr("dash.live_records", "Live records"), icon: Wrench, color: "text-cyan-500" },
+    { title: tr("dash.active_users", "Active Users"), value: data.activeUsers, subtitle: tr("dash.active_role_assignments", "Active role assignments"), icon: Activity, color: "text-blue-500" }
   ];
   const financial = [
-    [tr("Total Sales"), data.totals.sales, tr("Sales order total")],
-    [tr("Total Purchase"), data.totals.purchases, tr("Purchase order total")],
-    [tr("Total Receivables"), data.totals.debit, tr("Ledger debit total")],
-    [tr("Total Payables"), data.totals.credit, tr("Ledger credit total")],
-    [tr("Cash Balance"), data.totals.debit - data.totals.credit, tr("Debit less credit")],
-    [tr("Ledger Balance"), data.totals.balance, tr("Current ledger balance")]
+    [tr("dash.total_sales", "Total Sales"), data.totals.sales, tr("dash.sales_order_total", "Sales order total")],
+    [tr("dash.total_purchase", "Total Purchase"), data.totals.purchases, tr("dash.purchase_order_total", "Purchase order total")],
+    [tr("dash.total_receivables", "Total Receivables"), data.totals.debit, tr("dash.ledger_debit_total", "Ledger debit total")],
+    [tr("dash.total_payables", "Total Payables"), data.totals.credit, tr("dash.ledger_credit_total", "Ledger credit total")],
+    [tr("dash.cash_balance", "Cash Balance"), data.totals.debit - data.totals.credit, tr("dash.debit_less_credit", "Debit less credit")],
+    [tr("dash.ledger_balance", "Ledger Balance"), data.totals.balance, tr("dash.current_ledger_balance", "Current ledger balance")]
   ] as const;
 
   return (
@@ -203,13 +199,13 @@ export default async function SuperAdminDashboardPage() {
         <SuperAdminDashboardLiveRefresh />
         <section className="flex flex-col gap-4 border-b border-border pb-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="flex items-center gap-2 text-xl font-extrabold"><span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />{tr("Super Admin Control Center")}</h1>
-            <p className="mt-1 text-xs font-medium text-muted-foreground">{tr("Live database overview. No demo or fallback statistics.")}</p>
+            <h1 className="flex items-center gap-2 text-xl font-extrabold"><span className="h-2 w-2 animate-pulse rounded-full bg-emerald-500" />{tr("dash.super_admin_control_center", "Super Admin Control Center")}</h1>
+            <p className="mt-1 text-xs font-medium text-muted-foreground">{tr("dash.live_db_overview_subtitle", "Live database overview. No demo or fallback statistics.")}</p>
           </div>
           <div className="flex items-center gap-2"><SuperAdminDashboardSettingsPanel /><SyncLedgersButton /></div>
         </section>
 
-        {data.error && <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-700 dark:text-rose-300">Live database data could not be loaded. No demo values are being shown. {data.error}</div>}
+        {data.error && <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-700 dark:text-rose-300">{tr("dash.live_db_error_prefix", "Live database data could not be loaded. No demo values are being shown.")} {data.error}</div>}
 
         <DashboardWidget id="kpis">
           <section className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
@@ -224,7 +220,7 @@ export default async function SuperAdminDashboardPage() {
 
         <DashboardWidget id="finance">
           <section className="space-y-3">
-            <h2 className="px-1 text-xs font-black uppercase tracking-wider text-muted-foreground">{tr("Financial Overview (Live Records)")}</h2>
+            <h2 className="px-1 text-xs font-black uppercase tracking-wider text-muted-foreground">{tr("dash.financial_overview_live", "Financial Overview (Live Records)")}</h2>
             <div className="grid grid-cols-2 gap-4 md:grid-cols-3 xl:grid-cols-6">
               {financial.map(([label, value, subtitle]) => <div key={label} className="rounded-2xl border border-border bg-card p-4 shadow-lg"><p className="text-[10px] font-bold text-muted-foreground">{label}</p><h3 className="mt-2 text-lg font-black">{money(value)}</h3><p className="mt-3 text-[10px] font-semibold text-muted-foreground">{subtitle}</p></div>)}
             </div>

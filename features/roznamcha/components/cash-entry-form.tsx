@@ -1981,7 +1981,7 @@ export function CashEntryForm({
         }}
       >
         <Plus className="h-3.5 w-3.5" />
-        New
+        {t(lang, "common.new", "New")}
       </Button>
     </div>
   );
@@ -1994,36 +1994,36 @@ export function CashEntryForm({
       {isSuperAdmin && (!countryId || !countryBranchId) && (
         <SimpleModal
           onClose={() => {}} // Cannot close without selecting
-          title="Super Admin: Select Working Scope"
+          title={t(lang, "roz.select_working_scope_title", "Super Admin: Select Working Scope")}
           className="max-w-md"
         >
           <div className="space-y-4 p-2">
             <p className="text-xs text-slate-600 dark:text-slate-400">
-              Please select the Country and Branch you want to work in for Cash Entry.
+              {t(lang, "roz.select_scope_subtitle", "Please select the Country and Branch you want to work in for Cash Entry.")}
             </p>
             <div className="space-y-3">
               <div>
-                <Label className="text-xs font-black">Country</Label>
+                <Label className="text-xs font-black">{t(lang, "common.country", "Country")}</Label>
                 <select
                   value={countryId}
                   onChange={(e) => setCountryId(e.target.value)}
                   className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
                 >
-                  <option value="">Select Country...</option>
+                  <option value="">{t(lang, "roz.select_country_placeholder", "Select Country...")}</option>
                   {countries.map((c) => (
                     <option key={c.id} value={c.id}>{c.name} ({c.currency_code})</option>
                   ))}
                 </select>
               </div>
               <div>
-                <Label className="text-xs font-black">Branch</Label>
+                <Label className="text-xs font-black">{t(lang, "common.branch", "Branch")}</Label>
                 <select
                   value={countryBranchId}
                   onChange={(e) => setCountryBranchId(e.target.value)}
                   disabled={!countryId}
                   className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
                 >
-                  <option value="">Select Branch...</option>
+                  <option value="">{t(lang, "roz.select_branch_placeholder", "Select Branch...")}</option>
                   {mainBranches.map((b) => (
                     <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
                   ))}
@@ -2042,9 +2042,9 @@ export function CashEntryForm({
       <div className="mx-4 mt-4 mb-3">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Daily Cash Position
+            {t(lang, "roz.daily_cash_position", "Daily Cash Position")}
             <span className="ml-2 font-semibold text-slate-400 normal-case tracking-normal">
-              {selectedCountry?.name || (isSuperAdmin ? "Select a country" : "—")}
+              {selectedCountry?.name || (isSuperAdmin ? t(lang, "roz.select_a_country", "Select a country") : "—")}
               {selectedMainBranch?.name ? ` · ${selectedMainBranch.name}` : ""}
               {entryDate ? ` · ${entryDate.split("-").reverse().join("/")}` : ""}
             </span>
@@ -2056,7 +2056,7 @@ export function CashEntryForm({
             className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 disabled:opacity-50"
           >
             <RefreshCw className={cn("h-3 w-3", loadingSummary ? "animate-spin" : "")} />
-            Refresh
+            {t(lang, "common.refresh", "Refresh")}
           </button>
         </div>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">

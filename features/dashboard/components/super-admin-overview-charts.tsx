@@ -7,6 +7,8 @@ import { BarChart3, TableProperties, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DashboardWidget } from "@/features/dashboard/components/super-admin-dashboard-settings";
 import { Th } from "@/components/ui/translated-th";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 export type CountryFinancialSummary = {
   id: string;
@@ -32,11 +34,12 @@ function compact(value: number) {
   return String(value);
 }
 
-function EmptyChart() {
-  return <div className="absolute inset-0 z-10 grid place-items-center text-sm font-semibold text-muted-foreground">No Records Found</div>;
+function EmptyChart({ lang }: { lang: string }) {
+  return <div className="absolute inset-0 z-10 grid place-items-center text-sm font-semibold text-muted-foreground">{t(lang, "common.no_records", "No Records Found")}</div>;
 }
 
 export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }: Props) {
+  const lang = useActiveLanguage();
   const [isDark, setIsDark] = useState(false);
   useEffect(() => {
     const update = () => setIsDark(document.documentElement.classList.contains("dark"));
@@ -56,10 +59,10 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
     <div className="grid gap-6 lg:grid-cols-3">
       <DashboardWidget id="salesPurchase">
         <Card className="border-border bg-card shadow-lg">
-          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-sm font-bold"><BarChart3 className="h-4 w-4 text-emerald-500" />Sales vs Purchase</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-sm font-bold"><BarChart3 className="h-4 w-4 text-emerald-500" />{t(lang, "dash.sales_vs_purchase", "Sales vs Purchase")}</CardTitle></CardHeader>
           <CardContent>
             <div className="relative h-[250px] w-full">
-              {!hasFinancialRecords && <EmptyChart />}
+              {!hasFinancialRecords && <EmptyChart lang={lang} />}
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={chartData} margin={{ top: 15, right: 5, left: -25, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} opacity={0.6} />
@@ -78,10 +81,10 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
 
       <DashboardWidget id="profitTrend">
         <Card className="border-border bg-card shadow-lg">
-          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-sm font-bold"><TrendingUp className="h-4 w-4 text-purple-500" />Profit Trend</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-sm font-bold"><TrendingUp className="h-4 w-4 text-purple-500" />{t(lang, "dash.profit_trend", "Profit Trend")}</CardTitle></CardHeader>
           <CardContent>
             <div className="relative h-[250px] w-full">
-              {!hasFinancialRecords && <EmptyChart />}
+              {!hasFinancialRecords && <EmptyChart lang={lang} />}
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={profitData} margin={{ top: 15, right: 5, left: -25, bottom: 5 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={gridColor} opacity={0.6} />
@@ -98,13 +101,13 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
 
       <DashboardWidget id="countryPerformance">
         <Card className="border-border bg-card shadow-lg">
-          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-sm font-bold"><TableProperties className="h-4 w-4 text-blue-500" />Country Performance</CardTitle></CardHeader>
+          <CardHeader className="pb-2"><CardTitle className="flex items-center gap-2 text-sm font-bold"><TableProperties className="h-4 w-4 text-blue-500" />{t(lang, "dash.country_performance", "Country Performance")}</CardTitle></CardHeader>
           <CardContent className="px-4 pb-4 pt-0">
             <div className="max-h-[270px] overflow-auto rounded-xl border border-border/80">
               <table className="w-full min-w-[620px] text-left text-[11px]">
                 <thead className="sticky top-0 bg-muted"><tr className="border-b border-border"><Th className="p-2.5">Country</Th><Th className="p-2.5 text-center">Branches</Th><Th className="p-2.5 text-center">Users</Th><Th className="p-2.5 text-right">Sales</Th><Th className="p-2.5 text-right">Purchase</Th><Th className="p-2.5 text-center">Status</Th></tr></thead>
                 <tbody className="divide-y divide-border/60">
-                  {countrySummaries.length === 0 && <tr><td colSpan={6} className="py-12 text-center font-semibold text-muted-foreground">No Records Found</td></tr>}
+                  {countrySummaries.length === 0 && <tr><td colSpan={6} className="py-12 text-center font-semibold text-muted-foreground">{t(lang, "common.no_records", "No Records Found")}</td></tr>}
                   {countrySummaries.map((row) => (
                     <tr key={row.id} className="hover:bg-muted/50">
                       <td className="p-2.5 font-semibold"><Link href={`/dashboard/country?countryId=${row.id}`} className="text-blue-500 hover:underline">{row.name}</Link></td>
@@ -112,7 +115,7 @@ export function SuperAdminOverviewCharts({ countrySummaries, monthlyFinancials }
                       <td className="p-2.5 text-center">{row.totalUsers}</td>
                       <td className="p-2.5 text-right">${row.totalSales.toLocaleString()}</td>
                       <td className="p-2.5 text-right">${row.totalPurchases.toLocaleString()}</td>
-                      <td className="p-2.5 text-center"><span className={`inline-flex rounded-full border px-1.5 py-0.5 text-[9px] font-bold ${row.isActive ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600" : "border-slate-500/20 bg-slate-500/10 text-slate-500"}`}>{row.isActive ? "Active" : "Inactive"}</span></td>
+                      <td className="p-2.5 text-center"><span className={`inline-flex rounded-full border px-1.5 py-0.5 text-[9px] font-bold ${row.isActive ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-600" : "border-slate-500/20 bg-slate-500/10 text-slate-500"}`}>{row.isActive ? t(lang, "common.active", "Active") : t(lang, "common.inactive", "Inactive")}</span></td>
                     </tr>
                   ))}
                 </tbody>

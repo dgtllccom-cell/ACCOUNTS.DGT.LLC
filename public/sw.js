@@ -1,6 +1,5 @@
-const CACHE_NAME = "digital-dock-erp-v2";
+const CACHE_NAME = "digital-dock-erp-v3";
 const ASSETS_TO_CACHE = [
-  "/",
   "/manifest.webmanifest",
   "/icons/digital-dock-icon.svg",
   "/icons/digital-dock-maskable.svg"
@@ -20,6 +19,7 @@ self.addEventListener("activate", (event) => {
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
+          // Delete all old cache stores and any cached HTML pages
           if (key !== CACHE_NAME) {
             return caches.delete(key);
           }
@@ -34,12 +34,19 @@ self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
   const url = new URL(event.request.url);
 
-  // Skip API routes, auth routes, server actions, and dev HMR
-  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/auth/") || url.pathname.startsWith("/_next/webpack-hmr")) return;
+  // NEVER cache API routes, Auth routes, Webpack HMR, or HTML navigation documents
+  if (
+    url.pathname.startsWith("/api/") ||
+    url.pathname.startsWith("/auth/") ||
+    url.pathname.startsWith("/_next/webpack-hmr") ||
+    event.request.mode === "navigate" ||
+    (event.request.headers.get("accept") && event.request.headers.get("accept").includes("text/html"))
+  ) {
+    return;
+  }
 
-  // For JS chunk files (_next/static/chunks/), fetch network-first.
-  // DO NOT fall back to '/' (index HTML) because HTML causes SyntaxError / ChunkLoadError in JS script tags.
-  if (url.pathname.includes("/_next/static/chunks/")) {
+  // Network-First for Next.js static JS chunks
+  if (url.pathname.includes("/_next/static/")) {
     event.respondWith(
       fetch(event.request).catch((err) => {
         return caches.match(event.request).then((res) => {
@@ -53,10 +60,7 @@ self.addEventListener("fetch", (event) => {
 
   event.respondWith(
     fetch(event.request).catch(() => {
-      return caches.match(event.request).then((response) => {
-        return response || caches.match("/");
-      });
+      return caches.match(event.request);
     })
   );
 });
-

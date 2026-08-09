@@ -4,9 +4,12 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 export function SyncLedgersButton() {
   const router = useRouter();
+  const lang = useActiveLanguage();
   const [isPending, startTransition] = useTransition();
   const [loading, setLoading] = useState(false);
 
@@ -32,7 +35,7 @@ export function SyncLedgersButton() {
       disabled={isSyncing}
     >
       <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${isSyncing ? "animate-spin" : ""}`} />
-      {isSyncing ? "Syncing..." : "Sync Ledgers"}
+      {isSyncing ? t(lang, "dash.syncing", "Syncing...") : t(lang, "dash.sync_ledgers", "Sync Ledgers")}
     </Button>
   );
 }

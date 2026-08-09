@@ -16,15 +16,17 @@ import { usePathname, useRouter } from "next/navigation";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
-function titleFromPath(pathname: string) {
+function titleFromPath(pathname: string, lang: string) {
   const lastSegment = pathname
     .split("/")
     .filter(Boolean)
     .filter((segment) => segment !== "dashboard")
     .at(-1);
 
-  if (!lastSegment) return "Dashboard";
+  if (!lastSegment) return t(lang, "pa.default_title", "Dashboard");
 
   return lastSegment
     .replace(/\?.*$/, "")
@@ -64,9 +66,10 @@ function parentPathFor(pathname: string) {
 export function ErpPageActions() {
   const router = useRouter();
   const pathname = usePathname();
+  const lang = useActiveLanguage();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
-  const title = titleFromPath(pathname || "/dashboard");
+  const title = titleFromPath(pathname || "/dashboard", lang);
 
   useEffect(() => {
     if (!open) return;
@@ -132,17 +135,17 @@ export function ErpPageActions() {
           size="sm"
           onClick={goBack}
           className="h-7 gap-1 rounded-lg border-slate-200 bg-slate-50 px-2.5 text-[10px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-          aria-label="Back to previous page"
-          title="Back"
+          aria-label={t(lang, "pa.back_to_previous_page", "Back to previous page")}
+          title={t(lang, "pa.back", "Back")}
         >
           <ArrowLeft className="h-3 w-3" aria-hidden />
-          Back
+          {t(lang, "pa.back", "Back")}
         </Button>
         <div id="erp-page-title-slot" className="min-w-0 empty:hidden" />
         <style>{`#erp-page-title-slot:not(:empty) + .default-title { display: none; }`}</style>
         <div className="min-w-0 default-title">
           <h1 className="truncate text-xs font-black tracking-tight text-slate-900 dark:text-slate-100 sm:text-sm">{title}</h1>
-          <p className="hidden text-[9.5px] font-medium text-slate-400 sm:block">Standard ERP navigation and page actions</p>
+          <p className="hidden text-[9.5px] font-medium text-slate-400 sm:block">{t(lang, "pa.subtitle", "Standard ERP navigation and page actions")}</p>
         </div>
       </div>
 
@@ -155,42 +158,42 @@ export function ErpPageActions() {
             size="sm"
             onClick={() => setOpen((current) => !current)}
             className="h-7 gap-1 rounded-lg border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
-            aria-label="Open page actions menu"
-            title="Page actions"
+            aria-label={t(lang, "pa.open_actions_menu", "Open page actions menu")}
+            title={t(lang, "pa.page_actions", "Page actions")}
           >
             <MoreVertical className="h-3.5 w-3.5 text-slate-500" aria-hidden />
-            Actions
+            {t(lang, "pa.actions", "Actions")}
           </Button>
 
           {open ? (
             <div className={cn("absolute right-0 top-full z-40 mt-1.5 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl dark:border-slate-800 dark:bg-slate-900")}>
               <button type="button" onClick={() => closeAndRun(() => window.print())} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
                 <Printer className="h-4 w-4" aria-hidden />
-                Print
+                {t(lang, "pa.print", "Print")}
               </button>
               <button type="button" onClick={() => closeAndRun(() => window.print())} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
                 <DownloadActionIcon className="h-4 w-4" aria-hidden />
-                PDF Download
+                {t(lang, "pa.pdf_download", "PDF Download")}
               </button>
               <button type="button" onClick={() => closeAndRun(emailPage)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
                 <Mail className="h-4 w-4" aria-hidden />
-                Email
+                {t(lang, "pa.email", "Email")}
               </button>
               <button type="button" onClick={() => closeAndRun(whatsAppShare)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
                 <Send className="h-4 w-4" aria-hidden />
-                WhatsApp Share
+                {t(lang, "pa.whatsapp_share", "WhatsApp Share")}
               </button>
               <button type="button" onClick={() => closeAndRun(editCurrentRecord)} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
                 <Edit3 className="h-4 w-4" aria-hidden />
-                Edit
+                {t(lang, "pa.edit", "Edit")}
               </button>
               <button type="button" onClick={() => closeAndRun(() => window.location.reload())} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
                 <RefreshCw className="h-4 w-4" aria-hidden />
-                Refresh
+                {t(lang, "common.refresh", "Refresh")}
               </button>
               <button type="button" onClick={() => closeAndRun(() => navigator.clipboard?.writeText(currentUrl()))} className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-bold hover:bg-slate-50 dark:hover:bg-slate-800">
                 <Share2 className="h-4 w-4" aria-hidden />
-                Copy Link
+                {t(lang, "pa.copy_link", "Copy Link")}
               </button>
             </div>
           ) : null}
@@ -202,8 +205,8 @@ export function ErpPageActions() {
           size="icon"
           onClick={closePage}
           className="h-7 w-7 rounded-lg text-rose-600 hover:bg-rose-50 hover:text-rose-700 dark:text-rose-400 dark:hover:bg-rose-950/30"
-          aria-label="Close current page"
-          title="Close"
+          aria-label={t(lang, "pa.close_current_page", "Close current page")}
+          title={t(lang, "pa.close", "Close")}
         >
           <X className="h-3.5 w-3.5" aria-hidden />
         </Button>

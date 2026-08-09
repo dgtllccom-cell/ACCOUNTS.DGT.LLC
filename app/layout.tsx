@@ -98,18 +98,24 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         var str = '';
         if (typeof err === 'string') str = err;
         else if (err && typeof err === 'object') str = err.message || err.name || String(err);
-        if (str && (str.indexOf('Loading chunk') !== -1 || str.indexOf('ChunkLoadError') !== -1 || str.indexOf('failed to fetch') !== -1 || str.indexOf('exception has occurred') !== -1)) {
-          var last = sessionStorage.getItem('chunk_reload_attempt');
-          var now = Date.now();
-          if (!last || (now - parseInt(last, 10)) > 15000) {
-            sessionStorage.setItem('chunk_reload_attempt', now.toString());
-            window.location.href = window.location.pathname + '?_t=' + now;
+        if (str && (str.indexOf('Loading chunk') !== -1 || str.indexOf('ChunkLoadError') !== -1 || str.indexOf('failed to fetch') !== -1 || str.indexOf('Failed to fetch dynamically imported module') !== -1)) {
+          if ('caches' in window) {
+            caches.keys().then(function(keys) { keys.forEach(function(k) { caches.delete(k); }); }).catch(function() {});
+          }
+          if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.getRegistrations().then(function(regs) { regs.forEach(function(r) { r.unregister(); }); }).catch(function() {});
+          }
+          var countKey = 'erp_auto_chunk_cnt';
+          var count = parseInt(sessionStorage.getItem(countKey) || '0', 10);
+          if (count < 3) {
+            sessionStorage.setItem(countKey, String(count + 1));
+            window.location.replace(window.location.pathname + '?_v=' + Date.now());
           }
         }
       } catch (inner) {}
     };
-    window.addEventListener('error', function(e) { handleChunkErr(e ? (e.message || e.error) : null); });
-    window.addEventListener('unhandledrejection', function(e) { handleChunkErr(e ? e.reason : null); });
+    window.addEventListener('error', function(e) { handleChunkErr(e ? (e.message || e.error) : null); }, true);
+    window.addEventListener('unhandledrejection', function(e) { handleChunkErr(e ? e.reason : null); }, true);
   } catch {}
 })();
             `.trim()

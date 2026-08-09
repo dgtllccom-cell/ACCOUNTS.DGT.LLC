@@ -2,19 +2,21 @@
 
 import { createContext, type ReactNode, useContext, useEffect, useMemo, useState } from "react";
 import { Check, Settings2, SlidersHorizontal } from "lucide-react";
+import { t, type UiKey } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 const STORAGE_KEY = "damaan-super-admin-dashboard-widgets";
 
 const WIDGETS = [
-  { id: "kpis", label: "Executive KPI Cards" },
-  { id: "finance", label: "Financial Overview Cards" },
-  { id: "salesPurchase", label: "Sales vs Purchase Chart" },
-  { id: "profitTrend", label: "Profit Trend Chart" },
-  { id: "countryPerformance", label: "Country Performance" },
-  { id: "system", label: "System Status" },
-  { id: "quick", label: "Quick Controls" },
-  { id: "activity", label: "Recent Activities" }
-] as const;
+  { id: "kpis", labelKey: "dash.widget_kpi_cards", label: "Executive KPI Cards" },
+  { id: "finance", labelKey: "dash.widget_finance_cards", label: "Financial Overview Cards" },
+  { id: "salesPurchase", labelKey: "dash.widget_sales_purchase_chart", label: "Sales vs Purchase Chart" },
+  { id: "profitTrend", labelKey: "dash.widget_profit_trend_chart", label: "Profit Trend Chart" },
+  { id: "countryPerformance", labelKey: "dash.widget_country_performance", label: "Country Performance" },
+  { id: "system", labelKey: "dash.widget_system_status", label: "System Status" },
+  { id: "quick", labelKey: "dash.widget_quick_controls", label: "Quick Controls" },
+  { id: "activity", labelKey: "dash.widget_recent_activities", label: "Recent Activities" }
+] as const satisfies ReadonlyArray<{ id: string; labelKey: UiKey; label: string }>;
 
 type WidgetId = (typeof WIDGETS)[number]["id"];
 type WidgetState = Record<WidgetId, boolean>;
@@ -75,6 +77,7 @@ export function DashboardWidget({ id, children }: { id: WidgetId; children: Reac
 export function SuperAdminDashboardSettingsPanel() {
   const { visible, toggle, reset } = useDashboardSettings();
   const [open, setOpen] = useState(false);
+  const lang = useActiveLanguage();
 
   return (
     <div className="relative">
@@ -84,15 +87,15 @@ export function SuperAdminDashboardSettingsPanel() {
         className="inline-flex h-9 items-center justify-center gap-2 rounded-xl border border-border bg-card px-3 text-xs font-bold text-card-foreground shadow-sm transition hover:bg-muted"
       >
         <SlidersHorizontal className="h-4 w-4" />
-        Dashboard Settings
+        {t(lang, "dash.dashboard_settings", "Dashboard Settings")}
       </button>
       {open && (
         <div className="absolute right-0 z-30 mt-2 w-72 overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-950 shadow-2xl">
           <div className="flex items-center gap-2 border-b border-slate-100 bg-slate-50 px-4 py-3">
             <Settings2 className="h-4 w-4 text-blue-600" />
             <div>
-              <p className="text-sm font-black">Dashboard Settings</p>
-              <p className="text-[11px] font-medium text-slate-500">Choose what appears on this dashboard.</p>
+              <p className="text-sm font-black">{t(lang, "dash.dashboard_settings", "Dashboard Settings")}</p>
+              <p className="text-[11px] font-medium text-slate-500">{t(lang, "dash.choose_widgets_subtitle", "Choose what appears on this dashboard.")}</p>
             </div>
           </div>
           <div className="space-y-1 p-2">
@@ -103,7 +106,7 @@ export function SuperAdminDashboardSettingsPanel() {
                 onClick={() => toggle(item.id)}
                 className="flex w-full items-center justify-between rounded-xl px-3 py-2 text-left text-xs font-bold transition hover:bg-blue-50"
               >
-                <span>{item.label}</span>
+                <span>{t(lang, item.labelKey, item.label)}</span>
                 <span
                   className={`grid h-5 w-5 place-items-center rounded-md border ${
                     visible[item.id] ? "border-blue-600 bg-blue-600 text-white" : "border-slate-300 text-transparent"
@@ -120,7 +123,7 @@ export function SuperAdminDashboardSettingsPanel() {
               onClick={reset}
               className="w-full rounded-xl bg-slate-900 px-3 py-2 text-xs font-black text-white transition hover:bg-slate-700"
             >
-              Reset Dashboard
+              {t(lang, "dash.reset_dashboard", "Reset Dashboard")}
             </button>
           </div>
         </div>
