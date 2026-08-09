@@ -52,6 +52,9 @@ import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { openPurchaseA4ReportWindow, type PurchaseReportData } from "@/lib/reports/open-purchase-a4-report-window";
 import { PaymentEditModal } from "./payment-edit-modal";
 import { Th } from "@/components/ui/translated-th";
+import { t, type LanguageCode } from "@/features/i18n/purchase-journal-translations";
+import { t as tGlobal } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 function isUuid(value: any): boolean {
   if (!value || typeof value !== "string") return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim());
@@ -1024,6 +1027,7 @@ function NestedPaymentHistory({
   onOpenFullBill?: () => void,
   loadingRemainingLoadingRecords?: boolean
 }) {
+  const currentLanguage = useActiveLanguage() as LanguageCode;
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -1230,20 +1234,20 @@ function NestedPaymentHistory({
           {/* Column 3: Converted Local Currency Breakdown */}
           <div className="flex flex-col justify-between border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 rounded-lg p-3 shadow-sm">
             <div className="text-[10px] font-black uppercase tracking-widest text-indigo-700 dark:text-indigo-400 border-b border-slate-100 dark:border-slate-800 pb-1.5 mb-2.5">
-              Converted Currency Flow ({calcs.finalCurr})
+              {t("converted_currency_flow", currentLanguage)} ({calcs.finalCurr})
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500 font-semibold">Converted Local Amount:</span>
+                <span className="text-slate-500 font-semibold">{t("converted_local_amount", currentLanguage)}</span>
                 <span className="font-mono font-black text-slate-800 dark:text-slate-200">{money(calcs.totalPurchaseLC, calcs.finalCurr)}</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500 font-semibold">Local Currency Advance ({calcs.advancePercent}%):</span>
+                <span className="text-slate-500 font-semibold">{t("local_currency_advance", currentLanguage)} ({calcs.advancePercent}%):</span>
                 <span className="font-mono font-black text-emerald-600 dark:text-emerald-400">{money(calcs.advanceAmountLC, calcs.finalCurr)}</span>
               </div>
               <div className="border-t border-dashed border-slate-100 dark:border-slate-800/60 my-1"></div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-800 dark:text-slate-200 font-bold">Remaining Local Balance:</span>
+                <span className="text-slate-800 dark:text-slate-200 font-bold">{t("remaining_local_balance", currentLanguage)}</span>
                 <span className="font-mono font-black text-rose-600 dark:text-rose-400">{money(calcs.remainingPurchaseLC, calcs.finalCurr)}</span>
               </div>
             </div>
@@ -1253,10 +1257,10 @@ function NestedPaymentHistory({
 
       <div className="mb-3 flex items-center justify-between">
         <h4 className="text-xs font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-400 flex items-center gap-1.5">
-          Traceable Payment History (Nested Journal Entries)
+          {t("traceable_payment_history", currentLanguage)}
         </h4>
         {(loading || loadingRemainingLoadingRecords) && (
-          <span className="text-[10px] font-semibold text-slate-400 animate-pulse">Loading history...</span>
+          <span className="text-[10px] font-semibold text-slate-400 animate-pulse">{t("loading_history", currentLanguage)}</span>
         )}
       </div>
       {payments.length > 0 ? (
@@ -2424,18 +2428,18 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     setPageIndex(0);
   };
   const recordsTextMap: Record<LanguageCode, string> = {
-    en: "Records",
-    ur: "Records",
-    ar: "Records",
-    fa: "Records",
-    ps: "Records"
+    en: "records",
+    ur: "ریکارڈز",
+    ar: "سجلات",
+    fa: "رکوردها",
+    ps: "ریکارډونه"
   };
   const refreshTextMap: Record<LanguageCode, string> = {
     en: "Refresh",
-    ur: "Refresh",
-    ar: "Refresh",
-    fa: "Refresh",
-    ps: "Refresh"
+    ur: "تازہ کریں",
+    ar: "تحديث",
+    fa: "بروزرسانی",
+    ps: "تازه کول"
   };
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -2578,7 +2582,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
 
   const [titleSlot, setTitleSlot] = useState<Element | null>(null);
   const [actionsSlot, setActionsSlot] = useState<Element | null>(null);
-  const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>("en");
+  // Follows the single, app-wide active language (top toolbar selector) instead of its
+  // own disconnected state — this page previously had its own separate, broken language
+  // dropdown (corrupted-encoding option labels) that never reflected the real selection.
+  const currentLanguage = useActiveLanguage() as LanguageCode;
   const isRtl = ["ur", "ar", "fa", "ps"].includes(currentLanguage);
 
   useEffect(() => {
@@ -3902,29 +3909,6 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
       )}
       {actionsSlot && createPortal(
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Language Selector Dropdown */}
-          <div className="relative">
-            <select
-              value={currentLanguage}
-              onChange={(e) => setCurrentLanguage(e.target.value as LanguageCode)}
-              className="h-7 rounded-lg border border-slate-200 bg-white pl-2 pr-6 text-[10px] font-bold text-slate-700 outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 transition focus:border-blue-500 appearance-none cursor-pointer"
-              style={{
-                backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: isRtl ? 'left 0.5rem center' : 'right 0.5rem center',
-                backgroundSize: '1em',
-                paddingRight: isRtl ? '0.5rem' : '1.5rem',
-                paddingLeft: isRtl ? '1.5rem' : '0.5rem'
-              }}
-            >
-              <option value="en">English (EN)</option>
-              <option value="ur">Ø§Ø±Ø¯Ùˆ (UR)</option>
-              <option value="ar">Ø§Ù„Ø¹Ø±Ø¨ÙŠØ© (AR)</option>
-              <option value="fa">ÙØ§Ø±Ø³ÛŒ (FA)</option>
-              <option value="ps">Ù¾ÚšØªÙˆ (PS)</option>
-            </select>
-          </div>
-
           {/* Search Input */}
           <div className="relative">
             <Search className={cn("absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400", isRtl ? "right-2.5" : "left-2.5")} />
@@ -4497,18 +4481,18 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   >
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
                       <FileSpreadsheet style={{ width: 40, height: 40, opacity: 0.3 }} />
-                      <span>No purchase order payment records found.</span>
+                      <span>{t("no_payment_records_found", currentLanguage)}</span>
                       {activeMode === "remaining" ? (
                         <div style={{ maxWidth: 420, textAlign: "center" }}>
                           <span style={{ fontSize: 11, color: "#f59e0b", fontWeight: 700, display: "block" }}>
-                            Warning: Workflow Rule: Remaining Payment requires Transfer to Loading first.
+                            {tGlobal(currentLanguage, "pay.remaining_workflow_warning", "Warning: Workflow Rule: Remaining Payment requires Transfer to Loading first.")}
                           </span>
                           <span style={{ fontSize: 10, color: "#cbd5e1", display: "block", marginTop: 4 }}>
-                            Orders only appear here after: Booking ? Advance Payment ? Transfer to Loading ? Loading Confirmation. Ensure the order has been transferred to loading before making a remaining payment.
+                            {tGlobal(currentLanguage, "pay.remaining_workflow_steps", "Orders only appear here after: Booking → Advance Payment → Transfer to Loading → Loading Confirmation. Ensure the order has been transferred to loading before making a remaining payment.")}
                           </span>
                         </div>
                       ) : (
-                        <span style={{ fontSize: 11, color: "#cbd5e1" }}>Try adjusting filters or check if orders are posted.</span>
+                        <span style={{ fontSize: 11, color: "#cbd5e1" }}>{t("try_adjusting_filters", currentLanguage)}</span>
                       )}
                     </div>
                   </td>
@@ -4518,7 +4502,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
               {(loading || loadingRemainingLoadingRecords) && (
                 <tr>
                   <td colSpan={11} style={{ padding: "60px 20px", textAlign: "center", color: "#94a3b8", fontSize: 13 }}>
-                    Loading records...
+                    {t("loading_records", currentLanguage)}
                   </td>
                 </tr>
               )}
@@ -4530,10 +4514,10 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 bg-white px-6 py-4 dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-6">
             <span className="text-xs text-slate-500 dark:text-slate-400">
-              Showing <strong className="font-semibold text-slate-700 dark:text-slate-300">{pageRows.length ? pageIndex * pageSize + 1 : 0} to {Math.min(displayRows.length, (pageIndex + 1) * pageSize)}</strong> of <strong className="font-semibold text-slate-700 dark:text-slate-300">{displayRows.length}</strong> records
+              {t("showing", currentLanguage)} <strong className="font-semibold text-slate-700 dark:text-slate-300">{pageRows.length ? pageIndex * pageSize + 1 : 0} {t("range_to", currentLanguage)} {Math.min(displayRows.length, (pageIndex + 1) * pageSize)}</strong> {t("of_records", currentLanguage)} <strong className="font-semibold text-slate-700 dark:text-slate-300">{displayRows.length}</strong> {t("records_word", currentLanguage)}
             </span>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 dark:text-slate-400">Rows per page:</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">{t("rows_per_page", currentLanguage)}</span>
               <select
                 value={pageSize}
                 onChange={(event) => {
@@ -4557,9 +4541,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                 "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-650 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400",
                 pageIndex === 0 && "text-slate-400 opacity-50 cursor-not-allowed"
               )}
-              aria-label="Previous page"
+              aria-label={t("previous_page", currentLanguage)}
             >
-              <span className="text-xs">?</span>
+              <ChevronRight className="h-3.5 w-3.5" style={{ transform: isRtl ? "none" : "rotate(180deg)" }} />
             </button>
             {Array.from({ length: Math.ceil(displayRows.length / pageSize) }).slice(0, 5).map((_, idx) => (
               <button
@@ -4582,9 +4566,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                 "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-655 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400",
                 (pageIndex + 1) * pageSize >= displayRows.length && "text-slate-400 opacity-50 cursor-not-allowed"
               )}
-              aria-label="Next page"
+              aria-label={t("next_page", currentLanguage)}
             >
-              <span className="text-xs">?</span>
+              <ChevronRight className="h-3.5 w-3.5" style={{ transform: isRtl ? "rotate(180deg)" : "none" }} />
             </button>
           </div>
         </div>
@@ -5125,15 +5109,15 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                   <Truck className="h-6 w-6" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-sm font-black text-amber-800 dark:text-amber-400">Select a Loaded Container to Process Payment</h3>
+                  <h3 className="text-sm font-black text-amber-800 dark:text-amber-400">{t("select_loaded_container", currentLanguage)}</h3>
                   <p className="text-xs text-slate-500 max-w-md mx-auto">
-                    Remaining payments must be processed separately for each loaded container record. Please select one of the loaded containers below to continue:
+                    {t("select_container_instruction", currentLanguage)}
                   </p>
                 </div>
                 {loadingLoadingRecords ? (
                   <div className="text-xs text-amber-700 italic flex items-center justify-center gap-1.5 py-8">
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />
-                    Loading container records...
+                    {t("loading_container_records", currentLanguage)}
                   </div>
                 ) : loadingRecords.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 max-h-[350px] overflow-y-auto p-1">

@@ -8,6 +8,7 @@ import { roznamchaService } from "@/lib/services/roznamcha-service";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
+import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 import { revalidatePath } from "next/cache";
 
 export const dynamic = "force-dynamic";
@@ -339,6 +340,14 @@ export async function postRoznamchaWithErpSession(input: {
 
   if (entryError) throw new Error(entryError.message);
   const entryId = entry.id as string;
+
+  // Populate the 5-language store for the free-form narration the user typed, so any
+  // user viewing this entry in a different language later gets a resolved value instead
+  // of always seeing the original-language text. Registered in the field registry
+  // (lib/i18n/translatable-fields.ts) as mode:"translate"; non-blocking, never affects posting.
+  if (body.narration) {
+    void translateMasterRecord("roznamcha_entries", entryId, { narration: body.narration }, "en", actorId);
+  }
 
   // 4-level serial (Global/Country/Branch/Entry) — additive metadata on the
   // roznamcha entry only; does NOT touch the ledger/account posting below.

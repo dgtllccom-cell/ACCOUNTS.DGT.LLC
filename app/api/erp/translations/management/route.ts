@@ -70,7 +70,16 @@ export async function GET(request: NextRequest) {
 
     if (missingOnly) {
       records = records.filter((r: any) => {
+        const isFallback =
+          Boolean(r.original_text) &&
+          r.urdu_text === r.original_text &&
+          r.arabic_text === r.original_text &&
+          r.persian_text === r.original_text &&
+          r.pashto_text === r.original_text;
+
         return (
+          r.translation_status === "pending" ||
+          isFallback ||
           !r.english_text?.trim() ||
           !r.urdu_text?.trim() ||
           !r.pashto_text?.trim() ||

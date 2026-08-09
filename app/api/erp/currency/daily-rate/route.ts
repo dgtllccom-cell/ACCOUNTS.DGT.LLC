@@ -43,27 +43,55 @@ export async function GET(request: NextRequest) {
     });
 
     const supabase = await createApiSupabaseClient();
-    const { data, error } = await supabase.rpc("get_daily_rate", {
-      p_country_id: countryId,
-      p_country_branch_id: countryBranchId || null,
-      p_date: date || new Date().toISOString().slice(0, 10)
-    });
+    const targetDate = date || new Date().toISOString().slice(0, 10);
+    let row: any = null;
 
-    if (error) {
-      throw new Error(error.message);
+    try {
+      const { data, error } = await supabase.rpc("get_daily_rate", {
+        p_country_id: countryId,
+        p_country_branch_id: countryBranchId || null,
+        p_date: targetDate
+      });
+
+      if (!error && data) {
+        row = Array.isArray(data) ? data[0] : data;
+      } else {
+        throw error || new Error("RPC returned no data");
+      }
+    } catch {
+      // Fallback: direct query on daily_usd_rates table
+      let rateQuery = supabase
+        .from("daily_usd_rates")
+        .select("rate_date, buying_rate, selling_rate, credit_rate, debit_rate, country_branch_id")
+        .eq("country_id", countryId)
+        .eq("rate_date", targetDate)
+        .is("deleted_at", null);
+
+      if (countryBranchId) {
+        rateQuery = rateQuery.or(`country_branch_id.eq.${countryBranchId},country_branch_id.is.null`);
+      } else {
+        rateQuery = rateQuery.is("country_branch_id", null);
+      }
+
+      const { data: rows } = await rateQuery;
+      if (Array.isArray(rows) && rows.length > 0) {
+        rows.sort((a: any, b: any) => {
+          if (a.country_branch_id && !b.country_branch_id) return -1;
+          if (!a.country_branch_id && b.country_branch_id) return 1;
+          return 0;
+        });
+        const match = rows[0];
+        row = {
+          rate_date: match.rate_date,
+          buying_rate: match.buying_rate,
+          selling_rate: match.selling_rate,
+          credit_rate: match.credit_rate,
+          debit_rate: match.debit_rate,
+          is_exact_date: true,
+          is_branch_specific: Boolean(match.country_branch_id)
+        };
+      }
     }
-
-    const row = (Array.isArray(data) ? data[0] : data) as
-      | {
-          rate_date?: string | null;
-          buying_rate?: number | null;
-          selling_rate?: number | null;
-          credit_rate?: number | null;
-          debit_rate?: number | null;
-          is_exact_date?: boolean | null;
-          is_branch_specific?: boolean | null;
-        }
-      | undefined;
 
     const found = Boolean(row && (row.buying_rate != null || row.selling_rate != null || row.credit_rate != null || row.debit_rate != null));
 

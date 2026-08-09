@@ -35,6 +35,10 @@ type TranslationItem = {
 const MODULE_OPTIONS = [
   { label: "All Modules", value: "" },
   { label: "System & UI Dictionary", value: "system_dictionary" },
+  { label: "Roznamcha & Cash Entry", value: "roznamcha_entries" },
+  { label: "Expenses Bills & Remarks", value: "expenses" },
+  { label: "Purchases & Transfers", value: "purchases" },
+  { label: "Sales & Invoices", value: "sales" },
   { label: "Accounts & Ledgers", value: "enterprise_accounts" },
   { label: "Goods & Products", value: "goods" },
   { label: "Countries & Locations", value: "countries" },

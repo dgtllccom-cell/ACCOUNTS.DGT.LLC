@@ -30,6 +30,7 @@ const transferSchema = z.object({
  *   - Re-transfer after reversal is allowed (status would be reset to 'accepted').
  */
 import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
+import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
 export async function POST(request: NextRequest) {
   let idempotencyKey = "";
@@ -254,6 +255,7 @@ export async function POST(request: NextRequest) {
         console.error("Roznamcha entry creation failed:", rozErr);
       } else if (rozEntry) {
         roznamchaEntryId = rozEntry.id;
+        void translateMasterRecord("roznamcha_entries", roznamchaEntryId, { narration }, "en", session.userId);
 
         // Insert BOTH debit and credit lines into the SAME roznamcha entry
         await (supabase as any).from("roznamcha_lines").insert([

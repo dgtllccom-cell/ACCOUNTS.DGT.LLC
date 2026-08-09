@@ -7,11 +7,13 @@ import { SearchSelect } from "@/components/ui/search-select";
 import { Download, Printer, Filter, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { RoznamchaEntryRow } from "@/features/roznamcha/roznamcha-api";
-import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type TabType = "summary" | "branch" | "user";
 
 export function ComprehensiveDailyReportView() {
+  const lang = useActiveLanguage();
   const [loading, setLoading] = useState(false);
   const [entries, setEntries] = useState<RoznamchaEntryRow[]>([]);
   
@@ -261,7 +263,7 @@ export function ComprehensiveDailyReportView() {
               activeTab === tab ? "bg-indigo-50 text-indigo-700 border-b-2 border-indigo-600" : "text-slate-500 hover:bg-slate-50"
             )}
           >
-            {tab === "summary" ? "Daily Summary" : tab === "branch" ? "Branch-wise Report" : "User-wise Report"}
+            {tab === "summary" ? t(lang, "nav.financial_balance_summaries", "Daily Summary") : tab === "branch" ? t(lang, "nav.branch_transaction_performance", "Branch-wise Report") : t(lang, "nav.user_live_activity", "User-wise Report")}
           </button>
         ))}
       </div>

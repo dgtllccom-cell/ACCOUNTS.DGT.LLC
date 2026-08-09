@@ -2062,21 +2062,21 @@ export function CashEntryForm({
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {/* Total Credit (Money Paid) — green, matching the Ledger (Cr = green) */}
           <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/20">
-            <div className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-300">Total Credit <span className="font-semibold normal-case tracking-normal opacity-70">(Money Paid)</span></div>
+            <div className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-300">{t(lang, "roz.total_credit_label", "Total Credit")} <span className="font-semibold normal-case tracking-normal opacity-70">{t(lang, "roz.money_paid", "(Money Paid)")}</span></div>
             <div className="mt-1 text-lg font-black text-emerald-700 dark:text-emerald-200 tabular-nums">
               {loadingSummary ? "…" : fmtAmount(cashSummary?.totalCredit ?? 0)}
             </div>
           </div>
           {/* Total Debit (Money Received) — red, matching the Ledger (Dr = red) */}
           <div className="rounded-xl border border-rose-200 bg-rose-50/60 p-3 shadow-sm dark:border-rose-900/50 dark:bg-rose-950/20">
-            <div className="text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-300">Total Debit <span className="font-semibold normal-case tracking-normal opacity-70">(Money Received)</span></div>
+            <div className="text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-300">{t(lang, "roz.total_debit_label", "Total Debit")} <span className="font-semibold normal-case tracking-normal opacity-70">{t(lang, "roz.money_received", "(Money Received)")}</span></div>
             <div className="mt-1 text-lg font-black text-rose-700 dark:text-rose-200 tabular-nums">
               {loadingSummary ? "…" : fmtAmount(cashSummary?.totalDebit ?? 0)}
             </div>
           </div>
           {/* Current Balance = Credit - Debit (Cr positive) */}
           <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-3 shadow-sm dark:border-blue-900/50 dark:bg-blue-950/20">
-            <div className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-300">Current Balance</div>
+            <div className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-300">{t(lang, "roz.current_balance", "Current Balance")}</div>
             <div className="mt-1 text-lg font-black text-blue-700 dark:text-blue-200 tabular-nums">
               {loadingSummary ? "…" : fmtAmount(cashSummary?.balance ?? 0)}
               <span className="ml-1 text-[10px] font-bold uppercase">{cashSummary?.balanceType && cashSummary.balanceType !== "-" ? cashSummary.balanceType : ""}</span>
@@ -2084,7 +2084,7 @@ export function CashEntryForm({
           </div>
           {/* Total Entries */}
           <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">Total Entries</div>
+            <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{t(lang, "roz.total_entries", "Total Entries")}</div>
             <div className="mt-1 text-lg font-black text-slate-800 dark:text-slate-100 tabular-nums">
               {loadingSummary ? "…" : (cashSummary?.entryCount ?? 0)}
             </div>
@@ -2092,21 +2092,21 @@ export function CashEntryForm({
         </div>
         {/* Daily exchange rate strip (auto from Daily Exchange Rate module) */}
         <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] font-semibold">
-          <span className="text-slate-400 uppercase tracking-wider font-black">Daily Rate:</span>
+          <span className="text-slate-400 uppercase tracking-wider font-black">{t(lang, "roz.daily_rate", "Daily Rate:")}</span>
           {loadingDailyRate ? (
-            <span className="text-slate-400">Loading…</span>
+            <span className="text-slate-400">…</span>
           ) : dailyRate?.found ? (
             <>
-              <span className="rounded bg-emerald-50 border border-emerald-100 px-2 py-0.5 text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-900 dark:text-emerald-300">Buying: <b>{dailyRate.buyingRate ?? "—"}</b></span>
-              <span className="rounded bg-rose-50 border border-rose-100 px-2 py-0.5 text-rose-700 dark:bg-rose-950/40 dark:border-rose-900 dark:text-rose-300">Selling: <b>{dailyRate.sellingRate ?? "—"}</b></span>
-              <span className="rounded bg-slate-50 border border-slate-200 px-2 py-0.5 text-slate-600 dark:bg-slate-900 dark:border-slate-800">Debit Rate: <b>{dailyRate.debitRate ?? "—"}</b></span>
-              <span className="rounded bg-slate-50 border border-slate-200 px-2 py-0.5 text-slate-600 dark:bg-slate-900 dark:border-slate-800">Credit Rate: <b>{dailyRate.creditRate ?? "—"}</b></span>
+              <span className="rounded bg-emerald-50 border border-emerald-100 px-2 py-0.5 text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-900 dark:text-emerald-300">{t(lang, "roz.buying", "Buying:")} <b>{dailyRate.buyingRate ?? "—"}</b></span>
+              <span className="rounded bg-rose-50 border border-rose-100 px-2 py-0.5 text-rose-700 dark:bg-rose-950/40 dark:border-rose-900 dark:text-rose-300">{t(lang, "roz.selling", "Selling:")} <b>{dailyRate.sellingRate ?? "—"}</b></span>
+              <span className="rounded bg-slate-50 border border-slate-200 px-2 py-0.5 text-slate-600 dark:bg-slate-900 dark:border-slate-800">{t(lang, "roz.debit_rate", "Debit Rate:")} <b>{dailyRate.debitRate ?? "—"}</b></span>
+              <span className="rounded bg-slate-50 border border-slate-200 px-2 py-0.5 text-slate-600 dark:bg-slate-900 dark:border-slate-800">{t(lang, "roz.credit_rate", "Credit Rate:")} <b>{dailyRate.creditRate ?? "—"}</b></span>
               {dailyRate.isExactDate === false ? (
-                <span className="text-amber-600 dark:text-amber-400" title="No rate entered for this exact date; showing the most recent prior rate.">(latest available)</span>
+                <span className="text-amber-600 dark:text-amber-400" title="No rate entered for this exact date; showing the most recent prior rate.">{t(lang, "roz.latest_available", "(latest available)")}</span>
               ) : null}
             </>
           ) : (
-            <span className="text-amber-600 dark:text-amber-400">Not entered yet for this country/branch/date — set it in the Daily Exchange Rate module.</span>
+            <span className="text-amber-600 dark:text-amber-400">{t(lang, "roz.rate_not_entered", "Not entered yet for this country/branch/date — set it in the Daily Exchange Rate module.")}</span>
           )}
         </div>
       </div>
@@ -2118,7 +2118,7 @@ export function CashEntryForm({
           {/* Group 1: Branch Details & Transaction Info */}
           <div className="flex flex-col gap-6">
             <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right self-center">Country</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right self-center">{t(lang, "common.country", "Country")}</span>
               <div className="relative flex items-center">
                 <select
                   value={countryId}
@@ -2128,10 +2128,10 @@ export function CashEntryForm({
                 >
                   <option value="" className="text-slate-900">
                     {isSuperAdmin
-                      ? "All Countries (Super Admin View)"
-                      : (!session?.scopes.countryIds || session.scopes.countryIds.length === 0) 
-                      ? "No Country Assigned" 
-                      : "Select Country"}
+                      ? t(lang, "roz.all_countries_super_admin", "All Countries (Super Admin View)")
+                      : (!session?.scopes.countryIds || session.scopes.countryIds.length === 0)
+                      ? t(lang, "roz.no_country_assigned", "No Country Assigned")
+                      : t(lang, "roz.select_country", "Select Country")}
                   </option>
                   {countries.map((c) => (
                     <option key={c.id} value={c.id} className="text-slate-900">{c.name}</option>
@@ -2139,7 +2139,7 @@ export function CashEntryForm({
                 </select>
               </div>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right self-center">Branch Name</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right self-center">{t(lang, "roz.branch_name", "Branch Name")}</span>
               <div className="relative flex items-center">
                 <select
                   value={countryBranchId}
@@ -2147,19 +2147,19 @@ export function CashEntryForm({
                   onChange={(e) => setCountryBranchId(e.target.value)}
                   className="bg-transparent border-none p-0 outline-none font-bold text-slate-850 dark:text-slate-200 cursor-pointer appearance-none text-xs hover:underline"
                 >
-                  <option value="" className="text-slate-900">Select Branch</option>
+                  <option value="" className="text-slate-900">{t(lang, "roz.select_branch", "Select Branch")}</option>
                   {mainBranches.map((b) => (
                     <option key={b.id} value={b.id} className="text-slate-900">{b.name}</option>
                   ))}
                 </select>
               </div>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">Branch Code</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.branch_code", "Branch Code")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150">
                 {selectedMainBranch?.code || "—"}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right self-center">City Branch</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right self-center">{t(lang, "roz.city_branch", "City Branch")}</span>
               <div className="relative flex items-center">
                 <select
                   value={cityBranchId}
@@ -2167,19 +2167,19 @@ export function CashEntryForm({
                   onChange={(e) => setCityBranchId(e.target.value)}
                   className="bg-transparent border-none p-0 outline-none font-bold text-slate-850 dark:text-slate-200 cursor-pointer appearance-none text-xs hover:underline truncate max-w-[200px]"
                 >
-                  <option value="" className="text-slate-900">Select City Branch</option>
+                  <option value="" className="text-slate-900">{t(lang, "roz.select_city_branch", "Select City Branch")}</option>
                   {cityBranches.map((b) => (
                     <option key={b.id} value={b.id} className="text-slate-900">{b.name}</option>
                   ))}
                 </select>
               </div>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">City Code</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.city_code", "City Code")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150">
                 {selectedCityBranch?.code || "—"}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">Date</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "common.date", "Date")}</span>
               <input
                 type="date"
                 value={entryDate}
@@ -2189,17 +2189,17 @@ export function CashEntryForm({
             </div>
 
             <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">Created By</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[120px]" title={activeCreator || session?.user?.fullName || "Current User"}>
-                {activeCreator || session?.user?.fullName || "Current User"}
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.created_by", "Created By")}</span>
+              <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[120px]" title={activeCreator || session?.user?.fullName || t(lang, "roz.current_user", "Current User")}>
+                {activeCreator || session?.user?.fullName || t(lang, "roz.current_user", "Current User")}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">Approved By</span>
-              <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[120px]" title={activeApprover || "Pending"}>
-                {activeApprover || "Pending"}
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.approved_by", "Approved By")}</span>
+              <span className="font-extrabold text-slate-850 dark:text-slate-150 truncate max-w-[120px]" title={activeApprover || t(lang, "roz.pending", "Pending")}>
+                {activeApprover || t(lang, "roz.pending", "Pending")}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">Status</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "common.status", "Status")}</span>
               <div>
                 <span className={cn(
                   "inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-black uppercase tracking-wider border",
@@ -2209,7 +2209,7 @@ export function CashEntryForm({
                     ? "bg-rose-50 border-rose-200 text-rose-700 dark:bg-rose-950/20 dark:border-rose-800 dark:text-rose-400"
                     : "bg-amber-50 border-amber-200 text-amber-700 dark:bg-amber-950/20 dark:border-amber-800 dark:text-amber-400"
                 )}>
-                  {activeStatus || "Draft"}
+                  {activeStatus || t(lang, "roz.draft", "Draft")}
                 </span>
               </div>
             </div>
@@ -2218,44 +2218,44 @@ export function CashEntryForm({
           {/* Group 2: User Context & Exchange Rates */}
           <div className="flex flex-col gap-6">
             <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">User Name</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.user_name", "User Name")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150">
-                {session?.user?.fullName || "System User"}
+                {session?.user?.fullName || t(lang, "roz.system_user", "System User")}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">User ID</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.user_id", "User ID")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono">
                 {session?.user?.id?.slice(0, 8).toUpperCase() || "ADM-001"}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">Team</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.team", "Team")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150">
-                Accounts Team
+                {t(lang, "roz.accounts_team", "Accounts Team")}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">Time</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.time", "Time")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150">
                 {loginTimeText || "—"}
               </span>
             </div>
 
             <div className="grid grid-cols-[90px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">Exchange</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.exchange", "Exchange")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150">
                 {getCountryFlag(selectedCountry?.name)} USD / {branchCurrency}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">Rate Date</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-400 text-right">{t(lang, "roz.rate_date", "Rate Date")}</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-150 font-mono">
-                {countryRate?.effectiveDate || entryDate.split("-").reverse().join("/") || "Today"}
+                {countryRate?.effectiveDate || entryDate.split("-").reverse().join("/") || t(lang, "ledger.preset_today", "Today")}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 text-right">Buy / Sell</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 text-right">{t(lang, "roz.buy_sell", "Buy / Sell")}</span>
               <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
                 {countryRate?.debitRate ? countryRate.debitRate.toFixed(4) : "—"} / {countryRate?.creditRate ? countryRate.creditRate.toFixed(4) : "—"}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">Budget Rate</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.budget_rate", "Budget Rate")}</span>
               <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
                 {countryRate?.buyRate ? ((countryRate.buyRate + (countryRate.sellRate || countryRate.buyRate)) / 2).toFixed(4) : "—"}
               </span>
@@ -2266,40 +2266,40 @@ export function CashEntryForm({
           {/* Group 3: Serials */}
           <div className="flex flex-col gap-6">
             <div className="grid grid-cols-[110px_1fr] gap-x-3 gap-y-1.5 text-xs font-semibold">
-              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">Journal Serial</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.journal_serial", "Journal Serial")}</span>
               <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
                 {savedSerials?.superAdmin || liveSerials.superAdmin}
-                {!savedSerials?.superAdmin && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">(Next)</span>}
+                {!savedSerials?.superAdmin && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">Country Serial</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.country_serial", "Country Serial")}</span>
               <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
                 {savedSerials?.country || liveSerials.country}
-                {!savedSerials?.country && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">(Next)</span>}
+                {!savedSerials?.country && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">Branch Serial</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.branch_serial", "Branch Serial")}</span>
               <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
                 {savedSerials?.branch || liveSerials.branch}
-                {!savedSerials?.branch && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">(Next)</span>}
+                {!savedSerials?.branch && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">Main Branch Sr</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.main_branch_sr", "Main Branch Sr")}</span>
               <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
                 {(savedSerials as any)?.mainBranch || liveSerials.mainBranch}
-                {!(savedSerials as any)?.mainBranch && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">(Next)</span>}
+                {!(savedSerials as any)?.mainBranch && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">City Branch Sr</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 text-right">{t(lang, "roz.city_branch_sr", "City Branch Sr")}</span>
               <span className="font-extrabold text-blue-600 dark:text-blue-400 font-mono">
                 {(savedSerials as any)?.cityBranch || liveSerials.cityBranch}
-                {!(savedSerials as any)?.cityBranch && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">(Next)</span>}
+                {!(savedSerials as any)?.cityBranch && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-slate-400 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
               </span>
 
-              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 text-right">Entry Serial</span>
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 text-right">{t(lang, "roz.entry_serial", "Entry Serial")}</span>
               <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
                 {(savedSerials as any)?.entrySerial || liveSerials.entrySerial}
-                {!(savedSerials as any)?.entrySerial && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-emerald-500/70 font-sans">(Next)</span>}
+                {!(savedSerials as any)?.entrySerial && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-emerald-500/70 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
               </span>
             </div>
           </div>
@@ -2380,13 +2380,13 @@ export function CashEntryForm({
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-100 pb-3 dark:border-slate-800">
                 <div>
                   <h2 className="text-sm font-black uppercase tracking-wider text-slate-800 dark:text-slate-100 flex items-center gap-2">
-                    🌍 Global Financial Position & Country Summaries
+                    🌍 {t(lang, "roz.global_financial_position", "Global Financial Position & Country Summaries")}
                     <span className="bg-blue-100 text-blue-800 text-[10px] font-extrabold px-2 py-0.5 rounded-full dark:bg-blue-950 dark:text-blue-300">
-                      Super Admin View
+                      {t(lang, "roz.super_admin_view_badge", "Super Admin View")}
                     </span>
                   </h2>
                   <p className="text-[11px] font-semibold text-slate-500 mt-0.5">
-                    Daily position of every country at a glance for {entryDate}. Click any country card to view branch breakdown.
+                    {t(lang, "roz.daily_position_summary", "Daily position of every country at a glance for {date}. Click any country card to view branch breakdown.").replace("{date}", entryDate)}
                   </p>
                 </div>
                 <Button
@@ -2398,7 +2398,7 @@ export function CashEntryForm({
                   className="h-7 text-xs font-bold gap-1.5 shadow-xs"
                 >
                   <RefreshCw className={cn("h-3.5 w-3.5", loadingOverview ? "animate-spin" : "")} />
-                  Refresh Summaries
+                  {t(lang, "roz.refresh_summaries", "Refresh Summaries")}
                 </Button>
               </div>
 
@@ -2630,7 +2630,7 @@ export function CashEntryForm({
             <Card className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
               <div className="border-b border-slate-200 bg-gradient-to-r from-blue-50 to-white px-4 py-2 dark:border-slate-800 dark:from-slate-900 dark:to-slate-950">
                 <h3 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300">
-                  📋 Payment Work Entry
+                  📋 {t(lang, "roz.payment_work_entry", "Payment Work Entry")}
                 </h3>
               </div>
               <CardContent className="p-4 space-y-4">
@@ -2640,12 +2640,12 @@ export function CashEntryForm({
                     <SearchSelect
                       label=""
                       value={counterLedgerId}
-                      placeholder="Search by Account Name or Number..."
+                      placeholder={t(lang, "roz.search_account_placeholder", "Search by Account Name or Number...")}
                       options={accountOptions}
                       disabled={loadingLedgers}
                       onValueChange={handleCounterLedgerChange}
                       onSearchValueChange={setAccountNoInput}
-                      createLabel="Search on Server"
+                      createLabel={t(lang, "roz.search_on_server", "Search on Server")}
                       onCreateNew={lookupAccountNo}
                     />
                   </FieldBlock>
@@ -2672,9 +2672,9 @@ export function CashEntryForm({
                       value={roznamchaType}
                       onChange={(e) => setRoznamchaType(e.target.value)}
                     >
-                      <option value="Roznamcha Book No.">Roznamcha Book No.</option>
-                      <option value="Cash Book No.">Cash Book No.</option>
-                      <option value="Receipt No.">Receipt No.</option>
+                      <option value="Roznamcha Book No.">{t(lang, "roz.roznamcha_book_no", "Roznamcha Book No.")}</option>
+                      <option value="Cash Book No.">{t(lang, "roz.cash_book_no", "Cash Book No.")}</option>
+                      <option value="Receipt No.">{t(lang, "roz.receipt_no", "Receipt No.")}</option>
                     </select>
                   </FieldBlock>
 
@@ -2708,12 +2708,12 @@ export function CashEntryForm({
                           setPaymentMode("");
                         }}
                       >
-                        <option value="">Select Category</option>
-                        <option value="cash">Cash Roznamcha</option>
-                        <option value="bank">Bank Roznamcha</option>
-                        <option value="business">Business Roznamcha</option>
-                        <option value="invoice">Invoice Journal</option>
-                        <option value="transfer">Transfer</option>
+                        <option value="">{t(lang, "roz.select_category", "Select Category")}</option>
+                        <option value="cash">{t(lang, "roz.cash_roznamcha", "Cash Roznamcha")}</option>
+                        <option value="bank">{t(lang, "roz.bank_roznamcha", "Bank Roznamcha")}</option>
+                        <option value="business">{t(lang, "roz.business_roznamcha", "Business Roznamcha")}</option>
+                        <option value="invoice">{t(lang, "roz.invoice_journal", "Invoice Journal")}</option>
+                        <option value="transfer">{t(lang, "roz.transfer_category", "Transfer")}</option>
                       </select>
                     </FieldBlock>
 
@@ -2730,7 +2730,7 @@ export function CashEntryForm({
                           setFinalPayment("");
                         }}
                       >
-                        <option value="">Select Currency</option>
+                        <option value="">{t(lang, "roz.select_currency", "Select Currency")}</option>
                         {[...allowedCurrencies].map((c) => (
                           <option key={c} value={c}>{c}</option>
                         ))}
@@ -3150,8 +3150,8 @@ export function CashEntryForm({
             ) : (
               <Card className="overflow-hidden rounded-xl border-dashed border-slate-200 bg-white/70 shadow-sm dark:border-slate-800 dark:bg-slate-950/60 h-full min-h-[300px] grid place-items-center">
                 <div className="p-6 text-center text-xs font-semibold text-slate-400 space-y-2">
-                  <p className="text-sm">🔍 Live Payment Report Preview</p>
-                  <p className="max-w-[280px]">Select Account, Payment Category, Currency, Amount and Debit/Credit to display the live report.</p>
+                  <p className="text-sm">🔍 {t(lang, "roz.live_payment_preview", "Live Payment Report Preview")}</p>
+                  <p className="max-w-[280px]">{t(lang, "roz.live_preview_instruction", "Select Account, Payment Category, Currency, Amount and Debit/Credit to display the live report.")}</p>
                 </div>
               </Card>
             )}
@@ -3164,20 +3164,20 @@ export function CashEntryForm({
           <div className="border-b border-slate-200 bg-gradient-to-r from-blue-50 to-white px-4 py-3 dark:border-slate-800 dark:from-slate-900 dark:to-slate-950 flex items-center justify-between">
             <div className="flex items-center gap-6">
               <h3 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300">
-                📋 Recent Cash Entries
+                📋 {t(lang, "roz.recent_cash_entries", "Recent Cash Entries")}
               </h3>
               <div className="flex items-center gap-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400">
                 <span className="bg-white border border-slate-200 shadow-sm dark:bg-slate-900 dark:border-slate-800 px-2.5 py-1 rounded flex gap-1 items-center">
-                  Total Entries: <span className="font-bold text-slate-900 dark:text-slate-100">{recentEntriesSummary.count}</span>
+                  {t(lang, "roz.total_entries_colon", "Total Entries:")} <span className="font-bold text-slate-900 dark:text-slate-100">{recentEntriesSummary.count}</span>
                 </span>
                 <span className="bg-emerald-50 border border-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-900 dark:text-emerald-300 px-2.5 py-1 rounded flex gap-1 items-center">
-                  Total CR: <span className="font-bold">{fmtAmount(recentEntriesSummary.totalCredit)}</span>
+                  {t(lang, "roz.total_cr", "Total CR:")} <span className="font-bold">{fmtAmount(recentEntriesSummary.totalCredit)}</span>
                 </span>
                 <span className="bg-rose-50 border border-rose-100 text-rose-700 dark:bg-rose-950/40 dark:border-rose-900 dark:text-rose-300 px-2.5 py-1 rounded flex gap-1 items-center">
-                  Total DR: <span className="font-bold">{fmtAmount(recentEntriesSummary.totalDebit)}</span>
+                  {t(lang, "roz.total_dr", "Total DR:")} <span className="font-bold">{fmtAmount(recentEntriesSummary.totalDebit)}</span>
                 </span>
                 <span className="bg-blue-50 border border-blue-100 text-blue-700 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-300 px-2.5 py-1 rounded flex gap-1 items-center">
-                  Balance: <span className="font-bold">{fmtAmount(recentEntriesSummary.balance)}</span> <span className="text-[9px] uppercase">{recentEntriesSummary.balanceType}</span>
+                  {t(lang, "roz.balance_colon", "Balance:")} <span className="font-bold">{fmtAmount(recentEntriesSummary.balance)}</span> <span className="text-[9px] uppercase">{recentEntriesSummary.balanceType}</span>
                 </span>
               </div>
             </div>
@@ -3193,7 +3193,7 @@ export function CashEntryForm({
                     setShowPaymentWorkReport(true);
                   }}
                 >
-                  + New Entry
+                  + {t(lang, "roz.new_entry", "New Entry")}
                 </Button>
               )}
               <Button
@@ -3205,7 +3205,7 @@ export function CashEntryForm({
                 disabled={loadingEntries}
               >
                 <RefreshCw className={cn("h-3.5 w-3.5 mr-1", loadingEntries ? "animate-spin" : "")} />
-                Refresh
+                {t(lang, "common.refresh", "Refresh")}
               </Button>
             </div>
           </div>

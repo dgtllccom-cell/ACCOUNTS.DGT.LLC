@@ -35,6 +35,7 @@ const expensesBillPayloadSchema = z.object({
 });
 
 import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
+import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 import { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
@@ -106,6 +107,7 @@ export async function POST(req: NextRequest) {
         .eq("id", billId);
       
       if (updateErr) throw new Error("Failed to update bill header: " + updateErr.message);
+      if (header.billTitle) void translateMasterRecord("expenses_bills", billId, { bill_title: header.billTitle }, "en", session.userId || null);
 
       // Delete old lines
       await supabase.from("expenses_bill_lines").delete().eq("bill_id", billId);
@@ -130,6 +132,7 @@ export async function POST(req: NextRequest) {
 
       if (billError) throw new Error("Failed to insert bill header: " + billError.message);
       billId = billData.id;
+      if (header.billTitle) void translateMasterRecord("expenses_bills", billId, { bill_title: header.billTitle }, "en", session.userId || null);
     }
 
     const linesToInsert = entries.map((e) => ({

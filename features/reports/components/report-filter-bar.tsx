@@ -33,12 +33,12 @@ type Props = {
   onApply?: () => void;
 
   // Options
-  countries: ReportMetaItem[];
-  mainBranches: ReportMetaItem[];
-  cityBranches: ReportMetaItem[];
-  users: { id: string; name: string }[];
-  currencies: { code: string; name: string }[];
-  reportTypes: { key: string; icon: string }[];
+  countries?: ReportMetaItem[];
+  mainBranches?: ReportMetaItem[];
+  cityBranches?: ReportMetaItem[];
+  users?: { id: string; name: string }[];
+  currencies?: { code: string; name: string }[];
+  reportTypes?: { key: string; icon?: string }[];
 
   // Scope lock — non-editable if locked
   lockedCountryId?: string | null;
@@ -62,12 +62,12 @@ export function ReportFilterBar({
   onFilterChange,
   onReset,
   onApply,
-  countries,
-  mainBranches,
-  cityBranches,
-  users,
-  currencies,
-  reportTypes,
+  countries = [],
+  mainBranches = [],
+  cityBranches = [],
+  users = [],
+  currencies = [],
+  reportTypes = [],
   lockedCountryId,
   lockedBranchId,
   lockedCountryName,
@@ -85,11 +85,18 @@ export function ReportFilterBar({
   const isCountryLocked = Boolean(lockedCountryId);
   const isBranchLocked = Boolean(lockedBranchId);
 
+  const safeReportTypes = reportTypes || [];
+  const safeCountries = countries || [];
+  const safeMainBranches = mainBranches || [];
+  const safeCityBranches = cityBranches || [];
+  const safeCurrencies = currencies || [];
+  const safeUsers = users || [];
+
   // Filter branches based on selected country
-  const filteredMainBranches = (mainBranches || []).filter(
+  const filteredMainBranches = safeMainBranches.filter(
     (mb) => !filters.countryId || filters.countryId === "all" || mb.country_id === filters.countryId
   );
-  const filteredCityBranches = (cityBranches || []).filter((cb) => {
+  const filteredCityBranches = safeCityBranches.filter((cb) => {
     if (filters.countryId && filters.countryId !== "all" && cb.country_id !== filters.countryId) return false;
     if (filters.mainBranchId && filters.mainBranchId !== "all" && cb.country_branch_id !== filters.mainBranchId) return false;
     return true;
@@ -108,9 +115,9 @@ export function ReportFilterBar({
   if (filters.userId && filters.userId !== "all") activeFilterCount++;
 
   // Label lookups for active chips
-  const selectedReportTypeName = (reportTypes || []).find(rt => rt.key === filters.reportType)?.key || filters.reportType;
-  const selectedCountryName = (countries || []).find(c => c.id === filters.countryId)?.name || "All Countries";
-  const selectedBranchName = (cityBranches || []).find(b => b.id === filters.branchId)?.name || "All Branches";
+  const selectedReportTypeName = safeReportTypes.find(rt => rt?.key === filters.reportType)?.key || filters.reportType || "";
+  const selectedCountryName = safeCountries.find(c => c?.id === filters.countryId)?.name || "All Countries";
+  const selectedBranchName = safeCityBranches.find(b => b?.id === filters.branchId)?.name || "All Branches";
 
   const handleApplyClick = () => {
     if (onApply) onApply();
@@ -219,7 +226,7 @@ export function ReportFilterBar({
                   onChange={(e) => onFilterChange("reportType", e.target.value)}
                   className="w-full text-xs font-semibold rounded-xl border border-slate-200 bg-white px-3 py-2.5 outline-none dark:bg-slate-950 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200 shadow-sm"
                 >
-                  {reportTypes.map((rt) => (
+                  {safeReportTypes.map((rt) => (
                     <option key={rt.key} value={rt.key}>
                       {t(lang, `report.${rt.key.replace(/-/g, "_")}` as UiKey, rt.key)}
                     </option>
@@ -253,7 +260,7 @@ export function ReportFilterBar({
                     className="w-full text-xs font-semibold rounded-xl border border-slate-200 bg-white px-3 py-2.5 outline-none dark:bg-slate-950 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200 shadow-sm"
                   >
                     <option value="all">{_("report.filter_all_countries")}</option>
-                    {countries.map((c) => (
+                    {safeCountries.map((c) => (
                       <option key={c.id} value={c.id}>{c.name}</option>
                     ))}
                   </select>
@@ -354,7 +361,7 @@ export function ReportFilterBar({
                   className="w-full text-xs font-semibold rounded-xl border border-slate-200 bg-white px-3 py-2.5 outline-none dark:bg-slate-950 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200 shadow-sm"
                 >
                   <option value="all">{_("report.filter_all_currencies")}</option>
-                  {currencies.map((c) => (
+                  {safeCurrencies.map((c) => (
                     <option key={c.code} value={c.code}>{c.code} — {c.name}</option>
                   ))}
                 </select>
@@ -374,7 +381,7 @@ export function ReportFilterBar({
                   className="w-full text-xs font-semibold rounded-xl border border-slate-200 bg-white px-3 py-2.5 outline-none dark:bg-slate-950 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200 shadow-sm"
                 >
                   <option value="all">{_("report.filter_all_users")}</option>
-                  {users.map((u) => (
+                  {safeUsers.map((u) => (
                     <option key={u.id} value={u.id}>{u.name}</option>
                   ))}
                 </select>

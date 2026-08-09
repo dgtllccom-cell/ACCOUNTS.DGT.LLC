@@ -26,6 +26,12 @@ const TRANSLATABLE_FIELDS: Record<string, string[]> = Object.fromEntries(
   Object.entries(FIELD_REGISTRY).map(([table, defs]) => [table, defs.map((d) => d.field)])
 );
 
+/** field -> mode lookup per table, so the engine can pick dictionary-only vs
+ *  dictionary-then-transliterate behavior per lib/services/auto-translation-service.ts. */
+const FIELD_MODES: Record<string, Record<string, "translate" | "transliterate">> = Object.fromEntries(
+  Object.entries(FIELD_REGISTRY).map(([table, defs]) => [table, Object.fromEntries(defs.map((d) => [d.field, d.mode]))])
+);
+
 /**
  * Translates a master data record's translatable fields into all 5 languages.
  * This is a fire-and-forget operation — translation failures are logged
@@ -60,6 +66,7 @@ export async function translateMasterRecord(
       .map((fieldName) => ({
         fieldName,
         value: fieldValues[fieldName]!,
+        mode: FIELD_MODES[tableName]?.[fieldName] ?? "translate",
       }));
 
     if (fields.length === 0) {

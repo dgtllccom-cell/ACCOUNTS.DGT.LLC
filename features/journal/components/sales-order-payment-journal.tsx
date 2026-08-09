@@ -50,6 +50,11 @@ import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { openPurchaseA4ReportWindow, type PurchaseReportData } from "@/lib/reports/open-purchase-a4-report-window";
 import { PaymentEditModal } from "./payment-edit-modal";
 import { Th } from "@/components/ui/translated-th";
+import { t, type LanguageCode } from "@/features/i18n/purchase-journal-translations";
+import { t as tGlobal } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { rtlLanguages } from "@/lib/i18n/languages";
 function isUuid(value: any): boolean {
   if (!value || typeof value !== "string") return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim());
@@ -95,16 +100,18 @@ type PurchaseOrderRow = {
   form_data?: any;
 };
 
-function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCurrency: string, autoPrint = true) {
+function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCurrency: string, autoPrint = true, lang: LanguageCode = "en") {
   const drLedger = ledgers.find((l) => (l.id || l.account_id) === payment.debit_ledger_id);
   const crLedger = ledgers.find((l) => (l.id || l.account_id) === payment.credit_ledger_id);
   const drLabel = drLedger ? (drLedger.account_name || drLedger.name) : "-";
   const crLabel = crLedger ? (crLedger.account_name || crLedger.name) : "-";
   const re = payment.roznamcha_entries || {};
   const form = orderRow?.form_data?.form || {};
-  
-  const companyName = "DAMAAN BUSINESS GROUP";
-  const receiptTitle = "PAYMENT RECEIPT";
+  const th = (label: string) => translateHeader(lang, label);
+  const isRtl = rtlLanguages.includes(lang);
+
+  const companyName = "DAMAAN BUSINESS GROUP"; // brand name — kept in English per policy
+  const receiptTitle = th("Payment Receipt");
   const receiptNo = payment.reference_no || re.super_admin_serial_number || "N/A";
   const printDate = new Date().toLocaleString();
   const paymentDate = new Date(payment.entry_date || payment.created_at).toLocaleDateString();
@@ -130,15 +137,16 @@ function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCu
   
   let displayNarration = payment.narration || "-";
 
+  const rtlFont = lang === "ur" ? "'Noto Nastaliq Urdu', 'Noto Naskh Arabic', serif" : lang === "ar" || lang === "ps" ? "'Cairo', 'Noto Naskh Arabic', sans-serif" : lang === "fa" ? "'Vazirmatn', sans-serif" : "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
   const html = `
     <!DOCTYPE html>
-    <html lang="en">
+    <html lang="${lang}" dir="${isRtl ? "rtl" : "ltr"}">
     <head>
       <meta charset="UTF-8">
       <title>${receiptTitle} - ${receiptNo}</title>
       <style>
         @page { size: A4; margin: 15mm; }
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 11px; color: #1e293b; margin: 0; padding: 0; }
+        body { font-family: ${rtlFont}; font-size: 11px; color: #1e293b; margin: 0; padding: 0; }
         .container { width: 100%; max-width: 800px; margin: 0 auto; }
         .header { display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 3px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 20px; }
         .header-left h1 { margin: 0; font-size: 26px; color: #1e3a8a; letter-spacing: 1px; text-transform: uppercase; font-weight: 900; }
@@ -166,6 +174,14 @@ function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCu
         .stamp-box { width: 90px; height: 90px; border: 2px dashed #cbd5e1; display: flex; align-items: center; justify-content: center; color: #cbd5e1; font-weight: 900; margin: 0 auto; border-radius: 50%; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; }
         .sys-gen { text-align: center; font-size: 9px; color: #94a3b8; margin-top: 30px; font-style: italic; border-top: 1px dashed #cbd5e1; padding-top: 10px; }
         .qr-placeholder { width: 60px; height: 60px; background: #f1f5f9; border: 1px solid #cbd5e1; float: right; margin-left: 15px; display: flex; align-items: center; justify-content: center; font-size: 8px; color: #94a3b8; text-align: center; font-weight: bold; }
+        ${isRtl ? `
+        body { direction: rtl; }
+        th, td { text-align: right; }
+        .text-right { text-align: left; }
+        .header-right { text-align: left; }
+        .qr-placeholder { float: left; margin-left: 0; margin-right: 15px; }
+        .section-title { border-left: none; border-right: 4px solid #1e3a8a; }
+        ` : ""}
       </style>
     </head>
     <body>
@@ -173,102 +189,102 @@ function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCu
         <div class="header">
           <div class="header-left">
             <h1>${companyName}</h1>
-            <p>Purchase Payment Receipt</p>
+            <p>${th("Purchase Payment Receipt")}</p>
           </div>
           <div class="header-right">
-            <h2>RECEIPT</h2>
-            <p>No: ${receiptNo}</p>
-            <p style="font-weight: normal; color: #64748b; font-size: 10px;">Printed: ${printDate}</p>
+            <h2>${th("Payment Receipt")}</h2>
+            <p>${tGlobal(lang, "common.no_abbr", "No")}: ${receiptNo}</p>
+            <p style="font-weight: normal; color: #64748b; font-size: 10px;">${tGlobal(lang, "common.printed", "Printed")}: ${printDate}</p>
           </div>
         </div>
 
-        <div class="section-title">Purchase & Vendor Details</div>
+        <div class="section-title">${th("Purchase & Vendor Details")}</div>
         <table>
           <tr>
-            <Th>Sales Order No</Th><td><strong>${poNo}</strong></td>
-            <Th>Contract / GRN No</Th><td>${contractNo}</td>
+            <th>${th("Sales Order No")}</th><td><strong>${poNo}</strong></td>
+            <th>${th("Contract / GRN No")}</th><td>${contractNo}</td>
           </tr>
           <tr>
-            <Th>Supplier Name</Th><td colspan="3"><strong>${vendorName}</strong></td>
+            <th>${th("Supplier Name")}</th><td colspan="3"><strong>${vendorName}</strong></td>
           </tr>
           <tr>
-            <Th>Purchase Date</Th><td>${purchaseDate}</td>
-            <Th>Currency</Th><td><strong>${currency}</strong></td>
+            <th>${th("Purchase Date")}</th><td>${purchaseDate}</td>
+            <th>${th("Currency")}</th><td><strong>${currency}</strong></td>
           </tr>
         </table>
 
-        <div class="section-title">Purchase Financial Summary</div>
+        <div class="section-title">${th("Purchase Financial Summary")}</div>
         <table>
           <tr>
-            <Th>Goods Total Amount</Th><td class="text-right">${Number(goodsTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-            <Th>Discount</Th><td class="text-right">${Number(discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <th>${th("Goods Total Amount")}</th><td class="text-right">${Number(goodsTotal).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <th>${th("Discount")}</th><td class="text-right">${Number(discount).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
           </tr>
           <tr>
-            <Th>Freight Charges</Th><td class="text-right">${Number(freight).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-            <Th>Grand Total (${currency})</Th><td class="text-right font-bold">${Number(grandTotalFC).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <th>${th("Freight Charges")}</th><td class="text-right">${Number(freight).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+            <th>${th("Grand Total")} (${currency})</th><td class="text-right font-bold">${Number(grandTotalFC).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
           </tr>
         </table>
 
-        <div class="section-title">Accounting & Audit Trail</div>
+        <div class="section-title">${th("Accounting & Audit Trail")}</div>
         <table>
           <tr>
-            <Th>Debit Ledger (Dr)</Th><td colspan="3">${drLabel}</td>
+            <th>${th("Debit Ledger (Dr)")}</th><td colspan="3">${drLabel}</td>
           </tr>
           <tr>
-            <Th>Credit Ledger (Cr)</Th><td colspan="3">${crLabel}</td>
+            <th>${th("Credit Ledger (Cr)")}</th><td colspan="3">${crLabel}</td>
           </tr>
           <tr>
-            <Th>Payment Date</Th><td>${paymentDate}</td>
-            <Th>Posted By</Th><td>${re.profiles?.full_name ? re.profiles.full_name.toUpperCase() : "SUPER ADMIN"}</td>
+            <th>${th("Payment Date")}</th><td>${paymentDate}</td>
+            <th>${th("Posted By")}</th><td>${re.profiles?.full_name ? re.profiles.full_name.toUpperCase() : t(lang, "role.super_admin", "Super Admin")}</td>
           </tr>
           <tr>
-            <Th>Reference No</Th><td>${payment.reference_no || "-"}</td>
-            <Th>Journal Serial</Th><td>${re.super_admin_serial_number || "-"}</td>
+            <th>${th("Reference No")}</th><td>${payment.reference_no || "-"}</td>
+            <th>${th("Journal Serial")}</th><td>${re.super_admin_serial_number || "-"}</td>
           </tr>
           <tr>
-            <Th>Remarks</Th><td colspan="3">${displayNarration || "-"}</td>
+            <th>${th("Remarks")}</th><td colspan="3">${displayNarration || "-"}</td>
           </tr>
         </table>
 
-        <div class="section-title">Payment Summary</div>
+        <div class="section-title">${th("Payment Summary")}</div>
         <div class="summary-box">
           <div class="summary-item">
-            <div class="lbl">Previously Paid</div>
+            <div class="lbl">${th("Previously Paid")}</div>
             <div class="val">${Number(prevPaid).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
           </div>
           <div class="summary-item highlight">
-            <div class="lbl">Current Payment</div>
+            <div class="lbl">${th("Current Payment")}</div>
             <div class="val">${Number(paymentAmt).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
           </div>
           <div class="summary-item">
-            <div class="lbl">Total Paid to Date</div>
+            <div class="lbl">${th("Total Paid to Date")}</div>
             <div class="val">${Number(totalPaid).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
           </div>
           <div class="summary-item">
-            <div class="lbl" style="color: #be123c;">Running Purchase Balance</div>
+            <div class="lbl" style="color: #be123c;">${th("Running Purchase Balance")}</div>
             <div class="val" style="color: #be123c;">${Number(outstanding).toLocaleString(undefined, { minimumFractionDigits: 2 })}</div>
           </div>
         </div>
 
         <div class="footer">
           <div class="sig-block">
-            <div class="sig-line">Prepared By</div>
+            <div class="sig-line">${th("Prepared By")}</div>
           </div>
           <div class="sig-block" style="width: auto;">
-            <div class="stamp-box">COMPANY<br/>STAMP</div>
+            <div class="stamp-box">${th("Company")}<br/>${th("Stamp")}</div>
           </div>
           <div class="sig-block">
-            <div class="sig-line">Authorized Signatory</div>
+            <div class="sig-line">${th("Authorized Signatory")}</div>
           </div>
           <div class="sig-block">
-            <div class="sig-line">Receiver Signature</div>
+            <div class="sig-line">${th("Receiver Signature")}</div>
           </div>
         </div>
-        
+
         <div class="sys-gen">
-          <div class="qr-placeholder">VERIFY<br/>QR</div>
-          *** THIS IS A SYSTEM GENERATED DOCUMENT ***<br/>
-          UUID: ${payment.id || "N/A"} | Exchange Rate Applied: ${paymentExRate.toFixed(4)}
+          <div class="qr-placeholder">${th("Verify")}<br/>QR</div>
+          *** ${tGlobal(lang, "common.system_generated_document", "THIS IS A SYSTEM GENERATED DOCUMENT")} ***<br/>
+          UUID: ${payment.id || "N/A"} | ${tGlobal(lang, "common.exchange_rate_applied", "Exchange Rate Applied")}: ${paymentExRate.toFixed(4)}
         </div>
       </div>
       <script>
@@ -929,6 +945,7 @@ function FieldBlock({ label, required, children, className }: { label: string; r
 }
 
 function NestedRowActions({ payment, row, ledgers, localCurrency }: any) {
+  const lang = useActiveLanguage();
   function handleAction(fn: () => void) {
     fn();
     const details = document.activeElement?.closest("details");
@@ -936,13 +953,13 @@ function NestedRowActions({ payment, row, ledgers, localCurrency }: any) {
   }
   return (
     <details className="relative">
-      <summary className="flex h-7 w-8 cursor-pointer list-none items-center justify-center rounded border border-indigo-200 bg-indigo-50 text-indigo-600 transition hover:bg-indigo-100 [&::-webkit-details-marker]:hidden mx-auto" aria-label="Payment actions" title="Actions">
+      <summary className="flex h-7 w-8 cursor-pointer list-none items-center justify-center rounded border border-indigo-200 bg-indigo-50 text-indigo-600 transition hover:bg-indigo-100 [&::-webkit-details-marker]:hidden mx-auto" aria-label={tGlobal(lang, "pay.payment_actions", "Payment actions")} title={tGlobal(lang, "pa.actions", "Actions")}>
         <MoreVertical className="h-4 w-4" />
       </summary>
       <div className="absolute right-0 z-30 mt-1 w-40 rounded-xl border border-border bg-popover p-1 text-sm text-popover-foreground shadow-xl">
-        <MenuAction icon={<Eye />} label="View Details" onClick={() => handleAction(() => handlePrintReceipt(payment, row, ledgers, localCurrency, false))} />
-        <MenuAction icon={<Edit3 />} label="Edit Line" onClick={() => handleAction(() => window.dispatchEvent(new CustomEvent("open-edit-payment", { detail: { payment, row } })))} />
-        <MenuAction icon={<Printer />} label="Print Receipt" onClick={() => handleAction(() => handlePrintReceipt(payment, row, ledgers, localCurrency, true))} />
+        <MenuAction icon={<Eye />} label={tGlobal(lang, "pay.view_details", "View Details")} onClick={() => handleAction(() => handlePrintReceipt(payment, row, ledgers, localCurrency, false, lang))} />
+        <MenuAction icon={<Edit3 />} label={tGlobal(lang, "pay.edit_line", "Edit Line")} onClick={() => handleAction(() => window.dispatchEvent(new CustomEvent("open-edit-payment", { detail: { payment, row } })))} />
+        <MenuAction icon={<Printer />} label={tGlobal(lang, "pay.print_receipt", "Print Receipt")} onClick={() => handleAction(() => handlePrintReceipt(payment, row, ledgers, localCurrency, true, lang))} />
       </div>
     </details>
   );
@@ -969,6 +986,7 @@ function NestedPaymentHistory({
   logClientError: (msg: string) => void,
   onOpenFullBill?: () => void
 }) {
+  const currentLanguage = useActiveLanguage() as LanguageCode;
   const [payments, setPayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -1175,20 +1193,20 @@ function NestedPaymentHistory({
           {/* Column 3: Converted Local Currency Breakdown */}
           <div className="flex flex-col justify-between border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 rounded-lg p-3 shadow-sm">
             <div className="text-[10px] font-black uppercase tracking-widest text-indigo-700 dark:text-indigo-400 border-b border-slate-100 dark:border-slate-800 pb-1.5 mb-2.5">
-              Converted Currency Flow ({calcs.finalCurr})
+              {t("converted_currency_flow", currentLanguage)} ({calcs.finalCurr})
             </div>
             <div className="space-y-2">
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500 font-semibold">Converted Local Amount:</span>
+                <span className="text-slate-500 font-semibold">{t("converted_local_amount", currentLanguage)}</span>
                 <span className="font-mono font-black text-slate-800 dark:text-slate-200">{money(calcs.totalPurchaseLC, calcs.finalCurr)}</span>
               </div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-500 font-semibold">Local Currency Advance ({calcs.advancePercent}%):</span>
+                <span className="text-slate-500 font-semibold">{t("local_currency_advance", currentLanguage)} ({calcs.advancePercent}%):</span>
                 <span className="font-mono font-black text-emerald-600 dark:text-emerald-400">{money(calcs.advanceAmountLC, calcs.finalCurr)}</span>
               </div>
               <div className="border-t border-dashed border-slate-100 dark:border-slate-800/60 my-1"></div>
               <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-800 dark:text-slate-200 font-bold">Remaining Local Balance:</span>
+                <span className="text-slate-800 dark:text-slate-200 font-bold">{t("remaining_local_balance", currentLanguage)}</span>
                 <span className="font-mono font-black text-rose-600 dark:text-rose-400">{money(calcs.remainingPurchaseLC, calcs.finalCurr)}</span>
               </div>
             </div>
@@ -1198,10 +1216,10 @@ function NestedPaymentHistory({
 
       <div className="mb-3 flex items-center justify-between">
         <h4 className="text-xs font-black uppercase tracking-wider text-indigo-700 dark:text-indigo-400 flex items-center gap-1.5">
-          Traceable Payment History (Nested Journal Entries)
+          {t("traceable_payment_history", currentLanguage)}
         </h4>
         {loading && (
-          <span className="text-[10px] font-semibold text-slate-400 animate-pulse">Loading history...</span>
+          <span className="text-[10px] font-semibold text-slate-400 animate-pulse">{t("loading_history", currentLanguage)}</span>
         )}
       </div>
       {payments.length > 0 ? (
@@ -2503,7 +2521,10 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
 
   const [titleSlot, setTitleSlot] = useState<Element | null>(null);
   const [actionsSlot, setActionsSlot] = useState<Element | null>(null);
-  const [currentLanguage, setCurrentLanguage] = useState<LanguageCode>("en");
+  // Follows the single, app-wide active language (top toolbar selector) instead of its
+  // own disconnected state — this page previously had its own separate, broken language
+  // dropdown (corrupted-encoding option labels) that never reflected the real selection.
+  const currentLanguage = useActiveLanguage() as LanguageCode;
   const isRtl = ["ur", "ar", "fa", "ps"].includes(currentLanguage);
 
   useEffect(() => {
@@ -3687,18 +3708,18 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
 
   const recordsTextMap: Record<LanguageCode, string> = {
     en: "records",
-    ur: "Ø±ÛŒÚ©Ø§Ø±ÚˆØ²",
-    ar: "Ø³Ø¬Ù„Ø§Øª",
-    fa: "Ø±Ú©ÙˆØ±Ø¯Ù‡Ø§",
-    ps: "Ø±ÛŒÚ©Ø§Ø±Ú‰ÙˆÙ†Ù‡"
+    ur: "ریکارڈز",
+    ar: "سجلات",
+    fa: "رکوردها",
+    ps: "ریکارډونه"
   };
 
   const refreshTextMap: Record<LanguageCode, string> = {
     en: "Refresh",
-    ur: "ØªØ§Ø²Ù‡ Ú©Ø±ÛŒÚº",
-    ar: "ØªØ­Ø¯ÙŠØ«",
-    fa: "Ø¨Ø±ÙˆØ²Ø±Ø³Ø§Ù†ÛŒ",
-    ps: "ØªØ§Ø²Ù‡ Ú©ÙˆÙ„"
+    ur: "تازہ کریں",
+    ar: "تحديث",
+    fa: "بروزرسانی",
+    ps: "تازه کول"
   };
 
   // getTableHeader hoisted to module scope (getSalesOrderTableHeader) to avoid a
@@ -3709,38 +3730,15 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       {/* Header / Title Portal */}
       {titleSlot && createPortal(
         <span className="font-semibold text-slate-800 dark:text-slate-100">
-          {activeMode === "advance" ? t("page_title", currentLanguage) :
-           activeMode === "advance_completed" ? `${t("page_title", currentLanguage)} (${t("Completed", currentLanguage)})` :
+          {activeMode === "advance" ? t("page_title_sales", currentLanguage) :
+           activeMode === "advance_completed" ? `${t("page_title_sales", currentLanguage)} (${t("Completed", currentLanguage)})` :
            activeMode === "remaining" ? t("remaining_advance", currentLanguage) :
-           activeMode === "credit" ? t("col_remaining_balance", currentLanguage) : `${t("page_title", currentLanguage)} (${t("Cleared", currentLanguage)})`}
+           activeMode === "credit" ? t("col_remaining_balance", currentLanguage) : `${t("page_title_sales", currentLanguage)} (${t("Cleared", currentLanguage)})`}
         </span>,
         titleSlot
       )}
       {actionsSlot && createPortal(
         <div className="flex items-center gap-2 flex-wrap">
-          {/* Language Selector Dropdown */}
-          <div className="relative">
-            <select
-              value={currentLanguage}
-              onChange={(e) => setCurrentLanguage(e.target.value as LanguageCode)}
-              className="h-7 rounded-lg border border-slate-200 bg-white pl-2 pr-6 text-[10px] font-bold text-slate-700 outline-none dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 transition focus:border-blue-500 appearance-none cursor-pointer"
-              style={{
-                backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
-                backgroundRepeat: 'no-repeat',
-                backgroundPosition: isRtl ? 'left 0.5rem center' : 'right 0.5rem center',
-                backgroundSize: '1em',
-                paddingRight: isRtl ? '0.5rem' : '1.5rem',
-                paddingLeft: isRtl ? '1.5rem' : '0.5rem'
-              }}
-            >
-              <option value="en">English (EN)</option>
-              <option value="ur">Ø§Ø±Ø¯Ùˆ (UR)</option>
-              <option value="ar">Ø§Ù„Ø¹Ø±Ø¨ÙŠØ© (AR)</option>
-              <option value="fa">ÙØ§Ø±Ø³ÛŒ (FA)</option>
-              <option value="ps">Ù¾ÚšØªÙˆ (PS)</option>
-            </select>
-          </div>
-
           {/* Search Input */}
           <div className="relative">
             <Search className={cn("absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400", isRtl ? "right-2.5" : "left-2.5")} />
@@ -4278,18 +4276,18 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                   >
                     <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 10 }}>
                       <FileSpreadsheet style={{ width: 40, height: 40, opacity: 0.3 }} />
-                      <span>No sales order payment records found.</span>
+                      <span>{t("no_payment_records_found", currentLanguage)}</span>
                       {activeMode === "remaining" ? (
                         <div style={{ maxWidth: 420, textAlign: "center" }}>
                           <span style={{ fontSize: 11, color: "#f59e0b", fontWeight: 700, display: "block" }}>
-                            Warning: Workflow Rule: Remaining Payment requires Transfer to Loading first.
+                            {tGlobal(currentLanguage, "pay.remaining_workflow_warning", "Warning: Workflow Rule: Remaining Payment requires Transfer to Loading first.")}
                           </span>
                           <span style={{ fontSize: 10, color: "#cbd5e1", display: "block", marginTop: 4 }}>
-                            Orders only appear here after: Booking ? Advance Payment ? Transfer to Loading ? Loading Confirmation. Ensure the order has been transferred to loading before making a remaining payment.
+                            {tGlobal(currentLanguage, "pay.remaining_workflow_steps", "Orders only appear here after: Booking → Advance Payment → Transfer to Loading → Loading Confirmation. Ensure the order has been transferred to loading before making a remaining payment.")}
                           </span>
                         </div>
                       ) : (
-                        <span style={{ fontSize: 11, color: "#cbd5e1" }}>Try adjusting filters or check if orders are posted.</span>
+                        <span style={{ fontSize: 11, color: "#cbd5e1" }}>{t("try_adjusting_filters", currentLanguage)}</span>
                       )}
                     </div>
                   </td>
@@ -4299,7 +4297,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
               {loading && (
                 <tr>
                   <td colSpan={11} style={{ padding: "60px 20px", textAlign: "center", color: "#94a3b8", fontSize: 13 }}>
-                    Loading records...
+                    {t("loading_records", currentLanguage)}
                   </td>
                 </tr>
               )}
@@ -4311,10 +4309,10 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
         <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-100 bg-white px-6 py-4 dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-6">
             <span className="text-xs text-slate-500 dark:text-slate-400">
-              Showing <strong className="font-semibold text-slate-700 dark:text-slate-300">{pageRows.length ? pageIndex * pageSize + 1 : 0} to {Math.min(filtered.length, (pageIndex + 1) * pageSize)}</strong> of <strong className="font-semibold text-slate-700 dark:text-slate-300">{filtered.length}</strong> records
+              {t("showing", currentLanguage)} <strong className="font-semibold text-slate-700 dark:text-slate-300">{pageRows.length ? pageIndex * pageSize + 1 : 0} {t("range_to", currentLanguage)} {Math.min(filtered.length, (pageIndex + 1) * pageSize)}</strong> {t("of_records", currentLanguage)} <strong className="font-semibold text-slate-700 dark:text-slate-300">{filtered.length}</strong> {t("records_word", currentLanguage)}
             </span>
             <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-500 dark:text-slate-400">Rows per page:</span>
+              <span className="text-xs text-slate-500 dark:text-slate-400">{t("rows_per_page", currentLanguage)}</span>
               <select
                 value={pageSize}
                 onChange={(event) => {
@@ -4338,9 +4336,9 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                 "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-650 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400",
                 pageIndex === 0 && "text-slate-400 opacity-50 cursor-not-allowed"
               )}
-              aria-label="Previous page"
+              aria-label={t("previous_page", currentLanguage)}
             >
-              <span className="text-xs">?</span>
+              <ChevronRight className="h-3.5 w-3.5" style={{ transform: isRtl ? "none" : "rotate(180deg)" }} />
             </button>
             {Array.from({ length: Math.ceil(filtered.length / pageSize) }).slice(0, 5).map((_, idx) => (
               <button
@@ -4363,9 +4361,9 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                 "inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-655 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400",
                 (pageIndex + 1) * pageSize >= filtered.length && "text-slate-400 opacity-50 cursor-not-allowed"
               )}
-              aria-label="Next page"
+              aria-label={t("next_page", currentLanguage)}
             >
-              <span className="text-xs">?</span>
+              <ChevronRight className="h-3.5 w-3.5" style={{ transform: isRtl ? "rotate(180deg)" : "none" }} />
             </button>
           </div>
         </div>
@@ -4877,15 +4875,15 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                   <Truck className="h-6 w-6" />
                 </div>
                 <div className="space-y-1">
-                  <h3 className="text-sm font-black text-amber-800 dark:text-amber-400">Select a Loaded Container to Process Payment</h3>
+                  <h3 className="text-sm font-black text-amber-800 dark:text-amber-400">{t("select_loaded_container", currentLanguage)}</h3>
                   <p className="text-xs text-slate-500 max-w-md mx-auto">
-                    Remaining payments must be processed separately for each loaded container record. Please select one of the loaded containers below to continue:
+                    {t("select_container_instruction", currentLanguage)}
                   </p>
                 </div>
                 {loadingLoadingRecords ? (
                   <div className="text-xs text-amber-700 italic flex items-center justify-center gap-1.5 py-8">
                     <span className="h-4 w-4 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />
-                    Loading container records...
+                    {t("loading_container_records", currentLanguage)}
                   </div>
                 ) : loadingRecords.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 max-h-[350px] overflow-y-auto p-1">

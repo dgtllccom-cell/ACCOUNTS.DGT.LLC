@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { locationsRepository } from "@/lib/repositories/locations-repository";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
 
 function isUuid(value: any): boolean {
   if (!value || typeof value !== "string") return false;
@@ -21,7 +23,9 @@ export async function GET(request: NextRequest) {
     }
 
     const q = request.nextUrl.searchParams.get("q");
-    const states = await locationsRepository.listStates({ countryId, query: q, limit: 500 });
+    let states = await locationsRepository.listStates({ countryId, query: q, limit: 500 });
+    const lang = await getRequestLanguage();
+    states = await localizeRecordNames(states, "states_provinces", "name", lang);
     return apiOk({ states });
   } catch (error) {
     return handleApiError(error);

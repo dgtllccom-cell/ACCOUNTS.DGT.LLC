@@ -26,6 +26,8 @@ type EnterpriseDbClient = {
 export type EnterpriseTranslationField = {
   fieldName: string;
   value: string | null | undefined;
+  /** From the field registry (lib/i18n/translatable-fields.ts). Defaults to "translate". */
+  mode?: "translate" | "transliterate";
 };
 
 export type EnterpriseTranslationSaveInput = {
@@ -77,7 +79,14 @@ export function resolveLanguageText(translations: Partial<TranslationMap> | null
   return translations?.[language] || translations?.en || fallback;
 }
 
-function columnPayload(translations: TranslationMap) {
+function columnPayload(translations: TranslationMap, source?: string) {
+  const isFallback =
+    source !== "manual" &&
+    translations.en === translations.ur &&
+    translations.en === translations.ar &&
+    translations.en === translations.fa &&
+    translations.en === translations.ps;
+
   return {
     english_text: translations.en,
     urdu_text: translations.ur,
@@ -85,8 +94,8 @@ function columnPayload(translations: TranslationMap) {
     persian_text: translations.fa,
     pashto_text: translations.ps,
     language_texts: translations,
-    translation_status: "complete",
-    translated_by_engine: "local_dictionary",
+    translation_status: isFallback ? "pending" : "complete",
+    translated_by_engine: isFallback ? "fallback_source" : "local_dictionary",
     translated_at: new Date().toISOString()
   };
 }
@@ -101,12 +110,12 @@ export async function saveEnterpriseRecordTranslations(
   for (const field of activeFields) {
     const originalText = String(field.value).trim();
     const { autoTranslateText } = await import("./auto-translation-service");
-    const translations = await autoTranslateText(originalText, input.originalLanguage);
+    const translations = await autoTranslateText(originalText, input.originalLanguage, field.mode ?? "translate");
     // Upsert via the dedicated RPC. Direct supabase-js .upsert({ onConflict }) cannot be
     // used here because the unique index on record_translations is PARTIAL
     // (WHERE deleted_at IS NULL); PostgREST omits the predicate and Postgres raises 42P10.
     // upsert_record_translation() runs the correct ON CONFLICT (...) WHERE deleted_at IS NULL.
-    const columns = columnPayload(translations);
+    const columns = columnPayload(translations, input.source);
     const { data, error } = await db.rpc("upsert_record_translation", {
       p_record_table: input.recordTable,
       p_record_id: input.recordId,

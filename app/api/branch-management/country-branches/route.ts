@@ -7,6 +7,8 @@ import { allPermissionGroupKeys } from "@/lib/permissions/catalog";
 import { linkEmailAccount } from "@/lib/api/email-link";
 import { translateToUrdu } from "@/lib/api/response";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
 
 function formatError(message: string, isSuperAdmin: boolean) {
   if (isSuperAdmin) {
@@ -96,7 +98,9 @@ export async function GET(request: Request) {
       error = fallbackResult.error;
     }
 
-    const countryBranches = normalizeCountryBranchRows(data);
+    let countryBranches = normalizeCountryBranchRows(data);
+    const lang = await getRequestLanguage();
+    countryBranches = await localizeRecordNames(countryBranches, "country_branches", "name", lang);
     return NextResponse.json({ countryBranches }, { status: 200 });
   } catch (error) {
     if (error instanceof ErpAuthError) {

@@ -72,7 +72,11 @@ const REPORT_LIST: ReportMeta[] = [
   { type: "daily-comprehensive", title: "Comprehensive Daily Report", description: "Daily Summary, Branch-wise & User-wise reporting", icon: FileSpreadsheet }
 ];
 
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
+
 function ReportsHubContent() {
+  const lang = useActiveLanguage();
   const searchParams = useSearchParams();
   const rawType = searchParams.get("type") as ReportType | null;
   const rawScope = searchParams.get("scope");
@@ -85,13 +89,13 @@ function ReportsHubContent() {
       setSelectedReport(rawType);
     }
     if (rawScope === "country") {
-      setActiveScopeBadge("Country Admin Scope");
+      setActiveScopeBadge(t(lang, "nav.country_dashboard", "Country Admin Scope"));
     } else if (rawScope === "branch") {
-      setActiveScopeBadge("Branch Admin Scope");
+      setActiveScopeBadge(t(lang, "nav.city_dashboard", "Branch Admin Scope"));
     } else if (rawScope === "super-admin") {
-      setActiveScopeBadge("Super Admin Scope");
+      setActiveScopeBadge(t(lang, "nav.super_admin_dashboard", "Super Admin Scope"));
     }
-  }, [rawType, rawScope]);
+  }, [rawType, rawScope, lang]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -168,7 +172,8 @@ function ReportsHubContent() {
   };
 
   useEffect(() => {
-    loadReportData(filters);
+    setFilters(prev => ({ ...prev, reportType: selectedReport }));
+    loadReportData({ ...filters, reportType: selectedReport });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedReport]);
 
@@ -242,7 +247,7 @@ function ReportsHubContent() {
                 {activeScopeBadge}
               </span>
             </div>
-            <h1 className="text-xl font-black tracking-tight">{activeMeta.title}</h1>
+            <h1 className="text-xl font-black tracking-tight">{t(lang, `nav.${activeMeta.type.replace(/-/g, '_')}` as any, activeMeta.title)}</h1>
             <p className="text-xs text-slate-500 font-medium">{activeMeta.description}</p>
           </div>
         </div>
@@ -250,9 +255,14 @@ function ReportsHubContent() {
         {/* Action Toolbar */}
         <div className="flex flex-wrap items-center gap-2">
           <ReportFilterBar
-            lang="en"
+            lang={lang}
             filters={filters}
-            onFilterChange={(k, v) => setFilters(prev => ({ ...prev, [k]: v }))}
+            onFilterChange={(k, v) => {
+              setFilters(prev => ({ ...prev, [k]: v }));
+              if (k === "reportType" && REPORT_LIST.some(r => r.type === v)) {
+                setSelectedReport(v as ReportType);
+              }
+            }}
             onReset={() => {
               const resetF = { countryId: "all", mainBranchId: "all", branchId: "all", fromDate: "", toDate: "", currency: "USD", userId: "all", reportType: selectedReport };
               setFilters(resetF);
@@ -263,6 +273,7 @@ function ReportsHubContent() {
             mainBranches={masterMainBranches.map(b => ({ id: b.id, name: b.name }))}
             cityBranches={masterCityBranches.map(cb => ({ id: cb.id, name: cb.name }))}
             currencies={[{ code: "USD", name: "USD" }, { code: "AED", name: "AED" }, { code: "PKR", name: "PKR" }, { code: "AFN", name: "AFN" }]}
+            reportTypes={REPORT_LIST.map(r => ({ key: r.type, icon: r.type }))}
           />
 
           <button

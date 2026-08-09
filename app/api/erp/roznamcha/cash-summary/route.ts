@@ -43,25 +43,55 @@ export async function GET(request: NextRequest) {
     });
 
     const supabase = await createApiSupabaseClient();
-    const { data, error } = await supabase.rpc("get_branch_cash_summary", {
-      p_country_id: countryId,
-      p_country_branch_id: countryBranchId || null,
-      p_date: date || new Date().toISOString().slice(0, 10)
-    });
+    let totalDebit = 0;
+    let totalCredit = 0;
+    let entryCount = 0;
 
-    if (error) {
-      throw new Error(error.message);
+    const targetDate = date || new Date().toISOString().slice(0, 10);
+
+    try {
+      const { data, error } = await supabase.rpc("get_branch_cash_summary", {
+        p_country_id: countryId,
+        p_country_branch_id: countryBranchId || null,
+        p_date: targetDate
+      });
+
+      if (!error && data) {
+        const row = (Array.isArray(data) ? data[0] : data) as any;
+        totalDebit = Number(row?.total_debit ?? 0);
+        totalCredit = Number(row?.total_credit ?? 0);
+        entryCount = Number(row?.entry_count ?? 0);
+      } else {
+        throw error || new Error("RPC returned no data");
+      }
+    } catch {
+      // Fallback: direct query on roznamcha_entries and roznamcha_lines
+      let query = supabase
+        .from("roznamcha_entries")
+        .select("id, roznamcha_lines(debit, credit)")
+        .eq("country_id", countryId)
+        .eq("entry_date", targetDate)
+        .is("deleted_at", null);
+
+      if (countryBranchId) {
+        query = query.eq("country_branch_id", countryBranchId);
+      }
+
+      const { data: fallbackEntries } = await query;
+      if (Array.isArray(fallbackEntries)) {
+        entryCount = fallbackEntries.length;
+        for (const entry of fallbackEntries) {
+          if (Array.isArray(entry.roznamcha_lines)) {
+            for (const line of entry.roznamcha_lines) {
+              totalDebit += Number(line.debit || 0);
+              totalCredit += Number(line.credit || 0);
+            }
+          }
+        }
+      }
     }
 
-    const row = (Array.isArray(data) ? data[0] : data) as
-      | { total_debit?: number; total_credit?: number; balance?: number; entry_count?: number }
-      | undefined;
-
-    const totalDebit = Number(row?.total_debit ?? 0);
-    const totalCredit = Number(row?.total_credit ?? 0);
-    // Balance convention (confirmed with owner): Credit - Debit. Positive => Cr.
     const balance = totalCredit - totalDebit;
-    const entryCount = Number(row?.entry_count ?? 0);
 
     return apiOk({
       countryId,

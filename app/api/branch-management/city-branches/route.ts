@@ -9,6 +9,8 @@ import { linkWhatsAppAccount } from "@/lib/api/whatsapp-link";
 import { encrypt } from "@/lib/crypto";
 import { translateToUrdu } from "@/lib/api/response";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
 
 function formatError(message: string, isSuperAdmin: boolean) {
   if (isSuperAdmin) {
@@ -116,7 +118,9 @@ export async function GET(request: Request) {
       error = fallbackResult.error;
     }
 
-    const cityBranches = normalizeCityBranchRows(data);
+    let cityBranches = normalizeCityBranchRows(data);
+    const lang = await getRequestLanguage();
+    cityBranches = await localizeRecordNames(cityBranches, "city_branches", "name", lang);
     return NextResponse.json({ cityBranches }, { status: 200 });
   } catch (error) {
     if (error instanceof ErpAuthError) {

@@ -85,7 +85,7 @@ export function apiError(code: string, message: string, status = 400, details?: 
   let finalMessage = message;
   if (isSuperAdmin) {
     const urduTranslation = translateToUrdu(message);
-    finalMessage = `بھائی، اس میں یہ خرابی ہے: ${urduTranslation}`;
+    finalMessage = urduTranslation;
   }
 
   return NextResponse.json<ApiErrorBody>(
