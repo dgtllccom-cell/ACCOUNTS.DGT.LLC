@@ -26,7 +26,22 @@ const nextConfig: NextConfig = {
       {
         source: "/_next/static/:path*",
         headers: [
-          { key: "Cache-Control", value: "public, max-age=31536000, immutable" },
+          // Production build filenames are content-hashed, so caching forever is safe
+          // and correct there. In `next dev`, chunk filenames (e.g. page.js) are STABLE
+          // across rebuilds — an immutable/max-age=1yr rule here means the browser never
+          // re-requests the file again after the first load, no matter how many times the
+          // dev server recompiles it, silently serving a stale bundle for the rest of the
+          // browser session (confirmed: this caused edited component output to never
+          // reach the DOM even after full dev-server restarts and brand-new tabs, since
+          // the stale copy lived in the browser's own HTTP cache, not in any
+          // server/service-worker layer).
+          {
+            key: "Cache-Control",
+            value:
+              process.env.NODE_ENV === "production"
+                ? "public, max-age=31536000, immutable"
+                : "no-store, no-cache, must-revalidate",
+          },
         ],
       },
       {

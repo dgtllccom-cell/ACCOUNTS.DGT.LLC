@@ -68,7 +68,23 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     }
   } catch {}
   try {
-    if (window.isSecureContext && 'serviceWorker' in navigator) {
+    var isLocalDev = ['localhost', '127.0.0.1', '0.0.0.0'].indexOf(location.hostname) !== -1;
+    if (isLocalDev && 'serviceWorker' in navigator) {
+      // Actively unregister in local dev instead of just skipping registration --
+      // an already-registered SW from a previous session keeps controlling the page
+      // (SW registration is origin-scoped, not tab-scoped, and re-registers itself
+      // on every load via this same script) and its cache can silently serve stale
+      // HTML/RSC payloads for a route even after the dev server has rebuilt with
+      // new code, in a way that survives hard reloads and brand new tabs alike.
+      navigator.serviceWorker.getRegistrations().then(function(regs) {
+        regs.forEach(function(r) { r.unregister().catch(function() {}); });
+      }).catch(function() {});
+      if (window.caches && caches.keys) {
+        caches.keys().then(function(keys) {
+          keys.forEach(function(k) { caches.delete(k).catch(function() {}); });
+        }).catch(function() {});
+      }
+    } else if (window.isSecureContext && 'serviceWorker' in navigator) {
       window.addEventListener('load', function() {
         try {
           navigator.serviceWorker.register('/sw.js').catch(function() {});
