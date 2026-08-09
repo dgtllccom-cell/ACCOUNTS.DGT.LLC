@@ -21,7 +21,6 @@ import { EmployeeLedgerPanel } from "@/features/hr-payroll/components/employee-l
 import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
 import { Th } from "@/components/ui/translated-th";
 
-/* ──────────────────────────────────────────────────────────────
 const dict = {
   en: {
     title: "General Office Management",
@@ -226,64 +225,19 @@ const dict = {
     active: "فعال",
     inactive: "غیرفعال",
     onLeave: "مرخصی",
-    suspended    search: "بحث",
-    filter: "تصفية"
-  }
-};
-
-type TabKey =
-  | "master-setup"
-  | "management"
-  | "departments"
-  | "designations"
-  | "attendance"
-  | "leave"
-  | "payroll"
-  | "assets"
-  | "documents"
-  | "id-cards"
-  | "reports";
-
-export function GeneralOfficeDashboardView() {
-  const searchParams = useSearchParams();
-  const initialTab = (searchParams.get("tab") as TabKey) || "management";
-
-  const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
-  const lang = useActiveLanguage();
-  const isRtl = useMemo(() => ["ur", "ps", "fa", "ar"].includes(lang), [lang]);
-  const tr = useCallback((text: string) => {
-    if (!text) return text;
-    const res = autoTranslate5Languages(text);
-    return res[lang] || text;
-  }, [lang]);
-
-  const t = useMemo(() => {
-    const d = dict[lang] || dict.en;
-    return new Proxy(d, {
-      get(target, prop: string) {
-        if (prop in target) return target[prop as keyof typeof target];
-        const res = autoTranslate5Languages(prop);
-        return res[lang] || prop;
-      }
-    });
-  }, [lang]);
-
-  // Employees State
-  const [employees, setEmployees] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);�عة البطاقة",
-    search: "بحث",
-    filter: "تصفية"
-  }
-};
-
-type TabKey =
-  | "master-setup"
-  | "management"
-
-  const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
-  const [lang, setLang] = useState<SupportedLanguage>("en");
-  const [isRtl, setIsRtl] = useState(false);
-  const t = dict[lang] || dict.en;r: "البحث عن الموظفين، الأقسام، الأصول...",
+    suspended: "معلق",
+    edit: "ویرایش",
+    loanAdv: "وام / پیش‌پرداخت",
+    ledger: "دفتر حساب",
+    delete: "حذف",
+    idCardPreview: "چاپ کارت",
+    search: "جستجو",
+    filter: "فیلتر"
+  },
+  ar: {
+    title: "إدارة المكتب العام",
+    subtitle: "مركز متكامل لإدارة الموارد البشرية والرواتب والحضور وأصول المكتب وبيانات الموظفين",
+    searchPlaceholder: "البحث عن الموظفين، الأقسام، الأصول...",
     masterSetup: "إعداد الموظفين الرئيسي",
     empMgmt: "إدارة الموظفين",
     departments: "الأقسام الإدارية",
@@ -292,7 +246,9 @@ type TabKey =
     leave: "إدارة الإجازات",
     payroll: "مسير الرواتب",
     assets: "أصول المكتب",
+    officeAssets: "أصول المكتب",
     documents: "الوثائق الرسمية",
+    officeDocuments: "الوثائق الرسمية",
     idCards: "بطاقات الموظفين",
     reports: "تقارير الموظفين",
     registerBtn: "تسجيل موظف جديد",
@@ -353,6 +309,7 @@ export function GeneralOfficeDashboardView() {
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
   const [lang, setLang] = useState<SupportedLanguage>("en");
   const [isRtl, setIsRtl] = useState(false);
+  const t = dict[lang] || dict.en;
 
   // Employees State
   const [employees, setEmployees] = useState<any[]>([]);
