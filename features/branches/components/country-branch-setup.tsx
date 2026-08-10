@@ -28,6 +28,8 @@ import { cn } from "@/lib/utils";
 import { getPermissionKeysForTemplate } from "@/lib/permissions/catalog";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import type { ContactTypeKey } from "@/features/contact-types/contact-type-api";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 type CountryBranchRow = {
   id: string;
@@ -166,6 +168,7 @@ import { Suspense } from "react";
 
 function CountryBranchSetupContent() {
   const searchParams = useSearchParams();
+  const lang = useActiveLanguage();
   const editId = searchParams.get("editId") ?? "";
   const [drawerBranchData, setDrawerBranchData] = useState<any>(null);
   const [activeStep, setActiveStep] = useState(1);
@@ -562,8 +565,8 @@ function CountryBranchSetupContent() {
   function openReport(autoPrint: boolean) {
     const activeLang = typeof document !== "undefined" ? document.documentElement.lang : "en";
     openA4ReportWindow({
-      title: "Country Main Branch Report",
-      subtitle: "Store Entry Preview (A4)",
+      title: t(lang, "branch.country_main_branch_report", "Country Main Branch Report"),
+      subtitle: t(lang, "branch.store_entry_preview_a4", "Store Entry Preview (A4)"),
       autoPrint,
       branchData: liveBranchData,
       lang: activeLang
@@ -618,7 +621,9 @@ function CountryBranchSetupContent() {
     setPermissionGrants(Array.isArray(row.permission_grants) ? row.permission_grants : getPermissionKeysForTemplate("country-standard"));
     setBanner({
       type: "success",
-      message: `Editing Existing Branch\nBranch Name: ${row.name}\nBranch Code: ${row.code}`
+      message: t(lang, "branch.editing_existing_branch_msg", "Editing Existing Branch\nBranch Name: {name}\nBranch Code: {code}")
+        .replace("{name}", row.name)
+        .replace("{code}", row.code)
     });
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -710,18 +715,18 @@ function CountryBranchSetupContent() {
         const json = (await res.json().catch(() => ({}))) as { countryBranches?: CountryBranchRow[]; error?: string };
         if (cancelled) return;
         if (!res.ok) {
-          setBanner({ type: "error", message: json.error || "Branch record not found." });
+          setBanner({ type: "error", message: json.error || t(lang, "branch.err_branch_not_found", "Branch record not found.") });
           return;
         }
         const row = Array.isArray(json.countryBranches) ? json.countryBranches[0] : null;
         if (!row) {
-          setBanner({ type: "error", message: "Branch record not found." });
+          setBanner({ type: "error", message: t(lang, "branch.err_branch_not_found", "Branch record not found.") });
           return;
         }
         setCountryBranches(json.countryBranches ?? []);
         beginEditCountryBranch(row);
       } catch (error) {
-        if (!cancelled) setBanner({ type: "error", message: error instanceof Error ? error.message : "Failed to load branch record." });
+        if (!cancelled) setBanner({ type: "error", message: error instanceof Error ? error.message : t(lang, "branch.err_load_branch_failed", "Failed to load branch record.") });
       } finally {
         if (!cancelled) setEditLoading(false);
       }
@@ -832,8 +837,10 @@ function CountryBranchSetupContent() {
       setBranchCode(existing.main.code);
       setBanner({
         type: "error",
-        message:
-          `Country Branch Already Exists\nBranch Name: ${existing.main.name}\nBranch Code: ${existing.main.code}\nStatus: ${existing.main.status}`
+        message: t(lang, "branch.country_branch_exists_msg", "Country Branch Already Exists\nBranch Name: {name}\nBranch Code: {code}\nStatus: {status}")
+          .replace("{name}", existing.main.name)
+          .replace("{code}", existing.main.code)
+          .replace("{status}", existing.main.status)
       });
       return;
     }
@@ -863,27 +870,27 @@ function CountryBranchSetupContent() {
     setBanner(null);
 
     if (!isUuid(location.countryId)) {
-      setBanner({ type: "error", message: "Please select a valid country from Location Settings." });
+      setBanner({ type: "error", message: t(lang, "branch.err_select_valid_country", "Please select a valid country from Location Settings.") });
       return;
     }
 
     if (!isUuid(location.stateProvinceId) || !isUuid(location.cityId)) {
-      setBanner({ type: "error", message: "Please select State/Province and City from Location Settings." });
+      setBanner({ type: "error", message: t(lang, "branch.err_select_state_city", "Please select State/Province and City from Location Settings.") });
       return;
     }
 
     if (!branchCode.trim()) {
-      setBanner({ type: "error", message: "Branch Code is required." });
+      setBanner({ type: "error", message: t(lang, "branch.err_branch_code_required", "Branch Code is required.") });
       return;
     }
 
     if (!branchEmail || !branchEmail.includes("@")) {
-      setBanner({ type: "error", message: "Branch Email (Hostinger Titan Mailbox) is required." });
+      setBanner({ type: "error", message: t(lang, "branch.err_branch_email_required", "Branch Email (Hostinger Titan Mailbox) is required.") });
       return;
     }
 
     if (!permissionTemplate || !permissionGrants.length) {
-      setBanner({ type: "error", message: "Please select a Role Template and at least one permission before saving the Country." });
+      setBanner({ type: "error", message: t(lang, "branch.err_role_template_required", "Please select a Role Template and at least one permission before saving the Country.") });
       return;
     }
 
@@ -925,7 +932,7 @@ function CountryBranchSetupContent() {
 
       const json = await res.json().catch(() => ({}));
       if (!res.ok) {
-        let message = "Failed to save country branch.";
+        let message = t(lang, "branch.err_save_failed", "Failed to save country branch.");
         if (json?.error) {
           if (typeof json.error === "string") {
             message = json.error;
@@ -947,11 +954,17 @@ function CountryBranchSetupContent() {
         setBanner({ type: "error", message });
         return;
       }
-      setBanner({ type: "success", message: `${editingCountryBranchId ? "Updated" : "Saved"}: ${branchName} (${branchCode})` });
+      setBanner({
+        type: "success",
+        message: t(lang, "branch.saved_status_msg", "{action}: {name} ({code})")
+          .replace("{action}", editingCountryBranchId ? t(lang, "branch.action_updated", "Updated") : t(lang, "branch.action_saved", "Saved"))
+          .replace("{name}", branchName)
+          .replace("{code}", branchCode)
+      });
       setEditingCountryBranchId("");
       await loadExistingMainBranch(location.countryId);
     } catch (err) {
-      setBanner({ type: "error", message: err instanceof Error ? err.message : "Failed to save country branch." });
+      setBanner({ type: "error", message: err instanceof Error ? err.message : t(lang, "branch.err_save_failed", "Failed to save country branch.") });
     } finally {
       setSaving(false);
     }
@@ -983,29 +996,29 @@ function CountryBranchSetupContent() {
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">New Entry</p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight">Country Branch</h1>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">{t(lang, "branch.new_entry_label", "New Entry")}</p>
+          <h1 className="mt-1 text-2xl font-semibold tracking-tight">{t(lang, "branch.country_branch_title", "Country Branch")}</h1>
           <p className="text-sm text-muted-foreground">
-            Create one main branch per country. Countries and locations come from Settings / Location.
+            {t(lang, "branch.country_branch_subtitle", "Create one main branch per country. Countries and locations come from Settings / Location.")}
           </p>
         </div>
         <span className={pillClassName()}>
-          <b>Rule:</b> One Main Branch per Country
+          <b>{t(lang, "branch.rule_label", "Rule:")}</b> {t(lang, "branch.rule_one_main_per_country", "One Main Branch per Country")}
         </span>
       </div>
 
       <div className="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
         <div className="grid gap-2 md:grid-cols-4 xl:grid-cols-9" aria-label="Country branch wizard sequence">
           {[
-            ["1", "Branch Information", "Country, currency and location"],
-            ["2", "Access Scope", "Review country scope before setup"],
-            ["3", "User Account Setup", "Company and branch owner"],
-            ["4", "Contact Information", "Phone, email and official IDs"],
-            ["5", "Review & PDF Summary", "Preview before final setup"],
-            ["6", "Branch Documents", "Optional branch files"],
-            ["7", "Roles & Permissions", "Configure and confirm role access"],
-            ["8", "AI Communication Setup", "Email, WhatsApp and alerts"],
-            ["9", "Final Approval", "Accept setup or go back"]
+            ["1", t(lang, "branch.wizard_step1_title", "Branch Information"), t(lang, "branch.wizard_step1_desc", "Country, currency and location")],
+            ["2", t(lang, "branch.wizard_step2_title", "Access Scope"), t(lang, "branch.wizard_step2_desc", "Review country scope before setup")],
+            ["3", t(lang, "branch.wizard_step3_title", "User Account Setup"), t(lang, "branch.wizard_step3_desc", "Company and branch owner")],
+            ["4", t(lang, "branch.wizard_step4_title", "Contact Information"), t(lang, "branch.wizard_step4_desc", "Phone, email and official IDs")],
+            ["5", t(lang, "branch.wizard_step5_title", "Review & PDF Summary"), t(lang, "branch.wizard_step5_desc", "Preview before final setup")],
+            ["6", t(lang, "branch.wizard_step6_title", "Branch Documents"), t(lang, "branch.wizard_step6_desc", "Optional branch files")],
+            ["7", t(lang, "branch.wizard_step7_title", "Roles & Permissions"), t(lang, "branch.wizard_step7_desc", "Configure and confirm role access")],
+            ["8", t(lang, "branch.wizard_step8_title", "AI Communication Setup"), t(lang, "branch.wizard_step8_desc", "Email, WhatsApp and alerts")],
+            ["9", t(lang, "branch.wizard_step9_title", "Final Approval"), t(lang, "branch.wizard_step9_desc", "Accept setup or go back")]
           ].map(([no, title, desc]) => (
             <div key={no} className={cn("rounded-xl border px-3 py-2 transition", Number(no) === activeStep ? "border-cyan-500 bg-cyan-50 shadow-sm ring-1 ring-cyan-200 dark:border-cyan-500 dark:bg-cyan-950/40" : "border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50")}>
               <div className="flex items-center gap-2">
@@ -1017,13 +1030,13 @@ function CountryBranchSetupContent() {
           ))}
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
-          <span className="text-xs font-semibold text-slate-500">Step {activeStep} of 9</span>
+          <span className="text-xs font-semibold text-slate-500">{t(lang, "branch.step_of_9", "Step {n} of 9").replace("{n}", String(activeStep))}</span>
           <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" size="sm" disabled={saving || activeStep === 1} onClick={() => setActiveStep((step) => Math.max(1, step - 1))}>Back</Button>
+            <Button type="button" variant="outline" size="sm" disabled={saving || activeStep === 1} onClick={() => setActiveStep((step) => Math.max(1, step - 1))}>{t(lang, "common.back", "Back")}</Button>
             {activeStep < 9 ? (
-              <Button type="button" size="sm" onClick={() => setActiveStep((step) => Math.min(9, step + 1))}>Next</Button>
+              <Button type="button" size="sm" onClick={() => setActiveStep((step) => Math.min(9, step + 1))}>{t(lang, "common.next", "Next")}</Button>
             ) : (
-              <Button type="submit" form="country-branch-wizard-form" size="sm" disabled={saving || Boolean(existingMainBranch && !editingCountryBranchId) || !location.countryId}>{saving ? "Saving..." : editingCountryBranchId ? "Update" : "Accept & Save"}</Button>
+              <Button type="submit" form="country-branch-wizard-form" size="sm" disabled={saving || Boolean(existingMainBranch && !editingCountryBranchId) || !location.countryId}>{saving ? t(lang, "common.saving", "Saving...") : editingCountryBranchId ? t(lang, "branch.update", "Update") : t(lang, "branch.accept_save", "Accept & Save")}</Button>
             )}
           </div>
         </div>
@@ -1031,13 +1044,13 @@ function CountryBranchSetupContent() {
       <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
         <Card className="border-slate-200/80 shadow-sm">
           <CardHeader className="pb-3">
-            <CardTitle>Country Main Branch Setup</CardTitle>
+            <CardTitle>{t(lang, "branch.country_main_setup_title", "Country Main Branch Setup")}</CardTitle>
           </CardHeader>
 
           <CardContent>
             {editLoading ? (
               <div className="mb-4 rounded-lg border bg-muted/30 px-4 py-3 text-sm font-medium text-muted-foreground">
-                Loading existing branch for edit...
+                {t(lang, "branch.loading_existing_edit", "Loading existing branch for edit...")}
               </div>
             ) : null}
             {banner ? (
@@ -1059,7 +1072,7 @@ function CountryBranchSetupContent() {
                     onClick={() => beginEditCountryBranch(existingMainBranch)}
                   >
                     <Pencil className="h-3.5 w-3.5" aria-hidden />
-                    Edit Existing Branch
+                    {t(lang, "branch.edit_existing_branch", "Edit Existing Branch")}
                   </Button>
                 ) : null}
               </div>
@@ -1068,7 +1081,7 @@ function CountryBranchSetupContent() {
               <section hidden={activeStep !== 1} className="order-1 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
                 <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 1 - Country & Currency</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "branch.step1_country_currency", "Step 1 - Country & Currency")}</h2>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <LocationHierarchySelect
@@ -1080,24 +1093,24 @@ function CountryBranchSetupContent() {
                   />
 
                   <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Currency</Label>
-                    <Input value={currency} readOnly placeholder="Auto from selected Country" />
+                    <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{t(lang, "branch.currency_label", "Currency")}</Label>
+                    <Input value={currency} readOnly placeholder={t(lang, "branch.auto_from_country", "Auto from selected Country")} />
                   </div>
 
                   <div className="space-y-1.5 md:col-span-2">
                     <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">
-                      Branch Email (Hostinger Titan Mailbox) *
+                      {t(lang, "branch.branch_email_label", "Branch Email (Hostinger Titan Mailbox) *")}
                     </Label>
                     <Input
                       type="email"
                       required
                       value={branchEmail}
                       onChange={(e) => setBranchEmail(e.target.value)}
-                      placeholder="e.g. dubai@dgtllc.com or khi@dgtllc.com"
+                      placeholder={t(lang, "branch.branch_email_placeholder", "e.g. dubai@dgtllc.com or khi@dgtllc.com")}
                       className="h-9 text-xs font-medium"
                     />
                     <p className="text-[11px] text-slate-500">
-                      Enter your Hostinger Titan mailbox address for this branch. The ERP will securely send emails using this sender address via Titan SMTP.
+                      {t(lang, "branch.branch_email_help", "Enter your Hostinger Titan mailbox address for this branch. The ERP will securely send emails using this sender address via Titan SMTP.")}
                     </p>
                   </div>
                 </div>
@@ -1108,11 +1121,11 @@ function CountryBranchSetupContent() {
               <section hidden={activeStep !== 1} className="order-1 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
                 <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">2</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 2 - Location</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "branch.step2_location", "Step 2 - Location")}</h2>
                 </div>
                 <div className="grid gap-3 md:grid-cols-12">
                   <div className="space-y-2 md:col-span-4">
-                    <Label className="text-xs text-slate-600">Country (auto)</Label>
+                    <Label className="text-xs text-slate-600">{t(lang, "branch.country_auto", "Country (auto)")}</Label>
                     <Input value={locationMeta.country?.name ?? ""} readOnly />
                   </div>
                   <div className="space-y-2 md:col-span-8">
@@ -1128,15 +1141,15 @@ function CountryBranchSetupContent() {
                   </div>
 
                   <div className="space-y-2 md:col-span-4">
-                    <Label className="text-xs text-slate-600">Zip / Postal Code</Label>
-                    <Input value={zip} readOnly placeholder="Auto from selected Area or City" />
+                    <Label className="text-xs text-slate-600">{t(lang, "branch.zip_postal_code", "Zip / Postal Code")}</Label>
+                    <Input value={zip} readOnly placeholder={t(lang, "branch.auto_from_area_city", "Auto from selected Area or City")} />
                   </div>
                   <div className="space-y-2 md:col-span-8">
-                    <Label className="text-xs text-slate-600">Full Address</Label>
+                    <Label className="text-xs text-slate-600">{t(lang, "branch.full_address", "Full Address")}</Label>
                     <textarea
                       value={fullAddress}
                       onChange={(event) => setFullAddress(event.target.value)}
-                      placeholder="Area / Road, Building, Street, Landmark, etc."
+                      placeholder={t(lang, "branch.address_placeholder", "Area / Road, Building, Street, Landmark, etc.")}
                       className="min-h-20 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                     />
                   </div>
@@ -1146,15 +1159,15 @@ function CountryBranchSetupContent() {
               <section hidden={activeStep !== 3} className="order-3 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
                 <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">3</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 3 - Company & Branch Owner</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "branch.step3_company_owner", "Step 3 - Company & Branch Owner")}</h2>
                 </div>
                 <div className="grid gap-3 md:grid-cols-2">
                   <div className="space-y-2">
                     <CompanyPicker
-                      label="Company Name"
+                      label={t(lang, "branch.company_name_label", "Company Name")}
                       value={companyId}
                       onValueChange={setCompanyId}
-                      placeholder="Search company"
+                      placeholder={t(lang, "branch.search_company", "Search company")}
                       createButtonPlacement="below"
                     />
                   </div>
@@ -1162,7 +1175,7 @@ function CountryBranchSetupContent() {
                     <BranchOwnerPicker
                       value={ownerName}
                       onValueChange={setOwnerName}
-                      placeholder="Search owner"
+                      placeholder={t(lang, "branch.search_owner", "Search owner")}
                       createButtonPlacement="below"
                     />
                   </div>
@@ -1172,7 +1185,7 @@ function CountryBranchSetupContent() {
               <section hidden={activeStep !== 4} className="order-4 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
                 <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">4</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 4 - Contacts</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "branch.step4_contacts", "Step 4 - Contacts")}</h2>
                 </div>
                 <div className="space-y-3">
                   {contacts.map((row, idx) => (
@@ -1191,13 +1204,13 @@ function CountryBranchSetupContent() {
                           updateContact(idx, { type: value });
                         }}
                       >
-                        <option value="">Select Type</option>
+                        <option value="">{t(lang, "branch.select_type", "Select Type")}</option>
                         {contactTypeOptions.map((type) => (
                           <option key={type} value={type}>
                             {type}
                           </option>
                         ))}
-                        <option value="__new__">+ Add New Type</option>
+                        <option value="__new__">{t(lang, "branch.add_new_type", "+ Add New Type")}</option>
                       </select>
 
                       {toContactTypeKey(row.type) ? (
@@ -1215,7 +1228,7 @@ function CountryBranchSetupContent() {
                         <Input
                           value={row.value}
                           onChange={(event) => updateContact(idx, { value: event.target.value })}
-                          placeholder="Enter value"
+                          placeholder={t(lang, "branch.enter_value", "Enter value")}
                         />
                       )}
 
@@ -1225,14 +1238,14 @@ function CountryBranchSetupContent() {
                         className="border-rose-200 text-rose-700 hover:bg-rose-50 hover:text-rose-800"
                         onClick={() => setContacts((current) => current.filter((_, i) => i !== idx))}
                       >
-                        Remove
+                        {t(lang, "branch.remove", "Remove")}
                       </Button>
                     </div>
                   ))}
 
                   <div className="flex flex-wrap gap-2">
                     <Button type="button" variant="outline" onClick={() => setContacts((current) => [...current, { type: "", value: "" }])}>
-                      + Add Contact
+                      {t(lang, "branch.add_contact", "+ Add Contact")}
                     </Button>
                   </div>
                 </div>
@@ -1241,7 +1254,7 @@ function CountryBranchSetupContent() {
               <section hidden={activeStep !== 7} className="order-7 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
                 <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">5</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 7 - Roles & Permissions</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">{t(lang, "branch.step7_roles_permissions", "Step 7 - Roles & Permissions")}</h2>
                 </div>
                 <PermissionAssignmentSection
                   level="country"
@@ -1250,16 +1263,16 @@ function CountryBranchSetupContent() {
                   onTemplateChange={setPermissionTemplate}
                   onSelectedChange={setPermissionGrants}
                   required
-                  note="Super Admin must grant the Country permissions explicitly before saving."
+                  note={t(lang, "branch.permission_note", "Super Admin must grant the Country permissions explicitly before saving.")}
                 />
               </section>
 
               <div className="flex flex-wrap justify-end gap-2">
                 <Button type="reset" variant="outline" disabled={saving}>
-                  Cancel
+                  {t(lang, "common.cancel", "Cancel")}
                 </Button>
                 <Button type="submit" disabled={saving || Boolean(existingMainBranch && !editingCountryBranchId) || !location.countryId}>
-                  {saving ? "Saving..." : editingCountryBranchId ? "Update" : "Save"}
+                  {saving ? t(lang, "common.saving", "Saving...") : editingCountryBranchId ? t(lang, "branch.update", "Update") : t(lang, "common.save", "Save")}
                 </Button>
               </div>
             </form>
@@ -1268,17 +1281,17 @@ function CountryBranchSetupContent() {
 
         <div className="space-y-4 lg:sticky lg:top-4">
           <BranchLiveReportPanel
-            title="Store Entry (Live Preview)"
-            status={hasAny ? "Draft" : "Empty"}
+            title={t(lang, "branch.store_entry_live_preview", "Store Entry (Live Preview)")}
+            status={hasAny ? t(lang, "branch.status_draft", "Draft") : t(lang, "branch.status_empty", "Empty")}
             branchData={liveBranchData}
             summary={[
-              { label: "Branch", value: branchType || "-" },
-              { label: "Country", value: previewCountry || "-" },
-              { label: "Currency", value: currency || "USD" }
+              { label: t(lang, "branch.summary_branch", "Branch"), value: branchType || "-" },
+              { label: t(lang, "branch.country_code_label", "Country"), value: previewCountry || "-" },
+              { label: t(lang, "branch.currency_label", "Currency"), value: currency || "USD" }
             ]}
             actions={
               <BranchReportActionsMenu
-                ariaLabel="Country branch actions"
+                ariaLabel={t(lang, "branch.country_branch_actions_aria", "Country branch actions")}
                 disabled={!hasAny}
                 onView={viewReport}
                 onEdit={editReport}
@@ -1290,47 +1303,47 @@ function CountryBranchSetupContent() {
             }
             steps={[
               {
-                title: "Step 1 - Company & Owner",
+                title: t(lang, "branch.panel_step1_company_owner", "Step 1 - Company & Owner"),
                 rows: [
-                  { label: "Company Name", value: company?.name || "-" },
-                  { label: "Company Code", value: company?.id ? compactCode(company.id, "CMP") : "-" },
-                  { label: "Legal Name", value: company?.legal_name || "-" },
-                  { label: "Base Currency", value: company?.base_currency || currency || "USD" },
-                  { label: "Owner", value: ownerPreview?.name || ownerName || "-" },
-                  { label: "Owner Code", value: ownerPreview?.code || "-" },
-                  { label: "Source", value: ownerPreview ? ownerPreview.source : "-" },
-                  { label: "Role / Branch", value: ownerPreview ? [ownerPreview.role, ownerPreview.branch].filter(Boolean).join(" · ") : "-" }
+                  { label: t(lang, "branch.company_name_label", "Company Name"), value: company?.name || "-" },
+                  { label: t(lang, "branch.company_code_label", "Company Code"), value: company?.id ? compactCode(company.id, "CMP") : "-" },
+                  { label: t(lang, "branch.legal_name_label", "Legal Name"), value: company?.legal_name || "-" },
+                  { label: t(lang, "branch.base_currency_label", "Base Currency"), value: company?.base_currency || currency || "USD" },
+                  { label: t(lang, "branch.owner_label", "Owner"), value: ownerPreview?.name || ownerName || "-" },
+                  { label: t(lang, "branch.owner_code_label", "Owner Code"), value: ownerPreview?.code || "-" },
+                  { label: t(lang, "branch.source_label", "Source"), value: ownerPreview ? ownerPreview.source : "-" },
+                  { label: t(lang, "branch.role_branch_label", "Role / Branch"), value: ownerPreview ? [ownerPreview.role, ownerPreview.branch].filter(Boolean).join(" · ") : "-" }
                 ]
               },
               {
-                title: "Step 2 - Location",
+                title: t(lang, "branch.panel_step2_location", "Step 2 - Location"),
                 rows: [
-                  { label: "Country", value: previewCountry || "-" },
-                  { label: "Country Code", value: locationMeta.country?.iso2 || locationMeta.country?.iso3 || "-" },
-                  { label: "State", value: locationMeta.state?.name || "-" },
-                  { label: "State Code", value: locationMeta.state?.code || "-" },
-                  { label: "District", value: locationMeta.district?.name || "-" },
-                  { label: "City", value: locationMeta.city?.name || "-" },
-                  { label: "City Code", value: locationMeta.city?.code || "-" },
-                  { label: "Branch Name", value: locationMeta.country?.name ? `${locationMeta.country.name} Main Branch` : "-" },
-                  { label: "Branch Code", value: branchCode || "-" },
-                  { label: "Zip / Postal Code", value: zip || "-" }
+                  { label: t(lang, "branch.country_code_label", "Country"), value: previewCountry || "-" },
+                  { label: t(lang, "branch.country_code_label", "Country Code"), value: locationMeta.country?.iso2 || locationMeta.country?.iso3 || "-" },
+                  { label: t(lang, "branch.state_label", "State"), value: locationMeta.state?.name || "-" },
+                  { label: t(lang, "branch.state_code_label", "State Code"), value: locationMeta.state?.code || "-" },
+                  { label: t(lang, "branch.district_label", "District"), value: locationMeta.district?.name || "-" },
+                  { label: t(lang, "branch.city_label", "City"), value: locationMeta.city?.name || "-" },
+                  { label: t(lang, "branch.city_code_label", "City Code"), value: locationMeta.city?.code || "-" },
+                  { label: t(lang, "branch.branch_name_label", "Branch Name"), value: locationMeta.country?.name ? `${locationMeta.country.name} Main Branch` : "-" },
+                  { label: t(lang, "branch.branch_code_label", "Branch Code"), value: branchCode || "-" },
+                  { label: t(lang, "branch.zip_postal_code", "Zip / Postal Code"), value: zip || "-" }
                 ]
               },
               {
-                title: "Step 3 - Contact & Address",
+                title: t(lang, "branch.panel_step3_contact_address", "Step 3 - Contact & Address"),
                 rows: [
-                  { label: "Currency", value: currency || "USD" },
-                  { label: "Address", value: fullAddress || "-" },
-                  { label: "Contacts", value: contactItems.length ? contactItems.join(", ") : "-" }
+                  { label: t(lang, "branch.currency_label", "Currency"), value: currency || "USD" },
+                  { label: t(lang, "branch.address_label", "Address"), value: fullAddress || "-" },
+                  { label: t(lang, "branch.contacts_label", "Contacts"), value: contactItems.length ? contactItems.join(", ") : "-" }
                 ]
               },
               {
-                title: "Step 4 - Roles & Permissions",
+                title: t(lang, "branch.panel_step4_roles_permissions", "Step 4 - Roles & Permissions"),
                 rows: [
-                  { label: "Role Template", value: permissionTemplate || "-" },
-                  { label: "Permission Count", value: String(permissionGrants.length) },
-                  { label: "Permissions", value: permissionGrants.length ? permissionGrants.join(", ") : "-" }
+                  { label: t(lang, "branch.role_template_label", "Role Template"), value: permissionTemplate || "-" },
+                  { label: t(lang, "branch.permission_count_label", "Permission Count"), value: String(permissionGrants.length) },
+                  { label: t(lang, "branch.permissions_label", "Permissions"), value: permissionGrants.length ? permissionGrants.join(", ") : "-" }
                 ]
               }
             ]}
@@ -1338,8 +1351,8 @@ function CountryBranchSetupContent() {
               <div className="space-y-3">
                 {editingCountryBranchId ? (
                   <BranchRecordProfile
-                    title="Editing Existing Branch"
-                    subtitle="Saved data, completed fields, and missing information."
+                    title={t(lang, "branch.editing_existing_branch_title", "Editing Existing Branch")}
+                    subtitle={t(lang, "branch.editing_existing_branch_subtitle", "Saved data, completed fields, and missing information.")}
                     identity={editIdentityRows}
                     sections={editProfileSections}
                   />
@@ -1348,7 +1361,7 @@ function CountryBranchSetupContent() {
                   <>
                     {existingMainBranch ? (
                       <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-200">
-                        A main branch already exists for this country: <b>{existingMainBranch.name}</b> ({existingMainBranch.code})
+                        {t(lang, "branch.main_branch_exists_prefix", "A main branch already exists for this country:")} <b>{existingMainBranch.name}</b> ({existingMainBranch.code})
                         <Button
                           type="button"
                           size="sm"
@@ -1357,21 +1370,21 @@ function CountryBranchSetupContent() {
                           onClick={() => beginEditCountryBranch(existingMainBranch)}
                         >
                           <Pencil className="h-3.5 w-3.5" aria-hidden />
-                          Edit Existing
+                          {t(lang, "branch.edit_existing", "Edit Existing")}
                         </Button>
                       </div>
                     ) : null}
 
                     <details className="border-t pt-2">
-                      <summary className="cursor-pointer text-sm font-semibold text-foreground">Saved Country Main Branches</summary>
+                      <summary className="cursor-pointer text-sm font-semibold text-foreground">{t(lang, "branch.saved_country_main_branches", "Saved Country Main Branches")}</summary>
                       {!location.countryId ? (
-                        <p className="mt-2 text-xs text-muted-foreground">Select a country to load saved branches.</p>
+                        <p className="mt-2 text-xs text-muted-foreground">{t(lang, "branch.select_country_load_saved", "Select a country to load saved branches.")}</p>
                       ) : countryBranches.length ? (
                         <div className="mt-2 space-y-2">
                           <Input
                             value={countryBranchSearch}
                             onChange={(event) => setCountryBranchSearch(event.target.value)}
-                            placeholder="Search branches"
+                            placeholder={t(lang, "branch.search_branches", "Search branches")}
                           />
                           <ul className="space-y-2 text-xs text-muted-foreground">
                             {filteredCountryBranches.slice(0, 6).map((b) => (
@@ -1384,22 +1397,22 @@ function CountryBranchSetupContent() {
                                 <div className="flex items-center gap-2">
                                   <Button type="button" size="sm" variant="outline" className="h-7" onClick={() => viewSavedBranch(b)}>
                                     <Eye className="h-3.5 w-3.5" aria-hidden />
-                                    View
+                                    {t(lang, "branch.view", "View")}
                                   </Button>
                                   <Button type="button" size="sm" variant="outline" className="h-7" onClick={() => beginEditCountryBranch(b)}>
                                     <Pencil className="h-3.5 w-3.5" aria-hidden />
-                                    Edit
+                                    {t(lang, "branch.edit", "Edit")}
                                   </Button>
                                 </div>
                               </li>
                             ))}
                             {filteredCountryBranches.length > 6 ? (
-                              <li className="text-xs text-muted-foreground">+{filteredCountryBranches.length - 6} more...</li>
+                              <li className="text-xs text-muted-foreground">+{filteredCountryBranches.length - 6} {t(lang, "branch.more_suffix", "more...")}</li>
                             ) : null}
                           </ul>
                         </div>
                       ) : (
-                        <p className="mt-2 text-xs text-muted-foreground">No saved branches for this country yet.</p>
+                        <p className="mt-2 text-xs text-muted-foreground">{t(lang, "branch.no_saved_branches", "No saved branches for this country yet.")}</p>
                       )}
                     </details>
                   </>
@@ -1413,12 +1426,12 @@ function CountryBranchSetupContent() {
       <DetailDrawer
         isOpen={drawerBranchData !== null}
         onClose={() => setDrawerBranchData(null)}
-        title="Country Branch Details"
-        subtitle="Verification certificate and branch permissions"
+        title={t(lang, "branch.country_branch_details_title", "Country Branch Details")}
+        subtitle={t(lang, "branch.verification_cert_subtitle", "Verification certificate and branch permissions")}
       >
         {drawerBranchData && (
           <BranchLiveReportPanel
-            title="Saved Country Branch"
+            title={t(lang, "branch.saved_country_branch", "Saved Country Branch")}
             status={drawerBranchData.branchStatus}
             branchData={drawerBranchData}
           />
