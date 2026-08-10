@@ -27,7 +27,8 @@ if (!env.DATABASE_URL) {
 const migrations = [
   { name: "20260812_roznamcha_posting_idempotency_and_category", path: "supabase/migrations/20260812_roznamcha_posting_idempotency_and_category.sql" },
   { name: "20260814_per_language_tables", path: "supabase/migrations/20260814_per_language_tables.sql" },
-  { name: "20260815_fix_cash_entry_and_daily_rate_rpcs", path: "supabase/migrations/20260815_fix_cash_entry_and_daily_rate_rpcs.sql" }
+  { name: "20260815_fix_cash_entry_and_daily_rate_rpcs", path: "supabase/migrations/20260815_fix_cash_entry_and_daily_rate_rpcs.sql" },
+  { name: "20260816_fix_per_language_resolution", path: "supabase/migrations/20260816_fix_per_language_resolution.sql" }
 ];
 
 const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false, connect_timeout: 60 });

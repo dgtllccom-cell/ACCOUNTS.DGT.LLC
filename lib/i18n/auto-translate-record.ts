@@ -71,10 +71,10 @@ const localTermDictionary: Record<string, Record<SupportedLanguage, string>> = {
   "roznamcha": { en: "Roznamcha Entry", ur: "روزنامچہ اندراج", ar: "قيد روزنامجة", fa: "ثبت روزنامه", ps: "د روزنامچې لیکل" }
 };
 
-/**
- * Generates local 5-language translations for any input record field
- * using the built-in offline terminology engine.
- */
+import { transliterateProperNoun } from "@/lib/i18n/transliteration";
+
+const ARABIC_SCRIPT_REGEX = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFE]/;
+
 export function generateLocalTranslations(inputText: string | null | undefined): RecordTranslations {
   const raw = (inputText || "").trim();
   if (!raw) {
@@ -95,13 +95,24 @@ export function generateLocalTranslations(inputText: string | null | undefined):
     }
   }
 
-  // 3. Fallback: Provide safe localized wrappers
+  // 3. Script-aware local transliteration generator
+  const isArabic = ARABIC_SCRIPT_REGEX.test(raw);
+  if (isArabic) {
+    return {
+      en: transliterateProperNoun(raw, "en") || raw,
+      ur: raw,
+      ar: raw,
+      fa: raw,
+      ps: raw
+    };
+  }
+
   return {
     en: raw,
-    ur: raw,
-    ar: raw,
-    fa: raw,
-    ps: raw
+    ur: transliterateProperNoun(raw, "ur"),
+    ar: transliterateProperNoun(raw, "ar"),
+    fa: transliterateProperNoun(raw, "fa"),
+    ps: transliterateProperNoun(raw, "ps")
   };
 }
 

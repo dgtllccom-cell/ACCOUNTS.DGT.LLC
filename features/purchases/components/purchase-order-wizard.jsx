@@ -1472,6 +1472,12 @@ export function PurchaseOrderWizard({ session }) {
             // Retain PO/Contract identification numbers
             purchaseOrderNo: poNumber,
             purchaseContractNo: contractNumber,
+            // 5-language business-data record computed server-side on save (see
+            // saveEnterpriseRecordTranslations calls in the orders API routes) — a sibling of
+            // `form` inside form_data, not part of the saved form itself. Read by localizeBiz()
+            // so Complete Summary / Voucher / Print show the stored translation for the active
+            // language instead of always the raw English/entry-language text.
+            translations: rawFormData.translations || prev.translations || null,
           }));
           setScopeConfirmed(true);
 
@@ -3513,36 +3519,23 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <select
                   value={form.countryId}
                   onChange={(e) => {
-                    const countryList = (countries && countries.length > 0) ? countries : [
-                      { id: "c-uae-1001", name: "United Arab Emirates", currency_code: "AED" },
-                      { id: "c-pk-1002", name: "Pakistan", currency_code: "PKR" },
-                      { id: "c-in-1003", name: "India", currency_code: "INR" },
-                      { id: "c-af-1004", name: "Afghanistan", currency_code: "AFN" },
-                      { id: "c-ir-1005", name: "Iran", currency_code: "IRR" }
-                    ];
-                    const country = countryList.find(c => c.id === e.target.value);
+                    const country = (countries || []).find(c => c.id === e.target.value);
                     setForm(p => ({
                       ...p,
                       countryId: e.target.value,
                       countryBranchId: "",
                       cityBranchId: "",
                       currencyType: "USD",
-                      purchaseCurrency: country ? country.currency_code : p.purchaseCurrency,
-                      secondaryCurrency: country ? country.currency_code : p.secondaryCurrency,
-                      paymentCurrency: country ? country.currency_code : p.paymentCurrency
+                      purchaseCurrency: country ? (country.currency_code || country.currencyCode) : p.purchaseCurrency,
+                      secondaryCurrency: country ? (country.currency_code || country.currencyCode) : p.secondaryCurrency,
+                      paymentCurrency: country ? (country.currency_code || country.currencyCode) : p.paymentCurrency
                     }));
                   }}
                   className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
                 >
                   <option value="">{t(lang, "purchase.select_country_ellipsis", "Select Country...")}</option>
-                  {((countries && countries.length > 0) ? countries : [
-                    { id: "c-uae-1001", name: "United Arab Emirates", currency_code: "AED" },
-                    { id: "c-pk-1002", name: "Pakistan", currency_code: "PKR" },
-                    { id: "c-in-1003", name: "India", currency_code: "INR" },
-                    { id: "c-af-1004", name: "Afghanistan", currency_code: "AFN" },
-                    { id: "c-ir-1005", name: "Iran", currency_code: "IRR" }
-                  ]).map((c) => (
-                    <option key={c.id} value={c.id}>{c.name} ({c.currency_code})</option>
+                  {(countries || []).map((c) => (
+                    <option key={c.id} value={c.id}>{c.name} ({c.currency_code || c.currencyCode || "USD"})</option>
                   ))}
                 </select>
               </div>
@@ -3787,7 +3780,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         [t(lang, "purchase.purchase_account_report", "Purchase Account Report"), ArrowDownLeft, t(lang, "purchase.dr_debit", "DR (DEBIT)"), [
                           [t(lang, "purchase.f_account_code", "Account Code"), form.purchaseAccountNo || "-"],
                           [t(lang, "purchase.f_manual_account_no", "Manual Account No"), form.purchaseAccountManualReferenceNumber || "-"],
-                          [t(lang, "purchase.f_account_name", "Account Name"), form.purchaseAccountName || "-"],
+                          [t(lang, "purchase.f_account_name", "Account Name"), localizeBiz(form, lang, "purchaseAccountName", form.purchaseAccountName || "-")],
                           [t(lang, "purchase.f_company", "Company"), form.purchaseCompanyName || "-"],
                           [t(lang, "purchase.f_contact_person", "Contact Person"), supplierDetail?.contact_person || supplierDetail?.customer_name || "-"],
                           [t(lang, "purchase.f_mobile_number", "Mobile Number"), form.purchaseAccountMobile || supplierDetail?.mobile || "-"],
@@ -3799,7 +3792,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         [t(lang, "purchase.sales_account_report", "Sales Account Report"), ArrowUpRight, t(lang, "purchase.cr_credit", "CR (CREDIT)"), [
                           [t(lang, "purchase.f_account_code", "Account Code"), form.salesAccountNo || "-"],
                           [t(lang, "purchase.f_manual_account_no", "Manual Account No"), form.salesAccountManualReferenceNumber || "-"],
-                          [t(lang, "purchase.f_account_name", "Account Name"), form.salesAccountName || "-"],
+                          [t(lang, "purchase.f_account_name", "Account Name"), localizeBiz(form, lang, "salesAccountName", form.salesAccountName || "-")],
                           [t(lang, "purchase.f_company", "Company"), form.salesCompanyName || "-"],
                           [t(lang, "purchase.f_contact_person", "Contact Person"), customerDetail?.contact_person || customerDetail?.customer_name || "-"],
                           [t(lang, "purchase.f_mobile_number", "Mobile Number"), form.salesAccountMobile || customerDetail?.mobile || "-"],
@@ -5231,7 +5224,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 </div>
                 <div className="grid grid-cols-[100px_1fr] gap-1.5 text-xs">
                   <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_account_code", "Account Code")}:</span><span className="font-mono font-bold text-slate-900">{form.purchaseAccountNo || "N/A"}</span>
-                  <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_account_name", "Account Name")}:</span><span className="font-bold text-slate-900">{form.purchaseAccountName || "N/A"}</span>
+                  <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_account_name", "Account Name")}:</span><span className="font-bold text-slate-900">{localizeBiz(form, lang, "purchaseAccountName", form.purchaseAccountName || "N/A")}</span>
                   <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_company", "Company")}:</span><span className="font-bold text-slate-800">{form.purchaseCompanyName || "N/A"}</span>
                 </div>
               </div>
@@ -5245,7 +5238,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 </div>
                 <div className="grid grid-cols-[100px_1fr] gap-1.5 text-xs">
                   <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_account_code", "Account Code")}:</span><span className="font-mono font-bold text-slate-900">{form.salesAccountNo || "N/A"}</span>
-                  <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_account_name", "Account Name")}:</span><span className="font-bold text-slate-900">{form.salesAccountName || "N/A"}</span>
+                  <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_account_name", "Account Name")}:</span><span className="font-bold text-slate-900">{localizeBiz(form, lang, "salesAccountName", form.salesAccountName || "N/A")}</span>
                   <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_company", "Company")}:</span><span className="font-bold text-slate-800">{form.salesCompanyName || "N/A"}</span>
                 </div>
               </div>
@@ -5312,7 +5305,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     <span className="font-bold text-blue-700 uppercase text-[9px] bg-blue-100 px-2 py-0.5 rounded">{t(lang, "purchase.purchase_account_dr_badge", "Purchase Account (DR)")}</span>
                     <span className="text-slate-600 font-mono font-bold">{form.purchaseAccountNo || "N/A"}</span>
                   </div>
-                  <div className="font-bold text-slate-900 text-xs truncate" title={form.purchaseAccountName}>{form.purchaseAccountName || "N/A"}</div>
+                  <div className="font-bold text-slate-900 text-xs truncate" title={form.purchaseAccountName}>{localizeBiz(form, lang, "purchaseAccountName", form.purchaseAccountName || "N/A")}</div>
                   <div className="flex justify-between text-[10px] text-slate-500">
                     <span>{t(lang, "purchase.branch_colon_label", "Branch:")} <strong className="text-slate-700">{form.purchaseAccountBranch || "-"}</strong></span>
                     <span>{t(lang, "purchase.currency_colon_label", "Currency:")} <strong className="text-slate-700">{form.purchaseCurrency || form.purchaseAccountCurrency || "-"}</strong></span>
@@ -5324,7 +5317,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     <span className="font-bold text-emerald-700 uppercase text-[9px] bg-emerald-100 px-2 py-0.5 rounded">{t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}</span>
                     <span className="text-slate-600 font-mono font-bold">{form.salesAccountNo || "N/A"}</span>
                   </div>
-                  <div className="font-bold text-slate-900 text-xs truncate" title={form.salesAccountName}>{form.salesAccountName || "N/A"}</div>
+                  <div className="font-bold text-slate-900 text-xs truncate" title={form.salesAccountName}>{localizeBiz(form, lang, "salesAccountName", form.salesAccountName || "N/A")}</div>
                   <div className="flex justify-between text-[10px] text-slate-500">
                     <span>{t(lang, "purchase.branch_colon_label", "Branch:")} <strong className="text-slate-700">{form.salesAccountBranch || "-"}</strong></span>
                     <span>{t(lang, "purchase.currency_colon_label", "Currency:")} <strong className="text-slate-700">{form.salesAccountCurrency || "-"}</strong></span>
@@ -5561,7 +5554,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.purchase_account_dr_badge", "Purchase Account (DR)")}</h3>
                     <div className="grid grid-cols-[80px_1fr] gap-1">
                       <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_account_code", "Account Code")}:</span><span className="font-bold">{form.purchaseAccountNo || "N/A"}</span>
-                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_account_name", "Account Name")}:</span><span className="font-bold">{form.purchaseAccountName || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_account_name", "Account Name")}:</span><span className="font-bold">{localizeBiz(form, lang, "purchaseAccountName", form.purchaseAccountName || "N/A")}</span>
                       <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_company", "Company")}:</span><span className="font-bold">{form.purchaseCompanyName || "N/A"}</span>
                     </div>
                   </div>
@@ -5569,7 +5562,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}</h3>
                     <div className="grid grid-cols-[80px_1fr] gap-1">
                       <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_account_code", "Account Code")}:</span><span className="font-bold">{form.salesAccountNo || "N/A"}</span>
-                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_account_name", "Account Name")}:</span><span className="font-bold">{form.salesAccountName || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_account_name", "Account Name")}:</span><span className="font-bold">{localizeBiz(form, lang, "salesAccountName", form.salesAccountName || "N/A")}</span>
                       <span className="text-slate-500 font-semibold">{t(lang, "purchase.f_company", "Company")}:</span><span className="font-bold">{form.salesCompanyName || "N/A"}</span>
                     </div>
                   </div>
@@ -5662,7 +5655,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 {form.remarks && (
                   <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
                     <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.remarks_narration_title", "Remarks & Narration")}</h3>
-                    <p className="whitespace-pre-wrap font-medium text-slate-800">{form.remarks}</p>
+                    <p className="whitespace-pre-wrap font-medium text-slate-800">{localizeBiz(form, lang, "remarks", form.remarks)}</p>
                   </div>
                 )}
 
@@ -5670,7 +5663,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 {form.orderReportRemarks && (
                   <div className="mb-4 border border-slate-300 rounded p-3 text-[10px]">
                     <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.user_remarks_report_title", "User Remarks (Report)")}</h3>
-                    <p className="whitespace-pre-wrap font-medium text-slate-800">{form.orderReportRemarks}</p>
+                    <p className="whitespace-pre-wrap font-medium text-slate-800">{localizeBiz(form, lang, "remarks", form.orderReportRemarks)}</p>
                   </div>
                 )}
 
