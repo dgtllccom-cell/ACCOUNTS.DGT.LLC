@@ -2039,77 +2039,7 @@ export function CashEntryForm({
           Totals for the selected Country + Branch + Date, sourced from the
           get_branch_cash_summary DB function; auto-refreshes after each save.
       ============================================================ */}
-      <div className="mx-4 mt-4 mb-3">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            {t(lang, "roz.daily_cash_position", "Daily Cash Position")}
-            <span className="ml-2 font-semibold text-slate-400 normal-case tracking-normal">
-              {selectedCountry?.name || (isSuperAdmin ? t(lang, "roz.select_a_country", "Select a country") : "—")}
-              {selectedMainBranch?.name ? ` · ${selectedMainBranch.name}` : ""}
-              {entryDate ? ` · ${entryDate.split("-").reverse().join("/")}` : ""}
-            </span>
-          </h3>
-          <button
-            type="button"
-            onClick={() => { fetchCashSummary(); fetchDailyRate(); }}
-            disabled={loadingSummary || !countryId}
-            className="inline-flex items-center gap-1 text-[10px] font-bold text-blue-600 hover:text-blue-700 disabled:opacity-50"
-          >
-            <RefreshCw className={cn("h-3 w-3", loadingSummary ? "animate-spin" : "")} />
-            {t(lang, "common.refresh", "Refresh")}
-          </button>
-        </div>
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-          {/* Total Credit (Money Paid) — green, matching the Ledger (Cr = green) */}
-          <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-3 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/20">
-            <div className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-300">{t(lang, "roz.total_credit_label", "Total Credit")} <span className="font-semibold normal-case tracking-normal opacity-70">{t(lang, "roz.money_paid", "(Money Paid)")}</span></div>
-            <div className="mt-1 text-lg font-black text-emerald-700 dark:text-emerald-200 tabular-nums">
-              {loadingSummary ? "…" : fmtAmount(cashSummary?.totalCredit ?? 0)}
-            </div>
-          </div>
-          {/* Total Debit (Money Received) — red, matching the Ledger (Dr = red) */}
-          <div className="rounded-xl border border-rose-200 bg-rose-50/60 p-3 shadow-sm dark:border-rose-900/50 dark:bg-rose-950/20">
-            <div className="text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-300">{t(lang, "roz.total_debit_label", "Total Debit")} <span className="font-semibold normal-case tracking-normal opacity-70">{t(lang, "roz.money_received", "(Money Received)")}</span></div>
-            <div className="mt-1 text-lg font-black text-rose-700 dark:text-rose-200 tabular-nums">
-              {loadingSummary ? "…" : fmtAmount(cashSummary?.totalDebit ?? 0)}
-            </div>
-          </div>
-          {/* Current Balance = Credit - Debit (Cr positive) */}
-          <div className="rounded-xl border border-blue-200 bg-blue-50/60 p-3 shadow-sm dark:border-blue-900/50 dark:bg-blue-950/20">
-            <div className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-300">{t(lang, "roz.current_balance", "Current Balance")}</div>
-            <div className="mt-1 text-lg font-black text-blue-700 dark:text-blue-200 tabular-nums">
-              {loadingSummary ? "…" : fmtAmount(cashSummary?.balance ?? 0)}
-              <span className="ml-1 text-[10px] font-bold uppercase">{cashSummary?.balanceType && cashSummary.balanceType !== "-" ? cashSummary.balanceType : ""}</span>
-            </div>
-          </div>
-          {/* Total Entries */}
-          <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
-            <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">{t(lang, "roz.total_entries", "Total Entries")}</div>
-            <div className="mt-1 text-lg font-black text-slate-800 dark:text-slate-100 tabular-nums">
-              {loadingSummary ? "…" : (cashSummary?.entryCount ?? 0)}
-            </div>
-          </div>
-        </div>
-        {/* Daily exchange rate strip (auto from Daily Exchange Rate module) */}
-        <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] font-semibold">
-          <span className="text-slate-400 uppercase tracking-wider font-black">{t(lang, "roz.daily_rate", "Daily Rate:")}</span>
-          {loadingDailyRate ? (
-            <span className="text-slate-400">…</span>
-          ) : dailyRate?.found ? (
-            <>
-              <span className="rounded bg-emerald-50 border border-emerald-100 px-2 py-0.5 text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-900 dark:text-emerald-300">{t(lang, "roz.buying", "Buying:")} <b>{dailyRate.buyingRate ?? "—"}</b></span>
-              <span className="rounded bg-rose-50 border border-rose-100 px-2 py-0.5 text-rose-700 dark:bg-rose-950/40 dark:border-rose-900 dark:text-rose-300">{t(lang, "roz.selling", "Selling:")} <b>{dailyRate.sellingRate ?? "—"}</b></span>
-              <span className="rounded bg-slate-50 border border-slate-200 px-2 py-0.5 text-slate-600 dark:bg-slate-900 dark:border-slate-800">{t(lang, "roz.debit_rate", "Debit Rate:")} <b>{dailyRate.debitRate ?? "—"}</b></span>
-              <span className="rounded bg-slate-50 border border-slate-200 px-2 py-0.5 text-slate-600 dark:bg-slate-900 dark:border-slate-800">{t(lang, "roz.credit_rate", "Credit Rate:")} <b>{dailyRate.creditRate ?? "—"}</b></span>
-              {dailyRate.isExactDate === false ? (
-                <span className="text-amber-600 dark:text-amber-400" title="No rate entered for this exact date; showing the most recent prior rate.">{t(lang, "roz.latest_available", "(latest available)")}</span>
-              ) : null}
-            </>
-          ) : (
-            <span className="text-amber-600 dark:text-amber-400">{t(lang, "roz.rate_not_entered", "Not entered yet for this country/branch/date — set it in the Daily Exchange Rate module.")}</span>
-          )}
-        </div>
-      </div>
+
 
       {/* Horizontal Scope & Session Grid */}
       <div className="mx-4 mt-4 mb-3 bg-white border border-slate-200 rounded-xl p-4 shadow-sm dark:bg-slate-900 dark:border-slate-800 flex flex-col lg:flex-row lg:items-start justify-between gap-6">
@@ -2300,6 +2230,55 @@ export function CashEntryForm({
               <span className="font-extrabold text-emerald-600 dark:text-emerald-400 font-mono">
                 {(savedSerials as any)?.entrySerial || liveSerials.entrySerial}
                 {!(savedSerials as any)?.entrySerial && <span className="ml-1 text-[8px] font-bold uppercase tracking-wide text-emerald-500/70 font-sans">{t(lang, "roz.next_label", "(Next)")}</span>}
+              </span>
+            </div>
+          </div>
+          
+          {/* Group 4: Compact Daily Cash Summary (Report Format in Header Curtain) */}
+          <div className="flex flex-col gap-2 rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 dark:border-slate-800 dark:bg-slate-950/60 min-w-[230px] shadow-xs">
+            <div className="flex items-center justify-between border-b border-slate-200/80 pb-2 mb-1 dark:border-slate-800">
+              <span className="text-[10.5px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                <FileText className="h-3.5 w-3.5 text-blue-600" />
+                {t(lang, "roz.daily_cash_position", "Daily Cash Position")}
+              </span>
+              <button
+                type="button"
+                onClick={() => { fetchCashSummary(); fetchDailyRate(); }}
+                disabled={loadingSummary || !countryId}
+                className="text-[9.5px] font-bold text-blue-600 hover:text-blue-700 disabled:opacity-50 inline-flex items-center gap-1"
+              >
+                <RefreshCw className={cn("h-3 w-3", loadingSummary ? "animate-spin" : "")} />
+                {t(lang, "common.refresh", "Refresh")}
+              </button>
+            </div>
+
+            <div className="grid grid-cols-[110px_1fr] gap-x-2 gap-y-1.5 text-xs font-semibold">
+              <span className="text-[10px] font-black uppercase tracking-wider text-emerald-600 dark:text-emerald-400 text-right self-center">
+                {t(lang, "roz.total_credit_label", "Total Credit")}
+              </span>
+              <span className="font-extrabold text-emerald-700 dark:text-emerald-300 font-mono text-right tabular-nums text-sm">
+                {loadingSummary ? "…" : fmtAmount(cashSummary?.totalCredit ?? 0)}
+              </span>
+
+              <span className="text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 text-right self-center">
+                {t(lang, "roz.total_debit_label", "Total Debit")}
+              </span>
+              <span className="font-extrabold text-rose-700 dark:text-rose-300 font-mono text-right tabular-nums text-sm">
+                {loadingSummary ? "…" : fmtAmount(cashSummary?.totalDebit ?? 0)}
+              </span>
+
+              <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 text-right self-center">
+                {t(lang, "roz.current_balance", "Current Balance")}
+              </span>
+              <span className="font-extrabold text-blue-700 dark:text-blue-300 font-mono text-right tabular-nums text-sm">
+                {loadingSummary ? "…" : fmtAmount(cashSummary?.balance ?? 0)}
+              </span>
+
+              <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 text-right self-center">
+                {t(lang, "roz.total_entries", "Total Entries")}
+              </span>
+              <span className="font-extrabold text-slate-800 dark:text-slate-100 font-mono text-right tabular-nums text-sm">
+                {loadingSummary ? "…" : (cashSummary?.entryCount ?? 0)}
               </span>
             </div>
           </div>

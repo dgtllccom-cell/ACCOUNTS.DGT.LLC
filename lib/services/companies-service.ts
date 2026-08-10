@@ -148,37 +148,39 @@ export class CompaniesService {
 
     if (!values.length) return;
 
+    // record_translations is a VIEW (fanning out to 5 per-language tables), not a base table.
+    // A plain PostgREST .update()-then-.insert() against it is unreliable for the same reason
+    // documented in customers-service.ts (confirmed via direct DB inspection: existing company
+    // records had zero translation rows despite this code path running). Route through the
+    // proven upsert_record_translation RPC instead, which correctly handles the view's PARTIAL
+    // unique index (WHERE deleted_at IS NULL).
     for (const row of values) {
-      const { data: updated, error: updateError } = await supabase
-        .from("record_translations")
-        .update({
-          original_text: row.original_text,
-          original_language_code: row.original_language_code,
-          english_text: row.english_text,
-          arabic_text: row.arabic_text,
-          urdu_text: row.urdu_text,
-          persian_text: row.persian_text,
-          pashto_text: row.pashto_text,
-          source: row.source,
-          corrected_by: row.corrected_by,
-          corrected_at: row.corrected_at,
-          updated_at: row.updated_at
-        })
-        .eq("record_table", row.record_table)
-        .eq("record_id", row.record_id)
-        .eq("field_name", row.field_name)
-        .is("deleted_at", null)
-        .select("id");
+      const { error: rpcError } = await supabase.rpc("upsert_record_translation", {
+        p_record_table: row.record_table,
+        p_record_id: row.record_id,
+        p_field_name: row.field_name,
+        p_original_text: row.original_text,
+        p_original_language_code: row.original_language_code,
+        p_english: row.english_text,
+        p_urdu: row.urdu_text,
+        p_arabic: row.arabic_text,
+        p_persian: row.persian_text,
+        p_pashto: row.pashto_text,
+        p_language_texts: {
+          en: row.english_text,
+          ur: row.urdu_text,
+          ar: row.arabic_text,
+          fa: row.persian_text,
+          ps: row.pashto_text
+        },
+        p_source: row.source,
+        p_translation_status: "complete",
+        p_translated_by_engine: "local_dictionary",
+        p_actor_id: row.corrected_by
+      });
 
-      if (updateError) {
-        throw new Error(updateError.message);
-      }
-
-      if (Array.isArray(updated) && updated.length) continue;
-
-      const { error: insertError } = await supabase.from("record_translations").insert(row);
-      if (insertError) {
-        throw new Error(insertError.message);
+      if (rpcError) {
+        throw new Error(rpcError.message);
       }
     }
   }

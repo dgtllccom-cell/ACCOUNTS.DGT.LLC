@@ -289,20 +289,6 @@ export const sidebarTree: SidebarNode[] = [
             ]
           },
           {
-            key: "roz-daily-expenses-bill-direct",
-            labelKey: "nav.daily_operational_expenses",
-            iconKey: "receipt",
-            href: "/dashboard/roznamcha/daily-expenses-bill" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-          },
-          {
-            key: "roz-expenses-bill-direct",
-            labelKey: "nav.office_home_expenses_bill",
-            iconKey: "receipt",
-            href: "/dashboard/roznamcha/expenses-bill" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-          },
-          {
             key: "roznamcha",
             labelKey: "nav.roznamcha",
             iconKey: "scroll-text",

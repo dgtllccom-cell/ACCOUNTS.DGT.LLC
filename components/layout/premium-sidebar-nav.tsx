@@ -21,35 +21,7 @@ import { SidebarIcon } from "@/components/layout/sidebar-icon";
  * phase are highlighted in red so they are easy to spot. Remove this Set + the
  * `isChanged` usage below to restore normal colors — no other change needed.
  */
-const CHANGED_KEYS = new Set<string>([
-  // Recently added & updated features
-  "inter-country-trade",
-  "inter-country-booking",
-  "inter-country-transfer-payment",
-  "inter-country-verification",
-  "receiving-country-workflow",
-  "roz-expenses-bill-direct",
-  "roz-expenses-bill",
-  "local-purchase-management",
-  "branch-purchase-management",
-  "local-branch-purchase-management",
-  "country-purchase-management",
-  "local-purchase",
-  "purchase-transfer-verification",
-  "local-goods-received",
-  "mgmt-location-workspace",
-  "mgmt-company",
-  "mgmt-employees",
-  "mgmt-product-units",
-  "mgmt-product-brands",
-  "mgmt-product-categories",
-  "mgmt-warehouses",
-  "mgmt-bank",
-  "mgmt-goods-master",
-  "roz-money-exchange",
-  "purchase",
-  "sales"
-]);
+const CHANGED_KEYS = new Set<string>([]);
 
 function isPathMatch(href: string, pathname: string) {
   if (!href) return false;
