@@ -58,10 +58,20 @@ export default function CustomerOrderPage() {
         portRes.json(),
       ]);
 
-      if (ordData.success) setOrders(ordData.data || []);
-      if (custData.success) setCustomers(custData.data || []);
-      if (ctyData.success) setCountries(ctyData.data || []);
-      if (portData.success) setPorts(portData.data || []);
+      const extractArray = (json: any, keys: string[]) => {
+        if (!json) return [];
+        if (Array.isArray(json)) return json;
+        if (Array.isArray(json.data)) return json.data;
+        for (const k of keys) {
+          if (Array.isArray(json[k])) return json[k];
+        }
+        return [];
+      };
+
+      setOrders(extractArray(ordData, ["orders", "entries", "data"]));
+      setCustomers(extractArray(custData, ["customers", "data"]));
+      setCountries(extractArray(ctyData, ["countries", "data"]));
+      setPorts(extractArray(portData, ["ports", "data"]));
     } catch (err) {
       console.error("Error loading master data:", err);
     } finally {
@@ -70,7 +80,7 @@ export default function CustomerOrderPage() {
   };
 
   const handleCustomerChange = (customerId: string) => {
-    const cust = customers.find((c) => c.id === customerId);
+    const cust = (customers || []).find((c) => c.id === customerId);
     setFormData((prev) => ({
       ...prev,
       customer_id: customerId,
@@ -79,7 +89,7 @@ export default function CustomerOrderPage() {
   };
 
   const handleLoadingCountryChange = (countryId: string) => {
-    const c = countries.find((item) => item.id === countryId);
+    const c = (countries || []).find((item) => item.id === countryId);
     setFormData((prev) => ({
       ...prev,
       loading_country_id: countryId,
@@ -88,7 +98,7 @@ export default function CustomerOrderPage() {
   };
 
   const handleReceivingCountryChange = (countryId: string) => {
-    const c = countries.find((item) => item.id === countryId);
+    const c = (countries || []).find((item) => item.id === countryId);
     setFormData((prev) => ({
       ...prev,
       receiving_country_id: countryId,
@@ -97,7 +107,7 @@ export default function CustomerOrderPage() {
   };
 
   const handleLoadingPortChange = (portId: string) => {
-    const p = ports.find((item) => item.id === portId);
+    const p = (ports || []).find((item) => item.id === portId);
     setFormData((prev) => ({
       ...prev,
       loading_port_id: portId,
@@ -211,7 +221,7 @@ export default function CustomerOrderPage() {
             {/* Customer */}
             <div>
               <label className="block text-xs font-semibold text-slate-300 mb-2">Customer Selection *</label>
-              {customers.length > 0 ? (
+              {(customers || []).length > 0 ? (
                 <select
                   value={formData.customer_id}
                   onChange={(e) => handleCustomerChange(e.target.value)}
@@ -219,7 +229,7 @@ export default function CustomerOrderPage() {
                   required
                 >
                   <option value="">Select Registered Customer</option>
-                  {customers.map((c) => (
+                  {(customers || []).map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.customer_name || c.company_name}
                     </option>
@@ -341,7 +351,7 @@ export default function CustomerOrderPage() {
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500"
               >
                 <option value="">Select Loading Country</option>
-                {countries.map((c) => (
+                {(countries || []).map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
                   </option>
@@ -358,7 +368,7 @@ export default function CustomerOrderPage() {
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500"
               >
                 <option value="">Select Receiving Country</option>
-                {countries.map((c) => (
+                {(countries || []).map((c) => (
                   <option key={c.id} value={c.id}>
                     {c.name}
                   </option>
@@ -375,7 +385,7 @@ export default function CustomerOrderPage() {
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500"
               >
                 <option value="">Select Loading Port</option>
-                {ports.map((p) => (
+                {(ports || []).map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.port_name}
                   </option>
@@ -392,7 +402,7 @@ export default function CustomerOrderPage() {
                 className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-slate-200 text-sm focus:outline-none focus:border-indigo-500"
               >
                 <option value="">Select Destination Port</option>
-                {ports.map((p) => (
+                {(ports || []).map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.port_name}
                   </option>
@@ -429,11 +439,11 @@ export default function CustomerOrderPage() {
         {/* Existing Customer Orders Register */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-lg space-y-4">
           <div className="flex items-center justify-between border-b border-slate-800 pb-4">
-            <h2 className="text-lg font-semibold text-white">Registered Customer Orders ({orders.length})</h2>
+            <h2 className="text-lg font-semibold text-white">Registered Customer Orders ({(orders || []).length})</h2>
             <span className="text-xs text-slate-400">Ready for General Loading Workflow</span>
           </div>
 
-          {orders.length === 0 ? (
+          {(orders || []).length === 0 ? (
             <div className="py-12 text-center text-slate-500 text-sm">No customer orders created yet.</div>
           ) : (
             <div className="overflow-x-auto">
@@ -450,7 +460,7 @@ export default function CustomerOrderPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800/50">
-                  {orders.map((o) => (
+                  {(orders || []).map((o) => (
                     <tr key={o.id} className="hover:bg-slate-800/30 transition-colors">
                       <td className="px-4 py-3 font-mono font-medium text-indigo-400">{o.order_no}</td>
                       <td className="px-4 py-3 font-medium text-white">{o.customer_name}</td>

@@ -519,6 +519,99 @@ export const customerTranslations: Record<string, Record<SupportedLanguage, stri
     ar: "جلسة نشطة",
     fa: "نشست فعال",
     ps: "فعال سیشن"
+  },
+
+  // Live Preview keys
+  livePreview: {
+    en: "Live Preview",
+    ur: "لائیو پریویو",
+    ar: "معاينة مباشرة",
+    fa: "پیش‌نمایش زنده",
+    ps: "ژوندی مخکتنه"
+  },
+  draftPreview: {
+    en: "Draft Preview",
+    ur: "ڈرافٹ پریویو",
+    ar: "مسودة",
+    fa: "پیش‌نمایش پیش‌نویس",
+    ps: "ناپایلی مخکتنه"
+  },
+  businessCompanyName: {
+    en: "Business / Company Name",
+    ur: "کاروبار / کمپنی کا نام",
+    ar: "اسم الشركة / النشاط التجارية",
+    fa: "نام شرکت / کسب و کار",
+    ps: "د سوداګرۍ / شرکت نوم"
+  },
+  representativeName: {
+    en: "Representative Name",
+    ur: "نمائندے کا نام",
+    ar: "اسم الممثل",
+    fa: "نام نماینده",
+    ps: "د استازي نوم"
+  },
+  fatherName: {
+    en: "Father Name",
+    ur: "والد کا نام",
+    ar: "اسم الأب",
+    fa: "نام پدر",
+    ps: "د پلار نوم"
+  },
+  location: {
+    en: "Location",
+    ur: "مقام",
+    ar: "الموقع",
+    fa: "موقعیت",
+    ps: "ځای"
+  },
+  zipCode: {
+    en: "Zip Code",
+    ur: "زپ کوڈ",
+    ar: "الرمز البريدي",
+    fa: "کد پستی",
+    ps: "زیپ کوډ"
+  },
+  contacts: {
+    en: "Contacts",
+    ur: "رابطے",
+    ar: "جهات الاتصال",
+    fa: "مخاطبین",
+    ps: "اړیکې"
+  },
+  documents: {
+    en: "Documents",
+    ur: "دستاویزات",
+    ar: "المستندات",
+    fa: "اسناد",
+    ps: "اسناد"
+  },
+  noContactsEntered: {
+    en: "No contacts entered",
+    ur: "کوئی رابطہ درج نہیں ہوا",
+    ar: "لم يتم إدخال اتصالات",
+    fa: "هیچ تماسی وارد نشده",
+    ps: "هیڅ اړیکه نه ده داخل شوې"
+  },
+  noDocumentsEntered: {
+    en: "No documents entered",
+    ur: "کوئی دستاویز درج نہیں ہوئی",
+    ar: "لم يتم إدخال مستندات",
+    fa: "هیچ سندی وارد نشده",
+    ps: "هیڅ سند نه دی داخل شوی"
+  },
+  newCustomer: {
+    en: "New Customer",
+    ur: "نیا گاہک",
+    ar: "عميل جديد",
+    fa: "مشتری جدید",
+    ps: "نوی پیرودونکی"
+  },
+  newBusiness: {
+    en: "New Business",
+    ur: "نیا کاروبار",
+    ar: "نشاط تجاري جديد",
+    fa: "کسب و کار جدید",
+    ps: "نوی سوداګري"
   }
 };
 

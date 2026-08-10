@@ -106,11 +106,17 @@ export async function ensurePurchaseSchemaAndEnums() {
   if (sql) await sql.end();
 }
 
-export async function safeInsertPurchaseOrderItems(supabase: any, itemsPayload: any[]) {
-  if (!itemsPayload || itemsPayload.length === 0) return;
+/**
+ * Inserts purchase order line items and returns the inserted rows (with their real DB ids),
+ * in insertion order, so callers can drive per-item 5-language translation
+ * (translateMasterRecord against the "purchase_order_items" table — see
+ * lib/i18n/translatable-fields.ts) and thread the ids back into form_data for later resolution.
+ */
+export async function safeInsertPurchaseOrderItems(supabase: any, itemsPayload: any[]): Promise<Array<{ id: string; goods_name?: string; brand?: string; unit_name?: string }>> {
+  if (!itemsPayload || itemsPayload.length === 0) return [];
 
-  const res = await supabase.from("purchase_order_items").insert(itemsPayload);
-  if (!res.error) return;
+  const res = await supabase.from("purchase_order_items").insert(itemsPayload).select("id, goods_name, brand, unit_name");
+  if (!res.error) return res.data || [];
 
   // If error is schema cache or table not found, fallback via postgres
   const errMsg = String(res.error.message || res.error);
@@ -118,11 +124,11 @@ export async function safeInsertPurchaseOrderItems(supabase: any, itemsPayload: 
     const sql = await ensureTablesAndReloadSchema();
     if (sql) {
       try {
-        await sql`insert into purchase_order_items ${sql(itemsPayload)}`;
+        const rows = await sql`insert into purchase_order_items ${sql(itemsPayload)} returning id, goods_name, brand, unit_name`;
+        return rows as any;
       } finally {
         await sql.end();
       }
-      return;
     }
   }
   throw new Error(res.error.message || "Failed to insert purchase order items.");

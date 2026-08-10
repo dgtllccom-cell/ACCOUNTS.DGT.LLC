@@ -62,6 +62,32 @@ const CURRENCY_OPTIONS = ["USD", "AED", "EUR", "GBP", "PKR", "AFN", "INR", "CNY"
 const PAYMENT_TYPES = ["Advance Payment", "Invoice", "Final Payment", "Credit"];
 const LOADING_TYPES = ["By Sea", "By Road", "By Air"];
 const CONTAINER_TYPES = ["20 FT", "40 FT", "20 FT Reefer", "40 FT Reefer", "Reefer Container", "Non Reefer", "Open Top", "Flat Rack", "LCL / Bulk"];
+
+// Canonical English value -> translation key, for PAYMENT_TYPES/LOADING_TYPES/CONTAINER_TYPES
+// <option> labels. The stored/submitted `value` stays the canonical English string (form.paymentType
+// etc. are compared against these constants elsewhere); only the visible label is translated.
+const OPTION_LABEL_KEYS = {
+  "Advance Payment": "purchase.opt_advance_payment",
+  "Invoice": "purchase.opt_invoice",
+  "Final Payment": "purchase.opt_final_payment",
+  "Credit": "purchase.opt_credit",
+  "By Sea": "purchase.opt_by_sea",
+  "By Road": "purchase.opt_by_road",
+  "By Air": "purchase.opt_by_air",
+  "20 FT": "purchase.opt_container_20ft",
+  "40 FT": "purchase.opt_container_40ft",
+  "20 FT Reefer": "purchase.opt_container_20ft_reefer",
+  "40 FT Reefer": "purchase.opt_container_40ft_reefer",
+  "Reefer Container": "purchase.opt_container_reefer",
+  "Non Reefer": "purchase.opt_container_non_reefer",
+  "Open Top": "purchase.opt_container_open_top",
+  "Flat Rack": "purchase.opt_container_flat_rack",
+  "LCL / Bulk": "purchase.opt_container_lcl_bulk"
+};
+function translateOptionLabel(lang, value) {
+  const key = OPTION_LABEL_KEYS[value];
+  return key ? t(lang, key, value) : value;
+}
 const QTY_TYPE_OPTIONS = ["BAGS", "CARTONS", "Loose", "KGS", "Ton"];
 const SIZE_OPTIONS = ["Large", "Medium", "Standard", "Small"];
 const BRAND_OPTIONS = ["Premium", "Choice", "Organic", "Standard"];
@@ -754,19 +780,19 @@ export function PurchaseOrderWizard({ session }) {
                   <span className="p-1 rounded-md bg-primary/10 text-primary dark:bg-primary/20">
                     <Building2 className="h-3.5 w-3.5" />
                   </span>
-                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Branch Login Details</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "purchase.card_branch_login_details", "Branch Login Details")}</h4>
                 </div>
                 <div className="space-y-1.5 text-[10px]">
                   <div className="space-y-0.5 border-b border-border/40 pb-1.5 mb-1.5">
-                    <span className="text-muted-foreground block text-[8px] uppercase font-bold">Branch Name</span>
+                    <span className="text-muted-foreground block text-[8px] uppercase font-bold">{t(lang, "purchase.card_branch_name_label", "Branch Name")}</span>
                     <span className="font-black text-primary block truncate text-xs" title={loginBranchName}>{loginBranchName || "N/A"}</span>
                   </div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Branch Code:</span> <span className="font-semibold text-foreground font-mono">{loginBranchCode || "N/A"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">User Admin:</span> <span className="font-black text-emerald-600 dark:text-emerald-450 uppercase">{form.userName}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">User ID:</span> <span className="font-semibold text-foreground font-mono text-[9px]">{form.userId || "N/A"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Role:</span> <span className="font-semibold text-foreground capitalize text-[9px]">{primaryRole}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Location:</span> <span className="font-semibold text-foreground truncate" title={`${loginCityName || "N/A"}, ${loginCountryName || "N/A"}`}>{loginCityName || "N/A"}, {loginCountryName || "N/A"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Country:</span> <span className="font-semibold text-foreground truncate" title={loginCountryName}>{loginCountryName || "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_branch_code_colon", "Branch Code:")}</span> <span className="font-semibold text-foreground font-mono">{loginBranchCode || "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_user_admin_colon", "User Admin:")}</span> <span className="font-black text-emerald-600 dark:text-emerald-450 uppercase">{form.userName}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_user_id_colon", "User ID:")}</span> <span className="font-semibold text-foreground font-mono text-[9px]">{form.userId || "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_role_colon", "Role:")}</span> <span className="font-semibold text-foreground capitalize text-[9px]">{primaryRole}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_location_colon", "Location:")}</span> <span className="font-semibold text-foreground truncate" title={`${loginCityName || "N/A"}, ${loginCountryName || "N/A"}`}>{loginCityName || "N/A"}, {loginCountryName || "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_country_colon", "Country:")}</span> <span className="font-semibold text-foreground truncate" title={loginCountryName}>{loginCountryName || "N/A"}</span></div>
                 </div>
               </div>
 
@@ -776,18 +802,18 @@ export function PurchaseOrderWizard({ session }) {
                   <span className="p-1 rounded-md bg-primary/10 text-primary dark:bg-primary/20">
                     <FileText className="h-3.5 w-3.5" />
                   </span>
-                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Bill Details</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "purchase.card_bill_details", "Bill Details")}</h4>
                 </div>
                 <div className="space-y-1.5 text-[10px]">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Booking Date:</span> <span className="font-semibold text-foreground">{form.purchaseDate}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Fiscal Year:</span> <span className="font-semibold">2025-26</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground font-bold">Booking Branch:</span> <span className="font-bold text-emerald-600 dark:text-emerald-450 truncate" title={loginBranchName}>{loginBranchName || "N/A"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Status:</span> <span className="inline-flex items-center rounded-full bg-yellow-500/10 px-1.5 py-0.2 text-[8px] font-bold text-yellow-600 dark:text-yellow-450 uppercase">{form.salesStatus}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">System Serial:</span> <span className="font-bold text-foreground truncate font-mono" title={form.purchaseOrderNo}>{form.purchaseOrderNo}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground font-bold text-primary">Branch Serial:</span> <span className="font-bold text-primary truncate font-mono" title={form.billNo}>{form.billNo}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Contract No:</span> <span className="font-semibold text-foreground truncate font-mono" title={form.purchaseContractNo}>{form.purchaseContractNo}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Loading Mode:</span> <span className="font-semibold text-foreground truncate" title={form.shippingMode}>{form.shippingMode || "N/A"}</span></div>
-                  <div className="flex justify-between"><span className="text-muted-foreground">Origin Country:</span> <span className="font-semibold text-foreground truncate" title={form.origin || form.branchCountry}>{form.origin || form.branchCountry || "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_booking_date_colon", "Booking Date:")}</span> <span className="font-semibold text-foreground">{form.purchaseDate}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_fiscal_year_colon", "Fiscal Year:")}</span> <span className="font-semibold">2025-26</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground font-bold">{t(lang, "purchase.card_booking_branch_colon", "Booking Branch:")}</span> <span className="font-bold text-emerald-600 dark:text-emerald-450 truncate" title={loginBranchName}>{loginBranchName || "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_status_colon", "Status:")}</span> <span className="inline-flex items-center rounded-full bg-yellow-500/10 px-1.5 py-0.2 text-[8px] font-bold text-yellow-600 dark:text-yellow-450 uppercase">{form.salesStatus}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_system_serial_colon", "System Serial:")}</span> <span className="font-bold text-foreground truncate font-mono" title={form.purchaseOrderNo}>{form.purchaseOrderNo}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground font-bold text-primary">{t(lang, "purchase.card_branch_serial_colon", "Branch Serial:")}</span> <span className="font-bold text-primary truncate font-mono" title={form.billNo}>{form.billNo}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_contract_no_colon", "Contract No:")}</span> <span className="font-semibold text-foreground truncate font-mono" title={form.purchaseContractNo}>{form.purchaseContractNo}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_loading_mode_colon", "Loading Mode:")}</span> <span className="font-semibold text-foreground truncate" title={form.shippingMode}>{form.shippingMode ? translateOptionLabel(lang, form.shippingMode) : "N/A"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_origin_country_colon", "Origin Country:")}</span> <span className="font-semibold text-foreground truncate" title={form.origin || form.branchCountry}>{form.origin || form.branchCountry || "N/A"}</span></div>
                 </div>
               </div>
 
@@ -797,27 +823,27 @@ export function PurchaseOrderWizard({ session }) {
                   <span className="p-1 rounded-md bg-primary/10 text-primary dark:bg-primary/20">
                     <ArrowDownLeft className="h-3.5 w-3.5" />
                   </span>
-                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Purchase Account Details</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "purchase.card_purchase_account_details", "Purchase Account Details")}</h4>
                 </div>
                 <div className="space-y-1.5 text-[10px]">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Account Code:</span> <span className="font-bold text-foreground truncate block w-full text-right font-mono" title={form.purchaseAccountNo || "Not Selected"}>{form.purchaseAccountNo || "-"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span> <span className="font-bold text-foreground truncate block w-full text-right font-mono" title={form.purchaseAccountNo || t(lang, "purchase.card_not_selected", "Not Selected")}>{form.purchaseAccountNo || "-"}</span></div>
                   <div className="space-y-0.5 pt-1">
-                    <span className="text-muted-foreground block text-[9px]">Account Name:</span>
-                    <span className="font-semibold text-foreground block truncate text-xs text-primary" title={form.purchaseAccountName || "Select Purchase Account"}>{form.purchaseAccountName || "Select Purchase Account..."}</span>
+                    <span className="text-muted-foreground block text-[9px]">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span>
+                    <span className="font-semibold text-foreground block truncate text-xs text-primary" title={localizeBiz(form, lang, "purchaseAccountName", form.purchaseAccountName) || t(lang, "purchase.card_select_purchase_account_placeholder", "Select Purchase Account...")}>{localizeBiz(form, lang, "purchaseAccountName", form.purchaseAccountName) || t(lang, "purchase.card_select_purchase_account_placeholder", "Select Purchase Account...")}</span>
                   </div>
-                  <div className="flex justify-between pt-1"><span className="text-muted-foreground">Branch:</span> <span className="font-semibold text-foreground truncate" title={form.purchaseAccountBranch || form.branchName || "Main Branch"}>{form.purchaseAccountBranch || form.branchName || "Main Branch"}</span></div>
-                  <div className="flex justify-between pt-0.5"><span className="text-muted-foreground">Currency:</span> <span className="font-bold text-foreground">{form.purchaseAccountCurrency || form.purchaseCurrency || form.secondaryCurrency || "-"}</span></div>
+                  <div className="flex justify-between pt-1"><span className="text-muted-foreground">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> <span className="font-semibold text-foreground truncate" title={form.purchaseAccountBranch || form.branchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}>{form.purchaseAccountBranch || form.branchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</span></div>
+                  <div className="flex justify-between pt-0.5"><span className="text-muted-foreground">{t(lang, "purchase.currency_colon_label", "Currency:")}</span> <span className="font-bold text-foreground">{form.purchaseAccountCurrency || form.purchaseCurrency || form.secondaryCurrency || "-"}</span></div>
                   <div className="flex justify-between items-center pt-0.5 border-t border-border/20 mt-1 relative" ref={purchaseCompanyDropdownRef}>
-                    <span className="text-muted-foreground font-semibold">Company:</span>
+                    <span className="text-muted-foreground font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span>
                     <div className="flex items-center gap-1">
-                      <span className="font-bold text-foreground truncate max-w-[100px] text-[8.5px] text-right font-mono" title={form.purchaseCompanyName ? `${form.purchaseCompanyName} (${form.purchaseCompanyCode || "COM-N/A"})` : "None"}>
-                        {form.purchaseCompanyName ? `${form.purchaseCompanyName} (${form.purchaseCompanyCode || "COM-N/A"})` : "None"}
+                      <span className="font-bold text-foreground truncate max-w-[100px] text-[8.5px] text-right font-mono" title={form.purchaseCompanyName ? `${form.purchaseCompanyName} (${form.purchaseCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}>
+                        {form.purchaseCompanyName ? `${form.purchaseCompanyName} (${form.purchaseCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}
                       </span>
                       <button
                         type="button"
                         onClick={() => setPurchaseCompanySelectOpen(prev => !prev)}
                         className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-primary transition-colors shrink-0"
-                        title="Select Company"
+                        title={t(lang, "purchase.card_select_company_title", "Select Company")}
                       >
                         <Pin className={`h-2.5 w-2.5 ${purchaseCompanySelectOpen ? "text-primary fill-primary/25" : ""}`} />
                       </button>
@@ -826,12 +852,12 @@ export function PurchaseOrderWizard({ session }) {
                     {purchaseCompanySelectOpen && (
                       <div className="absolute right-0 top-6 w-48 rounded-xl bg-card border border-border shadow-2xl z-[60] p-1.5 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
                         <div className="px-2 py-0.5 text-[8px] font-black uppercase text-primary tracking-wider border-b border-border/40 mb-1">
-                          Select Company
+                          {t(lang, "purchase.card_select_company_title", "Select Company")}
                         </div>
                         <div className="max-h-32 overflow-y-auto space-y-0.5 scrollbar-thin">
                           {dbCompanies.length === 0 ? (
                             <div className="px-2 py-2 text-center text-muted-foreground text-[8px] italic">
-                              No companies found.
+                              {t(lang, "purchase.card_no_companies_found", "No companies found.")}
                             </div>
                           ) : (
                             dbCompanies.map((c) => {
@@ -868,7 +894,7 @@ export function PurchaseOrderWizard({ session }) {
                             className="w-full flex items-center gap-1.5 px-2 py-1 rounded-lg text-[9px] font-bold text-primary hover:bg-primary/5 transition text-left"
                           >
                             <span className="text-xs">+</span>
-                            <span>New Company</span>
+                            <span>{t(lang, "purchase.card_new_company_btn", "New Company")}</span>
                           </button>
                         </div>
                       </div>
@@ -880,35 +906,35 @@ export function PurchaseOrderWizard({ session }) {
                       {/* Category & Control Type */}
                       <div className="grid grid-cols-2 gap-1 pb-1.5 border-b border-border/20">
                         <div>
-                          <span className="text-[7.5px] text-muted-foreground block uppercase">Kind</span>
+                          <span className="text-[7.5px] text-muted-foreground block uppercase">{t(lang, "purchase.card_kind_label", "Kind")}</span>
                           <span className="font-bold text-foreground uppercase">{form.purchaseAccountKind || "N/A"}</span>
                         </div>
                         <div>
-                          <span className="text-[7.5px] text-muted-foreground block uppercase">Type</span>
+                          <span className="text-[7.5px] text-muted-foreground block uppercase">{t(lang, "purchase.card_type_label", "Type")}</span>
                           <span className="font-bold text-foreground truncate block">
-                            {form.purchaseAccountIsControl ? "Control" : "Sub-Acct"}
+                            {form.purchaseAccountIsControl ? t(lang, "purchase.card_control_label", "Control") : t(lang, "purchase.card_sub_acct_label", "Sub-Acct")}
                           </span>
                         </div>
                       </div>
 
                       {/* Serials Sub-Grid */}
                       <div className="bg-muted/30 p-1.5 rounded-lg border border-border/30 space-y-1">
-                        <span className="text-[7.5px] font-black text-primary block uppercase tracking-wider">Serials & Ref</span>
+                        <span className="text-[7.5px] font-black text-primary block uppercase tracking-wider">{t(lang, "purchase.card_serials_ref_label", "Serials & Ref")}</span>
                         <div className="grid grid-cols-2 gap-x-2 gap-y-0.5">
                           <div>
-                            <span className="text-[7px] text-muted-foreground block">Acct S/N</span>
+                            <span className="text-[7px] text-muted-foreground block">{t(lang, "purchase.card_acct_sn_label", "Acct S/N")}</span>
                             <span className="font-semibold text-foreground/90">{form.purchaseAccountSerialNumber || "-"}</span>
                           </div>
                           <div>
-                            <span className="text-[7px] text-muted-foreground block">Country S/N</span>
+                            <span className="text-[7px] text-muted-foreground block">{t(lang, "purchase.card_country_sn_label", "Country S/N")}</span>
                             <span className="font-semibold text-foreground/90">{form.purchaseAccountCountrySerialNumber || "-"}</span>
                           </div>
                           <div>
-                            <span className="text-[7px] text-muted-foreground block">Branch S/N</span>
+                            <span className="text-[7px] text-muted-foreground block">{t(lang, "purchase.card_branch_sn_label", "Branch S/N")}</span>
                             <span className="font-semibold text-foreground/90">{form.purchaseAccountBranchSerialNumber || "-"}</span>
                           </div>
                           <div>
-                            <span className="text-[7px] text-muted-foreground block">Manual Ref</span>
+                            <span className="text-[7px] text-muted-foreground block">{t(lang, "purchase.card_manual_ref_label", "Manual Ref")}</span>
                             <span className="font-semibold text-foreground/90">{form.purchaseAccountManualReferenceNumber || "-"}</span>
                           </div>
                         </div>
@@ -917,13 +943,13 @@ export function PurchaseOrderWizard({ session }) {
                       {/* Balances */}
                       <div className="grid grid-cols-2 gap-2 pt-1">
                         <div>
-                          <span className="text-[7.5px] text-muted-foreground block uppercase">Opening Bal</span>
+                          <span className="text-[7.5px] text-muted-foreground block uppercase">{t(lang, "purchase.card_opening_bal_label", "Opening Bal")}</span>
                           <span className="font-bold text-foreground">
                             {currencySymbol(form.purchaseAccountCurrency)} {formatNumber(form.purchaseAccountOpeningBalance)}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[7.5px] text-muted-foreground block uppercase">Current Bal</span>
+                          <span className="text-[7.5px] text-muted-foreground block uppercase">{t(lang, "purchase.card_current_bal_label", "Current Bal")}</span>
                           <span className={`font-bold ${form.purchaseAccountCurrentBalance >= 0 ? "text-emerald-600 dark:text-emerald-450" : "text-rose-600 dark:text-rose-450"}`}>
                             {currencySymbol(form.purchaseAccountCurrency)} {formatNumber(form.purchaseAccountCurrentBalance)}
                           </span>
@@ -935,13 +961,13 @@ export function PurchaseOrderWizard({ session }) {
                         <div className="border-t border-border/20 pt-1.5 flex flex-wrap gap-x-2 gap-y-0.5">
                           {form.purchaseAccountMobile && (
                             <div>
-                              <span className="text-[7.5px] text-muted-foreground mr-0.5 font-bold">MOB:</span>
+                              <span className="text-[7.5px] text-muted-foreground mr-0.5 font-bold">{t(lang, "purchase.card_mob_label", "MOB:")}</span>
                               <span className="text-foreground font-semibold">{form.purchaseAccountMobile}</span>
                             </div>
                           )}
                           {form.purchaseAccountWhatsapp && (
                             <div>
-                              <span className="text-[7.5px] text-emerald-600 dark:text-emerald-450 mr-0.5 font-bold">WA:</span>
+                              <span className="text-[7.5px] text-emerald-600 dark:text-emerald-450 mr-0.5 font-bold">{t(lang, "purchase.card_wa_label", "WA:")}</span>
                               <span className="text-foreground font-semibold">{form.purchaseAccountWhatsapp}</span>
                             </div>
                           )}
@@ -958,27 +984,27 @@ export function PurchaseOrderWizard({ session }) {
                   <span className="p-1 rounded-md bg-primary/10 text-primary dark:bg-primary/20">
                     <ArrowUpRight className="h-3.5 w-3.5" />
                   </span>
-                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Sales Account (CR)</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{t(lang, "purchase.sales_account_cr_badge", "Sales Account (CR)")}</h4>
                 </div>
                 <div className="space-y-1.5 text-[10px]">
-                  <div className="flex justify-between"><span className="text-muted-foreground">Account Code:</span> <span className="font-bold text-foreground truncate block w-full text-right font-mono" title={form.salesAccountNo || "Not Selected"}>{form.salesAccountNo || "-"}</span></div>
+                  <div className="flex justify-between"><span className="text-muted-foreground">{t(lang, "purchase.card_account_code_colon", "Account Code:")}</span> <span className="font-bold text-foreground truncate block w-full text-right font-mono" title={form.salesAccountNo || t(lang, "purchase.card_not_selected", "Not Selected")}>{form.salesAccountNo || "-"}</span></div>
                   <div className="space-y-0.5 pt-1">
-                    <span className="text-muted-foreground block text-[9px]">Account Name:</span>
-                    <span className="font-semibold text-foreground block truncate text-xs text-primary" title={form.salesAccountName || "Select Sales Account"}>{form.salesAccountName || "Select Sales Account..."}</span>
+                    <span className="text-muted-foreground block text-[9px]">{t(lang, "purchase.card_account_name_colon", "Account Name:")}</span>
+                    <span className="font-semibold text-foreground block truncate text-xs text-primary" title={localizeBiz(form, lang, "salesAccountName", form.salesAccountName) || t(lang, "purchase.card_select_sales_account_placeholder", "Select Sales Account...")}>{localizeBiz(form, lang, "salesAccountName", form.salesAccountName) || t(lang, "purchase.card_select_sales_account_placeholder", "Select Sales Account...")}</span>
                   </div>
-                  <div className="flex justify-between pt-1"><span className="text-muted-foreground">Branch:</span> <span className="font-semibold text-foreground truncate" title={form.salesAccountBranch || form.branchName || "Main Branch"}>{form.salesAccountBranch || form.branchName || "Main Branch"}</span></div>
-                  <div className="flex justify-between pt-0.5"><span className="text-muted-foreground">Currency:</span> <span className="font-bold text-foreground">{form.salesAccountCurrency || form.purchaseCurrency || form.secondaryCurrency || "-"}</span></div>
+                  <div className="flex justify-between pt-1"><span className="text-muted-foreground">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> <span className="font-semibold text-foreground truncate" title={form.salesAccountBranch || form.branchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}>{form.salesAccountBranch || form.branchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</span></div>
+                  <div className="flex justify-between pt-0.5"><span className="text-muted-foreground">{t(lang, "purchase.currency_colon_label", "Currency:")}</span> <span className="font-bold text-foreground">{form.salesAccountCurrency || form.purchaseCurrency || form.secondaryCurrency || "-"}</span></div>
                   <div className="flex justify-between items-center pt-0.5 border-t border-border/20 mt-1 relative" ref={salesCompanyDropdownRef}>
-                    <span className="text-muted-foreground font-semibold">Company:</span>
+                    <span className="text-muted-foreground font-semibold">{t(lang, "purchase.card_company_colon", "Company:")}</span>
                     <div className="flex items-center gap-1">
-                      <span className="font-bold text-foreground truncate max-w-[100px] text-[8.5px] text-right font-mono" title={form.salesCompanyName ? `${form.salesCompanyName} (${form.salesCompanyCode || "COM-N/A"})` : "None"}>
-                        {form.salesCompanyName ? `${form.salesCompanyName} (${form.salesCompanyCode || "COM-N/A"})` : "None"}
+                      <span className="font-bold text-foreground truncate max-w-[100px] text-[8.5px] text-right font-mono" title={form.salesCompanyName ? `${form.salesCompanyName} (${form.salesCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}>
+                        {form.salesCompanyName ? `${form.salesCompanyName} (${form.salesCompanyCode || "COM-N/A"})` : t(lang, "purchase.card_none_label", "None")}
                       </span>
                       <button
                         type="button"
                         onClick={() => setSalesCompanySelectOpen(prev => !prev)}
                         className="p-0.5 rounded hover:bg-muted text-muted-foreground hover:text-primary transition-colors shrink-0"
-                        title="Select Company"
+                        title={t(lang, "purchase.card_select_company_title", "Select Company")}
                       >
                         <Pin className={`h-2.5 w-2.5 ${salesCompanySelectOpen ? "text-primary fill-primary/25" : ""}`} />
                       </button>
@@ -987,12 +1013,12 @@ export function PurchaseOrderWizard({ session }) {
                     {salesCompanySelectOpen && (
                       <div className="absolute right-0 top-6 w-48 rounded-xl bg-card border border-border shadow-2xl z-[60] p-1.5 animate-in fade-in slide-in-from-top-2 duration-150 text-left">
                         <div className="px-2 py-0.5 text-[8px] font-black uppercase text-primary tracking-wider border-b border-border/40 mb-1">
-                          Select Company
+                          {t(lang, "purchase.card_select_company_title", "Select Company")}
                         </div>
                         <div className="max-h-32 overflow-y-auto space-y-0.5 scrollbar-thin">
                           {dbCompanies.length === 0 ? (
                             <div className="px-2 py-2 text-center text-muted-foreground text-[8px] italic">
-                              No companies found.
+                              {t(lang, "purchase.card_no_companies_found", "No companies found.")}
                             </div>
                           ) : (
                             dbCompanies.map((c) => {
@@ -1029,7 +1055,7 @@ export function PurchaseOrderWizard({ session }) {
                             className="w-full flex items-center gap-1.5 px-2 py-1 rounded-lg text-[9px] font-bold text-primary hover:bg-primary/5 transition text-left"
                           >
                             <span className="text-xs">+</span>
-                            <span>New Company</span>
+                            <span>{t(lang, "purchase.card_new_company_btn", "New Company")}</span>
                           </button>
                         </div>
                       </div>
@@ -1041,35 +1067,35 @@ export function PurchaseOrderWizard({ session }) {
                       {/* Category & Control Type */}
                       <div className="grid grid-cols-2 gap-1 pb-1.5 border-b border-border/20">
                         <div>
-                          <span className="text-[7.5px] text-muted-foreground block uppercase">Kind</span>
+                          <span className="text-[7.5px] text-muted-foreground block uppercase">{t(lang, "purchase.card_kind_label", "Kind")}</span>
                           <span className="font-bold text-foreground uppercase">{form.salesAccountKind || "N/A"}</span>
                         </div>
                         <div>
-                          <span className="text-[7.5px] text-muted-foreground block uppercase">Type</span>
+                          <span className="text-[7.5px] text-muted-foreground block uppercase">{t(lang, "purchase.card_type_label", "Type")}</span>
                           <span className="font-bold text-foreground truncate block">
-                            {form.salesAccountIsControl ? "Control" : "Sub-Acct"}
+                            {form.salesAccountIsControl ? t(lang, "purchase.card_control_label", "Control") : t(lang, "purchase.card_sub_acct_label", "Sub-Acct")}
                           </span>
                         </div>
                       </div>
 
                       {/* Serials Sub-Grid */}
                       <div className="bg-muted/30 p-1.5 rounded-lg border border-border/30 space-y-1">
-                        <span className="text-[7.5px] font-black text-primary block uppercase tracking-wider">Serials & Ref</span>
+                        <span className="text-[7.5px] font-black text-primary block uppercase tracking-wider">{t(lang, "purchase.card_serials_ref_label", "Serials & Ref")}</span>
                         <div className="grid grid-cols-2 gap-x-2 gap-y-0.5">
                           <div>
-                            <span className="text-[7px] text-muted-foreground block">Acct S/N</span>
+                            <span className="text-[7px] text-muted-foreground block">{t(lang, "purchase.card_acct_sn_label", "Acct S/N")}</span>
                             <span className="font-semibold text-foreground/90">{form.salesAccountSerialNumber || "-"}</span>
                           </div>
                           <div>
-                            <span className="text-[7px] text-muted-foreground block">Country S/N</span>
+                            <span className="text-[7px] text-muted-foreground block">{t(lang, "purchase.card_country_sn_label", "Country S/N")}</span>
                             <span className="font-semibold text-foreground/90">{form.salesAccountCountrySerialNumber || "-"}</span>
                           </div>
                           <div>
-                            <span className="text-[7px] text-muted-foreground block">Branch S/N</span>
+                            <span className="text-[7px] text-muted-foreground block">{t(lang, "purchase.card_branch_sn_label", "Branch S/N")}</span>
                             <span className="font-semibold text-foreground/90">{form.salesAccountBranchSerialNumber || "-"}</span>
                           </div>
                           <div>
-                            <span className="text-[7px] text-muted-foreground block">Manual Ref</span>
+                            <span className="text-[7px] text-muted-foreground block">{t(lang, "purchase.card_manual_ref_label", "Manual Ref")}</span>
                             <span className="font-semibold text-foreground/90">{form.salesAccountManualReferenceNumber || "-"}</span>
                           </div>
                         </div>
@@ -1078,13 +1104,13 @@ export function PurchaseOrderWizard({ session }) {
                       {/* Balances */}
                       <div className="grid grid-cols-2 gap-2 pt-1">
                         <div>
-                          <span className="text-[7.5px] text-muted-foreground block uppercase">Opening Bal</span>
+                          <span className="text-[7.5px] text-muted-foreground block uppercase">{t(lang, "purchase.card_opening_bal_label", "Opening Bal")}</span>
                           <span className="font-bold text-foreground">
                             {currencySymbol(form.salesAccountCurrency)} {formatNumber(form.salesAccountOpeningBalance)}
                           </span>
                         </div>
                         <div>
-                          <span className="text-[7.5px] text-muted-foreground block uppercase">Current Bal</span>
+                          <span className="text-[7.5px] text-muted-foreground block uppercase">{t(lang, "purchase.card_current_bal_label", "Current Bal")}</span>
                           <span className={`font-bold ${form.salesAccountCurrentBalance >= 0 ? "text-emerald-600 dark:text-emerald-450" : "text-rose-600 dark:text-rose-450"}`}>
                             {currencySymbol(form.salesAccountCurrency)} {formatNumber(form.salesAccountCurrentBalance)}
                           </span>
@@ -1096,13 +1122,13 @@ export function PurchaseOrderWizard({ session }) {
                         <div className="border-t border-border/20 pt-1.5 flex flex-wrap gap-x-2 gap-y-0.5">
                           {form.salesAccountMobile && (
                             <div>
-                              <span className="text-[7.5px] text-muted-foreground mr-0.5 font-bold">MOB:</span>
+                              <span className="text-[7.5px] text-muted-foreground mr-0.5 font-bold">{t(lang, "purchase.card_mob_label", "MOB:")}</span>
                               <span className="text-foreground font-semibold">{form.salesAccountMobile}</span>
                             </div>
                           )}
                           {form.salesAccountWhatsapp && (
                             <div>
-                              <span className="text-[7.5px] text-emerald-600 dark:text-emerald-450 mr-0.5 font-bold">WA:</span>
+                              <span className="text-[7.5px] text-emerald-600 dark:text-emerald-450 mr-0.5 font-bold">{t(lang, "purchase.card_wa_label", "WA:")}</span>
                               <span className="text-foreground font-semibold">{form.salesAccountWhatsapp}</span>
                             </div>
                           )}
@@ -1420,7 +1446,7 @@ export function PurchaseOrderWizard({ session }) {
       try {
         let poData = null;
         if (orderId) {
-          const res = await fetch(`/api/erp/purchases/orders/${encodeURIComponent(orderId)}`, {
+          const res = await fetch(`/api/erp/purchases/orders/${encodeURIComponent(orderId)}?lang=${encodeURIComponent(lang)}`, {
             credentials: "same-origin"
           });
           const payload = await res.json().catch(() => ({}));
@@ -1519,7 +1545,11 @@ export function PurchaseOrderWizard({ session }) {
     searchParams.get("purchaseOrderNo"),
     searchParams.get("id"),
     searchParams.get("purchaseOrderId"),
-    !!activeSession
+    !!activeSession,
+    // Re-fetch on language switch so goods_name/brand/unit translations resolve for the
+    // newly-selected language without requiring a page reload (see resolveGoodsEntriesLanguage
+    // in app/api/erp/purchases/orders/[id]/route.ts).
+    lang
   ]);
 
   // Set initial scope fields for scoped users
@@ -3693,7 +3723,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         </div>
                         <h2 className="text-xl font-black uppercase tracking-tight text-slate-900 mt-0.5">{t(lang, "purchase.step4_title", "Step 4: Review Reports & Notes")}</h2>
                         <p className="text-xs font-semibold text-slate-500 mt-0.5">
-                          Verify printable document sections, account postings, goods manifest, payment terms, and loading schedules before final verification.
+                          {t(lang, "purchase.step4_verify_subtitle", "Verify printable document sections, account postings, goods manifest, payment terms, and loading schedules before final verification.")}
                         </p>
                       </div>
                     </div>
@@ -3910,7 +3940,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                           <div className="bg-slate-50/80 p-4 rounded-xl border border-slate-200/80 text-xs space-y-2.5">
-                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">{t(lang, "purchase.f_payment_type", "Payment Type:")}</span> <span className="font-bold text-slate-800">{form.paymentType || "N/A"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">{t(lang, "purchase.f_payment_type", "Payment Type:")}</span> <span className="font-bold text-slate-800">{form.paymentType ? translateOptionLabel(lang, form.paymentType) : "N/A"}</span></div>
                             <div className="flex justify-between"><span className="text-slate-500 font-semibold">{t(lang, "purchase.f_payment_terms", "Payment Terms:")}</span> <span className="font-bold text-slate-800 text-right">{form.paymentCondition || form.paymentTerms || "N/A"}</span></div>
                             <div className="flex justify-between"><span className="text-slate-500 font-semibold">{t(lang, "purchase.f_currency_colon", "Currency:")}</span> <span className="font-bold text-slate-800">{form.purchaseCurrency || form.currencyType || "N/A"}</span></div>
                             <div className="flex justify-between"><span className="text-slate-500 font-semibold">{t(lang, "purchase.f_exchange_rate", "Exchange Rate:")}</span> <span className="font-bold text-slate-800">{goodsEntries[0]?.exchangeRate || form.exchangeRate || 1}</span></div>
@@ -3962,14 +3992,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                           <div className="bg-slate-50/80 p-4 rounded-xl border border-slate-200/80 text-xs space-y-2">
-                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">{t(lang, "purchase.f_shipping_mode", "Shipping Mode:")}</span> <span className="font-bold text-slate-800">{form.shippingMode || "N/A"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">{t(lang, "purchase.f_shipping_mode", "Shipping Mode:")}</span> <span className="font-bold text-slate-800">{form.shippingMode ? translateOptionLabel(lang, form.shippingMode) : "N/A"}</span></div>
                             <div className="flex justify-between"><span className="text-slate-500 font-semibold">{t(lang, "purchase.f_shipping_line", "Shipping Line:")}</span> <span className="font-bold text-slate-800 text-right">{form.shippingLine || form.shippingCompany || "N/A"}</span></div>
                             <div className="flex justify-between"><span className="text-slate-500 font-semibold">{t(lang, "purchase.f_loading_from", "Loading From:")}</span> <span className="font-bold text-slate-800">{form.loadingPort || form.loadingBorder || form.airportName || "N/A"} ({form.origin || "N/A"})</span></div>
                             <div className="flex justify-between"><span className="text-slate-500 font-semibold">{t(lang, "purchase.f_destination", "Destination:")}</span> <span className="font-bold text-slate-800">{form.receivedPort || form.receivedBorder || form.receivedPortName || "N/A"} ({form.receivedCountry || "N/A"})</span></div>
                             <div className="flex justify-between"><span className="text-slate-500 font-semibold">{t(lang, "purchase.f_loading_date", "Loading Date:")}</span> <span className="font-bold text-slate-800">{form.loadingDate || "N/A"}</span></div>
                             <div className="flex justify-between"><span className="text-slate-500 font-semibold">{t(lang, "purchase.f_receiving_date", "Receiving Date:")}</span> <span className="font-bold text-slate-800">{form.receivingDate || form.receivedDate || "N/A"}</span></div>
                             <div className="flex justify-between"><span className="text-slate-500 font-semibold">{t(lang, "purchase.f_container_no", "Container No:")}</span> <span className="font-bold text-slate-800 text-right font-mono">{form.containerNumbers || "N/A"}</span></div>
-                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">{t(lang, "purchase.f_container_type", "Container Type:")}</span> <span className="font-bold text-slate-800">{form.containerSize || "N/A"}</span></div>
+                            <div className="flex justify-between"><span className="text-slate-500 font-semibold">{t(lang, "purchase.f_container_type", "Container Type:")}</span> <span className="font-bold text-slate-800">{form.containerSize ? translateOptionLabel(lang, form.containerSize) : "N/A"}</span></div>
                             <div className="flex justify-between"><span className="text-slate-500 font-semibold">{t(lang, "purchase.f_vessel", "Vessel:")}</span> <span className="font-bold text-slate-800 text-right">{form.vesselName || "N/A"}</span></div>
                             <div className="flex justify-between"><span className="text-slate-500 font-semibold">{t(lang, "purchase.f_bl_no", "BL No:")}</span> <span className="font-bold text-slate-800 text-right font-mono">{form.blNo || form.billOfLadingNo || "N/A"}</span></div>
                             <div className="flex justify-between"><span className="text-slate-500 font-semibold">{t(lang, "purchase.f_eta_etd", "ETA / ETD:")}</span> <span className="font-bold text-slate-800 text-right">{form.eta || form.etd || form.receivingDate || "N/A"}</span></div>
@@ -4082,26 +4112,26 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       <table className="w-full text-[9px] text-foreground border-collapse text-left whitespace-nowrap">
                         <thead>
                           <tr className="bg-muted/80 text-muted-foreground border-b border-border font-bold uppercase tracking-wider">
-                            <Th className="px-3 py-2.5 text-center w-8">#</Th>
-                            <Th className="px-3 py-2.5">Goods Name</Th>
-                            <Th className="px-3 py-2.5 text-center">Size</Th>
-                            <Th className="px-3 py-2.5 text-center">Brand</Th>
-                            <Th className="px-3 py-2.5 text-center">HS Code</Th>
-                            <Th className="px-3 py-2.5 text-center">Origin</Th>
-                            <Th className="px-3 py-2.5 text-right">Qty</Th>
-                            <Th className="px-3 py-2.5 text-center">Unit</Th>
-                            <Th className="px-3 py-2.5 text-right">Price ({form.currencyType || "USD"})</Th>
-                            <Th className="px-3 py-2.5 text-right">Amount ({form.currencyType || "USD"})</Th>
-                            <Th className="px-3 py-2.5 text-center">Ex. Rate</Th>
-                            <Th className="px-3 py-2.5 text-right bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">Final ({form.secondaryCurrency || "PKR"})</Th>
-                            <Th className="px-3 py-2.5 text-center w-10">Action</Th>
+                            <Th className="px-3 py-2.5 text-center w-8">{t(lang, "purchase.th_hash", "#")}</Th>
+                            <Th className="px-3 py-2.5">{t(lang, "purchase.th_goods_name", "Goods Name")}</Th>
+                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_size", "Size")}</Th>
+                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_brand", "Brand")}</Th>
+                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_hs_code", "HS Code")}</Th>
+                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_origin", "Origin")}</Th>
+                            <Th className="px-3 py-2.5 text-right">{t(lang, "purchase.th_qty", "Qty")}</Th>
+                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_unit", "Unit")}</Th>
+                            <Th className="px-3 py-2.5 text-right">{t(lang, "purchase.th_price_currency", "Price ({currency})").replace("{currency}", form.currencyType || "USD")}</Th>
+                            <Th className="px-3 py-2.5 text-right">{t(lang, "purchase.th_amount_currency", "Amount ({currency})").replace("{currency}", form.currencyType || "USD")}</Th>
+                            <Th className="px-3 py-2.5 text-center">{t(lang, "purchase.th_ex_rate", "Ex. Rate")}</Th>
+                            <Th className="px-3 py-2.5 text-right bg-emerald-500/10 text-emerald-700 dark:text-emerald-400">{t(lang, "purchase.th_final_currency", "Final ({currency})").replace("{currency}", form.secondaryCurrency || "PKR")}</Th>
+                            <Th className="px-3 py-2.5 text-center w-10">{t(lang, "purchase.th_action", "Action")}</Th>
                           </tr>
                         </thead>
                         <tbody>
                           {goodsEntries.length === 0 ? (
                             <tr>
                               <td colSpan={13} className="px-3 py-6 text-center text-muted-foreground italic font-semibold text-[10px]">
-                                No goods added yet. Add an item above to see it here.
+                                {t(lang, "purchase.goods_table_empty", "No goods added yet. Add an item above to see it here.")}
                               </td>
                             </tr>
                           ) : (
@@ -4127,25 +4157,25 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                       type="button"
                                       onClick={() => handleViewGoodsEntry(index)}
                                       className="flex items-center gap-1 px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded text-[9px] font-bold transition-colors"
-                                      title="View"
+                                      title={t(lang, "common.view", "View")}
                                     >
-                                      <Eye className="h-3 w-3" /> View
+                                      <Eye className="h-3 w-3" /> {t(lang, "common.view", "View")}
                                     </button>
                                     <button
                                       type="button"
                                       onClick={() => handleEditGoodsEntry(index)}
                                       className="flex items-center gap-1 px-2 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 rounded text-[9px] font-bold transition-colors shadow-sm border border-blue-200"
-                                      title="Edit"
+                                      title={t(lang, "common.edit", "Edit")}
                                     >
-                                      <Edit3 className="h-3 w-3" /> Edit
+                                      <Edit3 className="h-3 w-3" /> {t(lang, "common.edit", "Edit")}
                                     </button>
                                     <button
                                       type="button"
                                       onClick={() => setGoodsEntries(prev => prev.filter((_, idx) => idx !== index))}
                                       className="flex items-center gap-1 px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded text-[9px] font-bold transition-colors shadow-sm border border-red-100"
-                                      title="Delete"
+                                      title={t(lang, "common.delete", "Delete")}
                                     >
-                                      <Trash2 className="h-3 w-3" /> Delete
+                                      <Trash2 className="h-3 w-3" /> {t(lang, "common.delete", "Delete")}
                                     </button>
                                   </div>
                                 </td>
@@ -4164,16 +4194,16 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               {activeTab === "booking" && (
                 <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="space-y-4 order-2 w-full mt-4">
                   <div className="border-b border-border pb-2 mb-3">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Purchase Booking / Bill Info</h3>
+                    <h3 className="text-xs font-black uppercase tracking-wider text-foreground">{t(lang, "purchase.booking_bill_info_title", "Purchase Booking / Bill Info")}</h3>
                   </div>
 
                   <div className="grid grid-cols-1 gap-4">
                     <div className="relative" ref={purchaseDropdownRef}>
-                      <label className="block text-[10px] font-bold text-foreground mb-1">Purchase Account (DR)*</label>
+                      <label className="block text-[10px] font-bold text-foreground mb-1">{t(lang, "purchase.purchase_account_dr_star", "Purchase Account (DR)*")}</label>
                       <div className="relative flex items-center">
                         <input
                           type="text"
-                          placeholder={form.purchaseAccountName ? formatAccountDisplayLabel(form.purchaseAccountName, form.purchaseAccountNo, form.purchaseAccountManualReferenceNumber) : "Search Code, Name, Branch, Manual A/C..."}
+                          placeholder={form.purchaseAccountName ? formatAccountDisplayLabel(form.purchaseAccountName, form.purchaseAccountNo, form.purchaseAccountManualReferenceNumber) : t(lang, "purchase.search_code_name_branch", "Search Code, Name, Branch, Manual A/C...")}
                           value={purchaseDropdownOpen ? purchaseSearch : (form.purchaseAccountName ? formatAccountDisplayLabel(form.purchaseAccountName, form.purchaseAccountNo, form.purchaseAccountManualReferenceNumber) : form.purchaseAccountNo || "")}
                           onChange={(e) => handleTextChange("purchase", e.target.value)}
                           onFocus={() => {
@@ -4199,9 +4229,9 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       {purchaseDropdownOpen && (
                         <div className="absolute left-0 mt-1.5 w-full min-w-[290px] sm:min-w-[440px] md:min-w-[520px] rounded-2xl bg-card border-2 border-primary/40 shadow-2xl z-[80] p-2 overflow-hidden backdrop-blur-md">
                           <div className="flex justify-between items-center px-2.5 py-1.5 bg-primary/5 rounded-lg mb-1.5 border border-primary/10">
-                            <span className="text-[10px] font-black uppercase text-primary tracking-wider">Select Purchase Account (DR)</span>
+                            <span className="text-[10px] font-black uppercase text-primary tracking-wider">{t(lang, "purchase.select_purchase_account_dr_header", "Select Purchase Account (DR)")}</span>
                             <span className="text-[9px] font-mono font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                              {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, purchaseSearch)).length} found
+                              {t(lang, "purchase.found_count_suffix", "{n} found").replace("{n}", String(dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, purchaseSearch)).length))}
                             </span>
                           </div>
                           <div className="max-h-64 overflow-y-auto space-y-1.5 pr-0.5">
@@ -4220,24 +4250,24 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                 >
                                   <div className="flex justify-between items-start gap-2 mb-1">
                                     <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">{formatAccountDisplayLabel(acc.accountName, acc.accountCode, acc.manualReferenceNumber)}</span>
-                                    <span className="font-mono text-[9.5px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0">System: {acc.accountCode}</span>
+                                    <span className="font-mono text-[9.5px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0">{t(lang, "purchase.system_code_prefix", "System: {code}").replace("{code}", acc.accountCode)}</span>
                                   </div>
                                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 text-[9px] text-muted-foreground">
-                                    <div><span className="font-semibold text-foreground/80">Branch:</span> {acc.cityBranchName || "Main Branch"}</div>
+                                    <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> {acc.cityBranchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</div>
                                     <div>
                                       {acc.manualReferenceNumber && (
-                                        <div className="mb-0.5"><span className="font-semibold text-foreground/80">Manual A/C:</span> <span className="font-bold text-slate-700 dark:text-slate-300">{acc.manualReferenceNumber}</span></div>
+                                        <div className="mb-0.5"><span className="font-semibold text-foreground/80">{t(lang, "purchase.manual_ac_colon", "Manual A/C:")}</span> <span className="font-bold text-slate-700 dark:text-slate-300">{acc.manualReferenceNumber}</span></div>
                                       )}
-                                      <div><span className="font-semibold text-foreground/80">Curr:</span> <span className="font-bold text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "PKR"}</span></div>
+                                      <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.curr_colon", "Curr:")}</span> <span className="font-bold text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "PKR"}</span></div>
                                     </div>
-                                    <div><span className="font-semibold text-foreground/80">Company:</span> <span className="truncate inline-block max-w-[120px] align-bottom">{compName}</span></div>
+                                    <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.card_company_colon", "Company:")}</span> <span className="truncate inline-block max-w-[120px] align-bottom">{compName}</span></div>
                                   </div>
                                 </button>
                               );
                             })}
                             {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, purchaseSearch)).length === 0 && (
                               <div className="p-4 text-center text-muted-foreground text-xs italic">
-                                No matching accounts found. Try searching by Code, Name, Currency, or Phone.
+                                {t(lang, "purchase.no_matching_accounts", "No matching accounts found. Try searching by Code, Name, Currency, or Phone.")}
                               </div>
                             )}
                           </div>
@@ -4246,11 +4276,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     </div>
 
                     <div className="relative" ref={salesDropdownRef}>
-                      <label className="block text-[10px] font-bold text-foreground mb-1">Sales Account (CR)*</label>
+                      <label className="block text-[10px] font-bold text-foreground mb-1">{t(lang, "purchase.sales_account_cr_star", "Sales Account (CR)*")}</label>
                       <div className="relative flex items-center">
                         <input
                           type="text"
-                          placeholder={form.salesAccountName ? formatAccountDisplayLabel(form.salesAccountName, form.salesAccountNo, form.salesAccountManualReferenceNumber) : "Search Code, Name, Branch, Manual A/C..."}
+                          placeholder={form.salesAccountName ? formatAccountDisplayLabel(form.salesAccountName, form.salesAccountNo, form.salesAccountManualReferenceNumber) : t(lang, "purchase.search_code_name_branch", "Search Code, Name, Branch, Manual A/C...")}
                           value={salesDropdownOpen ? salesSearch : (form.salesAccountName ? formatAccountDisplayLabel(form.salesAccountName, form.salesAccountNo, form.salesAccountManualReferenceNumber) : form.salesAccountNo || "")}
                           onChange={(e) => handleTextChange("sales", e.target.value)}
                           onFocus={() => {
@@ -4275,9 +4305,9 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       {salesDropdownOpen && (
                         <div className="absolute left-0 mt-1.5 w-full min-w-[290px] sm:min-w-[440px] md:min-w-[520px] rounded-2xl bg-card border-2 border-primary/40 shadow-2xl z-[80] p-2 overflow-hidden backdrop-blur-md">
                           <div className="flex justify-between items-center px-2.5 py-1.5 bg-primary/5 rounded-lg mb-1.5 border border-primary/10">
-                            <span className="text-[10px] font-black uppercase text-primary tracking-wider">Select Sales Account (CR)</span>
+                            <span className="text-[10px] font-black uppercase text-primary tracking-wider">{t(lang, "purchase.select_sales_account_cr_header", "Select Sales Account (CR)")}</span>
                             <span className="text-[9px] font-mono font-bold text-muted-foreground bg-muted px-1.5 py-0.5 rounded">
-                              {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length} found
+                              {t(lang, "purchase.found_count_suffix", "{n} found").replace("{n}", String(dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length))}
                             </span>
                           </div>
                           <div className="max-h-64 overflow-y-auto space-y-1.5 pr-0.5">
@@ -4296,24 +4326,24 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                 >
                                   <div className="flex justify-between items-start gap-2 mb-1">
                                     <span className="font-bold text-xs text-foreground group-hover:text-primary transition-colors">{formatAccountDisplayLabel(acc.accountName, acc.accountCode, acc.manualReferenceNumber)}</span>
-                                    <span className="font-mono text-[9.5px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0">System: {acc.accountCode}</span>
+                                    <span className="font-mono text-[9.5px] font-black bg-primary/10 text-primary px-1.5 py-0.5 rounded shrink-0">{t(lang, "purchase.system_code_prefix", "System: {code}").replace("{code}", acc.accountCode)}</span>
                                   </div>
                                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-1 text-[9px] text-muted-foreground">
-                                    <div><span className="font-semibold text-foreground/80">Branch:</span> {acc.cityBranchName || "Main Branch"}</div>
+                                    <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.branch_colon_label", "Branch:")}</span> {acc.cityBranchName || t(lang, "purchase.card_main_branch_fallback", "Main Branch")}</div>
                                     <div>
                                       {acc.manualReferenceNumber && (
-                                        <div className="mb-0.5"><span className="font-semibold text-foreground/80">Manual A/C:</span> <span className="font-bold text-slate-700 dark:text-slate-300">{acc.manualReferenceNumber}</span></div>
+                                        <div className="mb-0.5"><span className="font-semibold text-foreground/80">{t(lang, "purchase.manual_ac_colon", "Manual A/C:")}</span> <span className="font-bold text-slate-700 dark:text-slate-300">{acc.manualReferenceNumber}</span></div>
                                       )}
-                                      <div><span className="font-semibold text-foreground/80">Curr:</span> <span className="font-bold text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "PKR"}</span></div>
+                                      <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.curr_colon", "Curr:")}</span> <span className="font-bold text-emerald-600 dark:text-emerald-400">{acc.ledgerCurrency || "PKR"}</span></div>
                                     </div>
-                                    <div><span className="font-semibold text-foreground/80">Company:</span> <span className="truncate inline-block max-w-[120px] align-bottom">{compName}</span></div>
+                                    <div><span className="font-semibold text-foreground/80">{t(lang, "purchase.card_company_colon", "Company:")}</span> <span className="truncate inline-block max-w-[120px] align-bottom">{compName}</span></div>
                                   </div>
                                 </button>
                               );
                             })}
                             {dbAccounts.filter(acc => accountMatchesScope(acc) && accountMatchesSearch(acc, salesSearch)).length === 0 && (
                               <div className="p-4 text-center text-muted-foreground text-xs italic">
-                                No matching accounts found. Try searching by Code, Name, Currency, or Phone.
+                                {t(lang, "purchase.no_matching_accounts", "No matching accounts found. Try searching by Code, Name, Currency, or Phone.")}
                               </div>
                             )}
                           </div>
@@ -4325,7 +4355,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <div className="rounded-lg border border-border bg-muted/20 p-3">
                     <div className="grid grid-cols-1 gap-3">
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">Contract No</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.contract_no_label", "Contract No")}</label>
                         <input
                           type="text"
                           value={form.purchaseContractNo}
@@ -4334,7 +4364,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">Contract / Booking Date</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.contract_booking_date_label", "Contract / Booking Date")}</label>
                         <input
                           type="date"
                           value={form.purchaseDate}
@@ -4346,19 +4376,19 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                     <div className="grid grid-cols-2 gap-3 mt-3">
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">Invoice / Payment Select</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.invoice_payment_select_label", "Invoice / Payment Select")}</label>
                         <select
                           value={form.paymentType}
                           onChange={(e) => setValue("paymentType", e.target.value)}
                           className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8"
                         >
                           {PAYMENT_TYPES.map((type) => (
-                            <option key={type} value={type}>{type}</option>
+                            <option key={type} value={type}>{translateOptionLabel(lang, type)}</option>
                           ))}
                         </select>
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">Ship Option</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.ship_option_label", "Ship Option")}</label>
                         <select
                           value={form.shippingMode}
                           onChange={(e) => {
@@ -4369,37 +4399,37 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8"
                         >
                           {LOADING_TYPES.map((type) => (
-                            <option key={type} value={type}>{type}</option>
+                            <option key={type} value={type}>{translateOptionLabel(lang, type)}</option>
                           ))}
                         </select>
                       </div>
                       <div>
-                        <label className="block text-[10px] text-muted-foreground mb-1">Status</label>
+                        <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.status_label_plain", "Status")}</label>
                         <select
                           value={form.salesStatus}
                           onChange={(e) => setValue("salesStatus", e.target.value)}
                           className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-8"
                         >
-                          <option value="Draft">Draft</option>
-                          <option value="Pending">Pending</option>
-                          <option value="Confirmed">Confirmed</option>
-                          <option value="Transferred">Transferred</option>
+                          <option value="Draft">{t(lang, "purchase.opt_draft", "Draft")}</option>
+                          <option value="Pending">{t(lang, "purchase.opt_pending", "Pending")}</option>
+                          <option value="Confirmed">{t(lang, "purchase.opt_confirmed", "Confirmed")}</option>
+                          <option value="Transferred">{t(lang, "purchase.opt_transferred", "Transferred")}</option>
                         </select>
                       </div>
                     </div>
                     <div className="mt-3">
-                      <label className="block text-[10px] text-muted-foreground mb-1">Booking Remarks / Terms</label>
+                      <label className="block text-[10px] text-muted-foreground mb-1">{t(lang, "purchase.booking_remarks_terms_label", "Booking Remarks / Terms")}</label>
                       <textarea
                         rows={2}
                         value={form.remarks}
                         onChange={(e) => setValue("remarks", e.target.value)}
-                        placeholder="Write booking terms, payment notes, invoice note, or shipping instruction..."
+                        placeholder={t(lang, "purchase.booking_remarks_placeholder", "Write booking terms, payment notes, invoice note, or shipping instruction...")}
                         className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] resize-none"
                       />
                     </div>
                   </div>
                   <div className="flex justify-end gap-2 pt-2 border-t border-border mt-2">
-                    <Button type="button" onClick={() => setActiveTab("goods")} className="font-bold text-[10px] h-8 px-10 bg-primary text-primary-foreground">Next</Button>
+                    <Button type="button" onClick={() => setActiveTab("goods")} className="font-bold text-[10px] h-8 px-10 bg-primary text-primary-foreground">{t(lang, "common.next", "Next")}</Button>
                   </div>
                 </fieldset>
               )}
@@ -4839,12 +4869,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             <Globe2 className="h-4 w-4" />
                           </div>
                           <div>
-                            <h4 className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-900 dark:text-slate-100">Shipping & Location</h4>
-                            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Essential route information only: country, port, mode and dates.</p>
+                            <h4 className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-900 dark:text-slate-100">{t(lang, "purchase.shipping_location_title", "Shipping & Location")}</h4>
+                            <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{t(lang, "purchase.shipping_location_subtitle", "Essential route information only: country, port, mode and dates.")}</p>
                           </div>
                         </div>
                         <label className="min-w-[150px] space-y-1">
-                          <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">Shipping Mode</span>
+                          <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.shipping_mode_label", "Shipping Mode")}</span>
                           <select
                             value={form.shippingMode || "By Sea"}
                             onChange={(e) => {
@@ -4854,7 +4884,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             }}
                             className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-900 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
                           >
-                            {LOADING_TYPES.map((type) => <option key={type} value={type}>{type}</option>)}
+                            {LOADING_TYPES.map((type) => <option key={type} value={type}>{translateOptionLabel(lang, type)}</option>)}
                           </select>
                         </label>
                       </div>
@@ -4863,11 +4893,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         <div className="rounded-lg border border-amber-200 bg-amber-50/40 p-3 dark:border-amber-900/50 dark:bg-amber-950/10">
                           <div className="mb-3 flex items-center gap-2 border-b border-amber-100 pb-2 dark:border-amber-900/40">
                             <span className="h-2.5 w-2.5 rounded-full bg-amber-500" />
-                            <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">Loading / Departure</h5>
+                            <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.loading_departure_title", "Loading / Departure")}</h5>
                           </div>
                           <div className="grid gap-4 sm:grid-cols-3">
                             <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">Loading Country</span>
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_country_label", "Loading Country")}</span>
                               <SearchableSelect
                                 value={form.loadingCountry || ""}
                                 onChange={(val) => {
@@ -4882,12 +4912,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                   }
                                 }}
                                 options={masterCountryOptions.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
-                                placeholder="Select Country"
-                                addOptionLabel="Add New Country"
+                                placeholder={t(lang, "purchase.select_country_placeholder", "Select Country")}
+                                addOptionLabel={t(lang, "purchase.add_new_country_label", "Add New Country")}
                               />
                             </label>
                             <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">Loading Port</span>
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_port_label", "Loading Port")}</span>
                               <SearchableSelect
                                 value={form.loadingPort || form.airportName || form.loadingBorder || ""}
                                 onChange={(val) => {
@@ -4901,12 +4931,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                   }
                                 }}
                                 options={currentLoadingPorts.map((p, idx) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
-                                placeholder="Select Port"
-                                addOptionLabel="Add New Port"
+                                placeholder={t(lang, "purchase.select_port_placeholder", "Select Port")}
+                                addOptionLabel={t(lang, "purchase.add_new_port_label", "Add New Port")}
                               />
                             </label>
                             <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">Loading Date</span>
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.loading_date_label", "Loading Date")}</span>
                               <input
                                 type="date"
                                 value={form.loadingDate || ""}
@@ -4920,11 +4950,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         <div className="rounded-lg border border-emerald-200 bg-emerald-50/40 p-3 dark:border-emerald-900/50 dark:bg-emerald-950/10">
                           <div className="mb-3 flex items-center gap-2 border-b border-emerald-100 pb-2 dark:border-emerald-900/40">
                             <span className="h-2.5 w-2.5 rounded-full bg-emerald-500" />
-                            <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">Receiving / Arrival</h5>
+                            <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{t(lang, "purchase.receiving_arrival_title", "Receiving / Arrival")}</h5>
                           </div>
                           <div className="grid gap-4 sm:grid-cols-3">
                             <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">Receiving Country</span>
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_country_label", "Receiving Country")}</span>
                               <SearchableSelect
                                 value={form.receivingCountry || form.destinationCountry || form.receivedCountry || ""}
                                 onChange={(val) => {
@@ -4940,12 +4970,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                   }
                                 }}
                                 options={masterCountryOptions.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
-                                placeholder="Select Country"
-                                addOptionLabel="Add New Country"
+                                placeholder={t(lang, "purchase.select_country_placeholder", "Select Country")}
+                                addOptionLabel={t(lang, "purchase.add_new_country_label", "Add New Country")}
                               />
                             </label>
                             <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">Receiving Port</span>
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_port_label", "Receiving Port")}</span>
                               <SearchableSelect
                                 value={form.receivingPort || form.destinationPort || form.receivedPort || ""}
                                 onChange={(val) => {
@@ -4960,12 +4990,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                   }
                                 }}
                                 options={currentReceivedPorts.map((p, idx) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
-                                placeholder="Select Port"
-                                addOptionLabel="Add New Port"
+                                placeholder={t(lang, "purchase.select_port_placeholder", "Select Port")}
+                                addOptionLabel={t(lang, "purchase.add_new_port_label", "Add New Port")}
                               />
                             </label>
                             <label className="space-y-1">
-                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">Receiving Date</span>
+                              <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.receiving_date_label", "Receiving Date")}</span>
                               <input
                                 type="date"
                                 value={form.receivedDate || ""}
@@ -4979,32 +5009,32 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     </div>
                     {/* Ã¢â€â‚¬Ã¢â€â‚¬ SECTION 2: ADVANCE & PAYMENT TERMS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
                     <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded p-3 space-y-3">
-                      <h4 className="text-[10px] font-black uppercase text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800 pb-1">Advance & Payment Terms</h4>
+                      <h4 className="text-[10px] font-black uppercase text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800 pb-1">{t(lang, "purchase.advance_payment_terms_title", "Advance & Payment Terms")}</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
                         <div>
-                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Payment Type</label>
+                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.payment_type_label", "Payment Type")}</label>
                           <select
                             value={form.paymentType || "Advance Payment"}
                             onChange={(e) => setValue("paymentType", e.target.value)}
                             className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
                           >
-                            {PAYMENT_TYPES.map((p) => <option key={p} value={p}>{p}</option>)}
+                            {PAYMENT_TYPES.map((p) => <option key={p} value={p}>{translateOptionLabel(lang, p)}</option>)}
                           </select>
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Advance Percentage (%)</label>
+                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.advance_percentage_label", "Advance Percentage (%)")}</label>
                           <input
                             type="number"
                             min="0"
                             max="100"
                             value={form.advancePercent ?? ""}
                             onChange={(e) => setValue("advancePercent", e.target.value ? Number(e.target.value) : null)}
-                            placeholder="e.g. 20"
+                            placeholder={t(lang, "purchase.advance_pct_placeholder", "e.g. 20")}
                             className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Advance Payment Date</label>
+                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.advance_payment_date_label", "Advance Payment Date")}</label>
                           <input
                             type="date"
                             value={form.advancePaymentDate || ""}
@@ -5013,7 +5043,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Final Payment Date</label>
+                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.final_payment_date_label", "Final Payment Date")}</label>
                           <input
                             type="date"
                             value={form.paymentDate || ""}
@@ -5026,27 +5056,27 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                     {/* Ã¢â€â‚¬Ã¢â€â‚¬ SECTION 3: TRANSPORT & CONTAINER DETAILS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
                     <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded p-3 space-y-3">
-                      <h4 className="text-[10px] font-black uppercase text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800 pb-1">Transport & Container Details</h4>
+                      <h4 className="text-[10px] font-black uppercase text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800 pb-1">{t(lang, "purchase.transport_container_title", "Transport & Container Details")}</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
                         <div>
-                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Container Numbers</label>
+                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.container_numbers_label", "Container Numbers")}</label>
                           <input
                             type="text"
                             value={form.containerNumbers || ""}
                             onChange={(e) => setValue("containerNumbers", e.target.value)}
-                            placeholder="e.g. ABCU1234567"
+                            placeholder={t(lang, "purchase.container_numbers_placeholder", "e.g. ABCU1234567")}
                             className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Container Size / Type</label>
+                          <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.container_size_type_label", "Container Size / Type")}</label>
                           <select
                             value={form.containerSize || ""}
                             onChange={(e) => setValue("containerSize", e.target.value)}
                             className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
                           >
-                            <option value="">Select Type...</option>
-                            {CONTAINER_TYPES.map((t) => <option key={t} value={t}>{t}</option>)}
+                            <option value="">{t(lang, "purchase.select_type_placeholder", "Select Type...")}</option>
+                            {CONTAINER_TYPES.map((t2) => <option key={t2} value={t2}>{translateOptionLabel(lang, t2)}</option>)}
                           </select>
                         </div>
                       </div>
@@ -5054,19 +5084,19 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
                     {/* Ã¢â€â‚¬Ã¢â€â‚¬ SECTION 4: REMARKS & NARRATION Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
                     <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded p-3">
-                      <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Remarks & Narration</label>
+                      <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">{t(lang, "purchase.remarks_narration_title", "Remarks & Narration")}</label>
                       <textarea
                         value={form.remarks || ""}
                         onChange={(e) => setValue("remarks", e.target.value)}
                         className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px] h-16 resize-none"
-                        placeholder="Add any remarks or narration here..."
+                        placeholder={t(lang, "purchase.others_remarks_placeholder", "Add any remarks or narration here...")}
                       />
                     </div>
                   </div>
 
                   <div className="flex justify-between gap-2 pt-2 border-t border-border mt-2">
-                    <Button type="button" variant="outline" onClick={() => setActiveTab("goods")} className="font-bold text-[10px] h-8 px-6 text-slate-600">Back</Button>
-                    <Button type="button" onClick={() => setActiveTab("reports_tab")} className="font-bold text-[10px] h-8 px-6 bg-primary text-primary-foreground">Next</Button>
+                    <Button type="button" variant="outline" onClick={() => setActiveTab("goods")} className="font-bold text-[10px] h-8 px-6 text-slate-600">{t(lang, "common.back", "Back")}</Button>
+                    <Button type="button" onClick={() => setActiveTab("reports_tab")} className="font-bold text-[10px] h-8 px-6 bg-primary text-primary-foreground">{t(lang, "common.next", "Next")}</Button>
                   </div>
                 </fieldset>
               )}
@@ -5620,7 +5650,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.loading_transit_report", "Loading & Transit Report")}</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid grid-cols-[100px_1fr] gap-1">
-                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.shipping_mode_colon", "Shipping Mode:")}</span><span className="font-bold">{form.shippingMode || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.shipping_mode_colon", "Shipping Mode:")}</span><span className="font-bold">{form.shippingMode ? translateOptionLabel(lang, form.shippingMode) : "N/A"}</span>
                       <span className="text-slate-500 font-semibold">{t(lang, "purchase.origin_country_colon", "Origin Country:")}</span><span className="font-bold">{form.origin || "N/A"}</span>
                       <span className="text-slate-500 font-semibold">{t(lang, "purchase.loading_port_border_colon", "Loading Port/Border:")}</span><span className="font-bold">{form.loadingPort || form.loadingBorder || form.airportName || "N/A"}</span>
                       <span className="text-slate-500 font-semibold">{t(lang, "purchase.loading_date_colon", "Loading Date:")}</span><span className="font-bold">{form.loadingDate || "N/A"}</span>
@@ -5639,7 +5669,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   <h3 className="font-black border-b border-slate-200 pb-1 mb-2 uppercase text-slate-800">{t(lang, "purchase.payment_conditions_report", "Payment Conditions Report")}</h3>
                   <div className="grid grid-cols-2 gap-4">
                     <div className="grid grid-cols-[120px_1fr] gap-1">
-                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.payment_term_colon", "Payment Term:")}</span><span className="font-bold">{form.paymentType || "N/A"}</span>
+                      <span className="text-slate-500 font-semibold">{t(lang, "purchase.payment_term_colon", "Payment Term:")}</span><span className="font-bold">{form.paymentType ? translateOptionLabel(lang, form.paymentType) : "N/A"}</span>
                       <span className="text-slate-500 font-semibold">{t(lang, "purchase.advance_pct_colon", "Advance (%):")}</span><span className="font-bold">{form.advancePercent || 0}%</span>
                       <span className="text-slate-500 font-semibold">{t(lang, "purchase.advance_payment_date_colon", "Advance Payment Date:")}</span><span className="font-bold">{form.advancePaymentDate || "N/A"}</span>
                     </div>

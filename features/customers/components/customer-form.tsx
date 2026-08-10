@@ -925,58 +925,58 @@ export function CustomerForm({
           <div className="flex items-center justify-between border-b pb-3 mb-4">
             <div className="flex items-center gap-2">
               <Building2 className="h-4.5 w-4.5 text-teal-600" />
-              <h2 className="font-semibold text-slate-800 text-sm">Live Preview</h2>
+              <h2 className="font-semibold text-slate-800 text-sm">{getLabel("livePreview", lang)}</h2>
             </div>
             <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-200">
               <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" />
-              Draft Preview
+              {getLabel("draftPreview", lang)}
             </span>
           </div>
 
           <div className="space-y-4 text-xs">
             {customerType === "Business" && (
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Business / Company Name</p>
-                <p className="text-sm font-extrabold text-slate-900 mt-0.5">{businessName || "New Business"}</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{getLabel("businessCompanyName", lang)}</p>
+                <p className="text-sm font-extrabold text-slate-900 mt-0.5">{businessName || getLabel("newBusiness", lang)}</p>
               </div>
             )}
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                {customerType === "Business" ? "Representative Name" : "Customer Name"}
+                {customerType === "Business" ? getLabel("representativeName", lang) : getLabel("customerName", lang)}
               </p>
               <div className="flex items-center gap-3">
                 {passportPicture && (
                   <img src={passportPicture} alt="Passport" className="h-10 w-10 rounded-full border shadow-sm object-cover" />
                 )}
                 <p className="text-sm font-extrabold text-slate-900">
-                  {firstName || lastName ? `${firstName} ${lastName}`.trim() : "New Customer"}
+                  {firstName || lastName ? `${firstName} ${lastName}`.trim() : getLabel("newCustomer", lang)}
                 </p>
               </div>
             </div>
             {customerType !== "Business" && fatherName && (
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Father Name</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{getLabel("fatherName", lang)}</p>
                 <p className="text-xs font-semibold text-slate-700 mt-0.5">{fatherName}</p>
               </div>
             )}
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Customer Type</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{getLabel("customerType", lang)}</p>
               <p className="text-xs font-semibold text-slate-700 mt-0.5">{customerType}</p>
             </div>
             <div className="border-t pt-3">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Location</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{getLabel("location", lang)}</p>
               <p className="text-xs text-slate-700 font-semibold mt-0.5">{previewLocation}</p>
-              {cityCode && <p className="text-[10px] text-muted-foreground mt-0.5 font-mono">Zip Code: {cityCode}</p>}
+              {cityCode && <p className="text-[10px] text-muted-foreground mt-0.5 font-mono">{getLabel("zipCode", lang)}: {cityCode}</p>}
             </div>
             {address && (
               <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Full Address</p>
+                <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{getLabel("fullAddress", lang)}</p>
                 <p className="text-xs text-slate-600 leading-relaxed mt-0.5">{address}</p>
               </div>
             )}
 
             <div className="border-t pt-3 space-y-2">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Contacts ({contacts.filter(c => c.value.trim()).length})</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{getLabel("contacts", lang)} ({contacts.filter(c => c.value.trim()).length})</p>
               {contacts.filter(c => c.value.trim()).map((c, idx) => {
                 const label = c.type.startsWith("Custom: ") ? c.type.slice(8) : c.type;
                 return (
@@ -987,12 +987,12 @@ export function CustomerForm({
                 );
               })}
               {contacts.filter(c => c.value.trim()).length === 0 && (
-                <p className="text-[10px] italic text-muted-foreground">No contacts entered</p>
+                <p className="text-[10px] italic text-muted-foreground">{getLabel("noContactsEntered", lang)}</p>
               )}
             </div>
 
             <div className="border-t pt-3 space-y-2">
-              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Documents ({documents.filter(d => d.number.trim()).length})</p>
+              <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">{getLabel("documents", lang)} ({documents.filter(d => d.number.trim()).length})</p>
               {documents.filter(d => d.number.trim()).map((d, idx) => {
                 const label = d.type.startsWith("Custom: ") ? d.type.slice(8) : d.type;
                 return (
@@ -1003,7 +1003,7 @@ export function CustomerForm({
                 );
               })}
               {documents.filter(d => d.number.trim()).length === 0 && (
-                <p className="text-[10px] italic text-muted-foreground">No documents entered</p>
+                <p className="text-[10px] italic text-muted-foreground">{getLabel("noDocumentsEntered", lang)}</p>
               )}
             </div>
           </div>

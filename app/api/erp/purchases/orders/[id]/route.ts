@@ -15,6 +15,7 @@ import {
   ensurePurchaseSchemaAndEnums
 } from "@/lib/services/purchase-table-manager";
 import { saveEnterpriseRecordTranslations, normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 import { revalidatePath } from "next/cache";
 
@@ -22,10 +23,63 @@ const paramsSchema = z.object({
   id: uuidSchema
 });
 
+/**
+ * Bulk-resolves goods_name/brand/unit_name on form_data.goodsEntries into the requested
+ * language, reading from record_translations (written by translateMasterRecord against the
+ * "purchase_order_items" table on save — see the POST/PATCH handlers below). Entries saved
+ * before this pipeline existed have no stored itemId and are returned unchanged (English).
+ */
+async function resolveGoodsEntriesLanguage(formData: any, lang: string) {
+  if (!formData || lang === "en" || !Array.isArray(formData.goodsEntries)) return formData;
+  const ids = formData.goodsEntries.map((g: any) => g?.itemId).filter(Boolean);
+  if (ids.length === 0) return formData;
+
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) return formData;
+
+  const column = lang === "ur" ? "urdu_text" : lang === "ar" ? "arabic_text" : lang === "fa" ? "persian_text" : lang === "ps" ? "pashto_text" : "english_text";
+  const { default: postgres } = await import("postgres");
+  const sql = postgres(dbUrl, { max: 1, prepare: false, idle_timeout: 5, connect_timeout: 8 });
+  try {
+    const rows = await sql.unsafe(
+      `select record_id, field_name, "${column}" as text
+       from record_translations
+       where record_table = 'purchase_order_items' and field_name = any($1::text[])
+         and record_id = any($2::uuid[]) and deleted_at is null
+         and "${column}" is not null and trim("${column}") <> ''`,
+      [["goods_name", "brand", "unit_name"], ids]
+    ).catch(() => [] as Array<{ record_id: string; field_name: string; text: string }>);
+
+    if (rows.length === 0) return formData;
+    const byId = new Map<string, Record<string, string>>();
+    for (const r of rows) {
+      if (!byId.has(r.record_id)) byId.set(r.record_id, {});
+      byId.get(r.record_id)![r.field_name] = r.text;
+    }
+
+    return {
+      ...formData,
+      goodsEntries: formData.goodsEntries.map((g: any) => {
+        const t = g?.itemId ? byId.get(g.itemId) : null;
+        if (!t) return g;
+        return {
+          ...g,
+          goodsName: t.goods_name || g.goodsName,
+          brand: t.brand || g.brand,
+          qtyName: t.unit_name || g.qtyName
+        };
+      })
+    };
+  } finally {
+    await sql.end({ timeout: 2 }).catch(() => undefined);
+  }
+}
+
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
+    const requestedLang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
 
     const supabase = await createApiSupabaseClient();
     const row = await requireSupabaseData(
@@ -46,6 +100,10 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       countryBranchId: (row as any)?.country_branch_id ?? null,
       cityBranchId: (row as any)?.city_branch_id ?? null
     });
+
+    if (row && (row as any).form_data) {
+      (row as any).form_data = await resolveGoodsEntriesLanguage((row as any).form_data, requestedLang);
+    }
 
     return apiOk({ order: row });
   } catch (error) {
@@ -265,6 +323,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         .eq("purchase_order_id", params.id);
     }
 
+    let insertedItems: Array<{ id: string; goods_name?: string; brand?: string; unit_name?: string }> = [];
     if (body.items !== undefined) {
       await safeDeletePurchaseOrderItems(supabase, params.id);
       if (body.items && body.items.length > 0) {
@@ -288,7 +347,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
           total_local: it.totalLocal || 0,
           total_usd: it.totalUsd || 0
         }));
-        await safeInsertPurchaseOrderItems(supabase, itemsPayload);
+        insertedItems = await safeInsertPurchaseOrderItems(supabase, itemsPayload);
       }
     }
 
@@ -349,9 +408,28 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
           source: "auto"
         });
 
+        // Per-item translation, same root-cause fix as the POST route: only runs when items
+        // were actually re-inserted this request (insertedItems stays empty otherwise, so
+        // existing item translations/ids are left untouched).
         const currentFormData = patch.form_data || (before as any)?.form_data || {};
+        const goodsEntriesWithIds = insertedItems.length > 0 && Array.isArray(currentFormData.goodsEntries)
+          ? currentFormData.goodsEntries.map((g: any, idx: number) => {
+              const dbItem = insertedItems[idx];
+              if (!dbItem?.id) return g;
+              void translateMasterRecord(
+                "purchase_order_items",
+                dbItem.id,
+                { goods_name: dbItem.goods_name, brand: dbItem.brand, unit_name: dbItem.unit_name },
+                entryLang,
+                session.userId
+              );
+              return { ...g, itemId: dbItem.id };
+            })
+          : currentFormData.goodsEntries;
+
         const updatedFormData = {
           ...currentFormData,
+          goodsEntries: goodsEntriesWithIds,
           translations: translationsMap
         };
 

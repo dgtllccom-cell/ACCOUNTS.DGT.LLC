@@ -11,6 +11,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { safeInsertPurchaseOrderItems, safeInsertPurchaseOrderExpenses } from "@/lib/services/purchase-table-manager";
 import { saveEnterpriseRecordTranslations, normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 import { revalidatePath } from "next/cache";
 
@@ -384,6 +385,7 @@ export async function POST(request: NextRequest) {
       await adminSupabase.from("purchase_orders").update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial }).eq("id", orderId);
     } catch { /* non-fatal — never blocks the order/posting */ }
 
+    let insertedItems: Array<{ id: string; goods_name?: string; brand?: string; unit_name?: string }> = [];
     if (body.items && body.items.length > 0) {
       const itemsPayload = body.items.map((it: any) => ({
         purchase_order_id: orderId,
@@ -406,7 +408,7 @@ export async function POST(request: NextRequest) {
         total_usd: it.totalUsd || 0
       }));
       try {
-        await safeInsertPurchaseOrderItems(supabase, itemsPayload);
+        insertedItems = await safeInsertPurchaseOrderItems(supabase, itemsPayload);
       } catch (e: any) {
         return apiError("ITEMS_INSERT_FAILED", e.message || String(e), 400);
       }
@@ -472,9 +474,31 @@ export async function POST(request: NextRequest) {
         source: "auto"
       });
 
-      const currentFormData = payload.form_data || {};
+      // Per-item translation (purchase_order_items.goods_name/brand/unit_name — registered in
+      // lib/i18n/translatable-fields.ts) so the Goods Entry table, Complete Summary, and Voucher
+      // can resolve each line item's name/brand/unit in the active language, not just the
+      // concatenated order-level "product_name" summary above. insertedItems is in the same
+      // order as body.items / form_data.goodsEntries (both built from the same client-side
+      // `allEntries` array), so index-matching is safe here.
+      const currentFormData: any = payload.form_data || {};
+      const goodsEntriesWithIds = Array.isArray(currentFormData.goodsEntries)
+        ? currentFormData.goodsEntries.map((g: any, idx: number) => {
+            const dbItem = insertedItems[idx];
+            if (!dbItem?.id) return g;
+            void translateMasterRecord(
+              "purchase_order_items",
+              dbItem.id,
+              { goods_name: dbItem.goods_name, brand: dbItem.brand, unit_name: dbItem.unit_name },
+              entryLang,
+              session.userId
+            );
+            return { ...g, itemId: dbItem.id };
+          })
+        : currentFormData.goodsEntries;
+
       const updatedFormData = {
         ...currentFormData,
+        goodsEntries: goodsEntriesWithIds,
         translations: translationsMap
       };
 

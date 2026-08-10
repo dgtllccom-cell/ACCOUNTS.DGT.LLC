@@ -72,6 +72,7 @@ export function EmployeeManagementView() {
       if (status) qp.set("status", status);
       if (countryId) qp.set("countryId", countryId);
       if (branchId) qp.set("branchId", branchId);
+      qp.set("lang", lang);
 
       const res = await apiGet<{ employees: any[] }>(`/api/erp/hr-payroll/employees?${qp.toString()}`);
       setEmployees(res.employees || []);
@@ -87,7 +88,7 @@ export function EmployeeManagementView() {
       loadEmployees().catch(() => null);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activeTab, search, category, status, countryId, branchId]);
+  }, [activeTab, search, category, status, countryId, branchId, lang]);
 
   async function handleDelete(id: string) {
     if (!confirm("Are you sure you want to delete this employee record?")) return;

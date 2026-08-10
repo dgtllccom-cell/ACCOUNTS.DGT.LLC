@@ -228,6 +228,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
   const [accountTitle, setAccountTitle] = useState<AccountTitle | "">("");
   const [subType, setSubType] = useState("");
   const [category, setCategory] = useState("");
+  const [customCategories, setCustomCategories] = useState<string[]>([]);
   const [accountCode, setAccountCode] = useState("");
   const [manualReferenceNumber, setManualReferenceNumber] = useState("");
   const [accountName, setAccountName] = useState("");
@@ -887,10 +888,50 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                   )}
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="category">{getLabel("category", lang)} *</Label>
-                  <select id="category" value={category} onChange={(event) => setCategory(event.target.value)} className={selectClass()}>
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="category">{getLabel("category", lang)} *</Label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const promptMsg = lang === "ur" ? "نیا زمرہ داخل کریں:" : lang === "ar" ? "إدخال فئة جديدة:" : lang === "ps" ? "نوی ویش داخل کړئ:" : "Enter New Category Name:";
+                        const newCat = window.prompt(promptMsg);
+                        if (newCat && newCat.trim()) {
+                          setCustomCategories((prev) => Array.from(new Set([...prev, newCat.trim()])));
+                          setCategory(newCat.trim());
+                        }
+                      }}
+                      className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline"
+                    >
+                      + {lang === "ur" ? "نیا زمرہ شامل کریں" : lang === "ar" ? "إضافة فئة جديدة" : lang === "ps" ? "نوی کټګوري اضافه کړئ" : "Add New Category"}
+                    </button>
+                  </div>
+                  <select
+                    id="category"
+                    value={category}
+                    onChange={(event) => {
+                      const val = event.target.value;
+                      if (val === "__ADD_NEW_CATEGORY__") {
+                        const promptMsg = lang === "ur" ? "نیا زمرہ داخل کریں:" : lang === "ar" ? "إدخال فئة جديدة:" : lang === "ps" ? "نوی ویش داخل کړئ:" : "Enter New Category Name:";
+                        const newCat = window.prompt(promptMsg);
+                        if (newCat && newCat.trim()) {
+                          setCustomCategories((prev) => Array.from(new Set([...prev, newCat.trim()])));
+                          setCategory(newCat.trim());
+                        } else {
+                          setCategory("");
+                        }
+                      } else {
+                        setCategory(val);
+                      }
+                    }}
+                    className={selectClass()}
+                  >
                     <option value="">{getLabel("selectCategory", lang)}</option>
-                    {categories.map((item) => (<option key={item} value={item}>{localizedOption(item, lang)}</option>))}
+                    {Array.from(new Set([...categories, ...customCategories])).map((item) => (
+                      <option key={item} value={item}>{localizedOption(item, lang)}</option>
+                    ))}
+                    <option value="__ADD_NEW_CATEGORY__">
+                      + {lang === "ur" ? "نیا زمرہ شامل کریں..." : lang === "ar" ? "إضافة فئة جديدة..." : lang === "ps" ? "نوی کټګوري اضافه کړئ..." : "Add New Category..."}
+                    </option>
                   </select>
                 </div>
               </div>

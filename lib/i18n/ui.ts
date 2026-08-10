@@ -1409,11 +1409,525 @@ export type UiKey =
   | "purchase.prepared_by_label"
   | "purchase.checked_by_label"
   | "purchase.authorized_signatory_label"
-  | "common.save";
+  | "common.save"
+  | "common.save_finalize"
+  | "purchase.card_branch_login_details"
+  | "purchase.card_branch_name_label"
+  | "purchase.card_branch_code_colon"
+  | "purchase.card_user_admin_colon"
+  | "purchase.card_user_id_colon"
+  | "purchase.card_role_colon"
+  | "purchase.card_location_colon"
+  | "purchase.card_country_colon"
+  | "purchase.card_bill_details"
+  | "purchase.card_booking_date_colon"
+  | "purchase.card_fiscal_year_colon"
+  | "purchase.card_booking_branch_colon"
+  | "purchase.card_status_colon"
+  | "purchase.card_system_serial_colon"
+  | "purchase.card_branch_serial_colon"
+  | "purchase.card_contract_no_colon"
+  | "purchase.card_loading_mode_colon"
+  | "purchase.card_origin_country_colon"
+  | "purchase.card_purchase_account_details"
+  | "purchase.card_account_code_colon"
+  | "purchase.card_account_name_colon"
+  | "purchase.card_select_purchase_account_placeholder"
+  | "purchase.card_select_sales_account_placeholder"
+  | "purchase.card_main_branch_fallback"
+  | "purchase.card_company_colon"
+  | "purchase.card_none_label"
+  | "purchase.card_select_company_title"
+  | "purchase.card_no_companies_found"
+  | "purchase.card_new_company_btn"
+  | "purchase.card_kind_label"
+  | "purchase.card_type_label"
+  | "purchase.card_control_label"
+  | "purchase.card_sub_acct_label"
+  | "purchase.card_serials_ref_label"
+  | "purchase.card_acct_sn_label"
+  | "purchase.card_country_sn_label"
+  | "purchase.card_branch_sn_label"
+  | "purchase.card_manual_ref_label"
+  | "purchase.card_opening_bal_label"
+  | "purchase.card_current_bal_label"
+  | "purchase.card_mob_label"
+  | "purchase.card_wa_label"
+  | "purchase.card_not_selected"
+  | "common.cancel"
+  | "purchase.th_action"
+  | "purchase.goods_table_empty"
+  | "purchase.booking_bill_info_title"
+  | "purchase.purchase_account_dr_star"
+  | "purchase.sales_account_cr_star"
+  | "purchase.search_code_name_branch"
+  | "purchase.select_purchase_account_dr_header"
+  | "purchase.select_sales_account_cr_header"
+  | "purchase.found_count_suffix"
+  | "purchase.system_code_prefix"
+  | "purchase.manual_ac_colon"
+  | "purchase.curr_colon"
+  | "purchase.no_matching_accounts"
+  | "purchase.contract_no_label"
+  | "purchase.contract_booking_date_label"
+  | "purchase.invoice_payment_select_label"
+  | "purchase.ship_option_label"
+  | "purchase.status_label_plain"
+  | "purchase.opt_draft"
+  | "purchase.opt_pending"
+  | "purchase.opt_confirmed"
+  | "purchase.opt_transferred"
+  | "purchase.booking_remarks_terms_label"
+  | "purchase.booking_remarks_placeholder"
+  | "purchase.shipping_location_title"
+  | "purchase.shipping_location_subtitle"
+  | "purchase.shipping_mode_label"
+  | "purchase.loading_departure_title"
+  | "purchase.loading_country_label"
+  | "purchase.loading_port_label"
+  | "purchase.loading_date_label"
+  | "purchase.receiving_arrival_title"
+  | "purchase.receiving_country_label"
+  | "purchase.receiving_port_label"
+  | "purchase.receiving_date_label"
+  | "purchase.select_country_placeholder"
+  | "purchase.add_new_country_label"
+  | "purchase.select_port_placeholder"
+  | "purchase.add_new_port_label"
+  | "purchase.advance_payment_terms_title"
+  | "purchase.payment_type_label"
+  | "purchase.advance_percentage_label"
+  | "purchase.advance_pct_placeholder"
+  | "purchase.advance_payment_date_label"
+  | "purchase.final_payment_date_label"
+  | "purchase.transport_container_title"
+  | "purchase.container_numbers_label"
+  | "purchase.container_numbers_placeholder"
+  | "purchase.container_size_type_label"
+  | "purchase.select_type_placeholder"
+  | "purchase.others_remarks_placeholder"
+  | "purchase.opt_advance_payment"
+  | "purchase.opt_invoice"
+  | "purchase.opt_final_payment"
+  | "purchase.opt_credit"
+  | "purchase.opt_by_sea"
+  | "purchase.opt_by_road"
+  | "purchase.opt_by_air"
+  | "purchase.opt_container_20ft"
+  | "purchase.opt_container_40ft"
+  | "purchase.opt_container_20ft_reefer"
+  | "purchase.opt_container_40ft_reefer"
+  | "purchase.opt_container_reefer"
+  | "purchase.opt_container_non_reefer"
+  | "purchase.opt_container_open_top"
+  | "purchase.opt_container_flat_rack"
+  | "purchase.opt_container_lcl_bulk"
+  | "common.next"
+  | "common.next_step"
+  | "common.previous"
+  | "common.back"
+  | "common.search"
+  | "common.edit"
+  | "common.delete"
+  | "common.view"
+  | "common.add_new"
+  | "common.create"
+  | "common.register"
+  | "common.actions"
+  | "common.status"
+  | "common.active"
+  | "common.inactive"
+  | "common.on_leave"
+  | "common.suspended"
+  | "common.all"
+  | "common.all_countries"
+  | "common.all_branches"
+  | "common.all_categories"
+  | "common.all_statuses"
+  | "common.loading"
+  | "common.no_records"
+  | "common.select"
+  | "common.confirm"
+  | "common.reset"
+  | "common.print"
+  | "common.export"
+  | "common.date"
+  | "common.name"
+  | "common.category"
+  | "common.country"
+  | "common.branch"
+  | "common.city"
+  | "common.description"
+  | "common.amount"
+  | "common.remarks"
+  | "common.close"
+  | "common.yes"
+  | "common.no"
+  | "hr.title_master"
+  | "hr.subtitle_master"
+  | "hr.register_new_employee"
+  | "hr.tab_master"
+  | "hr.tab_payroll"
+  | "hr.search_placeholder"
+  | "hr.cat_manager"
+  | "hr.cat_normal_staff"
+  | "hr.cat_employee"
+  | "hr.cat_others"
+  | "hr.no_employees_cta"
+  | "hr.f_assigned_country"
+  | "hr.f_main_branch"
+  | "hr.f_city_branch"
+  | "hr.f_reporting_manager"
+  | "hr.f_select_country"
+  | "hr.f_select_main_branch"
+  | "hr.f_select_city_branch"
+  | "hr.f_select_manager"
+  | "hr.f_select_ledger"
+  | "hr.f_joining_date"
+  | "hr.f_employment_shift"
+  | "hr.f_employment_type"
+  | "hr.f_full_time"
+  | "hr.f_part_time"
+  | "hr.f_contract"
+  | "hr.f_internship"
+  | "hr.f_duty_shift"
+  | "hr.f_duty_start"
+  | "hr.f_duty_end"
+  | "hr.f_contract_start"
+  | "hr.f_contract_end"
+  | "hr.f_probation_start"
+  | "hr.f_probation_end"
+  | "hr.f_salary_basis"
+  | "hr.f_monthly"
+  | "hr.f_daily"
+  | "hr.f_hourly"
+  | "hr.f_custom"
+  | "hr.f_basic_salary"
+  | "hr.f_monthly_allowances"
+  | "hr.f_housing"
+  | "hr.f_transport"
+  | "hr.f_mobile_utility"
+  | "hr.f_tax_social"
+  | "hr.f_general_deduction"
+  | "hr.f_salary_expense_acc"
+  | "hr.f_payable_acc"
+  | "hr.f_net_payroll_estimate"
+  | "hr.f_master_report_card"
+  | "hr.f_loading_details"
+  | "hr.f_ph_day_shift"
+  | "hr.f_ph_department"
+  | "hr.f_ph_designation"
+  | "hr.f_food"
+  | "hr.f_gl_mapping"
+  | "hr.f_salary_expense_ledger"
+  | "hr.f_step1_title"
+  | "hr.f_step2_title"
+  | "hr.f_step3_title"
+  | "hr.f_step4_title"
+  | "hr.f_step5_title"
+  | "common.previous_step"
+  | "common.saving"
+  | "hr.f_save_finalize_employee"
+  | "hr.f_step_lbl_1"
+  | "hr.f_step_lbl_2"
+  | "hr.f_step_lbl_3"
+  | "hr.f_step_lbl_4"
+  | "hr.f_step_lbl_5"
+  | "hr.f_step2_preview"
+  | "hr.f_step3_preview"
+  | "hr.f_step4_preview"
+  | "hr.f_step2_of5"
+  | "hr.f_step3_of5"
+  | "hr.f_step4_of5"
+  | "hr.f_verified_ready"
+  | "hr.f_net_payroll"
+  | "hr.f_allowances"
+  | "hr.f_type"
+  | "hr.f_shift"
+  | "hr.p_payroll_month"
+  | "hr.p_branch_scope"
+  | "hr.p_country_scope"
+  | "hr.p_payment_status"
+  | "hr.p_paid"
+  | "hr.p_transferred"
+  | "hr.p_transfer_salary"
+  | "hr.p_confirm_transfer"
+  | "hr.p_basic_payroll"
+  | "hr.p_total_allowances"
+  | "hr.p_net_payable"
+  | "hr.p_recoveries_deds"
+  | "hr.p_excel_csv"
+  | "hr.p_loading_register"
+  | "hr.p_no_records_cta"
+  | "hr.l_certificate"
+  | "hr.l_ledger"
+  | "hr.l_issue_advance"
+  | "hr.l_salary_history"
+  | "hr.l_advances_ledger"
+  | "hr.l_loading_history"
+  | "hr.l_no_advances"
+  | "hr.l_no_salary_records"
+  | "hr.m_advance_type"
+  | "hr.m_salary_advance"
+  | "hr.m_emergency_advance"
+  | "hr.m_travel_advance"
+  | "hr.m_other_advance"
+  | "hr.m_employee_loan"
+  | "hr.m_principal"
+  | "hr.m_monthly_deduction_rate"
+  | "hr.m_date_disbursed"
+  | "hr.m_recovery_start"
+  | "hr.m_payment_ledger_source"
+  | "hr.m_select_cash_bank"
+  | "hr.m_auto_post_roznamcha"
+  | "hr.m_remarks"
+  | "hr.m_ph_remarks"
+  | "hr.l_loan_adv"
+  | "hr.edit_profile_title"
+  | "hr.register_profile_title"
+  | "hr.l_statement_history"
+  | "hr.m_target_currency"
+  | "hr.m_recording"
+  | "hr.m_record_btn"
+  | "hr.m_ph_500"
+  | "hr.m_err_amount"
+  | "hr.m_err_ledger"
+  | "hr.m_err_deduction"
+  | "hr.m_err_start"
+  | "hr.m_err_failed"
+  | "hr.stx_err_select_account"
+  | "hr.stx_err_unexpected"
+  | "hr.stx_month"
+  | "hr.stx_basic_rate"
+  | "hr.stx_allowances"
+  | "hr.stx_overtime"
+  | "hr.stx_deductions"
+  | "hr.stx_advance_recovery"
+  | "hr.stx_loan_recovery"
+  | "hr.stx_net_payable"
+  | "hr.stx_payment_account"
+  | "hr.stx_select_ledger"
+  | "hr.stx_payment_date"
+  | "hr.stx_exchange_rate_prefix"
+  | "hr.stx_converted_amount"
+  | "hr.stx_remarks_memo"
+  | "hr.stx_ph_remarks"
+  | "hr.stx_posting"
+  | "hr.stx_confirm_transfer"
+  | "hr.pp_new_person_registry"
+  | "purchase.pbo_back_to_register"
+  | "purchase.pbo_loading"
+  | "purchase.pbo_new_booking"
+  | "purchase.pbo_overview"
+  | "purchase.pbo_register_title"
+  | "purchase.pbo_view_register_table"
+  | "purchase.pbo_editing_prefix"
+  | "purchase.pbo_new_entry_title"
+  | "purchase.lgr_all_countries"
+  | "purchase.lgr_all_branches"
+  | "purchase.lgr_all_cities"
+  | "purchase.lgr_bill_no"
+  | "purchase.lgr_choose_warehouse"
+  | "purchase.lgr_date_from"
+  | "purchase.lgr_driver_name"
+  | "purchase.lgr_export_ref_label"
+  | "purchase.lgr_title"
+  | "purchase.lgr_loading_registry"
+  | "purchase.lgr_remarks_label"
+  | "purchase.lgr_search_placeholder"
+  | "purchase.lgr_select_warehouse"
+  | "purchase.lgr_truck_no"
+  | "purchase.lgr_ph_remarks"
+  | "purchase.lgr_ph_export_ref"
+  | "purchase.lgr_ph_truck_no"
+  | "purchase.lgr_subtitle"
+  | "purchase.lgr_status_warehouse_received"
+  | "purchase.lgr_status_export_completed"
+  | "purchase.lgr_status_loading_completed"
+  | "purchase.lgr_label_warehouse"
+  | "purchase.lgr_label_export"
+  | "purchase.lgr_label_loading"
+  | "purchase.lgr_truck_hash"
+  | "purchase.lgr_direct"
+  | "purchase.lgr_completed"
+  | "purchase.lgr_saving"
+  | "purchase.lgr_confirm_complete"
+  | "purchase.lgr_supplier_label"
+  | "purchase.lgr_item_label"
+  | "purchase.lgr_unit_bag"
+  | "purchase.lgr_general_goods"
+  | "purchase.lgr_local_vendor"
+  | "purchase.lgr_new_badge"
+  | "purchase.lgr_page_title"
+  | "purchase.lgr_no_pending_suffix"
+  | "purchase.lgr_no_match_prefix"
+  | "purchase.lgr_no_match_suffix"
+  | "purchase.lgr_process_prefix"
+  | "purchase.lgr_receipt_suffix"
+  | "purchase.lgr_err_save_failed"
+  | "purchase.pmw_filter"
+  | "purchase.pmw_print_pdf"
+  | "purchase.pmw_export_excel"
+  | "purchase.pmw_download_csv"
+  | "purchase.pmw_reset_refresh"
+  | "purchase.pmw_search_placeholder"
+  | "purchase.pmw_loading"
+  | "purchase.pmw_view_full_report"
+  | "purchase.pmw_super_admin"
+  | "purchase.pmw_advance"
+  | "purchase.pmw_branch_name_label"
+  | "purchase.pmw_user_name_label"
+  | "purchase.pmw_remaining_balance"
+  | "purchase.pmw_total_purchase"
+  | "purchase.pmw_total_containers"
+  | "purchase.pmw_total_quantity"
+  | "purchase.pmw_total_weight"
+  | "purchase.pmw_purchase_orders"
+  | "purchase.pmw_quantity_items_report"
+  | "purchase.pmw_spreadsheet_dashboard"
+  | "purchase.pmw_spreadsheet_report_subtitle"
+  | "purchase.pmw_quantity_report_subtitle"
+  | "purchase.pmw_no_live_records"
+  | "purchase.pmw_no_dashboard_records"
+  | "purchase.pmw_err_load_failed"
+  | "nav.final_payments_advance_nil"
+  | "nav.purchase_order_management"
+  | "nav.branch_purchase"
+  | "nav.local_branch_purchase"
+  | "nav.country_purchase"
+  | "nav.product_units"
+  | "nav.product_brands"
+  | "nav.product_categories"
+  | "nav.warehouses"
+  | "nav.truck_registration"
+  | "nav.truck_loading"
+  | "nav.import_loading"
+  | "nav.transit_loading"
+  | "nav.walkthrough_video"
+  | "tt.title"
+  | "tt.select_truck"
+  | "tt.date"
+  | "tt.company"
+  | "tt.goods"
+  | "nav.journal_stock_checking_report"
+  | "nav.daily_expenses_bill"
+  | "nav.office_home_expenses_bill"
+  | "purchase.step4_verify_subtitle";
 
 type Dict = Record<UiKey, string>;
 
 const en: Dict = {
+  "purchase.step4_verify_subtitle": "Verify printable document sections, account postings, goods manifest, payment terms, and loading schedules before final verification.",
+  "purchase.opt_advance_payment": "Advance Payment",
+  "purchase.opt_invoice": "Invoice",
+  "purchase.opt_final_payment": "Final Payment",
+  "purchase.opt_credit": "Credit",
+  "purchase.opt_by_sea": "By Sea",
+  "purchase.opt_by_road": "By Road",
+  "purchase.opt_by_air": "By Air",
+  "purchase.opt_container_20ft": "20 FT",
+  "purchase.opt_container_40ft": "40 FT",
+  "purchase.opt_container_20ft_reefer": "20 FT Reefer",
+  "purchase.opt_container_40ft_reefer": "40 FT Reefer",
+  "purchase.opt_container_reefer": "Reefer Container",
+  "purchase.opt_container_non_reefer": "Non Reefer",
+  "purchase.opt_container_open_top": "Open Top",
+  "purchase.opt_container_flat_rack": "Flat Rack",
+  "purchase.opt_container_lcl_bulk": "LCL / Bulk",
+  "purchase.shipping_location_title": "Shipping & Location",
+  "purchase.shipping_location_subtitle": "Essential route information only: country, port, mode and dates.",
+  "purchase.shipping_mode_label": "Shipping Mode",
+  "purchase.loading_departure_title": "Loading / Departure",
+  "purchase.loading_country_label": "Loading Country",
+  "purchase.loading_port_label": "Loading Port",
+  "purchase.loading_date_label": "Loading Date",
+  "purchase.receiving_arrival_title": "Receiving / Arrival",
+  "purchase.receiving_country_label": "Receiving Country",
+  "purchase.receiving_port_label": "Receiving Port",
+  "purchase.receiving_date_label": "Receiving Date",
+  "purchase.select_country_placeholder": "Select Country",
+  "purchase.add_new_country_label": "Add New Country",
+  "purchase.select_port_placeholder": "Select Port",
+  "purchase.add_new_port_label": "Add New Port",
+  "purchase.advance_payment_terms_title": "Advance & Payment Terms",
+  "purchase.payment_type_label": "Payment Type",
+  "purchase.advance_percentage_label": "Advance Percentage (%)",
+  "purchase.advance_pct_placeholder": "e.g. 20",
+  "purchase.advance_payment_date_label": "Advance Payment Date",
+  "purchase.final_payment_date_label": "Final Payment Date",
+  "purchase.transport_container_title": "Transport & Container Details",
+  "purchase.container_numbers_label": "Container Numbers",
+  "purchase.container_numbers_placeholder": "e.g. ABCU1234567",
+  "purchase.container_size_type_label": "Container Size / Type",
+  "purchase.select_type_placeholder": "Select Type...",
+  "purchase.others_remarks_placeholder": "Add any remarks or narration here...",
+  "purchase.th_action": "Action",
+  "purchase.goods_table_empty": "No goods added yet. Add an item above to see it here.",
+  "purchase.booking_bill_info_title": "Purchase Booking / Bill Info",
+  "purchase.purchase_account_dr_star": "Purchase Account (DR)*",
+  "purchase.sales_account_cr_star": "Sales Account (CR)*",
+  "purchase.search_code_name_branch": "Search Code, Name, Branch, Manual A/C...",
+  "purchase.select_purchase_account_dr_header": "Select Purchase Account (DR)",
+  "purchase.select_sales_account_cr_header": "Select Sales Account (CR)",
+  "purchase.found_count_suffix": "{n} found",
+  "purchase.system_code_prefix": "System: {code}",
+  "purchase.manual_ac_colon": "Manual A/C:",
+  "purchase.curr_colon": "Curr:",
+  "purchase.no_matching_accounts": "No matching accounts found. Try searching by Code, Name, Currency, or Phone.",
+  "purchase.contract_no_label": "Contract No",
+  "purchase.contract_booking_date_label": "Contract / Booking Date",
+  "purchase.invoice_payment_select_label": "Invoice / Payment Select",
+  "purchase.ship_option_label": "Ship Option",
+  "purchase.status_label_plain": "Status",
+  "purchase.opt_draft": "Draft",
+  "purchase.opt_pending": "Pending",
+  "purchase.opt_confirmed": "Confirmed",
+  "purchase.opt_transferred": "Transferred",
+  "purchase.booking_remarks_terms_label": "Booking Remarks / Terms",
+  "purchase.booking_remarks_placeholder": "Write booking terms, payment notes, invoice note, or shipping instruction...",
+  "purchase.card_branch_login_details": "Branch Login Details",
+  "purchase.card_branch_name_label": "Branch Name",
+  "purchase.card_branch_code_colon": "Branch Code:",
+  "purchase.card_user_admin_colon": "User Admin:",
+  "purchase.card_user_id_colon": "User ID:",
+  "purchase.card_role_colon": "Role:",
+  "purchase.card_location_colon": "Location:",
+  "purchase.card_country_colon": "Country:",
+  "purchase.card_bill_details": "Bill Details",
+  "purchase.card_booking_date_colon": "Booking Date:",
+  "purchase.card_fiscal_year_colon": "Fiscal Year:",
+  "purchase.card_booking_branch_colon": "Booking Branch:",
+  "purchase.card_status_colon": "Status:",
+  "purchase.card_system_serial_colon": "System Serial:",
+  "purchase.card_branch_serial_colon": "Branch Serial:",
+  "purchase.card_contract_no_colon": "Contract No:",
+  "purchase.card_loading_mode_colon": "Loading Mode:",
+  "purchase.card_origin_country_colon": "Origin Country:",
+  "purchase.card_purchase_account_details": "Purchase Account Details",
+  "purchase.card_account_code_colon": "Account Code:",
+  "purchase.card_account_name_colon": "Account Name:",
+  "purchase.card_select_purchase_account_placeholder": "Select Purchase Account...",
+  "purchase.card_select_sales_account_placeholder": "Select Sales Account...",
+  "purchase.card_main_branch_fallback": "Main Branch",
+  "purchase.card_company_colon": "Company:",
+  "purchase.card_none_label": "None",
+  "purchase.card_select_company_title": "Select Company",
+  "purchase.card_no_companies_found": "No companies found.",
+  "purchase.card_new_company_btn": "New Company",
+  "purchase.card_kind_label": "Kind",
+  "purchase.card_type_label": "Type",
+  "purchase.card_control_label": "Control",
+  "purchase.card_sub_acct_label": "Sub-Acct",
+  "purchase.card_serials_ref_label": "Serials & Ref",
+  "purchase.card_acct_sn_label": "Acct S/N",
+  "purchase.card_country_sn_label": "Country S/N",
+  "purchase.card_branch_sn_label": "Branch S/N",
+  "purchase.card_manual_ref_label": "Manual Ref",
+  "purchase.card_opening_bal_label": "Opening Bal",
+  "purchase.card_current_bal_label": "Current Bal",
+  "purchase.card_mob_label": "MOB:",
+  "purchase.card_wa_label": "WA:",
+  "purchase.card_not_selected": "Not Selected",
   "purchase.voucher_bill_number_label": "Bill Number:",
   "purchase.voucher_status_label": "Status:",
   "purchase.voucher_country_label": "Country",
@@ -3090,6 +3604,117 @@ const en: Dict = {
 
 const ur: Dict = {
   ...en,
+  "purchase.step4_verify_subtitle": "حتمی تصدیق سے پہلے پرنٹ ایبل دستاویز کے حصے، اکاؤنٹ پوسٹنگز، مال کی فہرست، ادائیگی کی شرائط، اور لوڈنگ شیڈول کی تصدیق کریں۔",
+  "purchase.opt_advance_payment": "ایڈوانس ادائیگی",
+  "purchase.opt_invoice": "انوائس",
+  "purchase.opt_final_payment": "حتمی ادائیگی",
+  "purchase.opt_credit": "کریڈٹ",
+  "purchase.opt_by_sea": "بذریعہ سمندر",
+  "purchase.opt_by_road": "بذریعہ سڑک",
+  "purchase.opt_by_air": "بذریعہ ہوائی جہاز",
+  "purchase.opt_container_20ft": "20 فٹ",
+  "purchase.opt_container_40ft": "40 فٹ",
+  "purchase.opt_container_20ft_reefer": "20 فٹ ریفر",
+  "purchase.opt_container_40ft_reefer": "40 فٹ ریفر",
+  "purchase.opt_container_reefer": "ریفر کنٹینر",
+  "purchase.opt_container_non_reefer": "نان ریفر",
+  "purchase.opt_container_open_top": "اوپن ٹاپ",
+  "purchase.opt_container_flat_rack": "فلیٹ ریک",
+  "purchase.opt_container_lcl_bulk": "ایل سی ایل / بلک",
+  "purchase.shipping_location_title": "شپنگ اور مقام",
+  "purchase.shipping_location_subtitle": "صرف ضروری راستے کی معلومات: ملک، پورٹ، طریقہ اور تاریخیں۔",
+  "purchase.shipping_mode_label": "شپنگ موڈ",
+  "purchase.loading_departure_title": "لوڈنگ / روانگی",
+  "purchase.loading_country_label": "لوڈنگ ملک",
+  "purchase.loading_port_label": "لوڈنگ پورٹ",
+  "purchase.loading_date_label": "لوڈنگ کی تاریخ",
+  "purchase.receiving_arrival_title": "وصولی / آمد",
+  "purchase.receiving_country_label": "وصولی ملک",
+  "purchase.receiving_port_label": "وصولی پورٹ",
+  "purchase.receiving_date_label": "وصولی کی تاریخ",
+  "purchase.select_country_placeholder": "ملک منتخب کریں",
+  "purchase.add_new_country_label": "نیا ملک شامل کریں",
+  "purchase.select_port_placeholder": "پورٹ منتخب کریں",
+  "purchase.add_new_port_label": "نیا پورٹ شامل کریں",
+  "purchase.advance_payment_terms_title": "ایڈوانس اور ادائیگی کی شرائط",
+  "purchase.payment_type_label": "ادائیگی کی قسم",
+  "purchase.advance_percentage_label": "ایڈوانس فیصد (%)",
+  "purchase.advance_pct_placeholder": "مثلاً 20",
+  "purchase.advance_payment_date_label": "ایڈوانس ادائیگی کی تاریخ",
+  "purchase.final_payment_date_label": "حتمی ادائیگی کی تاریخ",
+  "purchase.transport_container_title": "ٹرانسپورٹ اور کنٹینر کی تفصیلات",
+  "purchase.container_numbers_label": "کنٹینر نمبرز",
+  "purchase.container_numbers_placeholder": "مثلاً ABCU1234567",
+  "purchase.container_size_type_label": "کنٹینر سائز / قسم",
+  "purchase.select_type_placeholder": "قسم منتخب کریں...",
+  "purchase.others_remarks_placeholder": "یہاں کوئی تبصرہ یا بیان شامل کریں...",
+  "purchase.th_action": "عمل",
+  "purchase.goods_table_empty": "ابھی تک کوئی مال شامل نہیں کیا گیا۔ یہاں دیکھنے کے لیے اوپر ایک آئٹم شامل کریں۔",
+  "purchase.booking_bill_info_title": "خریداری بکنگ / بل کی معلومات",
+  "purchase.purchase_account_dr_star": "خریداری اکاؤنٹ (ڈیبٹ)*",
+  "purchase.sales_account_cr_star": "فروخت اکاؤنٹ (کریڈٹ)*",
+  "purchase.search_code_name_branch": "کوڈ، نام، برانچ، مینوئل اکاؤنٹ تلاش کریں...",
+  "purchase.select_purchase_account_dr_header": "خریداری اکاؤنٹ (ڈیبٹ) منتخب کریں",
+  "purchase.select_sales_account_cr_header": "فروخت اکاؤنٹ (کریڈٹ) منتخب کریں",
+  "purchase.found_count_suffix": "{n} ملے",
+  "purchase.system_code_prefix": "سسٹم: {code}",
+  "purchase.manual_ac_colon": "مینوئل اکاؤنٹ:",
+  "purchase.curr_colon": "کرنسی:",
+  "purchase.no_matching_accounts": "کوئی مماثل اکاؤنٹ نہیں ملا۔ کوڈ، نام، کرنسی، یا فون سے تلاش کریں۔",
+  "purchase.contract_no_label": "کنٹریکٹ نمبر",
+  "purchase.contract_booking_date_label": "کنٹریکٹ / بکنگ کی تاریخ",
+  "purchase.invoice_payment_select_label": "انوائس / ادائیگی منتخب کریں",
+  "purchase.ship_option_label": "شپنگ آپشن",
+  "purchase.status_label_plain": "حیثیت",
+  "purchase.opt_draft": "ڈرافٹ",
+  "purchase.opt_pending": "زیر التواء",
+  "purchase.opt_confirmed": "منظور شدہ",
+  "purchase.opt_transferred": "منتقل شدہ",
+  "purchase.booking_remarks_terms_label": "بکنگ کے تبصرے / شرائط",
+  "purchase.booking_remarks_placeholder": "بکنگ کی شرائط، ادائیگی کے نوٹس، انوائس نوٹ، یا شپنگ ہدایات لکھیں...",
+  "purchase.card_branch_login_details": "برانچ لاگ ان کی تفصیلات",
+  "purchase.card_branch_name_label": "برانچ کا نام",
+  "purchase.card_branch_code_colon": "برانچ کوڈ:",
+  "purchase.card_user_admin_colon": "یوزر ایڈمن:",
+  "purchase.card_user_id_colon": "یوزر آئی ڈی:",
+  "purchase.card_role_colon": "کردار:",
+  "purchase.card_location_colon": "مقام:",
+  "purchase.card_country_colon": "ملک:",
+  "purchase.card_bill_details": "بل کی تفصیلات",
+  "purchase.card_booking_date_colon": "تاریخ بکنگ:",
+  "purchase.card_fiscal_year_colon": "مالی سال:",
+  "purchase.card_booking_branch_colon": "بکنگ برانچ:",
+  "purchase.card_status_colon": "حیثیت:",
+  "purchase.card_system_serial_colon": "سسٹم سیریل:",
+  "purchase.card_branch_serial_colon": "برانچ سیریل:",
+  "purchase.card_contract_no_colon": "کنٹریکٹ نمبر:",
+  "purchase.card_loading_mode_colon": "لوڈنگ موڈ:",
+  "purchase.card_origin_country_colon": "ملک منشا:",
+  "purchase.card_purchase_account_details": "خریداری اکاؤنٹ کی تفصیلات",
+  "purchase.card_account_code_colon": "اکاؤنٹ کوڈ:",
+  "purchase.card_account_name_colon": "اکاؤنٹ کا نام:",
+  "purchase.card_select_purchase_account_placeholder": "خریداری اکاؤنٹ منتخب کریں...",
+  "purchase.card_select_sales_account_placeholder": "فروخت اکاؤنٹ منتخب کریں...",
+  "purchase.card_main_branch_fallback": "مین برانچ",
+  "purchase.card_company_colon": "کمپنی:",
+  "purchase.card_none_label": "کوئی نہیں",
+  "purchase.card_select_company_title": "کمپنی منتخب کریں",
+  "purchase.card_no_companies_found": "کوئی کمپنی نہیں ملی۔",
+  "purchase.card_new_company_btn": "نئی کمپنی",
+  "purchase.card_kind_label": "قسم",
+  "purchase.card_type_label": "نوعیت",
+  "purchase.card_control_label": "کنٹرول",
+  "purchase.card_sub_acct_label": "ذیلی اکاؤنٹ",
+  "purchase.card_serials_ref_label": "سیریلز اور حوالہ",
+  "purchase.card_acct_sn_label": "اکاؤنٹ ایس/این",
+  "purchase.card_country_sn_label": "کنٹری ایس/این",
+  "purchase.card_branch_sn_label": "برانچ ایس/این",
+  "purchase.card_manual_ref_label": "مینوئل حوالہ",
+  "purchase.card_opening_bal_label": "ابتدائی بیلنس",
+  "purchase.card_current_bal_label": "موجودہ بیلنس",
+  "purchase.card_mob_label": "موبائل:",
+  "purchase.card_wa_label": "واٹس ایپ:",
+  "purchase.card_not_selected": "منتخب نہیں",
   "purchase.voucher_bill_number_label": "بل نمبر:",
   "purchase.voucher_status_label": "حیثیت:",
   "purchase.voucher_country_label": "ملک",
@@ -4756,6 +5381,117 @@ const ur: Dict = {
 
 const ar: Dict = {
   ...en,
+  "purchase.step4_verify_subtitle": "تحقق من أقسام المستند القابل للطباعة، ترحيلات الحسابات، بيان البضائع، شروط الدفع، وجداول التحميل قبل التحقق النهائي.",
+  "purchase.opt_advance_payment": "دفعة مقدمة",
+  "purchase.opt_invoice": "فاتورة",
+  "purchase.opt_final_payment": "الدفعة النهائية",
+  "purchase.opt_credit": "دائن",
+  "purchase.opt_by_sea": "عن طريق البحر",
+  "purchase.opt_by_road": "عن طريق البر",
+  "purchase.opt_by_air": "عن طريق الجو",
+  "purchase.opt_container_20ft": "20 قدم",
+  "purchase.opt_container_40ft": "40 قدم",
+  "purchase.opt_container_20ft_reefer": "20 قدم مبرد",
+  "purchase.opt_container_40ft_reefer": "40 قدم مبرد",
+  "purchase.opt_container_reefer": "حاوية مبردة",
+  "purchase.opt_container_non_reefer": "غير مبرد",
+  "purchase.opt_container_open_top": "مفتوح من الأعلى",
+  "purchase.opt_container_flat_rack": "فلات راك",
+  "purchase.opt_container_lcl_bulk": "LCL / سائب",
+  "purchase.shipping_location_title": "الشحن والموقع",
+  "purchase.shipping_location_subtitle": "معلومات المسار الأساسية فقط: الدولة، الميناء، الطريقة والتواريخ.",
+  "purchase.shipping_mode_label": "طريقة الشحن",
+  "purchase.loading_departure_title": "التحميل / المغادرة",
+  "purchase.loading_country_label": "بلد التحميل",
+  "purchase.loading_port_label": "ميناء التحميل",
+  "purchase.loading_date_label": "تاريخ التحميل",
+  "purchase.receiving_arrival_title": "الاستلام / الوصول",
+  "purchase.receiving_country_label": "بلد الاستلام",
+  "purchase.receiving_port_label": "ميناء الاستلام",
+  "purchase.receiving_date_label": "تاريخ الاستلام",
+  "purchase.select_country_placeholder": "اختر الدولة",
+  "purchase.add_new_country_label": "إضافة دولة جديدة",
+  "purchase.select_port_placeholder": "اختر الميناء",
+  "purchase.add_new_port_label": "إضافة ميناء جديد",
+  "purchase.advance_payment_terms_title": "الدفعة المقدمة وشروط الدفع",
+  "purchase.payment_type_label": "نوع الدفع",
+  "purchase.advance_percentage_label": "نسبة الدفعة المقدمة (%)",
+  "purchase.advance_pct_placeholder": "مثلاً 20",
+  "purchase.advance_payment_date_label": "تاريخ الدفعة المقدمة",
+  "purchase.final_payment_date_label": "تاريخ الدفعة النهائية",
+  "purchase.transport_container_title": "تفاصيل النقل والحاوية",
+  "purchase.container_numbers_label": "أرقام الحاويات",
+  "purchase.container_numbers_placeholder": "مثلاً ABCU1234567",
+  "purchase.container_size_type_label": "حجم / نوع الحاوية",
+  "purchase.select_type_placeholder": "اختر النوع...",
+  "purchase.others_remarks_placeholder": "أضف أي ملاحظات أو سرد هنا...",
+  "purchase.th_action": "إجراء",
+  "purchase.goods_table_empty": "لم تتم إضافة أي بضائع بعد. أضف عنصرًا أعلاه لرؤيته هنا.",
+  "purchase.booking_bill_info_title": "معلومات حجز الشراء / الفاتورة",
+  "purchase.purchase_account_dr_star": "حساب الشراء (مدين)*",
+  "purchase.sales_account_cr_star": "حساب المبيعات (دائن)*",
+  "purchase.search_code_name_branch": "ابحث عن الرمز، الاسم، الفرع، الحساب اليدوي...",
+  "purchase.select_purchase_account_dr_header": "اختر حساب الشراء (مدين)",
+  "purchase.select_sales_account_cr_header": "اختر حساب المبيعات (دائن)",
+  "purchase.found_count_suffix": "{n} تم العثور عليها",
+  "purchase.system_code_prefix": "النظام: {code}",
+  "purchase.manual_ac_colon": "الحساب اليدوي:",
+  "purchase.curr_colon": "العملة:",
+  "purchase.no_matching_accounts": "لم يتم العثور على حسابات مطابقة. حاول البحث بالرمز أو الاسم أو العملة أو الهاتف.",
+  "purchase.contract_no_label": "رقم العقد",
+  "purchase.contract_booking_date_label": "تاريخ العقد / الحجز",
+  "purchase.invoice_payment_select_label": "اختيار الفاتورة / الدفع",
+  "purchase.ship_option_label": "خيار الشحن",
+  "purchase.status_label_plain": "الحالة",
+  "purchase.opt_draft": "مسودة",
+  "purchase.opt_pending": "معلق",
+  "purchase.opt_confirmed": "مؤكد",
+  "purchase.opt_transferred": "محول",
+  "purchase.booking_remarks_terms_label": "ملاحظات / شروط الحجز",
+  "purchase.booking_remarks_placeholder": "اكتب شروط الحجز، ملاحظات الدفع، ملاحظة الفاتورة، أو تعليمات الشحن...",
+  "purchase.card_branch_login_details": "تفاصيل تسجيل دخول الفرع",
+  "purchase.card_branch_name_label": "اسم الفرع",
+  "purchase.card_branch_code_colon": "رمز الفرع:",
+  "purchase.card_user_admin_colon": "مسؤول المستخدم:",
+  "purchase.card_user_id_colon": "معرف المستخدم:",
+  "purchase.card_role_colon": "الدور:",
+  "purchase.card_location_colon": "الموقع:",
+  "purchase.card_country_colon": "الدولة:",
+  "purchase.card_bill_details": "تفاصيل الفاتورة",
+  "purchase.card_booking_date_colon": "تاريخ الحجز:",
+  "purchase.card_fiscal_year_colon": "السنة المالية:",
+  "purchase.card_booking_branch_colon": "فرع الحجز:",
+  "purchase.card_status_colon": "الحالة:",
+  "purchase.card_system_serial_colon": "الرقم التسلسلي للنظام:",
+  "purchase.card_branch_serial_colon": "الرقم التسلسلي للفرع:",
+  "purchase.card_contract_no_colon": "رقم العقد:",
+  "purchase.card_loading_mode_colon": "طريقة التحميل:",
+  "purchase.card_origin_country_colon": "بلد المنشأ:",
+  "purchase.card_purchase_account_details": "تفاصيل حساب الشراء",
+  "purchase.card_account_code_colon": "رمز الحساب:",
+  "purchase.card_account_name_colon": "اسم الحساب:",
+  "purchase.card_select_purchase_account_placeholder": "اختر حساب الشراء...",
+  "purchase.card_select_sales_account_placeholder": "اختر حساب المبيعات...",
+  "purchase.card_main_branch_fallback": "الفرع الرئيسي",
+  "purchase.card_company_colon": "الشركة:",
+  "purchase.card_none_label": "لا يوجد",
+  "purchase.card_select_company_title": "اختر الشركة",
+  "purchase.card_no_companies_found": "لم يتم العثور على شركات.",
+  "purchase.card_new_company_btn": "شركة جديدة",
+  "purchase.card_kind_label": "النوع",
+  "purchase.card_type_label": "الفئة",
+  "purchase.card_control_label": "تحكم",
+  "purchase.card_sub_acct_label": "حساب فرعي",
+  "purchase.card_serials_ref_label": "الأرقام التسلسلية والمرجع",
+  "purchase.card_acct_sn_label": "الرقم التسلسلي للحساب",
+  "purchase.card_country_sn_label": "الرقم التسلسلي للدولة",
+  "purchase.card_branch_sn_label": "الرقم التسلسلي للفرع",
+  "purchase.card_manual_ref_label": "مرجع يدوي",
+  "purchase.card_opening_bal_label": "الرصيد الافتتاحي",
+  "purchase.card_current_bal_label": "الرصيد الحالي",
+  "purchase.card_mob_label": "الجوال:",
+  "purchase.card_wa_label": "واتساب:",
+  "purchase.card_not_selected": "لم يتم التحديد",
   "purchase.voucher_bill_number_label": "رقم الفاتورة:",
   "purchase.voucher_status_label": "الحالة:",
   "purchase.voucher_country_label": "الدولة",
@@ -6421,6 +7157,117 @@ const ar: Dict = {
 
 const fa: Dict = {
   ...en,
+  "purchase.step4_verify_subtitle": "بخش‌های سند قابل چاپ، ثبت حساب‌ها، فهرست کالا، شرایط پرداخت و برنامه بارگیری را قبل از تایید نهایی بررسی کنید.",
+  "purchase.opt_advance_payment": "پیش‌پرداخت",
+  "purchase.opt_invoice": "فاکتور",
+  "purchase.opt_final_payment": "پرداخت نهایی",
+  "purchase.opt_credit": "بستانکار",
+  "purchase.opt_by_sea": "از طریق دریا",
+  "purchase.opt_by_road": "از طریق جاده",
+  "purchase.opt_by_air": "از طریق هوا",
+  "purchase.opt_container_20ft": "20 فوت",
+  "purchase.opt_container_40ft": "40 فوت",
+  "purchase.opt_container_20ft_reefer": "20 فوت یخچالی",
+  "purchase.opt_container_40ft_reefer": "40 فوت یخچالی",
+  "purchase.opt_container_reefer": "کانتینر یخچالی",
+  "purchase.opt_container_non_reefer": "غیریخچالی",
+  "purchase.opt_container_open_top": "روباز",
+  "purchase.opt_container_flat_rack": "فلت رک",
+  "purchase.opt_container_lcl_bulk": "LCL / فله",
+  "purchase.shipping_location_title": "حمل و موقعیت",
+  "purchase.shipping_location_subtitle": "فقط اطلاعات ضروری مسیر: کشور، بندر، شیوه و تاریخ‌ها.",
+  "purchase.shipping_mode_label": "شیوه حمل",
+  "purchase.loading_departure_title": "بارگیری / حرکت",
+  "purchase.loading_country_label": "کشور بارگیری",
+  "purchase.loading_port_label": "بندر بارگیری",
+  "purchase.loading_date_label": "تاریخ بارگیری",
+  "purchase.receiving_arrival_title": "دریافت / ورود",
+  "purchase.receiving_country_label": "کشور دریافت",
+  "purchase.receiving_port_label": "بندر دریافت",
+  "purchase.receiving_date_label": "تاریخ دریافت",
+  "purchase.select_country_placeholder": "انتخاب کشور",
+  "purchase.add_new_country_label": "افزودن کشور جدید",
+  "purchase.select_port_placeholder": "انتخاب بندر",
+  "purchase.add_new_port_label": "افزودن بندر جدید",
+  "purchase.advance_payment_terms_title": "پیش‌پرداخت و شرایط پرداخت",
+  "purchase.payment_type_label": "نوع پرداخت",
+  "purchase.advance_percentage_label": "درصد پیش‌پرداخت (%)",
+  "purchase.advance_pct_placeholder": "مثلاً 20",
+  "purchase.advance_payment_date_label": "تاریخ پیش‌پرداخت",
+  "purchase.final_payment_date_label": "تاریخ پرداخت نهایی",
+  "purchase.transport_container_title": "جزئیات حمل و کانتینر",
+  "purchase.container_numbers_label": "شماره‌های کانتینر",
+  "purchase.container_numbers_placeholder": "مثلاً ABCU1234567",
+  "purchase.container_size_type_label": "اندازه / نوع کانتینر",
+  "purchase.select_type_placeholder": "انتخاب نوع...",
+  "purchase.others_remarks_placeholder": "هرگونه ملاحظه یا شرح را اینجا اضافه کنید...",
+  "purchase.th_action": "اقدام",
+  "purchase.goods_table_empty": "هنوز کالایی افزوده نشده است. یک قلم در بالا اضافه کنید تا اینجا نمایش داده شود.",
+  "purchase.booking_bill_info_title": "اطلاعات رزرو خرید / بیلتی",
+  "purchase.purchase_account_dr_star": "حساب خرید (بدهکار)*",
+  "purchase.sales_account_cr_star": "حساب فروش (بستانکار)*",
+  "purchase.search_code_name_branch": "جستجوی کد، نام، شعبه، حساب دستی...",
+  "purchase.select_purchase_account_dr_header": "انتخاب حساب خرید (بدهکار)",
+  "purchase.select_sales_account_cr_header": "انتخاب حساب فروش (بستانکار)",
+  "purchase.found_count_suffix": "{n} یافت شد",
+  "purchase.system_code_prefix": "سیستم: {code}",
+  "purchase.manual_ac_colon": "حساب دستی:",
+  "purchase.curr_colon": "ارز:",
+  "purchase.no_matching_accounts": "هیچ حساب مطابقی یافت نشد. با کد، نام، ارز یا تلفن جستجو کنید.",
+  "purchase.contract_no_label": "شماره قرارداد",
+  "purchase.contract_booking_date_label": "تاریخ قرارداد / رزرو",
+  "purchase.invoice_payment_select_label": "انتخاب فاکتور / پرداخت",
+  "purchase.ship_option_label": "گزینه حمل",
+  "purchase.status_label_plain": "وضعیت",
+  "purchase.opt_draft": "پیش‌نویس",
+  "purchase.opt_pending": "در انتظار",
+  "purchase.opt_confirmed": "تایید شده",
+  "purchase.opt_transferred": "منتقل شده",
+  "purchase.booking_remarks_terms_label": "ملاحظات / شرایط رزرو",
+  "purchase.booking_remarks_placeholder": "شرایط رزرو، یادداشت‌های پرداخت، یادداشت فاکتور یا دستورالعمل حمل را بنویسید...",
+  "purchase.card_branch_login_details": "جزئیات ورود شعبه",
+  "purchase.card_branch_name_label": "نام شعبه",
+  "purchase.card_branch_code_colon": "کد شعبه:",
+  "purchase.card_user_admin_colon": "مدیر کاربر:",
+  "purchase.card_user_id_colon": "شناسه کاربر:",
+  "purchase.card_role_colon": "نقش:",
+  "purchase.card_location_colon": "موقعیت:",
+  "purchase.card_country_colon": "کشور:",
+  "purchase.card_bill_details": "جزئیات بیلتی",
+  "purchase.card_booking_date_colon": "تاریخ رزرو:",
+  "purchase.card_fiscal_year_colon": "سال مالی:",
+  "purchase.card_booking_branch_colon": "شعبه رزرو:",
+  "purchase.card_status_colon": "وضعیت:",
+  "purchase.card_system_serial_colon": "سریال سیستم:",
+  "purchase.card_branch_serial_colon": "سریال شعبه:",
+  "purchase.card_contract_no_colon": "شماره قرارداد:",
+  "purchase.card_loading_mode_colon": "شیوه بارگیری:",
+  "purchase.card_origin_country_colon": "کشور مبدأ:",
+  "purchase.card_purchase_account_details": "جزئیات حساب خرید",
+  "purchase.card_account_code_colon": "کد حساب:",
+  "purchase.card_account_name_colon": "نام حساب:",
+  "purchase.card_select_purchase_account_placeholder": "انتخاب حساب خرید...",
+  "purchase.card_select_sales_account_placeholder": "انتخاب حساب فروش...",
+  "purchase.card_main_branch_fallback": "شعبه اصلی",
+  "purchase.card_company_colon": "شرکت:",
+  "purchase.card_none_label": "هیچ‌کدام",
+  "purchase.card_select_company_title": "انتخاب شرکت",
+  "purchase.card_no_companies_found": "هیچ شرکتی یافت نشد.",
+  "purchase.card_new_company_btn": "شرکت جدید",
+  "purchase.card_kind_label": "نوع",
+  "purchase.card_type_label": "گونه",
+  "purchase.card_control_label": "کنترل",
+  "purchase.card_sub_acct_label": "زیرحساب",
+  "purchase.card_serials_ref_label": "سریال‌ها و مرجع",
+  "purchase.card_acct_sn_label": "شماره سریال حساب",
+  "purchase.card_country_sn_label": "شماره سریال کشور",
+  "purchase.card_branch_sn_label": "شماره سریال شعبه",
+  "purchase.card_manual_ref_label": "مرجع دستی",
+  "purchase.card_opening_bal_label": "موجودی اولیه",
+  "purchase.card_current_bal_label": "موجودی فعلی",
+  "purchase.card_mob_label": "موبایل:",
+  "purchase.card_wa_label": "واتساپ:",
+  "purchase.card_not_selected": "انتخاب نشده",
   "purchase.voucher_bill_number_label": "شماره بیلتی:",
   "purchase.voucher_status_label": "وضعیت:",
   "purchase.voucher_country_label": "کشور",
@@ -8085,6 +8932,117 @@ const fa: Dict = {
 
 const ps: Dict = {
   ...en,
+  "purchase.step4_verify_subtitle": "د وروستي تصدیق دمخه د چاپ وړ سند برخې، د حساب ثبتونه، د مالونو لیست، د تادیې شرایط، او د بارولو مهالویش وګورئ.",
+  "purchase.opt_advance_payment": "مخکینۍ تادیه",
+  "purchase.opt_invoice": "انوائس",
+  "purchase.opt_final_payment": "وروستۍ تادیه",
+  "purchase.opt_credit": "بستانکار",
+  "purchase.opt_by_sea": "د سمندر له لارې",
+  "purchase.opt_by_road": "د سړک له لارې",
+  "purchase.opt_by_air": "د هوا له لارې",
+  "purchase.opt_container_20ft": "20 فټ",
+  "purchase.opt_container_40ft": "40 فټ",
+  "purchase.opt_container_20ft_reefer": "20 فټ یخچالي",
+  "purchase.opt_container_40ft_reefer": "40 فټ یخچالي",
+  "purchase.opt_container_reefer": "یخچالي کانتینر",
+  "purchase.opt_container_non_reefer": "غیر یخچالي",
+  "purchase.opt_container_open_top": "خلاص سر",
+  "purchase.opt_container_flat_rack": "فلیټ رک",
+  "purchase.opt_container_lcl_bulk": "LCL / بلک",
+  "purchase.shipping_location_title": "بارول او ځای",
+  "purchase.shipping_location_subtitle": "یوازې د لارې اړین معلومات: هېواد، بندر، ډول او نیټې.",
+  "purchase.shipping_mode_label": "د بارولو ډول",
+  "purchase.loading_departure_title": "بارول / وتل",
+  "purchase.loading_country_label": "د بارولو هېواد",
+  "purchase.loading_port_label": "د بارولو بندر",
+  "purchase.loading_date_label": "د بارولو نیټه",
+  "purchase.receiving_arrival_title": "ترلاسه کول / رسېدل",
+  "purchase.receiving_country_label": "د ترلاسه کولو هېواد",
+  "purchase.receiving_port_label": "د ترلاسه کولو بندر",
+  "purchase.receiving_date_label": "د ترلاسه کولو نیټه",
+  "purchase.select_country_placeholder": "هېواد وټاکئ",
+  "purchase.add_new_country_label": "نوی هېواد اضافه کړئ",
+  "purchase.select_port_placeholder": "بندر وټاکئ",
+  "purchase.add_new_port_label": "نوی بندر اضافه کړئ",
+  "purchase.advance_payment_terms_title": "مخکینۍ ورکړه او د تادیې شرایط",
+  "purchase.payment_type_label": "د تادیې ډول",
+  "purchase.advance_percentage_label": "د مخکینۍ ورکړې سلنه (%)",
+  "purchase.advance_pct_placeholder": "لکه 20",
+  "purchase.advance_payment_date_label": "د مخکینۍ تادیې نیټه",
+  "purchase.final_payment_date_label": "د وروستۍ تادیې نیټه",
+  "purchase.transport_container_title": "د ټرانسپورټ او کانتینر توضیحات",
+  "purchase.container_numbers_label": "د کانتینر شمېرې",
+  "purchase.container_numbers_placeholder": "لکه ABCU1234567",
+  "purchase.container_size_type_label": "د کانتینر اندازه / ډول",
+  "purchase.select_type_placeholder": "ډول وټاکئ...",
+  "purchase.others_remarks_placeholder": "دلته کوم تبصره یا بیان اضافه کړئ...",
+  "purchase.th_action": "کړنه",
+  "purchase.goods_table_empty": "لاهم هیڅ مال نه دی اضافه شوی. پورته یو توکی اضافه کړئ ترڅو دلته یې وګورئ.",
+  "purchase.booking_bill_info_title": "د پیرودلو بکینګ / بل معلومات",
+  "purchase.purchase_account_dr_star": "د پیرودلو حساب (بدهکار)*",
+  "purchase.sales_account_cr_star": "د پلورلو حساب (بستانکار)*",
+  "purchase.search_code_name_branch": "کوډ، نوم، څانګه، لاسي حساب وپلټئ...",
+  "purchase.select_purchase_account_dr_header": "د پیرودلو حساب (بدهکار) وټاکئ",
+  "purchase.select_sales_account_cr_header": "د پلورلو حساب (بستانکار) وټاکئ",
+  "purchase.found_count_suffix": "{n} وموندل شول",
+  "purchase.system_code_prefix": "سیسټم: {code}",
+  "purchase.manual_ac_colon": "لاسي حساب:",
+  "purchase.curr_colon": "پیسه:",
+  "purchase.no_matching_accounts": "هیڅ سمون لرونکی حساب ونه موندل شو. د کوډ، نوم، پیسو، یا ټیلیفون له مخې وپلټئ.",
+  "purchase.contract_no_label": "د تړون شمېره",
+  "purchase.contract_booking_date_label": "د تړون / بکینګ نیټه",
+  "purchase.invoice_payment_select_label": "د انوائس / تادیې غوراوی",
+  "purchase.ship_option_label": "د بارولو انتخاب",
+  "purchase.status_label_plain": "حالت",
+  "purchase.opt_draft": "مسوده",
+  "purchase.opt_pending": "پاتې",
+  "purchase.opt_confirmed": "تایید شوی",
+  "purchase.opt_transferred": "لیږدول شوی",
+  "purchase.booking_remarks_terms_label": "د بکینګ تبصرې / شرایط",
+  "purchase.booking_remarks_placeholder": "د بکینګ شرایط، د تادیې یادښتونه، د انوائس یادښت، یا د بارولو لارښوونې ولیکئ...",
+  "purchase.card_branch_login_details": "د څانګې د ننوتلو توضیحات",
+  "purchase.card_branch_name_label": "د څانګې نوم",
+  "purchase.card_branch_code_colon": "د څانګې کوډ:",
+  "purchase.card_user_admin_colon": "د کارن اډمین:",
+  "purchase.card_user_id_colon": "د کارن آی ډي:",
+  "purchase.card_role_colon": "رول:",
+  "purchase.card_location_colon": "ځای:",
+  "purchase.card_country_colon": "هېواد:",
+  "purchase.card_bill_details": "د بل توضیحات",
+  "purchase.card_booking_date_colon": "د بکینګ نیټه:",
+  "purchase.card_fiscal_year_colon": "مالي کال:",
+  "purchase.card_booking_branch_colon": "د بکینګ څانګه:",
+  "purchase.card_status_colon": "حالت:",
+  "purchase.card_system_serial_colon": "د سیسټم سیریل:",
+  "purchase.card_branch_serial_colon": "د څانګې سیریل:",
+  "purchase.card_contract_no_colon": "د تړون شمېره:",
+  "purchase.card_loading_mode_colon": "د بارولو ډول:",
+  "purchase.card_origin_country_colon": "د منشأ هېواد:",
+  "purchase.card_purchase_account_details": "د پیرودلو حساب توضیحات",
+  "purchase.card_account_code_colon": "د حساب کوډ:",
+  "purchase.card_account_name_colon": "د حساب نوم:",
+  "purchase.card_select_purchase_account_placeholder": "د پیرودلو حساب وټاکئ...",
+  "purchase.card_select_sales_account_placeholder": "د پلورلو حساب وټاکئ...",
+  "purchase.card_main_branch_fallback": "اصلي څانګه",
+  "purchase.card_company_colon": "شرکت:",
+  "purchase.card_none_label": "هیڅ یو",
+  "purchase.card_select_company_title": "شرکت وټاکئ",
+  "purchase.card_no_companies_found": "هیڅ شرکت ونه موندل شو.",
+  "purchase.card_new_company_btn": "نوی شرکت",
+  "purchase.card_kind_label": "ډول",
+  "purchase.card_type_label": "ډول",
+  "purchase.card_control_label": "کنټرول",
+  "purchase.card_sub_acct_label": "فرعي حساب",
+  "purchase.card_serials_ref_label": "سیریلونه او حواله",
+  "purchase.card_acct_sn_label": "د حساب سیریل",
+  "purchase.card_country_sn_label": "د هېواد سیریل",
+  "purchase.card_branch_sn_label": "د څانګې سیریل",
+  "purchase.card_manual_ref_label": "لاسي حواله",
+  "purchase.card_opening_bal_label": "پرانی پاتې",
+  "purchase.card_current_bal_label": "اوسنۍ پاتې",
+  "purchase.card_mob_label": "موبایل:",
+  "purchase.card_wa_label": "واټساپ:",
+  "purchase.card_not_selected": "نه دی ټاکل شوی",
   "purchase.voucher_bill_number_label": "د بل شمېره:",
   "purchase.voucher_status_label": "حالت:",
   "purchase.voucher_country_label": "هېواد",

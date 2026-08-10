@@ -3,6 +3,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireErpSession } from "@/lib/auth/session";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { ensureEmployeesTable } from "@/lib/services/ensure-employees-table";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 
@@ -118,6 +119,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
+    const lang = (searchParams.get("lang") || "en") as any;
+
     // Filter by search terms in customer/person fields if provided
     let filtered = employees || [];
     if (search) {
@@ -128,6 +131,19 @@ export async function GET(request: NextRequest) {
         const code = String(emp.employee_code || "").toLowerCase();
         return name.includes(search) || company.includes(search) || mobile.includes(search) || code.includes(search);
       });
+    }
+
+    if (filtered.length > 0 && lang) {
+      filtered = await localizeRecordNames(filtered, "employees", "full_name", lang);
+      const persons = filtered.map(e => e.person).filter(Boolean);
+      if (persons.length > 0) {
+        const localizedPersons = await localizeRecordNames(persons, "customers", "customer_name", lang);
+        const personMap = new Map(localizedPersons.map(p => [p.id, p]));
+        filtered = filtered.map(e => ({
+          ...e,
+          person: e.person ? (personMap.get(e.person.id) || e.person) : e.person
+        }));
+      }
     }
 
     return NextResponse.json({ employees: filtered });

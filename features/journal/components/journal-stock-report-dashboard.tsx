@@ -3,6 +3,8 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import {
   FileText, Package, Scale, Gauge, Coins, MapPin, Building2,
   ChevronDown, ChevronUp, Download, Printer,
@@ -129,6 +131,8 @@ export default function JournalStockReportDashboard({
   session: { branchName?: string; fullName?: string; email?: string } | null | undefined;
   initialLevel?: "salesman" | "country" | "branch";
 }) {
+  const lang = useActiveLanguage();
+
   // ── State ──
   const [activeTab, setActiveTab] = useState<"salesman" | "country" | "branch">(initialLevel);
   const [records, setRecords] = useState<ReportRecord[]>([]);
@@ -391,16 +395,22 @@ export default function JournalStockReportDashboard({
               {activeTab === "country" && <Globe className="w-3.5 h-3.5" />}
               {activeTab === "salesman" && <Building2 className="w-3.5 h-3.5" />}
               {activeTab === "branch" && <MapPin className="w-3.5 h-3.5" />}
-              <span>{activeTab === "country" ? "Country Summary" : activeTab === "salesman" ? "Salesman Summary" : "Branch Summary"}</span>
+              <span>
+                {activeTab === "country"
+                  ? t(lang, "report.country_summary", "Country Summary")
+                  : activeTab === "salesman"
+                  ? t(lang, "report.salesman_summary", "Salesman Summary")
+                  : t(lang, "report.branch_summary", "Branch Summary")}
+              </span>
               <ChevronDown className="w-3.5 h-3.5" />
             </button>
 
             {viewDropdownOpen && (
               <div className="absolute left-0 mt-1.5 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 p-1 font-bold text-xs space-y-0.5">
                 {[
-                  { id: "country", label: "Country Summary", icon: Globe },
-                  { id: "salesman", label: "Salesman Summary", icon: Building2 },
-                  { id: "branch", label: "Branch Summary", icon: MapPin }
+                  { id: "country", label: t(lang, "report.country_summary", "Country Summary"), icon: Globe },
+                  { id: "salesman", label: t(lang, "report.salesman_summary", "Salesman Summary"), icon: Building2 },
+                  { id: "branch", label: t(lang, "report.branch_summary", "Branch Summary"), icon: MapPin }
                 ].map(tab => {
                   const Icon = tab.icon;
                   const isActive = activeTab === tab.id;
@@ -531,38 +541,38 @@ export default function JournalStockReportDashboard({
               <div className="bg-blue-600 p-1 rounded-full text-white">
                 <User className="h-3.5 w-3.5" />
               </div>
-              <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">1. BRANCH & USER DETAILS</h4>
+              <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">1. {t(lang, "report.branch_user_details", "BRANCH & USER DETAILS")}</h4>
             </div>
             <div className="p-4 flex flex-col gap-2 text-[10px] font-semibold text-slate-500 dark:text-slate-400 h-full justify-between">
               <div className="flex justify-between items-center">
-                <span>COUNTRY:</span>
+                <span>{t(lang, "ledger.country", "COUNTRY")}:</span>
                 <span className="font-extrabold text-slate-800 dark:text-slate-200">{session?.branchName?.includes("UAE") ? "AE UNITED ARAB EMIRATES" : "PK PAKISTAN"}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>BRANCH NAME:</span>
+                <span>{t(lang, "ledger.branch_name", "BRANCH NAME")}:</span>
                 <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{session?.branchName || "MAIN BRANCH"}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>USER ID:</span>
+                <span>{t(lang, "form.user_id", "USER ID")}:</span>
                 <span className="font-mono font-extrabold text-slate-800 dark:text-slate-200">7719341B-BFCB-4A31-B852-0F67E8062E95</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>USER NAME:</span>
+                <span>{t(lang, "form.user_name", "USER NAME")}:</span>
                 <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{session?.fullName || "SUPER ADMIN"}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>ROLE:</span>
+                <span>{t(lang, "form.role", "ROLE")}:</span>
                 <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">SUPER ADMIN</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>DATE & TIME:</span>
+                <span>{t(lang, "ledger.col_date", "DATE & TIME")}:</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
                   {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}, {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
                 </span>
               </div>
               <div className="flex justify-between items-center pt-1 border-t border-slate-100 dark:border-slate-800">
-                <span>STATUS:</span>
-                <span className="font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded text-[9px] uppercase tracking-wider">ACTIVE</span>
+                <span>{t(lang, "ledger.ledger_status", "STATUS")}:</span>
+                <span className="font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded text-[9px] uppercase tracking-wider">{t(lang, "status.active", "ACTIVE")}</span>
               </div>
             </div>
           </div>
@@ -573,27 +583,27 @@ export default function JournalStockReportDashboard({
               <div className="bg-emerald-600 p-1 rounded-full text-white">
                 <Coins className="h-3.5 w-3.5" />
               </div>
-              <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">2. GLOBAL FINANCIAL SUMMARY</h4>
+              <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">2. {t(lang, "report.global_financial_summary", "GLOBAL FINANCIAL SUMMARY")}</h4>
             </div>
             <div className="p-4 flex flex-col gap-3 text-[10px] font-semibold text-slate-500 dark:text-slate-400 h-full justify-between">
               <div className="flex justify-between items-center">
-                <span>TOTAL GLOBAL ENTRIES:</span>
+                <span>{t(lang, "report.total_global_entries", "TOTAL GLOBAL ENTRIES")}:</span>
                 <span className="font-black text-slate-800 dark:text-slate-200 font-mono text-xs">{summary?.totalBills || records.length || 5}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>TOTAL PURCHASE (PKR):</span>
+                <span>{t(lang, "report.total_purchase_pkr", "TOTAL PURCHASE (PKR)")}:</span>
                 <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono text-xs">
                   {fmtNum(summary?.totalPurchaseAmount || 4767428600.00, 2)}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-rose-600 dark:text-rose-400 font-bold">TOTAL TRANSFERRED (PKR):</span>
+                <span className="text-rose-600 dark:text-rose-400 font-bold">{t(lang, "report.total_transferred_pkr", "TOTAL TRANSFERRED (PKR)")}:</span>
                 <span className="font-black text-rose-600 dark:text-rose-400 font-mono text-xs">
                   {fmtNum(summary?.totalPurchasePayment || 4767428600.00, 2)}
                 </span>
               </div>
               <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800">
-                <span className="text-slate-700 dark:text-slate-300 font-extrabold uppercase">BALANCE (PKR):</span>
+                <span className="text-slate-700 dark:text-slate-300 font-extrabold uppercase">{t(lang, "report.balance_pkr", "BALANCE (PKR)")}:</span>
                 <span className="font-black text-slate-900 dark:text-white font-mono text-sm">
                   {fmtNum(summary?.remainingPayment || 0.00, 2)}
                 </span>
@@ -607,28 +617,28 @@ export default function JournalStockReportDashboard({
               <div className="bg-purple-600 p-1 rounded-full text-white">
                 <FileText className="h-3.5 w-3.5" />
               </div>
-              <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">3. BILL ENTRIES SUMMARY</h4>
+              <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">3. {t(lang, "report.bill_entries_summary", "BILL ENTRIES SUMMARY")}</h4>
             </div>
             <div className="p-4 flex flex-col gap-3 text-[10px] font-semibold text-slate-500 dark:text-slate-400 h-full justify-between">
               <div className="flex justify-between items-center">
-                <span>TOTAL BILL ENTRIES:</span>
+                <span>{t(lang, "report.total_bill_entries", "TOTAL BILL ENTRIES")}:</span>
                 <span className="font-black text-purple-700 dark:text-purple-300 font-mono text-xs">{summary?.totalBills || records.length || 5}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>CLEARED ENTRIES:</span>
+                <span>{t(lang, "report.cleared_entries", "CLEARED ENTRIES")}:</span>
                 <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono text-xs">
                   {records.filter(r => r.remainingPayment === 0).length || 4}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-rose-600 dark:text-rose-400 font-bold">REMAINING ENTRIES:</span>
+                <span className="text-rose-600 dark:text-rose-400 font-bold">{t(lang, "report.remaining_entries", "REMAINING ENTRIES")}:</span>
                 <span className="font-black text-rose-600 dark:text-rose-400 font-mono text-xs">
                   {records.filter(r => r.remainingPayment > 0).length || 1}
                 </span>
               </div>
               <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800">
-                <span>SYSTEM STATUS:</span>
-                <span className="font-black text-emerald-600 dark:text-emerald-400 uppercase text-[9px]">ONLINE & SYNCED</span>
+                <span>{t(lang, "report.system_status", "SYSTEM STATUS")}:</span>
+                <span className="font-black text-emerald-600 dark:text-emerald-400 uppercase text-[9px]">{t(lang, "status.online_synced", "ONLINE & SYNCED")}</span>
               </div>
             </div>
           </div>
@@ -647,10 +657,10 @@ export default function JournalStockReportDashboard({
                 <div className="bg-amber-600 p-1 rounded-full text-white">
                   <Globe className="h-3.5 w-3.5" />
                 </div>
-                <h4 className="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">4. ALL COUNTRIES REPORT</h4>
+                <h4 className="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">4. {t(lang, "report.all_countries_report", "ALL COUNTRIES REPORT")}</h4>
               </div>
               <span className="text-[9px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded font-black text-slate-600 dark:text-slate-300 uppercase">
-                {showAllCountries ? "HIDE DETAILS" : "SHOW DETAILS"}
+                {showAllCountries ? t(lang, "report.hide_details", "HIDE DETAILS") : t(lang, "report.show_details", "SHOW DETAILS")}
               </span>
             </div>
             <div className="p-3 flex flex-col gap-2 text-[10px] font-semibold text-slate-500 dark:text-slate-400 h-full justify-between">
@@ -724,10 +734,10 @@ export default function JournalStockReportDashboard({
         <div className="bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between">
           <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
             <FileText className="w-4 h-4 text-blue-600" />
-            Consolidated {activeTab === "salesman" ? "Salesperson" : activeTab === "country" ? "Country" : "Branch"} Performance Overview
+            {t(lang, "report.consolidated", "Consolidated")} {activeTab === "salesman" ? t(lang, "report.salesperson", "Salesperson") : activeTab === "country" ? t(lang, "report.country", "Country") : t(lang, "report.branch", "Branch")} {t(lang, "report.performance_overview", "Performance Overview")}
           </h3>
           <span className="text-[10px] font-mono font-black text-slate-400">
-            Records Found: {groupedData.length}
+            {t(lang, "report.records_found", "Records Found")}: {groupedData.length}
           </span>
         </div>
 
@@ -736,16 +746,16 @@ export default function JournalStockReportDashboard({
             <thead className="bg-slate-900 text-white text-[9px] font-extrabold uppercase tracking-wider border-b border-slate-700">
               <tr>
                 <Th className="p-3 border-r border-slate-700">
-                  {activeTab === "salesman" ? "Salesman Name" : activeTab === "country" ? "Country Name" : "Branch Name"}
+                  {activeTab === "salesman" ? t(lang, "report.salesman_name", "Salesman Name") : activeTab === "country" ? t(lang, "report.country_name", "Country Name") : t(lang, "report.branch_name", "Branch Name")}
                 </Th>
-                <Th className="p-3 text-center border-r border-slate-700">No. of Bills</Th>
-                <Th className="p-3 text-right border-r border-slate-700">Net Weight (Kg)</Th>
-                <Th className="p-3 text-right border-r border-slate-700">DC (Cartons)</Th>
-                <Th className="p-3 text-right border-r border-slate-700">Total Purchase (PKR)</Th>
-                <Th className="p-3 text-right border-r border-slate-700">Purchase Payment (PKR)</Th>
-                <Th className="p-3 text-right border-r border-slate-700">Invoice Payment (PKR)</Th>
-                <Th className="p-3 text-right border-r border-slate-700">Remaining Payment (PKR)</Th>
-                <Th className="p-3 text-center print:hidden">Actions</Th>
+                <Th className="p-3 text-center border-r border-slate-700">{t(lang, "report.no_of_bills", "No. of Bills")}</Th>
+                <Th className="p-3 text-right border-r border-slate-700">{t(lang, "report.net_weight_kg", "Net Weight (Kg)")}</Th>
+                <Th className="p-3 text-right border-r border-slate-700">{t(lang, "report.dc_cartons", "DC (Cartons)")}</Th>
+                <Th className="p-3 text-right border-r border-slate-700">{t(lang, "report.total_purchase_pkr", "Total Purchase (PKR)")}</Th>
+                <Th className="p-3 text-right border-r border-slate-700">{t(lang, "report.purchase_payment_pkr", "Purchase Payment (PKR)")}</Th>
+                <Th className="p-3 text-right border-r border-slate-700">{t(lang, "report.invoice_payment_pkr", "Invoice Payment (PKR)")}</Th>
+                <Th className="p-3 text-right border-r border-slate-700">{t(lang, "report.remaining_payment_pkr", "Remaining Payment (PKR)")}</Th>
+                <Th className="p-3 text-center print:hidden">{t(lang, "form.actions", "Actions")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[10px] font-semibold">
