@@ -190,6 +190,7 @@ export type UiKey =
   | "nav.import_stock"
   | "nav.journal_stock"
   | "nav.journal_stock_report"
+  | "nav.journal_stock_checking_report"
   | "nav.document_management"
   | "nav.general_office_management"
   | "nav.employee_master_setup"
@@ -620,7 +621,7 @@ export type UiKey =
   | "report.search_placeholder"
   // ERP Reports System — Table
   | "report.no_data"
-  | "report.loading"
+  | "report.loading_state"
   | "report.error"
   | "report.generated_at"
   | "report.scope_label"
@@ -827,7 +828,6 @@ const en: Dict = {
   "nav.finalized_purchase_orders": "Finalized Purchase Orders",
   "nav.purchase_order_tracking": "Purchase Order Tracking",
   "nav.stock": "Stock",
-  "nav.tax": "Tax",
   "nav.booking_stock": "Booking Stock",
   "nav.confirmed_stock": "Confirmed Stock",
   "nav.import_stock": "Import Stock",
@@ -948,7 +948,6 @@ const en: Dict = {
   "nav.location_tehsil": "Tehsil Master",
   "nav.company_form": "Company Form",
   "nav.customers_form": "Customers Form",
-  "nav.employee_management": "Employee Management",
   "nav.contract_type": "Contract Type",
   "nav.company_registration_type": "Company Registration No Type",
   "nav.bank_form": "Bank Form",
@@ -1215,7 +1214,7 @@ const en: Dict = {
   "report.search_placeholder": "Search report data...",
   // ERP Reports System — table
   "report.no_data": "No data found",
-  "report.loading": "Loading report...",
+  "report.loading_state": "Loading report...",
   "report.error": "Error loading report",
   "report.generated_at": "Generated At",
   "report.scope_label": "Access Scope",
@@ -1569,7 +1568,6 @@ const ur: Dict = {
   "nav.location_tehsil": "تحصیل ماسٹر",
   "nav.company_form": "کمپنی فارم",
   "nav.customers_form": "کسٹمر فارم",
-  "nav.employee_management": "ملازمین کی رجسٹریشن",
   "nav.contract_type": "کانٹریکٹ ٹائپ",
   "nav.company_registration_type": "کمپنی رجسٹریشن نمبر ٹائپ",
   "nav.bank_form": "بینک فارم",
@@ -1796,7 +1794,7 @@ const ur: Dict = {
   "report.search": "تلاش",
   "report.search_placeholder": "رپورٹ دیٹا تلاش کریں...",
   "report.no_data": "کوئی ڈیٹا نہیں",
-  "report.loading": "رپورٹ لوڈ ہو رہی ہے...",
+  "report.loading_state": "رپورٹ لوڈ ہو رہی ہے...",
   "report.error": "رپورٹ لوڈ کرنے میں خطا",
   "report.generated_at": "تیار کیا گیا",
   "report.scope_label": "رسائی کی سطح",
@@ -2037,7 +2035,7 @@ const ar: Dict = {
   "nav.import_stock": "Import Stock",
   "nav.journal_stock": "Journal Stock",
   "nav.journal_stock_report": "Journal Stock Report",
-  "nav.journal_stock_checking_report": "Journal Stock Checking Report",
+  "nav.journal_stock_checking_report": "تقرير فحص مخزون اليومية",
   "nav.document_management": "د اسنادو مدیریت او سکینر",
   "nav.scanner_integration": "مباشر سکین کول",
   "nav.all_reports_catalog": "د ټول راپورونو کټلاګ",
@@ -2345,7 +2343,7 @@ const ar: Dict = {
   "report.search": "بحث",
   "report.search_placeholder": "بحث في بيانات التقرير...",
   "report.no_data": "لا توجد بيانات",
-  "report.loading": "جاري تحميل التقرير...",
+  "report.loading_state": "جاري تحميل التقرير...",
   "report.error": "خطأ في تحميل التقرير",
   "report.generated_at": "تاريخ الإنشاء",
   "report.scope_label": "مستوى الوصول",
@@ -2832,7 +2830,7 @@ const fa: Dict = {
   "report.search": "جستجو",
   "report.search_placeholder": "جستجو در داده‌های گزارش...",
   "report.no_data": "داده‌ای یافت نشد",
-  "report.loading": "در حال بارگذاری گزارش...",
+  "report.loading_state": "در حال بارگذاری گزارش...",
   "report.error": "خطا در بارگذاری گزارش",
   "report.generated_at": "ساخته شده در",
   "report.scope_label": "سطح دسترسی",
@@ -3287,7 +3285,7 @@ const ps: Dict = {
   "report.search_placeholder": "د راپور ډاټا لټون وکړئ...",
   // ERP Reports — table
   "report.no_data": "کوم ډاټا نشته",
-  "report.loading": "راپور ډکیږي...",
+  "report.loading_state": "راپور ډکیږي...",
   "report.error": "د راپور بارولو کې خطا",
   "report.generated_at": "جوړ شو",
   "report.scope_label": "د لاسرسي کچه",
@@ -3310,6 +3308,255 @@ const ps: Dict = {
   "report.col_reference": "حواله"
 };
 
+const navigationPhraseDictionaries: Record<SupportedLanguage, Record<string, string>> = {
+  en: {
+    "General Office Menu": "General Office Menu",
+    "General Office Employee Management": "General Office Employee Management",
+    "Money Changer": "Money Changer",
+    "Ready for Loading (Form)": "Ready for Loading (Form)",
+    "Completed Purchase Bills": "Completed Purchase Bills",
+    "Local Purchase Journal Report": "Local Purchase Journal Report",
+    "Local Purchase Transfer Payment": "Local Purchase Transfer Payment",
+    "Local Goods Received": "Local Goods Received",
+    "New Sales Booking": "New Sales Booking",
+    "Sales Transfer Payment": "Sales Transfer Payment",
+    "Confirmed Sales": "Confirmed Sales",
+    "Sales Booking Register": "Sales Booking Register"
+  },
+  ur: {
+    "General Office Menu": "جنرل آفس مینو",
+    "General Office Employee Management": "جنرل آفس ملازمین کا انتظام",
+    "Money Changer": "منی چینجر",
+    "Ready for Loading (Form)": "لوڈنگ کے لیے تیار (فارم)",
+    "Completed Purchase Bills": "مکمل شدہ پرچیز بل",
+    "Local Purchase Journal Report": "مقامی پرچیز جرنل رپورٹ",
+    "Local Purchase Transfer Payment": "مقامی پرچیز ٹرانسفر ادائیگی",
+    "Local Goods Received": "مقامی مال وصولی",
+    "New Sales Booking": "نئی سیلز بکنگ",
+    "Sales Transfer Payment": "سیلز ٹرانسفر ادائیگی",
+    "Confirmed Sales": "تصدیق شدہ سیلز",
+    "Sales Booking Register": "سیلز بکنگ رجسٹر"
+  },
+  ar: {
+    "General Office Menu": "قائمة المكتب العام",
+    "General Office Employee Management": "إدارة موظفي المكتب العام",
+    "Money Changer": "صراف العملات",
+    "Ready for Loading (Form)": "جاهز للتحميل (نموذج)",
+    "Completed Purchase Bills": "فواتير الشراء المكتملة",
+    "Local Purchase Journal Report": "تقرير دفتر الشراء المحلي",
+    "Local Purchase Transfer Payment": "دفع تحويل الشراء المحلي",
+    "Local Goods Received": "استلام البضائع المحلية",
+    "New Sales Booking": "حجز مبيعات جديد",
+    "Sales Transfer Payment": "دفع تحويل المبيعات",
+    "Confirmed Sales": "المبيعات المؤكدة",
+    "Sales Booking Register": "سجل حجوزات المبيعات"
+  },
+  fa: {
+    "General Office Menu": "منوی دفتر عمومی",
+    "General Office Employee Management": "مدیریت کارمندان دفتر عمومی",
+    "Money Changer": "صرافی",
+    "Ready for Loading (Form)": "آماده بارگیری (فرم)",
+    "Completed Purchase Bills": "صورت حساب های خرید تکمیل شده",
+    "Local Purchase Journal Report": "گزارش دفتر خرید محلی",
+    "Local Purchase Transfer Payment": "پرداخت انتقال خرید محلی",
+    "Local Goods Received": "دریافت کالای محلی",
+    "New Sales Booking": "رزرو فروش جدید",
+    "Sales Transfer Payment": "پرداخت انتقال فروش",
+    "Confirmed Sales": "فروش های تایید شده",
+    "Sales Booking Register": "دفتر رزرو فروش"
+  },
+  ps: {
+    "General Office Menu": "د عمومي دفتر مېنو",
+    "General Office Employee Management": "د عمومي دفتر د کارکوونکو مدیریت",
+    "Money Changer": "د پیسو بدلوونکی",
+    "Ready for Loading (Form)": "د بارولو لپاره چمتو (فورمه)",
+    "Completed Purchase Bills": "بشپړ شوي د پېرود بلونه",
+    "Local Purchase Journal Report": "د ځايي پېرود د ژورنال راپور",
+    "Local Purchase Transfer Payment": "د ځايي پېرود د لېږد تادیه",
+    "Local Goods Received": "د ځايي توکو ترلاسه کول",
+    "New Sales Booking": "د پلور نوې بکینګ",
+    "Sales Transfer Payment": "د پلور د لېږد تادیه",
+    "Confirmed Sales": "تایید شوي پلورونه",
+    "Sales Booking Register": "د پلور د بکینګ راجستر"
+  }
+};
+const operationalPhraseDictionaries: Record<SupportedLanguage, Record<string, string>> = {
+  en: {
+    "Enterprise Reporting Hub": "Enterprise Reporting Hub",
+    "Cash Entry (Roznamcha)": "Cash Entry (Roznamcha)",
+    "Receipts General Ledger": "Receipts General Ledger",
+    "Payments Ledger": "Payments Ledger",
+    "Customer Account Details": "Customer Account Details",
+    "Customer Company Registrations": "Customer Company Registrations",
+    "Pakistan & Global Exchange Rates": "Pakistan & Global Exchange Rates",
+    "Branch Transaction Performance": "Branch Transaction Performance",
+    "User Live Activity Journal": "User Live Activity Journal",
+    "Audit Trail Logs": "Audit Trail Logs",
+    "Approval Workflow States": "Approval Workflow States",
+    "Interval Expense Tracking": "Interval Expense Tracking",
+    "Financial Balance Summaries": "Financial Balance Summaries",
+    "Comprehensive Daily Report": "Comprehensive Daily Report",
+    "Print Reports Hub (A4 PDF)": "Print Reports Hub (A4 PDF)",
+    "Email Inbox & Sent": "Email Inbox & Sent",
+    "Official Branch Email Setup (Titan SMTP)": "Official Branch Email Setup (Titan SMTP)",
+    "Database Backup & Reset": "Database Backup & Reset"
+  },
+  ur: {
+    "Enterprise Reporting Hub": "انٹرپرائز رپورٹنگ مرکز",
+    "Cash Entry (Roznamcha)": "کیش انٹری (روزنامچہ)",
+    "Receipts General Ledger": "وصولیوں کا جنرل لیجر",
+    "Payments Ledger": "ادائیگیوں کا لیجر",
+    "Customer Account Details": "کسٹمر اکاؤنٹ کی تفصیلات",
+    "Customer Company Registrations": "کسٹمر کمپنی رجسٹریشن",
+    "Pakistan & Global Exchange Rates": "پاکستان اور عالمی شرح تبادلہ",
+    "Branch Transaction Performance": "برانچ ٹرانزیکشن کارکردگی",
+    "User Live Activity Journal": "صارف کی لائیو سرگرمی کا جرنل",
+    "Audit Trail Logs": "آڈٹ ٹریل لاگز",
+    "Approval Workflow States": "منظوری ورک فلو کی حالتیں",
+    "Interval Expense Tracking": "وقفہ وار اخراجات کی نگرانی",
+    "Financial Balance Summaries": "مالی بیلنس خلاصے",
+    "Comprehensive Daily Report": "جامع یومیہ رپورٹ",
+    "Print Reports Hub (A4 PDF)": "پرنٹ رپورٹس مرکز (A4 PDF)",
+    "Email Inbox & Sent": "ای میل ان باکس اور بھیجے گئے",
+    "Official Branch Email Setup (Titan SMTP)": "برانچ کی سرکاری ای میل سیٹ اپ (Titan SMTP)",
+    "Database Backup & Reset": "ڈیٹابیس بیک اپ اور ری سیٹ"
+  },
+  ar: {
+    "Enterprise Reporting Hub": "مركز تقارير المؤسسة",
+    "Cash Entry (Roznamcha)": "قيد نقدي (دفتر اليومية)",
+    "Receipts General Ledger": "دفتر الأستاذ العام للمقبوضات",
+    "Payments Ledger": "دفتر مدفوعات",
+    "Customer Account Details": "تفاصيل حساب العميل",
+    "Customer Company Registrations": "تسجيلات شركات العملاء",
+    "Pakistan & Global Exchange Rates": "أسعار الصرف في باكستان والعالم",
+    "Branch Transaction Performance": "أداء معاملات الفرع",
+    "User Live Activity Journal": "سجل نشاط المستخدم المباشر",
+    "Audit Trail Logs": "سجلات مسار التدقيق",
+    "Approval Workflow States": "حالات سير عمل الموافقة",
+    "Interval Expense Tracking": "تتبع المصروفات الدورية",
+    "Financial Balance Summaries": "ملخصات الأرصدة المالية",
+    "Comprehensive Daily Report": "التقرير اليومي الشامل",
+    "Print Reports Hub (A4 PDF)": "مركز طباعة التقارير (A4 PDF)",
+    "Email Inbox & Sent": "البريد الوارد والمرسل",
+    "Official Branch Email Setup (Titan SMTP)": "إعداد البريد الرسمي للفرع (Titan SMTP)",
+    "Database Backup & Reset": "نسخ قاعدة البيانات وإعادة ضبطها"
+  },
+  fa: {
+    "Enterprise Reporting Hub": "مرکز گزارش های سازمانی",
+    "Cash Entry (Roznamcha)": "ثبت نقدی (روزنامه)",
+    "Receipts General Ledger": "دفتر کل دریافت ها",
+    "Payments Ledger": "دفتر پرداخت ها",
+    "Customer Account Details": "جزئیات حساب مشتری",
+    "Customer Company Registrations": "ثبت شرکت های مشتری",
+    "Pakistan & Global Exchange Rates": "نرخ ارز پاکستان و جهان",
+    "Branch Transaction Performance": "عملکرد تراکنش های شعبه",
+    "User Live Activity Journal": "دفتر فعالیت زنده کاربر",
+    "Audit Trail Logs": "گزارش های مسیر حسابرسی",
+    "Approval Workflow States": "وضعیت های گردش تایید",
+    "Interval Expense Tracking": "پیگیری دوره ای هزینه ها",
+    "Financial Balance Summaries": "خلاصه مانده های مالی",
+    "Comprehensive Daily Report": "گزارش جامع روزانه",
+    "Print Reports Hub (A4 PDF)": "مرکز چاپ گزارش ها (A4 PDF)",
+    "Email Inbox & Sent": "ایمیل های دریافتی و ارسالی",
+    "Official Branch Email Setup (Titan SMTP)": "تنظیم ایمیل رسمی شعبه (Titan SMTP)",
+    "Database Backup & Reset": "پشتیبان گیری و بازنشانی پایگاه داده"
+  },
+  ps: {
+    "Enterprise Reporting Hub": "د تصدۍ د راپورونو مرکز",
+    "Cash Entry (Roznamcha)": "نغدي ثبت (روزنامچه)",
+    "Receipts General Ledger": "د ترلاسه شوو عمومي لیجر",
+    "Payments Ledger": "د تادیاتو لیجر",
+    "Customer Account Details": "د پېرودونکي د حساب معلومات",
+    "Customer Company Registrations": "د پېرودونکو د شرکتونو ثبت",
+    "Pakistan & Global Exchange Rates": "د پاکستان او نړۍ د اسعارو نرخونه",
+    "Branch Transaction Performance": "د څانګې د معاملاتو فعالیت",
+    "User Live Activity Journal": "د کارونکي ژوندۍ فعالیت ژورنال",
+    "Audit Trail Logs": "د پلټنې د بهیر لاګونه",
+    "Approval Workflow States": "د تایید د کاري بهیر حالتونه",
+    "Interval Expense Tracking": "د دوراني لګښتونو څارنه",
+    "Financial Balance Summaries": "د مالي بیلانس لنډیزونه",
+    "Comprehensive Daily Report": "جامع ورځنی راپور",
+    "Print Reports Hub (A4 PDF)": "د راپورونو د چاپ مرکز (A4 PDF)",
+    "Email Inbox & Sent": "بریښنالیک ان باکس او استول شوي",
+    "Official Branch Email Setup (Titan SMTP)": "د څانګې رسمي بریښنالیک تنظیم (Titan SMTP)",
+    "Database Backup & Reset": "د ډیټابیس بیک اپ او بیا تنظیم"
+  }
+};
+
+const scopedReportPhrases: Record<SupportedLanguage, { scopes: Record<string, string>; reports: Record<string, string> }> = {
+  en: { scopes: { "Super Admin": "Super Admin", Country: "Country", Branch: "Branch" }, reports: { Audit: "Audit Report", "Balance Sheet": "Balance Sheet", "Profit/Loss": "Profit/Loss Report", "Purchase Order": "Purchase Order Report", Purchase: "Purchase Report", Sales: "Sales Report", "Trial Balance": "Trial Balance" } },
+  ur: { scopes: { "Super Admin": "سپر ایڈمن", Country: "ملکی", Branch: "برانچ" }, reports: { Audit: "آڈٹ رپورٹ", "Balance Sheet": "بیلنس شیٹ", "Profit/Loss": "نفع و نقصان رپورٹ", "Purchase Order": "پرچیز آرڈر رپورٹ", Purchase: "پرچیز رپورٹ", Sales: "سیلز رپورٹ", "Trial Balance": "ٹرائل بیلنس" } },
+  ar: { scopes: { "Super Admin": "المشرف العام", Country: "الدولة", Branch: "الفرع" }, reports: { Audit: "تقرير التدقيق", "Balance Sheet": "الميزانية العمومية", "Profit/Loss": "تقرير الأرباح والخسائر", "Purchase Order": "تقرير أمر الشراء", Purchase: "تقرير الشراء", Sales: "تقرير المبيعات", "Trial Balance": "ميزان المراجعة" } },
+  fa: { scopes: { "Super Admin": "مدیر کل", Country: "کشور", Branch: "شعبه" }, reports: { Audit: "گزارش حسابرسی", "Balance Sheet": "ترازنامه", "Profit/Loss": "گزارش سود و زیان", "Purchase Order": "گزارش سفارش خرید", Purchase: "گزارش خرید", Sales: "گزارش فروش", "Trial Balance": "تراز آزمایشی" } },
+  ps: { scopes: { "Super Admin": "ستر مدیر", Country: "هېواد", Branch: "څانګه" }, reports: { Audit: "د پلټنې راپور", "Balance Sheet": "بیلانس شیټ", "Profit/Loss": "د ګټې او زیان راپور", "Purchase Order": "د پېرود امر راپور", Purchase: "د پېرود راپور", Sales: "د پلور راپور", "Trial Balance": "ازمایښتي بیلانس" } }
+};
+
+function translateScopedReportPhrase(lang: SupportedLanguage, key: string): string | undefined {
+  const match = /^(Super Admin|Country|Branch) (Audit|Balance Sheet|Profit\/Loss|Purchase Order|Purchase|Sales|Trial Balance)(?: Report)?$/.exec(key);
+  if (!match) return undefined;
+  const scope = scopedReportPhrases[lang].scopes[match[1]];
+  const report = scopedReportPhrases[lang].reports[match[2]];
+  if (!scope || !report) return undefined;
+  return lang === "ar" || lang === "fa" ? [report, scope].join(" - ") : [scope, report].join(" ");
+}
+const supplementalDictionaries: Record<SupportedLanguage, Record<string, string>> = {
+  en: {
+    "common.next": "Next",
+    "common.back": "Back",
+    "purchase.branch_login_details": "Branch Login Details",
+    "purchase.booking_bill_info": "Purchase Booking / Bill Info",
+    "purchase.select_origin": "Select Origin",
+    "purchase.select_brand": "Select Brand",
+    "purchase.select_size": "Select Size",
+    "purchase.currency_conversion": "Purchase Currency & Conversion",
+    "nav.new_purchase_order": "New Purchase Booking Order"
+  },
+  ur: {
+    "common.next": "\u0627\u06af\u0644\u0627",
+    "common.back": "\u0648\u0627\u067e\u0633",
+    "purchase.branch_login_details": "\u0628\u0631\u0627\u0646\u0686 \u0644\u0627\u06af \u0627\u0646 \u06a9\u06cc \u062a\u0641\u0635\u06cc\u0644\u0627\u062a",
+    "purchase.booking_bill_info": "\u067e\u0631\u0686\u06cc\u0632 \u0628\u06a9\u0646\u06af / \u0628\u0644 \u06a9\u06cc \u062a\u0641\u0635\u06cc\u0644\u0627\u062a",
+    "purchase.select_origin": "\u0645\u0644\u06a9 \u06cc\u0627 \u0645\u0628\u062f\u0627 \u0645\u0646\u062a\u062e\u0628 \u06a9\u0631\u06cc\u06ba",
+    "purchase.select_brand": "\u0628\u0631\u0627\u0646\u0688 \u0645\u0646\u062a\u062e\u0628 \u06a9\u0631\u06cc\u06ba",
+    "purchase.select_size": "\u0633\u0627\u0626\u0632 \u0645\u0646\u062a\u062e\u0628 \u06a9\u0631\u06cc\u06ba",
+    "purchase.currency_conversion": "\u067e\u0631\u0686\u06cc\u0632 \u06a9\u0631\u0646\u0633\u06cc \u0627\u0648\u0631 \u062a\u0628\u062f\u06cc\u0644\u06cc",
+    "nav.new_purchase_order": "\u0646\u06cc\u0627 \u067e\u0631\u0686\u06cc\u0632 \u0628\u06a9\u0646\u06af \u0622\u0631\u0688\u0631"
+  },
+  ar: {
+    "common.next": "\u0627\u0644\u062a\u0627\u0644\u064a",
+    "common.back": "\u0631\u062c\u0648\u0639",
+    "purchase.branch_login_details": "\u062a\u0641\u0627\u0635\u064a\u0644 \u062f\u062e\u0648\u0644 \u0627\u0644\u0641\u0631\u0639",
+    "purchase.booking_bill_info": "\u0645\u0639\u0644\u0648\u0645\u0627\u062a \u062d\u062c\u0632 \u0627\u0644\u0634\u0631\u0627\u0621 / \u0627\u0644\u0641\u0627\u062a\u0648\u0631\u0629",
+    "purchase.select_origin": "\u0627\u062e\u062a\u0631 \u0628\u0644\u062f \u0627\u0644\u0645\u0646\u0634\u0623",
+    "purchase.select_brand": "\u0627\u062e\u062a\u0631 \u0627\u0644\u0639\u0644\u0627\u0645\u0629 \u0627\u0644\u062a\u062c\u0627\u0631\u064a\u0629",
+    "purchase.select_size": "\u0627\u062e\u062a\u0631 \u0627\u0644\u0645\u0642\u0627\u0633",
+    "purchase.currency_conversion": "\u0639\u0645\u0644\u0629 \u0627\u0644\u0634\u0631\u0627\u0621 \u0648\u0627\u0644\u062a\u062d\u0648\u064a\u0644",
+    "nav.new_purchase_order": "\u0623\u0645\u0631 \u062d\u062c\u0632 \u0634\u0631\u0627\u0621 \u062c\u062f\u064a\u062f"
+  },
+  fa: {
+    "common.next": "\u0628\u0639\u062f\u06cc",
+    "common.back": "\u0628\u0627\u0632\u06af\u0634\u062a",
+    "purchase.branch_login_details": "\u062c\u0632\u0626\u06cc\u0627\u062a \u0648\u0631\u0648\u062f \u0634\u0639\u0628\u0647",
+    "purchase.booking_bill_info": "\u0645\u0639\u0644\u0648\u0645\u0627\u062a \u0631\u0632\u0631\u0648 \u062e\u0631\u06cc\u062f / \u0628\u0644",
+    "purchase.select_origin": "\u06a9\u0634\u0648\u0631 \u0645\u0628\u062f\u0623 \u0631\u0627 \u0627\u0646\u062a\u062e\u0627\u0628 \u06a9\u0646\u06cc\u062f",
+    "purchase.select_brand": "\u0628\u0631\u0646\u062f \u0631\u0627 \u0627\u0646\u062a\u062e\u0627\u0628 \u06a9\u0646\u06cc\u062f",
+    "purchase.select_size": "\u0627\u0646\u062f\u0627\u0632\u0647 \u0631\u0627 \u0627\u0646\u062a\u062e\u0627\u0628 \u06a9\u0646\u06cc\u062f",
+    "purchase.currency_conversion": "\u0627\u0631\u0632 \u062e\u0631\u06cc\u062f \u0648 \u062a\u0628\u062f\u06cc\u0644",
+    "nav.new_purchase_order": "\u0633\u0641\u0627\u0631\u0634 \u0631\u0632\u0631\u0648 \u062e\u0631\u06cc\u062f \u062c\u062f\u06cc\u062f"
+  },
+  ps: {
+    "common.next": "\u0628\u0644",
+    "common.back": "\u0634\u0627\u062a\u0647",
+    "purchase.branch_login_details": "\u062f \u0685\u0627\u0646\u06ab\u06d0 \u062f \u0646\u0646\u0648\u062a\u0644\u0648 \u062c\u0632\u0626\u06cc\u0627\u062a",
+    "purchase.booking_bill_info": "\u062f \u067e\u06d0\u0631\u0648\u062f \u0628\u0648\u06a9\u06cc\u0646\u06ab / \u0628\u0644 \u0645\u0639\u0644\u0648\u0645\u0627\u062a",
+    "purchase.select_origin": "\u0627\u0635\u0644\u064a \u0647\u06d0\u0648\u0627\u062f \u0648\u067c\u0627\u06a9\u0626",
+    "purchase.select_brand": "\u0628\u0631\u0627\u0646\u0689 \u0648\u067c\u0627\u06a9\u0626",
+    "purchase.select_size": "\u0627\u0646\u062f\u0627\u0632\u0647 \u0648\u067c\u0627\u06a9\u0626",
+    "purchase.currency_conversion": "\u062f \u067e\u06d0\u0631\u0648\u062f \u0627\u0633\u0639\u0627\u0631 \u0627\u0648 \u0628\u062f\u0644\u0648\u0646",
+    "nav.new_purchase_order": "\u062f \u067e\u06d0\u0631\u0648\u062f \u0646\u0648\u06cc \u0628\u0648\u06a9\u06cc\u0646\u06ab \u0627\u0645\u0631"
+  }
+};
+
 const dictionaries: Record<SupportedLanguage, Dict> = {
   en,
   ar,
@@ -3321,8 +3568,9 @@ const dictionaries: Record<SupportedLanguage, Dict> = {
 export function t(lang: SupportedLanguage | string | null | undefined, key: string | null | undefined, defaultValue?: string): string {
   if (!key) return defaultValue ?? "";
   const safeLang = (lang && typeof lang === "string" && ["en", "ar", "ur", "fa", "ps"].includes(lang) ? lang : "en") as SupportedLanguage;
-  const dictKey = key as UiKey;
+  const normalizedKey = key.startsWith("Email Inbox & Sent (") ? "Email Inbox & Sent" : key;
+  const dictKey = normalizedKey as UiKey;
   const dict = dictionaries[safeLang] || dictionaries.en;
-  return dict?.[dictKey] ?? en[dictKey] ?? defaultValue ?? key;
+  return navigationPhraseDictionaries[safeLang]?.[normalizedKey] ?? operationalPhraseDictionaries[safeLang]?.[normalizedKey] ?? translateScopedReportPhrase(safeLang, normalizedKey) ?? supplementalDictionaries[safeLang]?.[normalizedKey] ?? dict?.[dictKey] ?? navigationPhraseDictionaries.en[normalizedKey] ?? operationalPhraseDictionaries.en[normalizedKey] ?? supplementalDictionaries.en[normalizedKey] ?? en[dictKey] ?? defaultValue ?? key;
 }
 

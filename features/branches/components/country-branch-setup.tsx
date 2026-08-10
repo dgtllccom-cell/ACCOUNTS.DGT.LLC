@@ -335,16 +335,16 @@ function CountryBranchSetupContent() {
 
   const hasAny = Boolean(
     location.countryId ||
-      location.stateProvinceId ||
-      location.cityId ||
-      currency ||
-      fullAddress ||
-      companyId ||
-      ownerName ||
-      branchType ||
-      branchCode ||
-      permissionGrants.length ||
-      contacts.some((c) => c.type || c.value)
+    location.stateProvinceId ||
+    location.cityId ||
+    currency ||
+    fullAddress ||
+    companyId ||
+    ownerName ||
+    branchType ||
+    branchCode ||
+    permissionGrants.length ||
+    contacts.some((c) => c.type || c.value)
   );
 
   const reportRows = useMemo(
@@ -485,7 +485,7 @@ function CountryBranchSetupContent() {
       branchType: "MAIN",
       country: previewCountry,
       currency: active?.local_currency || currency || "USD",
-      
+
       parentBranch: {
         name: "ACCOUNTS.DGT.LLC Headquarters",
         code: "SUPER-HQ-001",
@@ -635,7 +635,7 @@ function CountryBranchSetupContent() {
       branchType: "MAIN",
       country: previewCountry || row.name.split(" ")[0] || "Country",
       currency: row.local_currency || currency || "USD",
-      
+
       parentBranch: {
         name: "ACCOUNTS.DGT.LLC Headquarters",
         code: "SUPER-HQ-001",
@@ -900,11 +900,14 @@ function CountryBranchSetupContent() {
       const phone = contactsPayload.find((row) => row.type.toLowerCase().includes("phone") || row.type.toLowerCase().includes("mobile"))?.value;
       const whatsappNumber = contactsPayload.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value;
 
+      const targetBranchId = editingCountryBranchId || existingMainBranch?.id || "";
+      const isUpdatingExistingBranch = Boolean(targetBranchId);
+
       const res = await fetch("/api/branch-management/country-branches", {
-        method: editingCountryBranchId ? "PUT" : "POST",
+        method: isUpdatingExistingBranch ? "PUT" : "POST",
         headers: { "content-type": "application/json" },
         body: JSON.stringify({
-          id: editingCountryBranchId || undefined,
+          id: targetBranchId || undefined,
           countryId: location.countryId,
           name: branchName,
           code: branchCode,
@@ -947,7 +950,7 @@ function CountryBranchSetupContent() {
         setBanner({ type: "error", message });
         return;
       }
-      setBanner({ type: "success", message: `${editingCountryBranchId ? "Updated" : "Saved"}: ${branchName} (${branchCode})` });
+      setBanner({ type: "success", message: `${isUpdatingExistingBranch ? "Updated" : "Saved"}: ${branchName} (${branchCode})` });
       setEditingCountryBranchId("");
       await loadExistingMainBranch(location.countryId);
     } catch (err) {
@@ -1023,11 +1026,12 @@ function CountryBranchSetupContent() {
             {activeStep < 9 ? (
               <Button type="button" size="sm" onClick={() => setActiveStep((step) => Math.min(9, step + 1))}>Next</Button>
             ) : (
-              <Button type="submit" form="country-branch-wizard-form" size="sm" disabled={saving || Boolean(existingMainBranch && !editingCountryBranchId) || !location.countryId}>{saving ? "Saving..." : editingCountryBranchId ? "Update" : "Accept & Save"}</Button>
+              <Button type="submit" form="country-branch-wizard-form" size="sm" disabled={saving || !location.countryId}>{saving ? "Saving..." : editingCountryBranchId || existingMainBranch ? "Update" : "Accept & Save"}</Button>
             )}
           </div>
         </div>
-      <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto"> 
+      </div>
+      <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto">
         <Card className="border-slate-200/80 shadow-sm">
           <CardHeader className="pb-3">
             <CardTitle>Country Main Branch Setup</CardTitle>
@@ -1257,8 +1261,8 @@ function CountryBranchSetupContent() {
                 <Button type="reset" variant="outline" disabled={saving}>
                   Cancel
                 </Button>
-                <Button type="submit" disabled={saving || Boolean(existingMainBranch && !editingCountryBranchId) || !location.countryId}>
-                  {saving ? "Saving..." : editingCountryBranchId ? "Update" : "Save"}
+                <Button type="submit" disabled={saving || !location.countryId}>
+                  {saving ? "Saving..." : editingCountryBranchId || existingMainBranch ? "Update" : "Save"}
                 </Button>
               </div>
             </form>

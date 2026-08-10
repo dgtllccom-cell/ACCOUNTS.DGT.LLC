@@ -133,7 +133,7 @@ function toPayload(input: Partial<CompanyWriteInput>) {
 export class CompaniesRepository {
   async search(input: { query?: string | null; limit?: number }) {
     const supabase = createSupabaseAdminClient() as any;
-    const limit = Math.min(Math.max(input.limit ?? 20, 1), 50);
+    const limit = Math.min(Math.max(input.limit ?? 20, 1), 200);
 
     let query = supabase
       .from("companies")

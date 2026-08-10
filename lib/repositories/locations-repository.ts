@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import postgres from "postgres";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
 function getDbUrl(): string {
@@ -281,6 +282,18 @@ export class LocationsRepository {
     const supabase = createSupabaseAdminClient() as any;
     const limit = Math.min(Math.max(input?.limit ?? 200, 1), 500);
     const q = (input?.query ?? "").trim();
+    const localDbUrl = getDbUrl();
+    if (localDbUrl) {
+      const localSql = postgres(localDbUrl, { max: 1, prepare: false });
+      try {
+        const localRows = q
+          ? await localSql`SELECT id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number FROM public.countries WHERE deleted_at IS NULL AND (name ILIKE ${'%' + q + '%'} OR iso2 ILIKE ${'%' + q + '%'} OR iso3 ILIKE ${'%' + q + '%'}) ORDER BY name ASC LIMIT ${limit}`
+          : await localSql`SELECT id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number FROM public.countries WHERE deleted_at IS NULL ORDER BY name ASC LIMIT ${limit}`;
+        if (localRows.length > 0) return localRows as CountryRow[];
+      } finally {
+        await localSql.end({ timeout: 5 });
+      }
+    }
 
     let query = supabase
       .from("countries")
@@ -295,9 +308,20 @@ export class LocationsRepository {
     }
 
     const { data } = await query.limit(limit);
+    const dbUrl = getDbUrl();
+    if ((!data || data.length === 0) && dbUrl) {
+      const sql = postgres(dbUrl, { max: 1, prepare: false });
+      try {
+        const rows = q
+          ? await sql`SELECT id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number FROM public.countries WHERE deleted_at IS NULL AND (name ILIKE ${'%' + q + '%'} OR iso2 ILIKE ${'%' + q + '%'} OR iso3 ILIKE ${'%' + q + '%'}) ORDER BY name ASC LIMIT ${limit}`
+          : await sql`SELECT id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number FROM public.countries WHERE deleted_at IS NULL ORDER BY name ASC LIMIT ${limit}`;
+        if (rows.length > 0) return rows as CountryRow[];
+      } finally {
+        await sql.end({ timeout: 5 });
+      }
+    }
     return (data ?? []) as CountryRow[];
   }
-
   async createCountry(input: {
     name: string;
     iso2?: string | null;
@@ -437,7 +461,7 @@ export class LocationsRepository {
     const dbUrl = getDbUrl();
     if ((!data || data.length === 0) && dbUrl) {
       try {
-        const sql = (await import("postgres")).default(dbUrl, { max: 1, prepare: false });
+        const sql = postgres(dbUrl, { max: 1, prepare: false });
         const rows = q
           ? await sql`
               SELECT id, country_id, name, code, postal_code, phone_area_code, is_active
@@ -466,6 +490,7 @@ export class LocationsRepository {
     const supabase = createSupabaseAdminClient() as any;
     const limit = Math.min(Math.max(input.limit ?? 200, 1), 500);
     const q = (input.query ?? "").trim();
+    const dbUrl = getDbUrl();
 
     const stateProvinceId = await this.resolveStateUuid(input.stateProvinceId);
 
@@ -485,7 +510,7 @@ export class LocationsRepository {
 
     if ((!data || data.length === 0) && dbUrl) {
       try {
-        const sql = (await import("postgres")).default(dbUrl, { max: 1, prepare: false });
+        const sql = postgres(dbUrl, { max: 1, prepare: false });
         const rows = q
           ? await sql`
               SELECT id, country_id, state_province_id, name, code, postal_code, phone_area_code, is_active
@@ -520,6 +545,7 @@ export class LocationsRepository {
     const supabase = createSupabaseAdminClient() as any;
     const limit = Math.min(Math.max(input.limit ?? 200, 1), 500);
     const q = (input.query ?? "").trim();
+    const dbUrl = getDbUrl();
 
     const countryId = await this.resolveCountryUuid(input.countryId);
     const stateProvinceId = input.stateProvinceId ? await this.resolveStateUuid(input.stateProvinceId, countryId) : null;
@@ -544,7 +570,7 @@ export class LocationsRepository {
 
     if ((!data || data.length === 0) && dbUrl) {
       try {
-        const sql = (await import("postgres")).default(dbUrl, { max: 1, prepare: false });
+        const sql = postgres(dbUrl, { max: 1, prepare: false });
         const rows = stateProvinceId
           ? await sql`
               SELECT id, country_id, state_province_id, district_id, name, code, zip_code, phone_area_code, is_active
@@ -581,7 +607,7 @@ export class LocationsRepository {
         if (fbData && fbData.length > 0) {
           data = fbData;
         } else {
-          // Table has 0 cities for country — seed standard default cities
+          // Table has 0 cities for country ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â seed standard default cities
           const defaultCityNames: Record<string, Array<{ name: string; code: string }>> = {
             pakistan: [
               { name: "Quetta", code: "UET" },

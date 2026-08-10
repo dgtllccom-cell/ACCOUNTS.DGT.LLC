@@ -50,6 +50,8 @@ import { SimpleModal } from "@/components/ui/simple-modal";
 import { openTradeDocumentWindow } from "@/lib/reports/open-trade-document-window";
 import { openPurchaseA4ReportWindow } from "@/lib/reports/open-purchase-a4-report-window";
 import { PurchaseBookingJournalReportView } from "./purchase-booking-journal-report-view";
+import { useErpLanguage } from "@/lib/i18n/use-erp-language";
+import { t } from "@/lib/i18n/ui";
 
 // Ã¢â€â‚¬Ã¢â€â‚¬ Non-location constants (static values, not from master forms) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
 const CURRENCY_OPTIONS = ["USD", "AED", "EUR", "GBP", "PKR", "AFN", "INR", "CNY", "SAR"];
@@ -434,6 +436,8 @@ function LightStatusBadge({ status }) {
 export function PurchaseOrderWizard({ session }) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const language = useErpLanguage();
+  const translate = (key, fallback) => t(language, key, fallback);
   const [activeTab, setActiveTab] = useState("booking"); // "booking" | "goods" | "others" | "reports"
   const [isMounted, setIsMounted] = useState(false);
 
@@ -732,7 +736,7 @@ export function PurchaseOrderWizard({ session }) {
                   <span className="p-1 rounded-md bg-primary/10 text-primary dark:bg-primary/20">
                     <Building2 className="h-3.5 w-3.5" />
                   </span>
-                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">Branch Login Details</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-wider text-muted-foreground">{translate("purchase.branch_login_details", "Branch Login Details")}</h4>
                 </div>
                 <div className="space-y-1.5 text-[10px]">
                   <div className="space-y-0.5 border-b border-border/40 pb-1.5 mb-1.5">
@@ -4051,7 +4055,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               {activeTab === "booking" && (
                 <fieldset disabled={isTransferred && !session?.scopes?.isSuperAdmin} className="space-y-4 order-2 w-full mt-4">
                   <div className="border-b border-border pb-2 mb-3">
-                    <h3 className="text-xs font-black uppercase tracking-wider text-foreground">Purchase Booking / Bill Info</h3>
+                    <h3 className="text-xs font-black uppercase tracking-wider text-foreground">{translate("purchase.booking_bill_info", "Purchase Booking / Bill Info")}</h3>
                   </div>
 
                   <div className="grid grid-cols-1 gap-4">
@@ -4286,7 +4290,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     </div>
                   </div>
                   <div className="flex justify-end gap-2 pt-2 border-t border-border mt-2">
-                    <Button type="button" onClick={() => setActiveTab("goods")} className="font-bold text-[10px] h-8 px-10 bg-primary text-primary-foreground">Next</Button>
+                    <Button type="button" onClick={() => setActiveTab("goods")} className="font-bold text-[10px] h-8 px-10 bg-primary text-primary-foreground">{translate("common.next", "Next")}</Button>
                   </div>
                 </fieldset>
               )}
@@ -4324,7 +4328,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         onChange={(e) => setValue("origin", e.target.value)}
                         className="w-full bg-background border border-input rounded px-2.5 py-1.5 text-foreground outline-none focus:border-primary text-[10px]"
                       >
-                        <option value="">Select Origin</option>
+                        <option value="">{translate("purchase.select_origin", "Select Origin")}</option>
                         {Array.from(new Set([
                           "United Arab Emirates", "Iran", "USA", "Vietnam", "Pakistan", "India", "Afghanistan", "China", "Turkey",
                           ...allCountries.map(c => c.name).filter(Boolean),
@@ -4448,7 +4452,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             ].filter(Boolean))).sort();
                             return brands.map(b => ({ label: b, value: b }));
                           })()}
-                          placeholder="Select Brand"
+                          placeholder={translate("purchase.select_brand", "Select Brand")}
                           addOptionLabel="Add New Brand"
                         />
                       </div>
@@ -4484,7 +4488,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             ].filter(Boolean))).sort();
                             return sizes.map(s => ({ label: s, value: s }));
                           })()}
-                          placeholder="Select Size"
+                          placeholder={translate("purchase.select_size", "Select Size")}
                           addOptionLabel="Add New Size"
                         />
                       </div>
@@ -4633,7 +4637,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     </div>
 
                     <div className="bg-emerald-50/50 dark:bg-emerald-950/20 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900 mt-2">
-                      <h4 className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 mb-2">Purchase Currency & Conversion</h4>
+                      <h4 className="text-[10px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400 mb-2">{translate("purchase.currency_conversion", "Purchase Currency & Conversion")}</h4>
                       <div className="grid grid-cols-2 gap-3 mb-2">
                         <div>
                           <label className="block text-[9px] text-emerald-700 dark:text-emerald-500 mb-1 font-bold">Pricing Currency</label>
@@ -4700,7 +4704,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   </div>
 
                   <div className="flex justify-between gap-2 pt-4 border-t border-border mt-4">
-                    <Button type="button" variant="outline" onClick={() => setActiveTab("booking")} className="font-bold text-[10px] h-8 px-6 text-slate-600">Back</Button>
+                    <Button type="button" variant="outline" onClick={() => setActiveTab("booking")} className="font-bold text-[10px] h-8 px-6 text-slate-600">{translate("common.back", "Back")}</Button>
                     <div className="flex gap-2">
                       <Button type="button" onClick={handleAddGoodsEntry} className="font-bold text-[10px] h-8 px-6 bg-emerald-600 hover:bg-emerald-700 text-white">+ Add Item to List</Button>
                       <Button type="button" onClick={() => setActiveTab("others")} className="font-bold text-[10px] h-8 px-6 bg-primary text-primary-foreground">Next: Other Details</Button>
@@ -4952,8 +4956,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   </div>
 
                   <div className="flex justify-between gap-2 pt-2 border-t border-border mt-2">
-                    <Button type="button" variant="outline" onClick={() => setActiveTab("goods")} className="font-bold text-[10px] h-8 px-6 text-slate-600">Back</Button>
-                    <Button type="button" onClick={() => setActiveTab("reports_tab")} className="font-bold text-[10px] h-8 px-6 bg-primary text-primary-foreground">Next</Button>
+                    <Button type="button" variant="outline" onClick={() => setActiveTab("goods")} className="font-bold text-[10px] h-8 px-6 text-slate-600">{translate("common.back", "Back")}</Button>
+                    <Button type="button" onClick={() => setActiveTab("reports_tab")} className="font-bold text-[10px] h-8 px-6 bg-primary text-primary-foreground">{translate("common.next", "Next")}</Button>
                   </div>
                 </fieldset>
               )}
@@ -4967,8 +4971,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       Review all generated reports and notes before final verification.
                     </p>
                     <div className="flex justify-between gap-2 pt-2 border-t border-slate-200 mt-2">
-                      <Button type="button" variant="outline" onClick={() => setActiveTab("others")} className="font-bold text-[10px] h-8 px-6 text-slate-600">Back</Button>
-                      <Button type="button" onClick={() => setActiveTab("report")} className="font-bold text-[10px] h-8 px-6 bg-primary text-primary-foreground">Next</Button>
+                      <Button type="button" variant="outline" onClick={() => setActiveTab("others")} className="font-bold text-[10px] h-8 px-6 text-slate-600">{translate("common.back", "Back")}</Button>
+                      <Button type="button" onClick={() => setActiveTab("report")} className="font-bold text-[10px] h-8 px-6 bg-primary text-primary-foreground">{translate("common.next", "Next")}</Button>
                     </div>
                   </div>
                 </div>

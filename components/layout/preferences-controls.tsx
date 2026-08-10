@@ -7,6 +7,7 @@ import { supportedLanguages, type SupportedLanguage, rtlLanguages, getHtmlLangua
 import { getLanguageKeyboardMap } from "@/lib/i18n/keyboard-layouts";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
+import { ERP_LANGUAGE_CHANGE_EVENT } from "@/lib/i18n/use-erp-language";
 
 function getInitialTheme(): "light" | "dark" {
   if (typeof document === "undefined") return "light";
@@ -135,6 +136,8 @@ export function PreferencesControls() {
           document.documentElement.lang = getHtmlLanguage(next);
           document.documentElement.dir = rtlLanguages.includes(next) ? "rtl" : "ltr";
           setLanguage(next);
+          injectWebFonts(next);
+          window.dispatchEvent(new CustomEvent(ERP_LANGUAGE_CHANGE_EVENT, { detail: { language: next } }));
         }
       }
     };
@@ -160,6 +163,7 @@ export function PreferencesControls() {
     document.cookie = "googtrans=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
 
     setLanguage(next);
+    window.dispatchEvent(new CustomEvent(ERP_LANGUAGE_CHANGE_EVENT, { detail: { language: next } }));
     injectWebFonts(next);
     router.refresh();
   }

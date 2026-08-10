@@ -16,7 +16,7 @@ import {
   type LocationHierarchyMeta,
   type LocationHierarchyValue
 } from "@/features/locations/components/location-hierarchy-select";
-import { apiPost } from "@/lib/api/client";
+import { apiGet, apiPatch, apiPost } from "@/lib/api/client";
 import type { ContactTypeKey } from "@/features/contact-types/contact-type-api";
 
 type DynamicList = "contacts" | "registrations" | "ownerIds";
@@ -41,6 +41,7 @@ export type CompanyIncorporationData = {
   state: string;
   district?: string;
   city: string;
+  area?: string;
   zipCode: string;
   address: string;
   contacts: DynamicRow[];
@@ -77,50 +78,61 @@ const damaamDraftRegistrations: DynamicRow[] = [
 const damaamDraftOwnerIds: DynamicRow[] = [
   { id: "draft-owner-id", type: "Passport / Emirates ID / National ID", value: "" }
 ];
-const initialCompanies: (CompanyIncorporationData & { id: string })[] = [
-  {
-    id: "co-1",
-    ownerName: "John Doe",
-    companyName: "Apex Trading LLC",
-    businessName: "Apex Imports",
-    country: "United States",
-    state: "New York",
-    city: "New York",
-    zipCode: "10001",
-    address: "5th Avenue, Manhattan, NY",
-    contacts: [
-      { id: "c-1", type: "Mobile Number", value: "+1-555-0199" },
-      { id: "c-2", type: "Email Address", value: "info@apextrading.com" }
-    ],
-    registrations: [
-      { id: "r-1", type: "GST No", value: "REG-9988221" }
-    ],
-    ownerIds: [
-      { id: "o-1", type: "Passport No", value: "US9876543" }
-    ]
-  },
-  {
-    id: "co-2",
-    ownerName: "Muhammad Ali",
-    companyName: "Al-Noor Logistics",
-    businessName: "Al-Noor Cargo",
-    country: "Pakistan",
-    state: "Punjab",
-    city: "Lahore",
-    zipCode: "54000",
-    address: "Gulberg III, Lahore, Pakistan",
-    contacts: [
-      { id: "c-3", type: "Mobile Number", value: "+92-300-1234567" },
-      { id: "c-4", type: "Email Address", value: "contact@alnoor.pk" }
-    ],
-    registrations: [
-      { id: "r-2", type: "NTN No", value: "NTN-882233-1" }
-    ],
-    ownerIds: [
-      { id: "o-2", type: "CNIC No", value: "35201-1234567-1" }
-    ]
-  }
-];
+type ApiCompanyRecord = {
+  id: string;
+  name: string;
+  legal_name: string | null;
+  owner_name: string | null;
+  business_type: string | null;
+  country_id: string | null;
+  state_province_id: string | null;
+  district_id: string | null;
+  city_id: string | null;
+  area_location_id: string | null;
+  country_name: string | null;
+  state_name: string | null;
+  district_name: string | null;
+  city_name: string | null;
+  area_name: string | null;
+  zip_code: string | null;
+  address: string | null;
+  contacts: Array<Partial<DynamicRow>> | null;
+  registrations: Array<Partial<DynamicRow>> | null;
+  owner_ids: Array<Partial<DynamicRow>> | null;
+};
+
+function rowsFromApi(rows: Array<Partial<DynamicRow>> | null, prefix: string): DynamicRow[] {
+  return (Array.isArray(rows) ? rows : []).map((row, index) => ({
+    id: row.id || `${prefix}-${index}`,
+    type: row.type || "",
+    value: row.value || ""
+  }));
+}
+
+function companyFromApi(company: ApiCompanyRecord): CompanyIncorporationData & { id: string } {
+  return {
+    id: company.id,
+    ownerName: company.owner_name || "",
+    companyName: company.name,
+    businessName: company.legal_name || "",
+    businessType: company.business_type || "",
+    countryId: company.country_id || undefined,
+    stateProvinceId: company.state_province_id || undefined,
+    districtId: company.district_id || undefined,
+    cityId: company.city_id || undefined,
+    areaLocationId: company.area_location_id || undefined,
+    country: company.country_name || "",
+    state: company.state_name || "",
+    district: company.district_name || "",
+    city: company.city_name || "",
+    area: company.area_name || "",
+    zipCode: company.zip_code || "",
+    address: company.address || "",
+    contacts: rowsFromApi(company.contacts, `${company.id}-contact`),
+    registrations: rowsFromApi(company.registrations, `${company.id}-registration`),
+    ownerIds: rowsFromApi(company.owner_ids, `${company.id}-owner-id`)
+  };
+}
 
 function safeUUID(): string {
   if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
@@ -161,8 +173,8 @@ function PreviewField({
   mono?: boolean;
   className?: string;
 }) {
-  const shown = value && value !== "-" ? value : "—";
-  const empty = shown === "—";
+  const shown = value && value !== "-" ? value : "â€”";
+  const empty = shown === "â€”";
   return (
     <div className={className}>
       <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{label}</p>
@@ -325,26 +337,24 @@ export function CompanyIncorporationForm({
   const [savedCompanies, setSavedCompanies] = useState<(CompanyIncorporationData & { id: string })[]>([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(initialCompanyId ?? null);
 
-  // Initialize from LocalStorage
+  // Existing records are loaded from the active environment's database.
   useEffect(() => {
-    const stored = localStorage.getItem("incorporated_companies");
-    if (stored) {
-      try {
-        setSavedCompanies(JSON.parse(stored));
-      } catch {
-        setSavedCompanies(initialCompanies);
-      }
-    } else {
-      setSavedCompanies(initialCompanies);
-      localStorage.setItem("incorporated_companies", JSON.stringify(initialCompanies));
+    if (!initialCompanyId) {
+      setSavedCompanies([]);
+      return;
     }
-  }, []);
 
-  // Load company details if initialCompanyId is provided for editing
-  useEffect(() => {
-    if (initialCompanyId && savedCompanies.length > 0) {
-      const comp = savedCompanies.find((c) => c.id === initialCompanyId);
-      if (comp) {
+    let cancelled = false;
+    async function loadCompany() {
+      try {
+        const result = await apiGet<{ company: ApiCompanyRecord }>(
+          `/api/erp/companies/${initialCompanyId}`
+        );
+        if (cancelled) return;
+
+        const comp = companyFromApi(result.company);
+        setSavedCompanies([comp]);
+        setSelectedCompanyId(comp.id);
         setOwnerName(comp.ownerName);
         setCompanyName(comp.companyName);
         setBusinessName(comp.businessName);
@@ -353,23 +363,34 @@ export function CompanyIncorporationForm({
         setContacts(comp.contacts.length > 0 ? comp.contacts : [newRow()]);
         setRegistrations(comp.registrations.length > 0 ? comp.registrations : [newRow()]);
         setOwnerIds(comp.ownerIds.length > 0 ? comp.ownerIds : [newRow()]);
-        
         setLocation({
           countryId: comp.countryId || "",
           stateProvinceId: comp.stateProvinceId || "",
           districtId: comp.districtId || "",
-          cityId: comp.cityId || ""
+          cityId: comp.cityId || "",
+          areaId: comp.areaLocationId || ""
         });
         setLocationMeta({
-          country: comp.country ? { id: comp.countryId || "", name: comp.country } as any : null,
-          state: comp.state ? { id: comp.stateProvinceId || "", name: comp.state } as any : null,
-          district: comp.district ? { id: comp.districtId || "", name: comp.district } as any : null,
-          city: comp.city ? { id: comp.cityId || "", name: comp.city, zip_code: comp.zipCode } as any : null,
-          area: (comp as any).area ? { id: comp.areaLocationId || "", name: (comp as any).area, postal_code: comp.zipCode, zip_code: comp.zipCode } as any : null
+          country: comp.country ? ({ id: comp.countryId || "", name: comp.country } as any) : null,
+          state: comp.state ? ({ id: comp.stateProvinceId || "", name: comp.state } as any) : null,
+          district: comp.district ? ({ id: comp.districtId || "", name: comp.district } as any) : null,
+          city: comp.city ? ({ id: comp.cityId || "", name: comp.city, zip_code: comp.zipCode } as any) : null,
+          area: comp.area
+            ? ({ id: comp.areaLocationId || "", name: comp.area, postal_code: comp.zipCode, zip_code: comp.zipCode } as any)
+            : null
         });
+      } catch (error) {
+        if (!cancelled) {
+          setMessage(error instanceof Error ? error.message : "Unable to load company from database.");
+        }
       }
     }
-  }, [initialCompanyId, savedCompanies]);
+
+    void loadCompany();
+    return () => {
+      cancelled = true;
+    };
+  }, [initialCompanyId]);
 
   const country = locationMeta.country?.name ?? "";
   const stateName = locationMeta.state?.name ?? "";
@@ -473,7 +494,38 @@ export function CompanyIncorporationForm({
     }
 
     if (initialCompanyId) {
-      // Edit mode: update existing
+      // Edit mode: update the current database record.
+      try {
+        const lang = (typeof document !== "undefined" ? document.documentElement.lang : "en") || "en";
+        const originalLanguage = ["ar", "ur", "fa", "ps"].includes(lang) ? lang : "en";
+        await apiPatch<{ companyId: string }>(`/api/erp/companies/${initialCompanyId}`, {
+          name: companyName.trim(),
+          legalName: businessName.trim() || companyName.trim(),
+          baseCurrency: "USD",
+          originalLanguage,
+          ownerName,
+          businessType,
+          countryId: location.countryId || undefined,
+          stateProvinceId: location.stateProvinceId || undefined,
+          districtId: location.districtId || undefined,
+          cityId: location.cityId || undefined,
+          areaLocationId: location.areaId || undefined,
+          countryName: country,
+          stateName,
+          districtName,
+          cityName: city,
+          areaName,
+          zipCode,
+          address,
+          contacts: contacts.filter((row) => row.type && row.value),
+          registrations: registrations.filter((row) => row.type && row.value),
+          ownerIds: ownerIds.filter((row) => row.type && row.value)
+        });
+      } catch (error) {
+        setMessage(error instanceof Error ? error.message : "Failed to update company in database.");
+        return;
+      }
+
       const updated = savedCompanies.map((c) => {
         if (c.id === initialCompanyId) {
           return {
@@ -502,7 +554,6 @@ export function CompanyIncorporationForm({
         return c;
       });
       setSavedCompanies(updated);
-      localStorage.setItem("incorporated_companies", JSON.stringify(updated));
       setMessage(`Updated company "${companyName}" successfully.`);
       
       if (mode === "standalone") {
@@ -567,7 +618,6 @@ export function CompanyIncorporationForm({
 
         const updated = [newCompany, ...savedCompanies];
         setSavedCompanies(updated);
-        localStorage.setItem("incorporated_companies", JSON.stringify(updated));
 
         onSave?.(newCompany);
         setMessage(`Saved company "${newCompany.companyName}" successfully.`);
@@ -578,6 +628,32 @@ export function CompanyIncorporationForm({
           }, 1000);
         }
       } catch (err: any) {
+        const errMsg = String(err?.message || err || "");
+        if (errMsg.includes("duplicate") || errMsg.includes("Ù¾ÛÙ„Û’ Ø³Û’ Ù…ÙˆØ¬ÙˆØ¯") || errMsg.includes("already exists")) {
+          try {
+            const listRes = await apiGet<{ companies: Array<{ id: string; name: string }> }>("/api/erp/companies?limit=50");
+            const match = listRes.companies?.find((c) => c.name.toLowerCase() === companyName.trim().toLowerCase());
+            if (match?.id) {
+              const fallbackComp: CompanyIncorporationData & { id: string } = {
+                id: match.id,
+                ownerName,
+                companyName: match.name,
+                businessName,
+                country,
+                state: stateName,
+                city,
+                zipCode,
+                address,
+                contacts: [],
+                registrations: [],
+                ownerIds: []
+              };
+              onSave?.(fallbackComp);
+              setMessage(`Selected existing company "${match.name}".`);
+              return;
+            }
+          } catch {}
+        }
         setMessage(err?.message || "Failed to save company to database.");
       }
     }

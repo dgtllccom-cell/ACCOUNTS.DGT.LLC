@@ -43,7 +43,7 @@ async function loadDashboard(): Promise<DashboardData> {
   const dbUrl = process.env.DATABASE_URL;
   if (!dbUrl) return { ...EMPTY_DATA, error: "DATABASE_URL is not configured." };
 
-  const sql = postgres(dbUrl, { max: 4, prepare: false, idle_timeout: 5, connect_timeout: 10 });
+  const sql = postgres(dbUrl, { max: 1, prepare: false, idle_timeout: 5, connect_timeout: 10 });
   const count = async (table: string) => {
     try {
       const rows = await sql`select count(*)::int as value from ${sql(table)} where deleted_at is null`;
@@ -60,30 +60,29 @@ async function loadDashboard(): Promise<DashboardData> {
 
   try {
     await sql`select 1 as connected`;
-    const [
-      countriesCount, countryBranchesCount, cityBranchesCount, usersCount, customersCount, companiesCount,
-      activeRows, purchaseRows, salesRows, ledgerRows, countries, mainBranches, cityBranches, countryUsers, monthly
-    ] = await Promise.all([
-      count("countries"), count("country_branches"), count("city_branches"), count("profiles"), count("customers"), count("companies"),
-      sql`select count(distinct user_id)::int as value from user_role_assignments where is_active=true and deleted_at is null`.catch(() => [{ value: 0 }]),
-      sql`select country_id, order_total from purchase_orders where deleted_at is null`.catch(() => []),
-      sql`select country_id, order_total from sales_orders where deleted_at is null`.catch(() => []),
-      sql`select country_id, debit_total, credit_total, current_balance from ledgers where deleted_at is null`.catch(() => []),
-      sql`select id, name, currency_code, is_active from countries where deleted_at is null order by name`.catch(() => []),
-      sql`select id, country_id from country_branches where deleted_at is null`.catch(() => []),
-      sql`select id, country_id from city_branches where deleted_at is null`.catch(() => []),
-      sql`select country_id, count(distinct user_id)::int as users from user_role_assignments where is_active=true and deleted_at is null and country_id is not null group by country_id`.catch(() => []),
-      sql`
-        with months as (
-          select generate_series(date_trunc('month', current_date)-interval '5 months', date_trunc('month', current_date), interval '1 month') month_start
-        )
-        select to_char(month_start,'Mon YYYY') name,
-          coalesce((select sum(order_total) from sales_orders where deleted_at is null and created_at>=month_start and created_at<month_start+interval '1 month'),0)::float8 sales,
-          coalesce((select sum(order_total) from purchase_orders where deleted_at is null and created_at>=month_start and created_at<month_start+interval '1 month'),0)::float8 purchases
-        from months order by month_start
-      `.catch(() => [])
-    ]);
-
+    const countriesCount = await count("countries");
+    const countryBranchesCount = await count("country_branches");
+    const cityBranchesCount = await count("city_branches");
+    const usersCount = await count("profiles");
+    const customersCount = await count("customers");
+    const companiesCount = await count("companies");
+    const activeRows = await sql`select count(distinct user_id)::int as value from user_role_assignments where is_active=true and deleted_at is null`.catch(() => [{ value: 0 }]);
+    const purchaseRows = await sql`select country_id, order_total from purchase_orders where deleted_at is null`.catch(() => []);
+    const salesRows = await sql`select country_id, order_total from sales_orders where deleted_at is null`.catch(() => []);
+    const ledgerRows = await sql`select country_id, debit_total, credit_total, current_balance from ledgers where deleted_at is null`.catch(() => []);
+    const countries = await sql`select id, name, currency_code, is_active from countries where deleted_at is null order by name`.catch(() => []);
+    const mainBranches = await sql`select id, country_id from country_branches where deleted_at is null`.catch(() => []);
+    const cityBranches = await sql`select id, country_id from city_branches where deleted_at is null`.catch(() => []);
+    const countryUsers = await sql`select country_id, count(distinct user_id)::int as users from user_role_assignments where is_active=true and deleted_at is null and country_id is not null group by country_id`.catch(() => []);
+    const monthly = await sql`
+      with months as (
+        select generate_series(date_trunc('month', current_date)-interval '5 months', date_trunc('month', current_date), interval '1 month') month_start
+      )
+      select to_char(month_start,'Mon YYYY') name,
+        coalesce((select sum(order_total) from sales_orders where deleted_at is null and created_at>=month_start and created_at<month_start+interval '1 month'),0)::float8 sales,
+        coalesce((select sum(order_total) from purchase_orders where deleted_at is null and created_at>=month_start and created_at<month_start+interval '1 month'),0)::float8 purchases
+      from months order by month_start
+    `.catch(() => []);
     const countryRows = countries as unknown as CountryRow[];
     const mainBranchRows = mainBranches as unknown as BranchRow[];
     const cityBranchRows = cityBranches as unknown as BranchRow[];

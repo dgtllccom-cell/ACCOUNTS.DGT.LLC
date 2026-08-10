@@ -8,59 +8,75 @@ import { Building2, Plus, Search, Eye, PencilLine, Printer, Trash2, X, MoreVerti
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { apiDelete, apiGet } from "@/lib/api/client";
 import type { CompanyIncorporationData } from "./company-incorporation-form";
 
-const initialCompanies: (CompanyIncorporationData & { id: string })[] = [
-  {
-    id: "co-1",
-    ownerName: "John Doe",
-    companyName: "Apex Trading LLC",
-    businessName: "Apex Imports",
-    country: "United States",
-    state: "New York",
-    city: "New York",
-    zipCode: "10001",
-    address: "5th Avenue, Manhattan, NY",
-    contacts: [
-      { id: "c-1", type: "Mobile Number", value: "+1-555-0199" },
-      { id: "c-2", type: "Email Address", value: "info@apextrading.com" }
-    ],
-    registrations: [
-      { id: "r-1", type: "GST No", value: "REG-9988221" }
-    ],
-    ownerIds: [
-      { id: "o-1", type: "Passport No", value: "US9876543" }
-    ]
-  },
-  {
-    id: "co-2",
-    ownerName: "Muhammad Ali",
-    companyName: "Al-Noor Logistics",
-    businessName: "Al-Noor Cargo",
-    country: "Pakistan",
-    state: "Punjab",
-    city: "Lahore",
-    zipCode: "54000",
-    address: "Gulberg III, Lahore, Pakistan",
-    contacts: [
-      { id: "c-3", type: "Mobile Number", value: "+92-300-1234567" },
-      { id: "c-4", type: "Email Address", value: "contact@alnoor.pk" }
-    ],
-    registrations: [
-      { id: "r-2", type: "NTN No", value: "NTN-882233-1" }
-    ],
-    ownerIds: [
-      { id: "o-2", type: "CNIC No", value: "35201-1234567-1" }
-    ]
-  }
-];
+type RegistryCompany = CompanyIncorporationData & { id: string };
+
+type ApiCompany = {
+  id: string;
+  name: string;
+  legal_name: string | null;
+  owner_name: string | null;
+  business_type: string | null;
+  country_id: string | null;
+  state_province_id: string | null;
+  district_id: string | null;
+  city_id: string | null;
+  area_location_id: string | null;
+  country_name: string | null;
+  state_name: string | null;
+  district_name: string | null;
+  city_name: string | null;
+  zip_code: string | null;
+  address: string | null;
+  contacts: Array<{ id?: string; type?: string; value?: string }> | null;
+  registrations: Array<{ id?: string; type?: string; value?: string }> | null;
+  owner_ids: Array<{ id?: string; type?: string; value?: string }> | null;
+};
+
+function mapRows(
+  rows: Array<{ id?: string; type?: string; value?: string }> | null,
+  prefix: string
+) {
+  return (Array.isArray(rows) ? rows : []).map((row, index) => ({
+    id: row.id || `${prefix}-${index}`,
+    type: row.type || "",
+    value: row.value || ""
+  }));
+}
+
+function toRegistryCompany(company: ApiCompany): RegistryCompany {
+  return {
+    id: company.id,
+    ownerName: company.owner_name || "",
+    companyName: company.name,
+    businessName: company.legal_name || company.business_type || "",
+    countryId: company.country_id || "",
+    stateProvinceId: company.state_province_id || "",
+    districtId: company.district_id || "",
+    cityId: company.city_id || "",
+    areaLocationId: company.area_location_id || "",
+    country: company.country_name || "",
+    state: company.state_name || "",
+    district: company.district_name || "",
+    city: company.city_name || "",
+    zipCode: company.zip_code || "",
+    address: company.address || "",
+    contacts: mapRows(company.contacts, `${company.id}-contact`),
+    registrations: mapRows(company.registrations, `${company.id}-registration`),
+    ownerIds: mapRows(company.owner_ids, `${company.id}-owner-id`)
+  };
+}
 
 export function CompanyRegistry() {
   const router = useRouter();
-  const [savedCompanies, setSavedCompanies] = useState<(CompanyIncorporationData & { id: string })[]>([]);
+  const [savedCompanies, setSavedCompanies] = useState<RegistryCompany[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [viewingCompany, setViewingCompany] = useState<(CompanyIncorporationData & { id: string }) | null>(null);
+  const [viewingCompany, setViewingCompany] = useState<RegistryCompany | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -75,19 +91,32 @@ export function CompanyRegistry() {
     }
   }, [openMenuId]);
 
-  // Initialize from LocalStorage
+  // The registry is always loaded from the active environment's database.
   useEffect(() => {
-    const stored = localStorage.getItem("incorporated_companies");
-    if (stored) {
+    let cancelled = false;
+
+    async function loadCompanies() {
+      setLoading(true);
+      setLoadError(null);
       try {
-        setSavedCompanies(JSON.parse(stored));
-      } catch {
-        setSavedCompanies(initialCompanies);
+        const result = await apiGet<{ companies: ApiCompany[] }>("/api/erp/companies?limit=200");
+        if (!cancelled) {
+          setSavedCompanies((result.companies ?? []).map(toRegistryCompany));
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setSavedCompanies([]);
+          setLoadError(error instanceof Error ? error.message : "Unable to load companies");
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-    } else {
-      setSavedCompanies(initialCompanies);
-      localStorage.setItem("incorporated_companies", JSON.stringify(initialCompanies));
     }
+
+    void loadCompanies();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const stats = useMemo(() => {
@@ -110,13 +139,16 @@ export function CompanyRegistry() {
     );
   }, [searchQuery, savedCompanies]);
 
-  function handleDelete(id: string) {
+  async function handleDelete(id: string) {
     if (!window.confirm("Are you sure you want to delete this company?")) return;
-    const updated = savedCompanies.filter((c) => c.id !== id);
-    setSavedCompanies(updated);
-    localStorage.setItem("incorporated_companies", JSON.stringify(updated));
-    if (viewingCompany?.id === id) {
-      setViewingCompany(null);
+    try {
+      await apiDelete(`/api/erp/companies/${id}`);
+      setSavedCompanies((companies) => companies.filter((company) => company.id !== id));
+      if (viewingCompany?.id === id) {
+        setViewingCompany(null);
+      }
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : "Unable to delete company");
     }
   }
 
@@ -644,7 +676,19 @@ export function CompanyRegistry() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {filteredCompanies.length > 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} className="px-5 py-10 text-center text-muted-foreground">
+                      Loading companies from the database...
+                    </td>
+                  </tr>
+                ) : loadError ? (
+                  <tr>
+                    <td colSpan={6} className="px-5 py-10 text-center text-rose-600">
+                      Unable to load companies: {loadError}
+                    </td>
+                  </tr>
+                ) : filteredCompanies.length > 0 ? (
                   filteredCompanies.map((c) => (
                     <tr
                       key={c.id}
@@ -732,7 +776,9 @@ export function CompanyRegistry() {
                 ) : (
                   <tr>
                     <td colSpan={6} className="px-5 py-10 text-center text-muted-foreground italic">
-                      No companies found matching search criteria. Click &quot;+ Incorporate New Company&quot; to register one.
+                      {searchQuery.trim()
+                        ? "No companies found matching the search criteria."
+                        : "No company records found in the current database."}
                     </td>
                   </tr>
                 )}
