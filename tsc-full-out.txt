@@ -1,0 +1,1081 @@
+.next/types/app/auth/login/page.ts(34,29): error TS2344: Type '{ searchParams?: { error?: string | undefined; } | Promise<{ error?: string | undefined; }> | undefined; }' does not satisfy the constraint 'PageProps'.
+  Types of property 'searchParams' are incompatible.
+    Type '{ error?: string | undefined; } | Promise<{ error?: string | undefined; }> | undefined' is not assignable to type 'Promise<any> | undefined'.
+      Type '{ error?: string | undefined; }' is missing the following properties from type 'Promise<any>': then, catch, finally, [Symbol.toStringTag]
+app/api/branch-management/city-branches/route.ts(281,33): error TS2304: Cannot find name 'session'.
+app/api/branch-management/city-branches/route.ts(281,61): error TS2304: Cannot find name 'session'.
+app/api/branch-management/city-branches/route.ts(443,33): error TS2304: Cannot find name 'session'.
+app/api/branch-management/city-branches/route.ts(443,61): error TS2304: Cannot find name 'session'.
+app/api/branch-management/country-branches/route.ts(219,33): error TS2304: Cannot find name 'session'.
+app/api/branch-management/country-branches/route.ts(219,61): error TS2304: Cannot find name 'session'.
+app/api/branch-management/country-branches/route.ts(337,33): error TS2304: Cannot find name 'session'.
+app/api/branch-management/country-branches/route.ts(337,61): error TS2304: Cannot find name 'session'.
+app/api/branch-management/general-report/route.ts(317,126): error TS2339: Property 'catch' does not exist on type 'PromiseLike<{ id: string; scope: "main_branch" | "super_admin" | "country" | "city_branch"; country_id: string | null; code: string; }[]>'.
+app/api/branch-management/general-report/route.ts(318,149): error TS2339: Property 'catch' does not exist on type 'PromiseLike<{ id: string; scope: "main_branch" | "super_admin" | "country" | "city_branch"; country_id: string | null; country_branch_id: string | null; city_branch_id: string | null; code: string; }[]>'.
+app/api/documents/route.ts(84,9): error TS2739: Type '{ id: string; title: string; file_name: string; file_url: string; file_type: string; file_size: number; country_id: string; country_name: string; country_branch_id: string; main_branch_name: string; ... 7 more ...; created_at: string; }' is missing the following properties from type '{ category: string | null; city_branch_id: string | null; city_branch_name: string | null; country_branch_id: string | null; country_id: string | null; country_name: string | null; ... 14 more ...; updated_at: string | null; }': deleted_at, metadata, updated_at
+app/api/documents/route.ts(104,9): error TS2739: Type '{ id: string; title: string; file_name: string; file_url: string; file_type: string; file_size: number; country_id: string; country_name: string; country_branch_id: string; main_branch_name: string; ... 7 more ...; created_at: string; }' is missing the following properties from type '{ category: string | null; city_branch_id: string | null; city_branch_name: string | null; country_branch_id: string | null; country_id: string | null; country_name: string | null; ... 14 more ...; updated_at: string | null; }': deleted_at, metadata, updated_at
+app/api/documents/route.ts(124,9): error TS2739: Type '{ id: string; title: string; file_name: string; file_url: string; file_type: string; file_size: number; country_id: string; country_name: string; country_branch_id: string; main_branch_name: string; ... 7 more ...; created_at: string; }' is missing the following properties from type '{ category: string | null; city_branch_id: string | null; city_branch_name: string | null; country_branch_id: string | null; country_id: string | null; country_name: string | null; ... 14 more ...; updated_at: string | null; }': deleted_at, metadata, updated_at
+app/api/documents/route.ts(229,15): error TS2345: Argument of type 'Record<string, any>' is not assignable to parameter of type 'RejectExcessProperties<{ category?: string | null | undefined; city_branch_id?: string | null | undefined; city_branch_name?: string | null | undefined; country_branch_id?: string | null | undefined; ... 16 more ...; updated_at?: string | ... 1 more ... | undefined; }, Record<...>>'.
+  Type 'Record<string, any>' is not assignable to type '{ [x: string]: never; }'.
+    'string' index signatures are incompatible.
+      Type 'any' is not assignable to type 'never'.
+app/api/erp/accounting/accounts/[id]/route.ts(288,25): error TS2339: Property 'id' does not exist on type '{}'.
+app/api/erp/accounting/accounts/[id]/route.ts(292,36): error TS2339: Property 'id' does not exist on type '{}'.
+app/api/erp/accounting/ledgers/route.ts(41,23): error TS2339: Property 'or' does not exist on type 'LooseQueryBuilder'.
+app/api/erp/accounting/reports/ledger/ledgers/route.ts(59,7): error TS2322: Type 'string' is not assignable to type '"en" | "ar" | "ur" | "fa" | "ps" | null | undefined'.
+app/api/erp/accounts/[id]/route.ts(138,7): error TS2322: Type 'string | null | undefined' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+app/api/erp/accounts/route.ts(71,26): error TS2339: Property 'name' does not exist on type '{ code: string; companyId: string; startDate: string; endDate: string; countryId?: string | null | undefined; countryBranchId?: string | null | undefined; cityBranchId?: string | null | undefined; branchId?: string | ... 1 more ... | undefined; parentId?: string | ... 1 more ... | undefined; }'.
+app/api/erp/accounts/route.ts(72,32): error TS2339: Property 'kind' does not exist on type '{ code: string; companyId: string; startDate: string; endDate: string; countryId?: string | null | undefined; countryBranchId?: string | null | undefined; cityBranchId?: string | null | undefined; branchId?: string | ... 1 more ... | undefined; parentId?: string | ... 1 more ... | undefined; }'.
+app/api/erp/accounts/route.ts(73,30): error TS2339: Property 'currency' does not exist on type '{ code: string; companyId: string; startDate: string; endDate: string; countryId?: string | null | undefined; countryBranchId?: string | null | undefined; cityBranchId?: string | null | undefined; branchId?: string | ... 1 more ... | undefined; parentId?: string | ... 1 more ... | undefined; }'.
+app/api/erp/accounts/route.ts(74,24): error TS2339: Property 'isControlAccount' does not exist on type '{ code: string; companyId: string; startDate: string; endDate: string; countryId?: string | null | undefined; countryBranchId?: string | null | undefined; cityBranchId?: string | null | undefined; branchId?: string | ... 1 more ... | undefined; parentId?: string | ... 1 more ... | undefined; }'.
+app/api/erp/accounts/route.ts(90,20): error TS2339: Property 'name' does not exist on type '{ code: string; companyId: string; startDate: string; endDate: string; countryId?: string | null | undefined; countryBranchId?: string | null | undefined; cityBranchId?: string | null | undefined; branchId?: string | ... 1 more ... | undefined; parentId?: string | ... 1 more ... | undefined; }'.
+app/api/erp/accounts/route.ts(91,20): error TS2339: Property 'kind' does not exist on type '{ code: string; companyId: string; startDate: string; endDate: string; countryId?: string | null | undefined; countryBranchId?: string | null | undefined; cityBranchId?: string | null | undefined; branchId?: string | ... 1 more ... | undefined; parentId?: string | ... 1 more ... | undefined; }'.
+app/api/erp/accounts/route.ts(92,24): error TS2339: Property 'currency' does not exist on type '{ code: string; companyId: string; startDate: string; endDate: string; countryId?: string | null | undefined; countryBranchId?: string | null | undefined; cityBranchId?: string | null | undefined; branchId?: string | ... 1 more ... | undefined; parentId?: string | ... 1 more ... | undefined; }'.
+app/api/erp/admin/dashboard-settings/route.ts(54,35): error TS2589: Type instantiation is excessively deep and possibly infinite.
+app/api/erp/admin/dashboard-settings/route.ts(55,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"app_settings"' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"app_settings"' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+app/api/erp/admin/dashboard-settings/route.ts(57,11): error TS2345: Argument of type '"setting_key"' is not assignable to parameter of type 'never'.
+app/api/erp/admin/dashboard-settings/route.ts(64,35): error TS2339: Property 'setting_value' does not exist on type 'NonNullable<ResultOne>'.
+app/api/erp/admin/dashboard-settings/route.ts(64,67): error TS2339: Property 'setting_value' does not exist on type 'NonNullable<ResultOne>'.
+app/api/erp/admin/dashboard-settings/route.ts(81,118): error TS2559: Type '403' has no properties in common with type 'ResponseInit'.
+app/api/erp/admin/dashboard-settings/route.ts(88,92): error TS2559: Type '400' has no properties in common with type 'ResponseInit'.
+app/api/erp/admin/dashboard-settings/route.ts(94,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"app_settings"' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"app_settings"' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+app/api/erp/admin/dashboard-settings/route.ts(96,9): error TS2322: Type 'string' is not assignable to type 'never'.
+app/api/erp/admin/dashboard-settings/route.ts(97,9): error TS2322: Type 'string' is not assignable to type 'never'.
+app/api/erp/admin/dashboard-settings/route.ts(98,9): error TS2322: Type 'string' is not assignable to type 'never'.
+app/api/erp/admin/i18n-database-audit/route.ts(158,5): error TS2345: Argument of type 'unknown[]' is not assignable to parameter of type 'ParameterOrJSON<never>[]'.
+  Type 'unknown' is not assignable to type 'ParameterOrJSON<never>'.
+app/api/erp/approvals/[id]/route.ts(98,27): error TS2339: Property 'id' does not exist on type '{}'.
+app/api/erp/branding/route.ts(82,34): error TS2589: Type instantiation is excessively deep and possibly infinite.
+app/api/erp/branding/route.ts(83,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+app/api/erp/branding/route.ts(85,13): error TS2345: Argument of type '"id"' is not assignable to parameter of type 'never'.
+app/api/erp/clearing-agent/customer-order/route.ts(11,17): error TS2589: Type instantiation is excessively deep and possibly infinite.
+app/api/erp/clearing-agent/customer-order/route.ts(12,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"clearing_customer_orders"' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"clearing_customer_orders"' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+app/api/erp/clearing-agent/customer-order/route.ts(18,24): error TS2345: Argument of type '"status"' is not assignable to parameter of type 'never'.
+app/api/erp/clearing-agent/customer-order/route.ts(61,29): error TS2589: Type instantiation is excessively deep and possibly infinite.
+app/api/erp/clearing-agent/customer-order/route.ts(62,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"clearing_customer_orders"' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"clearing_customer_orders"' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+app/api/erp/clearing-agent/customer-order/route.ts(90,35): error TS2589: Type instantiation is excessively deep and possibly infinite.
+app/api/erp/clearing-agent/customer-order/route.ts(91,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"clearing_customer_orders"' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"clearing_customer_orders"' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+app/api/erp/clearing-agent/customer-order/route.ts(92,15): error TS2345: Argument of type '{ order_no: string; customer_id: any; customer_name: string; route_name: string | null; shipment_type: any; transport_mode: any; movement_type: any; loading_country_id: any; loading_country_name: string | null; ... 9 more ...; status: string; }' is not assignable to parameter of type 'RejectExcessProperties<{ applied_at?: string | null | undefined; filename: string; id?: number | undefined; } | { account_kind: "liability" | "asset" | "equity" | "income" | "expense"; code: string; created_at?: string | undefined; ... 5 more ...; updated_at?: string | undefined; } | ... 166 more ... | { ...; }, { ....'.
+  Type '{ order_no: string; customer_id: any; customer_name: string; route_name: string | null; shipment_type: any; transport_mode: any; movement_type: any; loading_country_id: any; loading_country_name: string | null; ... 9 more ...; status: string; }' is not assignable to type 'RejectExcessProperties<{ applied_at?: string | null | undefined; filename: string; id?: number | undefined; } | { account_kind: "liability" | "asset" | "equity" | "income" | "expense"; code: string; created_at?: string | undefined; ... 5 more ...; updated_at?: string | undefined; } | ... 166 more ... | { ...; }, { ....'.
+    Type '{ order_no: string; customer_id: any; customer_name: string; route_name: string | null; shipment_type: any; transport_mode: any; movement_type: any; loading_country_id: any; loading_country_name: string | null; ... 9 more ...; status: string; }' is not assignable to type '{ status: never; remarks: never; customer_id: never; customer_name: never; route_name: never; loading_country_name: never; receiving_country_name: never; loading_port_name: never; destination_port_name: never; ... 9 more ...; order_no: never; }'.
+      Types of property 'status' are incompatible.
+        Type 'string' is not assignable to type 'never'.
+app/api/erp/clearing-agent/customer-order/route.ts(101,22): error TS2339: Property 'id' does not exist on type 'NewResultOne'.
+app/api/erp/clearing-agent/customer-order/route.ts(102,7): error TS2322: Type 'NewResultOne' is not assignable to type 'Record<string, unknown> | null | undefined'.
+app/api/erp/clearing-agent/import-loading/[id]/route.ts(29,81): error TS2345: Argument of type 'Record<string, unknown>' is not assignable to parameter of type 'RejectExcessProperties<{ border_crossing?: string | null | undefined; branch_serial?: string | null | undefined; city_branch_id?: string | null | undefined; clearing_agent?: string | null | undefined; ... 32 more ...; updated_at?: string | undefined; }, Record<...>>'.
+  Type 'Record<string, unknown>' is not assignable to type '{ [x: string]: never; }'.
+    'string' index signatures are incompatible.
+      Type 'unknown' is not assignable to type 'never'.
+app/api/erp/clearing-agent/transit-loading/[id]/route.ts(28,82): error TS2345: Argument of type 'Record<string, unknown>' is not assignable to parameter of type 'RejectExcessProperties<{ border?: string | null | undefined; branch_serial?: string | null | undefined; city_branch_id?: string | null | undefined; container_number?: string | null | undefined; country_branch_id?: string | ... 1 more ... | undefined; ... 29 more ...; updated_at?: string | undefined; }, Record<...>>'.
+  Type 'Record<string, unknown>' is not assignable to type '{ [x: string]: never; }'.
+    'string' index signatures are incompatible.
+      Type 'unknown' is not assignable to type 'never'.
+app/api/erp/clearing-agent/truck-loading/[id]/route.ts(30,74): error TS2345: Argument of type 'Record<string, unknown>' is not assignable to parameter of type 'RejectExcessProperties<{ branch_serial?: string | null | undefined; city_branch_id?: string | null | undefined; cnic_passport?: string | null | undefined; country_branch_id?: string | null | undefined; ... 32 more ...; vehicle_type?: string | ... 1 more ... | undefined; }, Record<...>>'.
+  Type 'Record<string, unknown>' is not assignable to type '{ [x: string]: never; }'.
+    'string' index signatures are incompatible.
+      Type 'unknown' is not assignable to type 'never'.
+app/api/erp/currency/daily-rate/route.ts(71,31): error TS2339: Property 'or' does not exist on type 'LooseQueryBuilder'.
+app/api/erp/currency/daily-rate/route.ts(76,15): error TS2339: Property 'data' does not exist on type 'LooseQueryBuilder'.
+app/api/erp/documents/[id]/route.ts(23,44): error TS2339: Property 'companyId' does not exist on type 'ErpSession'.
+app/api/erp/documents/[id]/route.ts(28,45): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+app/api/erp/documents/[id]/route.ts(33,53): error TS2339: Property 'user' does not exist on type 'ErpSession'.
+app/api/erp/documents/[id]/route.ts(34,77): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+app/api/erp/documents/[id]/route.ts(60,28): error TS2339: Property 'companyId' does not exist on type 'ErpSession'.
+app/api/erp/documents/[id]/route.ts(61,26): error TS2339: Property 'user' does not exist on type 'ErpSession'.
+app/api/erp/documents/[id]/version/route.ts(24,44): error TS2339: Property 'companyId' does not exist on type 'ErpSession'.
+app/api/erp/documents/[id]/version/route.ts(29,45): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+app/api/erp/documents/[id]/version/route.ts(36,56): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+app/api/erp/documents/[id]/version/route.ts(40,55): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+app/api/erp/documents/[id]/version/route.ts(54,33): error TS2339: Property 'companyId' does not exist on type 'ErpSession'.
+app/api/erp/documents/[id]/version/route.ts(88,29): error TS2339: Property 'user' does not exist on type 'ErpSession'.
+app/api/erp/documents/[id]/version/route.ts(92,28): error TS2339: Property 'companyId' does not exist on type 'ErpSession'.
+app/api/erp/documents/[id]/version/route.ts(93,26): error TS2339: Property 'user' does not exist on type 'ErpSession'.
+app/api/erp/documents/[id]/version/route.ts(103,26): error TS2559: Type '201' has no properties in common with type 'ResponseInit'.
+app/api/erp/documents/download/route.ts(31,44): error TS2339: Property 'companyId' does not exist on type 'ErpSession'.
+app/api/erp/documents/download/route.ts(36,45): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+app/api/erp/documents/download/route.ts(55,53): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+app/api/erp/documents/download/route.ts(68,58): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+app/api/erp/documents/route.ts(33,44): error TS2339: Property 'companyId' does not exist on type 'ErpSession'.
+app/api/erp/documents/route.ts(74,79): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+app/api/erp/documents/route.ts(78,55): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+app/api/erp/documents/route.ts(92,44): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+app/api/erp/documents/route.ts(100,33): error TS2339: Property 'companyId' does not exist on type 'ErpSession'.
+app/api/erp/documents/route.ts(118,28): error TS2339: Property 'companyId' does not exist on type 'ErpSession'.
+app/api/erp/documents/route.ts(119,28): error TS2551: Property 'countryId' does not exist on type 'ErpSession'. Did you mean 'countryIds'?
+app/api/erp/documents/route.ts(120,31): error TS2551: Property 'cityBranchId' does not exist on type 'ErpSession'. Did you mean 'cityBranchIds'?
+app/api/erp/documents/route.ts(126,29): error TS2339: Property 'user' does not exist on type 'ErpSession'.
+app/api/erp/documents/route.ts(136,29): error TS2339: Property 'user' does not exist on type 'ErpSession'.
+app/api/erp/documents/route.ts(139,23): error TS2304: Cannot find name 'auditLogs'.
+app/api/erp/documents/route.ts(140,28): error TS2339: Property 'companyId' does not exist on type 'ErpSession'.
+app/api/erp/documents/route.ts(141,26): error TS2339: Property 'user' does not exist on type 'ErpSession'.
+app/api/erp/documents/route.ts(151,26): error TS2559: Type '201' has no properties in common with type 'ResponseInit'.
+app/api/erp/email/accounts/route.ts(139,31): error TS2339: Property 'name' does not exist on type '{}'.
+app/api/erp/email/accounts/route.ts(140,31): error TS2339: Property 'iso2' does not exist on type '{}'.
+app/api/erp/email/accounts/route.ts(142,43): error TS2339: Property 'name' does not exist on type '{}'.
+app/api/erp/email/accounts/route.ts(144,37): error TS2339: Property 'name' does not exist on type '{}'.
+app/api/erp/email/accounts/route.ts(145,50): error TS2339: Property 'name' does not exist on type '{}'.
+app/api/erp/email/config/route.ts(55,46): error TS2339: Property 'email' does not exist on type 'string | number | boolean | { [key: string]: Json | undefined; } | Json[]'.
+  Property 'email' does not exist on type 'string'.
+app/api/erp/email/config/route.ts(55,69): error TS2339: Property 'emailAddress' does not exist on type 'string | number | boolean | { [key: string]: Json | undefined; } | Json[]'.
+  Property 'emailAddress' does not exist on type 'string'.
+app/api/erp/email/config/route.ts(79,42): error TS2339: Property 'email' does not exist on type 'string | number | boolean | { [key: string]: Json | undefined; } | Json[]'.
+  Property 'email' does not exist on type 'string'.
+app/api/erp/email/config/route.ts(79,65): error TS2339: Property 'emailAddress' does not exist on type 'string | number | boolean | { [key: string]: Json | undefined; } | Json[]'.
+  Property 'emailAddress' does not exist on type 'string'.
+app/api/erp/expenses/route.ts(56,26): error TS2551: Property 'countryId' does not exist on type 'ErpSession'. Did you mean 'countryIds'?
+app/api/erp/expenses/route.ts(57,29): error TS2551: Property 'cityBranchId' does not exist on type 'ErpSession'. Did you mean 'cityBranchIds'?
+app/api/erp/expenses/route.ts(58,33): error TS2339: Property 'billNo' does not exist on type '{ branch: string; billSerial: string; billDate: string; billMode: string; billTitle: string; id?: string | undefined; referenceNo?: string | null | undefined; debitLedgerId?: string | null | undefined; creditLedgerId?: string | ... 1 more ... | undefined; }'.
+app/api/erp/expenses/route.ts(135,74): error TS2345: Argument of type 'string | undefined' is not assignable to parameter of type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+app/api/erp/goods/[id]/route.ts(43,24): error TS2339: Property 'isActive' does not exist on type '{ originalLanguage?: "en" | "ar" | "ur" | "fa" | "ps" | undefined; chsCode?: string | undefined; goodsName?: string | undefined; originCountryId?: string | null | undefined; initialVariation?: { ...; } | ... 1 more ... | undefined; }'.
+app/api/erp/hr-payroll/advances-loans/route.ts(133,9): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+app/api/erp/hr-payroll/advances-loans/route.ts(134,9): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+app/api/erp/hr-payroll/advances-loans/route.ts(135,9): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+app/api/erp/hr-payroll/advances-loans/route.ts(139,9): error TS2322: Type 'null' is not assignable to type 'string'.
+app/api/erp/hr-payroll/salaries-due/transfer/route.ts(141,7): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+app/api/erp/hr-payroll/salaries-due/transfer/route.ts(142,7): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+app/api/erp/hr-payroll/salaries-due/transfer/route.ts(143,7): error TS2322: Type 'null' is not assignable to type 'string'.
+app/api/erp/hr-payroll/salaries-due/transfer/route.ts(147,7): error TS2322: Type 'null' is not assignable to type 'string'.
+app/api/erp/hr-payroll/salaries-due/transfer/route.ts(186,9): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+app/api/erp/hr-payroll/salaries-due/transfer/route.ts(187,9): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+app/api/erp/hr-payroll/salaries-due/transfer/route.ts(188,9): error TS2322: Type 'null' is not assignable to type 'string'.
+app/api/erp/hr-payroll/salaries-due/transfer/route.ts(192,9): error TS2322: Type 'null' is not assignable to type 'string'.
+app/api/erp/hr-payroll/salaries-due/transfer/route.ts(283,34): error TS2339: Property 'deduction' does not exist on type '{ id: string; employee_code: string; person: { customer_name: string; }; salary_expense_account_id: string | null; employee_payable_account_id: string | null; cash_account_id: string | null; bank_account_id: string | null; advance_salary_account_id: string | null; loan_account_id: string | null; }'.
+app/api/erp/hr-payroll/salaries-due/transfer/route.ts(283,63): error TS2339: Property 'tax_deduction' does not exist on type '{ id: string; employee_code: string; person: { customer_name: string; }; salary_expense_account_id: string | null; employee_payable_account_id: string | null; cash_account_id: string | null; bank_account_id: string | null; advance_salary_account_id: string | null; loan_account_id: string | null; }'.
+app/api/erp/hr-payroll/salaries-due/transfer/route.ts(284,32): error TS2339: Property 'basic_salary' does not exist on type '{ id: string; employee_code: string; person: { customer_name: string; }; salary_expense_account_id: string | null; employee_payable_account_id: string | null; cash_account_id: string | null; bank_account_id: string | null; advance_salary_account_id: string | null; loan_account_id: string | null; }'.
+app/api/erp/hr-payroll/salaries-due/transfer/route.ts(284,64): error TS2339: Property 'allowance' does not exist on type '{ id: string; employee_code: string; person: { customer_name: string; }; salary_expense_account_id: string | null; employee_payable_account_id: string | null; cash_account_id: string | null; bank_account_id: string | null; advance_salary_account_id: string | null; loan_account_id: string | null; }'.
+app/api/erp/locations/areas/route.ts(78,25): error TS18047: 'session' is possibly 'null'.
+app/api/erp/locations/areas/route.ts(78,43): error TS18047: 'session' is possibly 'null'.
+app/api/erp/master-data/brands/[id]/route.ts(25,15): error TS2345: Argument of type 'Record<string, unknown>' is not assignable to parameter of type 'RejectExcessProperties<{ brand_code?: string | null | undefined; brand_name?: string | undefined; country_id?: string | null | undefined; created_at?: string | undefined; created_by?: string | null | undefined; ... 5 more ...; updated_at?: string | undefined; }, Record<...>>'.
+  Type 'Record<string, unknown>' is not assignable to type '{ [x: string]: never; }'.
+    'string' index signatures are incompatible.
+      Type 'unknown' is not assignable to type 'never'.
+app/api/erp/master-data/categories/[id]/route.ts(25,15): error TS2345: Argument of type 'Record<string, unknown>' is not assignable to parameter of type 'RejectExcessProperties<{ category_code?: string | null | undefined; category_name?: string | undefined; country_id?: string | null | undefined; created_at?: string | undefined; created_by?: string | null | undefined; ... 5 more ...; updated_at?: string | undefined; }, Record<...>>'.
+  Type 'Record<string, unknown>' is not assignable to type '{ [x: string]: never; }'.
+    'string' index signatures are incompatible.
+      Type 'unknown' is not assignable to type 'never'.
+app/api/erp/master-data/trucks/[id]/route.ts(35,66): error TS2345: Argument of type 'Record<string, unknown>' is not assignable to parameter of type 'RejectExcessProperties<{ base_city_id?: string | null | undefined; base_district_id?: string | null | undefined; base_state_province_id?: string | null | undefined; branch_serial?: string | null | undefined; ... 34 more ...; updated_at?: string | undefined; }, Record<...>>'.
+  Type 'Record<string, unknown>' is not assignable to type '{ [x: string]: never; }'.
+    'string' index signatures are incompatible.
+      Type 'unknown' is not assignable to type 'never'.
+app/api/erp/master-data/trucks/route.ts(88,66): error TS2345: Argument of type 'Record<string, unknown>' is not assignable to parameter of type 'RejectExcessProperties<{ base_city_id?: string | null | undefined; base_district_id?: string | null | undefined; base_state_province_id?: string | null | undefined; branch_serial?: string | null | undefined; ... 34 more ...; updated_at?: string | undefined; }, { ...; }> | RejectExcessProperties<...>[]'.
+  Type 'Record<string, unknown>' is missing the following properties from type 'RejectExcessProperties<{ base_city_id?: string | null | undefined; base_district_id?: string | null | undefined; base_state_province_id?: string | null | undefined; branch_serial?: string | null | undefined; ... 34 more ...; updated_at?: string | undefined; }, { ...; }>[]': length, pop, push, concat, and 35 more.
+app/api/erp/master-data/units/[id]/route.ts(29,15): error TS2345: Argument of type 'Record<string, unknown>' is not assignable to parameter of type 'RejectExcessProperties<{ base_unit_code?: string | null | undefined; conversion_factor?: number | undefined; created_at?: string | undefined; created_by?: string | null | undefined; deleted_at?: string | null | undefined; ... 4 more ...; updated_at?: string | undefined; }, Record<...>>'.
+  Type 'Record<string, unknown>' is not assignable to type '{ [x: string]: never; }'.
+    'string' index signatures are incompatible.
+      Type 'unknown' is not assignable to type 'never'.
+app/api/erp/master-data/warehouses/[id]/route.ts(38,15): error TS2345: Argument of type 'Record<string, unknown>' is not assignable to parameter of type 'RejectExcessProperties<{ area_id?: string | null | undefined; branch_serial?: string | null | undefined; city_id?: string | null | undefined; contact_number?: string | null | undefined; country_id?: string | null | undefined; ... 23 more ...; warehouse_type?: string | ... 1 more ... | undefined; }, Record<...>>'.
+  Type 'Record<string, unknown>' is not assignable to type '{ [x: string]: never; }'.
+    'string' index signatures are incompatible.
+      Type 'unknown' is not assignable to type 'never'.
+app/api/erp/messages/send-branch-email/route.ts(22,19): error TS2339: Property 'branchIds' does not exist on type 'ErpSession'.
+app/api/erp/messages/send-branch-email/route.ts(22,40): error TS2339: Property 'branchIds' does not exist on type 'ErpSession'.
+app/api/erp/messages/send-branch-email/route.ts(23,22): error TS2339: Property 'branchIds' does not exist on type 'ErpSession'.
+app/api/erp/messages/send-branch-email/route.ts(114,7): error TS2741: Property 'branchIds' is missing in type 'ErpSession' but required in type '{ isSuperAdmin: boolean; countryIds: string[]; branchIds: string[]; }'.
+app/api/erp/mobile/push/route.ts(40,20): error TS2783: 'registered' is specified more than once, so this usage will be overwritten.
+app/api/erp/money-exchange/route.ts(50,26): error TS2551: Property 'countryId' does not exist on type 'ErpSession'. Did you mean 'countryIds'?
+app/api/erp/money-exchange/route.ts(51,29): error TS2551: Property 'cityBranchId' does not exist on type 'ErpSession'. Did you mean 'cityBranchIds'?
+app/api/erp/multilingual/events/route.ts(31,24): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+app/api/erp/purchases/booking-journal-report/route.ts(429,44): error TS2304: Cannot find name 'adminSupabase'.
+app/api/erp/purchases/loading-records/[id]/route.ts(42,18): error TS18046: 'existing' is of type 'unknown'.
+app/api/erp/purchases/loading-records/[id]/route.ts(43,24): error TS18046: 'existing' is of type 'unknown'.
+app/api/erp/purchases/loading-records/[id]/route.ts(44,21): error TS18046: 'existing' is of type 'unknown'.
+app/api/erp/purchases/loading-records/[id]/route.ts(71,17): error TS18046: 'updated' is of type 'unknown'.
+app/api/erp/purchases/loading-records/[id]/route.ts(73,16): error TS2698: Spread types may only be created from object types.
+app/api/erp/purchases/loading-records/[id]/route.ts(77,37): error TS18046: 'updated' is of type 'unknown'.
+app/api/erp/purchases/loading-records/[id]/route.ts(77,66): error TS18046: 'updated' is of type 'unknown'.
+app/api/erp/purchases/loading-records/[id]/route.ts(100,18): error TS18046: 'existing' is of type 'unknown'.
+app/api/erp/purchases/loading-records/[id]/route.ts(101,24): error TS18046: 'existing' is of type 'unknown'.
+app/api/erp/purchases/loading-records/[id]/route.ts(102,21): error TS18046: 'existing' is of type 'unknown'.
+app/api/erp/purchases/loading-records/[id]/route.ts(118,17): error TS18046: 'updated' is of type 'unknown'.
+app/api/erp/purchases/loading-records/[id]/route.ts(120,16): error TS2698: Spread types may only be created from object types.
+app/api/erp/purchases/loading-records/[id]/route.ts(124,37): error TS18046: 'updated' is of type 'unknown'.
+app/api/erp/purchases/loading-records/route.ts(260,49): error TS7006: Parameter 'r' implicitly has an 'any' type.
+app/api/erp/purchases/local-purchase/accept/route.ts(32,26): error TS2551: Property 'countryId' does not exist on type 'ErpSession'. Did you mean 'countryIds'?
+app/api/erp/purchases/local-purchase/accept/route.ts(33,29): error TS2551: Property 'cityBranchId' does not exist on type 'ErpSession'. Did you mean 'cityBranchIds'?
+app/api/erp/purchases/local-purchase/transfer/route.ts(47,26): error TS2551: Property 'countryId' does not exist on type 'ErpSession'. Did you mean 'countryIds'?
+app/api/erp/purchases/local-purchase/transfer/route.ts(48,29): error TS2551: Property 'cityBranchId' does not exist on type 'ErpSession'. Did you mean 'cityBranchIds'?
+app/api/erp/purchases/local-purchase/transfer/route.ts(258,57): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.
+  Type 'null' is not assignable to type 'string'.
+app/api/erp/purchases/orders/[id]/payments/[paymentId]/route.ts(123,7): error TS2353: Object literal may only specify known properties, and 'supabase' does not exist in type '{ action: string; entityTable: string; entityId?: string | null | undefined; companyId?: string | null | undefined; before?: unknown; after?: unknown; ipAddress?: string | null | undefined; }'.
+app/api/erp/purchases/orders/[id]/payments/route.ts(178,26): error TS2551: Property 'countryId' does not exist on type 'ErpSession'. Did you mean 'countryIds'?
+app/api/erp/purchases/orders/[id]/payments/route.ts(179,29): error TS2551: Property 'cityBranchId' does not exist on type 'ErpSession'. Did you mean 'cityBranchIds'?
+app/api/erp/purchases/orders/[id]/payments/route.ts(351,7): error TS2322: Type 'string' is not assignable to type '"super_admin" | "country" | "branch" | undefined'.
+app/api/erp/purchases/orders/[id]/payments/route.ts(367,7): error TS2345: Argument of type 'LooseQueryBuilder' is not assignable to parameter of type 'Promise<{ data: any[] | null; error: { message: string; } | null; }>'.
+  Type 'LooseQueryBuilder' is missing the following properties from type 'Promise<{ data: any[] | null; error: { message: string; } | null; }>': then, catch, finally, [Symbol.toStringTag]
+app/api/erp/purchases/orders/[id]/route.ts(115,17): error TS2339: Property 'data' does not exist on type 'LooseQueryBuilder'.
+app/api/erp/purchases/orders/[id]/route.ts(118,49): error TS2339: Property 'id' does not exist on type '{}'.
+app/api/erp/purchases/orders/[id]/route.ts(161,33): error TS2339: Property 'id' does not exist on type '{}'.
+app/api/erp/purchases/orders/[id]/route.ts(252,18): error TS2304: Cannot find name 'apiError'.
+app/api/erp/purchases/orders/[id]/route.ts(255,16): error TS2304: Cannot find name 'apiError'.
+app/api/erp/purchases/orders/[id]/route.ts(317,37): error TS2339: Property 'form' does not exist on type '{}'.
+app/api/erp/purchases/orders/[id]/route.ts(806,17): error TS2339: Property 'data' does not exist on type 'LooseQueryBuilder'.
+app/api/erp/purchases/orders/[id]/route.ts(809,49): error TS2339: Property 'id' does not exist on type '{}'.
+app/api/erp/purchases/orders/[id]/route.ts(853,33): error TS2339: Property 'id' does not exist on type '{}'.
+app/api/erp/purchases/orders/[id]/transfer/route.ts(109,26): error TS2551: Property 'countryId' does not exist on type 'ErpSession'. Did you mean 'countryIds'?
+app/api/erp/purchases/orders/[id]/transfer/route.ts(110,29): error TS2551: Property 'cityBranchId' does not exist on type 'ErpSession'. Did you mean 'cityBranchIds'?
+app/api/erp/purchases/orders/[id]/transfer/route.ts(435,10): error TS2339: Property 'maybeSingle' does not exist on type '{ single(): QueryResult<unknown>; }'.
+app/api/erp/purchases/orders/route.ts(60,38): error TS2339: Property 'country_id' does not exist on type '{}'.
+app/api/erp/purchases/orders/route.ts(60,71): error TS2339: Property 'country_branch_id' does not exist on type '{}'.
+app/api/erp/purchases/orders/route.ts(69,38): error TS2339: Property 'country_id' does not exist on type '{}'.
+app/api/erp/purchases/orders/route.ts(110,15): error TS2339: Property 'or' does not exist on type 'LooseQueryBuilder'.
+app/api/erp/purchases/orders/route.ts(129,13): error TS2339: Property 'or' does not exist on type 'LooseQueryBuilder'.
+app/api/erp/purchases/orders/route.ts(152,15): error TS2304: Cannot find name 'ensurePurchaseSchemaAndEnums'.
+app/api/erp/purchases/orders/route.ts(202,26): error TS2551: Property 'countryId' does not exist on type 'ErpSession'. Did you mean 'countryIds'?
+app/api/erp/purchases/orders/route.ts(203,29): error TS2551: Property 'cityBranchId' does not exist on type 'ErpSession'. Did you mean 'cityBranchIds'?
+app/api/erp/purchases/orders/route.ts(239,33): error TS2339: Property 'form' does not exist on type '{}'.
+app/api/erp/purchases/orders/route.ts(300,13): error TS2339: Property 'purchaseOrderNo' does not exist on type '{ exchangeRate: number; currencyCode: string; paymentCurrencyCode: string; orderTotal: number; totalGoodsOriginal: number; totalGoodsLocal: number; totalGoodsUsd: number; totalExpensesOriginal: number; ... 14 more ...; paymentStatus?: string | undefined; }'.
+app/api/erp/purchases/orders/route.ts(300,37): error TS2339: Property 'purchaseOrderNo' does not exist on type '{ exchangeRate: number; currencyCode: string; paymentCurrencyCode: string; orderTotal: number; totalGoodsOriginal: number; totalGoodsLocal: number; totalGoodsUsd: number; totalExpensesOriginal: number; ... 14 more ...; paymentStatus?: string | undefined; }'.
+app/api/erp/purchases/orders/route.ts(302,16): error TS2339: Property 'purchaseOrderNo' does not exist on type '{ exchangeRate: number; currencyCode: string; paymentCurrencyCode: string; orderTotal: number; totalGoodsOriginal: number; totalGoodsLocal: number; totalGoodsUsd: number; totalExpensesOriginal: number; ... 14 more ...; paymentStatus?: string | undefined; }'.
+app/api/erp/purchases/orders/route.ts(305,32): error TS2339: Property 'advanceAmount' does not exist on type '{ exchangeRate: number; currencyCode: string; paymentCurrencyCode: string; orderTotal: number; totalGoodsOriginal: number; totalGoodsLocal: number; totalGoodsUsd: number; totalExpensesOriginal: number; ... 14 more ...; paymentStatus?: string | undefined; }'.
+app/api/erp/purchases/orders/route.ts(314,35): error TS2339: Property 'purchaseCurrency' does not exist on type '{ exchangeRate: number; currencyCode: string; paymentCurrencyCode: string; orderTotal: number; totalGoodsOriginal: number; totalGoodsLocal: number; totalGoodsUsd: number; totalExpensesOriginal: number; ... 14 more ...; paymentStatus?: string | undefined; }'.
+app/api/erp/purchases/orders/route.ts(315,34): error TS2551: Property 'paymentCurrency' does not exist on type '{ exchangeRate: number; currencyCode: string; paymentCurrencyCode: string; orderTotal: number; totalGoodsOriginal: number; totalGoodsLocal: number; totalGoodsUsd: number; totalExpensesOriginal: number; ... 14 more ...; paymentStatus?: string | undefined; }'. Did you mean 'paymentCurrencyCode'?
+app/api/erp/purchases/orders/route.ts(344,30): error TS2339: Property 'form' does not exist on type '{}'.
+app/api/erp/purchases/orders/route.ts(345,67): error TS2339: Property 'form' does not exist on type '{}'.
+app/api/erp/purchases/orders/route.ts(365,15): error TS2304: Cannot find name 'ensurePurchaseSchemaAndEnums'.
+app/api/erp/reports/activity-summary/route.ts(73,10): error TS2339: Property 'catch' does not exist on type 'PromiseLike<PostgrestResponseFailure | PostgrestResponseSuccess<{ id: string; country_branch_id: string | null; country_id: string | null; created_at: string; }[]>>'.
+app/api/erp/reports/activity-summary/route.ts(87,10): error TS2339: Property 'catch' does not exist on type 'PromiseLike<PostgrestResponseFailure | PostgrestResponseSuccess<{ id: string; country_branch_id: string | null; country_id: string | null; created_at: string; }[]>>'.
+app/api/erp/reports/journal-report/route.ts(84,3): error TS2741: Property 'salesmanId' is missing in type '{ id: string; journal_no: string; date: string; party: string; shipmentType: "Warehouse"; amount: number; paidAmount: number; remainingAmount: number; currentStatus: string; nextStep: string; nextStepColor: "green"; ... 15 more ...; payments: { ...; }[]; }' but required in type 'JournalBillRecord'.
+app/api/erp/reports/journal-report/route.ts(124,3): error TS2741: Property 'salesmanId' is missing in type '{ id: string; journal_no: string; date: string; party: string; shipmentType: "Loading"; amount: number; paidAmount: number; remainingAmount: number; currentStatus: string; nextStep: string; nextStepColor: "green"; ... 15 more ...; payments: { ...; }[]; }' but required in type 'JournalBillRecord'.
+app/api/erp/reports/journal-report/route.ts(164,3): error TS2741: Property 'salesmanId' is missing in type '{ id: string; journal_no: string; date: string; party: string; shipmentType: "Export"; amount: number; paidAmount: number; remainingAmount: number; currentStatus: string; nextStep: string; nextStepColor: "orange"; ... 15 more ...; payments: never[]; }' but required in type 'JournalBillRecord'.
+app/api/erp/reports/journal-report/route.ts(202,3): error TS2741: Property 'salesmanId' is missing in type '{ id: string; journal_no: string; date: string; party: string; shipmentType: "Warehouse"; amount: number; paidAmount: number; remainingAmount: number; currentStatus: string; nextStep: string; nextStepColor: "red"; ... 15 more ...; payments: { ...; }[]; }' but required in type 'JournalBillRecord'.
+app/api/erp/reports/journal-report/route.ts(242,3): error TS2741: Property 'salesmanId' is missing in type '{ id: string; journal_no: string; date: string; party: string; shipmentType: "Loading"; amount: number; paidAmount: number; remainingAmount: number; currentStatus: string; nextStep: string; nextStepColor: "blue"; ... 15 more ...; payments: { ...; }[]; }' but required in type 'JournalBillRecord'.
+app/api/erp/reports/journal-report/route.ts(282,3): error TS2741: Property 'salesmanId' is missing in type '{ id: string; journal_no: string; date: string; party: string; shipmentType: "Warehouse"; amount: number; paidAmount: number; remainingAmount: number; currentStatus: string; nextStep: string; nextStepColor: "red"; ... 15 more ...; payments: { ...; }[]; }' but required in type 'JournalBillRecord'.
+app/api/erp/reports/journal-report/route.ts(322,3): error TS2741: Property 'salesmanId' is missing in type '{ id: string; journal_no: string; date: string; party: string; shipmentType: "Export"; amount: number; paidAmount: number; remainingAmount: number; currentStatus: string; nextStep: string; nextStepColor: "orange"; ... 15 more ...; payments: { ...; }[]; }' but required in type 'JournalBillRecord'.
+app/api/erp/reports/journal-report/route.ts(362,3): error TS2741: Property 'salesmanId' is missing in type '{ id: string; journal_no: string; date: string; party: string; shipmentType: "Loading"; amount: number; paidAmount: number; remainingAmount: number; currentStatus: string; nextStep: string; nextStepColor: "blue"; ... 15 more ...; payments: { ...; }[]; }' but required in type 'JournalBillRecord'.
+app/api/erp/reports/journal-report/route.ts(473,11): error TS2322: Type '{ id: string; journal_no: string; date: string; party: string; shipmentType: "Warehouse" | "Loading" | "Export"; amount: number; paidAmount: number; remainingAmount: number; currentStatus: string; ... 20 more ...; buyerDetails: any; }[]' is not assignable to type 'JournalBillRecord[]'.
+  Type '{ id: string; journal_no: string; date: string; party: string; shipmentType: "Warehouse" | "Loading" | "Export"; amount: number; paidAmount: number; remainingAmount: number; currentStatus: string; ... 20 more ...; buyerDetails: any; }' is not assignable to type 'JournalBillRecord'.
+    Types of property 'salesmanId' are incompatible.
+      Type 'string | null' is not assignable to type 'string'.
+        Type 'null' is not assignable to type 'string'.
+app/api/erp/reports/journal-report/route.ts(532,49): error TS2339: Property 'goodsEntries' does not exist on type '{ supplierName?: string | undefined; goodsName?: string | undefined; shipmentType?: string | undefined; lifecycleStatus?: string | undefined; }'.
+app/api/erp/reports/journal-report/route.ts(533,18): error TS2339: Property 'goodsEntries' does not exist on type '{ supplierName?: string | undefined; goodsName?: string | undefined; shipmentType?: string | undefined; lifecycleStatus?: string | undefined; }'.
+app/api/erp/reports/journal-report/route.ts(549,45): error TS2339: Property 'currency_code' does not exist on type '{ id: string; name: string; }'.
+app/api/erp/reports/journal-report/route.ts(550,63): error TS2339: Property 'exchangeRate' does not exist on type '{ supplierName?: string | undefined; goodsName?: string | undefined; shipmentType?: string | undefined; lifecycleStatus?: string | undefined; }'.
+app/api/erp/reports/journal-report/route.ts(562,26): error TS2339: Property 'paymentMode' does not exist on type '{ supplierName?: string | undefined; goodsName?: string | undefined; shipmentType?: string | undefined; lifecycleStatus?: string | undefined; }'.
+app/api/erp/reports/journal-report/route.ts(573,30): error TS2339: Property 'updated_at' does not exist on type '{ id: string; purchase_order_no: string; created_at: string; order_total: number; advance_paid: number; remaining_paid: number; remaining_due: number; payment_status: string; form_data: Json; ... 6 more ...; exchange_rate: number; }'.
+app/api/erp/reports/journal-report/route.ts(583,38): error TS2339: Property 'purchaseAccountName' does not exist on type '{ supplierName?: string | undefined; goodsName?: string | undefined; shipmentType?: string | undefined; lifecycleStatus?: string | undefined; }'.
+app/api/erp/reports/journal-report/route.ts(583,66): error TS2339: Property 'purchaseAccountNo' does not exist on type '{ supplierName?: string | undefined; goodsName?: string | undefined; shipmentType?: string | undefined; lifecycleStatus?: string | undefined; }'.
+app/api/erp/reports/journal-report/route.ts(584,35): error TS2339: Property 'salesAccountName' does not exist on type '{ supplierName?: string | undefined; goodsName?: string | undefined; shipmentType?: string | undefined; lifecycleStatus?: string | undefined; }'.
+app/api/erp/reports/journal-report/route.ts(584,60): error TS2339: Property 'salesAccountNo' does not exist on type '{ supplierName?: string | undefined; goodsName?: string | undefined; shipmentType?: string | undefined; lifecycleStatus?: string | undefined; }'.
+app/api/erp/reports/journal-report/route.ts(586,34): error TS2339: Property 'totalGrossWeight' does not exist on type '{ supplierName?: string | undefined; goodsName?: string | undefined; shipmentType?: string | undefined; lifecycleStatus?: string | undefined; }'.
+app/api/erp/reports/journal-report/route.ts(586,59): error TS2339: Property 'grossWeight' does not exist on type '{ supplierName?: string | undefined; goodsName?: string | undefined; shipmentType?: string | undefined; lifecycleStatus?: string | undefined; }'.
+app/api/erp/reports/journal-report/route.ts(587,32): error TS2339: Property 'totalNetWeight' does not exist on type '{ supplierName?: string | undefined; goodsName?: string | undefined; shipmentType?: string | undefined; lifecycleStatus?: string | undefined; }'.
+app/api/erp/reports/journal-report/route.ts(587,55): error TS2339: Property 'netWeight' does not exist on type '{ supplierName?: string | undefined; goodsName?: string | undefined; shipmentType?: string | undefined; lifecycleStatus?: string | undefined; }'.
+app/api/erp/reports/journal-report/route.ts(588,36): error TS2339: Property 'quantity' does not exist on type '{ supplierName?: string | undefined; goodsName?: string | undefined; shipmentType?: string | undefined; lifecycleStatus?: string | undefined; }'.
+app/api/erp/reports/journal-report/route.ts(588,53): error TS2339: Property 'totalQty' does not exist on type '{ supplierName?: string | undefined; goodsName?: string | undefined; shipmentType?: string | undefined; lifecycleStatus?: string | undefined; }'.
+app/api/erp/reports/journal-report/route.ts(589,30): error TS2339: Property 'qtyName' does not exist on type '{ supplierName?: string | undefined; goodsName?: string | undefined; shipmentType?: string | undefined; lifecycleStatus?: string | undefined; }'.
+app/api/erp/reports/journal-report/route.ts(590,39): error TS2339: Property 'paymentType' does not exist on type '{ supplierName?: string | undefined; goodsName?: string | undefined; shipmentType?: string | undefined; lifecycleStatus?: string | undefined; }'.
+app/api/erp/reports/journal-report/route.ts(622,30): error TS2339: Property 'buyerName' does not exist on type '{ supplierName?: string | undefined; goodsName?: string | undefined; shipmentType?: string | undefined; lifecycleStatus?: string | undefined; }'.
+app/api/erp/reports/journal-report/route.ts(622,48): error TS2339: Property 'buyer_name' does not exist on type '{ supplierName?: string | undefined; goodsName?: string | undefined; shipmentType?: string | undefined; lifecycleStatus?: string | undefined; }'.
+app/api/erp/reports/journal-report/route.ts(630,36): error TS2339: Property 'ledger_posting_status' does not exist on type '{ id: string; purchase_order_no: string; created_at: string; order_total: number; advance_paid: number; remaining_paid: number; remaining_due: number; payment_status: string; form_data: Json; ... 6 more ...; exchange_rate: number; }'.
+app/api/erp/reports/journal-report/route.ts(683,9): error TS2322: Type '{ id: string; journal_no: string; date: string; party: string; shipmentType: "Warehouse"; amount: number; paidAmount: number; remainingAmount: number; currentStatus: string; nextStep: string; nextStepColor: "green" | ... 1 more ... | "red"; ... 18 more ...; buyerDetails: string; }[]' is not assignable to type 'JournalBillRecord[]'.
+  Type '{ id: string; journal_no: string; date: string; party: string; shipmentType: "Warehouse"; amount: number; paidAmount: number; remainingAmount: number; currentStatus: string; nextStep: string; nextStepColor: "green" | ... 1 more ... | "red"; ... 18 more ...; buyerDetails: string; }' is not assignable to type 'JournalBillRecord'.
+    Types of property 'salesmanId' are incompatible.
+      Type 'string | null' is not assignable to type 'string'.
+        Type 'null' is not assignable to type 'string'.
+app/api/erp/reports/journal-report/route.ts(732,25): error TS2339: Property 'origin_country_name' does not exist on type '{ id: string; goods_name: string; supplier_name: string | null; created_at: string; purchase_cost: number; advance_amount: number | null; remaining_balance: number | null; final_cost: number; ... 18 more ...; city_branches: { ...; } | null; }'.
+app/api/erp/reports/journal-report/route.ts(752,27): error TS2339: Property 'payment_mode' does not exist on type '{ id: string; goods_name: string; supplier_name: string | null; created_at: string; purchase_cost: number; advance_amount: number | null; remaining_balance: number | null; final_cost: number; ... 18 more ...; city_branches: { ...; } | null; }'.
+app/api/erp/reports/journal-report/route.ts(768,40): error TS2339: Property 'payment_mode' does not exist on type '{ id: string; goods_name: string; supplier_name: string | null; created_at: string; purchase_cost: number; advance_amount: number | null; remaining_balance: number | null; final_cost: number; ... 18 more ...; city_branches: { ...; } | null; }'.
+app/api/erp/reports/meta/route.ts(78,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"user_profiles"' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"user_profiles"' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+app/api/erp/reports/scoped/route.ts(222,48): error TS2367: This comparison appears to be unintentional because the types '"roznamcha" | "cash" | "cash-entry"' and '"payments"' have no overlap.
+app/api/erp/reports/scoped/route.ts(223,28): error TS2345: Argument of type '"payment"' is not assignable to parameter of type 'NonNullable<"super_admin" | "country" | "branch">'.
+app/api/erp/reports/scoped/route.ts(225,29): error TS2322: Type '"cash"' is not assignable to type '"super_admin" | "country" | "branch"'.
+app/api/erp/reports/scoped/route.ts(225,37): error TS2322: Type '"cash_in"' is not assignable to type '"super_admin" | "country" | "branch"'.
+app/api/erp/reports/scoped/route.ts(225,48): error TS2322: Type '"cash_out"' is not assignable to type '"super_admin" | "country" | "branch"'.
+app/api/erp/reports/scoped/route.ts(333,17): error TS2589: Type instantiation is excessively deep and possibly infinite.
+app/api/erp/reports/scoped/route.ts(334,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"shipping_records"' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"shipping_records"' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+app/api/erp/reports/scoped/route.ts(362,17): error TS2589: Type instantiation is excessively deep and possibly infinite.
+app/api/erp/reports/scoped/route.ts(363,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"inter_branch_transfers"' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"inter_branch_transfers"' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+app/api/erp/reports/scoped/route.ts(432,17): error TS2589: Type instantiation is excessively deep and possibly infinite.
+app/api/erp/reports/scoped/route.ts(433,17): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"inventory_records"' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"inventory_records"' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+app/api/erp/reports/scoped/route.ts(485,12): error TS2678: Type '"exchange-rates"' is not comparable to type '"roznamcha" | "purchase" | "ledger" | "transfer" | "sales" | "payments" | "cash" | "remaining" | "expenses" | "inventory" | "payment" | "loading" | "journal" | "cash-entry" | ... 11 more ... | "exchange-rate"'.
+app/api/erp/reports/scoped/route.ts(518,23): error TS2345: Argument of type '"receipt"' is not assignable to parameter of type 'NonNullable<"super_admin" | "country" | "branch">'.
+app/api/erp/reports/stock-reports/route.ts(633,43): error TS2345: Argument of type 'string | null' is not assignable to parameter of type 'string'.
+  Type 'null' is not assignable to type 'string'.
+app/api/erp/return-sms-reply/templates/route.ts(78,7): error TS2322: Type '{ code: string; title: string; category: string; bodyEn: string; bodyUr: string; bodyPs: string; bodyFa: string; isActive: boolean; id: string; }[]' is not assignable to type '{ id: any; code: any; title: any; category: any; bodyEn: any; bodyUr: any; bodyPs: any; bodyFa: any; appliesToCountryId: any; appliesToBranchId: any; isActive: any; }[]'.
+  Type '{ code: string; title: string; category: string; bodyEn: string; bodyUr: string; bodyPs: string; bodyFa: string; isActive: boolean; id: string; }' is missing the following properties from type '{ id: any; code: any; title: any; category: any; bodyEn: any; bodyUr: any; bodyPs: any; bodyFa: any; appliesToCountryId: any; appliesToBranchId: any; isActive: any; }': appliesToCountryId, appliesToBranchId
+app/api/erp/return-sms-reply/webhooks/email/route.ts(55,31): error TS2339: Property 'country_id' does not exist on type '{ assigned_user_id: string | null; channel: string; city_branch_id: string | null; contact_identifier: string; country_id: string | null; created_at: string | null; id: string; last_message_at: string | null; ... 11 more ...; updated_at: string | null; } | { ...; }'.
+  Property 'country_id' does not exist on type '{ id: string; channel: "email" | "whatsapp"; contact_identifier: string; sender_name: string; sender_type: "unknown" | "agent" | "supplier" | "customer" | "employee" | "transporter"; status: string; unread_count: number; }'.
+app/api/erp/return-sms-reply/webhooks/email/route.ts(56,34): error TS2339: Property 'city_branch_id' does not exist on type '{ assigned_user_id: string | null; channel: string; city_branch_id: string | null; contact_identifier: string; country_id: string | null; created_at: string | null; id: string; last_message_at: string | null; ... 11 more ...; updated_at: string | null; } | { ...; }'.
+  Property 'city_branch_id' does not exist on type '{ id: string; channel: "email" | "whatsapp"; contact_identifier: string; sender_name: string; sender_type: "unknown" | "agent" | "supplier" | "customer" | "employee" | "transporter"; status: string; unread_count: number; }'.
+app/api/erp/return-sms-reply/webhooks/whatsapp/route.ts(80,19): error TS2345: Argument of type 'Record<string, any>' is not assignable to parameter of type 'RejectExcessProperties<{ ai_generated_reply?: string | null | undefined; approved_at?: string | null | undefined; approved_by?: string | null | undefined; body?: string | undefined; channel?: string | undefined; ... 17 more ...; subject?: string | ... 1 more ... | undefined; }, Record<...>>'.
+  Type 'Record<string, any>' is not assignable to type '{ [x: string]: never; }'.
+    'string' index signatures are incompatible.
+      Type 'any' is not assignable to type 'never'.
+app/api/erp/return-sms-reply/webhooks/whatsapp/route.ts(147,31): error TS2339: Property 'country_id' does not exist on type '{ assigned_user_id: string | null; channel: string; city_branch_id: string | null; contact_identifier: string; country_id: string | null; created_at: string | null; id: string; last_message_at: string | null; ... 11 more ...; updated_at: string | null; } | { ...; }'.
+  Property 'country_id' does not exist on type '{ id: string; channel: "email" | "whatsapp"; contact_identifier: string; sender_name: string; sender_type: "unknown" | "agent" | "supplier" | "customer" | "employee" | "transporter"; status: string; unread_count: number; }'.
+app/api/erp/return-sms-reply/webhooks/whatsapp/route.ts(148,34): error TS2339: Property 'city_branch_id' does not exist on type '{ assigned_user_id: string | null; channel: string; city_branch_id: string | null; contact_identifier: string; country_id: string | null; created_at: string | null; id: string; last_message_at: string | null; ... 11 more ...; updated_at: string | null; } | { ...; }'.
+  Property 'city_branch_id' does not exist on type '{ id: string; channel: "email" | "whatsapp"; contact_identifier: string; sender_name: string; sender_type: "unknown" | "agent" | "supplier" | "customer" | "employee" | "transporter"; status: string; unread_count: number; }'.
+app/api/erp/roznamcha/cash-summary/route.ts(80,15): error TS2339: Property 'data' does not exist on type 'LooseQueryBuilder'.
+app/api/erp/roznamcha/route.ts(600,23): error TS2339: Property 'or' does not exist on type 'LooseQueryBuilder'.
+app/api/erp/roznamcha/route.ts(651,26): error TS2551: Property 'countryId' does not exist on type 'ErpSession'. Did you mean 'countryIds'?
+app/api/erp/roznamcha/route.ts(652,29): error TS2551: Property 'cityBranchId' does not exist on type 'ErpSession'. Did you mean 'cityBranchIds'?
+app/api/erp/sales/orders/[id]/payments/route.ts(137,7): error TS2561: Object literal may only specify known properties, but 'city_branch_id' does not exist in type '{ resource: string; action: string; } & ApiScope'. Did you mean to write 'cityBranchId'?
+app/api/erp/sales/orders/[id]/payments/route.ts(189,26): error TS2551: Property 'countryId' does not exist on type 'ErpSession'. Did you mean 'countryIds'?
+app/api/erp/sales/orders/[id]/payments/route.ts(190,29): error TS2551: Property 'cityBranchId' does not exist on type 'ErpSession'. Did you mean 'cityBranchIds'?
+app/api/erp/sales/orders/[id]/payments/route.ts(191,66): error TS2339: Property 'roznamchaNumber' does not exist on type '{ kind: string; exchangeRate: number; entryDate: string; currencyCode: string; amount: number; debitLedgerId: string; creditLedgerId: string; referenceNo?: string | null | undefined; narration?: string | ... 1 more ... | undefined; typeDetails?: { ...; } | ... 1 more ... | undefined; }'.
+app/api/erp/sales/orders/[id]/payments/route.ts(338,7): error TS2322: Type 'string' is not assignable to type '"super_admin" | "country" | "branch" | undefined'.
+app/api/erp/sales/orders/[id]/route.ts(160,60): error TS2339: Property 'order_total' does not exist on type '{}'.
+app/api/erp/sales/orders/[id]/route.ts(160,115): error TS2339: Property 'exchange_rate' does not exist on type '{}'.
+app/api/erp/sales/orders/[id]/route.ts(161,45): error TS2339: Property 'form_data' does not exist on type '{}'.
+app/api/erp/sales/orders/[id]/route.ts(170,80): error TS2339: Property 'customer_name' does not exist on type '{}'.
+app/api/erp/sales/orders/[id]/route.ts(170,142): error TS2339: Property 'product_summary' does not exist on type '{}'.
+app/api/erp/sales/orders/[id]/route.ts(178,53): error TS7006: Parameter 'a' implicitly has an 'any' type.
+app/api/erp/sales/orders/[id]/route.ts(179,54): error TS7006: Parameter 'a' implicitly has an 'any' type.
+app/api/erp/sales/orders/[id]/route.ts(201,30): error TS2339: Property 'workflow_state' does not exist on type '{}'.
+app/api/erp/sales/orders/[id]/route.ts(209,90): error TS2339: Property 'customer_name' does not exist on type '{}'.
+app/api/erp/sales/orders/[id]/route.ts(216,90): error TS2339: Property 'product_summary' does not exist on type '{}'.
+app/api/erp/sales/orders/[id]/route.ts(235,20): error TS2339: Property 'workflow_state' does not exist on type '{}'.
+app/api/erp/sales/orders/[id]/route.ts(242,20): error TS2339: Property 'form_data' does not exist on type '{}'.
+app/api/erp/sales/orders/[id]/transfer/route.ts(57,26): error TS2551: Property 'countryId' does not exist on type 'ErpSession'. Did you mean 'countryIds'?
+app/api/erp/sales/orders/[id]/transfer/route.ts(58,29): error TS2551: Property 'cityBranchId' does not exist on type 'ErpSession'. Did you mean 'cityBranchIds'?
+app/api/erp/sales/orders/[id]/transfer/route.ts(223,19): error TS2345: Argument of type 'unknown' is not assignable to parameter of type 'string | number | boolean'.
+app/api/erp/sales/orders/[id]/transfer/route.ts(287,10): error TS2339: Property 'maybeSingle' does not exist on type '{ single(): QueryResult<unknown>; }'.
+app/api/erp/sales/orders/route.ts(196,26): error TS2551: Property 'countryId' does not exist on type 'ErpSession'. Did you mean 'countryIds'?
+app/api/erp/sales/orders/route.ts(197,29): error TS2551: Property 'cityBranchId' does not exist on type 'ErpSession'. Did you mean 'cityBranchIds'?
+app/api/erp/shipping/bl-records/route.ts(338,28): error TS2339: Property 'reportPayload' does not exist on type '{ debit: number; credit: number; currencyCode: string; shippingLineName: string; blNumber: string; shipmentStatus: "draft" | "cancelled" | "booked" | "in_transit" | "arrived" | "cleared" | "delivered"; ... 15 more ...; etd?: string | ... 1 more ... | undefined; }'.
+app/api/erp/shipping/bl-records/route.ts(380,14): error TS2304: Cannot find name 'NextResponse'.
+app/api/erp/shipping/bl-records/route.ts(393,14): error TS2304: Cannot find name 'NextResponse'.
+app/api/erp/shipping/bl-records/route.ts(433,14): error TS2304: Cannot find name 'NextResponse'.
+app/api/erp/tax/route.ts(51,17): error TS2589: Type instantiation is excessively deep and possibly infinite.
+app/api/erp/tax/route.ts(52,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"country_tax_settings"' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"country_tax_settings"' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+app/api/erp/tax/route.ts(57,24): error TS2345: Argument of type '"country_id"' is not assignable to parameter of type 'never'.
+app/api/erp/tax/route.ts(145,15): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"country_tax_settings"' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"country_tax_settings"' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+app/api/erp/tax/route.ts(146,19): error TS2322: Type 'false' is not assignable to type 'never'.
+app/api/erp/tax/route.ts(147,13): error TS2345: Argument of type '"country_id"' is not assignable to parameter of type 'never'.
+app/api/erp/tax/route.ts(150,35): error TS2589: Type instantiation is excessively deep and possibly infinite.
+app/api/erp/tax/route.ts(151,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"country_tax_settings"' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"country_tax_settings"' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+app/api/erp/tax/route.ts(152,15): error TS2345: Argument of type '{ country_id: string; tax_name: string; tax_code: string; tax_rate: number; trn_number: string | null; applies_to: "purchase" | "sales" | "expense" | "both"; is_default: boolean; is_active: boolean; updated_at: string; }' is not assignable to parameter of type 'RejectExcessProperties<{ applied_at?: string | null | undefined; filename: string; id?: number | undefined; } | { account_kind: "liability" | "asset" | "equity" | "income" | "expense"; code: string; created_at?: string | undefined; ... 5 more ...; updated_at?: string | undefined; } | ... 166 more ... | { ...; }, { ....'.
+  Type '{ country_id: string; tax_name: string; tax_code: string; tax_rate: number; trn_number: string | null; applies_to: "purchase" | "sales" | "expense" | "both"; is_default: boolean; is_active: boolean; updated_at: string; }' is not assignable to type 'RejectExcessProperties<{ applied_at?: string | null | undefined; filename: string; id?: number | undefined; } | { account_kind: "liability" | "asset" | "equity" | "income" | "expense"; code: string; created_at?: string | undefined; ... 5 more ...; updated_at?: string | undefined; } | ... 166 more ... | { ...; }, { ....'.
+    Type '{ country_id: string; tax_name: string; tax_code: string; tax_rate: number; trn_number: string | null; applies_to: "purchase" | "sales" | "expense" | "both"; is_default: boolean; is_active: boolean; updated_at: string; }' is not assignable to type '{ country_id: never; updated_at: never; is_active: never; is_default: never; tax_name: never; tax_code: never; tax_rate: never; trn_number: never; applies_to: never; }'.
+      Types of property 'country_id' are incompatible.
+        Type 'string' is not assignable to type 'never'.
+app/api/erp/tax/route.ts(180,18): error TS2339: Property 'id' does not exist on type 'NewResultOne'.
+app/api/erp/tax/route.ts(181,25): error TS2339: Property 'country_id' does not exist on type 'NewResultOne'.
+app/api/erp/tax/route.ts(182,23): error TS2339: Property 'tax_name' does not exist on type 'NewResultOne'.
+app/api/erp/tax/route.ts(183,23): error TS2339: Property 'tax_code' does not exist on type 'NewResultOne'.
+app/api/erp/tax/route.ts(184,30): error TS2339: Property 'tax_rate' does not exist on type 'NewResultOne'.
+app/api/erp/tax/route.ts(185,25): error TS2339: Property 'trn_number' does not exist on type 'NewResultOne'.
+app/api/erp/tax/route.ts(186,25): error TS2339: Property 'applies_to' does not exist on type 'NewResultOne'.
+app/api/erp/tax/route.ts(187,25): error TS2339: Property 'is_default' does not exist on type 'NewResultOne'.
+app/api/erp/tax/route.ts(188,24): error TS2339: Property 'is_active' does not exist on type 'NewResultOne'.
+app/api/erp/tax/route.ts(211,40): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"country_tax_settings"' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"country_tax_settings"' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+app/api/erp/tax/route.ts(211,76): error TS2345: Argument of type '"id"' is not assignable to parameter of type 'never'.
+app/api/erp/whatsapp/conversations/route.ts(112,36): error TS7006: Parameter 'a' implicitly has an 'any' type.
+app/api/erp/whatsapp/qr-code/route.ts(34,11): error TS2322: Type 'string' is not assignable to type '"super_admin" | "country" | "city_branch" | "country_branch"'.
+app/dashboard/clearing-agent/customer-order/page.tsx(165,21): error TS2322: Type '{ children: Element; title: string; subtitle: string; }' is not assignable to type 'IntrinsicAttributes & { children: ReactNode; nodes: SidebarNode[]; lang: "en" | "ar" | "ur" | "fa" | "ps"; roles: ("super_admin" | ... 8 more ... | "staff_user")[] | null; permissions?: string[] | ... 1 more ... | undefined; userEmail: string; userName?: string | ... 1 more ... | undefined; }'.
+  Property 'title' does not exist on type 'IntrinsicAttributes & { children: ReactNode; nodes: SidebarNode[]; lang: "en" | "ar" | "ur" | "fa" | "ps"; roles: ("super_admin" | ... 8 more ... | "staff_user")[] | null; permissions?: string[] | ... 1 more ... | undefined; userEmail: string; userName?: string | ... 1 more ... | undefined; }'.
+app/dashboard/country/page.tsx(75,17): error TS2304: Cannot find name 'postgres'.
+app/dashboard/inventory/journal-report/branch/page.tsx(6,25): error TS2322: Type 'ErpSession' is not assignable to type '{ branchName?: string | undefined; fullName?: string | undefined; email?: string | undefined; }'.
+  Types of property 'fullName' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+app/dashboard/inventory/journal-report/country/page.tsx(6,25): error TS2322: Type 'ErpSession' is not assignable to type '{ branchName?: string | undefined; fullName?: string | undefined; email?: string | undefined; }'.
+  Types of property 'fullName' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+app/dashboard/inventory/journal-report/salesman/page.tsx(6,25): error TS2322: Type 'ErpSession' is not assignable to type '{ branchName?: string | undefined; fullName?: string | undefined; email?: string | undefined; }'.
+  Types of property 'fullName' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+app/dashboard/inventory/stock-reports/branch/page.tsx(10,39): error TS2322: Type 'ErpSession' is not assignable to type '{ branchName?: string | undefined; fullName?: string | undefined; email?: string | undefined; }'.
+  Types of property 'fullName' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+app/dashboard/inventory/stock-reports/country/page.tsx(10,39): error TS2322: Type 'ErpSession' is not assignable to type '{ branchName?: string | undefined; fullName?: string | undefined; email?: string | undefined; }'.
+  Types of property 'fullName' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+app/dashboard/inventory/stock-reports/salesman/page.tsx(10,39): error TS2322: Type 'ErpSession' is not assignable to type '{ branchName?: string | undefined; fullName?: string | undefined; email?: string | undefined; }'.
+  Types of property 'fullName' are incompatible.
+    Type 'string | null' is not assignable to type 'string | undefined'.
+      Type 'null' is not assignable to type 'string | undefined'.
+app/dashboard/journal/sales-order-payment/advance-completed/page.tsx(4,36): error TS2820: Type '"advance-completed"' is not assignable to type 'PaymentMode | undefined'. Did you mean '"advance_completed"'?
+app/dashboard/logistics/page.tsx(41,45): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+app/dashboard/page.tsx(55,29): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "_applied_schema_migrations" | "account_groups" | "account_types" | "accounts" | "branches" | "companies" | "approval_request_items" | "approval_requests" | "profiles" | ... 159 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"_applied_schema_migrations" | "account_groups" | "account_types" | "accounts" | "branches" | "companies" | "approval_request_items" | "approval_requests" | "profiles" | ... 159 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type 'string' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+app/dashboard/page.tsx(377,29): error TS2322: Type '"lg"' is not assignable to type '"default" | "sm" | "icon" | null | undefined'.
+app/dashboard/print-reports/page.tsx(217,11): error TS2322: Type '{ serialNo: any; journalNo: any; voucherNo: any; entryDate: any; narration: any; preparedBy: string; totalDebit: number; totalCredit: number; currency: any; drCrStatus: string; runningBalance: number; }[]' is not assignable to type 'CustomerLedgerReportData[]'.
+  Type '{ serialNo: any; journalNo: any; voucherNo: any; entryDate: any; narration: any; preparedBy: string; totalDebit: number; totalCredit: number; currency: any; drCrStatus: string; runningBalance: number; }' is missing the following properties from type 'CustomerLedgerReportData': customerName, customerCode, openingBalance, openingDcType, and 9 more.
+app/dashboard/print-reports/page.tsx(232,7): error TS2353: Object literal may only specify known properties, and 'title' does not exist in type '{ report: CustomerLedgerReportData; companyInfo?: ERPCompanyInfo | undefined; lang?: string | undefined; }'.
+app/dashboard/print-reports/page.tsx(247,11): error TS2322: Type '{ id: any; loadingRecordNo: any; poNo: any; contractNo: any; supplierName: any; goodsName: any; containerNo: any; blNo: any; grossWeight: number; tareWeight: number; netWeight: number; contractQty: number; ... 10 more ...; branchCode: string; }[]' is not assignable to type 'PurchaseLoadingReportRow[]'.
+  Type '{ id: any; loadingRecordNo: any; poNo: any; contractNo: any; supplierName: any; goodsName: any; containerNo: any; blNo: any; grossWeight: number; tareWeight: number; netWeight: number; contractQty: number; ... 10 more ...; branchCode: string; }' is missing the following properties from type 'PurchaseLoadingReportRow': country, branch, purchaseBookingNo, salesAccount, and 12 more.
+app/dashboard/print-reports/page.tsx(277,7): error TS2353: Object literal may only specify known properties, and 'title' does not exist in type '{ rows: PurchaseLoadingReportRow[]; companyInfo?: ERPCompanyInfo | undefined; filters?: ERPFilterPill[] | undefined; lang?: string | undefined; }'.
+app/dashboard/print-reports/page.tsx(286,11): error TS2322: Type '{ poNo: any; contractNo: any; supplierName: any; goodsName: any; containers: number; totalWeight: number; amountUSD: number; amountPKR: number; currency: any; orderDate: any; status: any; paymentStatus: any; branchName: any; branchCode: any; countryName: string; }[]' is not assignable to type 'FinalizedPORow[]'.
+  Type '{ poNo: any; contractNo: any; supplierName: any; goodsName: any; containers: number; totalWeight: number; amountUSD: number; amountPKR: number; currency: any; orderDate: any; status: any; paymentStatus: any; branchName: any; branchCode: any; countryName: string; }' is missing the following properties from type 'FinalizedPORow': id, poNumber, country, branch, and 15 more.
+app/dashboard/print-reports/page.tsx(308,7): error TS2353: Object literal may only specify known properties, and 'title' does not exist in type '{ rows: FinalizedPORow[]; companyInfo?: ERPCompanyInfo | undefined; filters?: ERPFilterPill[] | undefined; lang?: string | undefined; }'.
+app/dashboard/print-reports/page.tsx(319,7): error TS2353: Object literal may only specify known properties, and 'title' does not exist in type '{ record: TransferPaymentRecord; companyInfo?: ERPCompanyInfo | undefined; lang?: string | undefined; }'.
+app/dashboard/print-reports/page.tsx(343,11): error TS2322: Type '{ serialNo: any; journalNo: any; voucherNo: any; entryDate: any; narration: any; preparedBy: string; debit: number; credit: number; currency: any; status: any; }[]' is not assignable to type 'CashEntryLine[]'.
+  Type '{ serialNo: any; journalNo: any; voucherNo: any; entryDate: any; narration: any; preparedBy: string; debit: number; credit: number; currency: any; status: any; }' is missing the following properties from type 'CashEntryLine': id, accountCode, accountTitle, user, branch
+app/dashboard/print-reports/page.tsx(359,7): error TS2322: Type 'CashEntryLine[] | undefined' is not assignable to type 'CashEntryLine[]'.
+  Type 'undefined' is not assignable to type 'CashEntryLine[]'.
+app/dashboard/print-reports/page.tsx(409,7): error TS2353: Object literal may only specify known properties, and 'title' does not exist in type '{ order: PurchaseBookingOrderData; companyInfo?: ERPCompanyInfo | undefined; lang?: string | undefined; }'.
+app/dashboard/print-reports/page.tsx(440,7): error TS2353: Object literal may only specify known properties, and 'title' does not exist in type '{ data: RoznamchaVoucherData; companyInfo?: ERPCompanyInfo | undefined; lang?: string | undefined; }'.
+app/dashboard/settings/management/goods/ui-client.tsx(139,31): error TS2339: Property 'originCountryId' does not exist on type '{ goodsName: string; chsCode: string; }'.
+app/dashboard/settings/management/goods/ui-client.tsx(626,14): error TS2304: Cannot find name 'countries'.
+app/dashboard/settings/management/goods/ui-client.tsx(626,29): error TS7006: Parameter 'c' implicitly has an 'any' type.
+app/dashboard/settings/management/taxes/ui-client.tsx(36,16): error TS2345: Argument of type '{}' is not assignable to parameter of type 'SetStateAction<TaxCodeRow[]>'.
+check-superadmins.ts(2,20): error TS2307: Cannot find module 'dotenv' or its corresponding type declarations.
+check_roznamcha.ts(2,20): error TS2307: Cannot find module 'dotenv' or its corresponding type declarations.
+components/purchase-booking-view-redesign.tsx(381,32): error TS2741: Property 'defaultView' is missing in type '{ branchDetails: KVRow[]; billDetails: KVRow[]; purchaseAccount: KVRow[]; salesAccount: KVRow[]; goods: GoodsRow[]; paymentSchedule: PaymentRow[]; }' but required in type 'Required<Omit<PurchaseBookingViewRedesignProps, "chrome">>'.
+components/reports/builder/custom-report-builder.tsx(50,40): error TS2345: Argument of type '{ from: string; to: string; preset?: string | undefined; }' is not assignable to parameter of type 'SetStateAction<{ from: string; to: string; preset: string; }>'.
+  Type '{ from: string; to: string; preset?: string | undefined; }' is not assignable to type '{ from: string; to: string; preset: string; }'.
+    Types of property 'preset' are incompatible.
+      Type 'string | undefined' is not assignable to type 'string'.
+        Type 'undefined' is not assignable to type 'string'.
+components/ui/master-location-select.tsx(4,33): error TS2724: '"@/components/ui/searchable-select"' has no exported member named 'SearchableSelectOption'. Did you mean 'SearchableSelect'?
+components/ui/master-location-select.tsx(80,7): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+components/ui/master-location-select.tsx(81,7): error TS2322: Type '(selectedVal: any, selectedOption: any) => void' is not assignable to type '(value: string) => void'.
+  Target signature provides too few arguments. Expected 2 or more, but got 1.
+components/ui/master-location-select.tsx(81,18): error TS7006: Parameter 'selectedVal' implicitly has an 'any' type.
+components/ui/master-location-select.tsx(81,31): error TS7006: Parameter 'selectedOption' implicitly has an 'any' type.
+features/accounts/components/account-general-report-view.tsx(697,15): error TS2339: Property 'cityBranchId' does not exist on type 'AccountGeneralReportRow'.
+features/accounts/components/account-general-report-view.tsx(697,58): error TS2339: Property 'cityBranchId' does not exist on type 'AccountGeneralReportRow'.
+features/accounts/components/account-general-report-view.tsx(698,15): error TS2339: Property 'countryBranchId' does not exist on type 'AccountGeneralReportRow'.
+features/accounts/components/account-general-report-view.tsx(698,64): error TS2339: Property 'countryBranchId' does not exist on type 'AccountGeneralReportRow'.
+features/accounts/components/account-general-report-view.tsx(1342,41): error TS2339: Property 'user' does not exist on type 'SessionInfo'.
+features/accounts/components/account-profile-view.tsx(553,102): error TS2339: Property 'customerId' does not exist on type 'AccountGeneralReportRow'.
+features/accounts/components/account-profile-view.tsx(575,80): error TS2339: Property 'customerId' does not exist on type 'AccountGeneralReportRow'.
+features/accounts/components/account-profile-view.tsx(608,59): error TS2551: Property 'customerName' does not exist on type 'AccountGeneralReportRow'. Did you mean 'customerNumber'?
+features/accounts/components/account-profile-view.tsx(648,76): error TS2551: Property 'customerName' does not exist on type 'AccountGeneralReportRow'. Did you mean 'customerNumber'?
+features/accounts/components/account-profile-view.tsx(654,19): error TS2322: Type 'string | Element' is not assignable to type 'string | null | undefined'.
+  Type 'Element' is not assignable to type 'string'.
+features/accounts/components/account-profile-view.tsx(655,33): error TS2339: Property 'companyId' does not exist on type 'AccountGeneralReportRow'.
+features/accounts/components/account-profile-view.tsx(657,25): error TS2322: Type '"link"' is not assignable to type '"secondary" | "destructive" | "default" | "outline" | "ghost" | null | undefined'.
+features/accounts/components/account-profile-view.tsx(659,111): error TS2339: Property 'companyId' does not exist on type 'AccountGeneralReportRow'.
+features/accounts/components/account-profile-view.tsx(668,19): error TS2322: Type 'string | Element' is not assignable to type 'string | null | undefined'.
+  Type 'Element' is not assignable to type 'string'.
+features/accounts/components/account-profile-view.tsx(669,33): error TS2339: Property 'bankId' does not exist on type 'AccountGeneralReportRow'.
+features/accounts/components/account-profile-view.tsx(671,25): error TS2322: Type '"link"' is not assignable to type '"secondary" | "destructive" | "default" | "outline" | "ghost" | null | undefined'.
+features/accounts/components/account-profile-view.tsx(673,111): error TS2339: Property 'bankId' does not exist on type 'AccountGeneralReportRow'.
+features/accounts/components/new-account-setup.tsx(1001,53): error TS2552: Cannot find name 'branches'. Did you mean 'branch'?
+features/accounts/components/new-account-setup.tsx(1001,75): error TS2552: Cannot find name 'branches'. Did you mean 'branch'?
+features/accounts/components/new-account-setup.tsx(1015,34): error TS2345: Argument of type 'null' is not assignable to parameter of type 'SetStateAction<string>'.
+features/accounts/components/translations.ts(633,3): error TS1117: An object literal cannot have multiple properties with the same name.
+features/branch-management/services/hierarchy-service.ts(3,30): error TS2307: Cannot find module 'uuid' or its corresponding type declarations.
+features/branch-management/services/hierarchy-service.ts(61,7): error TS2322: Type '"super_admin" | "country_admin" | "country_user" | "main_branch_admin" | "city_branch_admin" | "accountant" | "cashier" | "agent_user" | "staff_user" | "auditor_viewer"' is not assignable to type '"super_admin" | "country_admin" | "country_user" | "main_branch_admin" | "city_branch_admin" | "accountant" | "cashier" | "agent_user" | "auditor_viewer" | "branch_admin" | "staff"'.
+  Type '"staff_user"' is not assignable to type '"super_admin" | "country_admin" | "country_user" | "main_branch_admin" | "city_branch_admin" | "accountant" | "cashier" | "agent_user" | "auditor_viewer" | "branch_admin" | "staff"'.
+features/branch-management/services/hierarchy-service.ts(80,15): error TS2345: Argument of type '{ name: string; iso2: string; currency_code: string; is_active: true; }' is not assignable to parameter of type 'RejectExcessProperties<{ admin_email: string; created_at?: string | undefined; currency_code: string; default_company_profile_id?: string | null | undefined; default_country_branch_id?: string | null | undefined; ... 14 more ...; whatsapp_number?: string | ... 1 more ... | undefined; }, { ...; }> | RejectExcessPrope...'.
+  Type '{ name: string; iso2: string; currency_code: string; is_active: true; }' is not assignable to type 'RejectExcessProperties<{ admin_email: string; created_at?: string | undefined; currency_code: string; default_company_profile_id?: string | null | undefined; default_country_branch_id?: string | null | undefined; ... 14 more ...; whatsapp_number?: string | ... 1 more ... | undefined; }, { ...; }>'.
+    Type '{ name: string; iso2: string; currency_code: string; is_active: true; }' is missing the following properties from type '{ admin_email: string; created_at?: string | undefined; currency_code: string; default_company_profile_id?: string | null | undefined; default_country_branch_id?: string | null | undefined; ... 14 more ...; whatsapp_number?: string | ... 1 more ... | undefined; }': admin_email, official_email
+features/branch-management/services/hierarchy-service.ts(108,15): error TS2345: Argument of type '{ country_id: string; name: string; code: string; local_currency: string; is_main: false; }' is not assignable to parameter of type 'RejectExcessProperties<{ address?: string | null | undefined; branding_address?: string | null | undefined; branding_company_name?: string | null | undefined; branding_email?: string | null | undefined; ... 28 more ...; whatsapp_number?: string | ... 1 more ... | undefined; }, { ...; }> | RejectExcessProperties<...>[]'.
+  Type '{ country_id: string; name: string; code: string; local_currency: string; is_main: false; }' is not assignable to type 'RejectExcessProperties<{ address?: string | null | undefined; branding_address?: string | null | undefined; branding_company_name?: string | null | undefined; branding_email?: string | null | undefined; ... 28 more ...; whatsapp_number?: string | ... 1 more ... | undefined; }, { ...; }>'.
+    Property 'email' is missing in type '{ country_id: string; name: string; code: string; local_currency: string; is_main: false; }' but required in type '{ address?: string | null | undefined; branding_address?: string | null | undefined; branding_company_name?: string | null | undefined; branding_email?: string | null | undefined; ... 28 more ...; whatsapp_number?: string | ... 1 more ... | undefined; }'.
+features/branch-management/services/hierarchy-service.ts(136,15): error TS2345: Argument of type '{ country_id: string; country_branch_id: string; city_name: string; name: string; code: string; local_currency: string; }' is not assignable to parameter of type 'RejectExcessProperties<{ address?: string | null | undefined; area_location_id?: string | null | undefined; branding_address?: string | null | undefined; branding_company_name?: string | null | undefined; ... 30 more ...; whatsapp_number?: string | ... 1 more ... | undefined; }, { ...; }> | RejectExcessProperties<.....'.
+  Type '{ country_id: string; country_branch_id: string; city_name: string; name: string; code: string; local_currency: string; }' is not assignable to type 'RejectExcessProperties<{ address?: string | null | undefined; area_location_id?: string | null | undefined; branding_address?: string | null | undefined; branding_company_name?: string | null | undefined; ... 30 more ...; whatsapp_number?: string | ... 1 more ... | undefined; }, { ...; }>'.
+    Property 'email' is missing in type '{ country_id: string; country_branch_id: string; city_name: string; name: string; code: string; local_currency: string; }' but required in type '{ address?: string | null | undefined; area_location_id?: string | null | undefined; branding_address?: string | null | undefined; branding_company_name?: string | null | undefined; ... 30 more ...; whatsapp_number?: string | ... 1 more ... | undefined; }'.
+features/branches/components/branch-live-report-panel.tsx(328,147): error TS2339: Property 'phone' does not exist on type 'BranchReportData'.
+features/branches/components/branch-live-report-panel.tsx(332,147): error TS2339: Property 'email' does not exist on type 'BranchReportData'.
+features/branches/components/branch-live-report-panel.tsx(401,147): error TS2339: Property 'ownerCountry' does not exist on type 'BranchReportData'.
+features/branches/components/city-branch-registration-wizard.tsx(462,15): error TS2322: Type '"city_branch"' is not assignable to type 'PermissionLevel'.
+features/branches/components/super-admin-branch-setup.tsx(514,45): error TS2339: Property 'address' does not exist on type 'CompanyDetailRow'.
+features/branches/components/super-admin-branch-setup.tsx(594,23): error TS2339: Property 'district_id' does not exist on type 'DbSuperAdminBranchRow'.
+features/companies/components/company-incorporation-form.tsx(331,7): error TS2304: Cannot find name 'apiGet'.
+features/companies/components/company-incorporation-form.tsx(332,16): error TS7006: Parameter 'res' implicitly has an 'any' type.
+features/companies/components/company-incorporation-form.tsx(372,17): error TS7006: Parameter 'err' implicitly has an 'any' type.
+features/companies/components/company-incorporation-form.tsx(507,15): error TS2304: Cannot find name 'apiPatch'.
+features/companies/components/company-incorporation-form.tsx(525,11): error TS2353: Object literal may only specify known properties, and 'area' does not exist in type 'CompanyIncorporationData & { id: string; }'.
+features/companies/components/company-incorporation-form.tsx(565,11): error TS2353: Object literal may only specify known properties, and 'area' does not exist in type 'CompanyIncorporationData & { id: string; }'.
+features/companies/components/company-incorporation-form.tsx(586,33): error TS2304: Cannot find name 'apiGet'.
+features/companies/components/company-incorporation-form.tsx(587,50): error TS7006: Parameter 'c' implicitly has an 'any' type.
+features/companies/components/company-incorporation-form.tsx(688,99): error TS2304: Cannot find name 'setSelectedCompanyId'.
+features/companies/components/company-incorporation-form.tsx(692,103): error TS2304: Cannot find name 'setSelectedCompanyId'.
+features/companies/components/company-incorporation-form.tsx(696,105): error TS2304: Cannot find name 'setSelectedCompanyId'.
+features/companies/components/company-incorporation-form.tsx(710,17): error TS2304: Cannot find name 'setSelectedCompanyId'.
+features/companies/components/company-incorporation-form.tsx(724,93): error TS2304: Cannot find name 'setSelectedCompanyId'.
+features/companies/components/company-incorporation-form.tsx(737,75): error TS2304: Cannot find name 'setSelectedCompanyId'.
+features/companies/components/company-incorporation-form.tsx(738,62): error TS2304: Cannot find name 'setSelectedCompanyId'.
+features/companies/components/company-incorporation-form.tsx(739,50): error TS2304: Cannot find name 'setSelectedCompanyId'.
+features/companies/components/company-incorporation-form.tsx(748,80): error TS2304: Cannot find name 'setSelectedCompanyId'.
+features/companies/components/company-incorporation-form.tsx(749,67): error TS2304: Cannot find name 'setSelectedCompanyId'.
+features/companies/components/company-incorporation-form.tsx(750,55): error TS2304: Cannot find name 'setSelectedCompanyId'.
+features/companies/components/company-incorporation-form.tsx(759,75): error TS2304: Cannot find name 'setSelectedCompanyId'.
+features/companies/components/company-incorporation-form.tsx(760,62): error TS2304: Cannot find name 'setSelectedCompanyId'.
+features/companies/components/company-incorporation-form.tsx(761,50): error TS2304: Cannot find name 'setSelectedCompanyId'.
+features/companies/components/company-incorporation-form.tsx(947,36): error TS2304: Cannot find name 'setSelectedCompanyId'.
+features/customers/components/customers-management.tsx(38,68): error TS2345: Argument of type '{ countryId: string; stateProvinceId: string; cityId: string; areaId: string; }' is not assignable to parameter of type 'LocationHierarchyValue | (() => LocationHierarchyValue)'.
+  Property 'districtId' is missing in type '{ countryId: string; stateProvinceId: string; cityId: string; areaId: string; }' but required in type 'LocationHierarchyValue'.
+features/customers/components/customers-management.tsx(44,75): error TS2345: Argument of type '{ country: null; state: null; city: null; area: null; }' is not assignable to parameter of type 'LocationHierarchyMeta | (() => LocationHierarchyMeta)'.
+  Property 'district' is missing in type '{ country: null; state: null; city: null; area: null; }' but required in type 'LocationHierarchyMeta'.
+features/hr-payroll/components/employee-form.tsx(198,23): error TS2339: Property 'country_branch_id' does not exist on type 'BranchOption'.
+features/hr-payroll/components/employee-form.tsx(198,55): error TS2339: Property 'country_branch_id' does not exist on type 'BranchOption'.
+features/hr-payroll/components/employee-form.tsx(199,39): error TS2339: Property 'country_branch_id' does not exist on type 'BranchOption'.
+features/hr-payroll/components/employee-management-view.tsx(417,13): error TS2322: Type '{ employee: any; onClose: () => void; }' is not assignable to type 'IntrinsicAttributes & EmployeeLedgerPanelProps'.
+  Property 'employee' does not exist on type 'IntrinsicAttributes & EmployeeLedgerPanelProps'. Did you mean 'employeeId'?
+features/journal/components/payment-edit-modal.tsx(10,43): error TS2307: Cannot find module '@/lib/utils/format' or its corresponding type declarations.
+features/journal/components/payment-edit-modal.tsx(185,71): error TS2322: Type '{ options: { value: any; label: string; }[]; value: string; onChange: Dispatch<SetStateAction<string>>; placeholder: string; }' is not assignable to type 'IntrinsicAttributes & { label?: string | undefined; value: string; placeholder?: string | undefined; options: SearchSelectOption[]; disabled?: boolean | undefined; ... 7 more ...; className?: string | undefined; }'.
+  Property 'onChange' does not exist on type 'IntrinsicAttributes & { label?: string | undefined; value: string; placeholder?: string | undefined; options: SearchSelectOption[]; disabled?: boolean | undefined; ... 7 more ...; className?: string | undefined; }'.
+features/journal/components/payment-edit-modal.tsx(190,72): error TS2322: Type '{ options: { value: any; label: string; }[]; value: string; onChange: Dispatch<SetStateAction<string>>; placeholder: string; }' is not assignable to type 'IntrinsicAttributes & { label?: string | undefined; value: string; placeholder?: string | undefined; options: SearchSelectOption[]; disabled?: boolean | undefined; ... 7 more ...; className?: string | undefined; }'.
+  Property 'onChange' does not exist on type 'IntrinsicAttributes & { label?: string | undefined; value: string; placeholder?: string | undefined; options: SearchSelectOption[]; disabled?: boolean | undefined; ... 7 more ...; className?: string | undefined; }'.
+features/journal/components/sales-order-payment-journal.tsx(238,137): error TS2554: Expected 2 arguments, but got 3.
+features/locations/components/location-hierarchy-select.tsx(175,66): error TS18048: 'value.areaId' is possibly 'undefined'.
+features/locations/components/location-management-wizard.tsx(1935,23): error TS2304: Cannot find name 'handleCsvDrop'.
+features/locations/components/location-management-wizard.tsx(1941,58): error TS2304: Cannot find name 'handleCsvSelect'.
+features/locations/components/location-management-wizard.tsx(1958,26): error TS2304: Cannot find name 'executeBulkImport'.
+features/messages/components/email-management.tsx(393,35): error TS2339: Property 'countryId' does not exist on type 'EmailMessage'.
+features/messages/components/email-management.tsx(401,17): error TS2339: Property 'countryId' does not exist on type 'EmailMessage'.
+features/messages/components/email-management.tsx(419,35): error TS2339: Property 'countryId' does not exist on type 'EmailMessage'.
+features/messages/components/email-management.tsx(427,17): error TS2339: Property 'countryId' does not exist on type 'EmailMessage'.
+features/messages/components/email-management.tsx(445,35): error TS2339: Property 'countryId' does not exist on type 'EmailMessage'.
+features/messages/components/email-management.tsx(453,17): error TS2339: Property 'countryId' does not exist on type 'EmailMessage'.
+features/messages/components/email-management.tsx(853,49): error TS2345: Argument of type '"dashboard"' is not assignable to parameter of type 'EmailFolder'.
+features/messages/components/email-management.tsx(856,19): error TS2367: This comparison appears to be unintentional because the types 'EmailFolder' and '"dashboard"' have no overlap.
+features/messages/components/email-management.tsx(891,10): error TS2367: This comparison appears to be unintentional because the types 'EmailFolder' and '"dashboard"' have no overlap.
+features/messages/components/email-management.tsx(1102,24): error TS2367: This comparison appears to be unintentional because the types '"draft" | "received" | "sent"' and '"failed"' have no overlap.
+features/messages/components/email-management.tsx(1246,32): error TS2339: Property 'countries' does not exist on type 'EmailReportResponse'.
+features/messages/components/email-management.tsx(1265,32): error TS2339: Property 'cityBranches' does not exist on type 'EmailReportResponse'.
+features/messages/components/email-management.tsx(1511,19): error TS2322: Type '{ label: string; value: string; onChange: Dispatch<SetStateAction<string>>; placeholder: string; className: string; }' is not assignable to type 'IntrinsicAttributes & { label: string; value: string; onChange: (value: string) => void; placeholder?: string | undefined; }'.
+  Property 'className' does not exist on type 'IntrinsicAttributes & { label: string; value: string; onChange: (value: string) => void; placeholder?: string | undefined; }'.
+features/purchases/components/completed-purchase-bills-view.tsx(603,11): error TS2322: Type '{ children: Element; isOpen: boolean; onClose: () => void; title: string; maxWidth: string; }' is not assignable to type 'IntrinsicAttributes & { title: string; children: ReactNode; onClose: () => void; className?: string | undefined; }'.
+  Property 'isOpen' does not exist on type 'IntrinsicAttributes & { title: string; children: ReactNode; onClose: () => void; className?: string | undefined; }'.
+features/purchases/components/local-purchase-journal-report-view.tsx(149,18): error TS2339: Property 'status' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(149,43): error TS2339: Property 'status' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(149,71): error TS2339: Property 'status' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(182,44): error TS2339: Property 'status' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(182,70): error TS2339: Property 'status' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(187,44): error TS2339: Property 'status' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(336,51): error TS2322: Type '{ children: (string | Element)[]; className: string; compressHydrationWarning: true; }' is not assignable to type 'DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>'.
+  Property 'compressHydrationWarning' does not exist on type 'DetailedHTMLProps<HTMLAttributes<HTMLDivElement>, HTMLDivElement>'. Did you mean 'suppressHydrationWarning'?
+features/purchases/components/local-purchase-journal-report-view.tsx(624,40): error TS2339: Property 'status' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(697,68): error TS2339: Property 'taxPercentage' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(697,107): error TS2339: Property 'tax_percentage' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(703,127): error TS2339: Property 'journal_serial_no' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(710,60): error TS2339: Property 'supplierName' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(710,98): error TS2339: Property 'supplier_name' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(712,60): error TS2339: Property 'shippingMode' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(712,98): error TS2339: Property 'shipping_mode' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(716,56): error TS2339: Property 'size' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(749,94): error TS2339: Property 'warehouseName' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(749,133): error TS2339: Property 'warehouse_name' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(750,119): error TS2339: Property 'truckNo' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(750,152): error TS2339: Property 'truck_no' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(756,147): error TS2339: Property 'status' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(870,99): error TS2339: Property 'supplierName' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(870,137): error TS2339: Property 'supplier_name' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(876,88): error TS2339: Property 'remainingBalance' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(876,130): error TS2339: Property 'remaining_balance' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(882,128): error TS2339: Property 'shippingMode' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(882,166): error TS2339: Property 'shipping_mode' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(883,133): error TS2339: Property 'warehouseName' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(883,172): error TS2339: Property 'warehouse_name' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(884,158): error TS2339: Property 'truckNo' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(884,191): error TS2339: Property 'truck_no' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(909,55): error TS2339: Property 'applyTax' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(909,99): error TS2339: Property 'apply_tax' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(911,63): error TS2339: Property 'taxType' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(911,96): error TS2339: Property 'tax_type' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(911,139): error TS2339: Property 'taxPercentage' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-journal-report-view.tsx(911,178): error TS2339: Property 'tax_percentage' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/local-purchase-transfer-payment-view.tsx(525,127): error TS2339: Property 'journal_serial_no' does not exist on type 'LocalPurchaseRecord'.
+features/purchases/components/purchase-booking-journal-report-view.tsx(724,40): error TS2304: Cannot find name 'CheckCircle'.
+features/purchases/components/purchase-booking-journal-report-view.tsx(2463,86): error TS2551: Property 'purchaseContractNumber' does not exist on type '{ computedCountrySerial: string; computedBranchSerial: string; id: string; purchaseBookingOrderNumber: string; purchaseDate: string; bookingDate: string; purchaseAccountName: string; purchaseAccountNumber: string; ... 43 more ...; audit: { ...; }; }'. Did you mean 'purchaseContractNo'?
+features/purchases/components/purchase-booking-journal-report-view.tsx(2545,86): error TS2551: Property 'purchaseContractNumber' does not exist on type '{ computedCountrySerial: string; computedBranchSerial: string; id: string; purchaseBookingOrderNumber: string; purchaseDate: string; bookingDate: string; purchaseAccountName: string; purchaseAccountNumber: string; ... 43 more ...; audit: { ...; }; }'. Did you mean 'purchaseContractNo'?
+features/purchases/components/purchase-booking-journal-report-view.tsx(2792,82): error TS2551: Property 'purchaseContractNumber' does not exist on type '{ computedCountrySerial: string; computedBranchSerial: string; id: string; purchaseBookingOrderNumber: string; purchaseDate: string; bookingDate: string; purchaseAccountName: string; purchaseAccountNumber: string; ... 43 more ...; audit: { ...; }; }'. Did you mean 'purchaseContractNo'?
+features/purchases/components/purchase-booking-order-page-wrapper.tsx(115,41): error TS2322: Type '{ lang: "en" | "ar" | "ur" | "fa" | "ps"; }' is not assignable to type 'IntrinsicAttributes & { onNewBooking?: (() => void) | undefined; refreshKey?: number | undefined; highlightPurchaseOrderNo?: string | undefined; }'.
+  Property 'lang' does not exist on type 'IntrinsicAttributes & { onNewBooking?: (() => void) | undefined; refreshKey?: number | undefined; highlightPurchaseOrderNo?: string | undefined; }'.
+features/purchases/components/purchase-loading-record-details-view.tsx(121,8): error TS2322: Type '{ children: Element[]; backLink: string; title: string; subtitle: string; }' is not assignable to type 'IntrinsicAttributes'.
+  Property 'children' does not exist on type 'IntrinsicAttributes'.
+features/purchases/components/purchase-loading-records-view.tsx(51,89): error TS2339: Property 'loadedQuantity' does not exist on type 'LoadingRecord'.
+features/purchases/components/purchase-loading-records-view.tsx(509,61): error TS2339: Property 'id' does not exist on type '{ name?: string | null | undefined; iso2?: string | null | undefined; currency?: string | null | undefined; }'.
+features/purchases/components/purchase-loading-records-view.tsx(518,78): error TS2339: Property 'id' does not exist on type '{ name?: string | null | undefined; code?: string | null | undefined; }'.
+features/purchases/components/purchase-loading-records-view.tsx(536,68): error TS2339: Property 'id' does not exist on type '{ name?: string | null | undefined; iso2?: string | null | undefined; currency?: string | null | undefined; }'.
+features/purchases/components/purchase-loading-records-view.tsx(536,97): error TS2339: Property 'id' does not exist on type '{ name?: string | null | undefined; code?: string | null | undefined; }'.
+features/purchases/components/purchase-loading-records-view.tsx(559,68): error TS2339: Property 'loadedContainers' does not exist on type 'LoadingRecord'.
+features/purchases/components/purchase-loading-records-view.tsx(567,72): error TS2339: Property 'loadedQuantity' does not exist on type 'LoadingRecord'.
+features/purchases/components/purchase-loading-records-view.tsx(584,5): error TS2304: Cannot find name 'setPricingCurrency'.
+features/purchases/components/purchase-loading-records-view.tsx(623,62): error TS2339: Property 'loadedQuantity' does not exist on type 'LoadingRecord'.
+features/purchases/components/purchase-loading-records-view.tsx(639,109): error TS2339: Property 'loadedQuantity' does not exist on type 'LoadingRecord'.
+features/purchases/components/purchase-loading-records-view.tsx(777,55): error TS18004: No value exists in scope for the shorthand property 'pricingCurrency'. Either declare one or provide an initializer.
+features/purchases/components/purchase-loading-records-view.tsx(825,9): error TS2304: Cannot find name 'setPricingCurrency'.
+features/purchases/components/purchase-loading-records-view.tsx(829,7): error TS2304: Cannot find name 'setPricingCurrency'.
+features/purchases/components/purchase-loading-records-view.tsx(876,16): error TS2304: Cannot find name 'setPricingCurrency'.
+features/purchases/components/purchase-loading-records-view.tsx(885,12): error TS2304: Cannot find name 'ViewportActionMenu'.
+features/purchases/components/purchase-loading-records-view.tsx(890,15): error TS7006: Parameter 'close' implicitly has an 'any' type.
+features/purchases/components/purchase-loading-records-view.tsx(906,13): error TS2304: Cannot find name 'ViewportActionMenu'.
+features/purchases/components/purchase-loading-records-view.tsx(1263,43): error TS2304: Cannot find name 'pricingCurrency'.
+features/purchases/components/purchase-loading-records-view.tsx(1263,77): error TS2304: Cannot find name 'setPricingCurrency'.
+features/purchases/components/purchase-loading-records-view.tsx(1708,125): error TS2339: Property 'loadedQuantity' does not exist on type 'LoadingRecord'.
+features/purchases/components/purchase-loading-records-view.tsx(1710,131): error TS2339: Property 'loadedQuantity' does not exist on type 'LoadingRecord'.
+features/purchases/components/purchase-loading-records-view.tsx(1786,133): error TS2339: Property 'loadedQuantity' does not exist on type 'LoadingRecord'.
+features/purchases/components/purchase-loading-records-view.tsx(1795,138): error TS2339: Property 'loadedQuantity' does not exist on type 'LoadingRecord'.
+features/purchases/components/purchase-loading-records-view.tsx(1911,84): error TS2339: Property 'loadedQuantity' does not exist on type 'LoadingRecord'.
+features/purchases/components/purchase-loading-records-view.tsx(2057,91): error TS2339: Property 'loadedQuantity' does not exist on type 'LoadingRecord'.
+features/purchases/components/purchase-loading-records-view.tsx(2099,162): error TS2339: Property 'loadedQuantity' does not exist on type 'LoadingRecord'.
+features/purchases/components/purchase-loading-records-view.tsx(2142,19): error TS2304: Cannot find name 'LoadingStatus'.
+features/purchases/components/purchase-loading-records-view.tsx(2193,36): error TS2304: Cannot find name 'LoadingStatus'.
+features/purchases/components/purchase-loading-records-view.tsx(2202,33): error TS2304: Cannot find name 'LoadingStatus'.
+features/purchases/components/purchase-loading-records-view.tsx(2237,48): error TS2304: Cannot find name 'LoadingStatus'.
+features/purchases/components/purchase-loading-records-view.tsx(2289,70): error TS2339: Property 'loadedQuantity' does not exist on type 'LoadingRecord'.
+features/purchases/components/purchase-loading-records-view.tsx(2567,71): error TS2339: Property 'currency_code' does not exist on type 'LoadingRecord'.
+features/purchases/components/purchase-loading-records-view.tsx(2587,119): error TS2339: Property 'loadedQuantity' does not exist on type 'LoadingRecord'.
+features/purchases/components/purchase-loading-records-view.tsx(2725,57): error TS2304: Cannot find name 'LoadingStatus'.
+features/purchases/components/purchase-loading-records-view.tsx(3093,61): error TS2322: Type '"slate"' is not assignable to type '"green" | "blue" | "amber" | undefined'.
+features/purchases/components/purchase-loading-records-view.tsx(3385,70): error TS2304: Cannot find name 'handleInitiateTransfer'.
+features/purchases/components/purchase-loading-records-view.tsx(3448,43): error TS2304: Cannot find name 'LoadingStatus'.
+features/purchases/components/purchase-module-workspace.tsx(469,114): error TS2339: Property 'super_admin_serial_number' does not exist on type 'PurchaseOrderRow'.
+features/purchases/components/purchase-module-workspace.tsx(470,116): error TS2339: Property 'country_transaction_serial_number' does not exist on type 'PurchaseOrderRow'.
+features/purchases/components/purchase-module-workspace.tsx(471,112): error TS2339: Property 'branch_transaction_serial_number' does not exist on type 'PurchaseOrderRow'.
+features/purchases/components/purchase-order-management-dashboard.tsx(2129,13): error TS2339: Property 'manualBillNumber' does not exist on type 'PurchaseReport'.
+features/purchases/components/purchase-order-management-dashboard.tsx(2144,13): error TS2339: Property 'createdByName' does not exist on type 'PurchaseReport'.
+features/purchases/components/purchase-order-management-dashboard.tsx(2150,43): error TS2339: Property 'containerNo' does not exist on type '{ containerNumber: string; sealNumber: string; size: string; loadingDate: string; departureDate: string; arrivalDate: string; location: string; status: string; }'.
+features/purchases/components/purchase-order-management-dashboard.tsx(2155,74): error TS2339: Property 'cityBranchId' does not exist on type 'PurchaseReport'.
+features/purchases/components/purchase-order-management-dashboard.tsx(3132,46): error TS2339: Property 'finalCurrency' does not exist on type 'PurchaseReport'.
+features/purchases/components/purchase-order-management-dashboard.tsx(3132,72): error TS2339: Property 'payment_currency' does not exist on type 'PurchaseReport'.
+features/purchases/components/purchase-order-management-dashboard.tsx(3134,68): error TS2339: Property 'purchase_currency' does not exist on type 'PurchaseReport'.
+features/purchases/components/purchase-order-management-dashboard.tsx(3497,202): error TS2339: Property 'superAdminSerialNo' does not exist on type 'PurchaseReport'.
+features/purchases/components/purchase-order-management-dashboard.tsx(3497,233): error TS2339: Property 'super_admin_serial_number' does not exist on type 'PurchaseReport'.
+features/purchases/components/purchase-order-management-dashboard.tsx(3498,198): error TS2339: Property 'computedCountrySerial' does not exist on type 'PurchaseReport'.
+features/purchases/components/purchase-order-management-dashboard.tsx(3498,232): error TS2339: Property 'country_transaction_serial_number' does not exist on type 'PurchaseReport'.
+features/purchases/components/purchase-order-management-dashboard.tsx(3499,197): error TS2339: Property 'computedBranchSerial' does not exist on type 'PurchaseReport'.
+features/purchases/components/purchase-order-management-dashboard.tsx(3499,230): error TS2339: Property 'branch_transaction_serial_number' does not exist on type 'PurchaseReport'.
+features/reports/journal-report/astra-journal-report-view.tsx(765,26): error TS2367: This comparison appears to be unintentional because the types '"city" | "construction"' and '"country"' have no overlap.
+features/reports/ledger-report/components/ledger-general-report-view.tsx(265,33): error TS2339: Property 'scopes' does not exist on type 'SessionInfo'.
+features/reports/ledger-report/components/ledger-general-report-view.tsx(1018,78): error TS2322: Type '{ children: string; className: string; colSpan: number; }' is not assignable to type 'IntrinsicAttributes & { children: ReactNode; className?: string | undefined; onClick?: ((e: MouseEvent<Element, MouseEvent>) => void) | undefined; }'.
+  Property 'colSpan' does not exist on type 'IntrinsicAttributes & { children: ReactNode; className?: string | undefined; onClick?: ((e: MouseEvent<Element, MouseEvent>) => void) | undefined; }'.
+features/reports/ledger-report/components/ledger-report-view.tsx(175,33): error TS2339: Property 'scopes' does not exist on type 'SessionInfo'.
+features/reports/ledger-report/components/ledger-report-view.tsx(857,59): error TS5076: '??' and '||' operations cannot be mixed without parentheses.
+features/reports/ledger-report/components/ledger-report-view.tsx(864,30): error TS5076: '??' and '||' operations cannot be mixed without parentheses.
+features/reports/ledger-report/components/ledger-report-view.tsx(932,23): error TS2322: Type 'string | null' is not assignable to type 'string'.
+  Type 'null' is not assignable to type 'string'.
+features/return-sms-reply/components/unified-inbox-view.tsx(717,25): error TS2353: Object literal may only specify known properties, and 'adminNumber' does not exist in type 'SetStateAction<{ officialNumber: string | null; accountName: string | null; wbaId: string | null; phoneNumberId: string | null; webhookUrl: string; isConnected: boolean; }>'.
+features/return-sms-reply/components/unified-inbox-view.tsx(724,25): error TS2353: Object literal may only specify known properties, and 'adminNumber' does not exist in type 'SetStateAction<{ officialNumber: string | null; accountName: string | null; wbaId: string | null; phoneNumberId: string | null; webhookUrl: string; isConnected: boolean; }>'.
+features/return-sms-reply/components/unified-inbox-view.tsx(731,25): error TS2353: Object literal may only specify known properties, and 'adminNumber' does not exist in type 'SetStateAction<{ officialNumber: string | null; accountName: string | null; wbaId: string | null; phoneNumberId: string | null; webhookUrl: string; isConnected: boolean; }>'.
+features/return-sms-reply/components/unified-inbox-view.tsx(738,25): error TS2353: Object literal may only specify known properties, and 'adminNumber' does not exist in type 'SetStateAction<{ officialNumber: string | null; accountName: string | null; wbaId: string | null; phoneNumberId: string | null; webhookUrl: string; isConnected: boolean; }>'.
+features/return-sms-reply/components/unified-inbox-view.tsx(768,21): error TS2322: Type 'string | null' is not assignable to type 'string | number | readonly string[] | undefined'.
+  Type 'null' is not assignable to type 'string | number | readonly string[] | undefined'.
+features/return-sms-reply/components/unified-inbox-view.tsx(777,43): error TS2339: Property 'adminNumber' does not exist on type '{ officialNumber: string | null; accountName: string | null; wbaId: string | null; phoneNumberId: string | null; webhookUrl: string; isConnected: boolean; }'.
+features/return-sms-reply/components/unified-inbox-view.tsx(778,77): error TS2353: Object literal may only specify known properties, and 'adminNumber' does not exist in type 'SetStateAction<{ officialNumber: string | null; accountName: string | null; wbaId: string | null; phoneNumberId: string | null; webhookUrl: string; isConnected: boolean; }>'.
+features/return-sms-reply/components/unified-inbox-view.tsx(789,21): error TS2322: Type 'string | null' is not assignable to type 'string | number | readonly string[] | undefined'.
+  Type 'null' is not assignable to type 'string | number | readonly string[] | undefined'.
+features/return-sms-reply/components/unified-inbox-view.tsx(798,21): error TS2322: Type 'string | null' is not assignable to type 'string | number | readonly string[] | undefined'.
+  Type 'null' is not assignable to type 'string | number | readonly string[] | undefined'.
+features/return-sms-reply/components/unified-inbox-view.tsx(848,9): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+features/roznamcha/components/expenses-bill-entry-form.tsx(540,34): error TS2339: Property 'scopes' does not exist on type 'SessionInfo'.
+features/roznamcha/components/expenses-bill-entry-form.tsx(557,37): error TS2339: Property 'scopes' does not exist on type 'SessionInfo'.
+features/roznamcha/components/expenses-bill-entry-form.tsx(581,37): error TS2339: Property 'scopes' does not exist on type 'SessionInfo'.
+features/roznamcha/components/expenses-bill-entry-form.tsx(585,57): error TS2339: Property 'scopes' does not exist on type 'SessionInfo'.
+features/roznamcha/components/expenses-bill-entry-form.tsx(686,7): error TS2322: Type 'number' is not assignable to type 'string'.
+features/roznamcha/components/expenses-bill-entry-form.tsx(1350,81): error TS2339: Property 'toFixed' does not exist on type 'number | ""'.
+  Property 'toFixed' does not exist on type '""'.
+features/roznamcha/components/expenses-bill-entry-form.tsx(1354,69): error TS2365: Operator '>' cannot be applied to types 'string | number' and 'number'.
+features/roznamcha/components/expenses-bill-entry-form.tsx(1354,105): error TS2339: Property 'toFixed' does not exist on type 'number | ""'.
+  Property 'toFixed' does not exist on type '""'.
+features/roznamcha/components/roznamcha-report-view.tsx(394,72): error TS2339: Property 'debit_amount' does not exist on type 'RoznamchaLineRow'.
+features/roznamcha/components/roznamcha-report-view.tsx(395,72): error TS2339: Property 'credit_amount' does not exist on type 'RoznamchaLineRow'.
+features/roznamcha/components/roznamcha-report-view.tsx(401,32): error TS2551: Property 'account_no' does not exist on type 'RoznamchaLineRow'. Did you mean 'account_id'?
+features/roznamcha/components/roznamcha-report-view.tsx(401,56): error TS2339: Property 'ledger_no' does not exist on type 'RoznamchaLineRow'.
+features/roznamcha/components/roznamcha-report-view.tsx(402,34): error TS2551: Property 'account_name' does not exist on type 'RoznamchaLineRow'. Did you mean 'account_number'?
+features/roznamcha/components/roznamcha-report-view.tsx(402,60): error TS2339: Property 'ledger_name' does not exist on type 'RoznamchaLineRow'.
+features/roznamcha/components/roznamcha-report-view.tsx(403,29): error TS2551: Property 'account_name' does not exist on type 'RoznamchaLineRow'. Did you mean 'account_number'?
+features/roznamcha/components/roznamcha-report-view.tsx(405,36): error TS2339: Property 'currency_code' does not exist on type 'RoznamchaEntryRow'.
+features/roznamcha/components/roznamcha-report-view.tsx(406,32): error TS2339: Property 'narration' does not exist on type 'RoznamchaLineRow'.
+features/roznamcha/components/roznamcha-report-view.tsx(406,60): error TS2339: Property 'remarks' does not exist on type 'RoznamchaEntryRow'.
+features/roznamcha/components/super-admin-roznamcha-report-view.tsx(468,5): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+features/roznamcha/components/super-admin-roznamcha-report-view.tsx(469,5): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+features/roznamcha/components/super-admin-roznamcha-report-view.tsx(470,5): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+features/roznamcha/components/super-admin-roznamcha-report-view.tsx(551,5): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+features/roznamcha/components/super-admin-roznamcha-report-view.tsx(552,5): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+features/roznamcha/components/super-admin-roznamcha-report-view.tsx(553,5): error TS2322: Type 'string | null' is not assignable to type 'string | undefined'.
+  Type 'null' is not assignable to type 'string | undefined'.
+features/sales/components/sales-booking-journal-report-view.tsx(272,96): error TS2739: Type 'SalesReport' is missing the following properties from type 'SalesReportData': purchaseAccountName, purchaseAccountNumber, supplierName
+features/sales/components/sales-booking-journal-report-view.tsx(302,96): error TS2739: Type 'SalesReport' is missing the following properties from type 'SalesReportData': purchaseAccountName, purchaseAccountNumber, supplierName
+features/sales/components/sales-module-workspace.tsx(418,95): error TS2339: Property 'super_admin_serial_number' does not exist on type 'SalesOrderRow'.
+features/sales/components/sales-module-workspace.tsx(419,96): error TS2339: Property 'country_transaction_serial_number' does not exist on type 'SalesOrderRow'.
+features/sales/components/sales-module-workspace.tsx(420,94): error TS2339: Property 'branch_transaction_serial_number' does not exist on type 'SalesOrderRow'.
+features/sales/components/sales-module-workspace.tsx(427,166): error TS2339: Property 'exchangeRate' does not exist on type '(row: SalesOrderRow) => any'.
+features/sales/components/sales-order-management-dashboard.tsx(393,119): error TS2339: Property 'super_admin_serial_number' does not exist on type 'SalesOrder'.
+features/sales/components/sales-order-management-dashboard.tsx(394,119): error TS2339: Property 'country_transaction_serial_number' does not exist on type 'SalesOrder'.
+features/sales/components/sales-order-management-dashboard.tsx(395,119): error TS2339: Property 'branch_transaction_serial_number' does not exist on type 'SalesOrder'.
+features/sales/components/sales-order-management-dashboard.tsx(417,108): error TS2339: Property 'original_currency_code' does not exist on type 'SalesOrder'.
+features/users/components/admin-user-management-panel.tsx(359,19): error TS2353: Object literal may only specify known properties, and 'userId' does not exist in type '{ title: string; subtitle?: string | undefined; autoPrint?: boolean | undefined; userData: UserReportData; lang?: string | undefined; }'.
+features/users/components/user-registration-wizard.tsx(600,17): error TS2353: Object literal may only specify known properties, and 'userId' does not exist in type '{ title: string; subtitle?: string | undefined; autoPrint?: boolean | undefined; userData: UserReportData; lang?: string | undefined; }'.
+features/users/components/user-registration-wizard.tsx(822,86): error TS2551: Property 'cityName' does not exist on type 'CityBranchRow'. Did you mean 'city_name'?
+features/users/components/user-registration-wizard.tsx(822,147): error TS2551: Property 'cityName' does not exist on type 'CityBranchRow'. Did you mean 'city_name'?
+features/warehouses/components/warehouse-picker.tsx(56,9): error TS2322: Type 'string | undefined' is not assignable to type 'string'.
+  Type 'undefined' is not assignable to type 'string'.
+features/whatsapp/components/whatsapp-wizard-modal.tsx(177,5): error TS2304: Cannot find name 'setTestResult'.
+features/whatsapp/components/whatsapp-wizard-modal.tsx(191,7): error TS2304: Cannot find name 'setTestResult'.
+features/whatsapp/components/whatsapp-wizard-modal.tsx(193,7): error TS2304: Cannot find name 'setTestResult'.
+features/whatsapp/components/whatsapp-wizard-modal.tsx(434,16): error TS2304: Cannot find name 'testResult'.
+features/whatsapp/components/whatsapp-wizard-modal.tsx(437,19): error TS2304: Cannot find name 'testResult'.
+features/whatsapp/components/whatsapp-wizard-modal.tsx(437,45): error TS2304: Cannot find name 'testResult'.
+features/whatsapp/components/whatsapp-wizard-modal.tsx(442,22): error TS2304: Cannot find name 'testResult'.
+features/whatsapp/components/whatsapp-wizard-modal.tsx(442,102): error TS2304: Cannot find name 'testResult'.
+features/whatsapp/components/whatsapp-wizard-modal.tsx(444,20): error TS2304: Cannot find name 'testResult'.
+features/whatsapp/components/whatsapp-wizard-modal.tsx(445,77): error TS2304: Cannot find name 'testResult'.
+features/whatsapp/components/whatsapp-wizard-modal.tsx(447,20): error TS2304: Cannot find name 'testResult'.
+features/whatsapp/components/whatsapp-wizard-modal.tsx(449,31): error TS2304: Cannot find name 'testResult'.
+features/whatsapp/components/whatsapp-wizard-modal.tsx(449,65): error TS2304: Cannot find name 'testResult'.
+features/whatsapp/components/whatsapp-wizard-modal.tsx(449,101): error TS2304: Cannot find name 'testResult'.
+fix-broken-transfers.ts(2,20): error TS2307: Cannot find module 'dotenv' or its corresponding type declarations.
+lib/api/idempotency.ts(93,64): error TS2345: Argument of type '"acquire_idempotency_lock"' is not assignable to parameter of type '"is_super_admin" | "assert_enterprise_scope_access" | "assert_financial_period_open" | "can_access_city_branch" | "can_access_country" | "can_access_country_branch" | ... 41 more ... | "write_erp_audit_log"'.
+lib/api/idempotency.ts(107,19): error TS2339: Property 'is_replayed' does not exist on type 'string | { country_id: string; country_name: string; credit_usd: number; debit_usd: number; net_usd: number; } | { credit: number; currency: string; debit: number; description: string; entry_date: string; ... 5 more ...; usd_rate: number; } | { ...; } | { ...; }'.
+  Property 'is_replayed' does not exist on type 'string'.
+lib/api/idempotency.ts(113,33): error TS2339: Property 'response_code' does not exist on type 'string | { country_id: string; country_name: string; credit_usd: number; debit_usd: number; net_usd: number; } | { credit: number; currency: string; debit: number; description: string; entry_date: string; ... 5 more ...; usd_rate: number; } | { ...; } | { ...; }'.
+  Property 'response_code' does not exist on type 'string'.
+lib/api/idempotency.ts(114,33): error TS2339: Property 'response_body' does not exist on type 'string | { country_id: string; country_name: string; credit_usd: number; debit_usd: number; net_usd: number; } | { credit: number; currency: string; debit: number; description: string; entry_date: string; ... 5 more ...; usd_rate: number; } | { ...; } | { ...; }'.
+  Property 'response_body' does not exist on type 'string'.
+lib/api/idempotency.ts(117,19): error TS2339: Property 'acquired' does not exist on type 'string | { country_id: string; country_name: string; credit_usd: number; debit_usd: number; net_usd: number; } | { credit: number; currency: string; debit: number; description: string; entry_date: string; ... 5 more ...; usd_rate: number; } | { ...; } | { ...; }'.
+  Property 'acquired' does not exist on type 'string'.
+lib/api/idempotency.ts(124,38): error TS2589: Type instantiation is excessively deep and possibly infinite.
+lib/api/idempotency.ts(125,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"idempotency_keys"' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"idempotency_keys"' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+lib/api/idempotency.ts(127,11): error TS2345: Argument of type '"tenant_hash"' is not assignable to parameter of type 'never'.
+lib/api/idempotency.ts(128,11): error TS2345: Argument of type '"idempotency_key"' is not assignable to parameter of type 'never'.
+lib/api/idempotency.ts(132,20): error TS2339: Property 'status' does not exist on type 'NonNullable<ResultOne>'.
+lib/api/idempotency.ts(138,34): error TS2339: Property 'response_code' does not exist on type 'NonNullable<ResultOne>'.
+lib/api/idempotency.ts(139,34): error TS2339: Property 'response_body' does not exist on type 'NonNullable<ResultOne>'.
+lib/api/idempotency.ts(142,47): error TS2339: Property 'expires_at' does not exist on type 'NonNullable<ResultOne>'.
+lib/api/idempotency.ts(143,20): error TS2339: Property 'status' does not exist on type 'NonNullable<ResultOne>'.
+lib/api/idempotency.ts(150,22): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"idempotency_keys"' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"idempotency_keys"' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+lib/api/idempotency.ts(152,9): error TS2322: Type 'string' is not assignable to type 'never'.
+lib/api/idempotency.ts(153,9): error TS2322: Type 'string' is not assignable to type 'never'.
+lib/api/idempotency.ts(154,9): error TS2322: Type 'string' is not assignable to type 'never'.
+lib/api/idempotency.ts(155,9): error TS2322: Type 'string | null' is not assignable to type 'never'.
+  Type 'null' is not assignable to type 'never'.
+lib/api/idempotency.ts(156,9): error TS2322: Type 'string | null' is not assignable to type 'never'.
+  Type 'null' is not assignable to type 'never'.
+lib/api/idempotency.ts(157,9): error TS2322: Type 'string | null' is not assignable to type 'never'.
+  Type 'null' is not assignable to type 'never'.
+lib/api/idempotency.ts(158,9): error TS2322: Type 'string | null' is not assignable to type 'never'.
+  Type 'null' is not assignable to type 'never'.
+lib/api/idempotency.ts(159,9): error TS2322: Type 'string' is not assignable to type 'never'.
+lib/api/idempotency.ts(160,9): error TS2322: Type 'string' is not assignable to type 'never'.
+lib/api/idempotency.ts(161,9): error TS2322: Type 'string' is not assignable to type 'never'.
+lib/api/idempotency.ts(162,9): error TS2322: Type 'string' is not assignable to type 'never'.
+lib/api/idempotency.ts(192,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"idempotency_keys"' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"idempotency_keys"' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+lib/api/idempotency.ts(194,9): error TS2322: Type 'string' is not assignable to type 'never'.
+lib/api/idempotency.ts(195,9): error TS2322: Type 'number' is not assignable to type 'never'.
+lib/api/idempotency.ts(196,9): error TS2322: Type 'any' is not assignable to type 'never'.
+lib/api/idempotency.ts(197,9): error TS2322: Type 'string' is not assignable to type 'never'.
+lib/api/idempotency.ts(199,11): error TS2345: Argument of type '"tenant_hash"' is not assignable to parameter of type 'never'.
+lib/api/idempotency.ts(200,11): error TS2345: Argument of type '"idempotency_key"' is not assignable to parameter of type 'never'.
+lib/api/idempotency.ts(214,13): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"idempotency_keys"' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"idempotency_keys"' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+lib/api/idempotency.ts(216,11): error TS2345: Argument of type '"tenant_hash"' is not assignable to parameter of type 'never'.
+lib/api/idempotency.ts(217,11): error TS2345: Argument of type '"idempotency_key"' is not assignable to parameter of type 'never'.
+lib/api/idempotency.ts(248,7): error TS2345: Argument of type 'number' is not assignable to parameter of type 'string'.
+lib/db/client.ts(49,20): error TS2352: Conversion of type 'PostgresJsDatabase<typeof import("B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/lib/db/schema")> & { $client: Sql<{}>; }' to type 'Record<string | symbol, unknown>' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  Index signature for type 'string' is missing in type 'PostgresJsDatabase<typeof import("B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/lib/db/schema")> & { $client: Sql<{}>; }'.
+lib/i18n/table-headers.ts(274,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(1600,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(1659,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(1660,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(1661,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(1663,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(1664,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(1665,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(1666,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(1667,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(1669,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(1925,3): error TS2353: Object literal may only specify known properties, and '"common.save"' does not exist in type 'Dict'.
+lib/i18n/ui.ts(2481,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(2509,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(2603,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(2754,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(2956,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(2978,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(3292,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(3351,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(3352,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(3353,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(3355,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(3356,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(3357,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(3358,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(3359,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(3361,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(3616,3): error TS2353: Object literal may only specify known properties, and '"common.save"' does not exist in type 'Dict'.
+lib/i18n/ui.ts(4184,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(4411,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(4552,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(4686,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(4972,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(5031,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(5032,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(5033,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(5035,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(5036,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(5037,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(5038,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(5039,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(5041,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(5296,3): error TS2353: Object literal may only specify known properties, and '"common.save"' does not exist in type 'Dict'.
+lib/i18n/ui.ts(6061,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(6222,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(6356,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(6650,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(6709,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(6710,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(6711,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(6713,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(6714,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(6715,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(6716,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(6717,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(6719,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(6974,3): error TS2353: Object literal may only specify known properties, and '"common.save"' does not exist in type 'Dict'.
+lib/i18n/ui.ts(7687,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(7879,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(8013,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(8327,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(8386,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(8387,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(8388,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(8390,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(8391,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(8392,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(8393,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(8394,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(8396,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(8651,3): error TS2353: Object literal may only specify known properties, and '"common.save"' does not exist in type 'Dict'.
+lib/i18n/ui.ts(9355,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(9563,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/i18n/ui.ts(9697,3): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/master-data/multilingual.ts(108,7): error TS2862: Type 'T & Record<string, string>' is generic and can only be indexed for reading.
+lib/navigation/sidebar.ts(285,17): error TS2322: Type '"nav.final_payments_advance_nil"' is not assignable to type 'UiKey'.
+lib/navigation/sidebar.ts(294,13): error TS2322: Type '"receipt"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(300,13): error TS2322: Type '"nav.office_home_expenses_bill"' is not assignable to type 'UiKey'.
+lib/navigation/sidebar.ts(301,13): error TS2322: Type '"receipt"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(325,17): error TS2322: Type '"nav.office_home_expenses_bill"' is not assignable to type 'UiKey'.
+lib/navigation/sidebar.ts(340,13): error TS2820: Type '"bar-chart-3"' is not assignable to type 'SidebarIconKey | undefined'. Did you mean '"bar-chart"'?
+lib/navigation/sidebar.ts(392,5): error TS2322: Type '"globe"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(405,9): error TS2322: Type '"send"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(412,9): error TS2322: Type '"shield-check"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(419,9): error TS2322: Type '"package"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(433,9): error TS2322: Type '"nav.branch_purchase"' is not assignable to type 'UiKey'.
+lib/navigation/sidebar.ts(434,9): error TS2322: Type '"shopping-bag"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(486,9): error TS2820: Type '"nav.local_branch_purchase"' is not assignable to type 'UiKey'. Did you mean '"nav.local_purchase"'?
+lib/navigation/sidebar.ts(508,9): error TS2820: Type '"nav.country_purchase"' is not assignable to type 'UiKey'. Did you mean '"nav.country_local_purchase"'?
+lib/navigation/sidebar.ts(509,9): error TS2322: Type '"globe"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(592,59): error TS2322: Type '"clock"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(593,60): error TS2322: Type '"calendar"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(597,64): error TS2322: Type '"badge"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(642,13): error TS2820: Type '"nav.journal_stock_checking_report"' is not assignable to type 'UiKey'. Did you mean '"nav.journal_stock_report"'?
+lib/navigation/sidebar.ts(722,9): error TS2820: Type '"nav.customer_order"' is not assignable to type 'UiKey'. Did you mean '"nav.customers_form"'?
+lib/navigation/sidebar.ts(747,9): error TS2820: Type '"nav.truck_registration"' is not assignable to type 'UiKey'. Did you mean '"nav.truck_recreation"'?
+lib/navigation/sidebar.ts(759,9): error TS2322: Type '"nav.truck_loading"' is not assignable to type 'UiKey'.
+lib/navigation/sidebar.ts(833,79): error TS2322: Type '"globe"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(835,75): error TS2322: Type '"user-check"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(836,70): error TS2322: Type '"shield"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(837,86): error TS2322: Type '"check-square"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(838,77): error TS2322: Type '"coins"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(839,90): error TS2322: Type '"calculator"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(840,94): error TS2322: Type '"shopping-bag"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(841,85): error TS2322: Type '"calendar"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(1018,13): error TS2322: Type '"credit-card"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(1043,13): error TS2322: Type '"shopping-bag"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(1093,13): error TS2322: Type '"shield"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(1118,13): error TS2322: Type '"calculator"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(1143,13): error TS2322: Type '"file-spreadsheet"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(1168,13): error TS2322: Type '"scale"' is not assignable to type 'SidebarIconKey | undefined'.
+lib/navigation/sidebar.ts(1326,17): error TS2322: Type '"nav.product_units"' is not assignable to type 'UiKey'.
+lib/navigation/sidebar.ts(1332,17): error TS2322: Type '"nav.product_brands"' is not assignable to type 'UiKey'.
+lib/navigation/sidebar.ts(1338,17): error TS2322: Type '"nav.product_categories"' is not assignable to type 'UiKey'.
+lib/navigation/sidebar.ts(1346,13): error TS2322: Type '"nav.warehouses"' is not assignable to type 'UiKey'.
+lib/navigation/sidebar.ts(1422,5): error TS2322: Type '"nav.walkthrough_video"' is not assignable to type 'UiKey'.
+lib/reports/open-purchase-booking-print-report.ts(262,5): error TS18004: No value exists in scope for the shorthand property 'lang'. Either declare one or provide an initializer.
+lib/reports/open-sales-a4-report-window.ts(293,119): error TS2339: Property 'sales_contract_no' does not exist on type 'SalesReportData'.
+lib/reports/open-sales-a4-report-window.ts(331,121): error TS2339: Property 'exchange_rate' does not exist on type 'SalesReportData'.
+lib/reports/open-trade-document-window.ts(106,42): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+lib/reports/open-trade-document-window.ts(106,47): error TS7006: Parameter 'item' implicitly has an 'any' type.
+lib/reports/open-trade-document-window.ts(107,39): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+lib/reports/open-trade-document-window.ts(107,44): error TS7006: Parameter 'item' implicitly has an 'any' type.
+lib/reports/open-trade-document-window.ts(108,40): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+lib/reports/open-trade-document-window.ts(108,45): error TS7006: Parameter 'item' implicitly has an 'any' type.
+lib/reports/open-trade-document-window.ts(109,42): error TS7006: Parameter 'sum' implicitly has an 'any' type.
+lib/reports/open-trade-document-window.ts(109,47): error TS7006: Parameter 'item' implicitly has an 'any' type.
+lib/reports/open-trade-document-window.ts(244,26): error TS7006: Parameter 'item' implicitly has an 'any' type.
+lib/reports/open-trade-document-window.ts(244,32): error TS7006: Parameter 'idx' implicitly has an 'any' type.
+lib/reports/open-trade-document-window.ts(290,26): error TS7006: Parameter 'item' implicitly has an 'any' type.
+lib/reports/open-trade-document-window.ts(290,32): error TS7006: Parameter 'idx' implicitly has an 'any' type.
+lib/repositories/locations-repository.ts(292,42): error TS2352: Conversion of type 'RowList<Row[]>' to type 'CountryRow[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  The types returned by 'concat(...)' are incompatible between these types.
+    Type 'Row[]' is not comparable to type 'CountryRow[]'.
+      Type 'Row' is missing the following properties from type 'CountryRow': id, name, iso2, iso3, and 7 more.
+lib/repositories/locations-repository.ts(318,37): error TS2352: Conversion of type 'RowList<Row[]>' to type 'CountryRow[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  The types returned by 'concat(...)' are incompatible between these types.
+    Type 'Row[]' is not comparable to type 'CountryRow[]'.
+      Type 'Row' is missing the following properties from type 'CountryRow': id, name, iso2, iso3, and 7 more.
+lib/repositories/locations-repository.ts(486,45): error TS2352: Conversion of type 'RowList<Row[]>' to type 'StateRow[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  The types returned by 'concat(...)' are incompatible between these types.
+    Type 'Row[]' is not comparable to type 'StateRow[]'.
+      Type 'Row' is missing the following properties from type 'StateRow': id, country_id, name, code, and 3 more.
+lib/repositories/locations-repository.ts(535,45): error TS2352: Conversion of type 'RowList<Row[]>' to type 'DistrictRow[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  The types returned by 'concat(...)' are incompatible between these types.
+    Type 'Row[]' is not comparable to type 'DistrictRow[]'.
+      Type 'Row' is missing the following properties from type 'DistrictRow': id, country_id, state_province_id, name, and 4 more.
+lib/repositories/locations-repository.ts(594,45): error TS2352: Conversion of type 'RowList<Row[]>' to type 'CityRow[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  The types returned by 'concat(...)' are incompatible between these types.
+    Type 'Row[]' is not comparable to type 'CityRow[]'.
+      Type 'Row' is missing the following properties from type 'CityRow': id, country_id, state_province_id, district_id, and 5 more.
+lib/repositories/locations-repository.ts(707,16): error TS2352: Conversion of type 'RowList<Row[]>' to type 'AreaRow[]' may be a mistake because neither type sufficiently overlaps with the other. If this was intentional, convert the expression to 'unknown' first.
+  The types returned by 'concat(...)' are incompatible between these types.
+    Type 'Row[]' is not comparable to type 'AreaRow[]'.
+      Type 'Row' is missing the following properties from type 'AreaRow': id, country_id, state_province_id, district_id, and 6 more.
+lib/repositories/locations-repository.ts(1187,28): error TS2769: No overload matches this call.
+  Argument of type '[string | null | undefined, string | null, string | null, boolean | null, string]' is not assignable to parameter of type 'never'.
+  Overload 2 of 2, '(template: TemplateStringsArray, ...parameters: readonly ParameterOrFragment<never>[]): PendingQuery<Row[]>', gave the following error.
+    Argument of type 'string | null | undefined' is not assignable to parameter of type 'ParameterOrFragment<never>'.
+      Type 'undefined' is not assignable to type 'ParameterOrFragment<never>'.
+lib/services/master-parameters-service.ts(42,113): error TS1117: An object literal cannot have multiple properties with the same name.
+lib/services/mobile-push-service.ts(25,33): error TS2589: Type instantiation is excessively deep and possibly infinite.
+lib/services/mobile-push-service.ts(26,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"user_device_tokens"' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"user_device_tokens"' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+lib/services/mobile-push-service.ts(29,9): error TS2322: Type 'string' is not assignable to type 'never'.
+lib/services/mobile-push-service.ts(30,9): error TS2322: Type 'string' is not assignable to type 'never'.
+lib/services/mobile-push-service.ts(31,9): error TS2322: Type '"web" | "ios" | "android"' is not assignable to type 'never'.
+  Type '"web"' is not assignable to type 'never'.
+lib/services/mobile-push-service.ts(32,9): error TS2322: Type 'string' is not assignable to type 'never'.
+lib/services/mobile-push-service.ts(33,9): error TS2322: Type 'string' is not assignable to type 'never'.
+lib/services/mobile-push-service.ts(54,26): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"user_device_tokens"' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"user_device_tokens"' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+lib/services/mobile-push-service.ts(55,40): error TS2345: Argument of type '"user_id"' is not assignable to parameter of type 'never'.
+lib/services/mobile-sync-service.ts(80,9): error TS18047: 'c.unread_count' is possibly 'null'.
+lib/services/mobile-sync-service.ts(80,44): error TS18047: 'c.unread_count' is possibly 'null'.
+lib/services/mobile-sync-service.ts(93,25): error TS2551: Property 'userFullName' does not exist on type 'ErpSession'. Did you mean 'fullName'?
+lib/services/mobile-sync-service.ts(95,21): error TS2551: Property 'role' does not exist on type 'ErpSession'. Did you mean 'roles'?
+lib/services/payment-reminder-engine.ts(84,27): error TS2339: Property 'customers' does not exist on type 'SelectQueryError<"column 'po_number' does not exist on 'purchase_orders'.">'.
+lib/services/return-sms-reply-service.ts(53,11): error TS2769: No overload matches this call.
+  Overload 1 of 2, '(relation: "profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"user_profiles"' is not assignable to parameter of type '"profiles" | "memberships" | "erp_role_templates" | "purchase_order_payments" | "roznamcha_entries" | "roznamcha_lines" | "purchase_order_expenses" | "purchase_order_items" | ... 160 more ... | "zz_bak2_20260801_customers"'.
+  Overload 2 of 2, '(relation: "global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"): PostgrestQueryBuilder<...>', gave the following error.
+    Argument of type '"user_profiles"' is not assignable to parameter of type '"global_transaction_report_usd" | "ledger_outstanding_v" | "branch_ledger_transaction_report" | "loading_ports" | "received_ports" | "record_translations" | "super_admin_urdu_notifications"'.
+lib/services/return-sms-reply-service.ts(68,13): error TS2339: Property 'id' does not exist on type 'SelectQueryError<"column 'id' does not exist on 'profiles'."> | SelectQueryError<"column 'id' does not exist on 'memberships'."> | ... 166 more ... | SelectQueryError<...>'.
+  Property 'id' does not exist on type 'SelectQueryError<"column 'id' does not exist on 'profiles'.">'.
+lib/services/return-sms-reply-service.ts(69,15): error TS2339: Property 'full_name' does not exist on type 'SelectQueryError<"column 'id' does not exist on 'profiles'."> | SelectQueryError<"column 'id' does not exist on 'memberships'."> | ... 166 more ... | SelectQueryError<...>'.
+  Property 'full_name' does not exist on type 'SelectQueryError<"column 'id' does not exist on 'profiles'.">'.
+lib/services/return-sms-reply-service.ts(69,30): error TS2339: Property 'email' does not exist on type 'SelectQueryError<"column 'id' does not exist on 'profiles'."> | SelectQueryError<"column 'id' does not exist on 'memberships'."> | ... 166 more ... | SelectQueryError<...>'.
+  Property 'email' does not exist on type 'SelectQueryError<"column 'id' does not exist on 'profiles'.">'.
+lib/services/return-sms-reply-service.ts(72,16): error TS2339: Property 'email' does not exist on type 'SelectQueryError<"column 'id' does not exist on 'profiles'."> | SelectQueryError<"column 'id' does not exist on 'memberships'."> | ... 166 more ... | SelectQueryError<...>'.
+  Property 'email' does not exist on type 'SelectQueryError<"column 'id' does not exist on 'profiles'.">'.
+lib/services/return-sms-reply-service.ts(73,17): error TS2339: Property 'phone_number' does not exist on type 'SelectQueryError<"column 'id' does not exist on 'profiles'."> | SelectQueryError<"column 'id' does not exist on 'memberships'."> | ... 166 more ... | SelectQueryError<...>'.
+  Property 'phone_number' does not exist on type 'SelectQueryError<"column 'id' does not exist on 'profiles'.">'.
+lib/services/return-sms-reply-service.ts(114,20): error TS2339: Property 'id' does not exist on type 'SelectQueryError<"column 'po_number' does not exist on 'purchase_orders'.">'.
+lib/services/return-sms-reply-service.ts(115,23): error TS2339: Property 'po_number' does not exist on type 'SelectQueryError<"column 'po_number' does not exist on 'purchase_orders'.">'.
+lib/services/return-sms-reply-service.ts(115,39): error TS2339: Property 'id' does not exist on type 'SelectQueryError<"column 'po_number' does not exist on 'purchase_orders'.">'.
+lib/services/return-sms-reply-service.ts(116,41): error TS2339: Property 'po_number' does not exist on type 'SelectQueryError<"column 'po_number' does not exist on 'purchase_orders'.">'.
+lib/services/return-sms-reply-service.ts(116,57): error TS2339: Property 'id' does not exist on type 'SelectQueryError<"column 'po_number' does not exist on 'purchase_orders'.">'.
+lib/services/return-sms-reply-service.ts(116,79): error TS2339: Property 'currency' does not exist on type 'SelectQueryError<"column 'po_number' does not exist on 'purchase_orders'.">'.
+lib/services/return-sms-reply-service.ts(116,94): error TS2339: Property 'total_amount' does not exist on type 'SelectQueryError<"column 'po_number' does not exist on 'purchase_orders'.">'.
+lib/services/return-sms-reply-service.ts(116,125): error TS2339: Property 'remaining_amount' does not exist on type 'SelectQueryError<"column 'po_number' does not exist on 'purchase_orders'.">'.
+lib/services/return-sms-reply-service.ts(116,162): error TS2339: Property 'status' does not exist on type 'SelectQueryError<"column 'po_number' does not exist on 'purchase_orders'.">'.
+lib/services/return-sms-reply-service.ts(132,20): error TS2339: Property 'id' does not exist on type 'SelectQueryError<"column 'order_number' does not exist on 'sales_orders'.">'.
+lib/services/return-sms-reply-service.ts(133,23): error TS2339: Property 'order_number' does not exist on type 'SelectQueryError<"column 'order_number' does not exist on 'sales_orders'.">'.
+lib/services/return-sms-reply-service.ts(133,42): error TS2339: Property 'id' does not exist on type 'SelectQueryError<"column 'order_number' does not exist on 'sales_orders'.">'.
+lib/services/return-sms-reply-service.ts(134,38): error TS2339: Property 'order_number' does not exist on type 'SelectQueryError<"column 'order_number' does not exist on 'sales_orders'.">'.
+lib/services/return-sms-reply-service.ts(134,57): error TS2339: Property 'id' does not exist on type 'SelectQueryError<"column 'order_number' does not exist on 'sales_orders'.">'.
+lib/services/return-sms-reply-service.ts(134,79): error TS2339: Property 'currency' does not exist on type 'SelectQueryError<"column 'order_number' does not exist on 'sales_orders'.">'.
+lib/services/return-sms-reply-service.ts(134,94): error TS2339: Property 'total_amount' does not exist on type 'SelectQueryError<"column 'order_number' does not exist on 'sales_orders'.">'.
+lib/services/return-sms-reply-service.ts(134,122): error TS2339: Property 'status' does not exist on type 'SelectQueryError<"column 'order_number' does not exist on 'sales_orders'.">'.
+scripts/check-duplicates.ts(2,25): error TS2307: Cannot find module 'dotenv' or its corresponding type declarations.
+scripts/debug-orders-all.ts(2,25): error TS2307: Cannot find module 'dotenv' or its corresponding type declarations.
+scripts/debug-orders.ts(2,25): error TS2307: Cannot find module 'dotenv' or its corresponding type declarations.
+scripts/fix-account-currencies.ts(2,20): error TS2307: Cannot find module 'dotenv' or its corresponding type declarations.
+tests/api/accounts-auth.test.ts(86,48): error TS2345: Argument of type 'never[]' is not assignable to parameter of type '{ from: Mock<() => { from: Mock<...>; select: Mock<() => { from: Mock<...>; select: Mock<...>; eq: Mock<() => { from: Mock<...>; select: Mock<...>; eq: Mock<...>; is: Mock<() => { from: Mock<...>; ... 9 more ...; update: Mock<...>; }>; ... 6 more ...; update: Mock<...>; }>; ... 7 more ...; update: Mock<...>; }>; ......'.
+  Type 'never[]' is missing the following properties from type '{ from: Mock<() => { from: Mock<...>; select: Mock<() => { from: Mock<...>; select: Mock<...>; eq: Mock<() => { from: Mock<...>; select: Mock<...>; eq: Mock<...>; is: Mock<() => { from: Mock<...>; ... 9 more ...; update: Mock<...>; }>; ... 6 more ...; update: Mock<...>; }>; ... 7 more ...; update: Mock<...>; }>; ......': from, select, eq, is, and 7 more.
+tests/api/erp-validation.test.ts(28,19): error TS2339: Property 'currency' does not exist on type '{ code: string; companyId: string; startDate: string; endDate: string; countryId?: string | null | undefined; countryBranchId?: string | null | undefined; cityBranchId?: string | null | undefined; branchId?: string | ... 1 more ... | undefined; parentId?: string | ... 1 more ... | undefined; }'.
+tests/services/goods-variations.test.ts(84,9): error TS2353: Object literal may only specify known properties, and 'originCountryId' does not exist in type 'GoodsVariationInput'.

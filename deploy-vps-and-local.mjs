@@ -22,9 +22,9 @@ try {
 
 // Step 1: Run Database Migration
 try {
-  console.log("[1/4] Applying 5-Language Dedicated Tables Database Migration to Supabase...");
-  execSync('node scripts/db-apply-per-language-tables.mjs', { stdio: 'inherit' });
-  console.log("✅ 5-Language Dedicated Tables Migration completed successfully!");
+  console.log("[1/4] Applying Master Database Migrations to Supabase...");
+  execSync('node scripts/db-apply-all-migrations.mjs', { stdio: 'inherit' });
+  console.log("✅ Master Database Migrations completed successfully!");
 } catch (err) {
   console.error("Migration warning/error:", err.message);
 }
@@ -110,7 +110,7 @@ chmod 600 .env.local .env
 
 echo "[VPS 3b/7] Installing Dependencies & Running Database Migration..."
 npm install --include=dev
-node scripts/db-apply-per-language-tables.mjs || true
+node scripts/db-apply-all-migrations.mjs || true
 
 echo "[VPS 4/7] Cleaning Stale Build Cache & Compiling Next.js..."
 rm -rf .next

@@ -1,0 +1,75 @@
+import fs from "node:fs";
+import postgres from "postgres";
+
+function parseEnvFile(file) {
+  const env = {};
+  if (!fs.existsSync(file)) return env;
+  for (const line of fs.readFileSync(file, "utf8").split(/\r?\n/)) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith("#")) continue;
+    const index = trimmed.indexOf("=");
+    if (index === -1) continue;
+    env[trimmed.slice(0, index)] = trimmed.slice(index + 1).replace(/^"|"$/g, "");
+  }
+  return env;
+}
+
+function loadEnv() {
+  return { ...parseEnvFile(".env"), ...parseEnvFile(".env.local") };
+}
+
+const env = loadEnv();
+if (!env.DATABASE_URL) {
+  console.error("DATABASE_URL is not set in .env or .env.local");
+  process.exit(1);
+}
+
+const migrations = [
+  { name: "20260812_roznamcha_posting_idempotency_and_category", path: "supabase/migrations/20260812_roznamcha_posting_idempotency_and_category.sql" },
+  { name: "20260814_per_language_tables", path: "supabase/migrations/20260814_per_language_tables.sql" },
+  { name: "20260815_fix_cash_entry_and_daily_rate_rpcs", path: "supabase/migrations/20260815_fix_cash_entry_and_daily_rate_rpcs.sql" }
+];
+
+const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false, connect_timeout: 60 });
+
+try {
+  console.log("Connecting to Supabase Database:", env.NEXT_PUBLIC_SUPABASE_URL || "Postgres");
+  await sql`create table if not exists erp_schema_migrations (name text primary key, status text not null, applied_at timestamptz not null default now())`;
+
+  for (const mig of migrations) {
+    const existing = await sql`select name, status from erp_schema_migrations where name = ${mig.name}`;
+    if (existing.length && existing[0].status === "applied") {
+      console.log(`[SKIP] Migration already applied: ${mig.name}`);
+      continue;
+    }
+
+    console.log(`[APPLYING] Migration ${mig.name}...`);
+    const migrationSql = fs.readFileSync(mig.path, "utf8");
+    await sql.unsafe(migrationSql);
+    await sql`insert into erp_schema_migrations (name, status) values (${mig.name}, 'applied') on conflict (name) do update set status='applied', applied_at=now()`;
+    console.log(`[SUCCESS] Migration applied: ${mig.name}`);
+  }
+
+  // Verification checks
+  const colCheck = await sql`
+    select column_name from information_schema.columns 
+    where table_name = 'roznamcha_entries' and column_name = 'entry_category'
+  `;
+
+  const perLangCheck = await sql`
+    select relname from pg_class where relname = 'translations_english' and relnamespace = 'public'::regnamespace
+  `;
+
+  console.log(JSON.stringify({
+    ok: true,
+    entry_category_column_exists: colCheck.length > 0,
+    per_language_tables_exist: perLangCheck.length > 0
+  }, null, 2));
+
+} catch (error) {
+  console.error("MIGRATION FAILED:", error.message);
+  console.error(error);
+  process.exitCode = 1;
+} finally {
+  await sql.end();
+}

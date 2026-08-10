@@ -14,17 +14,22 @@ import { ReportPagination } from "@/features/reports/components/report-paginatio
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
-import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 export type RoznamchaEntryCategory = "business" | "bank" | "cash" | "invoice" | "transfer";
 
-const CATEGORY_LABELS: Record<RoznamchaEntryCategory, string> = {
-  business: "Business",
-  bank: "Bank",
-  cash: "Cash Entry",
-  invoice: "Invoice",
-  transfer: "Transfer"
-};
+function getCategoryLabel(cat: RoznamchaEntryCategory | null, lang: SupportedLanguage) {
+  if (!cat) return "-";
+  switch (cat) {
+    case "business": return t(lang, "nav.business_report", "Business");
+    case "bank": return t(lang, "nav.bank_report_roz", "Bank");
+    case "cash": return t(lang, "nav.cash_entry_report", "Cash Entry");
+    case "invoice": return t(lang, "nav.invoice_report", "Invoice");
+    case "transfer": return t(lang, "roz.transfer_report", "Transfer");
+    default: return cat;
+  }
+}
 
 type ReportLine = {
   id: string;
@@ -199,6 +204,9 @@ export function RoznamchaTypeReportView({
   pageTitle: string;
   entryCategory: RoznamchaEntryCategory | "all";
 }) {
+  const activeLang = useActiveLanguage();
+  const currentLang = activeLang || lang;
+
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<ReportResponse | null>(null);
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
@@ -508,7 +516,7 @@ export function RoznamchaTypeReportView({
                           {row.entry_date}
                           {row.posted_at ? <div className="text-[10px] text-muted-foreground">{new Date(row.posted_at).toLocaleTimeString()}</div> : null}
                         </ReportTd>
-                        <ReportTd className="text-center whitespace-nowrap">{row.entry_category ? CATEGORY_LABELS[row.entry_category] : "-"}</ReportTd>
+                        <ReportTd className="text-center whitespace-nowrap">{getCategoryLabel(row.entry_category, currentLang)}</ReportTd>
                         <ReportTd className="whitespace-nowrap">{line?.ledgers?.name ?? "-"}</ReportTd>
                         <ReportTd className="max-w-[260px] text-start"><div className="truncate">{row.narration ?? "-"}</div></ReportTd>
                         <ReportTd className="text-end font-mono text-rose-600">{debit ? fmtNumber(debit) : "-"}</ReportTd>
@@ -524,7 +532,7 @@ export function RoznamchaTypeReportView({
                     );
                   })
                 ) : (
-                  <tr><td colSpan={14} className="p-4 text-center text-sm text-muted-foreground">No entries found</td></tr>
+                  <tr><td colSpan={14} className="p-4 text-center text-sm text-muted-foreground">{t(currentLang, "common.no_entries_found", "No entries found")}</td></tr>
                 )}
               </tbody>
             </table>

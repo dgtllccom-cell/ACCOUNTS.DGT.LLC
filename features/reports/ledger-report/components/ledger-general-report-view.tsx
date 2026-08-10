@@ -241,6 +241,8 @@ export function LedgerReportView({
   initialToDate?: string | null;
 }) {
   const router = useRouter();
+  const activeLang = useHeaderLanguage();
+  const effectiveLang = activeLang || lang;
   const [loading, setLoading] = useState(true);
   const [loadingStatement, setLoadingStatement] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);

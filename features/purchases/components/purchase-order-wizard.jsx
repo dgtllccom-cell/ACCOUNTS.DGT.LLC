@@ -3555,10 +3555,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
                 >
                   <option value="">{t(lang, "purchase.select_branch_ellipsis", "Select Branch...")}</option>
-                  {((mainBranches && mainBranches.length > 0) ? mainBranches : [
-                    { id: "b-alras-2001", name: "AL.RAS (Main Branch)", code: "AL_RAS" },
-                    { id: "b-ho-2002", name: "HO Head Office", code: "HO" }
-                  ]).map((b) => (
+                  {(mainBranches || []).map((b) => (
                     <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
                   ))}
                 </select>
@@ -3572,10 +3569,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   className="mt-1 h-10 w-full rounded-md border border-input bg-background px-3 text-xs font-semibold outline-none"
                 >
                   <option value="">{t(lang, "purchase.select_city_branch_ellipsis", "Select City Branch...")}</option>
-                  {((cityBranches && cityBranches.length > 0) ? cityBranches : [
-                    { id: "cb-deira-3001", name: "Al Ras City Branch", code: "AL_RAS_CITY" },
-                    { id: "cb-ho-3002", name: "Main City Branch", code: "HO_CITY" }
-                  ]).map((b) => (
+                  {(cityBranches || []).map((b) => (
                     <option key={b.id} value={b.id}>{b.city_name || b.name} ({b.code || b.branch_code})</option>
                   ))}
                 </select>
