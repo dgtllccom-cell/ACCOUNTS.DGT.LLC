@@ -260,7 +260,11 @@ export const purchaseOrderCreateSchema = scopeSchema.extend({
   // Flexible payload (goods, shipping, notes, etc.) until full PO schema is modeled.
   formData: z.unknown().optional(),
   ledgerPostingStatus: z.string().optional(),
-  paymentStatus: z.string().optional()
+  paymentStatus: z.string().optional(),
+  // Language the user actually entered this booking's business data in (from the ERP's
+  // active-language state) — drives which language the local translation engine treats
+  // as the source when deriving the other 4 language columns in record_translations.
+  originalLanguage: z.enum(["en", "ur", "ar", "fa", "ps"]).optional()
 });
 
 export const purchaseOrderUpdateSchema = purchaseOrderCreateSchema.partial().extend({

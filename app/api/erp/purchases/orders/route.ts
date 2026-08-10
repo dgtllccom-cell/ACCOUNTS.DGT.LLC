@@ -10,7 +10,7 @@ import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/l
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { safeInsertPurchaseOrderItems, safeInsertPurchaseOrderExpenses } from "@/lib/services/purchase-table-manager";
-import { saveEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
+import { saveEnterpriseRecordTranslations, normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 import { revalidatePath } from "next/cache";
 
@@ -436,6 +436,10 @@ export async function POST(request: NextRequest) {
 
     // Save 5-language DB translations to 'record_translations' and form_data.translations
     try {
+      // The language the user actually entered this booking's business data in
+      // (sent by the wizard from its active-language state). Falls back to "en"
+      // for older clients that don't send it yet.
+      const entryLang = normalizeLanguage(body.originalLanguage as string | undefined, "en");
       const itemsList = body.items || [];
       const goodsNames = itemsList.map((i: any) => i.goodsName).filter(Boolean).join(", ") || form.goodsName || form.productName || "";
       const remarksText = form.orderReportRemarks || form.remarks || "";
@@ -445,18 +449,18 @@ export async function POST(request: NextRequest) {
       const buyer = form.customerName || "";
 
       const translationsMap = {
-        productName: autoTranslate5Languages(goodsNames, "en"),
-        purchaseAccountName: autoTranslate5Languages(purchaseAcc, "en"),
-        salesAccountName: autoTranslate5Languages(salesAcc, "en"),
-        supplierName: autoTranslate5Languages(supplier, "en"),
-        buyerName: autoTranslate5Languages(buyer, "en"),
-        remarks: autoTranslate5Languages(remarksText, "en")
+        productName: autoTranslate5Languages(goodsNames, entryLang),
+        purchaseAccountName: autoTranslate5Languages(purchaseAcc, entryLang),
+        salesAccountName: autoTranslate5Languages(salesAcc, entryLang),
+        supplierName: autoTranslate5Languages(supplier, entryLang),
+        buyerName: autoTranslate5Languages(buyer, entryLang),
+        remarks: autoTranslate5Languages(remarksText, entryLang)
       };
 
       await saveEnterpriseRecordTranslations({
         recordTable: "purchase_orders",
         recordId: orderId,
-        originalLanguage: "en",
+        originalLanguage: entryLang,
         fields: [
           { fieldName: "product_name", value: goodsNames },
           { fieldName: "purchase_account_name", value: purchaseAcc },
