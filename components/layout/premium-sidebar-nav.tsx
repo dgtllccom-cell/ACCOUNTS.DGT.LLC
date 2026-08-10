@@ -246,31 +246,13 @@ export function PremiumSidebarNav({
   const autoOpen = useMemo(() => collectAutoOpenKeys(nodes, pathname), [nodes, pathname]);
   const [openKeys, setOpenKeys] = useState<Set<string>>(() => autoOpen);
 
-  useEffect(() => {
-    setOpenKeys((prev) => {
-      const next = new Set(prev);
-      for (const key of autoOpen) next.add(key);
-      return next;
-    });
-  }, [autoOpen]);
-
   function toggle(key: string) {
     setOpenKeys((prev) => {
       const next = new Set(prev);
-      const isOpening = !next.has(key);
-      if (isOpening) {
-        next.add(key);
-        // Auto-expand any nested sub-wrapper nodes that also contain children
-        const node = findNodeByKey(nodes, key);
-        if (node?.children) {
-          for (const child of node.children) {
-            if (child.children?.length) {
-              next.add(child.key);
-            }
-          }
-        }
-      } else {
+      if (next.has(key)) {
         next.delete(key);
+      } else {
+        next.add(key);
       }
       return next;
     });

@@ -306,6 +306,39 @@ export const sidebarTree: SidebarNode[] = [
             key: "roznamcha",
             labelKey: "nav.roznamcha",
             iconKey: "scroll-text",
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"],
+            children: [
+              {
+                key: "roz-cash-entry",
+                labelKey: "nav.cash_journal_entry",
+                href: "/dashboard/roznamcha/cash-entry" as Route,
+                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+              },
+              {
+                key: "roz-daily-expenses-bill",
+                labelKey: "nav.daily_operational_expenses",
+                href: "/dashboard/roznamcha/daily-expenses-bill" as Route,
+                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+              },
+              {
+                key: "roz-expenses-bill",
+                labelKey: "nav.office_home_expenses_bill",
+                href: "/dashboard/roznamcha/expenses-bill" as Route,
+                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+              },
+              {
+                key: "roz-money-exchange",
+                labelKey: "nav.money_changer_short",
+                href: "/dashboard/roznamcha/money-exchange" as Route,
+                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+              }
+            ]
+          },
+          {
+            key: "general-roznamcha-reports",
+            labelKey: "nav.general_roznamcha_reports",
+            iconKey: "bar-chart-3",
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"],
             children: [
               {
                 key: "roz-report-business",
@@ -341,30 +374,6 @@ export const sidebarTree: SidebarNode[] = [
                 key: "roz-report-all",
                 labelKey: "nav.roznamcha_all_report",
                 href: "/dashboard/roznamcha/reports/all" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              },
-              {
-                key: "roz-cash-entry",
-                labelKey: "nav.cash_journal_entry",
-                href: "/dashboard/roznamcha/cash-entry" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              },
-              {
-                key: "roz-daily-expenses-bill",
-                labelKey: "nav.daily_operational_expenses",
-                href: "/dashboard/roznamcha/daily-expenses-bill" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              },
-              {
-                key: "roz-expenses-bill",
-                labelKey: "nav.office_home_expenses_bill",
-                href: "/dashboard/roznamcha/expenses-bill" as Route,
-                roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-              },
-              {
-                key: "roz-money-exchange",
-                labelKey: "nav.money_changer_short",
-                href: "/dashboard/roznamcha/money-exchange" as Route,
                 roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
               }
             ]

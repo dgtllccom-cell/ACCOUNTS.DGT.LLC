@@ -483,7 +483,7 @@ function CountryBranchSetupContent() {
 
     return {
       serialNumber: active?.id ? active.id.slice(0, 4).toUpperCase() : "0001",
-      branchStatus: active?.status || (hasAny ? "Draft" : "Empty"),
+      branchStatus: active?.status || (hasAny ? t(lang, "branch.status_draft", "Draft") : t(lang, "branch.status_empty", "Empty")),
       branchCode: active?.code || branchCode || "-",
       branchType: "MAIN",
       country: previewCountry,
@@ -518,9 +518,9 @@ function CountryBranchSetupContent() {
       ownerCode: ownerPreview?.code || "OWN-0001",
       fatherHusbandName: "-",
       cnicId: "-",
-      nationality: "Pakistani",
-      designation: "Country Admin",
-      ownershipType: "Individual",
+      nationality: t(lang, "branch.nationality_pakistani", "Pakistani"),
+      designation: t(lang, "branch.designation_country_admin", "Country Admin"),
+      ownershipType: t(lang, "branch.ownership_individual", "Individual"),
       ownershipPercent: "100%",
       ownerPhone: phoneVal || ownerPreview?.mobile || "-",
       ownerWhatsApp: whatsappVal || ownerPreview?.whatsapp || "-",
@@ -531,21 +531,22 @@ function CountryBranchSetupContent() {
 
       companyName: previewCompany || "-",
       companyCode: companyCode || "-",
-      companyType: "Private Limited",
+      companyType: t(lang, "branch.company_type_private_limited", "Private Limited"),
       companyRegNo: "-",
       companyIncDate: "-",
       companyTaxRegNo: "-",
       companyNtnGstNo: "-",
-      companyStatus: "Active",
+      companyStatus: t(lang, "branch.company_status_active", "Active"),
       companyPhone: phoneVal || "-",
       companyEmail: emailVal || "-",
       companyWebsite: "-",
       companyOfficeAddress: active?.address || fullAddress || "-",
 
       allowedPermissions: active?.permission_grants || permissionGrants,
-      remarks: "This is a detailed country main branch report representing live settings."
+      remarks: t(lang, "branch.default_remarks_detailed", "This is a detailed country main branch report representing live settings.")
     };
   }, [
+    lang,
     existingMainBranch,
     contacts,
     branchCode,
@@ -670,9 +671,9 @@ function CountryBranchSetupContent() {
       ownerCode: "OWN-0001",
       fatherHusbandName: "-",
       cnicId: "-",
-      nationality: "Pakistani",
-      designation: "Country Admin",
-      ownershipType: "Individual",
+      nationality: t(lang, "branch.nationality_pakistani", "Pakistani"),
+      designation: t(lang, "branch.designation_country_admin", "Country Admin"),
+      ownershipType: t(lang, "branch.ownership_individual", "Individual"),
       ownershipPercent: "100%",
       ownerPhone: phoneVal || "-",
       ownerWhatsApp: whatsappVal || "-",
@@ -683,19 +684,19 @@ function CountryBranchSetupContent() {
 
       companyName: previewCompany || "-",
       companyCode: companyCode || "-",
-      companyType: "Private Limited",
+      companyType: t(lang, "branch.company_type_private_limited", "Private Limited"),
       companyRegNo: "-",
       companyIncDate: "-",
       companyTaxRegNo: "-",
       companyNtnGstNo: "-",
-      companyStatus: "Active",
+      companyStatus: t(lang, "branch.company_status_active", "Active"),
       companyPhone: phoneVal || "-",
       companyEmail: emailVal || "-",
       companyWebsite: "-",
       companyOfficeAddress: row.address || "-",
 
       allowedPermissions: Array.isArray(row.permission_grants) ? row.permission_grants : [],
-      remarks: "Saved country main branch details registry."
+      remarks: t(lang, "branch.saved_registry_remarks", "Saved country main branch details registry.")
     };
 
     setDrawerBranchData(payload);

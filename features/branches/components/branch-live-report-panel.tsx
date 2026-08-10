@@ -5,6 +5,8 @@ import { ClipboardList, Check, X, ShieldAlert, Building2, User2, MapPin } from "
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import type { BranchReportData } from "@/lib/reports/open-a4-report-window";
 import { cn } from "@/lib/utils";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 export type BranchLiveReportField = {
   label: string;
@@ -16,22 +18,23 @@ export type BranchLiveReportStep = {
   rows: BranchLiveReportField[];
 };
 
-function renderValue(value: string | null | undefined, prefix: string = "", fallback: string = "[Not Configured]") {
+function renderValue(value: string | null | undefined, prefix: string = "", notConfiguredLabel: string = "[Not Configured]") {
   const isBlank = !value || value.trim() === "" || value.trim() === "-" || value.trim().toLowerCase() === "undefined";
   if (isBlank) {
-    return <span className="inline-flex max-w-full items-center rounded-md border border-rose-200/60 bg-rose-50 px-2 py-0.5 text-[10px] font-bold leading-4 text-rose-600 dark:border-rose-900/30 dark:bg-rose-950/20 dark:text-rose-400">{fallback}</span>;
+    return <span className="inline-flex max-w-full items-center rounded-md border border-rose-200/60 bg-rose-50 px-2 py-0.5 text-[10px] font-bold leading-4 text-rose-600 dark:border-rose-900/30 dark:bg-rose-950/20 dark:text-rose-400">{notConfiguredLabel}</span>;
   }
   return <span className="block max-w-full break-words text-slate-900 dark:text-slate-100 font-semibold leading-5">{prefix}{value}</span>;
 }
 
 export function BranchLiveReportRow({ label, value }: BranchLiveReportField) {
+  const lang = useActiveLanguage();
   const blank = !value || value === "-" || value.trim() === "";
 
   return (
     <div className="grid grid-cols-[140px_1fr] gap-3 border-b border-dashed py-2 text-sm last:border-b-0">
       <span className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
       <span className={blank ? "font-semibold text-rose-600 dark:text-rose-400" : "font-semibold text-foreground"}>
-        {blank ? "[Not Configured]" : value}
+        {blank ? t(lang, "branch.not_configured", "[Not Configured]") : value}
       </span>
     </div>
   );
@@ -52,34 +55,34 @@ type BranchLiveReportPanelProps = {
 };
 
 const PERMISSIONS_MAP = [
-  { key: "dashboard.access", label: "Dashboard Access" },
-  { key: "branch.new_entry", label: "Branch Entry (New)" },
-  { key: "branch.edit", label: "Branch Edit / Update" },
-  { key: "branch.delete", label: "Branch Delete" },
-  { key: "users.access", label: "Users Access" },
-  { key: "users.create", label: "Users Create / Invite" },
-  { key: "users.edit", label: "Users Edit / Update" },
-  { key: "accounts.access", label: "Accounts Access" },
-  { key: "accounts.new_entry", label: "Accounts Create" },
-  { key: "accounts.master", label: "Accounts Edit / Update" },
-  { key: "ledgers.general", label: "Ledger Access" },
-  { key: "journal.roznamcha.general", label: "Journal Entry" },
-  { key: "journal.daily_payment.add_new", label: "Daily Payment" },
-  { key: "purchase.entry", label: "Purchase Entry" },
-  { key: "sales.entry", label: "Sales Entry" },
-  { key: "reports.view", label: "Reports Access" },
-  { key: "reports.export", label: "Reports Export (PDF/Excel)" },
-  { key: "settings.access", label: "Settings Access" },
-  { key: "settings.user_permissions", label: "User Permission Manage" },
-  { key: "branches.manage", label: "Branch Permission Manage" },
-  { key: "reports.roznamcha.bulk", label: "Bulk Operations" },
-  { key: "inventory.access", label: "Inventory Access" },
-  { key: "inventory.stock", label: "Stock Management" },
-  { key: "masters.access", label: "Suppliers Access" },
-  { key: "masters.customers", label: "Customers Access" },
-  { key: "finance.access", label: "Bank Management" },
-  { key: "finance.cheque", label: "Cheque Management" },
-  { key: "settings.system", label: "All Modules Access" }
+  { key: "dashboard.access", labelKey: "branch.perm_dashboard_access", label: "Dashboard Access" },
+  { key: "branch.new_entry", labelKey: "branch.perm_branch_entry_new", label: "Branch Entry (New)" },
+  { key: "branch.edit", labelKey: "branch.perm_branch_edit", label: "Branch Edit / Update" },
+  { key: "branch.delete", labelKey: "branch.perm_branch_delete", label: "Branch Delete" },
+  { key: "users.access", labelKey: "branch.perm_users_access", label: "Users Access" },
+  { key: "users.create", labelKey: "branch.perm_users_create", label: "Users Create / Invite" },
+  { key: "users.edit", labelKey: "branch.perm_users_edit", label: "Users Edit / Update" },
+  { key: "accounts.access", labelKey: "branch.perm_accounts_access", label: "Accounts Access" },
+  { key: "accounts.new_entry", labelKey: "branch.perm_accounts_create", label: "Accounts Create" },
+  { key: "accounts.master", labelKey: "branch.perm_accounts_edit", label: "Accounts Edit / Update" },
+  { key: "ledgers.general", labelKey: "branch.perm_ledger_access", label: "Ledger Access" },
+  { key: "journal.roznamcha.general", labelKey: "branch.perm_journal_entry", label: "Journal Entry" },
+  { key: "journal.daily_payment.add_new", labelKey: "branch.perm_daily_payment", label: "Daily Payment" },
+  { key: "purchase.entry", labelKey: "branch.perm_purchase_entry", label: "Purchase Entry" },
+  { key: "sales.entry", labelKey: "branch.perm_sales_entry", label: "Sales Entry" },
+  { key: "reports.view", labelKey: "branch.perm_reports_access", label: "Reports Access" },
+  { key: "reports.export", labelKey: "branch.perm_reports_export", label: "Reports Export (PDF/Excel)" },
+  { key: "settings.access", labelKey: "branch.perm_settings_access", label: "Settings Access" },
+  { key: "settings.user_permissions", labelKey: "branch.perm_user_permission_manage", label: "User Permission Manage" },
+  { key: "branches.manage", labelKey: "branch.perm_branch_permission_manage", label: "Branch Permission Manage" },
+  { key: "reports.roznamcha.bulk", labelKey: "branch.perm_bulk_operations", label: "Bulk Operations" },
+  { key: "inventory.access", labelKey: "branch.perm_inventory_access", label: "Inventory Access" },
+  { key: "inventory.stock", labelKey: "branch.perm_stock_management", label: "Stock Management" },
+  { key: "masters.access", labelKey: "branch.perm_suppliers_access", label: "Suppliers Access" },
+  { key: "masters.customers", labelKey: "branch.perm_customers_access", label: "Customers Access" },
+  { key: "finance.access", labelKey: "branch.perm_bank_management", label: "Bank Management" },
+  { key: "finance.cheque", labelKey: "branch.perm_cheque_management", label: "Cheque Management" },
+  { key: "settings.system", labelKey: "branch.perm_all_modules_access", label: "All Modules Access" }
 ];
 
 export function BranchLiveReportPanel({
@@ -91,6 +94,9 @@ export function BranchLiveReportPanel({
   footer,
   branchData
 }: BranchLiveReportPanelProps) {
+  const lang = useActiveLanguage();
+  const notConfiguredLabel = t(lang, "branch.not_configured", "[Not Configured]");
+  const rv = (value: string | null | undefined, prefix: string = "") => renderValue(value, prefix, notConfiguredLabel);
   const hasLiveReport = Boolean(branchData);
 
   const now = new Date();
@@ -107,7 +113,7 @@ export function BranchLiveReportPanel({
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 px-4 py-3">
           <div className="flex items-center gap-2">
             <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Live Corporate Preview</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">{t(lang, "branch.live_corporate_preview", "Live Corporate Preview")}</span>
           </div>
           {actions ? <div>{actions}</div> : null}
         </div>
@@ -130,19 +136,19 @@ export function BranchLiveReportPanel({
             {/* Document Title */}
             <div className="flex flex-col items-center justify-center text-center">
               <h1 className="text-sm font-black text-blue-900 dark:text-blue-400 tracking-wide uppercase leading-tight">
-                {b.branchType === "MAIN" ? "Country Main Branch" : b.branchType === "CITY" ? "City Branch Report" : "Super Admin Branch"}
+                {b.branchType === "MAIN" ? t(lang, "branch.report_country_main_branch", "Country Main Branch") : b.branchType === "CITY" ? t(lang, "branch.report_city_branch", "City Branch Report") : t(lang, "branch.report_super_admin_branch", "Super Admin Branch")}
               </h1>
               <span className="mt-1 text-[8px] font-extrabold text-blue-600 dark:text-blue-400 border border-blue-600/30 rounded-full px-2 py-0.5 uppercase bg-blue-50/50 dark:bg-blue-950/30">
-                {b.branchStatus || status || "Draft"}
+                {b.branchStatus || status || t(lang, "branch.status_draft", "Draft")}
               </span>
             </div>
 
             {/* Metadata Box */}
             <div className="flex flex-col justify-start md:items-end text-left md:text-right text-[9px] text-slate-600 dark:text-slate-400 leading-normal font-medium">
-              <div><span className="text-slate-400">Generated On:</span> {stampDate}</div>
-              <div><span className="text-slate-400">Generated Time:</span> {stampTime}</div>
-              <div><span className="text-slate-400">Report By:</span> {b.createdBy || "Super Admin"}</div>
-              <div><span className="text-slate-400">Report Type:</span> Branch Detail</div>
+              <div><span className="text-slate-400">{t(lang, "branch.generated_on", "Generated On:")}</span> {stampDate}</div>
+              <div><span className="text-slate-400">{t(lang, "branch.generated_time", "Generated Time:")}</span> {stampTime}</div>
+              <div><span className="text-slate-400">{t(lang, "branch.report_by", "Report By:")}</span> {b.createdBy || t(lang, "branch.super_admin_role", "Super Admin")}</div>
+              <div><span className="text-slate-400">{t(lang, "branch.report_type", "Report Type:")}</span> {t(lang, "branch.report_type_branch_detail", "Branch Detail")}</div>
             </div>
           </div>
 
@@ -151,7 +157,7 @@ export function BranchLiveReportPanel({
             <div className="bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 rounded-lg p-3 space-y-2">
               <div className="text-[9px] font-black text-slate-400 dark:text-slate-500 uppercase tracking-wider border-b border-slate-200/50 dark:border-slate-800 pb-1.5 flex items-center gap-1.5">
                 <ShieldAlert className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-                <span>Parent Scope Security Hierarchy Context</span>
+                <span>{t(lang, "branch.parent_scope_hierarchy", "Parent Scope Security Hierarchy Context")}</span>
               </div>
               <div className="flex flex-wrap items-center gap-2">
                 {b.grandparentBranch && (
@@ -159,7 +165,7 @@ export function BranchLiveReportPanel({
                     <div className="bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 rounded px-2.5 py-1.5 flex flex-col min-w-[150px]">
                       <span className="text-[7px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider">{b.grandparentBranch.type}</span>
                       <span className="text-[10px] font-bold text-slate-800 dark:text-slate-200 truncate">{b.grandparentBranch.name}</span>
-                      <span className="text-[8px] font-semibold text-slate-400">Code: {b.grandparentBranch.code} ({b.grandparentBranch.status})</span>
+                      <span className="text-[8px] font-semibold text-slate-400">{t(lang, "branch.code_prefix", "Code:")} {b.grandparentBranch.code} ({b.grandparentBranch.status})</span>
                     </div>
                     <span className="text-slate-300 dark:text-slate-700 text-sm font-bold">➔</span>
                   </>
@@ -169,15 +175,15 @@ export function BranchLiveReportPanel({
                     <div className="bg-white dark:bg-slate-950 border border-slate-200/80 dark:border-slate-800 rounded px-2.5 py-1.5 flex flex-col min-w-[150px]">
                       <span className="text-[7px] font-extrabold text-blue-600 dark:text-blue-400 uppercase tracking-wider">{b.parentBranch.type}</span>
                       <span className="text-[10px] font-bold text-slate-800 dark:text-slate-200 truncate">{b.parentBranch.name}</span>
-                      <span className="text-[8px] font-semibold text-slate-400">Code: {b.parentBranch.code} ({b.parentBranch.status})</span>
+                      <span className="text-[8px] font-semibold text-slate-400">{t(lang, "branch.code_prefix", "Code:")} {b.parentBranch.code} ({b.parentBranch.status})</span>
                     </div>
                     <span className="text-slate-300 dark:text-slate-700 text-sm font-bold">➔</span>
                   </>
                 )}
                 <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-200/30 dark:border-blue-900/40 rounded px-2.5 py-1.5 flex flex-col min-w-[150px] shadow-sm">
-                  <span className="text-[7px] font-extrabold text-blue-700 dark:text-blue-400 uppercase tracking-wider">{b.branchType || "NEW"}</span>
-                  <span className="text-[10px] font-black text-blue-900 dark:text-blue-200 truncate">{b.branchName || "Creating branch..."}</span>
-                  <span className="text-[8px] font-semibold text-blue-500/80">Code: {b.branchCode || "-"} (CREATING)</span>
+                  <span className="text-[7px] font-extrabold text-blue-700 dark:text-blue-400 uppercase tracking-wider">{b.branchType || t(lang, "branch.new_badge", "NEW")}</span>
+                  <span className="text-[10px] font-black text-blue-900 dark:text-blue-200 truncate">{b.branchName || t(lang, "branch.creating_branch_placeholder", "Creating branch...")}</span>
+                  <span className="text-[8px] font-semibold text-blue-500/80">{t(lang, "branch.code_prefix", "Code:")} {b.branchCode || "-"} {t(lang, "branch.creating_suffix", "(CREATING)")}</span>
                 </div>
               </div>
             </div>
@@ -188,7 +194,7 @@ export function BranchLiveReportPanel({
             <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 bg-slate-50/20 flex items-center gap-2">
               <div className="h-6 w-6 rounded-full flex items-center justify-center text-[10px] bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-200/50">✓</div>
               <div className="flex flex-col">
-                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider">Status</span>
+                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "branch.kpi_status", "Status")}</span>
                 <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">{(b.branchStatus || "Active").toUpperCase()}</span>
               </div>
             </div>
@@ -196,7 +202,7 @@ export function BranchLiveReportPanel({
             <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 bg-slate-50/20 flex items-center gap-2">
               <div className="h-6 w-6 rounded-full flex items-center justify-center text-[10px] bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400 border border-blue-200/50">📌</div>
               <div className="flex flex-col">
-                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider">Code</span>
+                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "branch.kpi_code", "Code")}</span>
                 <span className="text-[10px] font-black text-slate-800 dark:text-slate-200">{b.branchCode || "-"}</span>
               </div>
             </div>
@@ -204,7 +210,7 @@ export function BranchLiveReportPanel({
             <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 bg-slate-50/20 flex items-center gap-2">
               <div className="h-6 w-6 rounded-full flex items-center justify-center text-[10px] bg-pink-50 text-pink-600 dark:bg-pink-950/30 dark:text-pink-400 border border-pink-200/50">🏢</div>
               <div className="flex flex-col">
-                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider">Type</span>
+                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "branch.kpi_type", "Type")}</span>
                 <span className="text-[10px] font-black text-slate-800 dark:text-slate-200">{(b.branchType || "MAIN").toUpperCase()}</span>
               </div>
             </div>
@@ -212,7 +218,7 @@ export function BranchLiveReportPanel({
             <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 bg-slate-50/20 flex items-center gap-2">
               <div className="h-6 w-6 rounded-full flex items-center justify-center text-[10px] bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400 border border-green-200/50">🌍</div>
               <div className="flex flex-col">
-                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider">Country</span>
+                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "branch.kpi_country", "Country")}</span>
                 <span className="text-[10px] font-black text-slate-800 dark:text-slate-200">{(b.country || "-").toUpperCase()}</span>
               </div>
             </div>
@@ -220,7 +226,7 @@ export function BranchLiveReportPanel({
             <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 bg-slate-50/20 flex items-center gap-2">
               <div className="h-6 w-6 rounded-full flex items-center justify-center text-[10px] bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200/50">💵</div>
               <div className="flex flex-col">
-                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider">Currency</span>
+                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "branch.kpi_currency", "Currency")}</span>
                 <span className="text-[10px] font-black text-slate-800 dark:text-slate-200">{(b.currency || "USD").toUpperCase()}</span>
               </div>
             </div>
@@ -228,7 +234,7 @@ export function BranchLiveReportPanel({
             <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 bg-slate-50/20 flex items-center gap-2">
               <div className="h-6 w-6 rounded-full flex items-center justify-center text-[10px] bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200/50">#</div>
               <div className="flex flex-col">
-                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider">Serial</span>
+                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "branch.kpi_serial", "Serial")}</span>
                 <span className="text-[10px] font-black text-slate-800 dark:text-slate-200">{b.serialNumber || "0001"}</span>
               </div>
             </div>
@@ -242,42 +248,42 @@ export function BranchLiveReportPanel({
               <div>
                 <div className="bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-t-lg flex items-center gap-2">
                   <span className="h-4 w-4 bg-white/20 rounded-full flex items-center justify-center text-[8px]">1</span>
-                  <span>Branch Information</span>
+                  <span>{t(lang, "branch.section_branch_info", "Branch Information")}</span>
                 </div>
                 <div className="border border-t-0 border-slate-100 dark:border-slate-800 rounded-b-lg p-3.5 bg-white dark:bg-slate-950/40 space-y-2">
                   <table className="w-full table-fixed text-[12px]">
                     <tbody>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Serial Number</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.serialNumber || "0001")}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_serial_number", "Serial Number")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.serialNumber || "0001")}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Branch Code</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.branchCode)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_branch_code", "Branch Code")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.branchCode)}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Branch Name</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.branchName)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_branch_name", "Branch Name")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.branchName)}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Branch Type</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.branchType)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_branch_type", "Branch Type")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.branchType)}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Country</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.country)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_country", "Country")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.country)}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Currency</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.currency)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_currency", "Currency")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.currency)}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Created Date</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.createdDate || stampDate)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_created_date", "Created Date")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.createdDate || stampDate)}</td>
                       </tr>
                       <tr>
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Updated Date</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.updatedDate || stampDate)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_updated_date", "Updated Date")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.updatedDate || stampDate)}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -288,46 +294,46 @@ export function BranchLiveReportPanel({
               <div>
                 <div className="bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-t-lg flex items-center gap-2">
                   <span className="h-4 w-4 bg-white/20 rounded-full flex items-center justify-center text-[8px]">2</span>
-                  <span>Branch Details & Address</span>
+                  <span>{t(lang, "branch.section_branch_details_address", "Branch Details & Address")}</span>
                 </div>
                 <div className="border border-t-0 border-slate-100 dark:border-slate-800 rounded-b-lg p-3.5 bg-white dark:bg-slate-950/40 space-y-2">
                   <table className="w-full table-fixed text-[12px]">
                     <tbody>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Branch Code</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.branchCode)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_branch_code", "Branch Code")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.branchCode)}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">City / Region</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.city)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_city_region", "City / Region")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.city)}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">City Code</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.cityCode)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_city_code", "City Code")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.cityCode)}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">State / Province</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.stateProvince)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_state_province", "State / Province")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.stateProvince)}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Area / District</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.areaRegion)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_area_district", "Area / District")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.areaRegion)}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Postal / Zip Code</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.zipCode)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_postal_zip", "Postal / Zip Code")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.zipCode)}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Mobile Number</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.phone, "Tel: ")}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_mobile_number", "Mobile Number")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.phone, t(lang, "branch.tel_prefix", "Tel: "))}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Email Address</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.email, "Email: ")}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_email_address", "Email Address")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.email, t(lang, "branch.email_prefix", "Email: "))}</td>
                       </tr>
                       <tr>
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Full Address</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.fullAddress)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_full_address", "Full Address")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.fullAddress)}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -341,7 +347,7 @@ export function BranchLiveReportPanel({
               <div>
                 <div className="bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-t-lg flex items-center gap-2">
                   <span className="h-4 w-4 bg-white/20 rounded-full flex items-center justify-center text-[8px]">3</span>
-                  <span>Owner Details</span>
+                  <span>{t(lang, "branch.section_owner_details", "Owner Details")}</span>
                 </div>
                 <div className="border border-t-0 border-slate-100 dark:border-slate-800 rounded-b-lg p-3.5 bg-white dark:bg-slate-950/40 space-y-3">
                   {/* Owner avatar card */}
@@ -350,53 +356,53 @@ export function BranchLiveReportPanel({
                       <User2 className="h-5 w-5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h5 className="text-xs font-black text-slate-800 dark:text-slate-200">{renderValue(b.ownerName)}</h5>
-                      <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">Code: {renderValue(b.ownerCode)}</p>
-                      <p className="text-[9px] text-slate-400 font-semibold mt-0.5">Designation: {renderValue(b.designation)}</p>
+                      <h5 className="text-xs font-black text-slate-800 dark:text-slate-200">{rv(b.ownerName)}</h5>
+                      <p className="text-[9px] text-slate-400 font-bold uppercase mt-0.5">{t(lang, "branch.code_prefix", "Code:")} {rv(b.ownerCode)}</p>
+                      <p className="text-[9px] text-slate-400 font-semibold mt-0.5">{t(lang, "branch.designation_prefix", "Designation:")} {rv(b.designation)}</p>
                     </div>
                   </div>
 
                   <table className="w-full table-fixed text-[12px]">
                     <tbody>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Father / Husband Name</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.fatherHusbandName)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_father_husband", "Father / Husband Name")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.fatherHusbandName)}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">CNIC / ID Number</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.cnicId)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_cnic_id", "CNIC / ID Number")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.cnicId)}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Nationality</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.nationality)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_nationality", "Nationality")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.nationality)}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Ownership Type</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.ownershipType)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_ownership_type", "Ownership Type")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.ownershipType)}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Ownership Percentage</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.ownershipPercent)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_ownership_percent", "Ownership Percentage")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.ownershipPercent)}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Mobile / Phone</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.ownerPhone, "Tel: ")}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_mobile_phone", "Mobile / Phone")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.ownerPhone, t(lang, "branch.tel_prefix", "Tel: "))}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">WhatsApp</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.ownerWhatsApp, "WhatsApp: ")}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_whatsapp", "WhatsApp")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.ownerWhatsApp, t(lang, "branch.whatsapp_prefix", "WhatsApp: "))}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Email</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.ownerEmail, "Email: ")}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_email", "Email")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.ownerEmail, t(lang, "branch.email_prefix", "Email: "))}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Country</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.ownerCountry)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_country", "Country")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.ownerCountry)}</td>
                       </tr>
                       <tr>
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Address / Website</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.ownerWebsite)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_address_website", "Address / Website")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.ownerWebsite)}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -407,38 +413,38 @@ export function BranchLiveReportPanel({
               <div>
                 <div className="bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-t-lg flex items-center gap-2">
                   <span className="h-4 w-4 bg-white/20 rounded-full flex items-center justify-center text-[8px]">4</span>
-                  <span>Company Details</span>
+                  <span>{t(lang, "branch.section_company_details", "Company Details")}</span>
                 </div>
                 <div className="border border-t-0 border-slate-100 dark:border-slate-800 rounded-b-lg p-3.5 bg-white dark:bg-slate-950/40 space-y-2">
                   <table className="w-full table-fixed text-[12px]">
                     <tbody>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Company Name</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.companyName)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_company_name", "Company Name")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.companyName)}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Company Code</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.companyCode)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_company_code", "Company Code")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.companyCode)}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Company Type</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.companyType)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_company_type", "Company Type")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.companyType)}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Office Phone</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.companyPhone, "Tel: ")}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_office_phone", "Office Phone")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.companyPhone, t(lang, "branch.tel_prefix", "Tel: "))}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Office Email</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.companyEmail, "Email: ")}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_office_email", "Office Email")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.companyEmail, t(lang, "branch.email_prefix", "Email: "))}</td>
                       </tr>
                       <tr className="border-b border-slate-100 dark:border-slate-900/50">
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Office Address</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.companyOfficeAddress)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_office_address", "Office Address")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.companyOfficeAddress)}</td>
                       </tr>
                       <tr>
-                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">Company Status</td>
-                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{renderValue(b.companyStatus)}</td>
+                        <td className="w-[42%] py-2 pr-3 align-top text-[11px] font-semibold uppercase tracking-[0.02em] text-slate-500 dark:text-slate-400">{t(lang, "branch.row_company_status", "Company Status")}</td>
+                        <td className="py-2 align-top text-left text-[12px] font-semibold text-slate-900 dark:text-slate-100 sm:text-right">{rv(b.companyStatus)}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -451,7 +457,7 @@ export function BranchLiveReportPanel({
           <div>
             <div className="bg-blue-600 text-white text-[10px] font-bold uppercase tracking-wider px-3 py-2 rounded-t-lg flex items-center gap-2">
               <span className="h-4 w-4 bg-white/20 rounded-full flex items-center justify-center text-[8px]">5</span>
-              <span>Branch Permissions & Access Rights</span>
+              <span>{t(lang, "branch.section_permissions_access", "Branch Permissions & Access Rights")}</span>
             </div>
             <div className="border border-t-0 border-slate-100 dark:border-slate-800 rounded-b-md p-4 bg-slate-50/30 dark:bg-slate-950/40">
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
@@ -476,7 +482,7 @@ export function BranchLiveReportPanel({
                           <X className="h-2.5 w-2.5" strokeWidth={3} />
                         </div>
                       )}
-                      <span className="truncate">{item.label}</span>
+                      <span className="truncate">{t(lang, item.labelKey as any, item.label)}</span>
                     </div>
                   );
                 })}
@@ -488,8 +494,8 @@ export function BranchLiveReportPanel({
           <div className="border-t border-slate-200 dark:border-slate-800 pt-6 flex flex-col md:flex-row items-center justify-between gap-6">
             {/* Remarks */}
             <div className="w-full md:w-5/12 bg-slate-50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800 p-3 rounded-lg text-[10px] text-slate-500 dark:text-slate-400 leading-normal">
-              <strong className="block text-slate-700 dark:text-slate-300 text-xs mb-1">Remarks / Notes</strong>
-              <span>{b.remarks || "This is the branch profile summary report. All operations are managed under this branch's authorized scopes."}</span>
+              <strong className="block text-slate-700 dark:text-slate-300 text-xs mb-1">{t(lang, "branch.remarks_notes", "Remarks / Notes")}</strong>
+              <span>{b.remarks || t(lang, "branch.default_remarks", "This is the branch profile summary report. All operations are managed under this branch's authorized scopes.")}</span>
             </div>
 
             {/* Verification Seal */}
@@ -519,9 +525,9 @@ export function BranchLiveReportPanel({
             {/* Signature Block */}
             <div className="w-full md:w-3/12 flex flex-col items-center justify-center text-center">
               <div className="border-b border-slate-300 dark:border-slate-700 w-full h-8 flex items-end justify-center pb-1 text-slate-800 dark:text-slate-200 font-serif italic text-sm font-semibold select-none">
-                {b.createdBy || "Super Admin"}
+                {b.createdBy || t(lang, "branch.super_admin_role", "Super Admin")}
               </div>
-              <p className="text-[10px] font-extrabold text-slate-500 mt-1 uppercase">Approved Authority</p>
+              <p className="text-[10px] font-extrabold text-slate-500 mt-1 uppercase">{t(lang, "branch.approved_authority", "Approved Authority")}</p>
               <p className="text-[8px] text-slate-400 font-medium leading-none">ACCOUNTS.DGT.LLC</p>
             </div>
           </div>
@@ -543,7 +549,7 @@ export function BranchLiveReportPanel({
             <CardTitle>{title}</CardTitle>
           </div>
           <span className={pillClassName()}>
-            <b>Status:</b> <span>{status}</span>
+            <b>{t(lang, "common.status", "Status")}:</b> <span>{status}</span>
           </span>
         </div>
 

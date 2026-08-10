@@ -179,14 +179,6 @@ export function SidebarNav({
   const autoOpen = useMemo(() => collectAutoOpenKeys(nodes, pathname), [nodes, pathname]);
   const [openKeys, setOpenKeys] = useState<Set<string>>(() => autoOpen);
 
-  useEffect(() => {
-    setOpenKeys((prev) => {
-      const next = new Set(prev);
-      for (const key of autoOpen) next.add(key);
-      return next;
-    });
-  }, [autoOpen]);
-
   function toggle(key: string) {
     setOpenKeys((prev) => {
       const next = new Set(prev);
