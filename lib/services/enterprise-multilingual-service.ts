@@ -3,6 +3,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { ErpSession } from "@/lib/auth/session";
 import { supportedLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
 import { multilingualService } from "@/lib/services/multilingual-service";
+import { buildVerifiedTranslationSet, type VerifiedTranslationMap } from "@/lib/i18n/verified-record-translations";
 
 type TranslationMap = Record<SupportedLanguage, string>;
 
@@ -37,6 +38,10 @@ export type EnterpriseTranslationSaveInput = {
   fields: EnterpriseTranslationField[];
   actorId?: string | null;
   source?: "auto" | "manual" | "imported";
+};
+
+export type VerifiedEnterpriseTranslationField = EnterpriseTranslationField & {
+  translations?: VerifiedTranslationMap;
 };
 
 export type EnterpriseEventInput = {
@@ -139,6 +144,42 @@ export async function saveEnterpriseRecordTranslations(
   }
 
   return saved;
+}
+
+export async function saveVerifiedEnterpriseRecordTranslations(
+  input: Omit<EnterpriseTranslationSaveInput, "fields"> & { fields: VerifiedEnterpriseTranslationField[] },
+  db: EnterpriseDbClient = adminDb()
+) {
+  const results: Array<{ fieldName: string; status: "complete" | "pending"; missingLanguages: SupportedLanguage[]; translations: VerifiedTranslationMap }> = [];
+  for (const field of input.fields.filter((item) => typeof item.value === "string" && item.value.trim())) {
+    const originalText = String(field.value).trim();
+    const verified = await buildVerifiedTranslationSet({
+      value: originalText,
+      originalLanguage: input.originalLanguage,
+      mode: field.mode,
+      supplied: field.translations
+    });
+    const { error } = await db.rpc("upsert_record_translation", {
+      p_record_table: input.recordTable,
+      p_record_id: input.recordId,
+      p_field_name: field.fieldName,
+      p_original_text: originalText,
+      p_original_language_code: input.originalLanguage,
+      p_english: verified.translations.en ?? null,
+      p_urdu: verified.translations.ur ?? null,
+      p_arabic: verified.translations.ar ?? null,
+      p_persian: verified.translations.fa ?? null,
+      p_pashto: verified.translations.ps ?? null,
+      p_language_texts: verified.translations,
+      p_source: verified.engine === "manual" ? "manual" : input.source ?? "auto",
+      p_translation_status: verified.status,
+      p_translated_by_engine: verified.engine,
+      p_actor_id: verified.engine === "manual" ? input.actorId ?? null : null
+    });
+    if (error) throw new Error(error.message);
+    results.push({ fieldName: field.fieldName, status: verified.status, missingLanguages: verified.missingLanguages, translations: verified.translations });
+  }
+  return results;
 }
 
 export async function resolveEnterpriseRecordText(input: {

@@ -47,6 +47,13 @@ export function WhatsAppWizardModal({
   const [testRecipient, setTestRecipient] = useState(defaultPhoneNumber || "00971544816664");
   const [testMessage, setTestMessage] = useState("Hello from Digital Dock ERP! Official Meta WhatsApp connection is live.");
   const [sendingTest, setSendingTest] = useState(false);
+  const [testResult, setTestResult] = useState<{
+    success?: boolean;
+    metaSuccess?: boolean;
+    status?: string;
+    wamid?: string;
+    details?: unknown;
+  } | null>(null);
   // Meta Admin token inline state
   const [accessToken, setAccessToken] = useState("");
   const [verifyingMeta, setVerifyingMeta] = useState(false);
@@ -444,7 +451,7 @@ export function WhatsAppWizardModal({
                   {testResult.wamid && (
                     <p>WAMID: <span className="font-bold text-emerald-600">{testResult.wamid}</span></p>
                   )}
-                  {testResult.details && (
+                  {Boolean(testResult.details) && (
                     <p className="text-[10.5px] opacity-90">
                       {typeof testResult.details === "string" ? testResult.details : JSON.stringify(testResult.details)}
                     </p>

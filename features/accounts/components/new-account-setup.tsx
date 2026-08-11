@@ -805,9 +805,9 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
       </div>
 
       {/* â”€â”€ Left Column Form + Right Column Preview â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className="grid grid-cols-1 lg:grid-cols-[0.9fr_1.1fr] gap-5 items-start" dir="ltr">
         {/* Left Side: Step View */}
-        <div className="lg:col-span-4 space-y-6">
+        <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
           {loadingAccount ? (
             <div className="rounded-xl border border-slate-100 bg-white p-10 shadow-sm flex flex-col items-center justify-center space-y-3">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -1039,7 +1039,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                   onClick={() => {
                     const activeCountry = country || (countries.length > 0 ? countries[0].id : "c-uae-1001");
                     const activeBranchType = branchType || "Main";
-                    const activeBranch = branch || (branches.length > 0 ? branches[0].id : "b-main-001");
+                    const activeBranch = branch || (branchOptions.length > 0 ? branchOptions[0].id : "b-main-001");
                     const activeTitle = accountTitle || "Company";
                     const activeSubType = subType || "Trading Company";
                     const activeCategory = category || "Sundry Debtors";
@@ -1325,7 +1325,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
         </div>
 
         {/* Right Side: High-fidelity Live Report Preview */}
-        <div className="lg:col-span-8 h-fit lg:sticky lg:top-24 space-y-4">
+        <div className="h-fit lg:sticky lg:top-24 space-y-4" dir={isRtl ? "rtl" : "ltr"}>
           <AccountLiveReportPanel
             accountName={accountName}
             lang={lang}

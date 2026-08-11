@@ -2,6 +2,7 @@
 
 import { Users, ClipboardList, Wallet, Building2, CalendarDays, Clock3 } from "lucide-react";
 import { t, type UiKey } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 type ReportSummary = {
@@ -51,6 +52,7 @@ function formatMoney(val: number) {
 
 export function ReportKpiCards({ lang, summary, reportType, currency = "USD", isLoading }: Props) {
   const _ = (key: UiKey, fallback?: string) => t(lang, key, fallback);
+  const th = (label: string) => translateHeader(lang, label);
 
   if (isLoading) {
     return (
@@ -99,24 +101,24 @@ export function ReportKpiCards({ lang, summary, reportType, currency = "USD", is
       <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
         <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
           <Users className="h-4 w-4 text-blue-600" />
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. BRANCH & USER DETAILS</span>
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. {th("BRANCH & USER DETAILS")}</span>
         </div>
         <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
           <div className="flex justify-between">
-            <span>Country:</span>
+            <span>{th("COUNTRY")}:</span>
             <span className="font-bold text-slate-900 dark:text-slate-100">{country}</span>
           </div>
           <div className="flex justify-between">
-            <span>Branch Name:</span>
+            <span>{th("BRANCH NAME")}:</span>
             <span className="font-bold text-slate-900 dark:text-slate-100 uppercase">{branch}</span>
           </div>
           <div className="flex justify-between">
-            <span>User ID / Name:</span>
+            <span>{th("USER ID / NAME")}:</span>
             <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[120px]" title={`${uId} - ${uName}`}>{uId} ({uName})</span>
           </div>
           <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-            <span>Status:</span>
-            <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px]">Active Session</span>
+            <span>{th("STATUS")}:</span>
+            <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px]">{th("ACTIVE SESSION")}</span>
           </div>
         </div>
       </div>
@@ -125,27 +127,27 @@ export function ReportKpiCards({ lang, summary, reportType, currency = "USD", is
       <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
         <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
           <ClipboardList className="h-4 w-4 text-emerald-600" />
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">2. RECORD / BILL SUMMARY</span>
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">2. {th("RECORD / BILL SUMMARY")}</span>
         </div>
         <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
           <div className="flex justify-between text-slate-600 dark:text-slate-400">
-            <span>Total Records</span>
+            <span>{th("TOTAL RECORDS")}</span>
             <span className="font-bold text-slate-900 dark:text-slate-100">{totalRecords}</span>
           </div>
           <div className="flex justify-between text-slate-500">
-            <span>Draft</span>
+            <span>{th("DRAFT")}</span>
             <span className="font-bold text-slate-700 dark:text-slate-300">{draftCount}</span>
           </div>
           <div className="flex justify-between text-red-600 dark:text-red-400 font-bold">
-            <span>Accepted (Pending)</span>
+            <span>{th("ACCEPTED (PENDING)")}</span>
             <span>{acceptedCount}</span>
           </div>
           <div className="flex justify-between text-slate-900 dark:text-slate-100 font-black">
-            <span>Transferred</span>
+            <span>{th("TRANSFERRED")}</span>
             <span>{transferredCount}</span>
           </div>
           <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-            <span>Completed</span>
+            <span>{th("COMPLETED")}</span>
             <span>{completedCount}</span>
           </div>
         </div>
@@ -155,23 +157,23 @@ export function ReportKpiCards({ lang, summary, reportType, currency = "USD", is
       <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
         <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
           <Wallet className="h-4 w-4 text-purple-600" />
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. TOTAL AMOUNTS ({qCurrency})</span>
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. {th("TOTAL AMOUNTS")} ({qCurrency})</span>
         </div>
         <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
           <div className="flex justify-between text-slate-600 dark:text-slate-400">
-            <span>Total Amount</span>
+            <span>{th("TOTAL AMOUNT")}</span>
             <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{formatMoney(totalAmt)}</span>
           </div>
           <div className="flex justify-between text-red-600 dark:text-red-400 font-bold">
-            <span>Accepted (Pending)</span>
+            <span>{th("ACCEPTED (PENDING)")}</span>
             <span className="font-mono">{formatMoney(acceptedAmt)}</span>
           </div>
           <div className="flex justify-between text-slate-900 dark:text-slate-100 font-black">
-            <span>Transferred</span>
+            <span>{th("TRANSFERRED")}</span>
             <span className="font-mono">{formatMoney(transferredAmt)}</span>
           </div>
           <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-            <span>Completed</span>
+            <span>{th("COMPLETED")}</span>
             <span className="font-mono">{formatMoney(completedAmt)}</span>
           </div>
         </div>
@@ -181,19 +183,19 @@ export function ReportKpiCards({ lang, summary, reportType, currency = "USD", is
       <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
         <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
           <Building2 className="h-4 w-4 text-indigo-600" />
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. BRANCHES</span>
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. {th("BRANCHES")}</span>
         </div>
         <div className="mt-2.5 space-y-1.5 text-[11px] font-semibold">
           <div className="flex justify-between text-slate-600 dark:text-slate-400">
-            <span>Total Branches</span>
+            <span>{th("TOTAL BRANCHES")}</span>
             <span className="font-bold text-slate-900 dark:text-slate-100">{totalBr}</span>
           </div>
           <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-            <span>Active Branches</span>
+            <span>{th("ACTIVE BRANCHES")}</span>
             <span>{activeBr}</span>
           </div>
           <div className="flex justify-between text-slate-400">
-            <span>Inactive Branches</span>
+            <span>{th("INACTIVE BRANCHES")}</span>
             <span>{inactiveBr}</span>
           </div>
         </div>
@@ -203,23 +205,23 @@ export function ReportKpiCards({ lang, summary, reportType, currency = "USD", is
       <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
         <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
           <Clock3 className="h-4 w-4 text-amber-500" />
-          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">5. QUICK INFO</span>
+          <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">5. {th("QUICK INFO")}</span>
         </div>
         <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
           <div className="flex justify-between">
-            <span>Currency</span>
+            <span>{th("CURRENCY")}</span>
             <span className="font-bold text-slate-900 dark:text-slate-100">{qCurrency}</span>
           </div>
           <div className="flex justify-between">
-            <span>Exchange Rate</span>
+            <span>{th("EXCHANGE RATE")}</span>
             <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{qRate}</span>
           </div>
           <div className="flex justify-between">
-            <span>Company</span>
+            <span>{th("COMPANY")}</span>
             <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px] text-right" title={qCompany}>{qCompany}</span>
           </div>
           <div className="flex justify-between">
-            <span>Financial Year</span>
+            <span>{th("FINANCIAL YEAR")}</span>
             <span className="font-bold text-slate-900 dark:text-slate-100">{qFY}</span>
           </div>
         </div>

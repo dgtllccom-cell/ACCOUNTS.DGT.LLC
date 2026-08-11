@@ -17,6 +17,7 @@ import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 function titleFromPath(pathname: string, lang: string) {
@@ -28,12 +29,18 @@ function titleFromPath(pathname: string, lang: string) {
 
   if (!lastSegment) return t(lang, "pa.default_title", "Dashboard");
 
-  return lastSegment
+  const humanized = lastSegment
     .replace(/\?.*$/, "")
     .split("-")
     .filter(Boolean)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+
+  // Route segments don't carry a semantic i18n key of their own, so this falls
+  // back to the shared header dictionary (keyed by normalized English text) —
+  // same lookup used for table column headers. Unmapped routes safely render
+  // the humanized English title, same as before this fix.
+  return translateHeader(lang, humanized);
 }
 
 function currentUrl() {

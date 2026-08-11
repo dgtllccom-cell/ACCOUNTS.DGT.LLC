@@ -38,7 +38,7 @@ type Props = {
   cityBranches?: ReportMetaItem[];
   users?: { id: string; name: string }[];
   currencies?: { code: string; name: string }[];
-  reportTypes?: { key: string; icon?: string }[];
+  reportTypes?: { key: string; icon?: string; labelKey?: string; label?: string }[];
 
   // Scope lock — non-editable if locked
   lockedCountryId?: string | null;
@@ -228,7 +228,7 @@ export function ReportFilterBar({
                 >
                   {safeReportTypes.map((rt) => (
                     <option key={rt.key} value={rt.key}>
-                      {t(lang, `report.${rt.key.replace(/-/g, "_")}` as UiKey, rt.key)}
+                      {t(lang, rt.labelKey || `report.${rt.key.replace(/-/g, "_")}`, rt.label || rt.key)}
                     </option>
                   ))}
                 </select>

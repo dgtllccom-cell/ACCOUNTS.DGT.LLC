@@ -36,7 +36,8 @@ import {
   Wallet,
   Clock,
   ShieldCheck,
-  Send
+  Send,
+  CheckCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
@@ -52,7 +53,9 @@ import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { ReportPagination } from "@/features/reports/components/report-pagination";
 import { ReportStatusLegend } from "@/features/reports/components/report-status-legend";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
+import { t } from "@/lib/i18n/ui";
+import { translationPendingLabel } from "@/lib/i18n/purchase-order-translations";
+import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
 import { Th } from "@/components/ui/translated-th";
 
 type PurchaseReport = {
@@ -1357,8 +1360,7 @@ export function PurchaseBookingJournalReportView({
     if (transObj && transObj[activeLang]) {
       return transObj[activeLang];
     }
-    const auto = autoTranslate5Languages(fallback);
-    return auto[activeLang] || fallback;
+    return activeLang === "en" ? fallback : translationPendingLabel(activeLang);
   }, [activeLang]);
 
   const [searchText, setSearchText] = useState("");
@@ -1942,8 +1944,8 @@ export function PurchaseBookingJournalReportView({
       {/* Portals for Top Navigation Strip */}
       {titleSlot && createPortal(
         <div className="min-w-0">
-          <h1 className="truncate text-sm font-black text-slate-900 dark:text-slate-100">Purchase Booking Register</h1>
-          <p className="hidden text-[10px] font-semibold text-slate-400 sm:block">Wholesaler / Import Export / Container Trading</p>
+          <h1 className="truncate text-sm font-black text-slate-900 dark:text-slate-100">{t(activeLang, "pb_register.title", "Purchase Booking Register")}</h1>
+          <p className="hidden text-[10px] font-semibold text-slate-400 sm:block">{t(activeLang, "pb_register.subtitle", "Wholesaler / Import Export / Container Trading")}</p>
         </div>,
         titleSlot
       )}
@@ -1957,7 +1959,7 @@ export function PurchaseBookingJournalReportView({
             onChange={(e) => setFilters(prev => ({ ...prev, country: e.target.value }))}
             className="h-8 min-w-[130px] rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 disabled:opacity-50"
           >
-            <option value="">Select Country (All)</option>
+            <option value="">{t(activeLang, "pb_register.select_country_all", "Select Country (All)")}</option>
             {countries.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
 
@@ -1968,7 +1970,7 @@ export function PurchaseBookingJournalReportView({
             onChange={(e) => setFilters(prev => ({ ...prev, branch: e.target.value }))}
             className="h-8 min-w-[130px] rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200 disabled:opacity-50"
           >
-            <option value="">Select Branch (All)</option>
+            <option value="">{t(activeLang, "pb_register.select_branch_all", "Select Branch (All)")}</option>
             {branches.map((b) => <option key={b} value={b}>{b}</option>)}
           </select>
 
@@ -1978,11 +1980,11 @@ export function PurchaseBookingJournalReportView({
             onChange={(e) => setFilters(prev => ({ ...prev, status: e.target.value }))}
             className="h-8 min-w-[120px] rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
           >
-            <option value="">Select Status (All)</option>
-            <option value="Draft">Draft</option>
-            <option value="Accepted">Accepted</option>
-            <option value="Transferred">Transferred</option>
-            <option value="Completed">Completed</option>
+            <option value="">{t(activeLang, "pb_register.select_status_all", "Select Status (All)")}</option>
+            <option value="Draft">{t(activeLang, "pb_register.status_draft", "Draft")}</option>
+            <option value="Accepted">{t(activeLang, "pb_register.status_accepted", "Accepted")}</option>
+            <option value="Transferred">{t(activeLang, "pb_register.status_transferred", "Transferred")}</option>
+            <option value="Completed">{t(activeLang, "pb_register.status_completed", "Completed")}</option>
           </select>
 
           {/* Search box input */}
@@ -1991,7 +1993,7 @@ export function PurchaseBookingJournalReportView({
             <input
               value={searchText}
               onChange={(event) => setSearchText(event.target.value)}
-              placeholder="Search booking, supplier, branch..."
+              placeholder={t(activeLang, "pb_register.search_placeholder", "Search booking, supplier, branch...")}
               className="h-8 w-full rounded-lg border border-slate-200 bg-white pl-8 pr-2.5 text-[10px] font-semibold text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
             />
           </div>
@@ -2044,7 +2046,7 @@ export function PurchaseBookingJournalReportView({
             className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
           >
             <Printer className="h-3.5 w-3.5 text-slate-500" />
-            Print
+            {t(activeLang, "common.print", "Print")}
           </button>
 
           {/* Combined Reset & Refresh Button */}
@@ -2073,7 +2075,7 @@ export function PurchaseBookingJournalReportView({
             className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-[10px] font-bold text-slate-600 shadow-sm hover:bg-slate-50 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400"
           >
             <RefreshCcw className={loading ? "h-3 w-3 animate-spin text-slate-500" : "h-3 w-3 text-slate-500"} />
-            Reset & Refresh
+            {t(activeLang, "pb_register.reset_refresh", "Reset & Refresh")}
           </button>
 
           {/* Three-dots menu */}
@@ -2090,7 +2092,7 @@ export function PurchaseBookingJournalReportView({
             }}
             className="h-8 rounded-lg bg-blue-600 px-3 text-[10px] font-bold text-white hover:bg-blue-700 shadow-sm border-0 flex items-center gap-1.5 transition"
           >
-            <Plus className="h-3 w-3" /> New Booking
+            <Plus className="h-3 w-3" /> {t(activeLang, "pb_register.new_booking", "New Booking")}
           </button>
         </div>,
         actionsSlot
@@ -2102,33 +2104,33 @@ export function PurchaseBookingJournalReportView({
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <ClipboardList className="h-4 w-4 text-blue-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">BILL SUMMARY</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "pb_register.card_bill_summary", "BILL SUMMARY")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>Total Bills</span>
+              <span>{t(activeLang, "pb_register.total_bills", "Total Bills")}</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">{reports.length}</span>
             </div>
             <div className="flex justify-between text-slate-500">
-              <span>Draft</span>
+              <span>{t(activeLang, "pb_register.status_draft", "Draft")}</span>
               <span className="font-bold text-slate-700 dark:text-slate-300">
                 {reports.filter(r => r.status === "Draft" || r.status === "Open" || (r.status !== "Accepted" && r.status !== "Transferred" && r.status !== "Posted" && r.status !== "Completed")).length}
               </span>
             </div>
             <div className="flex justify-between text-red-600 dark:text-red-400 font-bold">
-              <span>Accepted (Not Transferred)</span>
+              <span>{t(activeLang, "pb_register.accepted_not_transferred", "Accepted (Not Transferred)")}</span>
               <span>
                 {reports.filter(r => (r.status === "Accepted" || r.confirmationStatus === "Confirmed") && r.status !== "Transferred" && r.status !== "Posted" && r.status !== "Completed").length}
               </span>
             </div>
             <div className="flex justify-between text-slate-900 dark:text-slate-100 font-black">
-              <span>Transferred</span>
+              <span>{t(activeLang, "pb_register.status_transferred", "Transferred")}</span>
               <span>
                 {reports.filter(r => r.status === "Transferred" || r.status === "Posted" || (r as any).ledgerPostingStatus === "Posted" || (r as any).ledger_posting_status === "Posted").length}
               </span>
             </div>
             <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-              <span>Completed</span>
+              <span>{t(activeLang, "pb_register.status_completed", "Completed")}</span>
               <span>
                 {reports.filter(r => r.status === "Completed").length}
               </span>
@@ -2140,29 +2142,29 @@ export function PurchaseBookingJournalReportView({
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <BadgeDollarSign className="h-4 w-4 text-emerald-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">TOTAL AMOUNTS (AED)</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "pb_register.card_total_amounts", "TOTAL AMOUNTS")} (AED)</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>Total Purchase Amount</span>
+              <span>{t(activeLang, "pb_register.total_purchase_amount", "Total Purchase Amount")}</span>
               <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
                 {formatMoney(reports.reduce((s, r) => s + Number(r.totalPurchaseAmount || r.purchaseAmount || 0), 0))}
               </span>
             </div>
             <div className="flex justify-between text-red-600 dark:text-red-400 font-bold">
-              <span>Accepted (Not Transferred)</span>
+              <span>{t(activeLang, "pb_register.accepted_not_transferred", "Accepted (Not Transferred)")}</span>
               <span className="font-mono">
                 {formatMoney(reports.filter(r => (r.status === "Accepted" || r.confirmationStatus === "Confirmed") && r.status !== "Transferred" && r.status !== "Posted" && r.status !== "Completed").reduce((s, r) => s + Number(r.totalPurchaseAmount || r.purchaseAmount || 0), 0))}
               </span>
             </div>
             <div className="flex justify-between text-slate-900 dark:text-slate-100 font-black">
-              <span>Transferred</span>
+              <span>{t(activeLang, "pb_register.status_transferred", "Transferred")}</span>
               <span className="font-mono">
                 {formatMoney(reports.filter(r => r.status === "Transferred" || r.status === "Posted" || (r as any).ledgerPostingStatus === "Posted" || (r as any).ledger_posting_status === "Posted").reduce((s, r) => s + Number(r.totalPurchaseAmount || r.purchaseAmount || 0), 0))}
               </span>
             </div>
             <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-              <span>Completed</span>
+              <span>{t(activeLang, "pb_register.status_completed", "Completed")}</span>
               <span className="font-mono">
                 {formatMoney(reports.filter(r => r.status === "Completed").reduce((s, r) => s + Number(r.totalPurchaseAmount || r.purchaseAmount || 0), 0))}
               </span>
@@ -2174,21 +2176,21 @@ export function PurchaseBookingJournalReportView({
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Building2 className="h-4 w-4 text-purple-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">BRANCHES</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "pb_register.card_branches", "BRANCHES")}</span>
           </div>
           <div className="mt-2.5 space-y-1.5 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>Total Branches</span>
+              <span>{t(activeLang, "pb_register.total_branches", "Total Branches")}</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">
                 {branchSummary.length}
               </span>
             </div>
             <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-              <span>Active Branches</span>
+              <span>{t(activeLang, "pb_register.active_branches", "Active Branches")}</span>
               <span>{branchSummary.length}</span>
             </div>
             <div className="flex justify-between text-slate-400">
-              <span>Inactive Branches</span>
+              <span>{t(activeLang, "pb_register.inactive_branches", "Inactive Branches")}</span>
               <span>0</span>
             </div>
           </div>
@@ -2198,29 +2200,29 @@ export function PurchaseBookingJournalReportView({
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <CalendarDays className="h-4 w-4 text-blue-500" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">THIS MONTH</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "pb_register.card_this_month", "THIS MONTH")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>Bills Created</span>
+              <span>{t(activeLang, "pb_register.bills_created", "Bills Created")}</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">
                 {reports.filter(r => new Date(r.purchaseDate || r.createdAt).getMonth() === new Date().getMonth()).length}
               </span>
             </div>
             <div className="flex justify-between text-blue-600 dark:text-blue-400 font-bold">
-              <span>Amount (AED)</span>
+              <span>{t(activeLang, "pb_register.amount_label", "Amount")} (AED)</span>
               <span className="font-mono">
                 {formatMoney(reports.filter(r => new Date(r.purchaseDate || r.createdAt).getMonth() === new Date().getMonth()).reduce((s, r) => s + Number(r.totalPurchaseAmount || r.purchaseAmount || 0), 0))}
               </span>
             </div>
             <div className="flex justify-between text-slate-900 dark:text-slate-100 font-black">
-              <span>Transferred</span>
+              <span>{t(activeLang, "pb_register.status_transferred", "Transferred")}</span>
               <span>
                 {reports.filter(r => (r.status === "Transferred" || r.status === "Posted") && new Date(r.purchaseDate || r.createdAt).getMonth() === new Date().getMonth()).length}
               </span>
             </div>
             <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-              <span>Completed</span>
+              <span>{t(activeLang, "pb_register.status_completed", "Completed")}</span>
               <span>
                 {reports.filter(r => r.status === "Completed" && new Date(r.purchaseDate || r.createdAt).getMonth() === new Date().getMonth()).length}
               </span>
@@ -2232,23 +2234,23 @@ export function PurchaseBookingJournalReportView({
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Clock3 className="h-4 w-4 text-amber-500" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">QUICK INFO</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">{t(activeLang, "pb_register.card_quick_info", "QUICK INFO")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             <div className="flex justify-between">
-              <span>Currency</span>
+              <span>{t(activeLang, "pb_register.currency", "Currency")}</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">{apiSummary?.quickInfo?.currency ?? "—"}</span>
             </div>
             <div className="flex justify-between">
-              <span>Exchange Rate (Avg.)</span>
+              <span>{t(activeLang, "pb_register.exchange_rate_avg", "Exchange Rate (Avg.)")}</span>
               <span className="font-mono font-bold text-slate-900 dark:text-slate-100">{apiSummary?.quickInfo?.exchangeRate ?? "—"}</span>
             </div>
             <div className="flex justify-between">
-              <span>Company</span>
+              <span>{t(activeLang, "pb_register.company", "Company")}</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[120px] text-right" title={apiSummary?.quickInfo?.company}>{apiSummary?.quickInfo?.company ?? "—"}</span>
             </div>
             <div className="flex justify-between">
-              <span>Financial Year</span>
+              <span>{t(activeLang, "pb_register.financial_year", "Financial Year")}</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">{apiSummary?.quickInfo?.financialYear ?? "—"}</span>
             </div>
           </div>
@@ -2269,9 +2271,9 @@ export function PurchaseBookingJournalReportView({
             <ClipboardList className="h-5 w-5 text-blue-600" />
             <div>
               <h2 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
-                PURCHASE BOOKING REGISTER
+                {t(activeLang, "pb_register.title", "Purchase Booking Register")}
               </h2>
-              <p className="text-[10px] text-slate-500">View, manage and track all purchase booking bills across branches</p>
+              <p className="text-[10px] text-slate-500">{t(activeLang, "pb_register.section_subtitle", "View, manage and track all purchase booking bills across branches")}</p>
             </div>
           </div>
 
@@ -2286,7 +2288,7 @@ export function PurchaseBookingJournalReportView({
                   : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900"
               )}
             >
-              Standard Register (13 Columns)
+              {t(activeLang, "pb_register.standard_register_13", "Standard Register (13 Columns)")}
             </button>
             <button
               type="button"
@@ -2298,7 +2300,7 @@ export function PurchaseBookingJournalReportView({
                   : "text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-900"
               )}
             >
-              Detailed Audit Register (41 Columns)
+              {t(activeLang, "pb_register.detailed_audit_register_41", "Detailed Audit Register (41 Columns)")}
             </button>
           </div>
         </div>
@@ -2309,7 +2311,7 @@ export function PurchaseBookingJournalReportView({
           </div>
         ) : !registerRows.length ? (
           <div className="m-5 rounded-lg border border-blue-200 bg-blue-50 px-4 py-2.5 text-xs text-blue-800 font-semibold shadow-sm animate-in fade-in">
-            No Records Found
+            {t(activeLang, "pb_register.no_records_found", "No Records Found")}
           </div>
         ) : null}
 
@@ -2419,7 +2421,7 @@ export function PurchaseBookingJournalReportView({
                       <Td right className={cn("font-mono font-bold text-[10px]", isAccepted ? "text-red-600 font-black" : "text-slate-900")}>{formatMoney(totalAmountNum)}</Td>
                       <Td center>
                         <span className={`inline-flex rounded-full border px-2.5 py-0.5 text-[9px] uppercase tracking-wider ${statusBadgeClass}`}>
-                          {autoTranslate5Languages(statusLabel)[activeLang] || statusLabel}
+                          {statusLabel}
                         </span>
                       </Td>
                       <Td center className={cn("font-bold text-[10px] uppercase", isAccepted ? "text-red-600 font-black" : "text-slate-700 dark:text-slate-300")}>{userName}</Td>
@@ -2952,6 +2954,11 @@ export function PurchaseBookingJournalReportView({
           className="sm:max-w-none md:max-w-none w-screen h-screen"
           actions={
             <div className="flex items-center gap-1.5 mr-2">
+              {selected && <RecordTranslationCorrectionDialog
+                recordTable="purchase_orders"
+                recordId={selected.id}
+                onSaved={() => loadReport(filters, { force: true })}
+              />}
               <details className="relative">
                 <summary className="flex items-center gap-1.5 cursor-pointer list-none rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-2.5 py-1.5 transition-all h-8 [&::-webkit-details-marker]:hidden">
                   <span>Print & Documents</span>
@@ -3089,7 +3096,7 @@ export function PurchaseBookingJournalReportView({
             const advanceAmountFinal = (totalPKRVal * advancePercent) / 100;
             const remainingAmountFinal = totalPKRVal - advanceAmountFinal;
 
-            const remarksText = selected.form_data?.form?.orderReportRemarks || selected.remarks || "No narration provided.";
+            const remarksText = trField(selected, "remarks", selected.form_data?.form?.orderReportRemarks || selected.remarks || "No narration provided.");
             const reportDate = date(selected.bookingDate || selected.purchaseDate || selected.createdAt);
             const reportNo = `PTVR-2026-${selected.purchaseBookingOrderNumber.replace(/[^0-9]/g, "").slice(-6) || "000123"}`;
 
@@ -3206,7 +3213,7 @@ export function PurchaseBookingJournalReportView({
                     <div className="w-[62%] bg-emerald-500/5 border border-emerald-500/10 rounded p-2.5 text-[8.5px] text-slate-655 leading-relaxed font-semibold">
                       <span className="text-[7.5px] text-emerald-650 uppercase font-black tracking-wider block mb-1">Transferred To (Destination Accounts)</span>
                       <ul className="list-disc pl-3.5 space-y-0.5">
-                        <li>General Ledger Debit Account: <strong className="text-slate-800 font-mono">{selected.form_data?.form?.purchaseAccountNo || selected.purchaseAccountNumber} - {selected.form_data?.form?.purchaseAccountName || selected.purchaseAccountName}</strong> & Credit Account: <strong className="text-slate-800 font-mono">{selected.form_data?.form?.salesAccountNo || selected.salesAccountNumber} - {selected.form_data?.form?.salesAccountName || selected.salesAccountName}</strong></li>
+                        <li>General Ledger Debit Account: <strong className="text-slate-800 font-mono">{selected.form_data?.form?.purchaseAccountNo || selected.purchaseAccountNumber} - {trField(selected, "purchaseAccountName", selected.form_data?.form?.purchaseAccountName || selected.purchaseAccountName)}</strong> & Credit Account: <strong className="text-slate-800 font-mono">{selected.form_data?.form?.salesAccountNo || selected.salesAccountNumber} - {trField(selected, "salesAccountName", selected.form_data?.form?.salesAccountName || selected.salesAccountName)}</strong></li>
                         <li>Internal Voucher Entry No: <strong className="text-slate-800 font-mono">{selected.status === "Posted" || (selected as any).ledgerPostingStatus === "Posted" ? `JV-${selected.purchaseBookingOrderNumber.slice(-6)}` : `Pending Posting`}</strong></li>
                         <li>Logistics cargo loading module (<strong className="text-slate-800">{containerCount} Container</strong>)</li>
                       </ul>
@@ -3237,7 +3244,7 @@ export function PurchaseBookingJournalReportView({
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Supplier Name:</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{selected.supplierName}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Supplier Name:</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{trField(selected, "supplierName", selected.supplierName)}</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Contact Person:</td><td className="px-2 py-1 text-slate-800">{selected.form_data?.form?.purchaseContactPerson || selected.form_data?.form?.supplierContactPerson || "Mr. Ahmad Shah"}</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Mobile Number:</td><td className="px-2 py-1 text-slate-800 font-mono">{selected.form_data?.form?.purchaseContact || selected.form_data?.form?.supplierContact || "+93 700 000 000"}</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Email Address:</td><td className="px-2 py-1 text-slate-800 truncate max-w-[100px]">{selected.form_data?.form?.supplierEmail || "supplier@globalfoods.com"}</td></tr>
@@ -3253,7 +3260,7 @@ export function PurchaseBookingJournalReportView({
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Buyer Name:</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{selected.buyerName}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Buyer Name:</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{trField(selected, "buyerName", selected.buyerName)}</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Contact Person:</td><td className="px-2 py-1 text-slate-800">Mr. Imran Hassan</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Mobile Number:</td><td className="px-2 py-1 text-slate-800 font-mono">+92 300 1234567</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Email Address:</td><td className="px-2 py-1 text-slate-800 truncate max-w-[100px]">info@demitrading.com</td></tr>
@@ -3302,11 +3309,11 @@ export function PurchaseBookingJournalReportView({
                             <tr key={idx} className="hover:bg-slate-50 transition border-t border-slate-200 font-semibold text-slate-700">
                               <td className="p-1 border-r border-slate-200 text-center font-mono">{idx + 1}</td>
                               <td className="p-1 border-r border-slate-200 font-bold text-slate-900">
-                                {item.goodsName}
+                                {trField(selected, `items.${idx}.goods_name`, item.goodsName || "-")}
                               </td>
-                              <td className="p-1 border-r border-slate-200 text-center">{item.brand || "-"}</td>
+                              <td className="p-1 border-r border-slate-200 text-center">{trField(selected, `items.${idx}.brand`, item.brand || "-")}</td>
                               <td className="p-1 border-r border-slate-200 text-center">{item.size || "-"}</td>
-                              <td className="p-1 border-r border-slate-200 text-center">{item.origin || selected.countryName || "-"}</td>
+                              <td className="p-1 border-r border-slate-200 text-center">{trField(selected, `items.${idx}.origin`, item.origin || selected.countryName || "-")}</td>
                               <td className="p-1 border-r border-slate-200 text-right font-bold">{qtyNo.toLocaleString()} {item.qtyName}</td>
                               <td className="p-1 border-r border-slate-200 text-right font-mono">{qtyKgs.toLocaleString()} kg</td>
                               <td className="p-1 border-r border-slate-200 text-right font-mono">{grossWeight.toLocaleString()} kg</td>
@@ -3416,7 +3423,7 @@ export function PurchaseBookingJournalReportView({
                             <td className="px-2 py-1 text-slate-800 font-mono">
                               {selected.form_data?.form?.purchaseAccountNo || selected.purchaseAccountNumber || "-"} 
                               <span className="ml-1 text-slate-500 font-sans font-semibold">
-                                {selected.form_data?.form?.purchaseAccountName || selected.purchaseAccountName ? `(${selected.form_data?.form?.purchaseAccountName || selected.purchaseAccountName})` : ""}
+                                {selected.form_data?.form?.purchaseAccountName || selected.purchaseAccountName ? `(${trField(selected, "purchaseAccountName", selected.form_data?.form?.purchaseAccountName || selected.purchaseAccountName)})` : ""}
                               </span>
                             </td>
                           </tr>
@@ -3435,7 +3442,7 @@ export function PurchaseBookingJournalReportView({
                             <td className="px-2 py-1 text-slate-800 font-mono">
                               {selected.form_data?.form?.salesAccountNo || selected.salesAccountNumber || "-"} 
                               <span className="ml-1 text-slate-500 font-sans font-semibold">
-                                {selected.form_data?.form?.salesAccountName || selected.salesAccountName ? `(${selected.form_data?.form?.salesAccountName || selected.salesAccountName})` : ""}
+                                {selected.form_data?.form?.salesAccountName || selected.salesAccountName ? `(${trField(selected, "salesAccountName", selected.form_data?.form?.salesAccountName || selected.salesAccountName)})` : ""}
                               </span>
                             </td>
                           </tr>

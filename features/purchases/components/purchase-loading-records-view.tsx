@@ -6,6 +6,7 @@ import { openLoadingRecordsPrintReport } from "@/lib/reports/open-loading-record
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Download, FileText, Link2, MoreVertical, Plus, Printer, RefreshCcw, Search, Ship, Building2, ArrowDownLeft, ArrowUpRight, Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
+import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
@@ -236,6 +237,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
   const [priceType, setPriceType] = useState("P/KGs");
   const [priceRateC1, setPriceRateC1] = useState("");
   const [qualityReportRef, setQualityReportRef] = useState("Passed");
+  const [pricingCurrency, setPricingCurrency] = useState("USD");
   const poExchangeRate = useMemo(() => {
     const rawRate = Number(
       poRow.exchange_rate ||
@@ -2129,6 +2131,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
     </div>
   );
 }
+type LoadingStatus = "draft" | "pending" | "loaded" | "received" | "cancelled";
 type LoadingRecord = {
   id: string;
   purchase_order_id?: string | null;
@@ -3382,7 +3385,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                                     <Button
                                                       type="button"
                                                       size="sm"
-                                                      onClick={() => handleInitiateTransfer(r)}
+                                                      onClick={() => setSelectedLoadDetailsRecord(r)}
                                                       className="h-6 px-2 text-[9px] font-bold uppercase bg-blue-600 hover:bg-blue-700 text-white rounded shadow-sm"
                                                     >
                                                       Transfer to Journal

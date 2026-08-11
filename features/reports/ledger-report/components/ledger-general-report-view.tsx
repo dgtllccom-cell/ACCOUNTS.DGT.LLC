@@ -608,11 +608,11 @@ export function LedgerReportView({
         <div className="flex items-center gap-2">
           <Button type="button" variant="ghost" size="sm" className="gap-2" onClick={() => router.back()}>
             <ChevronRight className="h-4 w-4 rotate-180" aria-hidden />
-            Back
+            {t(effectiveLang, "ledger.back", "Back")}
           </Button>
           <Button type="button" variant="outline" size="sm" className="gap-2" onClick={() => setFiltersOpen((v) => !v)}>
             <Search className="h-4 w-4" aria-hidden />
-            {filtersOpen ? "Hide Filters" : "Search / Filters"}
+            {filtersOpen ? t(effectiveLang, "ledger.hide_filters", "Hide Filters") : t(effectiveLang, "ledger.search_filters", "Search / Filters")}
           </Button>
         </div>,
         actionsSlot
@@ -654,7 +654,7 @@ export function LedgerReportView({
               <SearchSelect
                 label=""
                 value={ledgerId}
-                placeholder={t(lang, "ledger.select_account_ph")}
+                placeholder={t(effectiveLang, "ledger.select_account_ph")}
                 options={ledgerOptions}
                 onValueChange={(value) => {
                   setLedgerId(value);
@@ -685,7 +685,7 @@ export function LedgerReportView({
               <SearchSelect
                 label=""
                 value={branchFilter}
-                placeholder={t(lang, "ledger.all_branches")}
+                placeholder={t(effectiveLang, "ledger.all_branches")}
                 options={branchOptions}
                 onValueChange={(value) => {
                   setBranchFilter(value);
@@ -804,9 +804,9 @@ export function LedgerReportView({
               </Button>
               {menuOpen ? (
                 <div className="absolute right-0 top-full z-20 mt-2 w-56 overflow-hidden rounded-xl border bg-background shadow-xl bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
-                  <MenuAction icon={<Printer className="h-4 w-4" />} label={t(lang, "ledger.print")} onClick={() => openPrint(true)} />
+                  <MenuAction icon={<Printer className="h-4 w-4" />} label={t(effectiveLang, "ledger.print")} onClick={() => openPrint(true)} />
                   <MenuAction icon={<DownloadActionIcon className="h-4 w-4" />} label="PDF Export" onClick={() => openPrint(false)} />
-                  <MenuAction icon={<DownloadActionIcon className="h-4 w-4" />} label={t(lang, "ledger.export_csv")} onClick={exportReportCsv} />
+                  <MenuAction icon={<DownloadActionIcon className="h-4 w-4" />} label={t(effectiveLang, "ledger.export_csv")} onClick={exportReportCsv} />
                   <MenuAction
                     icon={<Search className="h-4 w-4" />}
                     label="View Ledger"
@@ -892,18 +892,18 @@ export function LedgerReportView({
         <div className="space-y-2 border-b border-border dark:border-slate-700 pb-3 mb-4">
           <div className="flex flex-wrap items-center justify-between gap-2">
             <div>
-              <h2 className="text-base font-bold text-foreground dark:text-slate-100">{t(lang, "ledger.entries_table_title")}</h2>
+              <h2 className="text-base font-bold text-foreground dark:text-slate-100">{t(effectiveLang, "ledger.entries_table_title")}</h2>
               <p className="mt-1 text-xs text-muted-foreground dark:text-slate-400">
-                {t(lang, "ledger.showing_range")} <span className="font-mono text-[11px] text-slate-500 dark:text-slate-300">{fromDate} → {toDate}</span>
+                {t(effectiveLang, "ledger.showing_range")} <span className="font-mono text-[11px] text-slate-500 dark:text-slate-300">{fromDate} → {toDate}</span>
               </p>
             </div>
             <div className="flex items-center gap-4">
               <div className="text-xs text-muted-foreground dark:text-slate-500">
-                {t(lang, "ledger.rows")}: <b className="text-foreground dark:text-slate-200">{tableRows.length}</b>
+                {t(effectiveLang, "ledger.rows")}: <b className="text-foreground dark:text-slate-200">{tableRows.length}</b>
               </div>
               <Button type="button" variant="outline" size="sm" className="gap-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800 dark:bg-blue-900/20 dark:border-blue-800/50 dark:text-blue-300 dark:hover:bg-blue-900/40" onClick={() => setPrintMode(true)}>
                 <Printer className="h-4 w-4" />
-                Print Preview
+                {t(effectiveLang, "ledger.print_preview", "Print Preview")}
               </Button>
             </div>
           </div>
@@ -1018,13 +1018,17 @@ export function LedgerReportView({
                   {tableRows.length === 0 && !loading && (
                     <tr>
                       <Td className="text-center py-8 text-muted-foreground" colSpan={columns.length}>
-                        No ledger accounts found.
+                        {t(effectiveLang, "ledger.no_ledger_accounts_found", "No ledger accounts found.")}
                       </Td>
                     </tr>
                   )}
                 </ReportTable>
                 <TableFooter
-                  text={`Showing ${tableRows.length ? (page - 1) * pageSize + 1 : 0} to ${Math.min(page * pageSize, tableRows.length)} of ${tableRows.length} ledgers`}
+                  lang={effectiveLang}
+                  text={t(effectiveLang, "ledger.showing_to_of_ledgers", "Showing {from} to {to} of {count} ledgers")
+                    .replace("{from}", String(tableRows.length ? (page - 1) * pageSize + 1 : 0))
+                    .replace("{to}", String(Math.min(page * pageSize, tableRows.length)))
+                    .replace("{count}", String(tableRows.length))}
                   page={page}
                   pageCount={Math.max(1, Math.ceil(tableRows.length / pageSize))}
                   onPrev={() => setPage((p) => Math.max(1, p - 1))}
@@ -1036,7 +1040,7 @@ export function LedgerReportView({
                   <div className="fixed inset-0 z-[100] bg-black/80 flex flex-col">
                     <div className="flex-1 overflow-hidden">
                       <ProfessionalReportViewer
-                        lang={lang}
+                        lang={effectiveLang}
                         title="Country Ledger / Super Admin Ledger"
                         data={tableRows}
                         columns={columns}
@@ -1075,7 +1079,7 @@ export function LedgerReportView({
           setSelectedLedger(null);
         }}
         title={`Ledger: ${selectedLedger?.accountName || selectedLedger?.ledgerName || "Details"}`}
-        subtitle={`Account No: ${selectedLedger?.accountCode || selectedLedger?.ledgerCode || "-"} · Currency: ${selectedLedger?.ledgerCurrency || "-"}`}
+        subtitle={`${t(effectiveLang, "ledger.ac_number", "A/c Number")}: ${selectedLedger?.accountCode || selectedLedger?.ledgerCode || "-"} · ${t(effectiveLang, "ledger.currency", "Currency")}: ${selectedLedger?.ledgerCurrency || "-"}`}
         actions={<ExportOptions onPrint={openPrint} onExportCsv={exportReportCsv} />}
       >
         {loadingStatement ? (
@@ -1165,7 +1169,7 @@ export function LedgerReportView({
             </div>
           </div>
         ) : (
-          <div className="rounded-lg border bg-muted/20 p-4 text-sm text-muted-foreground">{t(lang, "ledger.select_account_hint")}</div>
+          <div className="rounded-lg border bg-muted/20 p-4 text-sm text-muted-foreground">{t(effectiveLang, "ledger.select_account_hint")}</div>
         )}
       </DetailDrawer>
     </div>
@@ -1301,19 +1305,19 @@ function Td({ children, className, onClick }: { children: React.ReactNode; class
   );
 }
 
-function TableFooter({ text, page, pageCount, onPrev, onNext, pageSize }: { text: string; page: number; pageCount: number; onPrev: () => void; onNext: () => void; pageSize: number }) {
+function TableFooter({ lang, text, page, pageCount, onPrev, onNext, pageSize }: { lang: SupportedLanguage; text: string; page: number; pageCount: number; onPrev: () => void; onNext: () => void; pageSize: number }) {
   return (
     <div className="flex flex-wrap items-center justify-between gap-3 px-2 py-3 text-xs text-slate-500">
       <span>{text}</span>
       <div className="flex items-center gap-2">
         <Button type="button" variant="outline" size="sm" className="h-7 text-slate-600 hover:text-slate-900" disabled={page <= 1} onClick={onPrev}>
-          Prev
+          {t(lang, "common.previous", "Prev")}
         </Button>
         <div className="text-xs">
-          Page <b className="text-slate-800">{page}</b> / {pageCount}
+          {t(lang, "ledger.page_label", "Page")} <b className="text-slate-800">{page}</b> / {pageCount}
         </div>
         <Button type="button" variant="outline" size="sm" className="h-7 text-slate-600 hover:text-slate-900" disabled={page >= pageCount} onClick={onNext}>
-          Next
+          {t(lang, "common.next", "Next")}
         </Button>
       </div>
     </div>

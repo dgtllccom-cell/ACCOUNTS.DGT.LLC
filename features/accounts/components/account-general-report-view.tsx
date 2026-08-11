@@ -24,6 +24,8 @@ const getFlag = (countryName: string) => {
   return "🌍";
 };
 import { apiDelete, apiGet } from "@/lib/api/client";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -493,7 +495,7 @@ function AccountRowActionsMenu({
 }
 
 export function AccountGeneralReportView({
-  lang,
+  lang: initialLang,
   pageTitle,
   subtitle,
   initialAccountId,
@@ -507,6 +509,8 @@ export function AccountGeneralReportView({
   highlightCreated?: boolean;
   showProfilePanel?: boolean;
 }) {
+  const lang = useActiveLanguage() || initialLang;
+  const tr = (label: string) => translateHeader(lang, label);
   const router = useRouter();
   const actionsRef = useRef<HTMLDivElement | null>(null);
   const [loading, setLoading] = useState(true);
@@ -965,7 +969,7 @@ export function AccountGeneralReportView({
 
   function openPrint(autoPrint: boolean) {
     const selectedRow = rows.find((r) => r.accountId === selectedAccountId) ?? null;
-    const activeBranchName = branchCode !== "all" ? branchCode : (session?.scopes?.isSuperAdmin ? "GLOBAL ADMIN" : session?.roles?.[0] ?? "MAIN BRANCH");
+    const activeBranchName = branchCode !== "all" ? branchCode : tr(session?.scopes?.isSuperAdmin ? "GLOBAL ADMIN" : session?.roles?.[0] ?? "MAIN BRANCH");
     openA4ReportWindow({
       title: "Account Register Report",
       subtitle: `Account Master Registry & Search Report - Generated ${new Date().toLocaleString()}`,
@@ -1087,8 +1091,8 @@ export function AccountGeneralReportView({
   const pageHeaderContent = (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-4">
       <div>
-        <h1 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">{pageTitle}</h1>
-        <p className="text-xs text-slate-500 mt-0.5 dark:text-slate-400">{subtitle ?? "Enterprise Registry & Financial Ledger Details"}</p>
+        <h1 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">{tr(pageTitle)}</h1>
+        <p className="text-xs text-slate-500 mt-0.5 dark:text-slate-400">{tr(subtitle ?? "Enterprise Registry & Financial Ledger Details")}</p>
       </div>
     </div>
   );
@@ -1108,9 +1112,9 @@ export function AccountGeneralReportView({
         }}
         className="h-9 min-w-[150px] rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-350 cursor-pointer shadow-sm"
       >
-        <option value="super_admin" disabled={!isSuperAdmin}>SUPER ADMIN</option>
-        <option value="country">COUNTRY SCOPE</option>
-        <option value="branch">BRANCH SCOPE</option>
+        <option value="super_admin" disabled={!isSuperAdmin}>{tr("SUPER ADMIN")}</option>
+        <option value="country">{tr("COUNTRY SCOPE")}</option>
+        <option value="branch">{tr("BRANCH SCOPE")}</option>
       </select>
 
       {/* Search Input */}
@@ -1119,16 +1123,16 @@ export function AccountGeneralReportView({
         <input
           value={draftQuery}
           onChange={(e) => { setDraftQuery(e.target.value); setQuery(e.target.value); }}
-          placeholder="Search account, name, branch..."
+          placeholder={tr("Search account, name, branch...")}
           className="h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100 shadow-sm"
         />
       </div>
 
       <Button type="button" size="sm" variant="outline" onClick={() => setActionsOpen(!actionsOpen)} className="h-9 rounded-xl border-slate-200 font-bold text-xs shadow-sm">
-        <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" /> Filter
+        <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" /> {tr("FILTER")}
       </Button>
       <Button type="button" size="sm" variant="outline" onClick={resetFilters} className="h-9 rounded-xl border-slate-200 font-bold text-xs shadow-sm">
-        <RefreshCw className={loading ? "mr-1.5 h-3.5 w-3.5 animate-spin" : "mr-1.5 h-3.5 w-3.5"} /> Reset
+        <RefreshCw className={loading ? "mr-1.5 h-3.5 w-3.5 animate-spin" : "mr-1.5 h-3.5 w-3.5"} /> {tr("RESET")}
       </Button>
 
       <div className="flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
@@ -1142,7 +1146,7 @@ export function AccountGeneralReportView({
         onClick={() => router.push("/dashboard/accounts/setup")}
         className="h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm px-4 gap-1.5 shrink-0"
       >
-        <Plus className="h-3.5 w-3.5" /> New Account
+        <Plus className="h-3.5 w-3.5" /> {tr("NEW ACCOUNT")}
       </Button>
 
       <Button
@@ -1152,7 +1156,7 @@ export function AccountGeneralReportView({
         onClick={() => openPrint(true)}
         className="h-9 rounded-xl border-slate-200 font-bold text-xs shadow-sm gap-1.5"
       >
-        <Printer className="h-3.5 w-3.5" /> Print
+        <Printer className="h-3.5 w-3.5" /> {tr("PRINT")}
       </Button>
 
       <Button
@@ -1162,7 +1166,7 @@ export function AccountGeneralReportView({
         onClick={() => openPrint(false)}
         className="h-9 rounded-xl border-slate-200 font-bold text-xs shadow-sm gap-1.5"
       >
-        <Download className="h-3.5 w-3.5" /> Export PDF
+        <Download className="h-3.5 w-3.5" /> {tr("EXPORT PDF")}
       </Button>
     </div>
   );
@@ -1186,15 +1190,15 @@ export function AccountGeneralReportView({
         <div className="flex flex-wrap items-center justify-between border-b border-slate-100 dark:border-slate-850 pb-2.5">
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
             <div className="flex items-center gap-2">
-              <span className="text-slate-400">Branch Scope:</span> 
-              <span className="text-slate-800 dark:text-slate-200 font-bold uppercase">{branchCode !== "all" ? branchCode : (session?.scopes?.isSuperAdmin ? "GLOBAL ADMIN" : session?.roles?.[0] ?? "MAIN BRANCH")}</span>
+              <span className="text-slate-400">{tr("BRANCH SCOPE")}:</span>
+              <span className="text-slate-800 dark:text-slate-200 font-bold uppercase">{branchCode !== "all" ? branchCode : tr(session?.scopes?.isSuperAdmin ? "GLOBAL ADMIN" : session?.roles?.[0] ?? "MAIN BRANCH")}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-slate-400">Session Role:</span> 
-              <span className="text-slate-800 dark:text-slate-200 font-bold">{isSuperAdmin ? "SUPER ADMIN" : "AUTHORIZED USER"}</span>
+              <span className="text-slate-400">{tr("SESSION ROLE")}:</span>
+              <span className="text-slate-800 dark:text-slate-200 font-bold">{isSuperAdmin ? tr("SUPER ADMIN") : tr("AUTHORIZED USER")}</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="text-slate-400">Total Ledgers:</span> 
+              <span className="text-slate-400">{tr("TOTAL LEDGERS")}:</span>
               <span className="text-slate-800 dark:text-slate-200 font-bold">{visibleSummary.totalLedgers}</span>
             </div>
           </div>
@@ -1675,7 +1679,7 @@ export function AccountGeneralReportView({
                   ) : (
                     <tr>
                       <td colSpan={18} className="px-5 py-10 text-center text-sm text-slate-500">
-                        No accounts match the selected filters.
+                        {tr("NO ACCOUNTS MATCH THE SELECTED FILTERS")}
                       </td>
                     </tr>
                   )}

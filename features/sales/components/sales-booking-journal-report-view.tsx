@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { Download, LayoutGrid, Mail, MoreVertical, Printer, RefreshCcw, Search, SlidersHorizontal, Table2 } from "lucide-react";
+import { Download, Mail, MoreVertical, Printer, RefreshCcw, Search, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
@@ -10,10 +10,9 @@ import { ReportKpiCards } from "@/features/reports/components/report-kpi-cards";
 import { ReportPagination } from "@/features/reports/components/report-pagination";
 import { ReportStatusLegend } from "@/features/reports/components/report-status-legend";
 import { Th } from "@/components/ui/translated-th";
-import { CustomReportBuilder } from "@/components/reports/builder/custom-report-builder";
-import { type ReportFieldDefinition, type ReportColumnConfig } from "@/components/reports/builder/types";
-import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/verified-record-translations";
+import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
 
 type SalesReport = {
   id: string;
@@ -39,6 +38,7 @@ type SalesReport = {
   countryName: string;
   createdAt: string;
   form_data?: any;
+  translations?: Record<string, Partial<Record<"en" | "ur" | "ar" | "fa" | "ps", string>>>;
   audit: {
     userName: string;
     userId: string;
@@ -47,8 +47,7 @@ type SalesReport = {
 };
 
 export function SalesBookingJournalReportView() {
-  const lang = useActiveLanguage();
-  const [viewMode, setViewMode] = useState<"classic" | "builder">("classic");
+  const activeLang = useActiveLanguage();
   const [reports, setReports] = useState<SalesReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -126,35 +125,8 @@ export function SalesBookingJournalReportView() {
     };
   }, [reports]);
 
-  // Generic Report Builder wiring — "Advanced Builder" view alongside the classic table
-  // above. Fields drive which columns/filters/grouping/chart options the builder exposes;
-  // nothing here is hardcoded UI, it's just this report's own field list (see
-  // components/reports/builder/custom-report-builder.tsx for the reusable part).
-  const builderFields = useMemo<ReportFieldDefinition[]>(() => [
-    { id: "salesBookingOrderNumber", label: "SO Number", type: "text" },
-    { id: "salesDate", label: "Date", type: "date" },
-    { id: "customerName", label: "Customer Details", type: "text" },
-    { id: "branchName", label: "Branch Name", type: "text" },
-    { id: "countryName", label: "Country", type: "text" },
-    { id: "productName", label: "Products / Description", type: "text" },
-    { id: "quantity", label: "Quantity", type: "number", align: "right" },
-    { id: "totalWeight", label: "Weight", type: "number", align: "right" },
-    { id: "containerCount", label: "Containers", type: "number", align: "right" },
-    { id: "totalSalesAmount", label: "Sales Total", type: "currency", align: "right" },
-    {
-      id: "status",
-      label: "Status",
-      type: "status",
-      options: ["Draft", "Open", "Accepted", "Confirmed", "Transferred", "Posted", "Completed", "Finalized"].map((s) => ({ label: s, value: s }))
-    },
-    { id: "paymentStatus", label: "Payment Status", type: "status" },
-    { id: "deliveryStatus", label: "Delivery Status", type: "status" }
-  ], []);
-
-  const builderDefaultColumns = useMemo<ReportColumnConfig[]>(
-    () => builderFields.map((f, i) => ({ id: f.id, label: f.label, visible: i < 10, order: i, align: f.align })),
-    [builderFields]
-  );
+  const localized = (row: SalesReport, field: string, fallback: string) =>
+    resolveVerifiedTranslation(row.translations?.[field], activeLang) || (activeLang === "en" ? fallback : translationPendingLabel(activeLang));
 
   function exportCsv() {
     const headers = ["SO Number", "Date", "Customer", "Product Details", "Qty", "Total Weight", "Containers", "Amount", "Status", "Payment", "Delivery"];
@@ -248,35 +220,14 @@ export function SalesBookingJournalReportView() {
             disabled={reports.length === 0}
             className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold h-10 text-xs px-4 shadow-sm"
           >
-            <Download className="h-4 w-4 mr-2" /> {t(lang, "report.builder_export_csv", "Export CSV")}
+            <Download className="h-4 w-4 mr-2" /> Export CSV
           </Button>
-
-          {/* Classic ⇄ Advanced Builder toggle — the classic table/KPI/print view above
-              stays exactly as it was; the builder is an additional, opt-in view of the same
-              already-loaded `reports` rows (Pick Columns, Filters, Group By, Totals, Chart,
-              Sidebar, Save As, Auto Email, Print/PDF/Excel). */}
-          <div className="flex rounded-lg border border-input bg-background shadow-sm overflow-hidden">
-            <button
-              type="button"
-              onClick={() => setViewMode("classic")}
-              className={`h-10 px-3 text-xs font-semibold flex items-center gap-1.5 ${viewMode === "classic" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"}`}
-            >
-              <Table2 className="h-3.5 w-3.5" /> {t(lang, "report.builder_classic_view", "Classic")}
-            </button>
-            <button
-              type="button"
-              onClick={() => setViewMode("builder")}
-              className={`h-10 px-3 text-xs font-semibold flex items-center gap-1.5 border-l border-input ${viewMode === "builder" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-accent"}`}
-            >
-              <LayoutGrid className="h-3.5 w-3.5" /> {t(lang, "report.builder_advanced_builder", "Advanced Builder")}
-            </button>
-          </div>
         </div>
       </div>
 
       {/* Top 5 KPI Summary Cards Grid */}
       <ReportKpiCards
-        lang={lang}
+        lang="en"
         reportType="sales"
         currency="USD"
         isLoading={loading}
@@ -294,17 +245,6 @@ export function SalesBookingJournalReportView() {
         }}
       />
 
-      {viewMode === "builder" ? (
-        <CustomReportBuilder
-          moduleName="sales-booking-journal"
-          reportTitle={t(lang, "report.builder_sales_booking_register", "Sales Booking Journal Register")}
-          data={reports}
-          fields={builderFields}
-          defaultColumns={builderDefaultColumns}
-          isLoading={loading}
-        />
-      ) : (
-      <>
       {/* Report Table */}
       <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
         <table className="min-w-full text-xs text-left">
@@ -345,12 +285,12 @@ export function SalesBookingJournalReportView() {
                   </td>
                   <td className="px-6 py-4 text-muted-foreground">{r.salesDate?.split("T")[0]}</td>
                   <td className="px-6 py-4">
-                    <div className="font-bold text-foreground">{r.customerName}</div>
-                    <div className="text-[11px] text-muted-foreground">{r.branchName} • {r.countryName}</div>
+                    <div className="font-bold text-foreground">{localized(r, "customerName", r.customerName)}</div>
+                    <div className="text-[11px] text-muted-foreground">{localized(r, "branchName", r.branchName)} "  {localized(r, "countryName", r.countryName)}</div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="font-semibold text-foreground">{r.productName}</div>
-                    <div className="text-[11px] text-muted-foreground truncate max-w-xs">{r.goodsDescription}</div>
+                    <div className="font-semibold text-foreground">{localized(r, "productName", r.productName)}</div>
+                    <div className="text-[11px] text-muted-foreground truncate max-w-xs">{localized(r, "goodsDescription", r.goodsDescription)}</div>
                   </td>
                   <td className="px-6 py-4 text-foreground font-medium">{r.quantity?.toLocaleString()} {r.unit}</td>
                   <td className="px-6 py-4 text-foreground font-medium">{r.totalWeight?.toLocaleString()} KG</td>
@@ -366,6 +306,7 @@ export function SalesBookingJournalReportView() {
                     </span>
                   </td>
                   <td className="px-6 py-4 text-center">
+                    <RecordTranslationCorrectionDialog recordTable="sales_orders" recordId={r.id} onSaved={() => loadReports(query)} />
                     <Button
                       onClick={() => openSalesA4ReportWindow({ title: "Sales Booking Invoice", salesData: r })}
                       variant="outline"
@@ -399,8 +340,6 @@ export function SalesBookingJournalReportView() {
           "Finalized / Transferred: Bill has been posted to ledger."
         ]}
       />
-      </>
-      )}
     </div>
   );
 }

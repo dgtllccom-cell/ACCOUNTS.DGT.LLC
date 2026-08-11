@@ -16,6 +16,7 @@ import {
 } from "@/features/locations/components/location-hierarchy-select";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLabel } from "./translations";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 type CustomerRow = {
   id: string;
@@ -35,7 +36,7 @@ type CustomerRow = {
 };
 
 export function CustomerForm({
-  lang,
+  lang: initialLang,
   initialCustomerId,
   mode = "standalone",
   onSave
@@ -46,6 +47,12 @@ export function CustomerForm({
   onSave?: (customerId: string) => void;
 }) {
   const router = useRouter();
+  // The server-rendered `lang` prop is only correct at the moment of the initial page
+  // load — it never re-renders when the user switches languages client-side without a
+  // full navigation (the exact "stale language state after navigation" bug class).
+  // useActiveLanguage() tracks the live selector reactively instead. `initialLang` is
+  // kept only as the SSR value React hydrates against (avoids a hydration mismatch).
+  const lang = useActiveLanguage() || initialLang;
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
 
@@ -309,7 +316,7 @@ export function CustomerForm({
   // Submit/Save
   const submitForm = async () => {
     if (!ready) {
-      setMessage("Please complete all required fields first.");
+      setMessage(getLabel("completeRequiredFieldsMsg", lang));
       return;
     }
 
@@ -389,7 +396,7 @@ export function CustomerForm({
       if (initialCustomerId) {
         // Edit mode
         await apiPatch(`/api/erp/customers/${initialCustomerId}`, payload);
-        setMessage("Customer details updated successfully.");
+        setMessage(getLabel("customerUpdatedMsg", lang));
         if (mode === "standalone") {
           setTimeout(() => {
             router.push(`/dashboard/settings/customers/view?customerId=${initialCustomerId}` as Route);
@@ -400,7 +407,7 @@ export function CustomerForm({
       } else {
         // Creation mode
         const res = await apiPost<{ customerId: string }>("/api/erp/customers", payload);
-        setMessage("Customer profile incorporated successfully.");
+        setMessage(getLabel("customerCreatedMsg", lang));
         if (mode === "standalone") {
           setTimeout(() => {
             router.push(`/dashboard/settings/customers/view?customerId=${res.customerId}` as Route);
@@ -425,10 +432,10 @@ export function CustomerForm({
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.24em] text-teal-600">Settings / Management</p>
           <h1 className="mt-1 text-2xl font-semibold tracking-tight text-slate-900">
-            {initialCustomerId ? "Edit Customer Details" : getLabel("customerDetails", lang)}
+            {initialCustomerId ? getLabel("editCustomerDetails", lang) : getLabel("customerDetails", lang)}
           </h1>
           <p className="text-sm text-muted-foreground mt-0.5">
-            {initialCustomerId ? "Update existing customer registry records" : getLabel("createOrUpdateCustomerSub", lang)}
+            {initialCustomerId ? getLabel("updateExistingCustomerSub", lang) : getLabel("createOrUpdateCustomerSub", lang)}
           </p>
         </div>
         <span
@@ -439,16 +446,16 @@ export function CustomerForm({
           }
         >
           <CheckCircle2 className="h-4 w-4" aria-hidden />
-          {ready ? "Ready" : "Draft"}
+          {ready ? getLabel("ready", lang) : getLabel("draftStatus", lang)}
         </span>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs font-semibold text-slate-500 mb-2">
         {[
-          { id: 1, label: "1. Personal Info" },
-          { id: 2, label: "2. Location" },
-          { id: 3, label: "3. Contacts & Docs" },
-          { id: 4, label: "4. Review & Save" },
+          { id: 1, label: getLabel("stepPersonalInfo", lang) },
+          { id: 2, label: getLabel("stepLocation", lang) },
+          { id: 3, label: getLabel("stepContactsDocs", lang) },
+          { id: 4, label: getLabel("stepReviewSave", lang) },
         ].map((s) => {
           const active = currentStep === s.id;
           const completed = currentStep > s.id;
@@ -511,7 +518,7 @@ export function CustomerForm({
 
                 {customerType === "Business" && (
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold text-slate-700">Business Name / Company Name *</Label>
+                    <Label className="text-xs font-semibold text-slate-700">{getLabel("businessNameCompanyName", lang)} *</Label>
                     <Input
                       value={businessName}
                       onChange={(e) => setBusinessName(e.target.value)}
@@ -524,27 +531,27 @@ export function CustomerForm({
                 <div className="grid gap-3 grid-cols-2">
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold text-slate-700">
-                      {customerType === "Business" ? "Representative First Name *" : `${getLabel("firstName", lang)} *`}
+                      {customerType === "Business" ? `${getLabel("representativeFirstName", lang)} *` : `${getLabel("firstName", lang)} *`}
                     </Label>
-                    <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="First Name" className="bg-white text-slate-900 border-slate-200 text-xs h-10" />
+                    <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder={getLabel("firstName", lang)} className="bg-white text-slate-900 border-slate-200 text-xs h-10" />
                   </div>
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold text-slate-700">
-                      {customerType === "Business" ? "Representative Last Name *" : `${getLabel("lastName", lang)} *`}
+                      {customerType === "Business" ? `${getLabel("representativeLastName", lang)} *` : `${getLabel("lastName", lang)} *`}
                     </Label>
-                    <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Last Name" className="bg-white text-slate-900 border-slate-200 text-xs h-10" />
+                    <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder={getLabel("lastName", lang)} className="bg-white text-slate-900 border-slate-200 text-xs h-10" />
                   </div>
                 </div>
 
                 {customerType !== "Business" && (
                   <div className="space-y-1.5">
                     <Label className="text-xs font-semibold text-slate-700">{getLabel("fatherNameRepresentative", lang)}</Label>
-                    <Input value={fatherName} onChange={(e) => setFatherName(e.target.value)} placeholder="Father Name" className="bg-white text-slate-900 border-slate-200 text-xs h-10" />
+                    <Input value={fatherName} onChange={(e) => setFatherName(e.target.value)} placeholder={getLabel("fatherName", lang)} className="bg-white text-slate-900 border-slate-200 text-xs h-10" />
                   </div>
                 )}
-                
+
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold text-slate-700">Passport Size Picture *</Label>
+                  <Label className="text-xs font-semibold text-slate-700">{getLabel("passportSizePicture", lang)} *</Label>
                   <div className="flex flex-col items-center w-max gap-2 mt-2">
                     {passportPicture ? (
                       <div className="relative h-16 w-16 overflow-hidden rounded-full border shadow-sm">
@@ -562,10 +569,10 @@ export function CustomerForm({
                         <User className="h-6 w-6 text-slate-300" />
                       </div>
                     )}
-                    
+
                     <Label className="cursor-pointer flex items-center justify-center h-7 px-3 rounded-full bg-slate-100 hover:bg-slate-200 border text-slate-500 shadow-sm transition gap-1.5 text-[10px] font-semibold">
                       <Paperclip className="h-3 w-3" />
-                      <span>Attach</span>
+                      <span>{getLabel("attach", lang)}</span>
                       <Input
                         type="file"
                         accept="image/*"
@@ -632,7 +639,7 @@ export function CustomerForm({
                   onClick={() => setContacts([...contacts, { type: "Mobile", value: "" }])}
                   className="h-7 text-xs border-teal-200 text-teal-700 hover:bg-teal-50 px-2.5 rounded-md font-semibold"
                 >
-                  + Add Contact
+                  {getLabel("addContact", lang)}
                 </Button>
               </div>
               <CardContent className="p-5 space-y-4">
@@ -642,7 +649,7 @@ export function CustomerForm({
                     <div key={idx} className="border-b pb-3 last:border-b-0 last:pb-0 space-y-2">
                       <div className="flex gap-2 items-end">
                         <div className="w-1/3 space-y-1">
-                          <Label className="text-[10px] font-semibold text-slate-500">Type</Label>
+                          <Label className="text-[10px] font-semibold text-slate-500">{getLabel("typeLabel", lang)}</Label>
                           <select
                             value={isCustom ? "Custom" : contact.type}
                             onChange={(e) => {
@@ -662,11 +669,11 @@ export function CustomerForm({
                             <option value="Email">Email</option>
                             <option value="Landline">Landline</option>
                             <option value="Office">Office</option>
-                            <option value="Custom">+ Custom Type</option>
+                            <option value="Custom">{getLabel("customType", lang)}</option>
                           </select>
                         </div>
                         <div className="flex-1 space-y-1">
-                          <Label className="text-[10px] font-semibold text-slate-500">Contact Value</Label>
+                          <Label className="text-[10px] font-semibold text-slate-500">{getLabel("contactValue", lang)}</Label>
                           <Input
                             value={contact.value}
                             onChange={(e) => {
@@ -735,7 +742,7 @@ export function CustomerForm({
                   onClick={() => setDocuments([...documents, { type: "CNIC", number: "", upload: "" }])}
                   className="h-7 text-xs border-teal-200 text-teal-700 hover:bg-teal-50 px-2.5 rounded-md font-semibold"
                 >
-                  + Add Document
+                  {getLabel("addDocument", lang)}
                 </Button>
               </div>
               <CardContent className="p-5 space-y-4">
@@ -756,7 +763,7 @@ export function CustomerForm({
                             }}
                             className="h-7 text-xs text-rose-600 hover:bg-rose-50 px-2 rounded-md font-semibold"
                           >
-                            Remove
+                            {getLabel("removeAction", lang)}
                           </Button>
                         )}
                       </div>
@@ -781,7 +788,7 @@ export function CustomerForm({
                             <option value="Passport">Passport</option>
                             <option value="National ID">National ID</option>
                             <option value="Trade License">Trade License</option>
-                            <option value="Custom">+ Custom Type</option>
+                            <option value="Custom">{getLabel("customType", lang)}</option>
                           </select>
                         </div>
                         <div className="space-y-1">
@@ -859,8 +866,8 @@ export function CustomerForm({
                     onChange={(e) => setStatus(e.target.value)}
                     className="flex h-10 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-500/20"
                   >
-                    <option value="Active">Active</option>
-                    <option value="Inactive">Inactive</option>
+                    <option value="Active">{getLabel("activeStatus", lang)}</option>
+                    <option value="Inactive">{getLabel("inactiveStatus", lang)}</option>
                   </select>
                 </div>
                 <div className="space-y-1.5">
@@ -887,9 +894,9 @@ export function CustomerForm({
               disabled={currentStep === 1}
               className="border-slate-200 text-slate-700 font-medium h-10 px-4"
             >
-              Back
+              {getLabel("backButton", lang)}
             </Button>
-            
+
             <div className="flex gap-2">
               {currentStep < 4 ? (
                 <Button
@@ -897,7 +904,7 @@ export function CustomerForm({
                   onClick={() => setCurrentStep((Math.min(4, currentStep + 1)) as any)}
                   className="rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-medium shadow-sm h-10 px-8 gap-2"
                 >
-                  Next
+                  {getLabel("nextButton", lang)}
                 </Button>
               ) : (
                 <Button
@@ -907,7 +914,7 @@ export function CustomerForm({
                   className="rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-medium shadow-sm h-10 px-5 gap-2"
                 >
                   <Save className="h-4 w-4" />
-                  {saving ? "Saving..." : getLabel("saveCustomer", lang)}
+                  {saving ? getLabel("savingLabel", lang) : getLabel("saveCustomer", lang)}
                 </Button>
               )}
             </div>

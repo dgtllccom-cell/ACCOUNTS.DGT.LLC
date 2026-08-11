@@ -138,7 +138,7 @@ function isDebitRow(row: ReportRow) {
   return line ? DEBIT_LEAN_TYPES.has(String(line.payment_entry_type ?? "")) : false;
 }
 
-function printReportTable(opts: { title: string; subtitle: string; rows: ReportRow[]; totals: { debit: number; credit: number } }) {
+function printReportTable(opts: { title: string; subtitle: string; rows: ReportRow[]; totals: { debit: number; credit: number }; lang: SupportedLanguage }) {
   if (typeof window === "undefined") return;
   const win = window.open("", "_blank", "width=1100,height=800");
   if (!win) return;
@@ -149,7 +149,7 @@ function printReportTable(opts: { title: string; subtitle: string; rows: ReportR
       return `<tr>
         <td>${idx + 1}</td>
         <td>${row.entry_date}${row.posted_at ? " " + new Date(row.posted_at).toLocaleTimeString() : ""}</td>
-        <td>${row.entry_category ? CATEGORY_LABELS[row.entry_category] : "-"}</td>
+        <td>${getCategoryLabel(row.entry_category, opts.lang)}</td>
         <td>${line?.ledgers?.name ?? "-"}</td>
         <td>${(row.narration ?? "-").slice(0, 80)}</td>
         <td class="num">${line?.debit ? fmtNumber(Number(line.debit)) : ""}</td>
@@ -325,7 +325,7 @@ export function RoznamchaTypeReportView({
       return [
         String(idx + 1 + (page - 1) * pageSize),
         row.entry_date,
-        row.entry_category ? CATEGORY_LABELS[row.entry_category] : "-",
+        getCategoryLabel(row.entry_category, activeLang),
         line?.ledgers?.name ?? "-",
         row.narration ?? "",
         line?.debit ? String(line.debit) : "",
@@ -347,7 +347,8 @@ export function RoznamchaTypeReportView({
       title: pageTitle,
       subtitle: `${fromDate} to ${toDate} · Generated ${new Date().toLocaleString()}`,
       rows,
-      totals: { debit: data?.totalDebit ?? 0, credit: data?.totalCredit ?? 0 }
+      totals: { debit: data?.totalDebit ?? 0, credit: data?.totalCredit ?? 0 },
+      lang: activeLang
     });
   }
 
@@ -364,7 +365,7 @@ export function RoznamchaTypeReportView({
     <div className="space-y-4">
       <ReportPageHeader
         title={pageTitle}
-        subtitle={`Roznamcha report · ${entryCategory === "all" ? "All entry types" : CATEGORY_LABELS[entryCategory]}`}
+        subtitle={`Roznamcha report · ${entryCategory === "all" ? "All entry types" : getCategoryLabel(entryCategory, activeLang)}`}
         actions={
           <>
             <Button type="button" variant="outline" onClick={() => setFiltersOpen((v) => !v)}>
@@ -404,8 +405,8 @@ export function RoznamchaTypeReportView({
                     onChange={(e) => setSelectedCategory(e.target.value as RoznamchaEntryCategory | "all")}
                   >
                     <option value="all">All Types</option>
-                    {Object.entries(CATEGORY_LABELS).map(([value, label]) => (
-                      <option key={value} value={value}>{label}</option>
+                    {(["business", "bank", "cash", "invoice", "transfer"] as RoznamchaEntryCategory[]).map((value) => (
+                      <option key={value} value={value}>{getCategoryLabel(value, activeLang)}</option>
                     ))}
                   </select>
                 </div>

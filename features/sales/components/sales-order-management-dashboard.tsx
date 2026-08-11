@@ -27,6 +27,9 @@ import { Input } from "@/components/ui/input";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
 import { apiGet, apiPatch } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/verified-record-translations";
+import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
 
 type SalesOrder = {
   id: string;
@@ -47,6 +50,7 @@ type SalesOrder = {
   delivery_status: string;
   form_data?: any;
   created_at: string;
+  translations?: Record<string, Partial<Record<"en" | "ur" | "ar" | "fa" | "ps", string>>>;
 };
 
 const lifecycleTabs = [
@@ -59,12 +63,15 @@ const lifecycleTabs = [
 type LifecycleTab = (typeof lifecycleTabs)[number];
 
 export function SalesOrderManagementDashboard({ initialStage }: { initialStage?: string }) {
+  const activeLang = useActiveLanguage();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<LifecycleTab>("Dashboard Overview");
   const [orders, setOrders] = useState<SalesOrder[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
+  const localized = (order: SalesOrder, field: string, fallback: string) =>
+    resolveVerifiedTranslation(order.translations?.[field], activeLang) || (activeLang === "en" ? fallback : translationPendingLabel(activeLang));
 
   // Load orders
   async function loadOrders() {
@@ -395,17 +402,17 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
                     <td className="px-3 py-2.5 font-mono text-[10px] text-slate-500 border-r border-slate-150">{order.branch_transaction_serial_number || raw.traceability?.branchTransactionSerialNumber || "-"}</td>
                     <td className="px-3 py-2.5 font-mono font-bold text-blue-600 border-r border-slate-150">{order.sales_order_no}</td>
                     <td className="px-3 py-2.5 text-slate-600 border-r border-slate-150 font-mono">{order.order_date}</td>
-                    <td className="px-3 py-2.5 font-bold text-slate-800 border-r border-slate-150 truncate max-w-[120px]" title={order.customer_name || "-"}>{order.customer_name || "-"}</td>
+                    <td className="px-3 py-2.5 font-bold text-slate-800 border-r border-slate-150 truncate max-w-[120px]" title={order.customer_name || "-"}>{localized(order, "customer_name", order.customer_name || "-")}</td>
                     <td className="px-3 py-2.5 text-slate-600 border-r border-slate-150 truncate max-w-[80px]" title={userDisplayName}>{userDisplayName}</td>
-                    <td className="px-3 py-2.5 text-slate-600 border-r border-slate-150 truncate max-w-[80px]" title={branchName}>{branchName}</td>
-                    <td className="px-3 py-2.5 text-slate-600 border-r border-slate-150 truncate max-w-[80px]" title={branchCountry}>{branchCountry}</td>
+                    <td className="px-3 py-2.5 text-slate-600 border-r border-slate-150 truncate max-w-[80px]" title={branchName}>{localized(order, "branch_name", branchName)}</td>
+                    <td className="px-3 py-2.5 text-slate-600 border-r border-slate-150 truncate max-w-[80px]" title={branchCountry}>{localized(order, "country_name", branchCountry)}</td>
                     
                     {/* Accounts */}
-                    <td className="px-3 py-2.5 text-slate-700 font-medium border-r border-slate-150 truncate max-w-[100px]" title={f.salesAccountName || "-"}>{f.salesAccountName || "-"}</td>
-                    <td className="px-3 py-2.5 text-slate-700 font-medium border-r border-slate-150 truncate max-w-[100px]" title={f.purchaseAccountName || "-"}>{f.purchaseAccountName || "-"}</td>
+                    <td className="px-3 py-2.5 text-slate-700 font-medium border-r border-slate-150 truncate max-w-[100px]" title={f.salesAccountName || "-"}>{localized(order, "sales_account_name", f.salesAccountName || "-")}</td>
+                    <td className="px-3 py-2.5 text-slate-700 font-medium border-r border-slate-150 truncate max-w-[100px]" title={f.purchaseAccountName || "-"}>{localized(order, "purchase_account_name", f.purchaseAccountName || "-")}</td>
 
                     {/* Product */}
-                    <td className="px-3 py-2.5 font-bold text-slate-800 border-r border-slate-150 truncate max-w-[120px]" title={order.product_summary || "-"}>{order.product_summary || "-"}</td>
+                    <td className="px-3 py-2.5 font-bold text-slate-800 border-r border-slate-150 truncate max-w-[120px]" title={order.product_summary || "-"}>{localized(order, "product_name", order.product_summary || "-")}</td>
                     <td className="px-3 py-2.5 text-slate-600 border-r border-slate-150">{f.brand || "-"}</td>
                     <td className="px-3 py-2.5 text-slate-600 border-r border-slate-150">{f.size || "-"}</td>
                     <td className="px-3 py-2.5 text-right font-mono text-slate-800 border-r border-slate-150">{order.quantity?.toLocaleString()}</td>
@@ -444,6 +451,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
 
                     {/* Actions */}
                     <td className="px-3 py-2.5 text-center space-x-2">
+                      <RecordTranslationCorrectionDialog recordTable="sales_orders" recordId={order.id} onSaved={loadOrders} />
                       <Button
                         onClick={() => handlePrint(order)}
                         variant="outline"

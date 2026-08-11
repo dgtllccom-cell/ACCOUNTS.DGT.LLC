@@ -612,6 +612,195 @@ export const customerTranslations: Record<string, Record<SupportedLanguage, stri
     ar: "نشاط تجاري جديد",
     fa: "کسب و کار جدید",
     ps: "نوی سوداګري"
+  },
+  editCustomerDetails: {
+    en: "Edit Customer Details",
+    ur: "کسٹمر کی تفصیلات میں تبدیلی",
+    ar: "تعديل تفاصيل العميل",
+    fa: "ویرایش جزئیات مشتری",
+    ps: "د پیرودونکي توضیحات سمول"
+  },
+  updateExistingCustomerSub: {
+    en: "Update existing customer registry records",
+    ur: "موجودہ کسٹمر رجسٹری ریکارڈ اپ ڈیٹ کریں",
+    ar: "تحديث سجلات العملاء الحالية",
+    fa: "بروزرسانی سوابق ثبت‌شده مشتری موجود",
+    ps: "شته پیرودونکي ثبت ریکارډونه تازه کړئ"
+  },
+  ready: {
+    en: "Ready",
+    ur: "تیار",
+    ar: "جاهز",
+    fa: "آماده",
+    ps: "چمتو"
+  },
+  draftStatus: {
+    en: "Draft",
+    ur: "مسودہ",
+    ar: "مسودة",
+    fa: "پیش‌نویس",
+    ps: "مسوده"
+  },
+  stepPersonalInfo: {
+    en: "1. Personal Info",
+    ur: "۱۔ ذاتی معلومات",
+    ar: "١. المعلومات الشخصية",
+    fa: "۱. اطلاعات شخصی",
+    ps: "۱. شخصي معلومات"
+  },
+  stepLocation: {
+    en: "2. Location",
+    ur: "۲۔ مقام",
+    ar: "٢. الموقع",
+    fa: "۲. موقعیت",
+    ps: "۲. ځای"
+  },
+  stepContactsDocs: {
+    en: "3. Contacts & Docs",
+    ur: "۳۔ رابطے اور دستاویزات",
+    ar: "٣. الاتصال والمستندات",
+    fa: "۳. تماس‌ها و اسناد",
+    ps: "۳. اړیکې او اسناد"
+  },
+  stepReviewSave: {
+    en: "4. Review & Save",
+    ur: "۴۔ جائزہ اور محفوظ کریں",
+    ar: "٤. المراجعة والحفظ",
+    fa: "۴. بررسی و ذخیره",
+    ps: "۴. بیاکتنه او خوندي کول"
+  },
+  businessNameCompanyName: {
+    en: "Business Name / Company Name",
+    ur: "کاروبار کا نام / کمپنی کا نام",
+    ar: "اسم النشاط التجاري / اسم الشركة",
+    fa: "نام کسب و کار / نام شرکت",
+    ps: "د سوداګرۍ نوم / د شرکت نوم"
+  },
+  representativeFirstName: {
+    en: "Representative First Name",
+    ur: "نمائندے کا پہلا نام",
+    ar: "الاسم الأول للممثل",
+    fa: "نام نماینده",
+    ps: "د استازي لومړی نوم"
+  },
+  representativeLastName: {
+    en: "Representative Last Name",
+    ur: "نمائندے کا آخری نام",
+    ar: "اسم عائلة الممثل",
+    fa: "نام خانوادگی نماینده",
+    ps: "د استازي تخلص"
+  },
+  passportSizePicture: {
+    en: "Passport Size Picture",
+    ur: "پاسپورٹ سائز تصویر",
+    ar: "صورة بحجم جواز السفر",
+    fa: "عکس پاسپورتی",
+    ps: "د پاسپورټ اندازه عکس"
+  },
+  attach: {
+    en: "Attach",
+    ur: "منسلک کریں",
+    ar: "إرفاق",
+    fa: "پیوست",
+    ps: "ضمیمه کول"
+  },
+  addContact: {
+    en: "+ Add Contact",
+    ur: "+ رابطہ شامل کریں",
+    ar: "+ إضافة جهة اتصال",
+    fa: "+ افزودن مخاطب",
+    ps: "+ اړیکه اضافه کړئ"
+  },
+  addDocument: {
+    en: "+ Add Document",
+    ur: "+ دستاویز شامل کریں",
+    ar: "+ إضافة مستند",
+    fa: "+ افزودن سند",
+    ps: "+ سند اضافه کړئ"
+  },
+  typeLabel: {
+    en: "Type",
+    ur: "قسم",
+    ar: "النوع",
+    fa: "نوع",
+    ps: "ډول"
+  },
+  contactValue: {
+    en: "Contact Value",
+    ur: "رابطہ کی قدر",
+    ar: "قيمة الاتصال",
+    fa: "مقدار تماس",
+    ps: "د اړیکې ارزښت"
+  },
+  customType: {
+    en: "+ Custom Type",
+    ur: "+ حسب ضرورت قسم",
+    ar: "+ نوع مخصص",
+    fa: "+ نوع سفارشی",
+    ps: "+ دودیز ډول"
+  },
+  removeAction: {
+    en: "Remove",
+    ur: "حذف کریں",
+    ar: "إزالة",
+    fa: "حذف",
+    ps: "لرې کول"
+  },
+  activeStatus: {
+    en: "Active",
+    ur: "فعال",
+    ar: "نشط",
+    fa: "فعال",
+    ps: "فعال"
+  },
+  inactiveStatus: {
+    en: "Inactive",
+    ur: "غیر فعال",
+    ar: "غير نشط",
+    fa: "غیرفعال",
+    ps: "غیر فعال"
+  },
+  backButton: {
+    en: "Back",
+    ur: "پیچھے",
+    ar: "رجوع",
+    fa: "بازگشت",
+    ps: "شاته"
+  },
+  nextButton: {
+    en: "Next",
+    ur: "اگلا",
+    ar: "التالي",
+    fa: "بعدی",
+    ps: "بل"
+  },
+  savingLabel: {
+    en: "Saving...",
+    ur: "محفوظ ہو رہا ہے...",
+    ar: "جارٍ الحفظ...",
+    fa: "در حال ذخیره...",
+    ps: "خوندي کیږي..."
+  },
+  completeRequiredFieldsMsg: {
+    en: "Please complete all required fields first.",
+    ur: "براہ کرم پہلے تمام لازمی خانے مکمل کریں۔",
+    ar: "يرجى إكمال جميع الحقول المطلوبة أولاً.",
+    fa: "لطفاً ابتدا تمام فیلدهای الزامی را تکمیل کنید.",
+    ps: "مهرباني وکړئ لومړی ټول اړین ډګرونه بشپړ کړئ."
+  },
+  customerUpdatedMsg: {
+    en: "Customer details updated successfully.",
+    ur: "کسٹمر کی تفصیلات کامیابی سے اپ ڈیٹ ہو گئیں۔",
+    ar: "تم تحديث تفاصيل العميل بنجاح.",
+    fa: "جزئیات مشتری با موفقیت به‌روزرسانی شد.",
+    ps: "د پیرودونکي توضیحات په بریالیتوب سره تازه شول."
+  },
+  customerCreatedMsg: {
+    en: "Customer profile incorporated successfully.",
+    ur: "کسٹمر پروفائل کامیابی سے شامل ہو گئی۔",
+    ar: "تم إدراج ملف العميل بنجاح.",
+    fa: "نمایه مشتری با موفقیت ثبت شد.",
+    ps: "د پیرودونکي پروفایل په بریالیتوب سره ثبت شو."
   }
 };
 

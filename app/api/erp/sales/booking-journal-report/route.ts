@@ -6,6 +6,8 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
 
 const querySchema = z.object({
   id: uuidSchema.optional(),
@@ -258,8 +260,20 @@ export async function GET(request: NextRequest) {
       data = result.data;
     }
 
-    const normalized = (data ?? []).map(normalizeOrder);
-    
+    let normalized = (data ?? []).map(normalizeOrder);
+
+    // Resolve customerName into the active language — record_translations was written keyed
+    // by the DB column name "customer_name" (see the POST handler), but normalizeOrder()
+    // exposes it as the camelCase "customerName", so alias it across the localize call rather
+    // than duplicating the lookup logic. Always resolve, even for lang === "en" — see
+    // customers/[id]/route.ts for why skipping that would leak non-English source text.
+    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    if (normalized.length > 0) {
+      const aliased = normalized.map((r: any) => ({ ...r, customer_name: r.customerName }));
+      const resolved = await localizeRecordNames<any>(aliased, "sales_orders", "customer_name", lang);
+      normalized = resolved.map((r: any) => ({ ...r, customerName: r.customer_name }));
+    }
+
     // Aggregation summary
     const summary = {
       total: normalized.length,

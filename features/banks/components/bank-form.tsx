@@ -20,6 +20,8 @@ import {
   type LocationHierarchyValue
 } from "@/features/locations/components/location-hierarchy-select";
 import { createBank, type BankRecord } from "@/features/banks/bank-api";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 const DEFAULT_BANK_TYPES = [
   "Customer Account",
@@ -123,6 +125,8 @@ export function BankForm({
   onSave,
   onCancel
 }: BankFormProps) {
+  const lang = useActiveLanguage();
+  const tr = (key: Parameters<typeof t>[1], fallback: string) => t(lang, key, fallback);
   const [form, setForm] = useState<BankFormState>(emptyForm);
   const [location, setLocation] = useState<LocationHierarchyValue>({
     countryId: "",
@@ -191,7 +195,7 @@ export function BankForm({
 
   async function handleSave() {
     if (!isReady) {
-      setMessage({ type: "error", text: "Please fill all required fields marked with *" });
+      setMessage({ type: "error", text: tr("bank.validation_required_fields", "Please fill all required fields marked with *") });
       return;
     }
     setSaving(true);
@@ -252,10 +256,10 @@ export function BankForm({
         updated_at: new Date().toISOString()
       };
       setSavedBank(saved);
-      setMessage({ type: "success", text: `Bank "${form.bankName}" saved successfully!` });
+      setMessage({ type: "success", text: tr("bank.saved_success_message", `Bank "${form.bankName}" saved successfully!`).replace("{name}", form.bankName) });
       onSave?.(bankId, saved);
     } catch (err: any) {
-      setMessage({ type: "error", text: err?.message ?? "Failed to save bank." });
+      setMessage({ type: "error", text: err?.message ?? tr("bank.save_failed", "Failed to save bank.") });
     } finally {
       setSaving(false);
     }
@@ -281,14 +285,14 @@ export function BankForm({
           </div>
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.22em] text-primary">
-              {mode === "standalone" ? "Settings / Master Forms" : "Bank Master Form"}
+              {mode === "standalone" ? tr("bank.settings_master_forms", "Settings / Master Forms") : tr("bank.master_form_title", "Bank Master Form")}
             </p>
             <h1 className={mode === "standalone" ? "mt-0.5 text-2xl font-bold tracking-tight" : "text-lg font-bold"}>
-              Bank Master Form
+              {tr("bank.master_form_title", "Bank Master Form")}
             </h1>
             {mode === "standalone" && (
               <p className="text-sm text-muted-foreground">
-                Create and manage bank information for personal or business use
+                {tr("bank.subtitle", "Create and manage bank information for personal or business use")}
               </p>
             )}
           </div>
@@ -301,15 +305,15 @@ export function BankForm({
           }
         >
           <CheckCircle2 className="h-4 w-4" aria-hidden />
-          {isReady ? "Ready to Save" : "Draft"}
+          {isReady ? tr("bank.ready_to_save", "Ready to Save") : tr("bank.draft", "Draft")}
         </span>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-xs font-semibold text-slate-500 mb-2">
         {[
-          { id: 1, label: "1. Bank Information" },
-          { id: 2, label: "2. Contact & Address" },
-          { id: 3, label: "3. Review & Save" },
+          { id: 1, label: tr("bank.step_bank_info", "1. Bank Information") },
+          { id: 2, label: tr("bank.step_contact_address", "2. Contact & Address") },
+          { id: 3, label: tr("bank.step_review_save", "3. Review & Save") },
         ].map((s) => {
           const active = currentStep === s.id;
           const completed = currentStep > s.id;
@@ -347,51 +351,51 @@ export function BankForm({
           <section className="space-y-5 rounded-lg border bg-card p-5 shadow-sm">
             <div className="flex items-center gap-2 border-b pb-3">
               <Landmark className="h-4 w-4 text-primary" aria-hidden />
-              <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">Bank Information</h2>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{tr("bank.section_bank_info", "Bank Information")}</h2>
             </div>
 
             <div className="grid gap-4 sm:grid-cols-3">
               {/* Bank Type */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Bank Type *</Label>
-                <select 
-                  value={form.bankType} 
+                <Label className="text-xs font-semibold">{tr("bank.bank_type", "Bank Type")} *</Label>
+                <select
+                  value={form.bankType}
                   onChange={(e) => {
                     if (e.target.value === "__new__") setTypeModal("bankType");
                     else set("bankType", e.target.value);
-                  }} 
+                  }}
                   className={selectClass}
                 >
-                  <option value="">Select Bank Type</option>
-                  {bankTypes.map((t) => <option key={t} value={t}>{t}</option>)}
-                  <option value="__new__">+ Add New Type</option>
+                  <option value="">{tr("bank.select_bank_type", "Select Bank Type")}</option>
+                  {bankTypes.map((bt) => <option key={bt} value={bt}>{bt}</option>)}
+                  <option value="__new__">{tr("bank.add_new_type", "+ Add New Type")}</option>
                 </select>
               </div>
 
               {/* Account Type */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Account Type *</Label>
-                <select 
-                  value={form.accountType} 
+                <Label className="text-xs font-semibold">{tr("bank.account_type", "Account Type")} *</Label>
+                <select
+                  value={form.accountType}
                   onChange={(e) => {
                     if (e.target.value === "__new__") setTypeModal("accountType");
                     else set("accountType", e.target.value);
-                  }} 
+                  }}
                   className={selectClass}
                 >
-                  <option value="">Select Account Type</option>
-                  {accountTypes.map((t) => <option key={t} value={t}>{t}</option>)}
-                  <option value="__new__">+ Add New Type</option>
+                  <option value="">{tr("bank.select_account_type", "Select Account Type")}</option>
+                  {accountTypes.map((at) => <option key={at} value={at}>{at}</option>)}
+                  <option value="__new__">{tr("bank.add_new_type", "+ Add New Type")}</option>
                 </select>
               </div>
 
               {/* Bank Name */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Bank Name *</Label>
+                <Label className="text-xs font-semibold">{tr("bank.bank_name", "Bank Name")} *</Label>
                 <Input
                   value={form.bankName}
                   onChange={(e) => set("bankName", e.target.value)}
-                  placeholder="Enter bank name"
+                  placeholder={tr("bank.enter_bank_name", "Enter bank name")}
                 />
               </div>
             </div>
@@ -399,7 +403,7 @@ export function BankForm({
             {/* Branch Code & Short Name */}
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="space-y-1.5 sm:col-span-2">
-                <Label className="text-xs font-semibold">{form.branchCodeType || "Branch Code"} *</Label>
+                <Label className="text-xs font-semibold">{form.branchCodeType || tr("bank.branch_code_generic", "Branch Code")} *</Label>
                 <div className="flex gap-1.5">
                   <select
                     value={form.branchCodeType}
@@ -409,13 +413,13 @@ export function BankForm({
                     }}
                     className="h-10 rounded-md border border-input bg-background px-2 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring shrink-0"
                   >
-                    {branchCodeTypes.map((t) => <option key={t} value={t}>{t}</option>)}
-                    <option value="__new__">+ Add New Type</option>
+                    {branchCodeTypes.map((bct) => <option key={bct} value={bct}>{bct}</option>)}
+                    <option value="__new__">{tr("bank.add_new_type", "+ Add New Type")}</option>
                   </select>
                   <Input
                     value={form.branchCode}
                     onChange={(e) => set("branchCode", e.target.value)}
-                    placeholder={`Enter ${form.branchCodeType.toLowerCase()}`}
+                    placeholder={`${tr("bank.enter_prefix", "Enter")} ${form.branchCodeType.toLowerCase()}`}
                     className="flex-1"
                   />
                 </div>
@@ -423,35 +427,35 @@ export function BankForm({
 
               {/* Short Name */}
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Short Name / Code *</Label>
+                <Label className="text-xs font-semibold">{tr("bank.short_name_code", "Short Name / Code")} *</Label>
                 <Input
                   value={form.shortName}
                   onChange={(e) => set("shortName", e.target.value)}
-                  placeholder="e.g. SCB, HBL, UBL"
+                  placeholder={tr("bank.short_name_placeholder", "e.g. SCB, HBL, UBL")}
                   maxLength={20}
                 />
-                <p className="text-[10px] text-muted-foreground">Short code for bank</p>
+                <p className="text-[10px] text-muted-foreground">{tr("bank.short_code_hint", "Short code for bank")}</p>
               </div>
             </div>
 
             {/* Account Title + Account Number */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Account Title / Name *</Label>
+                <Label className="text-xs font-semibold">{tr("bank.account_title_name", "Account Title / Name")} *</Label>
                 <Input
                   value={form.accountTitle}
                   onChange={(e) => set("accountTitle", e.target.value)}
-                  placeholder="Enter account title / name"
+                  placeholder={tr("bank.enter_account_title", "Enter account title / name")}
                 />
-                <p className="text-[10px] text-muted-foreground">Account holder name (Personal or Company)</p>
+                <p className="text-[10px] text-muted-foreground">{tr("bank.account_title_hint", "Account holder name (Personal or Company)")}</p>
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Account Number *</Label>
+                <Label className="text-xs font-semibold">{tr("bank.account_number", "Account Number")} *</Label>
                 <Input
                   value={form.accountNumber}
                   onChange={(e) => set("accountNumber", e.target.value)}
-                  placeholder="Enter account number"
+                  placeholder={tr("bank.enter_account_number", "Enter account number")}
                   className="font-mono text-lg h-14 tracking-widest"
                 />
               </div>
@@ -459,11 +463,11 @@ export function BankForm({
 
             {/* IBAN */}
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">IBAN Number (Optional)</Label>
+              <Label className="text-xs font-semibold">{tr("bank.iban_number_optional", "IBAN Number (Optional)")}</Label>
               <Input
                 value={form.ibanNumber}
                 onChange={(e) => set("ibanNumber", e.target.value)}
-                placeholder="Enter IBAN number"
+                placeholder={tr("bank.enter_iban", "Enter IBAN number")}
                 maxLength={34}
                 className="font-mono"
               />
@@ -472,7 +476,7 @@ export function BankForm({
             {/* Currency + Status */}
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Currency of Account *</Label>
+                <Label className="text-xs font-semibold">{tr("bank.currency_of_account", "Currency of Account")} *</Label>
                 <div className="flex gap-3">
                   <select
                     value={form.currency}
@@ -487,16 +491,16 @@ export function BankForm({
                     </span>
                     <div>
                       <p className="text-xs font-bold text-primary">
-                        {form.currency || "Not selected"}
+                        {form.currency || tr("bank.not_selected", "Not selected")}
                       </p>
-                      <p className="text-[10px] text-muted-foreground">Currency Selected</p>
+                      <p className="text-[10px] text-muted-foreground">{tr("bank.currency_selected", "Currency Selected")}</p>
                     </div>
                   </div>
                 </div>
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Account Status *</Label>
+                <Label className="text-xs font-semibold">{tr("bank.account_status", "Account Status")} *</Label>
                 <select
                   value={form.accountStatus}
                   onChange={(e) => set("accountStatus", e.target.value)}
@@ -515,7 +519,7 @@ export function BankForm({
           <section className="space-y-5 rounded-lg border bg-card p-5 shadow-sm">
             <div className="flex items-center gap-2 border-b pb-3">
               <Globe className="h-4 w-4 text-primary" aria-hidden />
-              <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">Contact & Address Information</h2>
+              <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">{tr("bank.section_contact_address", "Contact & Address Information")}</h2>
             </div>
 
             <LocationHierarchySelect
@@ -525,60 +529,60 @@ export function BankForm({
             />
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Full Address</Label>
+              <Label className="text-xs font-semibold">{tr("bank.full_address", "Full Address")}</Label>
               <Input
                 value={form.fullAddress}
                 onChange={(e) => set("fullAddress", e.target.value)}
-                placeholder="Enter full address"
+                placeholder={tr("bank.enter_full_address", "Enter full address")}
               />
             </div>
 
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Phone Number</Label>
+                <Label className="text-xs font-semibold">{tr("bank.phone_number", "Phone Number")}</Label>
                 <Input
                   value={form.phone}
                   onChange={(e) => set("phone", e.target.value)}
-                  placeholder="Enter phone number (optional)"
+                  placeholder={tr("bank.enter_phone_optional", "Enter phone number (optional)")}
                   type="tel"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Email Address</Label>
+                <Label className="text-xs font-semibold">{tr("bank.email_address", "Email Address")}</Label>
                 <Input
                   value={form.email}
                   onChange={(e) => set("email", e.target.value)}
-                  placeholder="Enter email address (optional)"
+                  placeholder={tr("bank.enter_email_optional", "Enter email address (optional)")}
                   type="email"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">SWIFT / BIC Code (Optional)</Label>
+                <Label className="text-xs font-semibold">{tr("bank.swift_bic_optional", "SWIFT / BIC Code (Optional)")}</Label>
                 <Input
                   value={form.swiftBic}
                   onChange={(e) => set("swiftBic", e.target.value)}
-                  placeholder="Enter SWIFT / BIC code"
+                  placeholder={tr("bank.enter_swift", "Enter SWIFT / BIC code")}
                   className="font-mono uppercase"
                   maxLength={11}
                 />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold">Website (Optional)</Label>
+                <Label className="text-xs font-semibold">{tr("bank.website_optional", "Website (Optional)")}</Label>
                 <Input
                   value={form.website}
                   onChange={(e) => set("website", e.target.value)}
-                  placeholder="Enter website"
+                  placeholder={tr("bank.enter_website", "Enter website")}
                   type="url"
                 />
               </div>
             </div>
 
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold">Remarks (Optional)</Label>
+              <Label className="text-xs font-semibold">{tr("bank.remarks_optional", "Remarks (Optional)")}</Label>
               <textarea
                 value={form.remarks}
                 onChange={(e) => set("remarks", e.target.value)}
-                placeholder="Enter any additional remarks"
+                placeholder={tr("bank.enter_remarks", "Enter any additional remarks")}
                 rows={3}
                 className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring resize-none"
               />
@@ -589,9 +593,9 @@ export function BankForm({
 
           {currentStep === 3 && (
             <div className="space-y-4">
-              <p className="text-sm font-semibold text-slate-800">Review & Save</p>
+              <p className="text-sm font-semibold text-slate-800">{tr("bank.review_save_title", "Review & Save")}</p>
               <p className="text-xs text-muted-foreground">
-                Please review the bank details on the right. Once confirmed, you can save the bank record.
+                {tr("bank.review_save_desc", "Please review the bank details on the right. Once confirmed, you can save the bank record.")}
               </p>
             </div>
           )}
@@ -618,9 +622,9 @@ export function BankForm({
               disabled={currentStep === 1}
               className="border-slate-200 text-slate-700 font-medium h-10 px-4"
             >
-              Back
+              {tr("common.back", "Back")}
             </Button>
-            
+
             <div className="flex gap-2">
               <Button
                 type="button"
@@ -628,7 +632,7 @@ export function BankForm({
                 onClick={onCancel ?? handleReset}
                 className="h-10 px-4"
               >
-                Cancel
+                {tr("common.cancel", "Cancel")}
               </Button>
               {currentStep < 3 ? (
                 <Button
@@ -636,7 +640,7 @@ export function BankForm({
                   onClick={() => setCurrentStep((Math.min(3, currentStep + 1)) as any)}
                   className="rounded-lg bg-primary hover:bg-primary-dark text-white font-medium shadow-sm h-10 px-8 gap-2"
                 >
-                  Next
+                  {tr("common.next", "Next")}
                 </Button>
               ) : (
                 <Button
@@ -646,7 +650,7 @@ export function BankForm({
                   className="rounded-lg bg-primary text-white hover:bg-primary-dark transition gap-2 shadow-sm font-medium h-10 px-5"
                 >
                   <Save className="h-4 w-4" aria-hidden />
-                  {saving ? "Saving..." : "Save Bank"}
+                  {saving ? tr("bank.saving", "Saving...") : tr("bank.save_bank", "Save Bank")}
                 </Button>
               )}
             </div>
@@ -658,18 +662,18 @@ export function BankForm({
           <div className="flex items-center justify-between border-b pb-3 mb-4">
             <div className="flex items-center gap-2">
               <Building2 className="h-4 w-4 text-primary" aria-hidden />
-              <h2 className="font-semibold text-sm">Bank Preview</h2>
+              <h2 className="font-semibold text-sm">{tr("bank.bank_preview", "Bank Preview")}</h2>
             </div>
             <div>
               {savedBank ? (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 border border-emerald-200">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  Saved Record
+                  {tr("bank.saved_record", "Saved Record")}
                 </span>
               ) : (
                 <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-2 py-0.5 text-[10px] font-semibold text-amber-700 border border-amber-200">
                   <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-                  Live Draft
+                  {tr("bank.live_draft", "Live Draft")}
                 </span>
               )}
             </div>
@@ -679,37 +683,37 @@ export function BankForm({
             {savedBank && (
               <div className="rounded-lg bg-emerald-50 border border-emerald-200 p-2.5 text-center mb-3">
                 <CheckCircle2 className="h-5 w-5 text-emerald-600 mx-auto mb-1" />
-                <p className="text-emerald-700 font-semibold text-xs">Saved Successfully</p>
+                <p className="text-emerald-700 font-semibold text-xs">{tr("bank.saved_successfully", "Saved Successfully")}</p>
               </div>
             )}
             <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Bank Name</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{tr("bank.bank_name", "Bank Name")}</p>
               <p className="font-bold text-sm mt-0.5 text-slate-900">{savedBank ? savedBank.bank_name : form.bankName || "-"}</p>
             </div>
             <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Account Title</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{tr("bank.account_title_label", "Account Title")}</p>
               <p className="font-semibold mt-0.5 text-slate-800">{savedBank ? savedBank.account_title : form.accountTitle || "-"}</p>
             </div>
             <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Account Number</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{tr("bank.account_number", "Account Number")}</p>
               <p className="font-mono font-bold mt-0.5 text-slate-900">{savedBank ? savedBank.account_number : form.accountNumber || "-"}</p>
             </div>
             <div>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">IBAN</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">{tr("bank.iban_label", "IBAN")}</p>
               <p className="font-mono mt-0.5 break-all text-slate-700">{savedBank ? (savedBank.iban_number || "-") : form.ibanNumber || "-"}</p>
             </div>
             <div className="flex justify-between border-t pt-2">
-              <span className="text-muted-foreground">Currency</span>
+              <span className="text-muted-foreground">{tr("bank.currency_of_account", "Currency of Account")}</span>
               <span className="font-bold font-mono text-slate-900">{savedBank ? savedBank.currency : form.currency || "-"}</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Branch</span>
+              <span className="text-muted-foreground">{tr("bank.branch_label", "Branch")}</span>
               <span className="font-semibold text-slate-800">
                 {savedBank ? savedBank.branch_name : (form.branchCode ? `${form.branchCodeType} - ${form.branchCode}` : "-")}
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-muted-foreground">Status</span>
+              <span className="text-muted-foreground">{tr("common.status", "Status")}</span>
               <span className={`font-bold ${savedBank ? (savedBank.account_status === "Active" ? "text-emerald-600" : "text-amber-600") : (form.accountStatus === "Active" ? "text-emerald-600" : "text-amber-600")}`}>
                 {savedBank ? savedBank.account_status : form.accountStatus}
               </span>
@@ -723,7 +727,7 @@ export function BankForm({
                 className="w-full text-xs mt-2"
                 onClick={handleReset}
               >
-                + Add Another Bank
+                {tr("bank.add_another_bank", "+ Add Another Bank")}
               </Button>
             )}
           </div>
@@ -733,15 +737,15 @@ export function BankForm({
       {typeModal && (
         <div className="fixed inset-0 z-[60] grid place-items-center bg-slate-950/60 p-4">
           <div className="w-full max-w-sm rounded-lg border bg-white p-5 shadow-2xl">
-            <h2 className="font-semibold text-slate-950">Add New Type</h2>
+            <h2 className="font-semibold text-slate-950">{tr("bank.add_new_type_modal_title", "Add New Type")}</h2>
             <div className="mt-4 space-y-3">
-              <Input value={newType} onChange={(e) => setNewType(e.target.value)} placeholder="Enter new type" />
+              <Input value={newType} onChange={(e) => setNewType(e.target.value)} placeholder={tr("bank.enter_new_type", "Enter new type")} />
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setTypeModal(null)}>
-                  Cancel
+                  {tr("common.cancel", "Cancel")}
                 </Button>
                 <Button type="button" onClick={saveType}>
-                  Save
+                  {tr("common.save", "Save")}
                 </Button>
               </div>
             </div>

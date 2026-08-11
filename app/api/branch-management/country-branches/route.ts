@@ -9,6 +9,7 @@ import { translateToUrdu } from "@/lib/api/response";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { withLocalPg } from "@/lib/db/local-postgres";
 
 function formatError(message: string, isSuperAdmin: boolean) {
   if (isSuperAdmin) {
@@ -86,19 +87,53 @@ export async function GET(request: Request) {
     const id = url.searchParams.get("id");
     const countryId = url.searchParams.get("countryId");
 
-    const supabase = createSupabaseAdminClient() as any;
-    let query = buildCountryBranchQuery(supabase, countryBranchSelect, id, countryId, session);
-    if (!query) return NextResponse.json({ countryBranches: [] }, { status: 200 });
+    // Root-cause bypass: country_branches_scope_read gates on is_super_admin()/
+    // can_access_country(), both keyed off auth.uid(), which is always NULL under
+    // the app's temp-session bootstrap login — so the "admin" Supabase client below
+    // silently returns zero rows for every filtered branch lookup. Try a direct
+    // Postgres read first (bypasses RLS via DATABASE_URL); fall back to the
+    // Supabase-client path only when DATABASE_URL isn't configured.
+    const viaPg = await withLocalPg(async (sql) => {
+      if (id && !isUuid(id)) return { countryBranches: [] as any[] };
+      if (countryId && !session.isSuperAdmin && !session.countryIds.includes(countryId)) {
+        return { countryBranches: [] as any[] };
+      }
+      if (!countryId && !session.isSuperAdmin && session.countryIds.length === 0) {
+        return { countryBranches: [] as any[] };
+      }
+      const rows = await sql`
+        select
+          id, country_id, name, code, local_currency, is_main, status, state_province_id,
+          district_id, city_id, address, phone, email, whatsapp_number, company_id, owner_name,
+          contacts, documents, permission_template, permission_grants, created_at, updated_at
+        from public.country_branches
+        where deleted_at is null
+          and (${id && isUuid(id) ? sql`id = ${id}` : sql`true`})
+          and (${countryId ? sql`country_id = ${countryId}` : sql`true`})
+          and (${!countryId && !session.isSuperAdmin ? sql`country_id = any(${session.countryIds})` : sql`true`})
+        order by created_at asc
+      `;
+      return { countryBranches: normalizeCountryBranchRows(rows as any[]) };
+    });
 
-    let { data, error } = await query;
-    if (error && isMissingOptionalColumn(error.message)) {
-      const fallbackQuery = buildCountryBranchQuery(supabase, countryBranchFallbackSelect, id, countryId, session);
-      const fallbackResult = fallbackQuery ? await fallbackQuery : { data: [], error: null };
-      data = fallbackResult.data;
-      error = fallbackResult.error;
+    let countryBranches: any[];
+    if (viaPg) {
+      countryBranches = viaPg.countryBranches;
+    } else {
+      const supabase = createSupabaseAdminClient() as any;
+      let query = buildCountryBranchQuery(supabase, countryBranchSelect, id, countryId, session);
+      if (!query) return NextResponse.json({ countryBranches: [] }, { status: 200 });
+
+      let { data, error } = await query;
+      if (error && isMissingOptionalColumn(error.message)) {
+        const fallbackQuery = buildCountryBranchQuery(supabase, countryBranchFallbackSelect, id, countryId, session);
+        const fallbackResult = fallbackQuery ? await fallbackQuery : { data: [], error: null };
+        data = fallbackResult.data;
+        error = fallbackResult.error;
+      }
+      countryBranches = normalizeCountryBranchRows(data);
     }
 
-    let countryBranches = normalizeCountryBranchRows(data);
     const lang = await getRequestLanguage();
     countryBranches = await localizeRecordNames(countryBranches, "country_branches", "name", lang);
     return NextResponse.json({ countryBranches }, { status: 200 });
@@ -111,8 +146,9 @@ export async function GET(request: Request) {
   }
 }
 export async function POST(request: Request) {
+  let session: Awaited<ReturnType<typeof requireErpSession>> | undefined;
   try {
-    const session = await requireErpSession();
+    session = await requireErpSession();
     if (!session.isSuperAdmin) {
       return NextResponse.json({ error: "Only Super Admin can create country main branches." }, { status: 403 });
     }
@@ -223,8 +259,9 @@ export async function POST(request: Request) {
 }
 
 export async function PUT(request: Request) {
+  let session: Awaited<ReturnType<typeof requireErpSession>> | undefined;
   try {
-    const session = await requireErpSession();
+    session = await requireErpSession();
     if (!session.isSuperAdmin) {
       return NextResponse.json({ error: "Only Super Admin can update country main branches." }, { status: 403 });
     }

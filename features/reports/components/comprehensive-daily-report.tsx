@@ -9,12 +9,14 @@ import { cn } from "@/lib/utils";
 import type { RoznamchaEntryRow } from "@/features/roznamcha/roznamcha-api";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { Th } from "@/components/ui/translated-th";
 
 type TabType = "summary" | "branch" | "user";
 
 export function ComprehensiveDailyReportView() {
   const lang = useActiveLanguage();
+  const tr = (value: string) => translateHeader(lang, value);
   const [loading, setLoading] = useState(false);
   const [entries, setEntries] = useState<RoznamchaEntryRow[]>([]);
   
@@ -185,7 +187,7 @@ export function ComprehensiveDailyReportView() {
       {/* Top Filter Bar */}
       <div className="flex flex-wrap items-end gap-3 bg-white p-4 rounded-xl border border-slate-200 shadow-sm print:hidden">
         <div className="space-y-1">
-          <label className="text-[10px] font-black uppercase text-slate-500">Date Range</label>
+          <label className="text-[10px] font-black uppercase text-slate-500">{tr("Date Range")}</label>
           <div className="flex items-center gap-1">
             <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="h-8 rounded-md border border-slate-200 text-xs px-2" />
             <span className="text-slate-400">-</span>
@@ -194,9 +196,9 @@ export function ComprehensiveDailyReportView() {
         </div>
 
         <div className="space-y-1 w-40">
-          <label className="text-[10px] font-black uppercase text-slate-500">Country</label>
+          <label className="text-[10px] font-black uppercase text-slate-500">{tr("Country")}</label>
           <select value={countryId} onChange={e => setCountryId(e.target.value)} className="h-8 w-full rounded-md border border-slate-200 text-xs px-2 outline-none">
-            <option value="all">All Countries</option>
+            <option value="all">{tr("All Countries")}</option>
             {countries.map(c => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
@@ -204,9 +206,9 @@ export function ComprehensiveDailyReportView() {
         </div>
 
         <div className="space-y-1 w-40">
-          <label className="text-[10px] font-black uppercase text-slate-500">Branch</label>
+          <label className="text-[10px] font-black uppercase text-slate-500">{tr("Branch")}</label>
           <select value={branchId} onChange={e => setBranchId(e.target.value)} className="h-8 w-full rounded-md border border-slate-200 text-xs px-2 outline-none">
-            <option value="all">All Branches</option>
+            <option value="all">{tr("All Branches")}</option>
             {branches.map(b => (
               <option key={b.id} value={b.id}>{b.name}</option>
             ))}
@@ -214,9 +216,9 @@ export function ComprehensiveDailyReportView() {
         </div>
 
         <div className="space-y-1 w-40">
-          <label className="text-[10px] font-black uppercase text-slate-500">User</label>
+          <label className="text-[10px] font-black uppercase text-slate-500">{tr("User")}</label>
           <select value={userId} onChange={e => setUserId(e.target.value)} className="h-8 w-full rounded-md border border-slate-200 text-xs px-2 outline-none">
-            <option value="all">All Users</option>
+            <option value="all">{tr("All Users")}</option>
             {users.map(u => (
               <option key={u.id} value={u.id}>{u.name}</option>
             ))}
@@ -224,31 +226,31 @@ export function ComprehensiveDailyReportView() {
         </div>
 
         <div className="space-y-1 w-32">
-          <label className="text-[10px] font-black uppercase text-slate-500">Voucher Type</label>
+          <label className="text-[10px] font-black uppercase text-slate-500">{tr("Voucher Type")}</label>
           <select value={voucherType} onChange={e => setVoucherType(e.target.value)} className="h-8 w-full rounded-md border border-slate-200 text-xs px-2 outline-none">
-            <option value="all">All</option>
-            <option value="cr">Cash Receipt (CR)</option>
-            <option value="cp">Cash Payment (CP)</option>
-            <option value="br">Bank Receipt (BR)</option>
-            <option value="bp">Bank Payment (BP)</option>
-            <option value="jv">Journal Voucher (JV)</option>
+            <option value="all">{tr("All")}</option>
+            <option value="cr">{tr("Cash Receipt (CR)")}</option>
+            <option value="cp">{tr("Cash Payment (CP)")}</option>
+            <option value="br">{tr("Bank Receipt (BR)")}</option>
+            <option value="bp">{tr("Bank Payment (BP)")}</option>
+            <option value="jv">{tr("Journal Voucher (JV)")}</option>
           </select>
         </div>
         
         <div className="space-y-1 w-32">
-          <label className="text-[10px] font-black uppercase text-slate-500">Currency Mode</label>
+          <label className="text-[10px] font-black uppercase text-slate-500">{tr("Currency Mode")}</label>
           <select value={targetCurrency} onChange={e => setTargetCurrency(e.target.value)} className="h-8 w-full rounded-md border border-slate-200 text-xs px-2 outline-none font-bold text-indigo-600 bg-indigo-50">
-            <option value="USD">USD (Converted)</option>
-            <option value="LOCAL">Local Currency</option>
+            <option value="USD">{tr("USD (Converted)")}</option>
+            <option value="LOCAL">{tr("Local Currency")}</option>
           </select>
         </div>
 
         <div className="flex items-center gap-2 ml-auto">
           <button onClick={handleExportCSV} className="h-8 flex items-center gap-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-md transition-colors">
-            <Download className="h-3.5 w-3.5" /> Export CSV
+            <Download className="h-3.5 w-3.5" /> {t(lang, "report.export_csv", "Export CSV")}
           </button>
           <button onClick={() => window.print()} className="h-8 flex items-center gap-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-md transition-colors shadow-sm">
-            <Printer className="h-3.5 w-3.5" /> Print
+            <Printer className="h-3.5 w-3.5" /> {t(lang, "report.print", "Print")}
           </button>
         </div>
       </div>
@@ -273,7 +275,7 @@ export function ComprehensiveDailyReportView() {
       <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden min-h-[400px]">
         {loading ? (
           <div className="flex items-center justify-center h-64 text-slate-400 font-bold text-sm">
-            Loading report data...
+            {tr("Loading report data...")}
           </div>
         ) : (
           <div className="overflow-x-auto">
@@ -343,7 +345,7 @@ export function ComprehensiveDailyReportView() {
                 ))}
                 {(activeTab === "summary" ? dailySummary : activeTab === "branch" ? branchSummary : userSummary).length === 0 && !loading && (
                   <tr>
-                    <td colSpan={10} className="px-4 py-8 text-center text-slate-500 italic">No transactions found for the selected filters.</td>
+                    <td colSpan={10} className="px-4 py-8 text-center text-slate-500 italic">{tr("No transactions found for the selected filters.")}</td>
                   </tr>
                 )}
               </tbody>

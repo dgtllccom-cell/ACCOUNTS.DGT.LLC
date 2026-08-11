@@ -53,7 +53,7 @@ import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-wind
 import { SalesBookingJournalReportView } from "./sales-booking-journal-report-view";
 import { Th } from "@/components/ui/translated-th";
 
-// Ã¢â€â‚¬Ã¢â€â‚¬ Non-location constants (static values, not from master forms) Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬
+// --- Non-location constants (static values, not from master forms) ---
 const CURRENCY_OPTIONS = ["USD", "AED", "EUR", "GBP", "PKR", "AFN", "INR", "CNY", "SAR"];
 const PAYMENT_TYPES = ["Advance Payment", "Invoice", "Final Payment", "Credit"];
 const LOADING_TYPES = ["By Sea", "By Road", "By Air"];
@@ -106,7 +106,7 @@ const MOCK_LOT_DEDUCTIONS = {
     { customer: "Sharjah Supply A/C", date: "2026-07-14", quantity: 80, weight: 2400, reference: "SO-2026-1044" }
   ]
 };
-// NOTE: COUNTRY_OPTIONS and ORIGIN_OPTIONS removed Ã¢â‚¬â€ countries now come from Location Master.
+// NOTE: COUNTRY_OPTIONS and ORIGIN_OPTIONS removed — countries now come from Location Master.
 
 const MOCK_ACCOUNTS = [
   { accountCode: "AE-AC-0001", accountName: "Dubai Customer Account", cityBranchName: "Dubai Main Branch", ledgerCurrency: "AED" },
@@ -388,9 +388,9 @@ function currencySymbol(currency) {
   const c = String(currency || "").toUpperCase();
   if (c.includes("USD")) return "$";
   if (c.includes("AED")) return "DH";
-  if (c.includes("PKR")) return "Ã¢â€šÂ¨";
-  if (c.includes("AFN")) return "Ã˜â€¹";
-  if (c.includes("INR")) return "Ã¢â€šÂ¹";
+  if (c.includes("PKR")) return "₨";
+  if (c.includes("AFN")) return "؋";
+  if (c.includes("INR")) return "₹";
   return currency || "";
 }
 
@@ -676,7 +676,7 @@ export function SalesOrderWizard({ session }) {
   const isSuperAdmin = activeSession?.isSuperAdmin || activeSession?.scopes?.isSuperAdmin || false;
   const isCountryAdmin = activeSession?.roles?.includes("country_admin") || activeSession?.scopes?.isCountryAdmin || (activeSession?.countryIds?.length > 0) || (activeSession?.scopes?.countryIds?.length > 0) || false;
   const [countries, setCountries] = useState([]);
-  const [allCountries, setAllCountries] = useState([]); // unscoped Ã¢â‚¬â€ for transit pickers
+  const [allCountries, setAllCountries] = useState([]); // unscoped — for transit pickers
   const [dbGoods, setDbGoods] = useState([]); // goods from master DB
   const [dbLoadingPorts, setDbLoadingPorts] = useState([]);
   const [dbReceivedPorts, setDbReceivedPorts] = useState([]);
@@ -1384,6 +1384,9 @@ export function SalesOrderWizard({ session }) {
     const salesAccount = dbAccounts.find(acc => acc.accountCode === form.salesAccountNo);
 
     return {
+      originalLanguage: ["en", "ur", "ar", "fa", "ps"].includes(document.documentElement.lang)
+        ? document.documentElement.lang
+        : "en",
       countryId: form.countryId || null,
       countryBranchId: form.countryBranchId || null,
       cityBranchId: form.cityBranchId || null,
@@ -4169,7 +4172,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         </div>
                       </div>
                     </div>
-                    {/* Ã¢â€â‚¬Ã¢â€â‚¬ SECTION 2: ADVANCE & PAYMENT TERMS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                    {/* --- SECTION 2: ADVANCE & PAYMENT TERMS --- */}
                     <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded p-3 space-y-3">
                       <h4 className="text-[10px] font-black uppercase text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800 pb-1">Advance & Payment Terms</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
@@ -4216,7 +4219,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       </div>
                     </div>
 
-                    {/* Ã¢â€â‚¬Ã¢â€â‚¬ SECTION 3: TRANSPORT & CONTAINER DETAILS Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                    {/* --- SECTION 3: TRANSPORT & CONTAINER DETAILS --- */}
                     <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded p-3 space-y-3">
                       <h4 className="text-[10px] font-black uppercase text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800 pb-1">Transport & Container Details</h4>
                       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
@@ -4244,7 +4247,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                       </div>
                     </div>
 
-                    {/* Ã¢â€â‚¬Ã¢â€â‚¬ SECTION 4: REMARKS & NARRATION Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+                    {/* --- SECTION 4: REMARKS & NARRATION --- */}
                     <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded p-3">
                       <label className="block text-[10px] font-bold text-muted-foreground uppercase mb-1">Remarks & Narration</label>
                       <textarea
@@ -4865,7 +4868,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
         </div>
       )}
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬ NEW COUNTRY MODAL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* --- NEW COUNTRY MODAL --- */}
       {newCountryModal && (
         <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm">
           <div className="w-full max-w-xs rounded-xl border border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-150">
@@ -4878,7 +4881,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 type="button"
                 onClick={() => { setNewCountryModal(false); setNewCountryError(""); setNewCountryForm({ name: "" }); }}
                 className="text-muted-foreground hover:text-foreground transition-colors text-lg leading-none font-bold"
-              >Ã¢Å“â€¢</button>
+              >✕</button>
             </div>
             <div className="p-5 space-y-3">
               {newCountryError && (
@@ -4909,13 +4912,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 onClick={handleAddNewCountry}
                 disabled={newCountryLoading}
                 className="px-4 py-1.5 text-[11px] rounded bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
-              >{newCountryLoading ? "SavingÃ¢â‚¬Â¦" : "Save Country"}</button>
+              >{newCountryLoading ? "Saving…" : "Save Country"}</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬ NEW GOOD MODAL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* --- NEW GOOD MODAL --- */}
       {newGoodModal && (
         <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-xl border border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-150">
@@ -4928,7 +4931,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 type="button"
                 onClick={() => { setNewGoodModal(false); setNewGoodError(""); setNewGoodForm({ goodsName: "", chsCode: "" }); }}
                 className="text-muted-foreground hover:text-foreground transition-colors text-lg leading-none font-bold"
-              >Ã¢Å“â€¢</button>
+              >✕</button>
             </div>
             <div className="p-5 space-y-3">
               {newGoodError && (
@@ -4969,13 +4972,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 onClick={handleAddNewGood}
                 disabled={newGoodLoading}
                 className="px-4 py-1.5 text-[11px] rounded bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
-              >{newGoodLoading ? "SavingÃ¢â‚¬Â¦" : "Save Good"}</button>
+              >{newGoodLoading ? "Saving…" : "Save Good"}</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬ NEW PORT / BORDER / AIRPORT MODAL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* --- NEW PORT / BORDER / AIRPORT MODAL --- */}
       {newPortModal && (
         <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm">
           <div className="w-full max-w-xs rounded-xl border border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-150">
@@ -4992,7 +4995,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 type="button"
                 onClick={() => { setNewPortModal(false); setNewPortError(""); setNewPortForm(p => ({ ...p, portName: "" })); }}
                 className="text-muted-foreground hover:text-foreground transition-colors text-lg leading-none font-bold"
-              >Ã¢Å“â€¢</button>
+              >✕</button>
             </div>
             <div className="p-5 space-y-3">
               {newPortError && (
@@ -5051,7 +5054,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
         </div>
       )}
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬ NEW GOOD VARIATION MODAL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* --- NEW GOOD VARIATION MODAL --- */}
       {customVariationModal && (
         <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm">
           <div className="w-full max-w-xs rounded-xl border border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-150">
@@ -5068,7 +5071,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 type="button"
                 onClick={() => setCustomVariationModal(false)}
                 className="text-muted-foreground hover:text-foreground transition-colors text-lg leading-none font-bold"
-              >Ã¢Å“â€¢</button>
+              >✕</button>
             </div>
             <div className="p-5 space-y-3">
               <div>
@@ -5123,7 +5126,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
         </div>
       )}
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬ CREATE NEW ACCOUNT MODAL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* --- CREATE NEW ACCOUNT MODAL --- */}
       {createAccountModalOpen && (
         <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-xl border border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-150">
@@ -5140,7 +5143,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 type="button"
                 onClick={() => setCreateAccountModalOpen(false)}
                 className="text-muted-foreground hover:text-foreground transition-colors text-lg leading-none font-bold"
-              >Ã¢Å“â€¢</button>
+              >✕</button>
             </div>
             <div className="p-5 space-y-3">
               {createAccountError && (
@@ -5229,7 +5232,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 disabled={createAccountLoading}
                 className="px-4 py-1.5 text-[11px] rounded bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
               >
-                {createAccountLoading ? "SavingÃ¢â‚¬Â¦" : "Save Account"}
+                {createAccountLoading ? "Saving…" : "Save Account"}
               </button>
             </div>
           </div>
@@ -5305,7 +5308,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
         </div>
       )}
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬ CREATE NEW COMPANY MODAL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* --- CREATE NEW COMPANY MODAL --- */}
       {createCompanyModalOpen && (
         <div className="fixed inset-0 z-[80] grid place-items-center bg-slate-950/70 p-4 backdrop-blur-sm">
           <div className="w-full max-w-sm rounded-xl border border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-150">
@@ -5322,7 +5325,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 type="button"
                 onClick={() => setCreateCompanyModalOpen(false)}
                 className="text-muted-foreground hover:text-foreground transition-colors text-lg leading-none font-bold"
-              >Ã¢Å“â€¢</button>
+              >✕</button>
             </div>
             <div className="p-5 space-y-3">
               {createCompanyError && (
@@ -5382,7 +5385,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 disabled={createCompanyLoading}
                 className="px-4 py-1.5 text-[11px] rounded bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
               >
-                {createCompanyLoading ? "SavingÃ¢â‚¬Â¦" : "Save Company"}
+                {createCompanyLoading ? "Saving…" : "Save Company"}
               </button>
             </div>
           </div>
@@ -5391,7 +5394,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
         </>
       )}
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬ TRANSFER CONFIRMATION MODAL Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* --- TRANSFER CONFIRMATION MODAL --- */}
       {transferConfirmModal && (
         <div className="fixed inset-0 z-[150] grid place-items-center bg-slate-950/80 p-4 backdrop-blur-sm animate-in fade-in duration-200">
           <div className="bg-white rounded-xl shadow-2xl overflow-hidden w-full max-w-lg animate-in zoom-in-95 duration-200">

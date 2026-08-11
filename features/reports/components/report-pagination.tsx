@@ -2,8 +2,11 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type Props = {
+  lang?: SupportedLanguage;
   totalCount: number;
   page: number;
   pageSize: number;
@@ -20,6 +23,7 @@ const DEFAULT_PAGE_SIZES = [10, 25, 50, 100];
  * Shows: "Showing X to Y of N entries" + Rows per page selector + page buttons.
  */
 export function ReportPagination({
+  lang = "en",
   totalCount,
   page,
   pageSize,
@@ -28,6 +32,7 @@ export function ReportPagination({
   pageSizeOptions = DEFAULT_PAGE_SIZES,
   className
 }: Props) {
+  const tr = (label: string) => translateHeader(lang, label);
   const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
   const from = totalCount === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = Math.min(page * pageSize, totalCount);
@@ -56,14 +61,14 @@ export function ReportPagination({
       {/* Entry count */}
       <p className="text-xs text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">
         {totalCount === 0
-          ? "No entries found"
-          : `Showing ${from} to ${to} of ${totalCount.toLocaleString()} entries`}
+          ? tr("No entries found")
+          : `${tr("Showing")} ${from} ${tr("to")} ${to} ${tr("of")} ${totalCount.toLocaleString()} ${tr("entries")}`}
       </p>
 
       <div className="flex items-center gap-3">
         {/* Rows per page */}
         <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">Rows per page</span>
+          <span className="text-xs text-slate-500 dark:text-slate-400 font-medium whitespace-nowrap">{tr("Rows per page")}</span>
           <select
             value={pageSize}
             onChange={(e) => {

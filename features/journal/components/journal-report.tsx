@@ -3,14 +3,16 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import {
   Package, Building2, Download, Printer, Coins,
   Globe, Loader2, X, Eye, CheckCircle, Clock, Plane, Truck, Calendar, User, ChevronDown, ChevronUp, MapPin, Filter
 } from "lucide-react";
 
-/* ─────────────────────────────────────────────
+/* ---
    Types
-   ───────────────────────────────────────────── */
+   --- */
 interface JourneyStep {
   name: string;
   status: "completed" | "active" | "pending";
@@ -78,9 +80,9 @@ interface DropdownItem {
   name: string;
 }
 
-/* ─────────────────────────────────────────────
+/* ---
    Helpers
-   ───────────────────────────────────────────── */
+   --- */
 function fmtNum(n: number, decimals = 2) {
   return new Intl.NumberFormat("en-US", {
     minimumFractionDigits: decimals,
@@ -104,10 +106,10 @@ function numberToWords(num: number): string {
   const ones = ["", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve", "Thirteen", "Fourteen", "Fifteen", "Sixteen", "Seventeen", "Eighteen", "Nineteen"];
   const tens = ["", "", "Twenty", "Thirty", "Forty", "Fifty", "Sixty", "Seventy", "Eighty", "Ninety"];
   const scales = ["", "Thousand", "Million", "Billion"];
-  
+
   let words = "";
   let scaleIndex = 0;
-  
+
   while (num > 0) {
     let chunk = num % 1000;
     if (chunk > 0) {
@@ -131,9 +133,9 @@ function numberToWords(num: number): string {
   return words.trim();
 }
 
-/* ─────────────────────────────────────────────
+/* ---
    Main Component
-   ───────────────────────────────────────────── */
+   --- */
 export default function JournalReport({
   session,
   initialLevel = "salesman"
@@ -141,7 +143,10 @@ export default function JournalReport({
   session: { branchName?: string; fullName?: string; email?: string } | null | undefined;
   initialLevel?: "salesman" | "country" | "branch";
 }) {
-  // ── State ──
+  const lang = useActiveLanguage();
+  const tr = (label: string) => translateHeader(lang, label);
+
+  // --- State ---
   const [records, setRecords] = useState<JournalBillRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -158,7 +163,7 @@ export default function JournalReport({
   const [selectedCountryId, setSelectedCountryId] = useState("");
   const [selectedBranchId, setSelectedBranchId] = useState("");
   const [selectedSalesmanId, setSelectedSalesmanId] = useState("");
-  
+
   // Custom Journal Filters
   const [shipmentTypeFilter, setShipmentTypeFilter] = useState("all");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -169,7 +174,7 @@ export default function JournalReport({
   const [branches, setBranches] = useState<DropdownItem[]>([]);
   const [salesmen, setSalesmen] = useState<DropdownItem[]>([]);
 
-  // ── Fetch metadata for filters ──
+  // --- Fetch metadata for filters ---
   useEffect(() => {
     async function loadMeta() {
       try {
@@ -197,7 +202,7 @@ export default function JournalReport({
     loadMeta();
   }, []);
 
-  // ── Fetch Report Data ──
+  // --- Fetch Report Data ---
   const fetchReport = useCallback(async () => {
     setLoading(true);
     try {
@@ -214,7 +219,7 @@ export default function JournalReport({
       const res = await fetch(`/api/erp/reports/journal-report?${params.toString()}`);
       const body = await res.json();
       if (!res.ok || !body?.ok) throw new Error(body?.error?.message ?? "Failed to fetch journal report");
-      
+
       const fetchedRecords = body.data.records ?? [];
       setRecords(fetchedRecords);
 
@@ -267,7 +272,7 @@ export default function JournalReport({
         const firstBranch = r.journey?.[0]?.branch || "Pakistan Main Branch";
         const isUAE = firstBranch.toUpperCase().includes("UAE") || firstBranch.toUpperCase().includes("EMIRATES") || (r.branchCode && r.branchCode.includes("UAE"));
         const formattedCountry = isUAE ? "AE UNITED ARAB EMIRATES" : "PK PAKISTAN";
-        
+
         if (!map[formattedCountry]) {
           map[formattedCountry] = {
             country: formattedCountry,
@@ -339,7 +344,7 @@ export default function JournalReport({
       r.currentStatus,
       r.nextStep
     ]);
-    const csvContent = "data:text/csv;charset=utf-8," 
+    const csvContent = "data:text/csv;charset=utf-8,"
       + [headers.join(","), ...rows.map(e => e.map(val => `"${val}"`).join(","))].join("\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -369,8 +374,8 @@ export default function JournalReport({
 
   return (
     <div className="text-slate-800 dark:text-slate-100">
-      
-      {/* ── Title Portal (Injects into ERP Top Header Bar) ── */}
+
+      {/* --- Title Portal (Injects into ERP Top Header Bar) --- */}
       {titleSlot && createPortal(
         <div className="relative flex items-center gap-2">
           <div className="relative">
@@ -381,16 +386,16 @@ export default function JournalReport({
               {currentLevel === "country" && <Globe className="w-3.5 h-3.5" />}
               {currentLevel === "salesman" && <Building2 className="w-3.5 h-3.5" />}
               {currentLevel === "branch" && <User className="w-3.5 h-3.5" />}
-              <span>{currentLevel === "country" ? "Country Summary" : currentLevel === "branch" ? "Branch Summary" : "Salesman Summary"}</span>
+              <span>{tr(currentLevel === "country" ? "Country Summary" : currentLevel === "branch" ? "Branch Summary" : "Salesman Summary")}</span>
               <ChevronDown className="w-3.5 h-3.5" />
             </button>
 
             {viewDropdownOpen && (
               <div className="absolute left-0 mt-1.5 w-48 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 p-1 font-bold text-xs space-y-0.5">
                 {[
-                  { id: "country", label: "Country Summary", icon: Globe, path: "/dashboard/inventory/journal-report/country" },
-                  { id: "salesman", label: "Salesman Summary", icon: Building2, path: "/dashboard/inventory/journal-report/salesman" },
-                  { id: "branch", label: "Branch Summary", icon: User, path: "/dashboard/inventory/journal-report/branch" }
+                  { id: "country", label: tr("Country Summary"), icon: Globe, path: "/dashboard/inventory/journal-report/country" },
+                  { id: "salesman", label: tr("Salesman Summary"), icon: Building2, path: "/dashboard/inventory/journal-report/salesman" },
+                  { id: "branch", label: tr("Branch Summary"), icon: User, path: "/dashboard/inventory/journal-report/branch" }
                 ].map(tab => {
                   const Icon = tab.icon;
                   const isActive = currentLevel === tab.id;
@@ -415,7 +420,7 @@ export default function JournalReport({
         titleSlot
       )}
 
-      {/* ── Actions Portal (Injects Filters, Export, Print into ERP Top Header Bar) ── */}
+      {/* --- Actions Portal (Injects Filters, Export, Print into ERP Top Header Bar) --- */}
       {actionsSlot && createPortal(
         <div className="flex items-center gap-2">
           {/* Collapsible filters panel */}
@@ -425,14 +430,14 @@ export default function JournalReport({
               className={`flex items-center gap-1.5 px-2.5 py-1 border rounded-lg text-xs font-bold uppercase transition-all duration-150 ${filtersOpen ? "bg-blue-600 text-white border-blue-600" : "bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-700"}`}
             >
               <Filter className="w-3.5 h-3.5" />
-              Filters
+              {tr("FILTERS")}
               {filtersOpen ? <ChevronUp className="w-3 h-3" /> : <ChevronDown className="w-3 h-3" />}
             </button>
 
             {filtersOpen && (
               <div className="absolute right-0 mt-2 w-[320px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 p-4 animate-in fade-in slide-in-from-top-2 duration-150 text-slate-800 dark:text-slate-100">
                 <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800 mb-3">
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Advanced Filters</span>
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">{tr("ADVANCED FILTERS")}</span>
                   <button onClick={() => setFiltersOpen(false)} className="text-slate-400 hover:text-slate-650">
                     <X className="w-4 h-4" />
                   </button>
@@ -501,10 +506,10 @@ export default function JournalReport({
         actionsSlot
       )}
 
-      {/* ── Interactive Web UI ── */}
+      {/* --- Interactive Web UI --- */}
       <div className="space-y-6 print:hidden">
 
-        {/* ── Executive 4-Panel Summary Header & Country Accordion ── */}
+        {/* --- Executive 4-Panel Summary Header & Country Accordion --- */}
         <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
             {/* Panel 1: Branch & User Details */}
@@ -513,38 +518,38 @@ export default function JournalReport({
                 <div className="bg-blue-600 p-1 rounded-full text-white">
                   <User className="h-3.5 w-3.5" />
                 </div>
-                <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">1. BRANCH & USER DETAILS</h4>
+                <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">1. {tr("BRANCH & USER DETAILS")}</h4>
               </div>
               <div className="p-4 flex flex-col gap-2 text-[10px] font-semibold text-slate-500 dark:text-slate-400 h-full justify-between">
                 <div className="flex justify-between items-center">
-                  <span>COUNTRY:</span>
+                  <span>{tr("COUNTRY")}:</span>
                   <span className="font-extrabold text-slate-800 dark:text-slate-200">{session?.branchName?.includes("UAE") ? "AE UNITED ARAB EMIRATES" : "PK PAKISTAN"}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>BRANCH NAME:</span>
+                  <span>{tr("BRANCH NAME")}:</span>
                   <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{session?.branchName || "MAIN BRANCH"}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>USER ID:</span>
+                  <span>{tr("USER ID")}:</span>
                   <span className="font-mono font-extrabold text-slate-800 dark:text-slate-200">7719341B-BFCB-4A31-B852-0F67E8062E95</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>USER NAME:</span>
+                  <span>{tr("USER NAME")}:</span>
                   <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{session?.fullName || "SUPER ADMIN"}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>ROLE:</span>
+                  <span>{tr("ROLE")}:</span>
                   <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">SUPER ADMIN</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>DATE & TIME:</span>
+                  <span>{tr("DATE & TIME")}:</span>
                   <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
                     {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}, {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
                   </span>
                 </div>
                 <div className="flex justify-between items-center pt-1 border-t border-slate-100 dark:border-slate-800">
-                  <span>STATUS:</span>
-                  <span className="font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded text-[9px] uppercase tracking-wider">ACTIVE</span>
+                  <span>{tr("STATUS")}:</span>
+                  <span className="font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded text-[9px] uppercase tracking-wider">{tr("ACTIVE")}</span>
                 </div>
               </div>
             </div>
@@ -555,27 +560,27 @@ export default function JournalReport({
                 <div className="bg-emerald-600 p-1 rounded-full text-white">
                   <Coins className="h-3.5 w-3.5" />
                 </div>
-                <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">2. GLOBAL FINANCIAL SUMMARY</h4>
+                <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">2. {tr("GLOBAL FINANCIAL SUMMARY")}</h4>
               </div>
               <div className="p-4 flex flex-col gap-3 text-[10px] font-semibold text-slate-500 dark:text-slate-400 h-full justify-between">
                 <div className="flex justify-between items-center">
-                  <span>TOTAL GLOBAL ENTRIES:</span>
+                  <span>{tr("TOTAL GLOBAL ENTRIES")}:</span>
                   <span className="font-black text-slate-800 dark:text-slate-200 font-mono text-xs">{records.length || 5}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>TOTAL PURCHASE (PKR):</span>
+                  <span>{tr("TOTAL PURCHASE (PKR)")}:</span>
                   <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono text-xs">
                     {fmtNum(records.reduce((acc, r) => acc + (r.amount || 0), 0) || 4767428600.00, 2)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-rose-600 dark:text-rose-400 font-bold">TOTAL TRANSFERRED (PKR):</span>
+                  <span className="text-rose-600 dark:text-rose-400 font-bold">{tr("TOTAL TRANSFERRED (PKR)")}:</span>
                   <span className="font-black text-rose-600 dark:text-rose-400 font-mono text-xs">
                     {fmtNum(records.reduce((acc, r) => acc + (r.paidAmount || 0), 0) || 4767428600.00, 2)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <span className="text-slate-700 dark:text-slate-300 font-extrabold uppercase">BALANCE (PKR):</span>
+                  <span className="text-slate-700 dark:text-slate-300 font-extrabold uppercase">{tr("BALANCE (PKR)")}:</span>
                   <span className="font-black text-slate-900 dark:text-white font-mono text-sm">
                     {fmtNum(records.reduce((acc, r) => acc + (r.remainingAmount || 0), 0) || 0.00, 2)}
                   </span>
@@ -589,38 +594,38 @@ export default function JournalReport({
                 <div className="bg-purple-600 p-1 rounded-full text-white">
                   <Package className="h-3.5 w-3.5" />
                 </div>
-                <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">3. BILL ENTRIES SUMMARY</h4>
+                <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">3. {tr("BILL ENTRIES SUMMARY")}</h4>
               </div>
               <div className="p-4 flex flex-col gap-3 text-[10px] font-semibold text-slate-500 dark:text-slate-400 h-full justify-between">
                 <div className="flex justify-between items-center">
-                  <span>TOTAL BILL ENTRIES:</span>
+                  <span>{tr("TOTAL BILL ENTRIES")}:</span>
                   <span className="font-black text-purple-700 dark:text-purple-300 font-mono text-xs">{records.length || 5}</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span>CLEARED ENTRIES:</span>
+                  <span>{tr("CLEARED ENTRIES")}:</span>
                   <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono text-xs">
                     {records.filter(r => r.remainingAmount === 0).length || 4}
                   </span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-rose-600 dark:text-rose-400 font-bold">REMAINING ENTRIES:</span>
+                  <span className="text-rose-600 dark:text-rose-400 font-bold">{tr("REMAINING ENTRIES")}:</span>
                   <span className="font-black text-rose-600 dark:text-rose-400 font-mono text-xs">
                     {records.filter(r => r.remainingAmount > 0).length || 1}
                   </span>
                 </div>
                 <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800">
-                  <span>SYSTEM STATUS:</span>
-                  <span className="font-black text-emerald-600 dark:text-emerald-400 uppercase text-[9px]">ONLINE & SYNCED</span>
+                  <span>{tr("SYSTEM STATUS")}:</span>
+                  <span className="font-black text-emerald-600 dark:text-emerald-400 uppercase text-[9px]">{tr("ONLINE & SYNCED")}</span>
                 </div>
               </div>
             </div>
 
             {/* Panel 4: All Countries Report (Interactive Accordion Header) */}
-            <div 
+            <div
               onClick={() => setShowAllCountries(!showAllCountries)}
               className={`flex flex-col rounded-2xl border-2 bg-white dark:bg-slate-900 shadow-xs overflow-hidden cursor-pointer transition-all duration-200 ${
-                showAllCountries 
-                  ? "border-amber-500 shadow-md ring-2 ring-amber-500/20" 
+                showAllCountries
+                  ? "border-amber-500 shadow-md ring-2 ring-amber-500/20"
                   : "border-slate-200 dark:border-slate-800 hover:border-amber-400"
               }`}
             >
@@ -629,10 +634,10 @@ export default function JournalReport({
                   <div className="bg-amber-600 p-1 rounded-full text-white">
                     <Globe className="h-3.5 w-3.5" />
                   </div>
-                  <h4 className="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">4. ALL COUNTRIES REPORT</h4>
+                  <h4 className="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">4. {tr("ALL COUNTRIES REPORT")}</h4>
                 </div>
                 <span className="text-[9px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded font-black text-slate-600 dark:text-slate-300 uppercase">
-                  {showAllCountries ? "HIDE DETAILS" : "SHOW DETAILS"}
+                  {showAllCountries ? tr("HIDE DETAILS") : tr("SHOW DETAILS")}
                 </span>
               </div>
               <div className="p-3 flex flex-col gap-2 text-[10px] font-semibold text-slate-500 dark:text-slate-400 h-full justify-between">
@@ -640,12 +645,12 @@ export default function JournalReport({
                   <div key={idx} className="flex justify-between items-center bg-slate-50 dark:bg-slate-850 p-2 rounded-xl border border-slate-200/60 dark:border-slate-800">
                     <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{r.country}</span>
                     <span className="bg-white dark:bg-slate-800 px-2 py-0.5 rounded text-[9px] font-black text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                      {r.branches.length} BRANCHES
+                      {r.branches.length} {tr("BRANCHES")}
                     </span>
                   </div>
                 ))}
                 <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[9px] font-extrabold text-amber-600 dark:text-amber-400">
-                  <span>{showAllCountries ? "HIDE REPORT DETAILS ↑" : "SHOW REPORT DETAILS ↓"}</span>
+                  <span>{showAllCountries ? `${tr("HIDE REPORT DETAILS")} ↑` : `${tr("SHOW REPORT DETAILS")} ↓`}</span>
                 </div>
               </div>
             </div>
@@ -662,7 +667,7 @@ export default function JournalReport({
                       {c.country}
                     </h4>
                     <span className="text-[9px] font-black uppercase bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded-lg border border-slate-200 dark:border-slate-700">
-                      {c.branches.length} BRANCHES
+                      {c.branches.length} {tr("BRANCHES")}
                     </span>
                   </div>
 
@@ -703,10 +708,10 @@ export default function JournalReport({
 
 
 
-      {/* ── Main Layout Workspace ── */}
+      {/* --- Main Layout Workspace --- */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        {/* ── Left Column: Master Bill List (12 cols full width) ── */}
+
+        {/* --- Left Column: Master Bill List (12 cols full width) --- */}
         <div className="lg:col-span-12 space-y-4">
           <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
             {/* Table filters */}
@@ -755,7 +760,7 @@ export default function JournalReport({
                   className="text-xs font-bold text-rose-600 hover:text-rose-700 flex items-center gap-1"
                 >
                   <X className="w-3 h-3" />
-                  Reset Filters
+                  {tr("RESET FILTERS")}
                 </button>
               )}
             </div>
@@ -801,7 +806,7 @@ export default function JournalReport({
                   ) : (
                     records.map((r, index) => {
                       const isSelected = r.id === selectedId;
-                      
+
                       // Shipment icon & styling
                       let shipmentIcon = <Truck className="w-3.5 h-3.5" />;
                       let shipmentBg = "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/20 dark:text-emerald-400";
@@ -900,14 +905,14 @@ export default function JournalReport({
       </div>
     </div>
 
-      {/* ── Journey Progress Detail Modal Overlay (Full Size View) ── */}
+      {/* --- Journey Progress Detail Modal Overlay (Full Size View) --- */}
       {journeyModalOpen && selectedRecord && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/70 backdrop-blur-md p-4 sm:p-6 transition-all duration-300">
           <div className="bg-white dark:bg-slate-900 w-full max-w-7xl h-[92vh] rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col overflow-hidden relative">
-            
+
             {/* Modal Header Bar with Left-Side Step Navigation */}
             <div className="bg-slate-50 dark:bg-slate-850 px-6 py-3 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between flex-shrink-0">
-              
+
               {/* Left Side: Step Navigation Buttons */}
               <div className="flex items-center gap-3">
                 {modalActiveStep === 1 ? (
@@ -915,14 +920,14 @@ export default function JournalReport({
                     onClick={() => setModalActiveStep(2)}
                     className="flex items-center gap-2 px-4 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all animate-pulse"
                   >
-                    NEXT: STEP 2 (LEDGER) ➔
+                    NEXT: STEP 2 (LEDGER) âž”
                   </button>
                 ) : (
                   <button
                     onClick={() => setModalActiveStep(1)}
                     className="flex items-center gap-2 px-4 py-1.5 bg-slate-700 hover:bg-slate-800 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all"
                   >
-                    ⬅ BACK: STEP 1 (GOODS)
+                    â¬… BACK: STEP 1 (GOODS)
                   </button>
                 )}
 
@@ -962,7 +967,7 @@ export default function JournalReport({
 
             {/* Modal Body (Unified Full Height Scrollable Workspace) */}
             <div className="flex-1 overflow-y-auto bg-white dark:bg-slate-900 p-6 md:p-8 space-y-5 text-slate-800 dark:text-slate-200">
-                
+
                 {/* Header Logo/TRN row */}
                 <div className="flex justify-between items-start border-b-2 border-slate-900 dark:border-slate-700 pb-3">
                   <div className="text-left">
@@ -1061,26 +1066,26 @@ export default function JournalReport({
                       onClick={() => setModalActiveStep(2)}
                       className="flex items-center gap-2 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all animate-pulse"
                     >
-                      NEXT: STEP 2 (LEDGER & PAYMENTS) ➔
+                      NEXT: STEP 2 (LEDGER & PAYMENTS) âž”
                     </button>
                   ) : (
                     <button
                       onClick={() => setModalActiveStep(1)}
                       className="flex items-center gap-2 px-5 py-2 bg-slate-700 hover:bg-slate-800 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all"
                     >
-                      ⬅ BACK: STEP 1 (GOODS & VERIFICATION)
+                      â¬… BACK: STEP 1 (GOODS & VERIFICATION)
                     </button>
                   )}
                 </div>
 
-                {/* ── STEP 1 CONTENT: Goods Specification & Verification ── */}
+                {/* --- STEP 1 CONTENT: Goods Specification & Verification --- */}
                 {modalActiveStep === 1 && (
                   <div className="space-y-5 animate-in fade-in slide-in-from-left-2 duration-200">
                     <div className="grid grid-cols-1 lg:grid-cols-12 gap-5">
-                      
+
                       {/* Left Main Section (9 cols) */}
                       <div className="lg:col-span-9 space-y-4">
-                        
+
                         {/* STEP 1 Badge Header */}
                         <div className="bg-[#0d2d6b] text-white px-3 py-1.5 rounded-xl flex items-center justify-between shadow-xs">
                           <div className="flex items-center gap-2">
@@ -1096,7 +1101,7 @@ export default function JournalReport({
 
                         {/* Top Checkpoints & Details 2-col Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                          
+
                           {/* Left: Verification Checkpoints (4 cols) */}
                           <div className="md:col-span-4 border border-slate-200 dark:border-slate-800 rounded-xl p-3 bg-slate-50/40 dark:bg-slate-900/20 space-y-2">
                             <h4 className="text-[9px] font-black uppercase text-blue-900 dark:text-blue-400 tracking-wider flex items-center gap-1">
@@ -1116,13 +1121,13 @@ export default function JournalReport({
                                   <div className={`w-3.5 h-3.5 rounded-full flex items-center justify-center text-[7px] font-black flex-shrink-0 mt-0.5 ${
                                     step.status === "completed" ? "bg-emerald-600 text-white" : step.status === "active" ? "bg-blue-600 text-white animate-pulse" : "bg-slate-200 dark:bg-slate-800 text-slate-400"
                                   }`}>
-                                    {step.status === "completed" ? "✓" : step.status === "active" ? "➔" : (sIdx + 1)}
+                                    {step.status === "completed" ? "âœ“" : step.status === "active" ? "âž”" : (sIdx + 1)}
                                   </div>
                                   <div>
                                     <p className={`font-extrabold uppercase ${step.status === "completed" ? "text-slate-800 dark:text-slate-200" : step.status === "active" ? "text-blue-700 dark:text-blue-400" : "text-slate-400"}`}>
                                       {step.name}
                                     </p>
-                                    <p className="text-[7.5px] text-slate-400 font-semibold">{step.operator} • {step.dateTime}</p>
+                                    <p className="text-[7.5px] text-slate-400 font-semibold">{step.operator} ⬢ {step.dateTime}</p>
                                   </div>
                                 </div>
                               ))}
@@ -1132,7 +1137,7 @@ export default function JournalReport({
                           {/* Right: Booking & Supplier/Buyer Info (8 cols) */}
                           <div className="md:col-span-8 space-y-3">
                             <div className="grid grid-cols-3 gap-3">
-                              
+
                               {/* Booking & Status Info */}
                               <div className="border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/20 text-[8.5px] space-y-1">
                                 <h5 className="font-black uppercase text-blue-900 dark:text-blue-400 text-[8px] tracking-wider mb-1">BOOKING & STATUS INFO</h5>
@@ -1231,7 +1236,7 @@ export default function JournalReport({
 
                       {/* Right Sidebar Section (3 cols) */}
                       <div className="lg:col-span-3 space-y-4">
-                        
+
                         {/* REPORT SUMMARY */}
                         <div className="space-y-1">
                           <div className="bg-[#1e3a8a] text-white px-2.5 py-1.5 rounded-t-xl text-[9px] font-black uppercase tracking-wider">
@@ -1283,8 +1288,8 @@ export default function JournalReport({
                             <div className="flex justify-between text-slate-400 items-center">
                               <span>Status:</span>
                               <span className={`inline-flex px-1.5 py-0.5 rounded text-[8px] font-black uppercase ${
-                                selectedRecord.remainingAmount > 0 
-                                  ? "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-300" 
+                                selectedRecord.remainingAmount > 0
+                                  ? "bg-amber-100 text-amber-800 dark:bg-amber-950/30 dark:text-amber-300"
                                   : "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/30 dark:text-emerald-300"
                               }`}>
                                 {selectedRecord.remainingAmount > 0 ? "PENDING" : "CLEARED"}
@@ -1306,10 +1311,10 @@ export default function JournalReport({
                   </div>
                 )}
 
-                {/* ── STEP 2 CONTENT: Financial Postings & Ledger Summary ── */}
+                {/* --- STEP 2 CONTENT: Financial Postings & Ledger Summary --- */}
                 {modalActiveStep === 2 && (
                   <div className="space-y-5 animate-in fade-in slide-in-from-right-2 duration-200">
-                    
+
                     {/* STEP 2 Badge Header */}
                     <div className="bg-[#0d2d6b] text-white px-3 py-1.5 rounded-xl flex items-center justify-between shadow-xs">
                       <div className="flex items-center gap-2">
@@ -1409,7 +1414,7 @@ export default function JournalReport({
                             </tr>
                           </thead>
                           <tbody className="divide-y divide-slate-150 dark:divide-slate-800 font-semibold text-slate-750 dark:text-slate-300">
-                            
+
                             {/* 1. DEBIT ENTRY (PURCHASE SIDE) */}
                             <tr className="bg-slate-100/50 dark:bg-slate-900/40 text-[#1e3a8a] dark:text-blue-400 font-black text-[8px] uppercase tracking-wider">
                               <td colSpan={13} className="py-1.5 px-2.5">1. DEBIT ENTRY (PURCHASE SIDE)</td>
@@ -1557,7 +1562,7 @@ export default function JournalReport({
 
                     {/* Bottom Payment Info & Authorized Stamp columns */}
                     <div className="grid grid-cols-1 md:grid-cols-12 gap-5 pt-3 border-t border-slate-200 dark:border-slate-800">
-                      
+
                       {/* Payment Information (8 cols) */}
                       <div className="md:col-span-8 border border-slate-250 dark:border-slate-800 rounded-xl p-3 bg-slate-50/20 dark:bg-slate-900/10">
                         <h4 className="text-[9px] font-black uppercase text-slate-500 tracking-wider mb-2 flex items-center gap-1">
@@ -1607,10 +1612,10 @@ export default function JournalReport({
         </div>
       )}
 
-      {/* ── Official Printable Ledger Report ── */}
+      {/* --- Official Printable Ledger Report --- */}
       {selectedRecord && (
         <div className="erp-print-only hidden print:block w-full text-slate-900 bg-white p-6 font-sans text-[10px] leading-normal space-y-5">
-          
+
           {/* Header Section */}
           <div className="flex justify-between items-start border-b-2 border-slate-950 pb-3">
             <div className="text-left">
@@ -1678,10 +1683,10 @@ export default function JournalReport({
 
           {/* Main Print Split Layout */}
           <div className="grid grid-cols-12 gap-5">
-            
+
             {/* Left Column (3 cols) */}
             <div className="col-span-3 space-y-4">
-              
+
               {/* REPORT SUMMARY */}
               <div className="space-y-1">
                 <div className="bg-[#1e3a8a] text-white px-2.5 py-1.5 rounded-t-xl text-[9px] font-black uppercase tracking-wider">
@@ -1788,12 +1793,12 @@ export default function JournalReport({
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-300 font-semibold text-slate-800">
-                    
+
                     {/* 1. DEBIT ENTRY (PURCHASE SIDE) HEADER */}
                     <tr className="bg-slate-100 text-[#1e3a8a] font-black text-[8px] uppercase tracking-wider">
                       <td colSpan={13} className="py-1.5 px-2.5">1. DEBIT ENTRY (PURCHASE SIDE)</td>
                     </tr>
-                    
+
                     {/* Debit Row */}
                     <tr className="hover:bg-slate-50">
                       <td className="py-2 px-2.5 text-center font-bold text-slate-400">1</td>
@@ -1825,7 +1830,7 @@ export default function JournalReport({
                     <tr className="bg-slate-100 text-emerald-800 font-black text-[8px] uppercase tracking-wider">
                       <td colSpan={13} className="py-1.5 px-2.5">2. CREDIT ENTRY (SALES SIDE)</td>
                     </tr>
-                    
+
                     {/* Credit Row */}
                     <tr className="hover:bg-slate-50">
                       <td className="py-2 px-2.5 text-center font-bold text-slate-400">2</td>
@@ -1976,7 +1981,7 @@ export default function JournalReport({
 
           {/* Bottom Payment Info & Authorized Stamp columns */}
           <div className="grid grid-cols-12 gap-5 pt-3 border-t border-slate-300">
-            
+
             {/* Payment Information (8 cols) */}
             <div className="col-span-8 border border-slate-300 rounded-xl p-3 bg-slate-50/20">
               <h4 className="text-[9px] font-black uppercase text-slate-500 tracking-wider mb-2 flex items-center gap-1">

@@ -20,7 +20,10 @@ import { AdvanceLoanModal } from "@/features/hr-payroll/components/advance-loan-
 import { EmployeeLedgerPanel } from "@/features/hr-payroll/components/employee-ledger-panel";
 import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
 import { Th } from "@/components/ui/translated-th";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
+/* ──────────────────────────────────────────────────────────────
+*/
 const dict = {
   en: {
     title: "General Office Management",
@@ -225,70 +228,89 @@ const dict = {
     active: "فعال",
     inactive: "غیرفعال",
     onLeave: "مرخصی",
-    suspended: "معلق",
-    edit: "ویرایش",
-    loanAdv: "وام / پیش‌پرداخت",
-    ledger: "دفتر حساب",
-    delete: "حذف",
-    idCardPreview: "چاپ کارت",
-    search: "جستجو",
-    filter: "فیلتر"
-  },
-  ar: {
-    title: "إدارة المكتب العام",
-    subtitle: "مركز متكامل لإدارة الموارد البشرية والرواتب والحضور وأصول المكتب وبيانات الموظفين",
-    searchPlaceholder: "البحث عن الموظفين، الأقسام، الأصول...",
-    masterSetup: "إعداد الموظفين الرئيسي",
-    empMgmt: "إدارة الموظفين",
-    departments: "الأقسام الإدارية",
-    designations: "المسميات الوظيفية",
-    attendance: "سجل الحضور والغياب",
-    leave: "إدارة الإجازات",
-    payroll: "مسير الرواتب",
-    assets: "أصول المكتب",
-    officeAssets: "أصول المكتب",
-    documents: "الوثائق الرسمية",
-    officeDocuments: "الوثائق الرسمية",
-    idCards: "بطاقات الموظفين",
-    reports: "تقارير الموظفين",
-    registerBtn: "تسجيل موظف جديد",
-    totalEmployees: "إجمالي الموظفين",
-    activeStaff: "الموظفون النشطون",
-    attendanceRate: "نسبة الحضور",
-    monthlyPayroll: "إجمالي الرواتب",
-    pendingLeaves: "الإجازات المعلقة",
-    assetsTracked: "الأصول المسجلة",
-    colEmpCode: "رمز الموظف",
-    colName: "اسم الموظف",
-    colCategory: "الفئة",
-    colDesigDept: "المسمى / القسم",
-    colJoining: "تاريخ الانضمام",
-    colNetSalary: "صافي الراتب",
-    colDeductions: "الاستقطاعات",
-    colStatus: "الحالة",
-    colActions: "الإجراءات",
-    view: "عرض",
-    print: "طباعة A4",
-    pdf: "تحميل PDF",
-    excel: "تصدير إكسل",
-    email: "إرسال بريد",
-    whatsapp: "واتساب",
-    allCategories: "جميع الفئات",
-    allStatuses: "جميع الحالات",
-    active: "نشط",
-    inactive: "غير نشط",
-    onLeave: "في إجازة",
-    suspended: "موقوف",
-    edit: "تعديل",
-    loanAdv: "سلفة / قروض",
-    ledger: "كشف حساب",
-    delete: "حذف",
-    idCardPreview: "طباعة البطاقة",
-    search: "بحث",
-    filter: "تصفية"
+    suspended: "Suspended",
+    edit: "Edit",
+    loanAdv: "Loan / Advance",
+    ledger: "Ledger",
+    delete: "Delete",
+    idCardPreview: "Print ID Card",
+    search: "Search",
+    filter: "Filter"
   }
 };
 
+
+type DictKey = keyof typeof dict.en;
+
+const generalOfficeLabels: Record<string, Partial<Record<SupportedLanguage, string>>> = {
+  "General Office Enterprise Management": { ur: "جنرل آفس انٹرپرائز مینجمنٹ", ar: "إدارة المكتب العام المؤسسية", fa: "مدیریت سازمانی دفتر عمومی", ps: "د عمومي دفتر سازماني اداره" },
+  "Branch & User Details": { ur: "برانچ اور صارف کی تفصیلات", ar: "تفاصيل الفرع والمستخدم", fa: "جزئیات شعبه و کاربر", ps: "د څانګې او کارن جزئیات" },
+  "Employees Summary": { ur: "ملازمین کا خلاصہ", ar: "ملخص الموظفين", fa: "خلاصه کارکنان", ps: "د کارمندانو لنډیز" },
+  "Payroll & Assets": { ur: "پے رول اور اثاثہ جات", ar: "الرواتب والأصول", fa: "حقوق و دارایی‌ها", ps: "معاشونه او شتمنۍ" },
+  "Quick Info": { ur: "فوری معلومات", ar: "معلومات سريعة", fa: "اطلاعات سریع", ps: "چټک معلومات" },
+  "Branch Name": { ur: "برانچ کا نام", ar: "اسم الفرع", fa: "نام شعبه", ps: "د څانګې نوم" },
+  "User ID / Name": { ur: "صارف آئی ڈی / نام", ar: "معرف المستخدم / الاسم", fa: "شناسه کاربر / نام", ps: "د کارن پېژند / نوم" },
+  "Active Session": { ur: "فعال سیشن", ar: "جلسة نشطة", fa: "نشست فعال", ps: "فعاله ناسته" },
+  "Pakistan / UAE": { ur: "پاکستان / متحدہ عرب امارات", ar: "باكستان / الإمارات", fa: "پاکستان / امارات متحده عربی", ps: "پاکستان / متحده عربي امارات" },
+  "Karachi Main": { ur: "کراچی مین", ar: "كراتشي الرئيسي", fa: "کراچی مرکزی", ps: "کراچۍ مرکزي" },
+  "Admin": { ur: "ایڈمن", ar: "مسؤول", fa: "مدیر سیستم", ps: "اډمین" },
+  "Admin User": { ur: "ایڈمن صارف", ar: "مستخدم مسؤول", fa: "کاربر مدیر", ps: "اډمین کارن" },
+  "Employees": { ur: "ملازمین", ar: "الموظفون", fa: "کارکنان", ps: "کارمندان" },
+  "Pending Leaves": { ur: "زیر التواء چھٹیاں", ar: "الإجازات المعلقة", fa: "مرخصی‌های در انتظار", ps: "پاتې رخصتۍ" },
+  "Manager": { ur: "منیجر", ar: "مدير", fa: "مدیر", ps: "مدیر" },
+  "Normal Staff": { ur: "عام عملہ", ar: "موظفون عاديون", fa: "کارکنان عادی", ps: "عادي کارمندان" },
+  "Employee": { ur: "ملازم", ar: "موظف", fa: "کارمند", ps: "کارمند" },
+  "Others": { ur: "دیگر", ar: "أخرى", fa: "سایر", ps: "نور" },
+  "Loading registered employees...": { ur: "رجسٹرڈ ملازمین لوڈ ہو رہے ہیں...", ar: "جار تحميل الموظفين المسجلين...", fa: "در حال بارگیری کارکنان ثبت‌شده...", ps: "ثبت شوي کارمندان پورته کېږي..." },
+  "No employee records found. Click Register New Employee above.": { ur: "کوئی ملازم ریکارڈ نہیں ملا۔ اوپر نیا ملازم رجسٹر کریں پر کلک کریں۔", ar: "لم يتم العثور على سجلات موظفين. اضغط تسجيل موظف جديد أعلاه.", fa: "هیچ رکورد کارمندی یافت نشد. روی ثبت کارمند جدید در بالا کلیک کنید.", ps: "د کارمندانو ریکارډ ونه موندل شو. پورته نوی کارمند ثبت کړئ کېکاږئ." },
+  "Manage corporate departments, assigned heads, and employee distribution.": { ur: "کارپوریٹ شعبہ جات، مقررہ سربراہان اور ملازمین کی تقسیم منظم کریں۔", ar: "إدارة الأقسام المؤسسية والرؤساء المعينين وتوزيع الموظفين.", fa: "دپارتمان‌های سازمانی، مدیران تعیین‌شده و توزیع کارکنان را مدیریت کنید.", ps: "سازماني څانګې، ټاکل شوي مشران او د کارمندانو وېش اداره کړئ." },
+  "Add Department": { ur: "شعبہ شامل کریں", ar: "إضافة قسم", fa: "افزودن دپارتمان", ps: "څانګه زیاته کړئ" },
+  "Head of Dept": { ur: "شعبہ سربراہ", ar: "رئيس القسم", fa: "رئیس دپارتمان", ps: "د څانګې مشر" },
+  "Active Employees": { ur: "فعال ملازمین", ar: "الموظفون النشطون", fa: "کارکنان فعال", ps: "فعال کارمندان" },
+  "Monthly Budget": { ur: "ماہانہ بجٹ", ar: "الميزانية الشهرية", fa: "بودجه ماهانه", ps: "میاشتنۍ بودیجه" },
+  "Members": { ur: "ارکان", ar: "أعضاء", fa: "اعضا", ps: "غړي" },
+  "Corporate designation grades, titles, and base salary scales.": { ur: "کارپوریٹ عہدے، گریڈز، عنوانات اور بنیادی تنخواہ اسکیل۔", ar: "درجات ومسميات الوظائف المؤسسية وسلالم الرواتب الأساسية.", fa: "درجات، عناوین شغلی و مقیاس حقوق پایه سازمانی.", ps: "سازماني دندې، رتبې، عنوانونه او بنسټیز معاش کچې." },
+  "Add Designation": { ur: "عہدہ شامل کریں", ar: "إضافة مسمى وظيفي", fa: "افزودن عنوان شغلی", ps: "دنده زیاته کړئ" },
+  "Designation Title": { ur: "عہدہ کا عنوان", ar: "المسمى الوظيفي", fa: "عنوان شغلی", ps: "دندې عنوان" },
+  "Department": { ur: "شعبہ", ar: "القسم", fa: "دپارتمان", ps: "څانګه" },
+  "Pay Grade": { ur: "پے گریڈ", ar: "درجة الراتب", fa: "درجه حقوق", ps: "د معاش رتبه" },
+  "Min Base Scale": { ur: "کم از کم بنیادی اسکیل", ar: "الحد الأدنى للسلم الأساسي", fa: "حداقل مقیاس پایه", ps: "لږ تر لږه بنسټیزه کچه" },
+  "Daily office attendance log, biometric check-in, and work duration tracking.": { ur: "روزانہ دفتری حاضری، بائیومیٹرک چیک اِن اور کام کے دورانیے کی نگرانی۔", ar: "سجل الحضور اليومي والبصمة وتتبع مدة العمل.", fa: "ثبت حضور روزانه، ورود بیومتریک و پیگیری مدت کار.", ps: "ورځنۍ حاضري، بایومیټریک ننوتل او د کار مودې تعقیب." },
+  "Mark Biometric Entry": { ur: "بائیومیٹرک اندراج کریں", ar: "تسجيل إدخال بصمة", fa: "ثبت ورود بیومتریک", ps: "بایومیټریک ثبت کړئ" },
+  "Time In": { ur: "آمد وقت", ar: "وقت الدخول", fa: "زمان ورود", ps: "د راتګ وخت" },
+  "Time Out": { ur: "روانگی وقت", ar: "وقت الخروج", fa: "زمان خروج", ps: "د وتلو وخت" },
+  "Duration": { ur: "دورانیہ", ar: "المدة", fa: "مدت", ps: "موده" },
+  "Present": { ur: "حاضر", ar: "حاضر", fa: "حاضر", ps: "حاضر" },
+  "Late": { ur: "تاخیر", ar: "متأخر", fa: "دیرکرد", ps: "ناوخته" },
+  "Manage employee leave requests, annual allocations, and approvals.": { ur: "ملازمین کی چھٹی درخواستیں، سالانہ کوٹے اور منظوریوں کو منظم کریں۔", ar: "إدارة طلبات الإجازة والحصص السنوية والموافقات.", fa: "درخواست‌های مرخصی، سهمیه سالانه و تأییدها را مدیریت کنید.", ps: "د رخصتۍ غوښتنې، کلني سهمونه او منظورۍ اداره کړئ." },
+  "Apply Leave": { ur: "چھٹی اپلائی کریں", ar: "طلب إجازة", fa: "درخواست مرخصی", ps: "رخصتي وغواړئ" },
+  "Leave Type": { ur: "چھٹی کی قسم", ar: "نوع الإجازة", fa: "نوع مرخصی", ps: "د رخصتۍ ډول" },
+  "Days": { ur: "دن", ar: "أيام", fa: "روز", ps: "ورځې" },
+  "Approved": { ur: "منظور شدہ", ar: "موافق عليه", fa: "تأیید شده", ps: "منظور شوی" },
+  "Generate monthly salary slips, calculate allowances, advances, and bank transfers.": { ur: "ماہانہ تنخواہ سلپس، الاؤنسز، ایڈوانسز اور بینک ٹرانسفرز بنائیں۔", ar: "إنشاء قسائم الرواتب الشهرية وحساب البدلات والسلف والتحويلات البنكية.", fa: "فیش حقوق ماهانه، مزایا، پیش‌پرداخت‌ها و انتقال‌های بانکی را تولید کنید.", ps: "میاشتني معاش slips، الاونسونه، مخکې ورکړې او بانکي لېږدونه جوړ کړئ." },
+  "Generate Monthly Payroll": { ur: "ماہانہ پے رول بنائیں", ar: "إنشاء الرواتب الشهرية", fa: "تولید حقوق ماهانه", ps: "میاشتنی معاش جوړ کړئ" },
+  "Current Payroll Month": { ur: "موجودہ پے رول مہینہ", ar: "شهر الرواتب الحالي", fa: "ماه حقوق فعلی", ps: "اوسنی د معاش میاشت" },
+  "Total Disbursed": { ur: "کل ادا شدہ", ar: "إجمالي المدفوع", fa: "کل پرداخت‌شده", ps: "ټول ورکړل شوي" },
+  "Register corporate laptops, vehicles, and equipment assigned to staff.": { ur: "عملے کو تفویض لیپ ٹاپ، گاڑیاں اور سامان رجسٹر کریں۔", ar: "تسجيل الحواسيب والمركبات والمعدات المسندة للموظفين.", fa: "لپ‌تاپ‌ها، خودروها و تجهیزات اختصاص‌یافته به کارکنان را ثبت کنید.", ps: "کارمندانو ته ورکړل شوي لپټاپونه، موټرونه او وسایل ثبت کړئ." },
+  "Assign Asset": { ur: "اثاثہ تفویض کریں", ar: "تعيين أصل", fa: "اختصاص دارایی", ps: "شتمني وټاکئ" },
+  "Asset Tag": { ur: "اثاثہ ٹیگ", ar: "وسم الأصل", fa: "برچسب دارایی", ps: "د شتمنۍ ټګ" },
+  "Item Description": { ur: "آئٹم تفصیل", ar: "وصف العنصر", fa: "شرح مورد", ps: "د توکي تفصیل" },
+  "Assigned To": { ur: "تفویض کردہ", ar: "مسند إلى", fa: "اختصاص‌یافته به", ps: "ورکړل شوی" },
+  "Serial No": { ur: "سیریل نمبر", ar: "الرقم التسلسلي", fa: "شماره سریال", ps: "سریال نمبر" },
+  "Employee passports, visas, CNIC copies, labor contracts, and legal documentation repository.": { ur: "ملازمین کے پاسپورٹ، ویزے، شناختی نقول، معاہدے اور قانونی دستاویزات۔", ar: "مستودع جوازات الموظفين والتأشيرات والوثائق القانونية.", fa: "مخزن گذرنامه، ویزا، مدارک هویتی، قراردادها و اسناد قانونی کارکنان.", ps: "د کارمندانو پاسپورټونه، ویزې، پېژند اسناد، قراردادونه او قانوني اسناد." },
+  "Upload Document": { ur: "دستاویز اپ لوڈ کریں", ar: "رفع مستند", fa: "بارگذاری سند", ps: "سند پورته کړئ" },
+  "Uploaded on": { ur: "اپ لوڈ تاریخ", ar: "تم الرفع في", fa: "بارگذاری شده در", ps: "پورته شوی په" },
+  "Official Identity Card": { ur: "سرکاری شناختی کارڈ", ar: "بطاقة هوية رسمية", fa: "کارت شناسایی رسمی", ps: "رسمي پېژند کارت" },
+  "Verified": { ur: "تصدیق شدہ", ar: "موثق", fa: "تأیید شده", ps: "تصدیق شوی" },
+  "Comprehensive employee audit trail, master summary, and distribution center.": { ur: "ملازمین کا جامع آڈٹ ٹریل، ماسٹر خلاصہ اور تقسیم مرکز۔", ar: "مسار تدقيق شامل للموظفين وملخص رئيسي ومركز توزيع.", fa: "ردیابی جامع کارکنان، خلاصه اصلی و مرکز توزیع.", ps: "د کارمندانو بشپړ پلټنیز مسیر، عمومي لنډیز او وېش مرکز." },
+  "Report Audit Summary": { ur: "رپورٹ آڈٹ خلاصہ", ar: "ملخص تدقيق التقرير", fa: "خلاصه حسابرسی گزارش", ps: "د راپور پلټنې لنډیز" },
+  "Employee Master Report compiles all active staff records, GL ledger balances, salary deductions, and attendance rates across Pakistan, UAE, Afghanistan, and Iran branches.": { ur: "ایمپلائی ماسٹر رپورٹ پاکستان، یو اے ای، افغانستان اور ایران برانچز کے تمام فعال عملے، جی ایل بیلنس، تنخواہ کٹوتیوں اور حاضری شرح کو یکجا کرتی ہے۔", ar: "يجمع تقرير الموظفين الرئيسي سجلات الموظفين النشطين وأرصدة دفتر الأستاذ والخصومات ومعدلات الحضور عبر الفروع.", fa: "گزارش اصلی کارکنان سوابق فعال، مانده‌های دفتر کل، کسورات حقوق و نرخ حضور را در شعب گردآوری می‌کند.", ps: "د کارمندانو اصلي راپور فعال ریکارډونه، لیجر بیلانسونه، د معاش کمښتونه او د حاضري کچه راټولوي." }
+};
+
+function translateGeneralOffice(label: string, lang: SupportedLanguage) {
+  if (lang === "en") return label;
+  return generalOfficeLabels[label]?.[lang] || translateHeader(lang, label);
+}
 type TabKey =
   | "master-setup"
   | "management"
@@ -309,7 +331,17 @@ export function GeneralOfficeDashboardView() {
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
   const [lang, setLang] = useState<SupportedLanguage>("en");
   const [isRtl, setIsRtl] = useState(false);
-  const t = dict[lang] || dict.en;
+
+  const baseDict = (dict[lang as keyof typeof dict] ?? dict.en) as typeof dict.en;
+  const t = useMemo(() => new Proxy(baseDict, {
+    get(target, prop: string) {
+      const fallback = dict.en[prop as DictKey] || prop;
+      const direct = target[prop as DictKey];
+      if (lang === "en") return direct || fallback;
+      return direct && direct !== fallback ? direct : translateGeneralOffice(fallback, lang);
+    }
+  }) as typeof dict.en, [baseDict, lang]);
+  const tr = useCallback((label: string) => translateGeneralOffice(label, lang), [lang]);
 
   // Employees State
   const [employees, setEmployees] = useState<any[]>([]);
@@ -444,13 +476,12 @@ export function GeneralOfficeDashboardView() {
 
   return (
     <div className={cn("space-y-6 pb-16 min-h-screen", isRtl && "text-right")} dir={isRtl ? "rtl" : "ltr"}>
-      {/* ── Top Executive Banner ── */}
       <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 p-6 md:p-8 text-white shadow-xl">
         <div className="relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold text-emerald-400">
               <ShieldCheck className="h-3.5 w-3.5" />
-              General Office Enterprise Management
+              {tr("General Office Enterprise Management")}
             </div>
             <h1 className="mt-3 text-2xl md:text-3xl font-extrabold tracking-tight text-white">
               {t.title}
@@ -474,126 +505,117 @@ export function GeneralOfficeDashboardView() {
           </div>
         </div>
 
-        {/* Ambient light glow */}
         <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
       </div>
 
-      {/* ── STANDARDIZED 5 KPI SUMMARY CARDS GRID ── */}
       <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
-        {/* MANDATORY Card 1: BRANCH & USER DETAILS */}
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Users className="h-4 w-4 text-blue-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. BRANCH & USER DETAILS</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. {tr("Branch & User Details")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             <div className="flex justify-between">
-              <span>Country:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">Pakistan / UAE</span>
+              <span>{tr("Country")}:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{tr("Pakistan / UAE")}</span>
             </div>
             <div className="flex justify-between">
-              <span>Branch Name:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100 uppercase">Karachi Main</span>
+              <span>{tr("Branch Name")}:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 uppercase">{tr("Karachi Main")}</span>
             </div>
             <div className="flex justify-between">
-              <span>User ID / Name:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]" title="USR-001 (Admin User)">USR-001 (Admin)</span>
+              <span>{tr("User ID / Name")}:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]" title={`USR-001 (${tr("Admin User")})`}>USR-001 ({tr("Admin")})</span>
             </div>
             <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-              <span>Status:</span>
-              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px]">Active Session</span>
+              <span>{tr("Status")}:</span>
+              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px]">{tr("Active Session")}</span>
             </div>
           </div>
         </div>
 
-        {/* Card 2: EMPLOYEES & STAFF SUMMARY */}
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <ClipboardList className="h-4 w-4 text-emerald-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">2. EMPLOYEES SUMMARY</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">2. {tr("Employees Summary")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>Total Employees:</span>
+              <span>{t.totalEmployees}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">{employees.length || 142}</span>
             </div>
             <div className="flex justify-between text-emerald-600 font-bold">
-              <span>Active Staff:</span>
+              <span>{t.activeStaff}:</span>
               <span>{employees.filter((e: any) => e.status === "Active").length || 138}</span>
             </div>
             <div className="flex justify-between text-blue-600 font-bold">
-              <span>Attendance Rate:</span>
+              <span>{t.attendanceRate}:</span>
               <span>98.4%</span>
             </div>
           </div>
         </div>
 
-        {/* Card 3: PAYROLL & ASSETS SUMMARY */}
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Banknote className="h-4 w-4 text-purple-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. PAYROLL & ASSETS</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. {tr("Payroll & Assets")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>Monthly Payroll:</span>
+              <span>{t.monthlyPayroll}:</span>
               <span className="font-bold font-mono text-slate-900 dark:text-slate-100">AED 450K</span>
             </div>
             <div className="flex justify-between text-amber-600 font-bold">
-              <span>Pending Leaves:</span>
+              <span>{t.pendingLeaves}:</span>
               <span>12</span>
             </div>
             <div className="flex justify-between text-indigo-600 font-bold">
-              <span>Assets Tracked:</span>
+              <span>{t.assetsTracked}:</span>
               <span>480</span>
             </div>
           </div>
         </div>
 
-        {/* Card 4: BRANCHES */}
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Building2 className="h-4 w-4 text-indigo-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. BRANCHES</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. {tr("Branches")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>Total Branches:</span>
+              <span>{tr("Total Branches")}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">12</span>
             </div>
             <div className="flex justify-between text-emerald-600 font-bold">
-              <span>Active Branches:</span>
+              <span>{tr("Active Branches")}:</span>
               <span>10</span>
             </div>
           </div>
         </div>
 
-        {/* Card 5: QUICK INFO */}
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <FileText className="h-4 w-4 text-amber-500" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">5. QUICK INFO</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">5. {tr("Quick Info")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             <div className="flex justify-between">
-              <span>Currency:</span>
+              <span>{tr("Currency")}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">AED / USD</span>
             </div>
             <div className="flex justify-between">
-              <span>Company:</span>
+              <span>{tr("Company")}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]">DGT LLC</span>
             </div>
             <div className="flex justify-between">
-              <span>Financial Year:</span>
+              <span>{tr("Financial Year")}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">2025-26</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── TWO-PANEL ERP LAYOUT (LEFT: MENU | RIGHT: WORKSPACE) ── */}
       <div className="grid gap-6 lg:grid-cols-12">
-        {/* ── LEFT PANEL: Navigation Menu (3 cols) ── */}
         <div className="lg:col-span-3 space-y-2">
           <div className="rounded-2xl border bg-card p-3 shadow-sm">
             <div className="px-3 py-2 text-xs font-extrabold uppercase tracking-wider text-muted-foreground border-b mb-2">
@@ -636,12 +658,9 @@ export function GeneralOfficeDashboardView() {
           </div>
         </div>
 
-        {/* ── RIGHT PANEL: Active Sub-Module Content (9 cols) ── */}
         <div className="lg:col-span-9 space-y-6">
-          {/* TAB 1 & 2: EMPLOYEE MASTER SETUP & MANAGEMENT TABLE DIRECTORY */}
           {(activeTab === "master-setup" || activeTab === "management") && (
             <div className="space-y-4">
-              {/* Search & Filter Toolbar */}
               <div className="rounded-2xl border bg-card p-4 shadow-sm flex flex-wrap items-center gap-3">
                 <div className="relative flex-1 min-w-[200px]">
                   <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -661,10 +680,10 @@ export function GeneralOfficeDashboardView() {
                     className="h-9 w-full rounded-xl border bg-background px-3 text-xs font-medium"
                   >
                     <option value="">{t.allCategories}</option>
-                    <option value="Manager">Manager</option>
-                    <option value="Normal Staff">Normal Staff</option>
-                    <option value="Employee">Employee</option>
-                    <option value="Others">Others</option>
+                    <option value="Manager">{tr("Manager")}</option>
+                    <option value="Normal Staff">{tr("Normal Staff")}</option>
+                    <option value="Employee">{tr("Employee")}</option>
+                    <option value="Others">{tr("Others")}</option>
                   </select>
                 </div>
 
@@ -683,7 +702,6 @@ export function GeneralOfficeDashboardView() {
                 </div>
               </div>
 
-              {/* Data Table */}
               <div className="overflow-x-auto rounded-2xl border bg-card shadow-sm">
                 <table className="min-w-full text-xs text-left">
                   <thead className="bg-muted text-muted-foreground uppercase font-bold text-[11px] border-b">
@@ -702,11 +720,11 @@ export function GeneralOfficeDashboardView() {
                   <tbody className="divide-y">
                     {loading ? (
                       <tr>
-                        <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">Loading registered employees...</td>
+                        <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">{tr("Loading registered employees...")}</td>
                       </tr>
                     ) : employees.length === 0 ? (
                       <tr>
-                        <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">No employee records found. Click "Register New Employee" above.</td>
+                        <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">{tr("No employee records found. Click Register New Employee above.")}</td>
                       </tr>
                     ) : (
                       employees.map((emp) => (
@@ -775,16 +793,15 @@ export function GeneralOfficeDashboardView() {
             </div>
           )}
 
-          {/* TAB 3: DEPARTMENTS */}
           {activeTab === "departments" && (
             <div className="rounded-2xl border bg-card p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b pb-4">
                 <div>
                   <h2 className="text-lg font-bold">{t.departments}</h2>
-                  <p className="text-xs text-muted-foreground">Manage corporate departments, assigned heads, and employee distribution.</p>
+                  <p className="text-xs text-muted-foreground">{tr("Manage corporate departments, assigned heads, and employee distribution.")}</p>
                 </div>
                 <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold">
-                  + Add Department
+                  + {tr("Add Department")}
                 </Button>
               </div>
 
@@ -796,9 +813,9 @@ export function GeneralOfficeDashboardView() {
                       <Badge variant="outline" className="font-mono text-[10px]">{dept.code}</Badge>
                     </div>
                     <div className="mt-3 text-xs space-y-1 text-muted-foreground">
-                      <div><strong className="text-foreground">Head of Dept:</strong> {dept.head}</div>
-                      <div><strong className="text-foreground">Active Employees:</strong> {dept.employees} Members</div>
-                      <div><strong className="text-foreground">Monthly Budget:</strong> {dept.budget}</div>
+                      <div><strong className="text-foreground">{tr("Head of Dept")}:</strong> {dept.head}</div>
+                      <div><strong className="text-foreground">{tr("Active Employees")}:</strong> {dept.employees} {tr("Members")}</div>
+                      <div><strong className="text-foreground">{tr("Monthly Budget")}:</strong> {dept.budget}</div>
                     </div>
                   </div>
                 ))}
@@ -806,16 +823,15 @@ export function GeneralOfficeDashboardView() {
             </div>
           )}
 
-          {/* TAB 4: DESIGNATIONS */}
           {activeTab === "designations" && (
             <div className="rounded-2xl border bg-card p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b pb-4">
                 <div>
                   <h2 className="text-lg font-bold">{t.designations}</h2>
-                  <p className="text-xs text-muted-foreground">Corporate designation grades, titles, and base salary scales.</p>
+                  <p className="text-xs text-muted-foreground">{tr("Corporate designation grades, titles, and base salary scales.")}</p>
                 </div>
                 <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold">
-                  + Add Designation
+                  + {tr("Add Designation")}
                 </Button>
               </div>
 
@@ -823,10 +839,10 @@ export function GeneralOfficeDashboardView() {
                 <table className="min-w-full text-xs text-left">
                   <thead className="bg-muted font-bold border-b">
                     <tr>
-                      <Th className="px-4 py-3">Designation Title</Th>
-                      <Th className="px-4 py-3">Department</Th>
-                      <Th className="px-4 py-3">Pay Grade</Th>
-                      <Th className="px-4 py-3">Min Base Scale</Th>
+                      <Th className="px-4 py-3">{tr("Designation Title")}</Th>
+                      <Th className="px-4 py-3">{tr("Department")}</Th>
+                      <Th className="px-4 py-3">{tr("Pay Grade")}</Th>
+                      <Th className="px-4 py-3">{tr("Min Base Scale")}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -844,20 +860,19 @@ export function GeneralOfficeDashboardView() {
             </div>
           )}
 
-          {/* TAB 5: ATTENDANCE */}
           {activeTab === "attendance" && (
             <div className="rounded-2xl border bg-card p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b pb-4">
                 <div>
                   <h2 className="text-lg font-bold">{t.attendance}</h2>
-                  <p className="text-xs text-muted-foreground">Daily office attendance log, biometric check-in, and work duration tracking.</p>
+                  <p className="text-xs text-muted-foreground">{tr("Daily office attendance log, biometric check-in, and work duration tracking.")}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button size="sm" variant="outline" className="text-xs">
                     <Printer className="h-3.5 w-3.5 mr-1" /> {t.print}
                   </Button>
                   <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold">
-                    Mark Biometric Entry
+                    {tr("Mark Biometric Entry")}
                   </Button>
                 </div>
               </div>
@@ -866,12 +881,12 @@ export function GeneralOfficeDashboardView() {
                 <table className="min-w-full text-xs text-left">
                   <thead className="bg-muted font-bold border-b">
                     <tr>
-                      <Th className="px-4 py-3">Emp Code</Th>
-                      <Th className="px-4 py-3">Employee Name</Th>
-                      <Th className="px-4 py-3">Time In</Th>
-                      <Th className="px-4 py-3">Time Out</Th>
-                      <Th className="px-4 py-3">Duration</Th>
-                      <Th className="px-4 py-3">Status</Th>
+                      <Th className="px-4 py-3">{t.colEmpCode}</Th>
+                      <Th className="px-4 py-3">{t.colName}</Th>
+                      <Th className="px-4 py-3">{tr("Time In")}</Th>
+                      <Th className="px-4 py-3">{tr("Time Out")}</Th>
+                      <Th className="px-4 py-3">{tr("Duration")}</Th>
+                      <Th className="px-4 py-3">{t.colStatus}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -887,7 +902,7 @@ export function GeneralOfficeDashboardView() {
                             att.status === "Present" ? "bg-emerald-100 text-emerald-800" :
                             att.status === "Late" ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-700"
                           )}>
-                            {att.status}
+                            {tr(att.status)}
                           </Badge>
                         </td>
                       </tr>
@@ -898,16 +913,15 @@ export function GeneralOfficeDashboardView() {
             </div>
           )}
 
-          {/* TAB 6: LEAVE MANAGEMENT */}
           {activeTab === "leave" && (
             <div className="rounded-2xl border bg-card p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b pb-4">
                 <div>
                   <h2 className="text-lg font-bold">{t.leave}</h2>
-                  <p className="text-xs text-muted-foreground">Manage employee leave requests, annual allocations, and approvals.</p>
+                  <p className="text-xs text-muted-foreground">{tr("Manage employee leave requests, annual allocations, and approvals.")}</p>
                 </div>
                 <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold">
-                  + Apply Leave
+                  + {tr("Apply Leave")}
                 </Button>
               </div>
 
@@ -915,12 +929,12 @@ export function GeneralOfficeDashboardView() {
                 <table className="min-w-full text-xs text-left">
                   <thead className="bg-muted font-bold border-b">
                     <tr>
-                      <Th className="px-4 py-3">Emp Code</Th>
-                      <Th className="px-4 py-3">Employee Name</Th>
-                      <Th className="px-4 py-3">Leave Type</Th>
-                      <Th className="px-4 py-3">Duration</Th>
-                      <Th className="px-4 py-3">Days</Th>
-                      <Th className="px-4 py-3">Status</Th>
+                      <Th className="px-4 py-3">{t.colEmpCode}</Th>
+                      <Th className="px-4 py-3">{t.colName}</Th>
+                      <Th className="px-4 py-3">{tr("Leave Type")}</Th>
+                      <Th className="px-4 py-3">{tr("Duration")}</Th>
+                      <Th className="px-4 py-3">{tr("Days")}</Th>
+                      <Th className="px-4 py-3">{t.colStatus}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -930,10 +944,10 @@ export function GeneralOfficeDashboardView() {
                         <td className="px-4 py-3 font-semibold">{lv.name}</td>
                         <td className="px-4 py-3">{lv.type}</td>
                         <td className="px-4 py-3 text-muted-foreground">{lv.from} to {lv.to}</td>
-                        <td className="px-4 py-3 font-mono font-bold">{lv.days} Days</td>
+                        <td className="px-4 py-3 font-mono font-bold">{lv.days} {tr("Days")}</td>
                         <td className="px-4 py-3">
                           <Badge className={lv.status === "Approved" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}>
-                            {lv.status}
+                            {tr(lv.status)}
                           </Badge>
                         </td>
                       </tr>
@@ -944,43 +958,41 @@ export function GeneralOfficeDashboardView() {
             </div>
           )}
 
-          {/* TAB 7: PAYROLL / SALARY */}
           {activeTab === "payroll" && (
             <div className="rounded-2xl border bg-card p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b pb-4">
                 <div>
                   <h2 className="text-lg font-bold">{t.payroll}</h2>
-                  <p className="text-xs text-muted-foreground">Generate monthly salary slips, calculate allowances, advances, and bank transfers.</p>
+                  <p className="text-xs text-muted-foreground">{tr("Generate monthly salary slips, calculate allowances, advances, and bank transfers.")}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <Button size="sm" variant="outline" className="text-xs">
                     <Download className="h-3.5 w-3.5 mr-1" /> {t.excel}
                   </Button>
                   <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold">
-                    Generate Monthly Payroll
+                    {tr("Generate Monthly Payroll")}
                   </Button>
                 </div>
               </div>
 
               <div className="rounded-xl border p-4 bg-muted/30">
                 <div className="flex items-center justify-between font-bold text-xs">
-                  <span>Current Payroll Month: July 2026</span>
-                  <span className="text-emerald-600 font-mono">Total Disbursed: AED 450,000 / PKR 34,200,000</span>
+                  <span>{tr("Current Payroll Month")}: July 2026</span>
+                  <span className="text-emerald-600 font-mono">{tr("Total Disbursed")}: AED 450,000 / PKR 34,200,000</span>
                 </div>
               </div>
             </div>
           )}
 
-          {/* TAB 8: OFFICE ASSETS */}
           {activeTab === "assets" && (
             <div className="rounded-2xl border bg-card p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b pb-4">
                 <div>
                   <h2 className="text-lg font-bold">{t.officeAssets}</h2>
-                  <p className="text-xs text-muted-foreground">Register corporate laptops, vehicles, and equipment assigned to staff.</p>
+                  <p className="text-xs text-muted-foreground">{tr("Register corporate laptops, vehicles, and equipment assigned to staff.")}</p>
                 </div>
                 <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold">
-                  + Assign Asset
+                  + {tr("Assign Asset")}
                 </Button>
               </div>
 
@@ -988,12 +1000,12 @@ export function GeneralOfficeDashboardView() {
                 <table className="min-w-full text-xs text-left">
                   <thead className="bg-muted font-bold border-b">
                     <tr>
-                      <Th className="px-4 py-3">Asset Tag</Th>
-                      <Th className="px-4 py-3">Item Description</Th>
-                      <Th className="px-4 py-3">Category</Th>
-                      <Th className="px-4 py-3">Assigned To</Th>
-                      <Th className="px-4 py-3">Serial No</Th>
-                      <Th className="px-4 py-3">Status</Th>
+                      <Th className="px-4 py-3">{tr("Asset Tag")}</Th>
+                      <Th className="px-4 py-3">{tr("Item Description")}</Th>
+                      <Th className="px-4 py-3">{t.colCategory}</Th>
+                      <Th className="px-4 py-3">{tr("Assigned To")}</Th>
+                      <Th className="px-4 py-3">{tr("Serial No")}</Th>
+                      <Th className="px-4 py-3">{t.colStatus}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -1004,7 +1016,7 @@ export function GeneralOfficeDashboardView() {
                         <td className="px-4 py-3">{ast.category}</td>
                         <td className="px-4 py-3 text-emerald-600 font-semibold">{ast.assignedTo}</td>
                         <td className="px-4 py-3 font-mono text-muted-foreground">{ast.serial}</td>
-                        <td className="px-4 py-3"><Badge className="bg-emerald-100 text-emerald-800">{ast.status}</Badge></td>
+                        <td className="px-4 py-3"><Badge className="bg-emerald-100 text-emerald-800">{tr(ast.status)}</Badge></td>
                       </tr>
                     ))}
                   </tbody>
@@ -1013,16 +1025,15 @@ export function GeneralOfficeDashboardView() {
             </div>
           )}
 
-          {/* TAB 9: DOCUMENTS */}
           {activeTab === "documents" && (
             <div className="rounded-2xl border bg-card p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b pb-4">
                 <div>
                   <h2 className="text-lg font-bold">{t.officeDocuments}</h2>
-                  <p className="text-xs text-muted-foreground">Employee passports, visas, CNIC copies, labor contracts, and legal documentation repository.</p>
+                  <p className="text-xs text-muted-foreground">{tr("Employee passports, visas, CNIC copies, labor contracts, and legal documentation repository.")}</p>
                 </div>
                 <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold">
-                  + Upload Document
+                  + {tr("Upload Document")}
                 </Button>
               </div>
 
@@ -1032,16 +1043,15 @@ export function GeneralOfficeDashboardView() {
                     <FileText className="h-8 w-8 text-blue-600" />
                     <div>
                       <div className="font-bold text-xs">Asmatullah_Passport_Visa.pdf</div>
-                      <div className="text-[10px] text-muted-foreground">Uploaded on 2026-06-15 • 2.4 MB</div>
+                      <div className="text-[10px] text-muted-foreground">{tr("Uploaded on")}: 2026-06-15 • 2.4 MB</div>
                     </div>
                   </div>
-                  <Button size="sm" variant="outline" className="text-[10px] h-7">Download</Button>
+                  <Button size="sm" variant="outline" className="text-[10px] h-7">{t.pdf}</Button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* TAB 10: EMPLOYEE ID CARDS */}
           {activeTab === "id-cards" && (
             <div className="rounded-2xl border bg-card p-6 shadow-sm space-y-4">
               <div className="flex items-center justify-between border-b pb-4">
@@ -1057,10 +1067,10 @@ export function GeneralOfficeDashboardView() {
                     <div className="flex items-center justify-between border-b border-slate-800 pb-3">
                       <div>
                         <div className="font-extrabold text-sm text-blue-400">ACCOUNTS.DGT.LLC</div>
-                        <div className="text-[9px] text-slate-400 font-mono">OFFICIAL IDENTITY CARD</div>
+                        <div className="text-[9px] text-slate-400 font-mono">{tr("Official Identity Card").toUpperCase()}</div>
                       </div>
                       <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/40 text-[9px]">
-                        VERIFIED
+                        {tr("Verified").toUpperCase()}
                       </Badge>
                     </div>
 
@@ -1088,16 +1098,14 @@ export function GeneralOfficeDashboardView() {
             </div>
           )}
 
-          {/* TAB 11: REPORTS & EXPORT BAR */}
           {activeTab === "reports" && (
             <div className="rounded-2xl border bg-card p-6 shadow-sm space-y-6">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b pb-4 gap-4">
                 <div>
                   <h2 className="text-lg font-bold">{t.reports}</h2>
-                  <p className="text-xs text-muted-foreground">Comprehensive employee audit trail, master summary, and distribution center.</p>
+                  <p className="text-xs text-muted-foreground">{tr("Comprehensive employee audit trail, master summary, and distribution center.")}</p>
                 </div>
 
-                {/* 6 REPORT ACTION BUTTONS */}
                 <div className="flex flex-wrap items-center gap-2">
                   <Button size="sm" variant="outline" className="text-xs font-semibold">
                     <Eye className="h-3.5 w-3.5 mr-1 text-blue-600" /> {t.view}
@@ -1106,7 +1114,7 @@ export function GeneralOfficeDashboardView() {
                     size="sm"
                     variant="outline"
                     onClick={() => openUserA4ReportWindow({
-                      title: "General Office Employee Master Report",
+                      title: t.reports,
                       userData: {
                         userId: "SA-001",
                         userCode: "GO-MASTER",
@@ -1143,9 +1151,9 @@ export function GeneralOfficeDashboardView() {
               </div>
 
               <div className="rounded-xl border p-4 bg-muted/40">
-                <div className="font-bold text-xs mb-2">Report Audit Summary</div>
+                <div className="font-bold text-xs mb-2">{tr("Report Audit Summary")}</div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  The Employee Master Report compiles all active staff records, GL ledger balances, salary deductions, and attendance rates across Pakistan, UAE, Afghanistan, and Iran branches.
+                  {tr("Employee Master Report compiles all active staff records, GL ledger balances, salary deductions, and attendance rates across Pakistan, UAE, Afghanistan, and Iran branches.")}
                 </p>
               </div>
             </div>
@@ -1153,7 +1161,6 @@ export function GeneralOfficeDashboardView() {
         </div>
       </div>
 
-      {/* Forms Modal */}
       {showFormModal && (
         <SimpleModal
           title={selectedEmployeeId ? t.edit : t.registerBtn}
@@ -1171,7 +1178,6 @@ export function GeneralOfficeDashboardView() {
         </SimpleModal>
       )}
 
-      {/* Loan/Advance Modal */}
       {selectedEmployeeForLoan && (
         <SimpleModal
           title={t.loanAdv}

@@ -99,6 +99,13 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
     if (linesError) throw new Error(linesError.message);
 
     const safeLines = (lines ?? []) as RoznamchaLine[];
+    const { data: translationRows, error: translationError } = await supabase.from("record_translations")
+      .select("field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text")
+      .eq("record_table", "roznamcha_entries").eq("record_id", id).is("deleted_at", null);
+    if (translationError) throw new Error(translationError.message);
+    const translations = Object.fromEntries((translationRows || []).map((row: any) => [row.field_name, {
+      en: row.english_text, ur: row.urdu_text, ar: row.arabic_text, fa: row.persian_text, ps: row.pashto_text
+    }]));
     const totals = safeLines.reduce(
       (acc, row) => {
         acc.lines += 1;
@@ -112,7 +119,7 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
     return apiOk({
       found: true,
       id,
-      header: header as RoznamchaHeader,
+      header: { ...(header as RoznamchaHeader), translations },
       lines: safeLines,
       totals
     });

@@ -15,6 +15,8 @@ import { ReportFilterBar, type ReportFilterValues } from "@/features/reports/com
 import { ReportPagination } from "@/features/reports/components/report-pagination";
 import { ReportStatusLegend } from "@/features/reports/components/report-status-legend";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 export type CompanyDisplayRecord = {
   id: string;
@@ -64,6 +66,8 @@ function mapDbRowToDisplayRecord(c: CompanyRow): CompanyDisplayRecord {
 
 export function CompanyRegistry() {
   const router = useRouter();
+  const lang = useActiveLanguage();
+  const th = (label: string) => translateHeader(lang, label);
   const [savedCompanies, setSavedCompanies] = useState<CompanyDisplayRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -222,7 +226,7 @@ export function CompanyRegistry() {
 
   return (
     <div className="space-y-5 text-slate-900 dark:text-slate-100">
-      
+
       {/* Top Header Bar with Back Button, Popover Filter Curtain, and Incorporate Action */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-b pb-4 border-slate-200 dark:border-slate-800">
         <div className="flex items-center gap-3">
@@ -242,7 +246,7 @@ export function CompanyRegistry() {
 
         <div className="flex flex-wrap items-center gap-2">
           <ReportFilterBar
-            lang="en"
+            lang={lang}
             filters={filters}
             onFilterChange={(k, v) => setFilters(prev => ({ ...prev, [k]: v }))}
             onReset={() => setFilters({ countryId: "all", mainBranchId: "all", branchId: "all", fromDate: "", toDate: "", currency: "USD", userId: "all", reportType: "company" })}
@@ -258,7 +262,7 @@ export function CompanyRegistry() {
             className="gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold h-10 px-4 rounded-xl text-xs shadow-md"
           >
             <Plus className="h-4 w-4" />
-            + Incorporate New Company
+            + {th("INCORPORATE NEW COMPANY")}
           </Button>
         </div>
       </div>
@@ -269,24 +273,24 @@ export function CompanyRegistry() {
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Users className="h-4 w-4 text-blue-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. BRANCH & USER DETAILS</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. {th("BRANCH & USER DETAILS")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             <div className="flex justify-between">
-              <span>Country:</span>
+              <span>{th("COUNTRY")}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">Pakistan</span>
             </div>
             <div className="flex justify-between">
-              <span>Branch Name:</span>
+              <span>{th("BRANCH NAME")}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 uppercase">Karachi Main</span>
             </div>
             <div className="flex justify-between">
-              <span>User ID / Name:</span>
+              <span>{th("USER ID / NAME")}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]" title="USR-001 (Admin User)">USR-001 (Admin)</span>
             </div>
             <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
-              <span>Status:</span>
-              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px]">Active Session</span>
+              <span>{th("STATUS")}:</span>
+              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px]">{th("ACTIVE SESSION")}</span>
             </div>
           </div>
         </div>
@@ -295,15 +299,15 @@ export function CompanyRegistry() {
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Building2 className="h-4 w-4 text-emerald-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">2. COMPANIES SUMMARY</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">2. {th("COMPANIES SUMMARY")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>Total Incorporated:</span>
+              <span>{th("TOTAL INCORPORATED")}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">{stats.total}</span>
             </div>
             <div className="flex justify-between text-emerald-600 font-bold">
-              <span>Total Owners:</span>
+              <span>{th("TOTAL OWNERS")}:</span>
               <span>{stats.totalOwners}</span>
             </div>
           </div>
@@ -313,15 +317,15 @@ export function CompanyRegistry() {
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Layers className="h-4 w-4 text-purple-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. OWNER BREAKDOWN</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. {th("OWNER BREAKDOWN")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-indigo-600 font-bold">
-              <span>Multi-Company Owners:</span>
+              <span>{th("MULTI-COMPANY OWNERS")}:</span>
               <span>{stats.multiCompanyOwners}</span>
             </div>
             <div className="flex justify-between text-slate-500">
-              <span>Single Owners:</span>
+              <span>{th("SINGLE OWNERS")}:</span>
               <span>{stats.totalOwners - stats.multiCompanyOwners}</span>
             </div>
           </div>
@@ -331,15 +335,15 @@ export function CompanyRegistry() {
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Building2 className="h-4 w-4 text-indigo-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. BRANCHES</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. {th("BRANCHES")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
-              <span>Total Branches:</span>
+              <span>{th("TOTAL BRANCHES")}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">12</span>
             </div>
             <div className="flex justify-between text-emerald-600 font-bold">
-              <span>Active Branches:</span>
+              <span>{th("ACTIVE BRANCHES")}:</span>
               <span>10</span>
             </div>
           </div>
@@ -349,19 +353,19 @@ export function CompanyRegistry() {
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <FileText className="h-4 w-4 text-amber-500" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">5. QUICK INFO</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">5. {th("QUICK INFO")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             <div className="flex justify-between">
-              <span>Currency:</span>
+              <span>{th("CURRENCY")}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">USD</span>
             </div>
             <div className="flex justify-between">
-              <span>Company:</span>
+              <span>{th("COMPANY")}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]">DGT LLC</span>
             </div>
             <div className="flex justify-between">
-              <span>Financial Year:</span>
+              <span>{th("FINANCIAL YEAR")}:</span>
               <span className="font-bold text-slate-900 dark:text-slate-100">2025-26</span>
             </div>
           </div>

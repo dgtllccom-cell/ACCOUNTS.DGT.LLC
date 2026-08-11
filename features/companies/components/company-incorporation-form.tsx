@@ -16,8 +16,10 @@ import {
   type LocationHierarchyMeta,
   type LocationHierarchyValue
 } from "@/features/locations/components/location-hierarchy-select";
-import { apiPost } from "@/lib/api/client";
+import { apiPost, apiGet, apiPatch } from "@/lib/api/client";
 import type { ContactTypeKey } from "@/features/contact-types/contact-type-api";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 
 type DynamicList = "contacts" | "registrations" | "ownerIds";
 type DynamicRow = {
@@ -198,7 +200,11 @@ function DynamicRows({
   onChange,
   onRemove,
   onAdd,
-  onNewType
+  onNewType,
+  addLabel = "Add",
+  selectTypeLabel = "Select Type",
+  addNewTypeLabel = "+ Add New Type",
+  enterValueLabel = "Enter value"
 }: {
   label: string;
   helper?: string;
@@ -210,6 +216,10 @@ function DynamicRows({
   onRemove: (id: string) => void;
   onAdd: () => void;
   onNewType: (list: DynamicList) => void;
+  addLabel?: string;
+  selectTypeLabel?: string;
+  addNewTypeLabel?: string;
+  enterValueLabel?: string;
 }) {
   return (
     <div className="space-y-3 rounded-lg border bg-white p-4">
@@ -220,7 +230,7 @@ function DynamicRows({
         </div>
         <Button type="button" variant="outline" size="sm" onClick={onAdd} className="h-8">
           <Plus className="h-4 w-4 mr-1 text-slate-600" aria-hidden />
-          Add
+          {addLabel}
         </Button>
       </div>
 
@@ -238,13 +248,13 @@ function DynamicRows({
               }}
               className={selectClass()}
             >
-              <option value="">Select Type</option>
+              <option value="">{selectTypeLabel}</option>
               {types.map((type) => (
                 <option key={type} value={type}>
                   {type}
                 </option>
               ))}
-              <option value="__new__">+ Add New Type</option>
+              <option value="__new__">{addNewTypeLabel}</option>
             </select>
             {list === "contacts" && toContactTypeKey(row.type) ? (
               <ContactNumberInput
@@ -261,7 +271,7 @@ function DynamicRows({
               <Input
                 value={row.value}
                 onChange={(event) => onChange(row.id, { value: event.target.value })}
-                placeholder="Enter value"
+                placeholder={enterValueLabel}
                 className="bg-white text-slate-900"
               />
             )}
@@ -294,6 +304,8 @@ export function CompanyIncorporationForm({
   onClose?: () => void;
 }) {
   const router = useRouter();
+  const lang = useActiveLanguage();
+  const tr = (key: Parameters<typeof t>[1], fallback: string) => t(lang, key, fallback);
   function handleClose() {
     if (onClose) {
       onClose();
@@ -324,6 +336,10 @@ export function CompanyIncorporationForm({
   const [currentStep, setCurrentStep] = useState<1 | 2 | 3 | 4>(1);
 
   const [saving, setSaving] = useState(false);
+  // Tracks an existing company matched by name during duplicate-detection on save
+  // (see the "duplicate"/"already exists" fallback below); cleared whenever the user
+  // edits any field so a stale match never gets silently reused for a different entry.
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string | null>(null);
 
   // Load company details from API if initialCompanyId is provided for editing
   useEffect(() => {
@@ -371,7 +387,7 @@ export function CompanyIncorporationForm({
         })
         .catch((err) => {
           console.error("Error loading company profile:", err);
-          setMessage("Failed to load company record from database.");
+          setMessage(tr("company_form.load_failed_msg", "Failed to load company record from database."));
         });
     }
   }, [initialCompanyId]);
@@ -505,7 +521,7 @@ export function CompanyIncorporationForm({
       if (initialCompanyId) {
         // Edit mode: update database record
         await apiPatch<{ company: any }>(`/api/erp/companies/${encodeURIComponent(initialCompanyId)}`, payload);
-        setMessage(`Updated company "${companyName}" in database successfully.`);
+        setMessage(tr("company_form.updated_company_msg", `Updated company "${companyName}" in database successfully.`).replace("{name}", companyName));
 
         const updatedData: CompanyIncorporationData & { id: string } = {
           id: initialCompanyId,
@@ -571,7 +587,7 @@ export function CompanyIncorporationForm({
         };
 
         onSave?.(newCompany);
-        setMessage(`Saved company "${newCompany.companyName}" to database successfully.`);
+        setMessage(tr("company_form.saved_company_msg", `Saved company "${newCompany.companyName}" to database successfully.`).replace("{name}", newCompany.companyName));
 
         if (mode === "standalone") {
           setTimeout(() => {
@@ -616,12 +632,12 @@ export function CompanyIncorporationForm({
     <div className={mode === "standalone" ? "mx-auto flex h-[calc(100vh-2rem)] w-full max-w-[min(1600px,calc(100vw-2rem))] flex-col overflow-y-auto rounded-2xl border bg-white p-5 shadow-2xl" : "flex h-[86vh] w-full flex-col overflow-y-auto rounded-xl bg-white p-4"}>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">Settings / Company</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.24em] text-primary">{tr("company_form.settings_company", "Settings / Company")}</p>
           <h1 className={mode === "standalone" ? "mt-1 text-2xl font-semibold tracking-tight text-slate-900" : "text-lg font-semibold"}>
-            {initialCompanyId ? "Edit Company Details" : "Company Incorporation Form"}
+            {initialCompanyId ? tr("company_form.edit_title", "Edit Company Details") : tr("company_form.create_title", "Company Incorporation Form")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            {initialCompanyId ? "Modify business profile records and registration information." : "Register new business entities with locations, registrations, contact lists, and owners."}
+            {initialCompanyId ? tr("company_form.edit_subtitle", "Modify business profile records and registration information.") : tr("company_form.create_subtitle", "Register new business entities with locations, registrations, contact lists, and owners.")}
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -633,7 +649,7 @@ export function CompanyIncorporationForm({
           }
         >
           <CheckCircle2 className="h-4 w-4" aria-hidden />
-          {ready ? "Ready" : "Draft"}
+          {ready ? tr("company_form.ready", "Ready") : tr("company_form.draft", "Draft")}
         </span>
         <Button type="button" variant="outline" size="icon" onClick={handleClose} className="h-9 w-9 rounded-full border-slate-200" aria-label="Close company incorporation form">
           <X className="h-4 w-4" aria-hidden />
@@ -643,10 +659,10 @@ export function CompanyIncorporationForm({
 
       <div className="sticky top-0 z-20 mb-3 grid grid-cols-2 gap-2 rounded-xl border bg-white/95 p-2 text-xs font-semibold text-slate-500 shadow-sm backdrop-blur md:grid-cols-4">
         {[
-          { id: 1, label: "1. Company Details" },
-          { id: 2, label: "2. Location" },
-          { id: 3, label: "3. Contacts & IDs" },
-          { id: 4, label: "4. Review & Save" },
+          { id: 1, label: tr("company_form.step_company_details", "1. Company Details") },
+          { id: 2, label: tr("company_form.step_location", "2. Location") },
+          { id: 3, label: tr("company_form.step_contacts_ids", "3. Contacts & IDs") },
+          { id: 4, label: tr("company_form.step_review_save", "4. Review & Save") },
         ].map((s) => {
           const active = currentStep === s.id;
           const completed = currentStep > s.id;
@@ -681,19 +697,19 @@ export function CompanyIncorporationForm({
           <section className="space-y-5 rounded-lg border bg-card p-5 pb-24 shadow-sm">
           {currentStep === 1 && (
             <>
-            <SectionTitle>Company Details</SectionTitle>
+            <SectionTitle>{tr("company_form.section_company_details", "Company Details")}</SectionTitle>
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-700">Company Owner Name</Label>
-                <Input value={ownerName} onChange={(event) => { setOwnerName(event.target.value); setSelectedCompanyId(null); }} placeholder="Enter owner name" className="bg-white text-slate-900 border-slate-200" />
+                <Label className="text-xs font-semibold text-slate-700">{tr("company_form.owner_name", "Company Owner Name")}</Label>
+                <Input value={ownerName} onChange={(event) => { setOwnerName(event.target.value); setSelectedCompanyId(null); }} placeholder={tr("company_form.enter_owner_name", "Enter owner name")} className="bg-white text-slate-900 border-slate-200" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-700">Company Name</Label>
-                <Input value={companyName} onChange={(event) => { setCompanyName(event.target.value); setSelectedCompanyId(null); }} placeholder="Enter company name" className="bg-white text-slate-900 border-slate-200" />
+                <Label className="text-xs font-semibold text-slate-700">{tr("company_form.company_name", "Company Name")}</Label>
+                <Input value={companyName} onChange={(event) => { setCompanyName(event.target.value); setSelectedCompanyId(null); }} placeholder={tr("company_form.enter_company_name", "Enter company name")} className="bg-white text-slate-900 border-slate-200" />
               </div>
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-700">Business Name</Label>
-                <Input value={businessName} onChange={(event) => { setBusinessName(event.target.value); setSelectedCompanyId(null); }} placeholder="Enter business name" className="bg-white text-slate-900 border-slate-200" />
+                <Label className="text-xs font-semibold text-slate-700">{tr("company_form.business_name", "Business Name")}</Label>
+                <Input value={businessName} onChange={(event) => { setBusinessName(event.target.value); setSelectedCompanyId(null); }} placeholder={tr("company_form.enter_business_name", "Enter business name")} className="bg-white text-slate-900 border-slate-200" />
               </div>
             </div>
             </>
@@ -701,7 +717,7 @@ export function CompanyIncorporationForm({
 
           {currentStep === 2 && (
             <>
-            <SectionTitle>Location</SectionTitle>
+            <SectionTitle>{tr("company_form.section_location", "Location")}</SectionTitle>
             <LocationHierarchySelect
               value={location}
               onChange={(next, meta) => {
@@ -715,13 +731,13 @@ export function CompanyIncorporationForm({
 
             <div className="grid gap-4 md:grid-cols-3">
               <div className="space-y-1.5">
-                <Label className="text-xs font-semibold text-slate-700">Zip Code</Label>
+                <Label className="text-xs font-semibold text-slate-700">{tr("company_form.zip_code", "Zip Code")}</Label>
                 <Input value={zipCode || "-"} readOnly className="bg-slate-50 font-mono text-xs text-slate-600 font-semibold border-slate-200" />
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label className="text-xs font-semibold text-slate-700">Full Address</Label>
-              <Input value={address} onChange={(event) => { setAddress(event.target.value); setSelectedCompanyId(null); }} placeholder="Enter full address" className="bg-white text-slate-900 border-slate-200" />
+              <Label className="text-xs font-semibold text-slate-700">{tr("company_form.full_address", "Full Address")}</Label>
+              <Input value={address} onChange={(event) => { setAddress(event.target.value); setSelectedCompanyId(null); }} placeholder={tr("company_form.enter_full_address", "Enter full address")} className="bg-white text-slate-900 border-slate-200" />
             </div>
             </>
           )}
@@ -729,7 +745,7 @@ export function CompanyIncorporationForm({
           {currentStep === 3 && (
             <>
             <DynamicRows
-              label="Contacts"
+              label={tr("company_form.contacts_label", "Contacts")}
               list="contacts"
               rows={contacts}
               types={types.contacts}
@@ -738,10 +754,14 @@ export function CompanyIncorporationForm({
               onRemove={(id) => { removeRow("contacts", id); setSelectedCompanyId(null); }}
               onAdd={() => { addRow("contacts"); setSelectedCompanyId(null); }}
               onNewType={setTypeModal}
+              addLabel={tr("company_form.add_button", "Add")}
+              selectTypeLabel={tr("company_form.select_type", "Select Type")}
+              addNewTypeLabel={tr("company_form.add_new_type", "+ Add New Type")}
+              enterValueLabel={tr("company_form.enter_value", "Enter value")}
             />
             <DynamicRows
-              label="Company Registrations"
-              helper="Select type, for example VAT/NTN, and enter number."
+              label={tr("company_form.registrations_label", "Company Registrations")}
+              helper={tr("company_form.registrations_helper", "Select type, for example VAT/NTN, and enter number.")}
               list="registrations"
               rows={registrations}
               types={types.registrations}
@@ -749,10 +769,14 @@ export function CompanyIncorporationForm({
               onRemove={(id) => { removeRow("registrations", id); setSelectedCompanyId(null); }}
               onAdd={() => { addRow("registrations"); setSelectedCompanyId(null); }}
               onNewType={setTypeModal}
+              addLabel={tr("company_form.add_button", "Add")}
+              selectTypeLabel={tr("company_form.select_type", "Select Type")}
+              addNewTypeLabel={tr("company_form.add_new_type", "+ Add New Type")}
+              enterValueLabel={tr("company_form.enter_value", "Enter value")}
             />
             <DynamicRows
-              label="Company Owner Identification"
-              helper="CNIC / Passport / National ID etc. Multiple IDs can be added."
+              label={tr("company_form.owner_ids_label", "Company Owner Identification")}
+              helper={tr("company_form.owner_ids_helper", "CNIC / Passport / National ID etc. Multiple IDs can be added.")}
               list="ownerIds"
               rows={ownerIds}
               types={types.ownerIds}
@@ -760,15 +784,19 @@ export function CompanyIncorporationForm({
               onRemove={(id) => { removeRow("ownerIds", id); setSelectedCompanyId(null); }}
               onAdd={() => { addRow("ownerIds"); setSelectedCompanyId(null); }}
               onNewType={setTypeModal}
+              addLabel={tr("company_form.add_button", "Add")}
+              selectTypeLabel={tr("company_form.select_type", "Select Type")}
+              addNewTypeLabel={tr("company_form.add_new_type", "+ Add New Type")}
+              enterValueLabel={tr("company_form.enter_value", "Enter value")}
             />
             </>
           )}
 
           {currentStep === 4 && (
             <div className="space-y-4">
-              <p className="text-sm font-semibold text-slate-800">Review & Save</p>
+              <p className="text-sm font-semibold text-slate-800">{tr("company_form.review_save_title", "Review & Save")}</p>
               <p className="text-xs text-muted-foreground">
-                Incorporate all details. Saving will update the entity registry and return you to the registry dashboard.
+                {tr("company_form.review_save_desc", "Incorporate all details. Saving will update the entity registry and return you to the registry dashboard.")}
               </p>
             </div>
           )}
@@ -781,9 +809,9 @@ export function CompanyIncorporationForm({
                 disabled={currentStep === 1}
                 className="border-slate-200 text-slate-700 font-medium h-10 px-4"
               >
-                Back
+                {tr("common.back", "Back")}
               </Button>
-              
+
               <div className="flex gap-2">
                 {currentStep < 4 ? (
                   <Button
@@ -791,7 +819,7 @@ export function CompanyIncorporationForm({
                     onClick={() => setCurrentStep((Math.min(4, currentStep + 1)) as any)}
                     className="rounded-lg bg-primary hover:bg-primary-dark text-white font-medium shadow-sm h-10 px-8 gap-2"
                   >
-                    Next
+                    {tr("common.next", "Next")}
                   </Button>
                 ) : (
                   <Button
@@ -801,7 +829,7 @@ export function CompanyIncorporationForm({
                     className="rounded-lg bg-primary text-white hover:bg-primary-dark transition gap-2 shadow-sm font-medium h-10 px-5"
                   >
                     <Save className="h-4 w-4" aria-hidden />
-                    {initialCompanyId ? "Update Profile" : "Submit and Save"}
+                    {initialCompanyId ? tr("company_form.update_profile", "Update Profile") : tr("company_form.submit_save", "Submit and Save")}
                   </Button>
                 )}
               </div>
@@ -829,20 +857,20 @@ export function CompanyIncorporationForm({
                   <Building2 className="h-5 w-5 text-primary" aria-hidden />
                 </div>
                 <div>
-                  <h2 className="font-semibold text-slate-900 text-base leading-tight">Company Preview</h2>
-                  <p className="text-xs text-muted-foreground">Review all details before saving</p>
+                  <h2 className="font-semibold text-slate-900 text-base leading-tight">{tr("company_form.company_preview", "Company Preview")}</h2>
+                  <p className="text-xs text-muted-foreground">{tr("company_form.review_before_saving", "Review all details before saving")}</p>
                 </div>
               </div>
               <div>
                 {initialCompanyId ? (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
                     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                    Saved Record
+                    {tr("company_form.saved_record", "Saved Record")}
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-50 px-3 py-1 text-xs font-semibold text-amber-700 border border-amber-200">
                     <span className="h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
-                    Live Draft
+                    {tr("company_form.live_draft", "Live Draft")}
                   </span>
                 )}
               </div>
@@ -850,49 +878,49 @@ export function CompanyIncorporationForm({
 
             {/* Hero: Company name */}
             <div className="mb-6 rounded-xl border border-slate-100 bg-gradient-to-br from-slate-50 to-slate-100/40 p-5">
-              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Company Name</p>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">{tr("company_form.company_name", "Company Name")}</p>
               <p className="mt-1 break-words text-xl font-bold leading-snug text-slate-900 sm:text-2xl">
-                {previewData.companyName && previewData.companyName !== "-" ? previewData.companyName : "Untitled Company"}
+                {previewData.companyName && previewData.companyName !== "-" ? previewData.companyName : tr("company_form.untitled_company", "Untitled Company")}
               </p>
               {previewData.ownerName && previewData.ownerName !== "-" ? (
                 <p className="mt-1.5 text-sm text-slate-600">
-                  Owner: <span className="font-semibold text-slate-800">{previewData.ownerName}</span>
+                  {tr("company_form.owner_prefix", "Owner:")} <span className="font-semibold text-slate-800">{previewData.ownerName}</span>
                 </p>
               ) : null}
             </div>
 
             <div className="space-y-6">
               {/* Business information */}
-              <PreviewSection title="Business Information">
+              <PreviewSection title={tr("company_form.business_info_section", "Business Information")}>
                 <div className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
-                  <PreviewField label="Business Name" value={previewData.businessName} />
-                  <PreviewField label="Business Type" value={previewData.businessType} />
-                  <PreviewField label="Owner Name" value={previewData.ownerName} />
+                  <PreviewField label={tr("company_form.business_name", "Business Name")} value={previewData.businessName} />
+                  <PreviewField label={tr("company_form.business_type_label", "Business Type")} value={previewData.businessType} />
+                  <PreviewField label={tr("company_form.owner_name_label", "Owner Name")} value={previewData.ownerName} />
                 </div>
               </PreviewSection>
 
               {/* Location */}
-              <PreviewSection title="Location">
+              <PreviewSection title={tr("company_form.section_location", "Location")}>
                 <div className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
-                  <PreviewField label="Country" value={previewData.country} />
-                  <PreviewField label="State / Province" value={previewData.state} />
-                  <PreviewField label="City" value={previewData.city} />
-                  <PreviewField label="Area / Town / Locality / Road" value={previewData.area} />
+                  <PreviewField label={tr("common.country", "Country")} value={previewData.country} />
+                  <PreviewField label={tr("company_form.state_province_label", "State / Province")} value={previewData.state} />
+                  <PreviewField label={tr("common.city", "City")} value={previewData.city} />
+                  <PreviewField label={tr("company_form.area_label", "Area / Town / Locality / Road")} value={previewData.area} />
                   {(previewData as any).areaCode && (previewData as any).areaCode !== "-" ? (
-                    <PreviewField label="Road / Area Code" value={(previewData as any).areaCode} mono />
+                    <PreviewField label={tr("company_form.road_area_code_label", "Road / Area Code")} value={(previewData as any).areaCode} mono />
                   ) : null}
-                  <PreviewField label="ZIP Code" value={previewData.zipCode} mono />
+                  <PreviewField label={tr("company_form.zip_code_label", "ZIP Code")} value={previewData.zipCode} mono />
                 </div>
                 {previewData.address && previewData.address !== "-" ? (
                   <div className="mt-4 rounded-lg border border-slate-100 bg-slate-50/60 p-3">
-                    <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">Full Address</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">{tr("company_form.full_address", "Full Address")}</p>
                     <p className="mt-1 break-words text-sm leading-relaxed text-slate-700">{previewData.address}</p>
                   </div>
                 ) : null}
               </PreviewSection>
 
               {/* Contacts */}
-              <PreviewSection title="Contacts">
+              <PreviewSection title={tr("company_form.contacts_section", "Contacts")}>
                 {previewData.contacts.length > 0 ? (
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {previewData.contacts.map((c) => (
@@ -903,12 +931,12 @@ export function CompanyIncorporationForm({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm italic text-slate-400">No contacts added</p>
+                  <p className="text-sm italic text-slate-400">{tr("company_form.no_contacts_added", "No contacts added")}</p>
                 )}
               </PreviewSection>
 
               {/* Registrations */}
-              <PreviewSection title="Registrations">
+              <PreviewSection title={tr("company_form.registrations_section", "Registrations")}>
                 {previewData.registrations.length > 0 ? (
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {previewData.registrations.map((r) => (
@@ -919,12 +947,12 @@ export function CompanyIncorporationForm({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm italic text-slate-400">No registrations added</p>
+                  <p className="text-sm italic text-slate-400">{tr("company_form.no_registrations_added", "No registrations added")}</p>
                 )}
               </PreviewSection>
 
               {/* Owner Identification */}
-              <PreviewSection title="Owner Identification">
+              <PreviewSection title={tr("company_form.owner_id_section", "Owner Identification")}>
                 {previewData.ownerIds.length > 0 ? (
                   <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                     {previewData.ownerIds.map((o) => (
@@ -935,7 +963,7 @@ export function CompanyIncorporationForm({
                     ))}
                   </div>
                 ) : (
-                  <p className="text-sm italic text-slate-400">No IDs added</p>
+                  <p className="text-sm italic text-slate-400">{tr("company_form.no_ids_added", "No IDs added")}</p>
                 )}
               </PreviewSection>
 
@@ -948,7 +976,7 @@ export function CompanyIncorporationForm({
                     className="w-full gap-1.5 border-slate-200 text-sm"
                   >
                     <RefreshCcw className="h-4 w-4" />
-                    Back to Form / New Draft
+                    {tr("company_form.back_to_form", "Back to Form / New Draft")}
                   </Button>
                 </div>
               ) : null}
@@ -959,15 +987,15 @@ export function CompanyIncorporationForm({
       {typeModal ? (
         <div className="fixed inset-0 z-[60] grid place-items-center bg-slate-950/60 p-4">
           <div className="w-full max-w-sm rounded-lg border bg-white p-5 shadow-2xl">
-            <h2 className="font-semibold text-slate-950">Add New Type</h2>
+            <h2 className="font-semibold text-slate-950">{tr("company_form.add_new_type_modal_title", "Add New Type")}</h2>
             <div className="mt-4 space-y-3">
-              <Input value={newType} onChange={(event) => setNewType(event.target.value)} placeholder="Enter type name" />
+              <Input value={newType} onChange={(event) => setNewType(event.target.value)} placeholder={tr("company_form.enter_type_name", "Enter type name")} />
               <div className="flex justify-end gap-2">
                 <Button type="button" variant="outline" onClick={() => setTypeModal(null)}>
-                  Cancel
+                  {tr("common.cancel", "Cancel")}
                 </Button>
                 <Button type="button" onClick={saveType}>
-                  Save
+                  {tr("common.save", "Save")}
                 </Button>
               </div>
             </div>

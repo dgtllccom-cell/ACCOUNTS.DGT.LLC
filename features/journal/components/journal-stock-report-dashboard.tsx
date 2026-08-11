@@ -11,9 +11,9 @@ import {
   Globe, Loader2, Filter, X, ArrowUpRight, ArrowDownLeft, User
 } from "lucide-react";
 
-/* ─────────────────────────────────────────────
+/* ---
    Types
-   ───────────────────────────────────────────── */
+   --- */
 interface ReportRecord {
   id: string;
   purchase_order_no: string;
@@ -63,9 +63,9 @@ interface Summary {
 
 
 
-/* ─────────────────────────────────────────────
+/* ---
    Helpers
-   ───────────────────────────────────────────── */
+   --- */
 function fmtNum(n: number, decimals = 2) {
   return new Intl.NumberFormat("en-US", {
     minimumFractionDigits: decimals,
@@ -84,9 +84,9 @@ function fmtDate(d: string | null | undefined) {
   }
 }
 
-/* ─────────────────────────────────────────────
+/* ---
    Summary Card Component
-   ───────────────────────────────────────────── */
+   --- */
 function SummaryCard({
   icon: Icon,
   label,
@@ -116,9 +116,9 @@ function SummaryCard({
   );
 }
 
-/* ─────────────────────────────────────────────
+/* ---
    Main Component
-   ───────────────────────────────────────────── */
+   --- */
 interface DropdownItem {
   id: string;
   name: string;
@@ -133,7 +133,7 @@ export default function JournalStockReportDashboard({
 }) {
   const lang = useActiveLanguage();
 
-  // ── State ──
+  // --- State ---
   const [activeTab, setActiveTab] = useState<"salesman" | "country" | "branch">(initialLevel);
   const [records, setRecords] = useState<ReportRecord[]>([]);
   const [summary, setSummary] = useState<Summary | null>(null);
@@ -156,7 +156,7 @@ export default function JournalStockReportDashboard({
   const [branches, setBranches] = useState<DropdownItem[]>([]);
   const [salesmen, setSalesmen] = useState<DropdownItem[]>([]);
 
-  // ── Fetch metadata for filters ──
+  // --- Fetch metadata for filters ---
   useEffect(() => {
     async function loadMeta() {
       try {
@@ -184,7 +184,7 @@ export default function JournalStockReportDashboard({
     loadMeta();
   }, []);
 
-  // ── Fetch Report Data ──
+  // --- Fetch Report Data ---
   const fetchReport = useCallback(async () => {
     setLoading(true);
     try {
@@ -221,7 +221,7 @@ export default function JournalStockReportDashboard({
     setFiltersOpen(false);
   };
 
-  // ── Groupings ──
+  // --- Groupings ---
   // Group by active tab (Salesman, Country, Branch)
   const groupedData = useMemo(() => {
     const map: Record<string, {
@@ -352,8 +352,8 @@ export default function JournalStockReportDashboard({
   const handleExport = () => {
     if (!records.length) return;
     const headers = [
-      "Date", "PO / Bill No", "Contract No", "Salesman", "Country", "Branch", 
-      "Goods Name", "Supplier", "Net Weight (Kg)", "DC (Cartons)", 
+      "Date", "PO / Bill No", "Contract No", "Salesman", "Country", "Branch",
+      "Goods Name", "Supplier", "Net Weight (Kg)", "DC (Cartons)",
       "Purchase Amount (PKR)", "Purchase Payment (PKR)", "Invoice Payment (PKR)", "Remaining Payment (PKR)"
     ];
     const csvContent = [
@@ -383,8 +383,8 @@ export default function JournalStockReportDashboard({
 
   return (
     <div className="space-y-6 p-4 sm:p-6 text-slate-800 dark:text-slate-100 bg-slate-50/50 dark:bg-slate-950 min-h-screen">
-      
-      {/* ── Title Portal (Injects into ERP Top Header Bar) ── */}
+
+      {/* --- Title Portal (Injects into ERP Top Header Bar) --- */}
       {titleSlot && createPortal(
         <div className="relative flex items-center gap-2">
           <div className="relative">
@@ -436,7 +436,7 @@ export default function JournalStockReportDashboard({
         titleSlot
       )}
 
-      {/* ── Actions Portal (Injects Filters, Export, Print into ERP Top Header Bar) ── */}
+      {/* --- Actions Portal (Injects Filters, Export, Print into ERP Top Header Bar) --- */}
       {actionsSlot && createPortal(
         <div className="flex items-center gap-2">
           {/* Collapsible filters panel */}
@@ -532,7 +532,7 @@ export default function JournalStockReportDashboard({
         actionsSlot
       )}
 
-      {/* ── Executive 4-Panel Summary Header & Country Accordion ── */}
+      {/* --- Executive 4-Panel Summary Header & Country Accordion --- */}
       <div className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
           {/* Panel 1: Branch & User Details */}
@@ -644,11 +644,11 @@ export default function JournalStockReportDashboard({
           </div>
 
           {/* Panel 4: All Countries Report (Interactive Accordion Header) */}
-          <div 
+          <div
             onClick={() => setShowAllCountries(!showAllCountries)}
             className={`flex flex-col rounded-2xl border-2 bg-white dark:bg-slate-900 shadow-xs overflow-hidden cursor-pointer transition-all duration-200 ${
-              showAllCountries 
-                ? "border-amber-500 shadow-md ring-2 ring-amber-500/20" 
+              showAllCountries
+                ? "border-amber-500 shadow-md ring-2 ring-amber-500/20"
                 : "border-slate-200 dark:border-slate-800 hover:border-amber-400"
             }`}
           >
@@ -673,7 +673,7 @@ export default function JournalStockReportDashboard({
                 </div>
               ))}
               <div className="pt-2 border-t border-slate-100 dark:border-slate-800 flex justify-between items-center text-[9px] font-extrabold text-amber-600 dark:text-amber-400">
-                <span>{showAllCountries ? "HIDE REPORT DETAILS ↑" : "SHOW REPORT DETAILS ↓"}</span>
+                <span>{showAllCountries ? `${t(lang, "report.hide_report_details", "HIDE REPORT DETAILS")} ↑` : `${t(lang, "report.show_report_details", "SHOW REPORT DETAILS")} ↓`}</span>
               </div>
             </div>
           </div>
@@ -729,7 +729,7 @@ export default function JournalStockReportDashboard({
         )}
       </div>
 
-      {/* ── Main Summary Table ── */}
+      {/* --- Main Summary Table --- */}
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xs overflow-hidden">
         <div className="bg-slate-50 dark:bg-slate-850 border-b border-slate-200 dark:border-slate-800 p-4 flex items-center justify-between">
           <h3 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
@@ -853,11 +853,11 @@ export default function JournalStockReportDashboard({
         </div>
       </div>
 
-      {/* ── Purchase Booking Bill Details Top Curtain Overlay Modal ("Parda Upar Khulna Chahiye") ── */}
+      {/* --- Purchase Booking Bill Details Top Curtain Overlay Modal ("Parda Upar Khulna Chahiye") --- */}
       {selectedGroupDetails && (
         <div className="fixed inset-0 z-[100] overflow-y-auto bg-slate-950/70 backdrop-blur-md animate-in fade-in slide-in-from-top-6 duration-300 p-3 sm:p-6 flex flex-col items-center justify-start">
           <div className="w-full max-w-[99vw] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-3xl shadow-2xl overflow-hidden my-2 flex flex-col max-h-[92vh]">
-            
+
             {/* Overlay Header Bar */}
             <div className="bg-slate-900 text-white p-4 px-6 flex items-center justify-between border-b border-slate-800 flex-shrink-0">
               <div className="flex items-center gap-3">
@@ -865,7 +865,7 @@ export default function JournalStockReportDashboard({
                   onClick={() => setSelectedEntity(null)}
                   className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs transition-colors"
                 >
-                  ← Back to Summary
+                  â⬠ Back to Summary
                 </button>
                 <div className="h-4 w-px bg-slate-700 hidden sm:block" />
                 <div className="flex items-center gap-2">
@@ -924,7 +924,7 @@ export default function JournalStockReportDashboard({
 
             {/* Overlay Scrollable Body */}
             <div className="p-5 space-y-6 overflow-y-auto flex-1 text-slate-800 dark:text-slate-100">
-              
+
               {/* Summary Cards Row */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">

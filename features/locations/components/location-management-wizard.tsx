@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ChangeEvent, type DragEvent } from "react";
 import {
   Globe2,
   Map,
@@ -754,6 +754,197 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
     } finally {
       setLoading((prev) => ({ ...prev, saving: false }));
     }
+  }
+
+  // ── Bulk CSV Import (Country/State/City/Tehsil hierarchy) ──────────────────
+  // Minimal RFC4180-ish CSV parser: handles quoted fields containing commas/quotes.
+  function parseCsvText(text: string): string[][] {
+    const rows: string[][] = [];
+    let row: string[] = [];
+    let field = "";
+    let inQuotes = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (inQuotes) {
+        if (ch === '"') {
+          if (text[i + 1] === '"') { field += '"'; i++; }
+          else { inQuotes = false; }
+        } else {
+          field += ch;
+        }
+      } else if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ",") {
+        row.push(field);
+        field = "";
+      } else if (ch === "\n" || ch === "\r") {
+        if (ch === "\r" && text[i + 1] === "\n") i++;
+        row.push(field);
+        field = "";
+        if (row.some((c) => c.trim() !== "")) rows.push(row);
+        row = [];
+      } else {
+        field += ch;
+      }
+    }
+    if (field !== "" || row.length > 0) {
+      row.push(field);
+      if (row.some((c) => c.trim() !== "")) rows.push(row);
+    }
+    return rows;
+  }
+
+  function parseCsvToImportRows(text: string): ImportRow[] {
+    const rows = parseCsvText(text);
+    if (rows.length === 0) return [];
+    const header = rows[0].map((h) => h.trim().toLowerCase().replace(/[^a-z]/g, ""));
+    const colIndex = (...aliases: string[]) => aliases.map((a) => header.indexOf(a)).find((i) => i >= 0) ?? -1;
+    const idx = {
+      countryCode: colIndex("countrycode"),
+      countryName: colIndex("countryname"),
+      stateCode: colIndex("statecode"),
+      stateName: colIndex("statename"),
+      cityCode: colIndex("citycode"),
+      cityName: colIndex("cityname"),
+      tehsilCode: colIndex("tehsilcode", "districtcode"),
+      tehsilName: colIndex("tehsilname", "districtname")
+    };
+    const dataRows = rows.slice(1);
+    return dataRows
+      .map((cols) => ({
+        countryCode: (cols[idx.countryCode] || "").trim().toUpperCase(),
+        countryName: (cols[idx.countryName] || "").trim(),
+        stateCode: (cols[idx.stateCode] || "").trim().toUpperCase(),
+        stateName: (cols[idx.stateName] || "").trim(),
+        cityCode: (cols[idx.cityCode] || "").trim().toUpperCase(),
+        cityName: (cols[idx.cityName] || "").trim(),
+        tehsilCode: (cols[idx.tehsilCode] || "").trim().toUpperCase(),
+        tehsilName: (cols[idx.tehsilName] || "").trim()
+      }))
+      .filter((r) => r.countryCode || r.countryName);
+  }
+
+  function handleCsvFile(file: File) {
+    setImportLogs([]);
+    file
+      .text()
+      .then((text) => {
+        const rows = parseCsvToImportRows(text);
+        setImportRows(rows);
+        setImportLogs([`Parsed ${rows.length} row(s) from ${file.name}. Click "Execute Import" to continue.`]);
+      })
+      .catch((e: any) => {
+        setImportRows([]);
+        setImportLogs([`Failed to read file: ${e?.message || String(e)}`]);
+      });
+  }
+
+  function handleCsvDrop(e: DragEvent<HTMLDivElement>) {
+    e.preventDefault();
+    const file = e.dataTransfer.files?.[0];
+    if (file) handleCsvFile(file);
+  }
+
+  function handleCsvSelect(e: ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (file) handleCsvFile(file);
+  }
+
+  async function executeBulkImport() {
+    if (importRows.length === 0) return;
+    setImportProgress({ total: importRows.length, current: 0 });
+    const logs: string[] = [];
+
+    // Caches keyed by code so repeated codes across rows only hit the API once.
+    // Plain objects (not the built-in Map) — `Map` is shadowed in this file by the
+    // lucide-react `Map` icon imported above.
+    const countryCache: Record<string, string> = {}; // iso2 -> id
+    const stateCache: Record<string, string> = {}; // `${countryId}:${code}` -> id
+    const districtCache: Record<string, string> = {}; // `${stateId}:${code}` -> id
+    const cityCache: Record<string, string> = {}; // `${districtId}:${code}` -> id
+
+    async function findOrCreateCountry(code: string, name: string): Promise<string | null> {
+      if (!code) return null;
+      const cached = countryCache[code];
+      if (cached) return cached;
+      const existing = await apiGet<{ countries: CountryRow[] }>("/api/erp/locations/countries");
+      const match = existing.countries.find((c) => (c.iso2 || "").toUpperCase() === code);
+      if (match) { countryCache[code] = match.id; return match.id; }
+      const res = await apiPost<{ country: CountryRow }>("/api/erp/locations/countries", { name: name || code, iso2: code });
+      countryCache[code] = res.country.id;
+      return res.country.id;
+    }
+
+    async function findOrCreateState(countryId: string, code: string, name: string): Promise<string | null> {
+      if (!code) return null;
+      const key = `${countryId}:${code}`;
+      const cached = stateCache[key];
+      if (cached) return cached;
+      const existing = await apiGet<{ states: StateRow[] }>(`/api/erp/locations/states?countryId=${countryId}`);
+      const match = existing.states.find((s) => (s.code || "").toUpperCase() === code);
+      if (match) { stateCache[key] = match.id; return match.id; }
+      const res = await apiPost<{ state: StateRow }>("/api/erp/locations/states", { countryId, name: name || code, code });
+      stateCache[key] = res.state.id;
+      return res.state.id;
+    }
+
+    async function findOrCreateDistrict(countryId: string, stateId: string, code: string, name: string): Promise<string | null> {
+      if (!code) return null;
+      const key = `${stateId}:${code}`;
+      const cached = districtCache[key];
+      if (cached) return cached;
+      const existing = await apiGet<{ districts: DistrictRow[] }>(`/api/erp/locations/districts?stateProvinceId=${stateId}`);
+      const match = existing.districts.find((d) => (d.code || "").toUpperCase() === code);
+      if (match) { districtCache[key] = match.id; return match.id; }
+      const res = await apiPost<{ district: DistrictRow }>("/api/erp/locations/districts", { countryId, stateProvinceId: stateId, name: name || code, code });
+      districtCache[key] = res.district.id;
+      return res.district.id;
+    }
+
+    async function findOrCreateCity(countryId: string, stateId: string, districtId: string, code: string, name: string): Promise<string | null> {
+      if (!code) return null;
+      const key = `${districtId}:${code}`;
+      const cached = cityCache[key];
+      if (cached) return cached;
+      const existing = await apiGet<{ cities: CityRow[] }>(
+        `/api/erp/locations/cities?countryId=${countryId}&stateProvinceId=${stateId}&districtId=${districtId}`
+      );
+      const match = existing.cities.find((c) => (c.code || "").toUpperCase() === code);
+      if (match) { cityCache[key] = match.id; return match.id; }
+      const res = await apiPost<{ city: CityRow }>("/api/erp/locations/cities", { countryId, stateProvinceId: stateId, districtId, name: name || code, code });
+      cityCache[key] = res.city.id;
+      return res.city.id;
+    }
+
+    let successCount = 0;
+    let errorCount = 0;
+
+    for (let i = 0; i < importRows.length; i++) {
+      const row = importRows[i];
+      try {
+        const countryId = await findOrCreateCountry(row.countryCode, row.countryName);
+        if (!countryId) throw new Error("Country Code is required");
+        const stateId = row.stateCode ? await findOrCreateState(countryId, row.stateCode, row.stateName) : null;
+        const districtId = stateId && row.cityCode ? await findOrCreateDistrict(countryId, stateId, row.cityCode, row.cityName) : null;
+        if (districtId && stateId && row.tehsilCode) {
+          await findOrCreateCity(countryId, stateId, districtId, row.tehsilCode, row.tehsilName);
+        }
+        successCount++;
+        logs.push(`Row ${i + 1}: OK — ${row.countryCode}${row.stateCode ? "/" + row.stateCode : ""}${row.cityCode ? "/" + row.cityCode : ""}${row.tehsilCode ? "/" + row.tehsilCode : ""}`);
+      } catch (e: any) {
+        errorCount++;
+        logs.push(`Row ${i + 1}: FAILED — ${e?.message || String(e)}`);
+      }
+      setImportProgress({ total: importRows.length, current: i + 1 });
+      setImportLogs([...logs]);
+    }
+
+    logs.push(`Import complete: ${successCount} succeeded, ${errorCount} failed.`);
+    setImportLogs([...logs]);
+    setImportProgress(null);
+    setImportRows([]);
+    showBanner(errorCount === 0 ? "success" : "info", `Bulk import finished: ${successCount} succeeded, ${errorCount} failed.`);
+    refreshAllData();
   }
 
   // Deletions

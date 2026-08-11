@@ -2,7 +2,7 @@
 
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import { DocumentAttachmentIcon } from "@/components/documents/document-attachment-icon";
-import { useEffect, useMemo, useState, Fragment } from "react";
+import { useCallback, useEffect, useMemo, useState, Fragment } from "react";
 import { createPortal } from "react-dom";
 import {
   BadgeDollarSign,
@@ -48,6 +48,10 @@ import { openProformaInvoiceWindow } from "@/lib/reports/open-proforma-invoice-w
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
+import type { MultilingualText } from "@/lib/i18n/multilingual-translator";
+import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/purchase-order-translations";
+import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
 
 type PurchaseReport = {
   id: string;
@@ -84,6 +88,7 @@ type PurchaseReport = {
   confirmationStatus?: string;
   containerStatus?: string;
   form_data?: any;
+  translations?: Record<string, Partial<MultilingualText>>;
   supplier_company_id?: string;
   audit: {
     userName: string;
@@ -91,6 +96,18 @@ type PurchaseReport = {
     branchCode: string;
   };
 };
+
+function localizedReportValue(
+  row: PurchaseReport,
+  field: string,
+  lang: SupportedLanguage,
+  fallback: string
+) {
+  const translated = resolveVerifiedTranslation(row.translations?.[field], lang);
+  if (translated) return translated;
+  // A source-language fallback would falsely present English as Urdu/Arabic/etc.
+  return lang === "en" && fallback ? fallback : translationPendingLabel(lang);
+}
 
 type ApiPayload = {
   reports: PurchaseReport[];
@@ -110,7 +127,7 @@ type CountryTransferSummary = {
   purchaseCurrency: string;
   baseCurrency: string;
   totalOrders: number;
-  
+
   totalPurchaseAmountUSD: number;
   transferredAmountUSD: number;
   pendingAmountUSD: number;
@@ -133,10 +150,10 @@ export type DashboardSummaryData = {
   userName: string;
   userId: string;
   role: string;
-  
+
   totalTransactions: number;
   localCurrency: string;
-  
+
   // Left side (Foreign Currencies)
   foreignCurrencies: Record<string, PurchaseCurrencySummaryFC>;
   totalAllFC: {
@@ -144,7 +161,7 @@ export type DashboardSummaryData = {
     advancePaid: number;
     remainingBalance: number;
   };
-  
+
   // Right side (Local Currency)
   totalPurchaseLC: number;
   advancePaidLC: number;
@@ -157,7 +174,7 @@ function getDashboardSummaryData(rows: PurchaseReport[], session: any): Dashboar
   const firstRow = rows[0];
   const country = firstRow.countryName || session?.countryName || "Unknown";
   const branchName = session?.branchName || "Main Branch";
-  
+
   let baseCurrencyFallback = firstRow?.form_data?.form?.secondaryCurrency?.split(" ")?.[0];
   if (!baseCurrencyFallback) {
     const c = country.toUpperCase();
@@ -166,7 +183,7 @@ function getDashboardSummaryData(rows: PurchaseReport[], session: any): Dashboar
     else if (c.includes("INDIA") || c === "IN") baseCurrencyFallback = "INR";
     else baseCurrencyFallback = "PKR";
   }
-                             
+
   const localCurRaw = baseCurrencyFallback;
   const localCur = (localCurRaw === "USD") ? "PKR" : localCurRaw;
 
@@ -176,13 +193,13 @@ function getDashboardSummaryData(rows: PurchaseReport[], session: any): Dashboar
     userName: session?.name || session?.username || session?.user?.fullName || "SUPER ADMIN",
     userId: session?.userId || session?.user?.id || "SA001",
     role: session?.role || "Super Admin",
-    
+
     totalTransactions: rows.length,
     localCurrency: localCur,
-    
+
     foreignCurrencies: {},
     totalAllFC: { totalPurchase: 0, advancePaid: 0, remainingBalance: 0 },
-    
+
     totalPurchaseLC: 0,
     advancePaidLC: 0,
     remainingBalanceLC: 0,
@@ -210,11 +227,11 @@ function getDashboardSummaryData(rows: PurchaseReport[], session: any): Dashboar
       || row.form_data?.workflow?.journalStatus === "Posted"
       || row.form_data?.workflow?.journalStatus?.toLowerCase() === "posted"
       || (row as any).ledger_posting_status === "transferred";
-      
+
     const purchaseAmountRaw = parseNumber(row.totalPurchaseAmount || row.purchaseAmount || 0);
     const exRateRaw = parseNumber((row as any).exchange_rate || row.form_data?.goodsEntries?.[0]?.exchangeRate || row.form_data?.goodsEntries?.[0]?.rate2 || 1);
     const exRate = exRateRaw > 0 ? exRateRaw : 1;
-    
+
     const invoiceAmountFC = purchaseAmountRaw;
     const transferredFC = isPosted ? purchaseAmountRaw : 0;
     const remainingFC = isPosted ? 0 : purchaseAmountRaw;
@@ -234,7 +251,7 @@ function getDashboardSummaryData(rows: PurchaseReport[], session: any): Dashboar
     summary.foreignCurrencies[foreignCur].totalPurchase += invoiceAmountFC;
     summary.foreignCurrencies[foreignCur].advancePaid += transferredFC;
     summary.foreignCurrencies[foreignCur].remainingBalance += remainingFC;
-    
+
     summary.totalAllFC.totalPurchase += invoiceAmountFC;
     summary.totalAllFC.advancePaid += transferredFC;
     summary.totalAllFC.remainingBalance += remainingFC;
@@ -248,19 +265,19 @@ function getDashboardSummaryData(rows: PurchaseReport[], session: any): Dashboar
 }
 
 const getFlag = (country: string) => {
-  if (!country) return "🏳️";
+  if (!country) return "";
   const c = country.toUpperCase();
-  if (c.includes("PAKISTAN")) return "🇵🇰";
-  if (c.includes("UNITED ARAB") || c === "UAE") return "🇦🇪";
-  if (c.includes("UNITED STATES") || c === "USA") return "🇺🇸";
-  if (c.includes("SAUDI")) return "🇸🇦";
-  if (c.includes("CHINA")) return "🇨🇳";
-  if (c.includes("INDIA")) return "🇮🇳";
-  if (c.includes("AFGHANISTAN")) return "🇦🇫";
-  if (c.includes("UNITED KINGDOM") || c === "UK") return "🇬🇧";
-  if (c.includes("CANADA")) return "🇨🇦";
-  if (c.includes("AUSTRALIA")) return "🇦🇺";
-  return "🏳️";
+  if (c.includes("PAKISTAN")) return "";
+  if (c.includes("UNITED ARAB") || c === "UAE") return "";
+  if (c.includes("UNITED STATES") || c === "USA") return "";
+  if (c.includes("SAUDI")) return "";
+  if (c.includes("CHINA")) return "";
+  if (c.includes("INDIA")) return "";
+  if (c.includes("AFGHANISTAN")) return "";
+  if (c.includes("UNITED KINGDOM") || c === "UK") return "";
+  if (c.includes("CANADA")) return "";
+  if (c.includes("AUSTRALIA")) return "";
+  return "";
 };
 
 const sampleReports: PurchaseReport[] = [
@@ -747,10 +764,10 @@ function getCurrencySymbol(c: string) {
   if (!c) return "";
   const upper = c.toUpperCase();
   if (upper === "USD") return "$";
-  if (upper === "AED") return "د.إ";
-  if (upper === "PKR") return "₨";
-  if (upper === "AFN") return "؋";
-  if (upper === "INR") return "₹";
+  if (upper === "AED") return "Ã˜Â¯.Ã˜Â¥";
+  if (upper === "PKR") return "â�a¨";
+  if (upper === "AFN") return "Ã˜-¹";
+  if (upper === "INR") return "â�a¹";
   return upper;
 }
 
@@ -924,19 +941,19 @@ function DashboardCard({ icon, label, value, sub }: { icon: React.ReactNode; lab
   );
 }
 
-function SelectFilter({ label, value, options, onChange }: { label: string; value: string; options: string[]; onChange: (value: string) => void }) {
+function SelectFilter({ lang, label, value, options, onChange }: { lang: SupportedLanguage; label: string; value: string; options: string[]; onChange: (value: string) => void }) {
   return (
     <label className="space-y-1">
-      <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{label}</span>
+      <span className="text-[11px] font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">{translateHeader(lang, label)}</span>
       <select
         value={value}
         onChange={(event) => onChange(event.target.value)}
         className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm shadow-sm outline-none transition focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950"
       >
-        <option value="all">All</option>
+        <option value="all">{translateHeader(lang, "All")}</option>
         {options.map((option) => (
           <option key={option} value={option}>
-            {option}
+            {translateHeader(lang, option)}
           </option>
         ))}
       </select>
@@ -944,48 +961,50 @@ function SelectFilter({ label, value, options, onChange }: { label: string; valu
   );
 }
 
-function PurchaseReportActionsMenu({ rows, onExport }: { rows: PurchaseReport[]; onExport: () => void }) {
+function PurchaseReportActionsMenu({ lang, rows, onExport }: { lang: SupportedLanguage; rows: PurchaseReport[]; onExport: () => void }) {
+  const tr = (label: string) => translateHeader(lang, label);
   return (
     <ViewportActionMenu
-      ariaLabel="Report actions"
+      ariaLabel={tr("Report actions")}
       buttonClassName="flex h-9 w-10 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 dark:hover:bg-slate-900"
       trigger={<MoreVertical className="h-4 w-4" />}
       menuClassName="border-slate-200 bg-white text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
     >
       {(close) => (
         <>
-          <ActionItem icon={<Eye />} label="Plate View" onClick={() => close()} />
-          <ActionItem icon={<DownloadActionIcon />} label="Download" onClick={() => { close(); onExport(); }} />
-          <ActionItem icon={<FileSpreadsheet />} label="Export Excel" onClick={() => { close(); onExport(); }} />
-          <ActionItem icon={<DownloadActionIcon />} label="Export PDF" onClick={() => { close(); window.print(); }} />
-          <ActionItem icon={<Printer />} label="Print" onClick={() => { close(); window.print(); }} />
-          <div className="border-t border-slate-200 px-3 py-2 text-[11px] text-slate-500 dark:border-slate-800">{rows.length} rows</div>
+          <ActionItem icon={<Eye />} label={tr("Plate View")} onClick={() => close()} />
+          <ActionItem icon={<DownloadActionIcon />} label={tr("Download")} onClick={() => { close(); onExport(); }} />
+          <ActionItem icon={<FileSpreadsheet />} label={tr("Export Excel")} onClick={() => { close(); onExport(); }} />
+          <ActionItem icon={<DownloadActionIcon />} label={tr("Export PDF")} onClick={() => { close(); window.print(); }} />
+          <ActionItem icon={<Printer />} label={tr("Print")} onClick={() => { close(); window.print(); }} />
+          <div className="border-t border-slate-200 px-3 py-2 text-[11px] text-slate-500 dark:border-slate-800">{rows.length} {tr("Records")}</div>
         </>
       )}
     </ViewportActionMenu>
   );
 }
 
-function PurchaseRowActionsMenu({ onSelect, onEdit, onPrint, onExportPdf }: { onSelect: () => void; onEdit: () => void; onPrint: () => void; onExportPdf: () => void }) {
+function PurchaseRowActionsMenu({ lang, onSelect, onEdit, onPrint, onExportPdf }: { lang: SupportedLanguage; onSelect: () => void; onEdit: () => void; onPrint: () => void; onExportPdf: () => void }) {
+  const tr = (label: string) => translateHeader(lang, label);
   return (
     <ViewportActionMenu
-      ariaLabel="Row actions"
+      ariaLabel={tr("Row actions")}
       buttonClassName="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 bg-background hover:bg-muted dark:border-slate-800"
       trigger={<MoreVertical className="h-4 w-4" />}
       menuClassName="border-slate-200 bg-white text-slate-900 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
     >
       {(close) => (
         <>
-          <ActionItem icon={<Eye />} label="View Details" onClick={() => { close(); onSelect(); }} />
-          <ActionItem icon={<Edit3 />} label="Edit" onClick={() => { close(); onEdit(); }} />
-          <ActionItem icon={<Landmark />} label="Journal" onClick={() => { close(); onSelect(); }} />
-          <ActionItem icon={<WalletCards />} label="Payment History" onClick={() => { close(); onSelect(); }} />
-          <ActionItem icon={<Container />} label="Container Details" onClick={() => { close(); onSelect(); }} />
-          <ActionItem icon={<FileText />} label="Documents" onClick={() => { close(); onSelect(); }} />
-          <ActionItem icon={<ClipboardList />} label="Timeline" onClick={() => { close(); onSelect(); }} />
-          <ActionItem icon={<Printer />} label="Print" onClick={() => { close(); onPrint(); }} />
-          <ActionItem icon={<DownloadActionIcon />} label="Export PDF" onClick={() => { close(); onExportPdf(); }} />
-          <ActionItem icon={<FileText />} label="Proforma Invoice" onClick={() => { close(); onExportPdf(); }} />
+          <ActionItem icon={<Eye />} label={tr("View Details")} onClick={() => { close(); onSelect(); }} />
+          <ActionItem icon={<Edit3 />} label={tr("Edit")} onClick={() => { close(); onEdit(); }} />
+          <ActionItem icon={<Landmark />} label={tr("Journal")} onClick={() => { close(); onSelect(); }} />
+          <ActionItem icon={<WalletCards />} label={tr("Payment History")} onClick={() => { close(); onSelect(); }} />
+          <ActionItem icon={<Container />} label={tr("Container Details")} onClick={() => { close(); onSelect(); }} />
+          <ActionItem icon={<FileText />} label={tr("Documents")} onClick={() => { close(); onSelect(); }} />
+          <ActionItem icon={<ClipboardList />} label={tr("Timeline")} onClick={() => { close(); onSelect(); }} />
+          <ActionItem icon={<Printer />} label={tr("Print")} onClick={() => { close(); onPrint(); }} />
+          <ActionItem icon={<DownloadActionIcon />} label={tr("Export PDF")} onClick={() => { close(); onExportPdf(); }} />
+          <ActionItem icon={<FileText />} label={tr("Proforma Invoice")} onClick={() => { close(); onExportPdf(); }} />
         </>
       )}
     </ViewportActionMenu>
@@ -1000,19 +1019,21 @@ function ActionItem({ icon, label, onClick }: { icon: React.ReactNode; label: st
   );
 }
 
-function DashboardSummaryHeader({ 
-  summary, 
-  mode, 
+function DashboardSummaryHeader({
+  summary,
+  mode,
+  lang,
   isSuperAdmin,
   rows,
   expandedCountries,
   setExpandedCountries,
   selectedCountryForSummary,
   setSelectedCountryForSummary
-}: { 
-  summary: DashboardSummaryData; 
-  mode: string; 
-  isSuperAdmin?: boolean; 
+}: {
+  summary: DashboardSummaryData;
+  mode: string;
+  lang: SupportedLanguage;
+  isSuperAdmin?: boolean;
   rows?: PurchaseReport[];
   expandedCountries?: Record<string, boolean>;
   setExpandedCountries?: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
@@ -1020,12 +1041,13 @@ function DashboardSummaryHeader({
   setSelectedCountryForSummary?: (c: string | null) => void;
 }) {
   if (!summary) return null;
+  const tr = (value: string) => translateHeader(lang, value);
 
   const notTransferredPercentLC = summary.totalPurchaseLC > 0 ? (summary.remainingBalanceLC / summary.totalPurchaseLC) * 100 : 0;
   const numCurrencies = Object.keys(summary.foreignCurrencies).length;
   const reportType = mode === "advance" ? "Advance Payment Summary" : mode === "credit" ? "Credit Payment Summary" : mode === "transfer" ? "Transfer Payment Summary" : "Purchase Booking Summary";
   const now = new Date();
-  
+
   // Format Date & Time based on Pakistan time (or local system)
   const dateStr = now.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
   const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase();
@@ -1091,7 +1113,7 @@ function DashboardSummaryHeader({
       const country = normalizeCountryName(rawCountry);
       const branch = row.branchName || "Main Branch";
       const purchaseCurrency = String(row.currency || row.form_data?.form?.currencyType || row.form_data?.form?.purchaseCurrency || "USD").toUpperCase();
-      
+
       const purchaseAmt = parseNumber(row.totalPurchaseAmount || row.purchaseAmount || 0);
       const exRateRaw = parseNumber((row as any).exchange_rate || row.form_data?.form?.exchangeRate || row.form_data?.goodsEntries?.[0]?.exchangeRate || row.form_data?.goodsEntries?.[0]?.rate2 || 1);
       const exRate = exRateRaw > 0 ? exRateRaw : 1;
@@ -1148,7 +1170,7 @@ function DashboardSummaryHeader({
           remainingLocal: 0
         };
       }
-      
+
       const b = g.branches[branch];
       b.purchasesByCurrency[purchaseCurrency] = (b.purchasesByCurrency[purchaseCurrency] || 0) + purchaseAmt;
       b.paidLocal += transferredLC;
@@ -1165,7 +1187,7 @@ function DashboardSummaryHeader({
     if (!summaryRows || summaryRows.length === 0) {
       return (
         <div className="text-center py-6 text-slate-400 dark:text-slate-500 text-xs font-semibold">
-          No summary data available
+          {tr("No summary data available")}
         </div>
       );
     }
@@ -1187,16 +1209,16 @@ function DashboardSummaryHeader({
           const isExpanded = !!expandedSummaryCountries[r.country];
 
           return (
-            <div 
+            <div
               key={idx}
               className={cn(
                 "rounded-xl border shadow-sm transition-all bg-white dark:bg-slate-900 overflow-hidden flex flex-col",
-                isSelected 
-                  ? "border-blue-500 ring-1 ring-blue-500 dark:border-blue-400 dark:ring-blue-400" 
+                isSelected
+                  ? "border-blue-500 ring-1 ring-blue-500 dark:border-blue-400 dark:ring-blue-400"
                   : "border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-slate-600"
               )}
             >
-              <div 
+              <div
                 className={cn(
                   "px-4 py-3 flex items-center justify-between cursor-pointer border-b",
                   isSelected ? "bg-blue-50/50 dark:bg-blue-900/20 border-blue-100 dark:border-blue-900/30" : "bg-slate-50/50 dark:bg-slate-800/20 border-slate-100 dark:border-slate-800"
@@ -1221,7 +1243,7 @@ function DashboardSummaryHeader({
                 <div className="flex flex-col items-end">
                   <span className="text-[10px] font-black text-slate-800 dark:text-slate-200 bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">{r.currency}</span>
                   <span className="text-[9px] text-slate-400 mt-0.5 flex items-center gap-0.5">
-                    {isExpanded ? "Hide Branches" : "View Branches"} {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
+                    {tr(isExpanded ? "Hide Branches" : "View Branches")} {isExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3" />}
                   </span>
                 </div>
               </div>
@@ -1229,7 +1251,7 @@ function DashboardSummaryHeader({
               <div className="p-4 flex flex-col gap-4 flex-1">
                 {/* Purchases Section */}
                 <div>
-                  <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 border-b border-slate-100 dark:border-slate-800 pb-1">Total Purchases</div>
+                  <div className="text-[9px] font-bold text-slate-400 uppercase tracking-wider mb-1.5 border-b border-slate-100 dark:border-slate-800 pb-1">{tr("Total Purchases")}</div>
                   <div className="space-y-1">
                     {Object.entries(r.purchasesByCurrency).map(([cur, amt]) => (
                       <div key={cur} className="flex justify-between items-center text-[11px]">
@@ -1238,7 +1260,7 @@ function DashboardSummaryHeader({
                       </div>
                     ))}
                     {Object.keys(r.purchasesByCurrency).length === 0 && (
-                      <div className="text-[11px] font-medium text-slate-400">No purchases</div>
+                      <div className="text-[11px] font-medium text-slate-400">{tr("No purchases")}</div>
                     )}
                   </div>
                 </div>
@@ -1246,11 +1268,11 @@ function DashboardSummaryHeader({
                 {/* Local Currency Totals */}
                 <div className="bg-slate-50 dark:bg-slate-800/40 rounded-lg p-2.5 space-y-2 border border-slate-100 dark:border-slate-800">
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="font-bold text-slate-600 dark:text-slate-300">Total Transferred</span>
+                    <span className="font-bold text-slate-600 dark:text-slate-300">{tr("Total Transferred")}</span>
                     <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-400">{money(r.paidLocal, r.currency)}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="font-bold text-slate-600 dark:text-slate-300">Outstanding Balance</span>
+                    <span className="font-bold text-slate-600 dark:text-slate-300">{tr("Outstanding Balance")}</span>
                     <span className="font-mono font-extrabold text-rose-600 dark:text-rose-400">{money(r.remainingLocal, r.currency)}</span>
                   </div>
                 </div>
@@ -1258,15 +1280,15 @@ function DashboardSummaryHeader({
                 {/* Dates */}
                 <div className="mt-auto grid grid-cols-2 gap-y-2 gap-x-4 text-[9px]">
                   <div>
-                    <div className="text-slate-400 font-semibold mb-0.5">First Entry Date</div>
+                    <div className="text-slate-400 font-semibold mb-0.5">{tr("First Entry Date")}</div>
                     <div className="font-bold text-slate-700 dark:text-slate-300">{formatDate(r.firstEntryDate)}</div>
                   </div>
                   <div>
-                    <div className="text-slate-400 font-semibold mb-0.5">Last Payment Date</div>
+                    <div className="text-slate-400 font-semibold mb-0.5">{tr("Last Payment Date")}</div>
                     <div className="font-bold text-slate-700 dark:text-slate-300">{formatDate(r.lastPaymentDate)}</div>
                   </div>
                   <div className="col-span-2">
-                    <div className="text-slate-400 font-semibold mb-0.5">Outstanding Since / Due Date</div>
+                    <div className="text-slate-400 font-semibold mb-0.5">{tr("Outstanding Since / Due Date")}</div>
                     <div className={cn("font-bold", r.outstandingSince !== Infinity ? "text-rose-600 dark:text-rose-400" : "text-slate-700 dark:text-slate-300")}>
                       {formatDate(r.outstandingSince)}
                     </div>
@@ -1281,12 +1303,12 @@ function DashboardSummaryHeader({
                     <span>{r.country} Branches</span>
                     <span className="bg-slate-200 dark:bg-slate-800 px-1.5 py-0.5 rounded">{r.branches.length}</span>
                   </div>
-                  
+
                   <div className="space-y-3">
                     {r.branches.map((b, bIdx) => (
                       <div key={bIdx} className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-md p-2">
                         <div className="font-extrabold uppercase text-[10px] text-slate-700 dark:text-slate-200 mb-1.5 pb-1 border-b border-slate-100 dark:border-slate-800">{b.branch}</div>
-                        
+
                         <div className="space-y-1 mb-2">
                           {Object.entries(b.purchasesByCurrency).map(([cur, amt]) => (
                             <div key={cur} className="flex justify-between items-center text-[9px]">
@@ -1295,10 +1317,10 @@ function DashboardSummaryHeader({
                             </div>
                           ))}
                         </div>
-                        
+
                         <div className="flex justify-between items-center text-[9px] mt-1 pt-1 border-t border-slate-50 dark:border-slate-800 border-dashed">
-                          <span className="text-slate-500">Paid: <span className="font-mono font-bold text-emerald-600">{money(b.paidLocal, r.currency)}</span></span>
-                          <span className="text-slate-500">Bal: <span className="font-mono font-bold text-rose-600">{money(b.remainingLocal, r.currency)}</span></span>
+                          <span className="text-slate-500">{tr("Paid")}: <span className="font-mono font-bold text-emerald-600">{money(b.paidLocal, r.currency)}</span></span>
+                          <span className="text-slate-500">{tr("Balance")}: <span className="font-mono font-bold text-rose-600">{money(b.remainingLocal, r.currency)}</span></span>
                         </div>
                       </div>
                     ))}
@@ -1340,9 +1362,9 @@ function DashboardSummaryHeader({
             {getFlag(selectedCountryForSummary)}
             <span>{selectedCountryForSummary}</span>
             {setSelectedCountryForSummary && (
-              <button 
-                type="button" 
-                onClick={() => setSelectedCountryForSummary(null)} 
+              <button
+                type="button"
+                onClick={() => setSelectedCountryForSummary(null)}
                 className="text-[9px] font-black text-rose-500 hover:text-rose-600 dark:hover:text-rose-455 underline ml-1 cursor-pointer"
               >
                 (Reset)
@@ -1367,27 +1389,27 @@ function DashboardSummaryHeader({
     const body = (
       <div className="flex flex-col gap-4 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
         <div className="flex justify-between items-center">
-          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></div> Total Transactions:</span>
+          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg></div> {tr("TOTAL TRANSACTIONS")}:</span>
           <span className="font-black text-slate-800 dark:text-slate-200">{summary.totalTransactions}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div> Purchase Currencies:</span>
+          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" x2="22" y1="12" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div> {tr("PURCHASE CURRENCIES")}:</span>
           <span className="font-black text-slate-800 dark:text-slate-200">{numCurrencies}</span>
         </div>
         <div className="flex justify-between items-center mt-2">
-          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5" y="0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div> Total Purchase (All):</span>
+          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-slate-400"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.5" y="0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div> {tr("TOTAL PURCHASE (ALL)")}:</span>
           <span className="font-black text-slate-800 dark:text-slate-200 font-mono">{summary.totalAllFC.totalPurchase.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-emerald-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></div> Total Transferred (All):</span>
+          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-emerald-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></div> {tr("TOTAL TRANSFERRED (ALL)")}:</span>
           <span className="font-black text-slate-800 dark:text-slate-200 font-mono">{summary.totalAllFC.advancePaid.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
         </div>
         <div className="flex justify-between items-center pt-2 mt-auto border-t border-dashed border-slate-100 dark:border-slate-800">
-          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-rose-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div> Total Pending (All):</span>
+          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-rose-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div> {tr("TOTAL PENDING (ALL)")}:</span>
           <span className="font-black text-rose-600 dark:text-rose-400 font-mono">{summary.totalAllFC.remainingBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-rose-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div> % Pending:</span>
+          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-rose-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div> {tr("% PENDING")}:</span>
           <span className="font-black text-rose-600 dark:text-rose-400">{summary.totalAllFC.totalPurchase > 0 ? ((summary.totalAllFC.remainingBalance / summary.totalAllFC.totalPurchase) * 100).toFixed(2) : "0.00"}%</span>
         </div>
       </div>
@@ -1401,7 +1423,7 @@ function DashboardSummaryHeader({
           <div className="bg-purple-600 p-1 rounded-full text-white">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
           </div>
-          <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">2. PURCHASE SUMMARY (ALL CURRENCIES)</h4>
+          <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">2. {tr("PURCHASE SUMMARY (ALL CURRENCIES)")}</h4>
         </div>
         <div className="p-4 flex-1">
           {body}
@@ -1414,19 +1436,19 @@ function DashboardSummaryHeader({
     const body = (
       <div className="flex flex-col gap-4 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
         <div className="flex justify-between items-center">
-          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-emerald-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.55" y="0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div> Total Amount ({summary.localCurrency}):</span>
+          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-emerald-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20M17 5H9.5a3.55" y="0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div> {tr("TOTAL AMOUNT")} ({summary.localCurrency}):</span>
           <span className="font-black text-slate-800 dark:text-slate-200 font-mono">{summary.totalPurchaseLC.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
         </div>
         <div className="flex justify-between items-center mt-4">
-          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-emerald-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></div> Transferred ({summary.localCurrency}):</span>
+          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-emerald-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg></div> {tr("TRANSFERRED")} ({summary.localCurrency}):</span>
           <span className="font-black text-slate-800 dark:text-slate-200 font-mono">{summary.advancePaidLC.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
         </div>
         <div className="flex justify-between items-center pt-2 mt-auto border-t border-dashed border-slate-100 dark:border-slate-800">
-          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-rose-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div> Pending ({summary.localCurrency}):</span>
+          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-rose-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg></div> {tr("PENDING")} ({summary.localCurrency}):</span>
           <span className="font-black text-rose-600 dark:text-rose-400 font-mono">{summary.remainingBalanceLC.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-rose-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div> % Pending:</span>
+          <span className="flex items-center gap-2"><div className="w-4 flex justify-center text-rose-500"><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/></svg></div> {tr("% PENDING")}:</span>
           <span className="font-black text-rose-600 dark:text-rose-400">{notTransferredPercentLC.toFixed(2)}%</span>
         </div>
       </div>
@@ -1440,7 +1462,7 @@ function DashboardSummaryHeader({
           <div className="bg-emerald-600 p-1 rounded-full text-white">
             <svg xmlns="http://www.w3.org/2500/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="14" x="2" y="5" rx="2"/><line x1="2" x2="22" y1="10" y2="10"/></svg>
           </div>
-          <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-455 bg-emerald-50 dark:bg-emerald-900/10">3. FINAL OFFICE CURRENCY SUMMARY ({summary.localCurrency})</h4>
+          <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-455 bg-emerald-50 dark:bg-emerald-900/10">3. {tr("FINAL OFFICE CURRENCY SUMMARY")} ({summary.localCurrency})</h4>
         </div>
         <div className="p-4 flex-1">
           {body}
@@ -1453,27 +1475,27 @@ function DashboardSummaryHeader({
     const body = (
       <div className="flex flex-col gap-3.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
         <div className="flex justify-between items-center">
-          <span>Total Transactions:</span>
+          <span>{tr("TOTAL TRANSACTIONS")}:</span>
           <span className="font-bold text-slate-800 dark:text-slate-200">{summary.totalTransactions}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span>Purchase Currencies:</span>
+          <span>{tr("PURCHASE CURRENCIES")}:</span>
           <span className="font-bold text-slate-800 dark:text-slate-200">{numCurrencies}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span>Final Currency:</span>
+          <span>{tr("FINAL CURRENCY")}:</span>
           <span className="font-bold text-slate-800 dark:text-slate-200">{summary.localCurrency}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span>Exchange Rate Type:</span>
-          <span className="font-bold text-slate-800 dark:text-slate-200">Live</span>
+          <span>{tr("EXCHANGE RATE TYPE")}:</span>
+          <span className="font-bold text-slate-800 dark:text-slate-200">{tr("LIVE")}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span>Last Updated:</span>
+          <span>{tr("LAST UPDATED")}:</span>
           <span className="font-bold text-slate-800 dark:text-slate-200">{dateStr}, {timeStr}</span>
         </div>
         <div className="flex justify-between items-center">
-          <span>Report Type:</span>
+          <span>{tr("REPORT TYPE")}:</span>
           <span className="font-bold text-slate-800 dark:text-slate-200">{reportType}</span>
         </div>
       </div>
@@ -1487,7 +1509,7 @@ function DashboardSummaryHeader({
           <div className="bg-orange-600 p-1 rounded-full text-white">
             <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
           </div>
-          <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">4. TRANSACTION SUMMARY</h4>
+          <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">4. {tr("TRANSACTION SUMMARY")}</h4>
         </div>
         <div className="p-4 flex-1">
           {body}
@@ -1497,11 +1519,11 @@ function DashboardSummaryHeader({
   };
 
   const renderAllStepsContent = () => {
-    const avgPurchaseRate = summary.totalAllFC.totalPurchase > 0 
+    const avgPurchaseRate = summary.totalAllFC.totalPurchase > 0
       ? (summary.totalPurchaseLC / summary.totalAllFC.totalPurchase).toFixed(4)
       : "1.0000";
 
-    const avgAdvanceRate = summary.totalAllFC.advancePaid > 0 
+    const avgAdvanceRate = summary.totalAllFC.advancePaid > 0
       ? (summary.advancePaidLC / summary.totalAllFC.advancePaid).toFixed(4)
       : "1.0000";
 
@@ -1523,7 +1545,7 @@ function DashboardSummaryHeader({
               <span className="font-extrabold text-slate-850 dark:text-slate-200 font-sans tabular-nums">{summary.totalAllFC.totalPurchase.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Total Purchase ({summary.localCurrency}):</span>
+              <span>{tr("TOTAL PURCHASE")} ({summary.localCurrency}):</span>
               <span className="font-extrabold text-slate-850 dark:text-slate-200 font-sans tabular-nums">{summary.totalPurchaseLC.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
             </div>
             <div className="flex justify-between items-center">
@@ -1624,12 +1646,12 @@ function DashboardSummaryHeader({
       return ps === "posted" || ps === "transferred" || st === "paid" || st === "completed";
     }).length;
     const remainingEntries = totalGlobalEntries - transferredEntries;
-    
+
     let activeBranchesCount = 0;
     summaryRows.forEach(r => { activeBranchesCount += r.branches.length; });
 
     const formatMoney = (val: number) => val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    
+
     const adminCountry = summary.country || "United Arab Emirates";
     const adminBranch = summary.branchName || "Head Office";
     const adminUserId = summary.userId;
@@ -1651,36 +1673,36 @@ function DashboardSummaryHeader({
               <div className="bg-blue-600 p-1 rounded-full text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               </div>
-              <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">1. BRANCH & USER DETAILS</h4>
+              <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">1. {tr("BRANCH & USER DETAILS")}</h4>
             </div>
             <div className="p-4 flex flex-col gap-2.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
               <div className="flex justify-between items-center">
-                <span>Country:</span>
+                <span>{tr("COUNTRY")}:</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">{getFlag(adminCountry)} {adminCountry}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>Branch Name:</span>
+                <span>{tr("BRANCH NAME")}:</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{adminBranch}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>User ID:</span>
+                <span>{tr("USER ID")}:</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{adminUserId}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>User Name:</span>
+                <span>{tr("USER NAME")}:</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{summary.userName}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>Role:</span>
+                <span>{tr("ROLE")}:</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{summary.role}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>Date & Time:</span>
+                <span>{tr("DATE & TIME")}:</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200">{dateStr}, {timeStr}</span>
               </div>
               <div className="flex justify-between items-center mt-auto">
-                <span>Status:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">Active</span>
+                <span>{tr("STATUS")}:</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">{tr("ACTIVE")}</span>
               </div>
             </div>
           </div>
@@ -1691,23 +1713,23 @@ function DashboardSummaryHeader({
               <div className="bg-emerald-600 p-1 rounded-full text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
               </div>
-              <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">2. GLOBAL FINANCIAL SUMMARY</h4>
+              <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">2. {tr("GLOBAL FINANCIAL SUMMARY")}</h4>
             </div>
             <div className="p-4 flex flex-col gap-3 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
               <div className="flex justify-between items-center">
-                <span>Total Global Entries:</span>
+                <span>{tr("TOTAL GLOBAL ENTRIES")}:</span>
                 <span className="font-black text-slate-800 dark:text-slate-200">{totalGlobalEntries}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>Total Purchase ({summary.localCurrency}):</span>
+                <span>{tr("TOTAL PURCHASE")} ({summary.localCurrency}):</span>
                 <span className="font-black text-emerald-700 dark:text-emerald-400 font-mono">{formatMoney(summary.totalPurchaseLC)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-rose-600 dark:text-rose-500">Total Transferred ({summary.localCurrency}):</span>
+                <span className="text-rose-600 dark:text-rose-500">{tr("TOTAL TRANSFERRED")} ({summary.localCurrency}):</span>
                 <span className="font-black text-rose-700 dark:text-rose-400 font-mono">{formatMoney(summary.advancePaidLC)}</span>
               </div>
               <div className="flex justify-between items-center mt-1 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <span className="text-slate-600 dark:text-slate-400 uppercase font-bold">Balance ({summary.localCurrency}):</span>
+                <span className="text-slate-600 dark:text-slate-400 uppercase font-bold">{tr("BALANCE")} ({summary.localCurrency}):</span>
                 <span className="font-black text-slate-900 dark:text-slate-100 font-mono text-sm">{formatMoney(summary.remainingBalanceLC)}</span>
               </div>
             </div>
@@ -1719,34 +1741,34 @@ function DashboardSummaryHeader({
               <div className="bg-purple-600 p-1 rounded-full text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
               </div>
-              <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400 truncate">3. BILL ENTRIES SUMMARY</h4>
+              <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400 truncate">3. {tr("BILL ENTRIES SUMMARY")}</h4>
             </div>
             <div className="p-4 flex flex-col gap-3 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
               <div className="flex justify-between items-center">
-                <span>Total Bill Entries:</span>
+                <span>{tr("TOTAL BILL ENTRIES")}:</span>
                 <span className="font-black text-purple-700 dark:text-purple-400 font-mono">{totalGlobalEntries}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>Cleared Entries:</span>
+                <span>{tr("CLEARED ENTRIES")}:</span>
                 <span className="font-black text-emerald-600 dark:text-emerald-500 font-mono">{transferredEntries}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-rose-600 dark:text-rose-500">Remaining Entries:</span>
+                <span className="text-rose-600 dark:text-rose-500">{tr("REMAINING ENTRIES")}:</span>
                 <span className="font-black text-rose-700 dark:text-rose-400 font-mono">{remainingEntries}</span>
               </div>
               <div className="flex justify-between items-center mt-auto pt-2 border-t border-dashed border-slate-200 dark:border-slate-700">
-                <span>System Status:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-500">Online & Synced</span>
+                <span>{tr("SYSTEM STATUS")}:</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-500">{tr("ONLINE & SYNCED")}</span>
               </div>
             </div>
           </div>
 
           {/* Panel 4: All Countries Report Details (Interactive) */}
-          <div 
+          <div
             className={cn(
               "group flex flex-col rounded-xl border-2 bg-white shadow-sm dark:bg-slate-900 overflow-hidden cursor-pointer transition-colors",
-              showAllCountries 
-                ? "border-orange-400 dark:border-orange-600 shadow-md" 
+              showAllCountries
+                ? "border-orange-400 dark:border-orange-600 shadow-md"
                 : "border-slate-200 dark:border-slate-800 hover:border-orange-300 dark:hover:border-orange-700"
             )}
             onClick={toggleShowAllCountries}
@@ -1754,15 +1776,15 @@ function DashboardSummaryHeader({
             <div className="flex flex-col h-full outline-none">
               <div className={cn(
                 "flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 transition-colors",
-                showAllCountries 
-                  ? "bg-orange-100/80 dark:bg-orange-900/40" 
+                showAllCountries
+                  ? "bg-orange-100/80 dark:bg-orange-900/40"
                   : "bg-orange-50/50 dark:bg-orange-900/10 group-hover:bg-orange-100/50 dark:group-hover:bg-orange-900/30"
               )}>
                 <div className={cn("bg-orange-600 p-1 rounded-full text-white transition-transform duration-300", showAllCountries ? "rotate-90" : "rotate-0")}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                 </div>
-                <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400 flex-1">4. ALL COUNTRIES REPORT</h4>
-                <span className="text-[9px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded text-slate-500 font-bold">{showAllCountries ? "Hide Details" : "Show Details"}</span>
+                <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400 flex-1">4. {tr("ALL COUNTRIES REPORT")}</h4>
+                <span className="text-[9px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded text-slate-500 font-bold">{showAllCountries ? tr("HIDE DETAILS") : tr("SHOW DETAILS")}</span>
               </div>
               <div className="p-3 flex flex-col gap-1.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400 h-full overflow-y-auto max-h-[160px] scrollbar-thin">
                 {summaryRows.map((r, idx) => (
@@ -1770,13 +1792,13 @@ function DashboardSummaryHeader({
                      <span className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 truncate max-w-[120px]">
                        {getFlag(r.country)} {r.country}
                      </span>
-                     <span className="bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm text-[9px] whitespace-nowrap">{r.branches.length} Branches</span>
+                     <span className="bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm text-[9px] whitespace-nowrap">{r.branches.length} {tr("BRANCHES")}</span>
                    </div>
                 ))}
-                
+
                 <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
-                  {!showAllCountries && <span className="text-orange-600 dark:text-orange-500 font-bold uppercase text-[10px]">Show Report Details ↓</span>}
-                  {showAllCountries && <span className="text-orange-600 dark:text-orange-500 font-bold uppercase text-[10px]">Hide Report Details ↑</span>}
+                  {!showAllCountries && <span className="text-orange-600 dark:text-orange-500 font-bold uppercase text-[10px]">{tr("SHOW REPORT DETAILS")}</span>}
+                  {showAllCountries && <span className="text-orange-600 dark:text-orange-500 font-bold uppercase text-[10px]">{tr("HIDE REPORT DETAILS")}</span>}
                 </div>
               </div>
             </div>
@@ -1794,33 +1816,33 @@ function DashboardSummaryHeader({
                       {getFlag(r.country)} {r.country}
                     </span>
                     <span className="bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-                      {r.branches.length} Branches
+                      {r.branches.length} {tr("BRANCHES")}
                     </span>
                   </div>
                   <div className="p-4">
                     <div className="mb-4 flex flex-col gap-2 rounded-xl bg-slate-50 p-3 dark:bg-slate-950">
                       <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Currency</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tr("CURRENCY")}</span>
                         <span className="font-black text-slate-800 dark:text-slate-200 text-xs">{r.currency}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Purchase</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tr("TOTAL PURCHASE")}</span>
                         <span className="font-black text-rose-600 dark:text-rose-400 font-mono text-[11px]">{formatMoney(r.paidLocal + r.remainingLocal)}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Transferred</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tr("TOTAL TRANSFERRED")}</span>
                         <span className="font-black text-emerald-600 font-mono text-[11px]">{formatMoney(r.paidLocal)}</span>
                       </div>
                       <div className="mt-1 flex justify-between items-center border-t border-slate-200 pt-2 dark:border-slate-800">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Remaining Balance</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tr("REMAINING BALANCE")}</span>
                         <span className="font-black text-slate-800 dark:text-slate-200 font-mono text-sm">{formatMoney(r.remainingLocal)}</span>
                       </div>
                     </div>
-                    
+
                     <div className="space-y-3">
                       <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex justify-between items-center">
-                        <span>Branch Breakdown</span>
-                        <span className="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-[8px] dark:bg-slate-800">All</span>
+                        <span>{tr("BRANCH DETAILS BREAKDOWN")}</span>
+                        <span className="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-[8px] dark:bg-slate-800">{tr("ALL")}</span>
                       </h5>
                       {r.branches.map((b, bIdx) => (
                         <div key={bIdx} className="flex flex-col gap-1.5 rounded-lg border border-slate-100 p-2.5 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
@@ -1829,15 +1851,15 @@ function DashboardSummaryHeader({
                           </div>
                           <div className="grid grid-cols-2 gap-1 text-[9px]">
                             <div className="flex justify-between items-center">
-                              <span className="text-slate-400">Total Purch.</span>
+                              <span className="text-slate-400">{tr("TOTAL PURCHASE")}</span>
                               <span className="font-bold text-rose-500 font-mono">{formatMoney(b.paidLocal + b.remainingLocal)}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                              <span className="text-slate-400">Paid Adv</span>
+                              <span className="text-slate-400">{tr("TRANSFERRED")}</span>
                               <span className="font-bold text-emerald-500 font-mono">{formatMoney(b.paidLocal)}</span>
                             </div>
                             <div className="flex justify-between items-center col-span-2 pt-1 mt-1 border-t border-slate-100 dark:border-slate-800">
-                              <span className="text-slate-400">Rem. Bal</span>
+                              <span className="text-slate-400">{tr("REMAINING BALANCE")}</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{formatMoney(b.remainingLocal)}</span>
                             </div>
                           </div>
@@ -1863,36 +1885,36 @@ function DashboardSummaryHeader({
             <div className="bg-blue-600 p-1 rounded-full text-white">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
-            <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">1. BRANCH & USER DETAILS</h4>
+            <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">1. {tr("BRANCH & USER DETAILS")}</h4>
           </div>
           <div className="p-4 flex flex-col gap-2.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
             <div className="flex justify-between items-center">
-              <span>Country:</span>
+              <span>{tr("COUNTRY")}:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">{getFlag(summary.country)} {summary.country}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Branch Name:</span>
+              <span>{tr("BRANCH NAME")}:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{summary.branchName}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>User ID:</span>
+              <span>{tr("USER ID")}:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{summary.userId}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>User Name:</span>
+              <span>{tr("USER NAME")}:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{summary.userName}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Role:</span>
+              <span>{tr("ROLE")}:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{summary.role}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Date & Time:</span>
+              <span>{tr("DATE & TIME")}:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{dateStr}, {timeStr}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Status:</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-450 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">Active</span>
+              <span>{tr("STATUS")}:</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-450 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">{tr("ACTIVE")}</span>
             </div>
           </div>
         </div>
@@ -1913,6 +1935,7 @@ function DashboardSummaryHeader({
 export function PurchaseOrderManagementDashboard() {
   const router = useRouter();
   const activeLang = useActiveLanguage();
+  const tr = useCallback((label: string) => translateHeader(activeLang, label), [activeLang]);
   const [reports, setReports] = useState<PurchaseReport[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -2016,7 +2039,7 @@ export function PurchaseOrderManagementDashboard() {
       const body = await response.json();
       const payload = (body?.ok ? body.data : body) as ApiPayload;
       const rows = payload?.reports || [];
-      
+
       // Sort reports descending so that the newest created PO appears at the top
       const sortedRows = [...rows].sort((a, b) => {
         const dateA = new Date(a.bookingDate || a.purchaseDate || a.createdAt).getTime();
@@ -2035,14 +2058,14 @@ export function PurchaseOrderManagementDashboard() {
   const handleTransfer = async (selectedData?: any) => {
     const itemToTransfer = selectedData || selected;
     if (!itemToTransfer) return;
-    
+
     // Prevent duplicate transfer only if roznamcha_entry_id exists
     const hasRoznamchaEntry = Boolean(itemToTransfer.roznamcha_entry_id || itemToTransfer.form_data?.form?.roznamchaEntryId);
     if ((itemToTransfer.ledger_posting_status === "posted" || itemToTransfer.ledger_posting_status === "transferred") && hasRoznamchaEntry && !itemToTransfer.is_edited_since_transfer) {
       alert("This booking has already been transferred to Payment and Roznamcha.");
       return;
     }
-    
+
     setTransferring(true);
     try {
       const updatedFormData = {
@@ -2170,8 +2193,8 @@ export function PurchaseOrderManagementDashboard() {
         const lSt = String((r as any).ledgerPostingStatus || (r as any).ledger_posting_status || "").toUpperCase();
         const jSt = String((r as any).journalStatus || r.form_data?.workflow?.journalStatus || "").toUpperCase();
         const pSt = String(r.paymentStatus || "").toUpperCase();
-        return st === "POSTED" || st === "TRANSFERRED" 
-          || lSt === "POSTED" || lSt === "TRANSFERRED" 
+        return st === "POSTED" || st === "TRANSFERRED"
+          || lSt === "POSTED" || lSt === "TRANSFERRED"
           || jSt === "POSTED" || jSt === "TRANSFERRED"
           || pSt === "PAID" || pSt === "COMPLETED";
       };
@@ -2317,8 +2340,8 @@ export function PurchaseOrderManagementDashboard() {
   const pageHeaderContent = (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-4">
       <div>
-        <h1 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">Purchase Transfer Payment</h1>
-        <p className="text-xs text-slate-500 mt-0.5 dark:text-slate-400">Logistics ERP Master Console</p>
+        <h1 className="text-lg font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">{tr("Purchase Transfer Payment")}</h1>
+        <p className="text-xs text-slate-500 mt-0.5 dark:text-slate-400">{tr("Logistics ERP Master Console")}</p>
       </div>
     </div>
   );
@@ -2330,7 +2353,7 @@ export function PurchaseOrderManagementDashboard() {
         value={activeTab}
         onChange={(event) => setActiveTab(event.target.value as LifecycleTab)}
         className="h-9 min-w-[150px] rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-350 cursor-pointer"
-        aria-label="Select Stage"
+        aria-label={tr("Select Stage")}
       >
         {lifecycleTabs.map((tab) => {
           const count = tab === "Dashboard Overview"
@@ -2340,7 +2363,7 @@ export function PurchaseOrderManagementDashboard() {
               : reports.filter(r => lifecycleStage(r) === tab).length;
           return (
             <option key={tab} value={tab}>
-              {tab.toUpperCase()} ({count})
+              {tr(tab).toUpperCase()} ({count})
             </option>
           );
         })}
@@ -2352,7 +2375,7 @@ export function PurchaseOrderManagementDashboard() {
         <input
           value={searchText}
           onChange={(event) => setSearchText(event.target.value)}
-          placeholder="Search PO#, Supplier..."
+          placeholder={tr("Search PO#, Supplier...")}
           className="h-9 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3 text-xs text-slate-900 placeholder:text-slate-400 outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition dark:border-slate-800 dark:bg-slate-950 dark:text-slate-100"
         />
       </div>
@@ -2366,7 +2389,7 @@ export function PurchaseOrderManagementDashboard() {
         className="h-9 rounded-xl border-slate-200 font-bold text-xs"
       >
         <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" />
-        Filter
+        {tr("Filter")}
       </Button>
 
       {/* Reset Button */}
@@ -2378,11 +2401,11 @@ export function PurchaseOrderManagementDashboard() {
         className="h-9 rounded-xl border-slate-200 font-bold text-xs"
       >
         <RefreshCw className={loading ? "mr-1.5 h-3.5 w-3.5 animate-spin" : "mr-1.5 h-3.5 w-3.5"} />
-        Reset
+        {tr("Reset")}
       </Button>
 
       {/* Three-dots menu (ReportActions) */}
-      <PurchaseReportActionsMenu rows={filtered} onExport={() => downloadCsv(filtered)} />
+      <PurchaseReportActionsMenu lang={activeLang} rows={filtered} onExport={() => downloadCsv(filtered)} />
 
       {/* Calendar Date/Time Indicator */}
       <div className="flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
@@ -2398,7 +2421,7 @@ export function PurchaseOrderManagementDashboard() {
         className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 h-9 rounded-xl shadow-md shadow-blue-100 flex items-center gap-1.5"
       >
         <Plus className="h-4 w-4" />
-        New
+        {tr("New")}
       </Button>
     </div>
   );
@@ -2407,7 +2430,7 @@ export function PurchaseOrderManagementDashboard() {
     <div className="w-full max-w-none space-y-4 px-2 py-3 text-slate-900 dark:text-slate-100 sm:px-4">
       {titlePortal && createPortal(pageHeaderContent, titlePortal)}
       {actionsPortal && createPortal(pageActionsContent, actionsPortal)}
-      
+
       {(!titlePortal || !actionsPortal) && (
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between border-b pb-4">
           {pageHeaderContent}
@@ -2422,28 +2445,29 @@ export function PurchaseOrderManagementDashboard() {
           <div className="flex flex-wrap items-center justify-between border-b border-slate-100 dark:border-slate-850 pb-2.5">
             <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
               <div className="flex items-center gap-2">
-                <span className="text-slate-400">Branch Name:</span> 
+                <span className="text-slate-400">{tr("Branch Name")}:</span>
                 <span className="text-slate-800 dark:text-slate-200 font-bold uppercase">{lockedBranchName && lockedBranchName !== "QUETTA MAIN BRANCH" && lockedBranchName !== "Quetta" ? lockedBranchName : (session?.branchName && session.branchName !== "QUETTA MAIN BRANCH" && session.branchName !== "Quetta" ? session.branchName : (session?.countryName ? session.countryName + " MAIN BRANCH" : "UNITED ARAB EMIRATES MAIN BRANCH"))}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-slate-400">User Name:</span> 
+                <span className="text-slate-400">{tr("User Name")}:</span>
                 <span className="text-slate-800 dark:text-slate-200 font-bold">{session?.user?.fullName || "SUPER ADMIN"}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-slate-400">Date:</span> 
+                <span className="text-slate-400">{tr("Date")}:</span>
                 <span className="text-slate-800 dark:text-slate-200 font-bold">17 JUN 2026</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="text-slate-400">Time:</span> 
+                <span className="text-slate-400">{tr("Time")}:</span>
                 <span className="text-slate-800 dark:text-slate-200 font-bold">08:54 PM</span>
               </div>
             </div>
           </div>
 
           {dashboardSummary && (
-            <DashboardSummaryHeader 
-              summary={dashboardSummary} 
-              mode="transfer" 
+            <DashboardSummaryHeader
+              summary={dashboardSummary}
+              mode="transfer"
+              lang={activeLang}
               isSuperAdmin={isSuperAdmin}
               rows={filtered}
               expandedCountries={expandedCountries}
@@ -2460,19 +2484,19 @@ export function PurchaseOrderManagementDashboard() {
         <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-50 dark:bg-slate-900/60 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 mb-2 shadow-sm">
           <div className="flex items-center gap-2">
             <span className="text-xs font-extrabold text-slate-800 dark:text-slate-100 uppercase tracking-wider">
-              {lockedCountryName || session?.countryName || "Country"} - Branch Entry View
+               {lockedCountryName || session?.countryName || tr("Country")} - {tr("Branch Entry View")}
             </span>
           </div>
           <div className="flex items-center gap-3">
             <label className="flex items-center gap-2 text-xs font-semibold text-slate-600 dark:text-slate-400">
-              <span className="uppercase text-[10px] tracking-wider font-bold">Branch:</span>
+               <span className="uppercase text-[10px] tracking-wider font-bold">{tr("Branch")}:</span>
               <select
                 value={filters.branch}
                 disabled={!!lockedBranchName}
                 onChange={(e) => setFilters((f) => ({ ...f, branch: e.target.value }))}
                 className="h-8 rounded-lg border border-slate-250 bg-white px-3 text-xs font-bold text-slate-800 outline-none focus:border-blue-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-100 cursor-pointer"
               >
-                <option value="all">All Branches</option>
+                 <option value="all">{tr("All Branches")}</option>
                 {options.branches.map((b) => (
                   <option key={b} value={b}>
                     {b}
@@ -2489,9 +2513,9 @@ export function PurchaseOrderManagementDashboard() {
         <div className="flex flex-col items-center justify-center text-center w-full py-3 border-b border-slate-100 dark:border-slate-800/60">
           <h2 className="text-sm font-black tracking-widest text-slate-800 dark:text-slate-100 uppercase flex items-center gap-2 justify-center">
             <SlidersHorizontal className="h-4 w-4 text-blue-600 dark:text-blue-500" />
-            Transaction Log & Search Report
+            {tr("Transaction Log & Search Report")}
           </h2>
-          <p className="text-[10px] text-slate-400 mt-1.5 font-medium tracking-wide">Enterprise Registry & Financial Ledger Details</p>
+          <p className="text-[10px] text-slate-400 mt-1.5 font-medium tracking-wide">{tr("Enterprise Registry & Financial Ledger Details")}</p>
         </div>
 
         {/* FILTER PANEL */}
@@ -2499,29 +2523,29 @@ export function PurchaseOrderManagementDashboard() {
           <div className="rounded border border-slate-200 bg-slate-50/30 p-4 dark:border-slate-800 dark:bg-slate-955 animate-in fade-in duration-200">
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               <label className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Country Scope</span>
+                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{tr("Country Scope")}</span>
                 <select value={filters.country} disabled={!!lockedCountryName} onChange={(e) => setFilters((f) => ({ ...f, country: e.target.value }))} className="h-9 w-full rounded border border-slate-250 bg-white px-3 text-xs focus:border-blue-500 outline-none transition disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-800 dark:bg-slate-950">
-                  <option value="all">All Countries</option>
+                   <option value="all">{tr("All Countries")}</option>
                   {options.countries.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </label>
               <label className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Branch Scope</span>
+                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{tr("Branch Scope")}</span>
                 <select value={filters.branch} disabled={!!lockedBranchName} onChange={(e) => setFilters((f) => ({ ...f, branch: e.target.value }))} className="h-9 w-full rounded border border-slate-250 bg-white px-3 text-xs focus:border-blue-500 outline-none transition disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-800 dark:bg-slate-950">
-                  <option value="all">All Branches</option>
+                   <option value="all">{tr("All Branches")}</option>
                   {options.branches.map((b) => <option key={b} value={b}>{b}</option>)}
                 </select>
               </label>
-              <SelectFilter label="Supplier Vendor" value={filters.supplier} options={options.suppliers} onChange={(v) => setFilters((f) => ({ ...f, supplier: v }))} />
-              <SelectFilter label="Purchase Status" value={filters.poStatus} options={options.poStatuses} onChange={(v) => setFilters((f) => ({ ...f, poStatus: v }))} />
-              <SelectFilter label="Payment Stages" value={filters.paymentStatus} options={options.paymentStatuses} onChange={(v) => setFilters((f) => ({ ...f, paymentStatus: v }))} />
-              <SelectFilter label="Shipment Status" value={filters.shipmentStatus} options={options.shipmentStatuses} onChange={(v) => setFilters((f) => ({ ...f, shipmentStatus: v }))} />
-              <SelectFilter label="Cargo Containers" value={filters.containerStatus} options={options.containerStatuses} onChange={(v) => setFilters((f) => ({ ...f, containerStatus: v }))} />
-              <SelectFilter label="Date Period" value={filters.dateRange} options={options.dateRanges} onChange={(v) => setFilters((f) => ({ ...f, dateRange: v }))} />
+              <SelectFilter lang={activeLang} label="Supplier Vendor" value={filters.supplier} options={options.suppliers} onChange={(v) => setFilters((f) => ({ ...f, supplier: v }))} />
+              <SelectFilter lang={activeLang} label="Purchase Status" value={filters.poStatus} options={options.poStatuses} onChange={(v) => setFilters((f) => ({ ...f, poStatus: v }))} />
+              <SelectFilter lang={activeLang} label="Payment Stages" value={filters.paymentStatus} options={options.paymentStatuses} onChange={(v) => setFilters((f) => ({ ...f, paymentStatus: v }))} />
+              <SelectFilter lang={activeLang} label="Shipment Status" value={filters.shipmentStatus} options={options.shipmentStatuses} onChange={(v) => setFilters((f) => ({ ...f, shipmentStatus: v }))} />
+              <SelectFilter lang={activeLang} label="Cargo Containers" value={filters.containerStatus} options={options.containerStatuses} onChange={(v) => setFilters((f) => ({ ...f, containerStatus: v }))} />
+              <SelectFilter lang={activeLang} label="Date Period" value={filters.dateRange} options={options.dateRanges} onChange={(v) => setFilters((f) => ({ ...f, dateRange: v }))} />
             </div>
             <div className="mt-3 flex justify-end gap-2 border-t border-slate-150 pt-3 dark:border-slate-800">
-              <Button size="sm" variant="outline" onClick={resetFilters} className="h-8 text-[10px] font-bold">Reset Matrix</Button>
-              <Button size="sm" onClick={() => void loadReports()} className="bg-blue-600 hover:bg-blue-700 text-white h-8 text-[10px] font-bold"><RefreshCw className={cn("mr-1.5 h-3.5 w-3.5", loading && "animate-spin")} />Sync Ledger Registry</Button>
+              <Button size="sm" variant="outline" onClick={resetFilters} className="h-8 text-[10px] font-bold">{tr("Reset Matrix")}</Button>
+              <Button size="sm" onClick={() => void loadReports()} className="bg-blue-600 hover:bg-blue-700 text-white h-8 text-[10px] font-bold"><RefreshCw className={cn("mr-1.5 h-3.5 w-3.5", loading && "animate-spin")} />{tr("Sync Ledger Registry")}</Button>
             </div>
           </div>
         ) : null}
@@ -2575,8 +2599,11 @@ export function PurchaseOrderManagementDashboard() {
               <tbody className="divide-y divide-slate-100 dark:divide-slate-850">
                 {countryGroups.map((group, groupIndex) => {
                   const countryName = group.country;
+                  const displayCountryName = group.rows[0]
+                    ? localizedReportValue(group.rows[0], "countryName", activeLang, countryName)
+                    : countryName;
                   const isExpanded = expandedTableCountries[countryName] ?? (!isSuperAdmin || countryGroups.length === 1 || !!lockedCountryName);
-                  
+
                   // Calculate totals for master row
                   const groupTotalPurch = group.rows.reduce((sum, r) => sum + Number(r.purchaseAmount || r.totalPurchaseAmount || 0), 0);
                   const groupFinalAmt = group.rows.reduce((sum, r) => {
@@ -2589,16 +2616,16 @@ export function PurchaseOrderManagementDashboard() {
                   }, 0);
 
                   const defaultCurrency = group.rows[0]?.currency || "USD";
-                  
+
                   return (
                     <Fragment key={`group-${countryName}`}>
-                      <tr 
+                      <tr
                         className="bg-slate-50 border-y border-slate-200 cursor-pointer hover:bg-blue-50 dark:bg-slate-900/40 dark:border-slate-800 dark:hover:bg-blue-900/20 transition-colors"
                         onClick={() => setExpandedTableCountries(prev => ({ ...prev, [countryName]: !isExpanded }))}
                       >
                         <td colSpan={20} className="px-4 py-3 font-black text-[11px] uppercase tracking-wider text-slate-800 dark:text-slate-200 text-left">
                           <div className="flex items-center gap-2">
-                            <span>{countryName} ({group.rows.length} Records)</span>
+                            <span>{displayCountryName} ({group.rows.length} {tr("Records")})</span>
                           </div>
                         </td>
                         <td className="px-2 py-3 font-black font-mono text-[11px] text-right text-emerald-700 dark:text-emerald-400">
@@ -2635,8 +2662,8 @@ export function PurchaseOrderManagementDashboard() {
                   const invoiceNo = row.form_data?.form?.billNo || row.form_data?.form?.invoiceNo || row.form_data?.form?.purchaseContractNo || row.purchaseContractNo || "-";
                   const rawDate = row.bookingDate || row.purchaseDate || row.createdAt;
                   const bookingDateVal = rawDate ? new Date(rawDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "-";
-                  const branchName = row.branchName || "-";
-                  const countryName = row.countryName || "-";
+                   const branchName = localizedReportValue(row, "branchName", activeLang, row.branchName || "-");
+                   const countryName = localizedReportValue(row, "countryName", activeLang, row.countryName || "-");
                   const userName = row.audit?.userName || "-";
 
                   // Product
@@ -2651,7 +2678,12 @@ export function PurchaseOrderManagementDashboard() {
                     return originVal;
                   };
 
-                  const goodsName = goods.map((g: any) => g.goodsName).filter(Boolean).join(", ") || row.productName || "-";
+                   const goodsName = localizedReportValue(
+                     row,
+                     "productName",
+                     activeLang,
+                     goods.map((g: any) => g.goodsName).filter(Boolean).join(", ") || row.productName || "-"
+                   );
                   const brand = goods.map((g: any) => g.brand || g.size || "").filter(Boolean).join(", ") || "-";
                   const origin = goods.map((g: any) => getOriginText(g, row)).filter(Boolean).join(", ") || row.countryName || "-";
                   const totalQty = goods.length > 0 ? goods.reduce((s: number, g: any) => s + Number(g.qtyNo || 0), 0) : Number(row.quantity || 0);
@@ -2681,7 +2713,7 @@ export function PurchaseOrderManagementDashboard() {
                   }
                   let localCur = row.finalCurrency
                     || row.form_data?.form?.secondaryCurrency?.split(" ")?.[0]
-                    || row.form_data?.form?.purchaseAccountCurrency 
+                    || row.form_data?.form?.purchaseAccountCurrency
                     || row.form_data?.form?.salesAccountCurrency;
                   if (!localCur || localCur === purchaseCurrency) {
                     const c = countryName.toUpperCase();
@@ -2801,9 +2833,9 @@ export function PurchaseOrderManagementDashboard() {
                         {/* Status */}
                         <td className="px-2 py-2 border-r border-slate-100 dark:border-slate-850">
                           {isPosted ? (
-                            <span className="inline-flex rounded border border-emerald-300 bg-emerald-50 text-emerald-700 px-2 py-0.5 text-[8px] font-bold uppercase whitespace-nowrap">YES</span>
+                             <span className="inline-flex rounded border border-emerald-300 bg-emerald-50 text-emerald-700 px-2 py-0.5 text-[8px] font-bold uppercase whitespace-nowrap">{tr("Yes")}</span>
                           ) : (
-                            <span className="inline-flex rounded border border-red-300 bg-red-50 text-red-600 px-2 py-0.5 text-[8px] font-bold uppercase whitespace-nowrap animate-pulse">NO</span>
+                             <span className="inline-flex rounded border border-red-300 bg-red-50 text-red-600 px-2 py-0.5 text-[8px] font-bold uppercase whitespace-nowrap animate-pulse">{tr("No")}</span>
                           )}
                         </td>
                         {/* Actions */}
@@ -2821,7 +2853,7 @@ export function PurchaseOrderManagementDashboard() {
                                   router.push(`/dashboard/purchase/new-purchase-booking-order?id=${encodeURIComponent(row.id)}&purchaseOrderNo=${encodeURIComponent(row.purchaseBookingOrderNumber || "")}`);
                                 }}
                                 className="inline-flex h-7 w-7 items-center justify-center rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition shadow-sm text-blue-600 dark:border-slate-800 dark:bg-slate-950 dark:text-blue-400"
-                                title="Edit Booking"
+                                title={tr("Edit Booking")}
                               >
                                 <Edit3 className="h-3.5 w-3.5" />
                               </button>
@@ -2833,10 +2865,10 @@ export function PurchaseOrderManagementDashboard() {
                                 setIsDrawerOpen(true);
                               }}
                               className="inline-flex h-7 px-2 items-center justify-center rounded-lg border border-slate-200 bg-white hover:bg-slate-50 transition shadow-sm text-slate-700 text-[10px] font-bold dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300 uppercase tracking-wider"
-                              title="View Booking"
+                              title={tr("View Booking")}
                             >
                               <Eye className="h-3.5 w-3.5 mr-1" />
-                              View
+                              {tr("View")}
                             </button>
                           </div>
                         </td>
@@ -2850,21 +2882,21 @@ export function PurchaseOrderManagementDashboard() {
                               <div className="flex items-center gap-2 border-b border-slate-150 pb-2">
                                 <FileText className="h-4 w-4 text-blue-600" />
                                 <span className="text-[11px] font-black uppercase text-slate-850 dark:text-slate-250 tracking-wider">
-                                  Bill Items Breakdown ({goods.length} items)
+                                  {tr("Bill Items Breakdown")} ({goods.length} {tr("Items")})
                                 </span>
                               </div>
                               <table className="w-full text-left text-[10px] border border-slate-150 dark:border-slate-800">
                                 <thead className="bg-slate-50 dark:bg-slate-900 text-slate-650 dark:text-slate-400 font-bold uppercase tracking-wider text-[8.5px]">
                                   <tr>
-                                    <th className="p-2 border-b">Goods Name</th>
-                                    <th className="p-2 border-b">Brand/Size</th>
-                                    <th className="p-2 border-b">Origin</th>
-                                    <th className="p-2 border-b text-right">Qty</th>
-                                    <th className="p-2 border-b text-right">Gross Wt</th>
-                                    <th className="p-2 border-b text-right">Net Wt</th>
-                                    <th className="p-2 border-b text-right">Price</th>
-                                    <th className="p-2 border-b text-right">Total Amount</th>
-                                    <th className="p-2 border-b text-right font-black">Final Amount</th>
+                                    <th className="p-2 border-b">{tr("Goods Name")}</th>
+                                    <th className="p-2 border-b">{tr("Brand/Size")}</th>
+                                    <th className="p-2 border-b">{tr("Origin")}</th>
+                                    <th className="p-2 border-b text-right">{tr("Qty")}</th>
+                                    <th className="p-2 border-b text-right">{tr("Gross Wt")}</th>
+                                    <th className="p-2 border-b text-right">{tr("Net Wt")}</th>
+                                    <th className="p-2 border-b text-right">{tr("Price")}</th>
+                                    <th className="p-2 border-b text-right">{tr("Total Amount")}</th>
+                                    <th className="p-2 border-b text-right font-black">{tr("Final Amount")}</th>
                                   </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-100 dark:divide-slate-850 font-medium">
@@ -2905,7 +2937,7 @@ export function PurchaseOrderManagementDashboard() {
                 {!filtered.length ? (
                   <tr>
                     <td colSpan={38} className="px-4 py-12 text-center text-slate-500">
-                      No purchase order records match the selected filters.
+                      {tr("No purchase order records match the selected filters.")}
                     </td>
                   </tr>
                 ) : null}
@@ -2917,7 +2949,7 @@ export function PurchaseOrderManagementDashboard() {
 
       {/* Signature Note */}
       <p className="text-[10px] text-center text-slate-400 dark:text-slate-500 font-bold mt-2">
-        Note: All amounts are system generated and may not require a signature.
+        {tr("Note: All amounts are system generated and may not require a signature.")}
       </p>
 
       {/* 6. DARK NAVY BLUE FOOTER */}
@@ -2953,18 +2985,23 @@ export function PurchaseOrderManagementDashboard() {
         <DetailDrawer
           isOpen={isDrawerOpen}
           onClose={() => setIsDrawerOpen(false)}
-          title="Purchase Transfer Verification Screen"
-          subtitle={`Booking Ref: ${selected.purchaseBookingOrderNumber}`}
+          title={tr("Purchase Transfer Verification Screen")}
+          subtitle={`${tr("Booking Ref")}: ${selected.purchaseBookingOrderNumber}`}
           className="sm:max-w-none md:max-w-none w-screen h-screen"
           actions={
             <div className="flex flex-wrap items-center gap-1.5 mr-2">
+              <RecordTranslationCorrectionDialog
+                recordTable="purchase_orders"
+                recordId={selected.id}
+                onSaved={loadReports}
+              />
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setIsDrawerOpen(false)}
                 className="h-8 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 font-bold text-[10px] uppercase px-3 shadow-sm hover:bg-slate-100 dark:hover:bg-slate-800/80 mr-2"
               >
-                ← Back to Report
+                â⬠ {tr("Back to Report")}
               </Button>
 
               <Button
@@ -2977,7 +3014,7 @@ export function PurchaseOrderManagementDashboard() {
                     : "h-8 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] uppercase px-3 shadow-sm border-none flex items-center gap-1.5"
                 }
               >
-                {transferring ? "Transferring..." : (selected && (selected.status === "Posted" || (selected as any).ledgerPostingStatus === "Posted")) ? "✓ Transferred" : "Post Transfer"}
+                {transferring ? tr("Transferring...") : (selected && (selected.status === "Posted" || (selected as any).ledgerPostingStatus === "Posted")) ? `✓ ${tr("Transferred")}` : tr("Post Transfer")}
               </Button>
 
               <Button
@@ -2987,7 +3024,7 @@ export function PurchaseOrderManagementDashboard() {
                 }}
                 className="h-8 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase px-3 shadow-sm border-none flex items-center gap-1.5 ml-2"
               >
-                Transfer to Payment →
+                {tr("Transfer to Payment")} →
               </Button>
 
               {/* More Actions Dropdown */}
@@ -3000,7 +3037,7 @@ export function PurchaseOrderManagementDashboard() {
                     setTransferDropdownOpen(false);
                   }}
                   className="h-8 w-8 p-0 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-350 shadow-sm hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center justify-center rounded-lg"
-                  aria-label="More actions"
+                  aria-label={tr("More actions")}
                 >
                   <MoreVertical className="h-4 w-4" />
                 </Button>
@@ -3017,7 +3054,7 @@ export function PurchaseOrderManagementDashboard() {
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
                       >
                         <FileText className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
-                        Generate Contract
+                        {tr("Generate Contract")}
                       </button>
                       <button
                         type="button"
@@ -3028,7 +3065,7 @@ export function PurchaseOrderManagementDashboard() {
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
                       >
                         <Printer className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
-                        Proforma Invoice
+                        {tr("Proforma Invoice")}
                       </button>
                       <button
                         type="button"
@@ -3039,7 +3076,7 @@ export function PurchaseOrderManagementDashboard() {
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
                       >
                         <Printer className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
-                        Print
+                        {tr("Print")}
                       </button>
                       <button
                         type="button"
@@ -3050,7 +3087,7 @@ export function PurchaseOrderManagementDashboard() {
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
                       >
                         <DownloadActionIcon className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400" />
-                        Export PDF
+                        {tr("Export PDF")}
                       </button>
                       <button
                         type="button"
@@ -3061,7 +3098,7 @@ export function PurchaseOrderManagementDashboard() {
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
                       >
                         <Mail className="h-3.5 w-3.5 text-teal-600 dark:text-teal-400" />
-                        Email
+                        {tr("Email")}
                       </button>
                       <button
                         type="button"
@@ -3072,7 +3109,7 @@ export function PurchaseOrderManagementDashboard() {
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-900"
                       >
                         <MessageSquare className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-450" />
-                        WhatsApp
+                        {tr("WhatsApp")}
                       </button>
                     </div>
                   </>
@@ -3101,7 +3138,7 @@ export function PurchaseOrderManagementDashboard() {
             const totalQty = goodsEntries.reduce((sum: number, item: any) => sum + Number(item.qtyNo || 0), 0);
             const totalGross = goodsEntries.reduce((sum: number, item: any) => sum + Number(item.grossWeight || 0), 0);
             const totalNet = goodsEntries.reduce((sum: number, item: any) => sum + Number(item.netWeight || 0), 0);
-            
+
             const exRate = goodsEntries[0]?.exchangeRate || selected.exchange_rate || 280;
 
             const totalUSDVal = goodsEntries.reduce((sum: number, item: any) => {
@@ -3142,7 +3179,7 @@ export function PurchaseOrderManagementDashboard() {
             const remainingPercent = 100 - advancePercent;
             const remainingAmount = totalUSDVal - advanceAmount;
 
-            const remarksText = selected.form_data?.form?.orderReportRemarks || selected.remarks || "No narration provided.";
+            const remarksText = localizedReportValue(selected, "remarks", activeLang, selected.form_data?.form?.orderReportRemarks || selected.remarks || "No narration provided.");
             const reportDate = date(selected.bookingDate || selected.purchaseDate || selected.createdAt);
             const reportNo = `PTVR-2026-${selected.purchaseBookingOrderNumber.replace(/[^0-9]/g, "").slice(-6) || "000123"}`;
 
@@ -3174,7 +3211,7 @@ export function PurchaseOrderManagementDashboard() {
                 {/* Right Side: Simulated A4 Page (Moved by flex-row-reverse) */}
                 <div className="flex-1 overflow-auto flex justify-center rounded-xl bg-slate-200/50 dark:bg-slate-950 p-2 lg:p-4 border border-slate-200 dark:border-slate-800">
                   <div className="print-a4-content bg-white text-slate-800 border border-slate-300 w-[210mm] min-h-[297mm] p-[10mm] shadow-lg text-[9px] font-sans flex flex-col gap-3 relative rounded-sm text-left leading-relaxed shrink-0">
-                  
+
                   {/* CSS print hack injection */}
                   <style dangerouslySetInnerHTML={{__html: `
                     @media print {
@@ -3199,7 +3236,7 @@ export function PurchaseOrderManagementDashboard() {
                       }
                     }
                   `}} />
-                  
+
                   {/* Branding Header */}
                   <div className="flex justify-between items-center border-b border-slate-350 pb-2">
                     <div className="flex items-center gap-2">
@@ -3229,7 +3266,7 @@ export function PurchaseOrderManagementDashboard() {
                   {/* Document Title Bar */}
                   <div className="bg-[#0f2942] text-white text-[8.5px] font-bold px-3 py-1 flex justify-between rounded-sm items-center">
                     <span>Report No: {reportNo}</span>
-                    <span className="text-xs tracking-widest uppercase font-black">Purchase Transfer Verification Report</span>
+                    <span className="text-xs tracking-widest uppercase font-black">{tr("Purchase Transfer Verification Report")}</span>
                     <div className="flex gap-4">
                       <span>Report Date: {reportDate}</span>
                       <span>Time: 10:30 AM</span>
@@ -3243,7 +3280,7 @@ export function PurchaseOrderManagementDashboard() {
                     {/* Booking Information */}
                     <div className="border border-slate-200 rounded overflow-hidden">
                       <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
-                        <span>👤</span> Booking Information
+                        <span>Booking Information</span>
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
@@ -3258,11 +3295,11 @@ export function PurchaseOrderManagementDashboard() {
                     {/* Supplier Information */}
                     <div className="border border-slate-200 rounded overflow-hidden">
                       <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
-                        <span>🏢</span> Supplier Information
+                        <span>Supplier Information</span>
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Supplier Name:</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{selected.supplierName}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Supplier Name:</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{localizedReportValue(selected, "supplierName", activeLang, selected.supplierName)}</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Contact Person:</td><td className="px-2 py-1 text-slate-800">{selected.form_data?.form?.purchaseContactPerson || selected.form_data?.form?.supplierContactPerson || "Mr. Ahmad Shah"}</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Mobile Number:</td><td className="px-2 py-1 text-slate-800 font-mono">{selected.form_data?.form?.purchaseContact || selected.form_data?.form?.supplierMobile || "+93 700 000 000"}</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Email Address:</td><td className="px-2 py-1 text-slate-800 truncate max-w-[100px]">{selected.form_data?.form?.supplierEmail || "supplier@globalfoods.com"}</td></tr>
@@ -3274,11 +3311,11 @@ export function PurchaseOrderManagementDashboard() {
                     {/* Buyer Information */}
                     <div className="border border-slate-200 rounded overflow-hidden">
                       <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
-                        <span>👤</span> Buyer Information
+                        <span>Buyer Information</span>
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
-                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Buyer Name:</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{selected.buyerName}</td></tr>
+                          <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Buyer Name:</td><td className="px-2 py-1 font-bold text-slate-800 truncate max-w-[100px]">{localizedReportValue(selected, "buyerName", activeLang, selected.buyerName)}</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Contact Person:</td><td className="px-2 py-1 text-slate-800">Mr. Imran Hassan</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Mobile Number:</td><td className="px-2 py-1 text-slate-800 font-mono">+92 300 1234567</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Email Address:</td><td className="px-2 py-1 text-slate-800 truncate max-w-[100px]">info@demitrading.com</td></tr>
@@ -3291,15 +3328,15 @@ export function PurchaseOrderManagementDashboard() {
                   {/* Accounting / Ledger Impact Preview */}
                   <div className="border border-slate-200 rounded overflow-hidden mt-2.5">
                     <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
-                      <span>📓</span> Accounting / Ledger Impact Preview
+                      <span>Accounting / Ledger Impact Preview</span>
                     </div>
                     <table className="w-full text-[8px] text-left border-collapse font-semibold text-slate-700">
                       <thead>
                         <tr className="border-b border-slate-200 bg-slate-50/50 text-[7.5px] uppercase tracking-wider text-slate-500">
-                          <th className="px-2 py-1.5 font-bold w-[20%]">GL Code</th>
-                          <th className="px-2 py-1.5 font-bold w-[40%]">Account Name</th>
-                          <th className="px-2 py-1.5 font-bold text-right w-[20%]">Debit</th>
-                          <th className="px-2 py-1.5 font-bold text-right w-[20%]">Credit</th>
+                          <th className="px-2 py-1.5 font-bold w-[20%]">{tr("GL Code")}</th>
+                          <th className="px-2 py-1.5 font-bold w-[40%]">{tr("Account Name")}</th>
+                          <th className="px-2 py-1.5 font-bold text-right w-[20%]">{tr("Debit")}</th>
+                          <th className="px-2 py-1.5 font-bold text-right w-[20%]">{tr("Credit")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -3308,21 +3345,21 @@ export function PurchaseOrderManagementDashboard() {
                             {selected.form_data?.form?.purchaseAccountNo || selected.purchaseAccountNumber || "INV-001"}
                           </td>
                           <td className="px-2 py-1.5 font-bold">
-                            {selected.form_data?.form?.purchaseAccountName || selected.purchaseAccountName || "Purchase Inventory Account"}
+                            {localizedReportValue(selected, "purchaseAccountName", activeLang, selected.form_data?.form?.purchaseAccountName || selected.purchaseAccountName || "Purchase Inventory Account")}
                           </td>
                           <td className="px-2 py-1.5 text-right font-mono font-bold text-emerald-600">
                             {totalUSDVal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </td>
-                          <td className="px-2 py-1.5 text-right font-mono text-slate-400">—</td>
+                          <td className="px-2 py-1.5 text-right font-mono text-slate-400">-</td>
                         </tr>
                         <tr className="border-b border-slate-100">
                           <td className="px-2 py-1.5 font-mono text-indigo-700">
                             {selected.form_data?.form?.salesAccountNo || selected.salesAccountNumber || "AP-001"}
                           </td>
                           <td className="px-2 py-1.5 font-bold">
-                            {selected.form_data?.form?.salesAccountName || selected.salesAccountName || selected.supplierName || "Supplier Payable Account"}
+                            {localizedReportValue(selected, "salesAccountName", activeLang, selected.form_data?.form?.salesAccountName || selected.salesAccountName || selected.supplierName || "Supplier Payable Account")}
                           </td>
-                          <td className="px-2 py-1.5 text-right font-mono text-slate-400">—</td>
+                          <td className="px-2 py-1.5 text-right font-mono text-slate-400">-</td>
                           <td className="px-2 py-1.5 text-right font-mono font-bold text-rose-600">
                             {totalUSDVal.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                           </td>
@@ -3345,24 +3382,24 @@ export function PurchaseOrderManagementDashboard() {
                   {/* Goods Details section */}
                   <div className="border border-slate-200 rounded overflow-hidden">
                     <div className="bg-[#0f2942] text-white px-2.5 py-1 text-[8px] font-black uppercase tracking-wider">
-                      📦 Goods Details
+                       Goods Details
                     </div>
                     <table className="w-full text-[8px] text-left border-collapse">
                       <thead>
                         <tr className="bg-slate-100 border-b border-slate-200 text-slate-700 font-black uppercase">
-                          <th className="p-1 border-r border-slate-200 text-center w-[3%]">SR.</th>
-                          <th className="p-1 border-r border-slate-200 w-[17%]">GOODS NAME</th>
-                          <th className="p-1 border-r border-slate-200 text-center w-[8%]">BRAND</th>
-                          <th className="p-1 border-r border-slate-200 text-center w-[8%]">SIZE</th>
-                          <th className="p-1 border-r border-slate-200 text-center w-[8%]">ORIGIN</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[8%]">QUANTITY</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[8%]">QTY (KGS)</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[8%]">GROSS WT</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[8%]">NET WT</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[8%]">RATE / KG</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[10%]">AMOUNT (USD)</th>
-                          <th className="p-1 border-r border-slate-200 text-right w-[6%]">EX. RATE</th>
-                          <th className="p-1 text-right w-[10%]">FINAL AMOUNT</th>
+                          <th className="p-1 border-r border-slate-200 text-center w-[3%]">{tr("SR.")}</th>
+                          <th className="p-1 border-r border-slate-200 w-[17%]">{tr("GOODS NAME")}</th>
+                          <th className="p-1 border-r border-slate-200 text-center w-[8%]">{tr("BRAND")}</th>
+                          <th className="p-1 border-r border-slate-200 text-center w-[8%]">{tr("SIZE")}</th>
+                          <th className="p-1 border-r border-slate-200 text-center w-[8%]">{tr("ORIGIN")}</th>
+                          <th className="p-1 border-r border-slate-200 text-right w-[8%]">{tr("QUANTITY")}</th>
+                          <th className="p-1 border-r border-slate-200 text-right w-[8%]">{tr("QTY (KGS)")}</th>
+                          <th className="p-1 border-r border-slate-200 text-right w-[8%]">{tr("GROSS WT")}</th>
+                          <th className="p-1 border-r border-slate-200 text-right w-[8%]">{tr("NET WT")}</th>
+                          <th className="p-1 border-r border-slate-200 text-right w-[8%]">{tr("RATE / KG")}</th>
+                          <th className="p-1 border-r border-slate-200 text-right w-[10%]">{tr("AMOUNT (USD)")}</th>
+                          <th className="p-1 border-r border-slate-200 text-right w-[6%]">{tr("EX. RATE")}</th>
+                          <th className="p-1 text-right w-[10%]">{tr("FINAL AMOUNT")}</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -3382,11 +3419,11 @@ export function PurchaseOrderManagementDashboard() {
                             <tr key={idx} className="hover:bg-slate-50 transition border-t border-slate-200 font-semibold text-slate-700">
                               <td className="p-1 border-r border-slate-200 text-center font-mono">{idx + 1}</td>
                               <td className="p-1 border-r border-slate-200 font-bold text-slate-900">
-                                {item.goodsName}
+                                {localizedReportValue(selected, `items.${idx}.goods_name`, activeLang, item.goodsName || "-")}
                               </td>
-                              <td className="p-1 border-r border-slate-200 text-center">{item.brand || "-"}</td>
+                              <td className="p-1 border-r border-slate-200 text-center">{localizedReportValue(selected, `items.${idx}.brand`, activeLang, item.brand || "-")}</td>
                               <td className="p-1 border-r border-slate-200 text-center">{item.size || "-"}</td>
-                              <td className="p-1 border-r border-slate-200 text-center">{item.origin || selected.countryName || "-"}</td>
+                              <td className="p-1 border-r border-slate-200 text-center">{localizedReportValue(selected, `items.${idx}.origin`, activeLang, item.origin || selected.countryName || "-")}</td>
                               <td className="p-1 border-r border-slate-200 text-right font-bold">{qtyNo.toLocaleString()} {item.qtyName}</td>
                               <td className="p-1 border-r border-slate-200 text-right font-mono">{qtyKgs.toLocaleString()} kg</td>
                               <td className="p-1 border-r border-slate-200 text-right font-mono">{grossWeight.toLocaleString()} kg</td>
@@ -3423,7 +3460,7 @@ export function PurchaseOrderManagementDashboard() {
                   {/* Loading & Transit Information */}
                   <div className="border border-slate-200 rounded overflow-hidden">
                     <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
-                      <span>🚢</span> Loading & Transit Information
+                      <span>Loading & Transit Information</span>
                     </div>
                     <table className="w-full text-[8px] font-semibold text-slate-600">
                       <tbody>
@@ -3460,7 +3497,7 @@ export function PurchaseOrderManagementDashboard() {
                     {/* Payment Information */}
                     <div className="border border-slate-200 rounded overflow-hidden">
                       <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex items-center gap-1">
-                        <span>💵</span> Payment Information
+                        <span>"µ</span> Payment Information
                       </div>
                       <table className="w-full text-[8px] font-semibold text-slate-600">
                         <tbody>
@@ -3475,7 +3512,7 @@ export function PurchaseOrderManagementDashboard() {
                               <span className={`inline-block px-1.5 py-0.5 rounded text-[7px] font-black uppercase text-white ${
                                 paymentStatusLabel === "PAID" || paymentStatusLabel === "FULL PAYMENT" || paymentStatusLabel === "ADVANCE PAID" ? "bg-emerald-600" : "bg-rose-600"
                               }`}>
-                                {paymentStatusLabel}
+                                {tr(paymentStatusLabel)}
                               </span>
                             </td>
                           </tr>
@@ -3487,7 +3524,7 @@ export function PurchaseOrderManagementDashboard() {
                     <div className="border border-slate-200 rounded overflow-hidden">
                       <div className="bg-slate-50 border-b border-slate-200 px-2 py-1 text-[8px] font-black uppercase text-blue-900 flex justify-between items-center">
                         <div className="flex items-center gap-1">
-                          <span>📊</span> Accounting Information & Serials
+                          <span> </span> Accounting Information & Serials
                         </div>
                         <span className="font-mono text-blue-700 text-[7px]">S/N AUDIT VERIFIED</span>
                       </div>
@@ -3497,11 +3534,11 @@ export function PurchaseOrderManagementDashboard() {
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Super Admin S/N:</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.superAdminSerialNo || selected.super_admin_serial_number || `GBL-PB-${selected.purchaseBookingOrderNumber}`}</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Country S/N:</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.computedCountrySerial || selected.country_transaction_serial_number || `CTY-PB-${selected.purchaseBookingOrderNumber}`}</td></tr>
                           <tr className="border-b border-slate-100"><td className="px-2 py-1 text-slate-400">Branch S/N:</td><td className="px-2 py-1 text-slate-800 font-mono font-bold">{selected.computedBranchSerial || selected.branch_transaction_serial_number || `BR-PB-${selected.purchaseBookingOrderNumber}`}</td></tr>
-                          
+
                           <tr className="border-b border-slate-100 bg-blue-50/40">
                             <td className="px-2 py-1 text-slate-500 font-bold">Debit Account (DR):</td>
                             <td className="px-2 py-1 text-blue-900 font-mono">
-                              {selected.form_data?.form?.purchaseAccountNo || selected.purchaseAccountNumber || "1001"} 
+                              {selected.form_data?.form?.purchaseAccountNo || selected.purchaseAccountNumber || "1001"}
                               <span className="ml-1 text-slate-600 font-sans font-semibold">
                                 {selected.form_data?.form?.purchaseAccountName || selected.purchaseAccountName ? `(${selected.form_data?.form?.purchaseAccountName || selected.purchaseAccountName})` : ""}
                               </span>
@@ -3511,10 +3548,10 @@ export function PurchaseOrderManagementDashboard() {
                           <tr className="border-b border-slate-100 bg-blue-50/40">
                             <td className="px-2 py-1 text-slate-400">Debit Amount:</td>
                             <td className="px-2 py-1 text-slate-800 font-mono font-bold text-blue-700">
-                              {totalUSDVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {selected.currency || "USD"} 
-                              <span className="text-slate-400 font-medium px-1.5">@</span> 
-                              <span className="text-blue-600">{exRate}</span> 
-                              <span className="text-slate-400 font-medium px-1.5">=</span> 
+                              {totalUSDVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {selected.currency || "USD"}
+                              <span className="text-slate-400 font-medium px-1.5">@</span>
+                              <span className="text-blue-600">{exRate}</span>
+                              <span className="text-slate-400 font-medium px-1.5">=</span>
                               {totalPKRVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {displayCurrencySymbol}
                             </td>
                           </tr>
@@ -3522,7 +3559,7 @@ export function PurchaseOrderManagementDashboard() {
                           <tr className="border-b border-slate-100 bg-emerald-50/40">
                             <td className="px-2 py-1 text-slate-500 font-bold">Credit Account (CR):</td>
                             <td className="px-2 py-1 text-emerald-900 font-mono">
-                              {selected.form_data?.form?.salesAccountNo || selected.salesAccountNumber || "2001"} 
+                              {selected.form_data?.form?.salesAccountNo || selected.salesAccountNumber || "2001"}
                               <span className="ml-1 text-slate-600 font-sans font-semibold">
                                 {selected.form_data?.form?.salesAccountName || selected.salesAccountName ? `(${selected.form_data?.form?.salesAccountName || selected.salesAccountName})` : ""}
                               </span>
@@ -3532,10 +3569,10 @@ export function PurchaseOrderManagementDashboard() {
                           <tr className="border-b border-slate-100 bg-emerald-50/40">
                             <td className="px-2 py-1 text-slate-400">Credit Amount:</td>
                             <td className="px-2 py-1 text-slate-800 font-mono font-bold text-emerald-700">
-                              {totalUSDVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {selected.currency || "USD"} 
-                              <span className="text-slate-400 font-medium px-1.5">@</span> 
-                              <span className="text-blue-600">{exRate}</span> 
-                              <span className="text-slate-400 font-medium px-1.5">=</span> 
+                              {totalUSDVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {selected.currency || "USD"}
+                              <span className="text-slate-400 font-medium px-1.5">@</span>
+                              <span className="text-blue-600">{exRate}</span>
+                              <span className="text-slate-400 font-medium px-1.5">=</span>
                               {totalPKRVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {displayCurrencySymbol}
                             </td>
                           </tr>
@@ -3546,7 +3583,7 @@ export function PurchaseOrderManagementDashboard() {
                               Advance Paid ({advancePercent}%) transferred via Business Roznamcha to Supplier Payable Account
                             </td>
                           </tr>
-                          
+
                           <tr className="border-b border-slate-100">
                             <td className="px-2 py-1 text-slate-400">Total Quantity:</td>
                             <td className="px-2 py-1 text-slate-800 font-bold">{totalQty.toLocaleString()} {goodsEntries[0]?.qtyName || "Units"}</td>
@@ -3568,7 +3605,7 @@ export function PurchaseOrderManagementDashboard() {
                   {selected.form_data?.form?.showRemarksOnA4 !== false && (
                     <div className="border border-slate-200 rounded overflow-hidden mt-1.5">
                       <div className="bg-slate-50 border-b border-slate-200 px-2 py-0.5 text-[7px] font-black uppercase text-blue-900 flex items-center gap-1">
-                        <span>📝</span> Remarks / Narration
+                        <span>Remarks / Narration</span>
                       </div>
                       <div className="p-1.5 bg-white text-[7.5px] font-semibold text-slate-800 italic leading-normal min-h-[20px] max-h-[35px] overflow-hidden whitespace-pre-wrap break-words">
                         {remarksText}
@@ -3610,14 +3647,14 @@ export function PurchaseOrderManagementDashboard() {
 
                 {/* Left Side: Verification Panel (Moved by flex-row-reverse) */}
                 <div className="w-full lg:w-[400px] shrink-0 bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl shadow-lg flex flex-col h-full overflow-y-auto">
-                  
+
                   {/* Panel Header */}
                   <div className="p-5 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 sticky top-0 z-10 shadow-sm">
                     <h3 className="text-base font-black text-[#0f2942] dark:text-white uppercase tracking-widest flex items-center gap-2">
                       <FileCheck2 className="h-5 w-5 text-emerald-600" />
                       Transfer Verification Form
                     </h3>
-                    <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wider font-bold">Review details before posting to Roznamcha</p>
+                    <p className="text-[10px] text-slate-500 mt-1 uppercase tracking-wider font-bold">{tr("Review details before posting to Roznamcha")}</p>
                   </div>
 
                   <div className="p-5 space-y-6 flex-1 bg-slate-50/50 dark:bg-slate-900/20">
@@ -3625,55 +3662,55 @@ export function PurchaseOrderManagementDashboard() {
                     {/* User, Branch & Country Info */}
                     <div className="space-y-3">
                       <div className="bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
-                        <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">User Information</div>
+                        <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">{tr("User Information")}</div>
                         <div className="grid grid-cols-2 gap-2 text-xs">
-                          <div><span className="text-slate-400 block text-[9px] uppercase">User ID</span><span className="font-bold font-mono">USR-{selected.audit?.userId?.slice(-4) || "101"}</span></div>
-                          <div><span className="text-slate-400 block text-[9px] uppercase">User Name</span><span className="font-bold truncate">{selected.audit?.userName || "Admin"}</span></div>
-                          <div><span className="text-slate-400 block text-[9px] uppercase">Team Name</span><span className="font-bold">Logistics</span></div>
-                          <div><span className="text-slate-400 block text-[9px] uppercase">Team Code</span><span className="font-bold font-mono">TM-LOG</span></div>
+                          <div><span className="text-slate-400 block text-[9px] uppercase">{tr("User ID")}</span><span className="font-bold font-mono">USR-{selected.audit?.userId?.slice(-4) || "101"}</span></div>
+                          <div><span className="text-slate-400 block text-[9px] uppercase">{tr("User Name")}</span><span className="font-bold truncate">{selected.audit?.userName || "Admin"}</span></div>
+                          <div><span className="text-slate-400 block text-[9px] uppercase">{tr("Team Name")}</span><span className="font-bold">Logistics</span></div>
+                          <div><span className="text-slate-400 block text-[9px] uppercase">{tr("Team Code")}</span><span className="font-bold font-mono">TM-LOG</span></div>
                         </div>
                       </div>
 
                       <div className="grid grid-cols-2 gap-3">
                         <div className="bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
-                          <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">Branch Info</div>
-                          <div><span className="text-slate-400 block text-[9px] uppercase">Name</span><span className="font-bold text-xs truncate block" title={selected.branchName}>{selected.branchName || "Main"}</span></div>
-                          <div className="mt-1"><span className="text-slate-400 block text-[9px] uppercase">Code</span><span className="font-bold text-xs font-mono">{selected.audit?.branchCode || selected.form_data?.form?.branchCode || "-"}</span></div>
+                          <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">{tr("Branch Info")}</div>
+                          <div><span className="text-slate-400 block text-[9px] uppercase">{tr("Name")}</span><span className="font-bold text-xs truncate block" title={selected.branchName}>{localizedReportValue(selected, "branchName", activeLang, selected.branchName || "Main")}</span></div>
+                          <div className="mt-1"><span className="text-slate-400 block text-[9px] uppercase">{tr("Code")}</span><span className="font-bold text-xs font-mono">{selected.audit?.branchCode || selected.form_data?.form?.branchCode || "-"}</span></div>
                         </div>
                         <div className="bg-slate-50 dark:bg-slate-900/40 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
-                          <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">Country Info</div>
-                          <div><span className="text-slate-400 block text-[9px] uppercase">Name</span><span className="font-bold text-xs truncate block" title={selected.countryName}>{selected.countryName || "PK"}</span></div>
-                          <div className="mt-1"><span className="text-slate-400 block text-[9px] uppercase">Code</span><span className="font-bold text-xs font-mono">{selected.countryName ? selected.countryName.slice(0, 3).toUpperCase() : "PAK"}</span></div>
+                          <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-2">{tr("Country Info")}</div>
+                          <div><span className="text-slate-400 block text-[9px] uppercase">{tr("Name")}</span><span className="font-bold text-xs truncate block" title={selected.countryName}>{localizedReportValue(selected, "countryName", activeLang, selected.countryName || "PK")}</span></div>
+                          <div className="mt-1"><span className="text-slate-400 block text-[9px] uppercase">{tr("Code")}</span><span className="font-bold text-xs font-mono">{selected.countryName ? selected.countryName.slice(0, 3).toUpperCase() : "PAK"}</span></div>
                         </div>
                       </div>
                     </div>
 
                     <div className="bg-blue-50/50 dark:bg-blue-950/20 p-3 rounded-lg border border-blue-100 dark:border-blue-900/50">
-                      <div className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 mb-2">Transfer Information</div>
+                      <div className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400 mb-2">{tr("Transfer Information")}</div>
                       <div className="space-y-2 text-xs">
                         <div className="flex justify-between items-center">
-                          <span className="text-slate-500">Status</span>
+                          <span className="text-slate-500">{tr("Status")}</span>
                           <span className={`font-black uppercase text-[10px] px-2 py-0.5 rounded ${selected.status === "Posted" || (selected as any).ledgerPostingStatus === "Posted" ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"}`}>
-                            {selected.status === "Posted" || (selected as any).ledgerPostingStatus === "Posted" ? "Fully Transferred" : "Pending"}
+                            {tr(selected.status === "Posted" || (selected as any).ledgerPostingStatus === "Posted" ? "Fully Transferred" : "Pending")}
                           </span>
                         </div>
                         <div className="flex justify-between items-center">
-                          <span className="text-slate-500">Date</span>
-                          <span className="font-bold">{selected.form_data?.form?.transferAudit ? new Date(selected.form_data.form.transferAudit.transferDate).toLocaleString() : "Not Transferred"}</span>
+                          <span className="text-slate-500">{tr("Date")}</span>
+                          <span className="font-bold">{selected.form_data?.form?.transferAudit ? new Date(selected.form_data.form.transferAudit.transferDate).toLocaleString() : tr("Not Transferred")}</span>
                         </div>
                       </div>
                     </div>
 
                     <div>
-                      <div className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-3 border-b border-slate-200 dark:border-slate-800 pb-1">Account Verification</div>
+                      <div className="text-[10px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-3 border-b border-slate-200 dark:border-slate-800 pb-1">{tr("Account Verification")}</div>
                       <div className="bg-emerald-50/50 dark:bg-emerald-950/20 border-l-2 border-emerald-500 p-3 rounded-r-lg mb-2">
                         <div className="flex justify-between items-center mb-1">
-                          <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-wider">Purchase Account (DR)</span>
+                          <span className="text-[9px] font-bold text-emerald-700 uppercase tracking-wider">{tr("Purchase Account (DR)")}</span>
                           <span className="font-mono text-[10px] font-bold text-slate-700 dark:text-slate-300">{selected.purchaseAccountNumber || selected.form_data?.form?.purchaseAccountNo || "ACC-PUR"}</span>
                         </div>
-                        <div className="font-bold text-sm text-slate-800 dark:text-slate-200 truncate">{selected.purchaseAccountName || selected.form_data?.form?.purchaseAccountName || "-"}</div>
+                        <div className="font-bold text-sm text-slate-800 dark:text-slate-200 truncate">{localizedReportValue(selected, "purchaseAccountName", activeLang, selected.purchaseAccountName || selected.form_data?.form?.purchaseAccountName || "-")}</div>
                         <div className="flex justify-between items-center mt-2 pt-2 border-t border-emerald-100 dark:border-emerald-900/50">
-                          <span className="text-[10px] text-slate-500">Amount</span>
+                          <span className="text-[10px] text-slate-500">{tr("Amount")}</span>
                           <span className="font-mono font-black text-emerald-700">{totalPKRVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {displayCurrencySymbol}</span>
                         </div>
                       </div>
@@ -3684,19 +3721,19 @@ export function PurchaseOrderManagementDashboard() {
 
                       <div className="bg-blue-50/50 dark:bg-blue-950/20 border-l-2 border-blue-500 p-3 rounded-r-lg">
                         <div className="flex justify-between items-center mb-1">
-                          <span className="text-[9px] font-bold text-blue-700 uppercase tracking-wider">Sales Account (CR)</span>
+                          <span className="text-[9px] font-bold text-blue-700 uppercase tracking-wider">{tr("Sales Account (CR)")}</span>
                           <span className="font-mono text-[10px] font-bold text-slate-700 dark:text-slate-300">{selected.salesAccountNumber || selected.form_data?.form?.salesAccountNo || "ACC-SAL"}</span>
                         </div>
-                        <div className="font-bold text-sm text-slate-800 dark:text-slate-200 truncate">{selected.salesAccountName || selected.form_data?.form?.salesAccountName || "-"}</div>
+                        <div className="font-bold text-sm text-slate-800 dark:text-slate-200 truncate">{localizedReportValue(selected, "salesAccountName", activeLang, selected.salesAccountName || selected.form_data?.form?.salesAccountName || "-")}</div>
                         <div className="flex justify-between items-center mt-2 pt-2 border-t border-blue-100 dark:border-blue-900/50">
-                          <span className="text-[10px] text-slate-500">Amount</span>
+                          <span className="text-[10px] text-slate-500">{tr("Amount")}</span>
                           <span className="font-mono font-black text-blue-700">{totalPKRVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} {displayCurrencySymbol}</span>
                         </div>
                       </div>
                     </div>
 
                     <div className="bg-slate-800 dark:bg-slate-900 text-white p-4 rounded-xl text-center shadow-inner">
-                      <div className="text-[10px] text-slate-300 uppercase tracking-widest font-black mb-1">Transfer Amount</div>
+                      <div className="text-[10px] text-slate-300 uppercase tracking-widest font-black mb-1">{tr("Transfer Amount")}</div>
                       <div className="text-2xl font-black font-mono tracking-tight text-emerald-400">{totalPKRVal.toLocaleString(undefined, { minimumFractionDigits: 2 })} <span className="text-sm text-slate-400">{displayCurrency}</span></div>
                       <div className="mt-2 text-[9px] text-slate-400 font-bold uppercase tracking-widest flex items-center justify-center gap-2">
                         <span className="truncate max-w-[100px]">{selected.purchaseAccountName || "Purchase A/C"}</span>
@@ -3707,12 +3744,12 @@ export function PurchaseOrderManagementDashboard() {
                   </div>
 
                   <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 flex flex-col gap-2 sticky bottom-0">
-                    <Button 
+                    <Button
                       className={`w-full font-bold uppercase tracking-wider text-[11px] h-12 shadow-md transition-all bg-emerald-600 hover:bg-emerald-700 text-white`}
                       onClick={() => handleTransfer(selected)}
                     >
                       {transferring ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Landmark className="h-4 w-4 mr-2" />}
-                      {(selected.status === "Posted" || (selected as any).ledgerPostingStatus === "Posted") ? "Refresh Roznamcha Payment" : "Transfer Roznamcha Payment"}
+                      {tr((selected.status === "Posted" || (selected as any).ledgerPostingStatus === "Posted") ? "Refresh Roznamcha Payment" : "Transfer Roznamcha Payment")}
                     </Button>
                   </div>
                 </div>

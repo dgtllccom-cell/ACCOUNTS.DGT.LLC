@@ -12,6 +12,8 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 const UAE_COUNTRY_MATCHERS = ["UNITED ARAB", "UAE", "EMIRATES", "AE"];
 
@@ -120,6 +122,8 @@ interface LocalPurchaseRecord {
 
 export function LocalPurchaseJournalReportView({ session }: { session: any }) {
   const router = useRouter();
+  const activeLang = useActiveLanguage();
+  const th = (label: string) => translateHeader(activeLang, label);
   const [purchases, setPurchases] = useState<LocalPurchaseRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -252,15 +256,15 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
 
   return (
     <div className="space-y-6 p-4 sm:p-6 text-slate-900 dark:text-slate-100 bg-slate-50/50 dark:bg-slate-950 min-h-screen">
-      
+
       {/* Top Banner: Branch, User & Date Time Bar */}
       <div className="flex flex-wrap items-center justify-between text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-2xl shadow-xs gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-slate-400">BRANCH NAME:</span>
+          <span className="text-slate-400">{th("BRANCH NAME")}:</span>
           <span className="text-blue-600 dark:text-blue-400 font-extrabold">{session.branchName || "UNITED ARAB EMIRATES MAIN BRANCH"}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-slate-400">USER NAME:</span>
+          <span className="text-slate-400">{th("USER NAME")}:</span>
           <span className="text-slate-900 dark:text-white font-extrabold">{session.fullName || session.email || "SUPER ADMIN"}</span>
         </div>
         <div className="flex items-center gap-3 font-mono" suppressHydrationWarning>
@@ -318,23 +322,23 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
 
       {/* Top Admin Dashboard: 4 Executive Summary KPI Panels */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        
+
         {/* Panel 1: Branch & User Details */}
         <Card className="border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs rounded-2xl">
           <CardHeader className="p-3.5 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
             <Building2 className="h-4 w-4 text-blue-600" />
             <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
-              1. BRANCH & USER DETAILS
+              1. {th("BRANCH & USER DETAILS")}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3.5 space-y-1.5 text-xs font-semibold">
-            <div className="flex justify-between"><span className="text-slate-400">COUNTRY:</span> <span className="font-bold text-slate-800 dark:text-slate-200">PK PAKISTAN</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">BRANCH NAME:</span> <span className="font-bold text-slate-800 dark:text-slate-200">MAIN BRANCH</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">CITY BRANCH:</span> <span className="font-bold text-blue-600">CHAMAN CITY BRANCH</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">USER NAME:</span> <span className="font-black text-slate-900 dark:text-white uppercase">{session.fullName || session.email || "SUPER ADMIN"}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">ROLE:</span> <span className="font-black text-purple-600 uppercase">{session.role || "SUPER ADMIN"}</span></div>
-            <div className="flex justify-between" compressHydrationWarning><span className="text-slate-400">DATE & TIME:</span> <span className="font-mono text-[10px] text-slate-700 dark:text-slate-300">20 JUL 2026, 09:35 PM</span></div>
-            <div className="flex justify-between items-center"><span className="text-slate-400">STATUS:</span> <span className="bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded text-[8px] uppercase">ACTIVE</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{th("COUNTRY")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">PK PAKISTAN</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{th("BRANCH NAME")}:</span> <span className="font-bold text-slate-800 dark:text-slate-200">MAIN BRANCH</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{th("CITY BRANCH")}:</span> <span className="font-bold text-blue-600">CHAMAN CITY BRANCH</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{th("USER NAME")}:</span> <span className="font-black text-slate-900 dark:text-white uppercase">{session.fullName || session.email || "SUPER ADMIN"}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{th("ROLE")}:</span> <span className="font-black text-purple-600 uppercase">{session.role || "SUPER ADMIN"}</span></div>
+            <div className="flex justify-between" compressHydrationWarning><span className="text-slate-400">{th("DATE & TIME")}:</span> <span className="font-mono text-[10px] text-slate-700 dark:text-slate-300">20 JUL 2026, 09:35 PM</span></div>
+            <div className="flex justify-between items-center"><span className="text-slate-400">{th("STATUS")}:</span> <span className="bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded text-[8px] uppercase">{th("ACTIVE")}</span></div>
           </CardContent>
         </Card>
 
@@ -343,15 +347,15 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
           <CardHeader className="p-3.5 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
             <Coins className="h-4 w-4 text-emerald-600" />
             <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
-              2. GLOBAL FINANCIAL SUMMARY
+              2. {th("GLOBAL FINANCIAL SUMMARY")}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3.5 space-y-2 text-xs font-semibold">
-            <div className="flex justify-between"><span className="text-slate-400">TOTAL LOCAL PURCHASE BILLS:</span> <span className="font-mono font-bold text-slate-900 dark:text-white">{grandTotalEntries}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">TOTAL LOCAL PURCHASE AMOUNT:</span> <span className="font-mono font-black text-slate-800 dark:text-slate-100">{grandTotalPurchase.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">TOTAL TAX AMOUNT:</span> <span className="font-mono font-bold text-amber-500">{grandTotalTax.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">TOTAL FINAL AMOUNT:</span> <span className="font-mono font-black text-emerald-600">{grandTotalPurchase.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-            <div className="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-1.5"><span className="text-slate-400">REMAINING BALANCE:</span> <span className="font-mono font-bold text-slate-800 dark:text-slate-200">0.00</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{th("TOTAL LOCAL PURCHASE BILLS")}:</span> <span className="font-mono font-bold text-slate-900 dark:text-white">{grandTotalEntries}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{th("TOTAL LOCAL PURCHASE AMOUNT")}:</span> <span className="font-mono font-black text-slate-800 dark:text-slate-100">{grandTotalPurchase.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{th("TOTAL TAX AMOUNT")}:</span> <span className="font-mono font-bold text-amber-500">{grandTotalTax.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{th("TOTAL FINAL AMOUNT")}:</span> <span className="font-mono font-black text-emerald-600">{grandTotalPurchase.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+            <div className="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-1.5"><span className="text-slate-400">{th("REMAINING BALANCE")}:</span> <span className="font-mono font-bold text-slate-800 dark:text-slate-200">0.00</span></div>
           </CardContent>
         </Card>
 
@@ -360,15 +364,15 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
           <CardHeader className="p-3.5 border-b border-slate-100 dark:border-slate-800/60 flex flex-row items-center gap-2">
             <FileText className="h-4 w-4 text-purple-600" />
             <CardTitle className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
-              3. BILL ENTRY SUMMARY
+              3. {th("BILL ENTRY SUMMARY")}
             </CardTitle>
           </CardHeader>
           <CardContent className="p-3.5 space-y-1.5 text-xs font-semibold">
-            <div className="flex justify-between"><span className="text-slate-400">TOTAL BILLS:</span> <span className="font-mono font-bold text-purple-600">{grandTotalEntries + acceptedBillsCount}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">POSTED (TRANSFERRED):</span> <span className="font-mono font-bold text-emerald-600">{postedBillsCount}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">PENDING GL TRANSFER:</span> <span className="font-mono font-bold text-amber-600">{acceptedBillsCount}</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">PENDING BILLS:</span> <span className="font-mono font-bold text-slate-400">0</span></div>
-            <div className="flex justify-between"><span className="text-slate-400">CANCELLED BILLS:</span> <span className="font-mono font-bold text-slate-400">0</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{th("TOTAL BILLS")}:</span> <span className="font-mono font-bold text-purple-600">{grandTotalEntries + acceptedBillsCount}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{th("POSTED (TRANSFERRED)")}:</span> <span className="font-mono font-bold text-emerald-600">{postedBillsCount}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{th("PENDING GL TRANSFER")}:</span> <span className="font-mono font-bold text-amber-600">{acceptedBillsCount}</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{th("PENDING BILLS")}:</span> <span className="font-mono font-bold text-slate-400">0</span></div>
+            <div className="flex justify-between"><span className="text-slate-400">{th("CANCELLED BILLS")}:</span> <span className="font-mono font-bold text-slate-400">0</span></div>
           </CardContent>
         </Card>
 
@@ -378,7 +382,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
             <div className="flex items-center gap-2">
               <Globe className="h-4 w-4 text-amber-600" />
               <CardTitle className="text-xs font-black uppercase text-amber-900 dark:text-amber-300">
-                4. ALL COUNTRIES REPORT
+                4. {th("ALL COUNTRIES REPORT")}
               </CardTitle>
             </div>
             <button
@@ -386,7 +390,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
               onClick={() => setShowCountryDetails(prev => !prev)}
               className="text-[9px] font-black uppercase text-amber-700 hover:text-amber-900 dark:text-amber-400 underline"
             >
-              {showCountryDetails ? "HIDE DETAILS -" : "SHOW DETAILS +"}
+              {showCountryDetails ? `${th("HIDE DETAILS")} -` : `${th("SHOW DETAILS")} +`}
             </button>
           </CardHeader>
           <CardContent className="p-3.5 space-y-1.5 text-xs font-semibold">
@@ -395,7 +399,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                 <div key={cg.countryName} className="flex justify-between items-center py-1 border-b border-amber-200/30 last:border-b-0">
                   <span className="font-black text-slate-800 dark:text-slate-200 text-[10px] uppercase">{cg.countryName}</span>
                   <span className="font-mono font-bold text-amber-800 dark:text-amber-400 text-[9px] bg-amber-100 dark:bg-amber-950 px-1.5 py-0.5 rounded">
-                    {cg.branches.length} BRANCHES
+                    {cg.branches.length} {th("BRANCHES")}
                   </span>
                 </div>
               ))
@@ -403,11 +407,11 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
               <>
                 <div className="flex justify-between items-center py-1 border-b border-amber-200/30">
                   <span className="font-black text-slate-800 dark:text-slate-200 text-[10px] uppercase">PK PAKISTAN</span>
-                  <span className="font-mono font-bold text-amber-800 dark:text-amber-400 text-[9px] bg-amber-100 dark:bg-amber-950 px-1.5 py-0.5 rounded">1 BRANCHES</span>
+                  <span className="font-mono font-bold text-amber-800 dark:text-amber-400 text-[9px] bg-amber-100 dark:bg-amber-950 px-1.5 py-0.5 rounded">1 {th("BRANCHES")}</span>
                 </div>
                 <div className="flex justify-between items-center py-1">
                   <span className="font-black text-slate-800 dark:text-slate-200 text-[10px] uppercase">AE UNITED ARAB EMIRATES</span>
-                  <span className="font-mono font-bold text-amber-800 dark:text-amber-400 text-[9px] bg-amber-100 dark:bg-amber-950 px-1.5 py-0.5 rounded">1 BRANCHES</span>
+                  <span className="font-mono font-bold text-amber-800 dark:text-amber-400 text-[9px] bg-amber-100 dark:bg-amber-950 px-1.5 py-0.5 rounded">1 {th("BRANCHES")}</span>
                 </div>
               </>
             )}
@@ -425,7 +429,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                 <span className="font-black text-xs uppercase text-slate-800 dark:text-slate-100">{cg.countryName}</span>
               </div>
               <span className="text-[10px] font-mono font-bold bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded border border-blue-200 dark:border-blue-800">
-                {cg.branches.length} BRANCHES
+                {cg.branches.length} {th("BRANCHES")}
               </span>
             </CardHeader>
             <CardContent className="p-4 space-y-3 text-xs">
@@ -433,7 +437,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                 <div className="flex justify-between"><span className="text-slate-400">CURRENCY:</span> <span className="font-mono font-black text-slate-800 dark:text-slate-200">{cg.currency}</span></div>
                 <div className="flex justify-between"><span className="text-slate-400">TOTAL PURCHASE:</span> <span className="font-mono font-black text-slate-900 dark:text-slate-100">{cg.totalPurchase.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
                 <div className="flex justify-between"><span className="text-slate-400">TOTAL TRANSFERRED:</span> <span className="font-mono font-black text-emerald-600">{cg.totalPosted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-                <div className="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-1.5"><span className="text-slate-400">REMAINING BALANCE:</span> <span className="font-mono font-bold text-slate-800 dark:text-slate-200">0.00</span></div>
+                <div className="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-1.5"><span className="text-slate-400">{th("REMAINING BALANCE")}:</span> <span className="font-mono font-bold text-slate-800 dark:text-slate-200">0.00</span></div>
               </div>
 
               {/* Branch Breakdown Section inside Country Card */}
@@ -636,7 +640,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                         const data = await res.json();
                         if (!res.ok || !data.ok) throw new Error(data.error?.message || "Failed to transfer.");
                         alert("Accounting Entries Posted Successfully to:\n- Cash Entry / Daily Payment\n- Business Roznamcha\n- General Ledger\n- Journal (Debit/Credit Serials generated)");
-                        
+
                         setSelectedRowForVoucher(prev => prev ? { ...prev, status: "posted" } : null);
                         await loadReports();
                       } catch (err: any) {

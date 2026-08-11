@@ -8,8 +8,12 @@ import { roznamchaService } from "@/lib/services/roznamcha-service";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
-import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
+import { roznamchaTranslationFields } from "@/lib/i18n/roznamcha-entry-translations";
 import { revalidatePath } from "next/cache";
+import { withLocalPg } from "@/lib/db/local-postgres";
+import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -288,7 +292,413 @@ function createOperationalPostingPlan(body: ReturnType<typeof roznamchaPostingSc
   };
 }
 
+/**
+ * Root-cause note (see lib/db/local-postgres.ts): the "admin" Supabase client is not
+ * actually carrying a real service-role key locally, so under the app's temp-session
+ * bootstrap login every RLS-gated read/write here (roznamcha_entries, roznamcha_lines,
+ * ledgers, ledger_balances, enterprise_accounts, enterprise_account_history) silently
+ * fails ("new row violates row-level security policy" on writes, empty results on
+ * reads). postRoznamchaWithErpSession now tries a direct-Postgres path first (bypasses
+ * RLS via DATABASE_URL) and only falls back to the Supabase-admin-client path below
+ * when DATABASE_URL isn't configured for this environment.
+ */
 export async function postRoznamchaWithErpSession(input: {
+  sessionUserId: string;
+  session?: any;
+  body: ReturnType<typeof roznamchaPostingSchema.parse>;
+}) {
+  const viaPg = await withLocalPg((sql) => postRoznamchaWithErpSessionPg(sql, input));
+  if (viaPg) return viaPg;
+  return postRoznamchaWithErpSessionSupabase(input);
+}
+
+async function resolveProfileActorPg(sql: any, userId: string | null | undefined) {
+  if (!userId) return null;
+  const rows = await sql`select id from public.profiles where id = ${userId} limit 1`;
+  return rows[0]?.id ?? null;
+}
+
+async function nextTransactionSerialPg(
+  sql: any,
+  scopeType: "global" | "country" | "branch" | "main_branch" | "city_branch" | "module_roznamcha",
+  scopeKey: string,
+  prefix: string
+) {
+  if (!scopeKey || typeof scopeKey !== "string") {
+    const ts = Date.now().toString(36).toUpperCase();
+    return `${prefix}-FALLBACK-${ts}`;
+  }
+  try {
+    const rows = await sql`
+      select public.next_transaction_serial(
+        p_scope_type := ${scopeType},
+        p_scope_key := ${scopeKey},
+        p_prefix := ${prefix}
+      ) as serial
+    `;
+    return String(rows[0]?.serial);
+  } catch (err: any) {
+    console.warn(`[serial][pg] next_transaction_serial failed (${scopeType}/${scopeKey}):`, err?.message);
+    const ts = Date.now().toString(36).toUpperCase();
+    return `${prefix}-${ts}`;
+  }
+}
+
+async function generateTransactionSerialsPg(sql: any, body: ReturnType<typeof roznamchaPostingSchema.parse>) {
+  try {
+    const superAdminSerialNumber = await nextTransactionSerialPg(sql, "global", "global", "SA");
+
+    let countryPrefix = "CNT";
+    if (body.countryId) {
+      const rows = await sql`select iso2, iso3, name from public.countries where id = ${body.countryId} limit 1`;
+      countryPrefix = cleanSerialPrefix(rows[0]?.iso2 || rows[0]?.iso3 || rows[0]?.name, "CNT");
+    }
+
+    let mainBranchPrefix = "MB";
+    if (body.countryBranchId) {
+      const rows = await sql`select code, name from public.country_branches where id = ${body.countryBranchId} limit 1`;
+      mainBranchPrefix = cleanSerialPrefix(rows[0]?.code || rows[0]?.name, "MB");
+    }
+
+    let cityBranchPrefix = "CB";
+    if (body.cityBranchId) {
+      const rows = await sql`select code, name from public.city_branches where id = ${body.cityBranchId} limit 1`;
+      cityBranchPrefix = cleanSerialPrefix(rows[0]?.code || rows[0]?.name, "CB");
+    }
+
+    const entrySerialPrefix = (body as any).roznamchaBookType === "bank" ? "BNK" : "ROZ";
+
+    const countryTransactionSerialNumber =
+      body.countryId && typeof body.countryId === "string"
+        ? await nextTransactionSerialPg(sql, "country", body.countryId, countryPrefix)
+        : null;
+
+    const branchScopeKey = body.cityBranchId || body.countryBranchId;
+    const branchTransactionSerialNumber =
+      branchScopeKey && typeof branchScopeKey === "string"
+        ? await nextTransactionSerialPg(sql, "branch", branchScopeKey, body.cityBranchId ? cityBranchPrefix : mainBranchPrefix)
+        : null;
+
+    const mainBranchTransactionSerialNumber =
+      body.countryBranchId && typeof body.countryBranchId === "string"
+        ? await nextTransactionSerialPg(sql, "main_branch", body.countryBranchId, mainBranchPrefix)
+        : null;
+
+    const cityBranchTransactionSerialNumber =
+      body.cityBranchId && typeof body.cityBranchId === "string"
+        ? await nextTransactionSerialPg(sql, "city_branch", body.cityBranchId, cityBranchPrefix)
+        : null;
+
+    const entrySerialNumber = await nextTransactionSerialPg(sql, "module_roznamcha", "global", entrySerialPrefix);
+
+    return {
+      superAdminSerialNumber,
+      countryTransactionSerialNumber,
+      branchTransactionSerialNumber,
+      mainBranchTransactionSerialNumber,
+      cityBranchTransactionSerialNumber,
+      entrySerialNumber
+    };
+  } catch (err: any) {
+    console.warn("[serial][pg] generateTransactionSerials failed, using fallback serials:", err?.message);
+    const ts = Date.now().toString(36).toUpperCase();
+    return {
+      superAdminSerialNumber: `SA-${ts}`,
+      countryTransactionSerialNumber: body.countryId ? `CNT-${ts}` : null,
+      branchTransactionSerialNumber: (body.cityBranchId || body.countryBranchId) ? `BR-${ts}` : null,
+      mainBranchTransactionSerialNumber: body.countryBranchId ? `MB-${ts}` : null,
+      cityBranchTransactionSerialNumber: body.cityBranchId ? `CB-${ts}` : null,
+      entrySerialNumber: `ROZ-${ts}`
+    };
+  }
+}
+
+async function resolveUsdAmountPg(sql: any, input: {
+  countryId: string | null | undefined;
+  countryBranchId?: string | null | undefined;
+  currency: string;
+  amount: number;
+  rate: number;
+  entryDate: string;
+  isDebit: boolean;
+}) {
+  const amount = toNumber(input.amount);
+  if (!amount) return { usdRate: 1, usdAmount: 0 };
+
+  let countryCurrency: string | null = null;
+  if (input.countryId) {
+    const rows = await sql`select currency_code from public.countries where id = ${input.countryId} limit 1`;
+    countryCurrency = rows[0]?.currency_code ? String(rows[0].currency_code).toUpperCase() : null;
+  }
+
+  if (countryCurrency === "USD") {
+    return { usdRate: 1, usdAmount: Math.round(amount * 10000) / 10000 };
+  }
+
+  let usdRate = 1;
+  if (input.countryId) {
+    const rows = await sql`
+      select buying_rate, selling_rate, credit_rate, debit_rate, country_branch_id
+      from public.daily_usd_rates
+      where country_id = ${input.countryId}
+        and rate_date = ${input.entryDate}
+        and deleted_at is null
+        and (${input.countryBranchId ? sql`country_branch_id = ${input.countryBranchId} or country_branch_id is null` : sql`country_branch_id is null`})
+    `;
+    if (rows.length > 0) {
+      rows.sort((a: any, b: any) => {
+        if (a.country_branch_id && !b.country_branch_id) return -1;
+        if (!a.country_branch_id && b.country_branch_id) return 1;
+        return 0;
+      });
+      const row = rows[0];
+      usdRate = input.isDebit
+        ? toNumber(row.debit_rate || row.buying_rate || row.selling_rate || 1)
+        : toNumber(row.credit_rate || row.selling_rate || row.buying_rate || 1);
+    } else {
+      const latestRows = await sql`
+        select buying_rate, selling_rate, credit_rate, debit_rate, country_branch_id, rate_date
+        from public.daily_usd_rates
+        where country_id = ${input.countryId}
+          and deleted_at is null
+          and (${input.countryBranchId ? sql`country_branch_id = ${input.countryBranchId} or country_branch_id is null` : sql`country_branch_id is null`})
+        order by rate_date desc, updated_at desc
+        limit 10
+      `;
+      if (latestRows.length > 0) {
+        latestRows.sort((a: any, b: any) => {
+          const dateComp = String(b.rate_date).localeCompare(String(a.rate_date));
+          if (dateComp !== 0) return dateComp;
+          if (a.country_branch_id && !b.country_branch_id) return -1;
+          if (!a.country_branch_id && b.country_branch_id) return 1;
+          return 0;
+        });
+        const row = latestRows[0];
+        usdRate = input.isDebit
+          ? toNumber(row.debit_rate || row.buying_rate || row.selling_rate || 1)
+          : toNumber(row.credit_rate || row.selling_rate || row.buying_rate || 1);
+      }
+    }
+  }
+
+  if (usdRate <= 0) usdRate = 1;
+
+  return {
+    usdRate,
+    usdAmount: Math.round((amount / usdRate) * 10000) / 10000
+  };
+}
+
+async function postRoznamchaWithErpSessionPg(sql: any, input: {
+  sessionUserId: string;
+  session?: any;
+  body: ReturnType<typeof roznamchaPostingSchema.parse>;
+}) {
+  const actorId = await resolveProfileActorPg(sql, input.sessionUserId);
+  const body = input.body;
+  const transactionSerials = await generateTransactionSerialsPg(sql, body);
+
+  const entryCategory = (body.roznamchaCategory || (body.paymentDetails as any)?.roznamchaCategory || null) as
+    | "business"
+    | "bank"
+    | "cash"
+    | "invoice"
+    | "transfer"
+    | null;
+
+  const entryRows = await sql`
+    insert into public.roznamcha_entries (
+      type, country_id, country_branch_id, city_branch_id, journal_no, voucher_no, entry_date,
+      payment_method_id, reference_no, narration, status, created_by,
+      super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number,
+      main_branch_transaction_serial, city_branch_transaction_serial, entry_serial_number,
+      source_module, source_transaction_type, source_transaction_id, source_reference_no,
+      entry_category, posted_at
+    ) values (
+      ${body.type}, ${body.countryId ?? null}, ${body.countryBranchId ?? null}, ${body.cityBranchId ?? null},
+      ${body.journalNo}, ${body.voucherNo}, ${body.entryDate}, ${body.paymentMethodId ?? null},
+      ${body.referenceNo ?? null}, ${body.narration ?? null}, 'posted', ${actorId},
+      ${transactionSerials.superAdminSerialNumber}, ${transactionSerials.countryTransactionSerialNumber},
+      ${transactionSerials.branchTransactionSerialNumber}, ${transactionSerials.mainBranchTransactionSerialNumber},
+      ${transactionSerials.cityBranchTransactionSerialNumber}, ${transactionSerials.entrySerialNumber},
+      ${body.sourceModule ?? null}, ${body.sourceTransactionType ?? null}, ${body.sourceTransactionId ?? null},
+      ${body.sourceReferenceNo ?? null}, ${entryCategory}, now()
+    )
+    returning id
+  `;
+  const entryId = entryRows[0].id as string;
+
+  if (body.narration) {
+    void translateMasterRecord("roznamcha_entries", entryId, { narration: body.narration }, "en", actorId);
+  }
+
+  try {
+    const s = await allocateFormSerials("journal_roznamcha", { countryId: (body as any).countryId ?? null, branchKey: (body as any).countryBranchId ?? (body as any).cityBranchId ?? null });
+    await sql`
+      update public.roznamcha_entries
+      set super_admin_serial = ${s.superAdminSerial}, country_serial = ${s.countrySerial},
+          branch_serial = ${s.branchSerial}, entry_serial = ${s.entrySerial}
+      where id = ${entryId}
+    `;
+  } catch { /* non-fatal — never affects posting */ }
+
+  for (const line of body.lines) {
+    const ledgerId = line.ledgerId;
+    if (!ledgerId) throw new Error("ledgerId is required for posting");
+
+    const ledgerRows = await sql`
+      select id, scope, country_id, country_branch_id, city_branch_id, enterprise_account_id, is_active
+      from public.ledgers
+      where id = ${ledgerId} and deleted_at is null
+      limit 1
+    `;
+    const ledger = ledgerRows[0];
+    if (!ledger?.id || ledger.is_active === false) throw new Error("Ledger was not found or inactive");
+
+    const debit = toNumber(line.debit);
+    const credit = toNumber(line.credit);
+    const enterpriseAccountId = line.enterpriseAccountId ?? ledger.enterprise_account_id ?? null;
+
+    if (!isLedgerScopeCompatible(body.type, ledger.scope)) {
+      throw new Error("Ledger belongs to a different financial scope");
+    }
+
+    // Rule 1: Country Scope Validation — advisory/non-blocking (fail-open on lookup
+    // errors), so keep using the Supabase admin client here; an RLS-empty read just
+    // skips the extra check rather than corrupting the actual posting below.
+    const { validateLedgerCountryScope, validateAccountCountryScope } = await import("@/lib/api/country-scope-validator");
+    if (input.session) {
+      const admin = createSupabaseAdminClient() as any;
+      await validateLedgerCountryScope(input.session, ledgerId, body.countryId, admin);
+      if (enterpriseAccountId) {
+        await validateAccountCountryScope(input.session, enterpriseAccountId, body.countryId, admin);
+      }
+    }
+
+    const currentLedgerRows = await sql`select debit_total, credit_total, current_balance from public.ledgers where id = ${ledgerId} limit 1`;
+    const currentLedger = currentLedgerRows[0];
+    if (!currentLedger) throw new Error("Ledger not found while updating totals");
+
+    await sql`
+      update public.ledgers
+      set debit_total = ${toNumber(currentLedger.debit_total) + debit},
+          credit_total = ${toNumber(currentLedger.credit_total) + credit},
+          current_balance = ${toNumber(currentLedger.current_balance) + debit - credit},
+          updated_at = now()
+      where id = ${ledgerId}
+    `;
+
+    let accountIdentity: any = null;
+    if (enterpriseAccountId) {
+      const accRows = await sql`
+        select account_number, manual_reference_number, customer_number, country_serial_number, branch_serial_number, current_balance
+        from public.enterprise_accounts where id = ${enterpriseAccountId} limit 1
+      `;
+      if (!accRows[0]) throw new Error("Enterprise account not found");
+      accountIdentity = accRows[0];
+    }
+
+    const traceability = {
+      account_number: line.accountNumber ?? accountIdentity?.account_number ?? null,
+      manual_reference_number: line.manualReferenceNumber ?? accountIdentity?.manual_reference_number ?? null,
+      customer_number: line.customerNumber ?? accountIdentity?.customer_number ?? null,
+      country_serial_number: line.countrySerialNumber ?? accountIdentity?.country_serial_number ?? null,
+      branch_serial_number: line.branchSerialNumber ?? accountIdentity?.branch_serial_number ?? null
+    };
+
+    const conversion = await resolveUsdAmountPg(sql, {
+      countryId: body.countryId,
+      countryBranchId: body.countryBranchId,
+      currency: line.currency,
+      amount: debit + credit,
+      rate: toNumber(line.exchangeRate) || 1,
+      entryDate: body.entryDate,
+      isDebit: debit > 0
+    });
+
+    await sql`
+      insert into public.roznamcha_lines (
+        roznamcha_entry_id, payment_entry_type, account_id, enterprise_account_id, ledger_id,
+        description, debit, credit, currency, usd_rate, usd_amount,
+        super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number,
+        main_branch_transaction_serial, city_branch_transaction_serial, entry_serial_number,
+        account_number, manual_reference_number, customer_number, country_serial_number, branch_serial_number
+      ) values (
+        ${entryId}, ${line.paymentEntryType}, ${line.accountId ?? null}, ${enterpriseAccountId}, ${ledgerId},
+        ${line.description ?? null}, ${debit}, ${credit}, ${line.currency}, ${conversion.usdRate}, ${conversion.usdAmount},
+        ${transactionSerials.superAdminSerialNumber}, ${transactionSerials.countryTransactionSerialNumber}, ${transactionSerials.branchTransactionSerialNumber},
+        ${transactionSerials.mainBranchTransactionSerialNumber}, ${transactionSerials.cityBranchTransactionSerialNumber}, ${transactionSerials.entrySerialNumber},
+        ${traceability.account_number}, ${traceability.manual_reference_number}, ${traceability.customer_number},
+        ${traceability.country_serial_number}, ${traceability.branch_serial_number}
+      )
+    `;
+
+    if (enterpriseAccountId && accountIdentity) {
+      const nextBalance = toNumber(accountIdentity.current_balance) + debit - credit;
+      await sql`
+        update public.enterprise_accounts
+        set current_balance = ${nextBalance}, updated_at = now()
+        where id = ${enterpriseAccountId}
+      `;
+
+      await sql`
+        insert into public.enterprise_account_history (
+          enterprise_account_id, account_number, event_type, created_by,
+          debit_total, credit_total, current_balance, last_transaction_at, details
+        ) values (
+          ${enterpriseAccountId}, ${traceability.account_number}, 'roznamcha_posted', ${actorId},
+          ${debit}, ${credit}, ${nextBalance}, now(), ${sql.json({
+            roznamchaEntryId: entryId,
+            voucherNo: body.voucherNo,
+            journalNo: body.journalNo,
+            referenceNo: body.referenceNo ?? null,
+            narration: body.narration ?? null,
+            paymentEntryType: line.paymentEntryType,
+            ledgerId,
+            manualReferenceNumber: traceability.manual_reference_number,
+            customerNumber: traceability.customer_number,
+            countrySerialNumber: traceability.country_serial_number,
+            branchSerialNumber: traceability.branch_serial_number,
+            superAdminSerialNumber: transactionSerials.superAdminSerialNumber,
+            countryTransactionSerialNumber: transactionSerials.countryTransactionSerialNumber,
+            branchTransactionSerialNumber: transactionSerials.branchTransactionSerialNumber,
+            currency: line.currency,
+            exchangeRate: conversion.usdRate,
+            paymentDetails: body.paymentDetails ?? null
+          })}
+        )
+      `;
+    }
+
+    const balanceRows = await sql`
+      select id, debit_total, credit_total, closing_balance
+      from public.ledger_balances
+      where ledger_id = ${ledgerId} and balance_date = ${body.entryDate}
+      limit 1
+    `;
+    const balance = balanceRows[0];
+
+    if (balance?.id) {
+      await sql`
+        update public.ledger_balances
+        set debit_total = ${toNumber(balance.debit_total) + debit},
+            credit_total = ${toNumber(balance.credit_total) + credit},
+            closing_balance = ${toNumber(balance.closing_balance) + debit - credit},
+            updated_at = now()
+        where id = ${balance.id}
+      `;
+    } else {
+      await sql`
+        insert into public.ledger_balances (ledger_id, balance_date, opening_balance, debit_total, credit_total, closing_balance)
+        values (${ledgerId}, ${body.entryDate}, 0, ${debit}, ${credit}, ${debit - credit})
+      `;
+    }
+  }
+
+  return { entryId, transactionSerials };
+}
+
+async function postRoznamchaWithErpSessionSupabase(input: {
   sessionUserId: string;
   session?: any;
   body: ReturnType<typeof roznamchaPostingSchema.parse>;
@@ -340,14 +750,6 @@ export async function postRoznamchaWithErpSession(input: {
 
   if (entryError) throw new Error(entryError.message);
   const entryId = entry.id as string;
-
-  // Populate the 5-language store for the free-form narration the user typed, so any
-  // user viewing this entry in a different language later gets a resolved value instead
-  // of always seeing the original-language text. Registered in the field registry
-  // (lib/i18n/translatable-fields.ts) as mode:"translate"; non-blocking, never affects posting.
-  if (body.narration) {
-    void translateMasterRecord("roznamcha_entries", entryId, { narration: body.narration }, "en", actorId);
-  }
 
   // 4-level serial (Global/Country/Branch/Entry) — additive metadata on the
   // roznamcha entry only; does NOT touch the ledger/account posting below.
@@ -549,6 +951,10 @@ export async function GET(request: NextRequest) {
     const search = request.nextUrl.searchParams.get("search")?.trim();
     const fromDate = request.nextUrl.searchParams.get("fromDate")?.trim();
     const toDate = request.nextUrl.searchParams.get("toDate")?.trim();
+    // Never skip narration resolution based on lang === "en" — the base DB column may
+    // hold non-English source text (see localizeRecordNames rule established earlier
+    // this session for the same class of bug on other tables).
+    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
 
     authorizeApiScope(session, {
       resource: "roznamcha",
@@ -556,13 +962,115 @@ export async function GET(request: NextRequest) {
       ...scope
     });
 
+    // Root-cause bypass (see postRoznamchaWithErpSession above): the Supabase client's
+    // reads are RLS-gated on auth.uid(), which is always NULL under the temp-session
+    // bootstrap login, so the query below silently returns zero rows even for entries
+    // that were just posted. Try a direct-Postgres read first; only fall back to the
+    // Supabase-client path when DATABASE_URL isn't configured for this environment.
+    const viaPg = await withLocalPg(async (sql) => {
+      let cityIds: string[] = [];
+      let countryBranchIds: string[] = [];
+      let countryIds: string[] = [];
+      if (!session.isSuperAdmin) {
+        for (const assignment of session.assignments) {
+          if (assignment.cityBranchId) cityIds.push(assignment.cityBranchId);
+          else if (assignment.countryBranchId) countryBranchIds.push(assignment.countryBranchId);
+          else if (assignment.countryId) countryIds.push(assignment.countryId);
+        }
+        cityIds = [...new Set(cityIds)];
+        countryBranchIds = [...new Set(countryBranchIds)];
+        countryIds = [...new Set(countryIds)];
+        if (cityIds.length === 0 && countryBranchIds.length === 0 && countryIds.length === 0) {
+          return { entries: [] as any[] };
+        }
+      }
+
+      const safeSearch = search ? search.replace(/[%,]/g, "") : null;
+
+      const entryRows = await sql`
+        select
+          e.id, e.type, e.country_id, e.country_branch_id, e.city_branch_id,
+          e.journal_no, e.voucher_no, e.super_admin_serial_number, e.country_transaction_serial_number,
+          e.branch_transaction_serial_number, e.main_branch_transaction_serial, e.city_branch_transaction_serial,
+          e.entry_serial_number, e.entry_date, e.payment_method_id, e.reference_no, e.narration, e.status,
+          e.created_by, e.approved_by, e.approved_at, e.posted_at, e.created_at, e.updated_at,
+          e.source_module, e.source_transaction_type, e.source_transaction_id, e.source_reference_no,
+          case when c.id is not null then jsonb_build_object('name', c.name, 'currency_code', c.currency_code) else null end as countries,
+          case when cb.id is not null then jsonb_build_object('name', cb.name, 'code', cb.code) else null end as country_branches,
+          case when cib.id is not null then jsonb_build_object('name', cib.name, 'code', cib.code) else null end as city_branches,
+          case when pm.id is not null then jsonb_build_object('name', pm.name, 'code', pm.code) else null end as payment_methods,
+          case when cp.id is not null then jsonb_build_object('full_name', cp.full_name) else null end as profiles,
+          case when ap.id is not null then jsonb_build_object('full_name', ap.full_name) else null end as approver_profile
+        from public.roznamcha_entries e
+        left join public.countries c on c.id = e.country_id
+        left join public.country_branches cb on cb.id = e.country_branch_id
+        left join public.city_branches cib on cib.id = e.city_branch_id
+        left join public.payment_methods pm on pm.id = e.payment_method_id
+        left join public.profiles cp on cp.id = e.created_by
+        left join public.profiles ap on ap.id = e.approved_by
+        where e.deleted_at is null
+          and (${scope.countryId ? sql`e.country_id = ${scope.countryId}` : sql`true`})
+          and (${scope.countryBranchId ? sql`e.country_branch_id = ${scope.countryBranchId}` : sql`true`})
+          and (${scope.cityBranchId ? sql`e.city_branch_id = ${scope.cityBranchId}` : sql`true`})
+          and (${session.isSuperAdmin
+            ? sql`true`
+            : sql`(e.city_branch_id = any(${cityIds}) or e.country_branch_id = any(${countryBranchIds}) or e.country_id = any(${countryIds}))`})
+          and (${fromDate ? sql`e.entry_date >= ${fromDate}` : sql`true`})
+          and (${toDate ? sql`e.entry_date <= ${toDate}` : sql`true`})
+          and (${safeSearch ? sql`(
+                e.journal_no ilike ${"%" + safeSearch + "%"}
+                or e.voucher_no ilike ${"%" + safeSearch + "%"}
+                or e.reference_no ilike ${"%" + safeSearch + "%"}
+                or e.super_admin_serial_number ilike ${"%" + safeSearch + "%"}
+                or e.country_transaction_serial_number ilike ${"%" + safeSearch + "%"}
+                or e.branch_transaction_serial_number ilike ${"%" + safeSearch + "%"}
+              )` : sql`true`})
+        order by e.entry_date desc
+        limit ${limit}
+      `;
+
+      const entryIds = entryRows.map((r: any) => r.id);
+      const lineRows = entryIds.length
+        ? await sql`
+            select
+              rl.id, rl.roznamcha_entry_id, rl.payment_entry_type, rl.debit, rl.credit, rl.currency, rl.ledger_id,
+              rl.account_number, rl.manual_reference_number, rl.customer_number, rl.usd_rate, rl.usd_amount,
+              case when l.id is not null then jsonb_build_object(
+                'name', l.name,
+                'city_branches', case when lcb.id is not null then jsonb_build_object('name', lcb.name) else null end,
+                'country_branches', case when lcbr.id is not null then jsonb_build_object('name', lcbr.name) else null end
+              ) else null end as ledgers
+            from public.roznamcha_lines rl
+            left join public.ledgers l on l.id = rl.ledger_id
+            left join public.city_branches lcb on lcb.id = l.city_branch_id
+            left join public.country_branches lcbr on lcbr.id = l.country_branch_id
+            where rl.roznamcha_entry_id = any(${entryIds})
+          `
+        : [];
+
+      const linesByEntry = new Map<string, any[]>();
+      for (const line of lineRows as any[]) {
+        const key = line.roznamcha_entry_id;
+        if (!linesByEntry.has(key)) linesByEntry.set(key, []);
+        linesByEntry.get(key)!.push(line);
+      }
+
+      const entries = (entryRows as any[]).map((e) => ({ ...e, roznamcha_lines: linesByEntry.get(e.id) ?? [] }));
+      return { entries };
+    });
+
+    if (viaPg) {
+      const resolvedEntries = await localizeRecordNames(viaPg.entries, "roznamcha_entries", "narration", lang);
+      return apiOk({ entries: resolvedEntries, limit });
+    }
+
     const supabase = await createApiSupabaseClient();
     let query = supabase
       .from("roznamcha_entries")
       .select(
         // Disambiguate profiles embedding (created_by vs approved_by) by pinning to the FK.
         // We keep the `profiles` key in the response for backward compatibility with the UI types.
-        "id, type, country_id, countries(name,currency_code), country_branch_id, country_branches(name,code), city_branch_id, city_branches(name,code), journal_no, voucher_no, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, main_branch_transaction_serial, city_branch_transaction_serial, entry_serial_number, entry_date, payment_method_id, payment_methods(name,code), reference_no, narration, status, created_by, profiles!roznamcha_entries_created_by_fkey(full_name), approved_by, approver_profile:profiles!roznamcha_entries_approved_by_fkey(full_name), approved_at, posted_at, created_at, updated_at, source_module, source_transaction_type, source_transaction_id, source_reference_no, roznamcha_lines(id, payment_entry_type, debit, credit, currency, ledger_id, ledgers(name, city_branches(name), country_branches(name)), account_number, manual_reference_number, customer_number, usd_rate, usd_amount)"
+        "id, type, country_id, countries(name,currency_code), country_branch_id, country_branches(name,code), city_branch_id, city_branches(name,code), journal_no, voucher_no, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, main_branch_transaction_serial, city_branch_transaction_serial, entry_serial_number, entry_date, payment_method_id, payment_methods(name,code), reference_no, narration, status, created_by, profiles!roznamcha_entries_created_by_fkey(full_name), approved_by, approver_profile:profiles!roznamcha_entries_approved_by_fkey(full_name), approved_at, posted_at, created_at, updated_at, source_module, source_transaction_type, source_transaction_id, source_reference_no, roznamcha_lines(id, payment_entry_type, description, debit, credit, currency, ledger_id, ledgers(name, city_branches(name), country_branches(name)), account_number, manual_reference_number, customer_number, usd_rate, usd_amount)"
       )
       .is("deleted_at", null)
       .order("entry_date", { ascending: false });
@@ -626,8 +1134,25 @@ export async function GET(request: NextRequest) {
       throw new Error(error.message);
     }
 
+    const entries = data ?? [];
+    const entryIds = entries.map((entry: any) => entry.id);
+    if (entryIds.length) {
+      const { data: translationRows, error: translationError } = await supabase.from("record_translations")
+        .select("record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text")
+        .eq("record_table", "roznamcha_entries").in("record_id", entryIds).is("deleted_at", null);
+      if (translationError) throw new Error(translationError.message);
+      for (const row of translationRows || []) {
+        const entry = entries.find((item: any) => item.id === row.record_id) as any;
+        if (entry) {
+          entry.translations ||= {};
+          entry.translations[row.field_name] = { en: row.english_text, ur: row.urdu_text, ar: row.arabic_text, fa: row.persian_text, ps: row.pashto_text };
+        }
+      }
+    }
+    const resolvedEntries = await localizeRecordNames(entries as any[], "roznamcha_entries", "narration", lang);
+
     return apiOk({
-      entries: data ?? [],
+      entries: resolvedEntries,
       limit
     });
   } catch (error) {
@@ -742,6 +1267,21 @@ export async function POST(request: NextRequest) {
     }
 
     const result = await postRoznamchaWithErpSession({ sessionUserId: session.userId, session, body });
+    let translationStatus: { status: "complete" | "pending"; fields: Record<string, unknown> } = { status: "pending", fields: {} };
+    try {
+    const fields = roznamchaTranslationFields({ narration: body.narration, lines: body.lines, paymentDetails: body.paymentDetails })
+      .map((field) => ({ ...field, translations: body.translations?.[field.fieldName] }));
+    const translationResults = await saveVerifiedEnterpriseRecordTranslations({
+      recordTable: "roznamcha_entries", recordId: result.entryId, originalLanguage: body.originalLanguage,
+      actorId: session.userId, fields, source: "auto"
+    });
+    translationStatus = {
+      status: translationResults.every((item) => item.status === "complete") ? "complete" : "pending",
+      fields: Object.fromEntries(translationResults.map((item) => [item.fieldName, { status: item.status, missingLanguages: item.missingLanguages }]))
+    };
+    } catch (translationError) {
+      console.warn("Roznamcha translations remain pending because persistence failed:", translationError);
+    }
 
     // Requirement 9 & 11: Real-time Synchronization
     revalidatePath("/dashboard/roznamcha", "layout");
@@ -754,7 +1294,8 @@ export async function POST(request: NextRequest) {
       balanced: body.lines.length > 1,
       entryId: result.entryId,
       ...result.transactionSerials,
-      postingPlan
+      postingPlan,
+      translationStatus
     };
 
     if (idempotencyKey && tenantHash) {

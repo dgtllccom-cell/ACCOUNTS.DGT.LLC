@@ -65,7 +65,7 @@ const MODULE_FOLDERS = [
 
 export function DocumentManager() {
   const [countries, setCountries] = useState<any[]>([]);
-  const [selectedCountryId, setSelectedCountryId] = useState<string>("c1");
+  const [selectedCountryId, setSelectedCountryId] = useState<string>("");
   const [selectedMainBranchId, setSelectedMainBranchId] = useState<string>("");
   const [selectedCityBranchId, setSelectedCityBranchId] = useState<string>("");
   const [selectedModule, setSelectedModule] = useState<string>("all");

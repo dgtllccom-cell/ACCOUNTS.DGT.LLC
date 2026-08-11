@@ -154,7 +154,9 @@ export const roznamchaPostingSchema = scopeSchema
     sourceTransactionType: z.string().max(60).optional().nullable(),
     sourceTransactionId: optionalUuidSchema,
     sourceReferenceNo: z.string().max(120).optional().nullable(),
-    roznamchaCategory: z.enum(["business", "bank", "cash", "invoice", "transfer"]).optional().nullable()
+    roznamchaCategory: z.enum(["business", "bank", "cash", "invoice", "transfer"]).optional().nullable(),
+    originalLanguage: supportedLanguageSchema.default("en"),
+    translations: z.record(z.string(), z.record(supportedLanguageSchema, z.string().trim())).optional()
   })
   .superRefine((input, context) => {
     if (input.mode === "post" && input.lines.some((line) => !line.ledgerId)) {
@@ -261,10 +263,8 @@ export const purchaseOrderCreateSchema = scopeSchema.extend({
   formData: z.unknown().optional(),
   ledgerPostingStatus: z.string().optional(),
   paymentStatus: z.string().optional(),
-  // Language the user actually entered this booking's business data in (from the ERP's
-  // active-language state) — drives which language the local translation engine treats
-  // as the source when deriving the other 4 language columns in record_translations.
-  originalLanguage: z.enum(["en", "ur", "ar", "fa", "ps"]).optional()
+  originalLanguage: supportedLanguageSchema.default("en"),
+  translations: z.record(z.string(), z.record(supportedLanguageSchema, z.string().trim())).optional()
 });
 
 export const purchaseOrderUpdateSchema = purchaseOrderCreateSchema.partial().extend({
@@ -476,7 +476,7 @@ export const shippingBlRecordCreateSchema = scopeSchema.extend({
 
 export const shippingBlRecordUpdateSchema = shippingBlRecordCreateSchema.partial();
 
-// ─── Bank Master ─────────────────────────────────────────────────────────────
+// %%% Bank Master %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 export const bankCreateSchema = z.object({
   bankType: z.string().trim().min(1).max(80),
   accountType: z.string().trim().min(1).max(80),
@@ -499,13 +499,12 @@ export const bankCreateSchema = z.object({
   email: z.preprocess((val) => (val === "" || val === undefined ? null : val), z.string().trim().email().nullable().optional()),
   swiftBic: z.preprocess((val) => (val === "" || val === undefined ? null : val), z.string().trim().max(20).nullable().optional()),
   website: z.preprocess((val) => (val === "" || val === undefined ? null : val), z.string().trim().max(255).nullable().optional()),
-  remarks: z.preprocess((val) => (val === "" || val === undefined ? null : val), z.string().trim().max(2000).nullable().optional()),
-  originalLanguage: z.enum(["en", "ur", "ar", "fa", "ps"]).optional()
+  remarks: z.preprocess((val) => (val === "" || val === undefined ? null : val), z.string().trim().max(2000).nullable().optional())
 });
 
 export const bankUpdateSchema = bankCreateSchema.partial();
 
-// ─── Missing Schemas ─────────────────────────────────────────────────────────
+// %%% Missing Schemas %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 export const accountUpdateSchema = scopeSchema.partial().extend({
   branchId: optionalUuidSchema,
@@ -558,7 +557,7 @@ export const financialPeriodCreateSchema = scopeSchema.extend({
   endDate: z.string().date()
 });
 
-// ─── Port Masters ────────────────────────────────────────────────────────────
+// %%% Port Masters %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 export const portCreateSchema = z.object({
   portName: z.string().trim().min(2).max(200),
   countryId: optionalUuidSchema,

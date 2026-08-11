@@ -6,6 +6,9 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { supportedLanguageSchema } from "@/lib/api/erp-validation";
+import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
+import { salesOrderTranslationFields } from "@/lib/i18n/sales-order-translations";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -37,7 +40,9 @@ const salesOrderUpdateSchema = z.object({
   paymentStatus: z.string().optional(),
   deliveryStatus: z.string().optional(),
   workflowState: z.unknown().optional(),
-  formData: z.unknown().optional()
+  formData: z.unknown().optional(),
+  originalLanguage: supportedLanguageSchema.optional(),
+  translations: z.record(z.string(), z.record(supportedLanguageSchema, z.string().trim())).optional()
 });
 
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
@@ -67,7 +72,11 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       cityBranchId: (row as any).city_branch_id
     });
 
-    return apiOk({ order: row });
+    const admin = createSupabaseAdminClient() as any;
+    const { data: translationRows } = await admin.from("record_translations")
+      .select("field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text")
+      .eq("record_table", "sales_orders").eq("record_id", params.id).is("deleted_at", null);
+    return apiOk({ order: { ...(row as any), translations: Object.fromEntries((translationRows || []).map((item: any) => [item.field_name, { en: item.english_text, ur: item.urdu_text, ar: item.arabic_text, fa: item.persian_text, ps: item.pashto_text }])) } });
   } catch (error) {
     return handleApiError(error);
   }
@@ -253,6 +262,34 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
     if (error) {
       throw error;
+    }
+
+    if (body.formData !== undefined || body.customerName !== undefined || body.productSummary !== undefined) {
+      try {
+      const effectiveFormData = body.formData ?? (before as any).form_data ?? {};
+      const originalLanguage = body.originalLanguage ?? (effectiveFormData as any).translationOriginalLanguage ?? "en";
+      const fields = salesOrderTranslationFields({
+        formData: effectiveFormData,
+        customerName: body.customerName ?? (before as any).customer_name,
+        productSummary: body.productSummary ?? (before as any).product_summary
+      }).map((field) => ({ ...field, translations: body.translations?.[field.fieldName] }));
+      const translationResults = await saveVerifiedEnterpriseRecordTranslations({
+        recordTable: "sales_orders", recordId: params.id, originalLanguage, actorId: session.userId, fields, source: "auto"
+      });
+      const translationStatus = {
+        status: translationResults.every((result) => result.status === "complete") ? "complete" : "pending",
+        fields: Object.fromEntries(translationResults.map((result) => [result.fieldName, { status: result.status, missingLanguages: result.missingLanguages }]))
+      };
+      const admin = createSupabaseAdminClient() as any;
+      await admin.from("sales_orders").update({ form_data: {
+        ...(effectiveFormData as any),
+        translations: Object.fromEntries(translationResults.map((result) => [result.fieldName, result.translations])),
+        translationStatus,
+        translationOriginalLanguage: originalLanguage
+      } }).eq("id", params.id);
+      } catch (translationError) {
+        console.warn("Sales-order translations remain pending after update persistence failure:", translationError);
+      }
     }
 
     await writeAuditLog({

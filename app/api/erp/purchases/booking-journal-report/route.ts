@@ -6,7 +6,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { ensurePurchaseSchemaAndEnums } from "@/lib/services/purchase-table-manager";
-import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
+import { withLocalPg } from "@/lib/db/local-postgres";
 
 const querySchema = z.object({
   purchaseOrderNo: z.string().trim().max(140).optional(),
@@ -138,20 +138,10 @@ function normalizeOrder(row: any) {
       .map((item: any) => [item.goodsName, item.size, item.brand, item.origin, item.hsCode ? `HS ${item.hsCode}` : ""].filter(Boolean).join(" / "))
       .filter(Boolean)
       .join("; ") || "-",
-    translations: {
-      productName: autoTranslate5Languages(goods.map((item: any) => item.goodsName).filter(Boolean).join(", ") || "-"),
-      goodsDescription: autoTranslate5Languages(
-        goods.map((item: any) => [item.goodsName, item.size, item.brand, item.origin].filter(Boolean).join(" / ")).join("; ") || "-"
-      ),
-      purchaseAccountName: autoTranslate5Languages(form.purchaseAccountName ?? "-"),
-      salesAccountName: autoTranslate5Languages(form.salesAccountName ?? "-"),
-      supplierName: autoTranslate5Languages(form.supplierName ?? row.companies?.name ?? "-"),
-      buyerName: autoTranslate5Languages(form.customerName ?? "-"),
-      remarks: autoTranslate5Languages(form.orderReportRemarks || form.remarks || "-"),
-      branchName: autoTranslate5Languages(finalBranchName),
-      countryName: autoTranslate5Languages(finalCountryName),
-      status: autoTranslate5Languages(workflow.lifecycleStatus ?? purchaseBooking.loadingStatus ?? row.payment_status ?? form.salesStatus ?? "Draft")
-    },
+    // Only persisted, verified target-language values are exposed. Unknown target
+    // text stays pending instead of being copied from the source language.
+    translations: row.form_data?.translations ?? {},
+    translationStatus: row.form_data?.translationStatus ?? { status: "pending", fields: {} },
     quantity,
         unit: form.qtyName ?? goods[0]?.qtyName ?? "-",
         totalWeight,
@@ -233,6 +223,42 @@ function normalizeOrder(row: any) {
       });
       const effectiveScope = getEffectiveScope(session, query);
 
+      // purchase_orders has scoped RLS and this app's Supabase client is not guaranteed to
+      // carry a real service-role key that bypasses RLS on its own - reads through it
+      // silently return an empty array. Try a direct Postgres read first (same proven bypass
+      // as app/api/erp/purchases/orders/route.ts), covering the common case (no free-text
+      // search, no explicit date range); when it succeeds, feed its rows into the SAME
+      // downstream dedup/filter/summary logic below instead of duplicating it, only skipping
+      // the Supabase-client fetch. Falls back to the existing path otherwise.
+      let viaPgData: any[] | null = null;
+      if (!query.purchaseOrderNo && !query.q && !query.dateFrom && !query.dateTo) {
+        viaPgData = await withLocalPg(async (sql) => {
+          const rows = await sql`
+            SELECT po.id, po.purchase_order_no, po.purchase_contract_no, po.country_id, po.country_branch_id,
+              po.city_branch_id, po.supplier_company_id, po.purchase_currency, po.payment_currency, po.currency_code,
+              po.exchange_rate, po.order_total, po.payment_status, po.ledger_posting_status, po.is_edited_since_transfer,
+              po.form_data, po.created_at, po.advance_paid, po.remaining_paid, po.credit_amount, po.remaining_due,
+              po.super_admin_serial_number, po.country_transaction_serial_number, po.branch_transaction_serial_number,
+              CASE WHEN comp.id IS NULL THEN NULL ELSE jsonb_build_object('name', comp.name) END as companies,
+              CASE WHEN c.id IS NULL THEN NULL ELSE jsonb_build_object('name', c.name, 'iso2', c.iso2) END as countries,
+              CASE WHEN cb.id IS NULL THEN NULL ELSE jsonb_build_object('name', cb.name, 'code', cb.code) END as country_branches,
+              CASE WHEN cib.id IS NULL THEN NULL ELSE jsonb_build_object('name', cib.name, 'code', cib.code, 'city_name', cib.city_name) END as city_branches
+            FROM public.purchase_orders po
+            LEFT JOIN public.companies comp ON comp.id = po.supplier_company_id
+            LEFT JOIN public.countries c ON c.id = po.country_id
+            LEFT JOIN public.country_branches cb ON cb.id = po.country_branch_id
+            LEFT JOIN public.city_branches cib ON cib.id = po.city_branch_id
+            WHERE po.deleted_at IS NULL
+              AND (${query.cityBranchId ? sql`po.city_branch_id = ${query.cityBranchId}::uuid` : sql`true`})
+              AND (${!query.cityBranchId && query.countryBranchId ? sql`po.country_branch_id = ${query.countryBranchId}::uuid` : sql`true`})
+              AND (${!query.cityBranchId && !query.countryBranchId && query.countryId ? sql`po.country_id = ${query.countryId}::uuid` : sql`true`})
+            ORDER BY po.created_at DESC
+            LIMIT ${query.limit}
+          `;
+          return rows as any[];
+        });
+      }
+
       const supabase = createSupabaseAdminClient() as any;
       let requestQuery = supabase
         .from("purchase_orders")
@@ -289,14 +315,20 @@ function normalizeOrder(row: any) {
         requestQuery = requestQuery.in("country_id", session.countryIds.length ? session.countryIds : ["00000000-0000-0000-0000-000000000000"]);
       }
 
-      let { data, error } = await withTimeout<any>(requestQuery.limit(query.limit), "purchase booking journal report");
-      if (error) {
-        const errMsg = String(error.message || error);
-        if (errMsg.includes("column") || errMsg.includes("does not exist") || errMsg.includes("schema cache") || errMsg.includes("relation")) {
-          await ensurePurchaseSchemaAndEnums();
-          const retryRes = await withTimeout<any>(requestQuery.limit(query.limit), "purchase booking journal report");
-          data = retryRes.data;
-          error = retryRes.error;
+      let data: any = viaPgData;
+      let error: any = null;
+      if (!viaPgData) {
+        const res = await withTimeout<any>(requestQuery.limit(query.limit), "purchase booking journal report");
+        data = res.data;
+        error = res.error;
+        if (error) {
+          const errMsg = String(error.message || error);
+          if (errMsg.includes("column") || errMsg.includes("does not exist") || errMsg.includes("schema cache") || errMsg.includes("relation")) {
+            await ensurePurchaseSchemaAndEnums();
+            const retryRes = await withTimeout<any>(requestQuery.limit(query.limit), "purchase booking journal report");
+            data = retryRes.data;
+            error = retryRes.error;
+          }
         }
       }
       if (error) {
@@ -350,7 +382,7 @@ function normalizeOrder(row: any) {
         console.warn("Could not fetch daily USD rates", e);
       }
 
-      // ─── Compute live status breakdown ───────────────────────────────────
+      // --- Compute live status breakdown ---
       const nowMs = Date.now();
       const firstDayOfMonth = new Date();
       firstDayOfMonth.setDate(1);
@@ -426,9 +458,9 @@ function normalizeOrder(row: any) {
       const orderIds = reports.map((r: any) => r.id).filter(Boolean);
       if (orderIds.length > 0) {
         try {
-          const { data: recTrans } = await adminSupabase
+          const { data: recTrans } = await supabase
             .from("record_translations")
-            .select("record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text, language_texts")
+            .select("record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text, language_texts, translation_status, original_language_code")
             .in("record_id", orderIds)
             .eq("record_table", "purchase_orders")
             .is("deleted_at", null);
@@ -438,11 +470,14 @@ function normalizeOrder(row: any) {
             for (const row of recTrans) {
               if (!transMapByOrder[row.record_id]) transMapByOrder[row.record_id] = {};
               const fName = row.field_name === "product_name" ? "productName"
+                : row.field_name === "goods_description" ? "goodsDescription"
                 : row.field_name === "purchase_account_name" ? "purchaseAccountName"
                 : row.field_name === "sales_account_name" ? "salesAccountName"
                 : row.field_name === "supplier_name" ? "supplierName"
                 : row.field_name === "buyer_name" ? "buyerName"
                 : row.field_name === "remarks" ? "remarks"
+                : row.field_name === "branch_name" ? "branchName"
+                : row.field_name === "country_name" ? "countryName"
                 : row.field_name;
 
               const tObj = row.language_texts || {
@@ -477,28 +512,28 @@ function normalizeOrder(row: any) {
           totalAmount: reports.reduce((sum: number, report: any) => sum + Number(report.totalPurchaseAmount || 0), 0),
           totalQuantity: reports.reduce((sum: number, report: any) => sum + Number(report.quantity || 0), 0),
           totalContainers: reports.reduce((sum: number, report: any) => sum + Number(report.containerCount || 0), 0),
-          // ── Status breakdown (live) ──
+          // --- Status breakdown (live) ---
           draft: statusCounts.draft,
           accepted: statusCounts.accepted,
           transferred: statusCounts.transferred,
           completed: statusCounts.completed,
           cancelled: statusCounts.cancelled,
-          // ── Amount breakdown by status ──
+          // --- Amount breakdown by status ---
           acceptedAmount: totalAcceptedAmount,
           transferredAmount: totalTransferredAmount,
           completedAmount: totalCompletedAmount,
-          // ── Branches ──
+          // --- Branches ---
           totalBranches: branchIds.size,
           activeBranches: activeBranchIds.size,
           inactiveBranches: Math.max(0, branchIds.size - activeBranchIds.size),
-          // ── This Month ──
+          // --- This Month ---
           thisMonth: {
             created: thisMonthCreated,
             amount: thisMonthAmount,
             transferred: thisMonthTransferred,
             completed: thisMonthCompleted
           },
-          // ── Quick Info ──
+          // --- Quick Info ---
           quickInfo: {
             currency: topCurrency,
             exchangeRate: avgExchangeRate,
@@ -514,4 +549,3 @@ function normalizeOrder(row: any) {
       return handleApiError(error);
     }
   }
-

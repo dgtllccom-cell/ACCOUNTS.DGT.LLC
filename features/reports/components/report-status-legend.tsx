@@ -1,6 +1,8 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 export type StatusDefinition = {
   label: string;
@@ -52,6 +54,13 @@ export const ERP_STATUS_COLORS: Record<string, { bg: string; text: string; borde
     border: "border-yellow-200 dark:border-yellow-800",
     dot: "bg-yellow-500",
     label: "Pending"
+  },
+  Posted: {
+    bg: "bg-emerald-100 dark:bg-emerald-950/50",
+    text: "text-emerald-800 dark:text-emerald-300",
+    border: "border-emerald-200 dark:border-emerald-800",
+    dot: "bg-emerald-600",
+    label: "Posted"
   },
   Active: {
     bg: "bg-emerald-100 dark:bg-emerald-950/50",
@@ -133,6 +142,7 @@ export function StatusBadge({ status, className }: { status: string; className?:
 }
 
 type ReportStatusLegendProps = {
+  lang?: SupportedLanguage;
   statuses?: Array<keyof typeof ERP_STATUS_COLORS>;
   notes?: string[];
   className?: string;
@@ -146,10 +156,12 @@ const DEFAULT_PURCHASE_STATUSES: Array<keyof typeof ERP_STATUS_COLORS> = [
  * ReportStatusLegend — footer section showing status color key + notes.
  */
 export function ReportStatusLegend({
+  lang = "en",
   statuses = DEFAULT_PURCHASE_STATUSES,
   notes,
   className
 }: ReportStatusLegendProps) {
+  const tr = (label: string) => translateHeader(lang, label);
   return (
     <div className={cn(
       "flex flex-col sm:flex-row gap-4 sm:gap-8 print:flex-row",
@@ -159,7 +171,7 @@ export function ReportStatusLegend({
       {/* Status Legend */}
       <div className="flex-1">
         <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-          STATUS LEGEND
+          {tr("STATUS LEGEND")}
         </p>
         <div className="flex flex-wrap gap-x-5 gap-y-1.5">
           {statuses.map((status) => {
@@ -169,7 +181,7 @@ export function ReportStatusLegend({
               <div key={status as string} className="flex items-center gap-1.5">
                 <span className={cn("h-2.5 w-2.5 rounded-full flex-shrink-0", cfg.dot)} />
                 <span className="text-slate-600 dark:text-slate-400 font-medium">
-                  {cfg.label}
+                  {tr(cfg.label)}
                 </span>
               </div>
             );
@@ -181,7 +193,7 @@ export function ReportStatusLegend({
       {notes && notes.length > 0 && (
         <div className="sm:max-w-sm">
           <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2">
-            NOTE
+            {tr("NOTE")}
           </p>
           <ul className="space-y-1">
             {notes.map((note, i) => (

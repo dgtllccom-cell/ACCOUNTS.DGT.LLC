@@ -582,7 +582,8 @@ function EditMasterModal({
   row,
   onClose,
   onSave,
-  busy
+  busy,
+  countries
 }: {
   row: GoodsRecord;
   onClose: () => void;

@@ -10,10 +10,11 @@ import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/l
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { safeInsertPurchaseOrderItems, safeInsertPurchaseOrderExpenses } from "@/lib/services/purchase-table-manager";
-import { saveEnterpriseRecordTranslations, normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
-import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 import { revalidatePath } from "next/cache";
+import { purchaseOrderTranslationFields } from "@/lib/i18n/purchase-order-translations";
+import { withLocalPg } from "@/lib/db/local-postgres";
 
 const listQuerySchema = z.object({
   countryId: uuidSchema.optional(),
@@ -95,65 +96,102 @@ export async function GET(request: NextRequest) {
     });
 
     const supabase = await createApiSupabaseClient();
-    let q = supabase
-      .from("purchase_orders")
-      .select(`
-        *,
-        countries(name, currency_code),
-        country_branches(name, code)
-      `)
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false });
 
-    // Apply strict DB-level scoping based on user session BEFORE limit
-    if (!session.isSuperAdmin) {
-      if (session.cityBranchIds.length > 0) {
-        q = q.or(`city_branch_id.in.(${session.cityBranchIds.join(",")}),city_branch_id.is.null`);
-        if (session.countryIds.length > 0) {
+    // purchase_orders has scoped RLS and this app's Supabase client is not guaranteed to
+    // carry a real service-role key that bypasses RLS on its own — reads through it silently
+    // return an empty array (RLS filters rows, it doesn't error on SELECT) rather than the
+    // real data. Read via a direct Postgres connection when available (same proven bypass as
+    // the POST handler above), falling back to the Supabase client otherwise.
+    const term = query.q ? query.q.trim().replace(/[%_]/g, "") : null;
+    const like = term ? `%${term}%` : null;
+    const viaPgRows = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        SELECT po.*, to_jsonb(c.*) as countries, to_jsonb(cb.*) as country_branches
+        FROM public.purchase_orders po
+        LEFT JOIN public.countries c ON c.id = po.country_id
+        LEFT JOIN public.country_branches cb ON cb.id = po.country_branch_id
+        WHERE po.deleted_at IS NULL
+          AND (${query.cityBranchId ? sql`po.city_branch_id = ${query.cityBranchId}::uuid` : sql`true`})
+          AND (${!query.cityBranchId && query.countryBranchId ? sql`po.country_branch_id = ${query.countryBranchId}::uuid` : sql`true`})
+          AND (${!query.cityBranchId && !query.countryBranchId && query.countryId ? sql`po.country_id = ${query.countryId}::uuid` : sql`true`})
+          AND (${like ? sql`(
+            po.purchase_order_no ILIKE ${like} OR po.purchase_contract_no ILIKE ${like} OR
+            po.form_data->'form'->>'manualBillNo' ILIKE ${like} OR po.form_data->'form'->>'manual_bill_no' ILIKE ${like} OR
+            po.form_data->'form'->>'billNo' ILIKE ${like} OR po.form_data->'form'->>'invoiceNo' ILIKE ${like} OR
+            po.form_data->'form'->>'purchaseContractNo' ILIKE ${like} OR po.form_data->'form'->>'supplierName' ILIKE ${like} OR
+            po.form_data->'form'->>'customerName' ILIKE ${like} OR po.form_data->'form'->>'goodsName' ILIKE ${like} OR
+            po.form_data->'form'->>'productName' ILIKE ${like} OR po.form_data->'form'->>'purchaseAccountName' ILIKE ${like} OR
+            po.form_data->'form'->>'salesAccountName' ILIKE ${like}
+          )` : sql`true`})
+        ORDER BY po.created_at DESC
+        LIMIT ${query.limit}
+      `;
+      return rows;
+    });
+
+    let rawRows: any;
+    if (viaPgRows) {
+      rawRows = viaPgRows;
+    } else {
+      let q = supabase
+        .from("purchase_orders")
+        .select(`
+          *,
+          countries(name, currency_code),
+          country_branches(name, code)
+        `)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false });
+
+      // Apply strict DB-level scoping based on user session BEFORE limit
+      if (!session.isSuperAdmin) {
+        if (session.cityBranchIds.length > 0) {
+          q = q.or(`city_branch_id.in.(${session.cityBranchIds.join(",")}),city_branch_id.is.null`);
+          if (session.countryIds.length > 0) {
+            q = q.in("country_id", session.countryIds);
+          }
+        } else if (session.countryBranchIds.length > 0) {
+          q = q.in("country_branch_id", session.countryBranchIds);
+        } else if (session.countryIds.length > 0) {
           q = q.in("country_id", session.countryIds);
+        } else {
+          q = q.eq("id", "00000000-0000-0000-0000-000000000000"); // Fail-safe empty state
         }
-      } else if (session.countryBranchIds.length > 0) {
-        q = q.in("country_branch_id", session.countryBranchIds);
-      } else if (session.countryIds.length > 0) {
-        q = q.in("country_id", session.countryIds);
-      } else {
-        q = q.eq("id", "00000000-0000-0000-0000-000000000000"); // Fail-safe empty state
       }
-    }
 
-    if (query.cityBranchId) q = q.eq("city_branch_id", query.cityBranchId);
-    else if (query.countryBranchId) q = q.eq("country_branch_id", query.countryBranchId);
-    else if (query.countryId) q = q.eq("country_id", query.countryId);
+      if (query.cityBranchId) q = q.eq("city_branch_id", query.cityBranchId);
+      else if (query.countryBranchId) q = q.eq("country_branch_id", query.countryBranchId);
+      else if (query.countryId) q = q.eq("country_id", query.countryId);
 
-    if (query.q) {
-      const term = query.q.trim().replace(/[%_]/g, "");
-      q = q.or(
-        `purchase_order_no.ilike.%${term}%,` +
-        `purchase_contract_no.ilike.%${term}%,` +
-        `form_data->form->>manualBillNo.ilike.%${term}%,` +
-        `form_data->form->>manual_bill_no.ilike.%${term}%,` +
-        `form_data->form->>billNo.ilike.%${term}%,` +
-        `form_data->form->>invoiceNo.ilike.%${term}%,` +
-        `form_data->form->>purchaseContractNo.ilike.%${term}%,` +
-        `form_data->form->>supplierName.ilike.%${term}%,` +
-        `form_data->form->>customerName.ilike.%${term}%,` +
-        `form_data->form->>goodsName.ilike.%${term}%,` +
-        `form_data->form->>productName.ilike.%${term}%,` +
-        `form_data->form->>purchaseAccountName.ilike.%${term}%,` +
-        `form_data->form->>salesAccountName.ilike.%${term}%`
-      );
-    }
+      if (query.q) {
+        const qterm = query.q.trim().replace(/[%_]/g, "");
+        q = q.or(
+          `purchase_order_no.ilike.%${qterm}%,` +
+          `purchase_contract_no.ilike.%${qterm}%,` +
+          `form_data->form->>manualBillNo.ilike.%${qterm}%,` +
+          `form_data->form->>manual_bill_no.ilike.%${qterm}%,` +
+          `form_data->form->>billNo.ilike.%${qterm}%,` +
+          `form_data->form->>invoiceNo.ilike.%${qterm}%,` +
+          `form_data->form->>purchaseContractNo.ilike.%${qterm}%,` +
+          `form_data->form->>supplierName.ilike.%${qterm}%,` +
+          `form_data->form->>customerName.ilike.%${qterm}%,` +
+          `form_data->form->>goodsName.ilike.%${qterm}%,` +
+          `form_data->form->>productName.ilike.%${qterm}%,` +
+          `form_data->form->>purchaseAccountName.ilike.%${qterm}%,` +
+          `form_data->form->>salesAccountName.ilike.%${qterm}%`
+        );
+      }
 
-    let rawRows;
-    try {
-      rawRows = await requireSupabaseData(q.limit(query.limit));
-    } catch (e: any) {
-      const errMsg = String(e.message || e);
-      if (errMsg.includes("column") || errMsg.includes("does not exist") || errMsg.includes("schema cache") || errMsg.includes("relation")) {
-        await ensurePurchaseSchemaAndEnums();
+      try {
         rawRows = await requireSupabaseData(q.limit(query.limit));
-      } else {
-        throw e;
+      } catch (e: any) {
+        const errMsg = String(e.message || e);
+        if (errMsg.includes("column") || errMsg.includes("does not exist") || errMsg.includes("schema cache") || errMsg.includes("relation")) {
+          await ensurePurchaseSchemaAndEnums();
+          rawRows = await requireSupabaseData(q.limit(query.limit));
+        } else {
+          throw e;
+        }
       }
     }
     const seenPo = new Set<string>();
@@ -236,7 +274,7 @@ export async function POST(request: NextRequest) {
     const supabase = await createApiSupabaseClient();
     const adminSupabase = createSupabaseAdminClient() as any;
 
-    // ── Rule 1: Country Scope Validation for Purchase Accounts ──
+    // â”€â”€ Rule 1: Country Scope Validation for Purchase Accounts â”€â”€
     const form = body.formData?.form || {};
     const purchaseAccountId = form.purchaseAccountId || form.purchaseAccountNo;
     const salesAccountId = form.salesAccountId || form.salesAccountNo;
@@ -355,24 +393,39 @@ export async function POST(request: NextRequest) {
       branch_transaction_serial_number: branchTransactionSerialNumber
     };
 
-    let inserted;
-    try {
-      inserted = await requireSupabaseData(
-        supabase.from("purchase_orders").insert(payload).select("id, purchase_order_no").single()
-      );
-    } catch (e: any) {
-      const errMsg = String(e.message || e);
-      if (errMsg.includes("schema cache") || errMsg.includes("column") || errMsg.includes("relation") || errMsg.includes("landed_cost") || errMsg.includes("currency")) {
-        await ensurePurchaseSchemaAndEnums();
-        try {
-          inserted = await requireSupabaseData(
-            supabase.from("purchase_orders").insert(payload).select("id, purchase_order_no").single()
-          );
-        } catch (retryErr: any) {
-          return apiError("INSERT_FAILED", retryErr.message || String(retryErr), 400);
+    // purchase_orders has scoped RLS and this app's Supabase client is not guaranteed to
+    // carry a real service-role key that bypasses RLS on its own (confirmed live: this
+    // insert failed with "new row violates row-level security policy for table
+    // \"purchase_orders\"" for every purchase order creation attempt). Insert via a direct
+    // Postgres connection when available (same proven bypass as banks/customers/sales_orders),
+    // falling back to the Supabase client + its existing schema-cache retry otherwise.
+    let inserted: any;
+    const viaPgInsert = await withLocalPg(async (sql) => {
+      const rows = await sql`INSERT INTO public.purchase_orders ${sql(payload as any)} RETURNING id, purchase_order_no`;
+      return rows[0];
+    });
+
+    if (viaPgInsert) {
+      inserted = viaPgInsert;
+    } else {
+      try {
+        inserted = await requireSupabaseData(
+          supabase.from("purchase_orders").insert(payload).select("id, purchase_order_no").single()
+        );
+      } catch (e: any) {
+        const errMsg = String(e.message || e);
+        if (errMsg.includes("schema cache") || errMsg.includes("column") || errMsg.includes("relation") || errMsg.includes("landed_cost") || errMsg.includes("currency")) {
+          await ensurePurchaseSchemaAndEnums();
+          try {
+            inserted = await requireSupabaseData(
+              supabase.from("purchase_orders").insert(payload).select("id, purchase_order_no").single()
+            );
+          } catch (retryErr: any) {
+            return apiError("INSERT_FAILED", retryErr.message || String(retryErr), 400);
+          }
+        } else {
+          return apiError("INSERT_FAILED", errMsg, 400);
         }
-      } else {
-        return apiError("INSERT_FAILED", errMsg, 400);
       }
     }
 
@@ -382,7 +435,14 @@ export async function POST(request: NextRequest) {
     // AFTER the order row is created. Does NOT touch posting/ledger logic.
     try {
       const s = await allocateFormSerials("purchase", { countryId: effective.countryId, branchKey: effective.countryBranchId ?? effective.cityBranchId ?? null });
-      await adminSupabase.from("purchase_orders").update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial }).eq("id", orderId);
+      const serialPatch = { super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial };
+      const viaPgSerial = await withLocalPg(async (sql) => {
+        await sql`UPDATE public.purchase_orders SET ${sql(serialPatch)} WHERE id = ${orderId}::uuid`;
+        return true;
+      });
+      if (!viaPgSerial) {
+        await adminSupabase.from("purchase_orders").update(serialPatch).eq("id", orderId);
+      }
     } catch { /* non-fatal — never blocks the order/posting */ }
 
     let insertedItems: Array<{ id: string; goods_name?: string; brand?: string; unit_name?: string }> = [];
@@ -436,80 +496,44 @@ export async function POST(request: NextRequest) {
     // Ledger posting has been removed from Purchase Booking.
     // Booking must remain only in the Purchase Booking Register until transferred and paid.
 
-    // Save 5-language DB translations to 'record_translations' and form_data.translations
+    // Reuse the central five-language translation store. Unknown target text is
+    // persisted as pending/null, never as a false copy of the source language.
+    let translationSummary: { status: "complete" | "pending"; fields: Record<string, unknown> } = { status: "pending", fields: {} };
     try {
-      // The language the user actually entered this booking's business data in
-      // (sent by the wizard from its active-language state). Falls back to "en"
-      // for older clients that don't send it yet.
-      const entryLang = normalizeLanguage(body.originalLanguage as string | undefined, "en");
-      const itemsList = body.items || [];
-      const goodsNames = itemsList.map((i: any) => i.goodsName).filter(Boolean).join(", ") || form.goodsName || form.productName || "";
-      const remarksText = form.orderReportRemarks || form.remarks || "";
-      const purchaseAcc = form.purchaseAccountName || "";
-      const salesAcc = form.salesAccountName || "";
-      const supplier = form.supplierName || "";
-      const buyer = form.customerName || "";
-
-      const translationsMap = {
-        productName: autoTranslate5Languages(goodsNames, entryLang),
-        purchaseAccountName: autoTranslate5Languages(purchaseAcc, entryLang),
-        salesAccountName: autoTranslate5Languages(salesAcc, entryLang),
-        supplierName: autoTranslate5Languages(supplier, entryLang),
-        buyerName: autoTranslate5Languages(buyer, entryLang),
-        remarks: autoTranslate5Languages(remarksText, entryLang)
-      };
-
-      await saveEnterpriseRecordTranslations({
+      const currentFormData: any = payload.form_data || {};
+      const supplied = body.translations || {};
+      const fields = purchaseOrderTranslationFields(body.formData, body.items).map((field) => ({
+        ...field,
+        translations: supplied[field.fieldName]
+      }));
+      const translationResults = await saveVerifiedEnterpriseRecordTranslations({
         recordTable: "purchase_orders",
         recordId: orderId,
-        originalLanguage: entryLang,
-        fields: [
-          { fieldName: "product_name", value: goodsNames },
-          { fieldName: "purchase_account_name", value: purchaseAcc },
-          { fieldName: "sales_account_name", value: salesAcc },
-          { fieldName: "supplier_name", value: supplier },
-          { fieldName: "buyer_name", value: buyer },
-          { fieldName: "remarks", value: remarksText }
-        ],
+        originalLanguage: body.originalLanguage,
+        fields,
+        actorId: session.userId,
         source: "auto"
       });
-
-      // Per-item translation (purchase_order_items.goods_name/brand/unit_name — registered in
-      // lib/i18n/translatable-fields.ts) so the Goods Entry table, Complete Summary, and Voucher
-      // can resolve each line item's name/brand/unit in the active language, not just the
-      // concatenated order-level "product_name" summary above. insertedItems is in the same
-      // order as body.items / form_data.goodsEntries (both built from the same client-side
-      // `allEntries` array), so index-matching is safe here.
-      const currentFormData: any = payload.form_data || {};
-      const goodsEntriesWithIds = Array.isArray(currentFormData.goodsEntries)
-        ? currentFormData.goodsEntries.map((g: any, idx: number) => {
-            const dbItem = insertedItems[idx];
-            if (!dbItem?.id) return g;
-            void translateMasterRecord(
-              "purchase_order_items",
-              dbItem.id,
-              { goods_name: dbItem.goods_name, brand: dbItem.brand, unit_name: dbItem.unit_name },
-              entryLang,
-              session.userId
-            );
-            return { ...g, itemId: dbItem.id };
-          })
-        : currentFormData.goodsEntries;
-
+      translationSummary = {
+        status: translationResults.every((result) => result.status === "complete") ? "complete" : "pending",
+        fields: Object.fromEntries(translationResults.map((result) => [result.fieldName, {
+          status: result.status,
+          missingLanguages: result.missingLanguages
+        }]))
+      };
       const updatedFormData = {
         ...currentFormData,
-        goodsEntries: goodsEntriesWithIds,
-        translations: translationsMap
+        translations: Object.fromEntries(translationResults.map((result) => [result.fieldName, result.translations])),
+        translationStatus: translationSummary,
+        translationOriginalLanguage: body.originalLanguage
       };
-
       await adminSupabase
         .from("purchase_orders")
         .update({ form_data: updatedFormData })
         .eq("id", orderId);
     } catch (transErr) {
-      console.warn("Non-fatal error saving record translations:", transErr);
+      console.warn("Purchase-order translations remain pending because persistence failed:", transErr);
     }
-
     await writeAuditLog({
       action: "create",
       entityTable: "purchase_orders",
@@ -525,7 +549,8 @@ export async function POST(request: NextRequest) {
 
     const resData = {
       purchaseOrderId: orderId as string,
-      purchaseOrderNo: (inserted as any).purchase_order_no as string
+      purchaseOrderNo: (inserted as any).purchase_order_no as string,
+      translationStatus: translationSummary
     };
 
     if (idempotencyKey && tenantHash) {
@@ -540,5 +565,3 @@ export async function POST(request: NextRequest) {
     return handleApiError(error);
   }
 }
-
-

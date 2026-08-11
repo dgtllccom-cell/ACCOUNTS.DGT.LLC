@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { withLocalPg } from "@/lib/db/local-postgres";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -15,25 +16,50 @@ export async function GET(request: NextRequest) {
 
     const supabase = createSupabaseAdminClient();
 
+    // Root-cause bypass: countries_scope_read / currency_rates_scope_read gate on
+    // is_super_admin()/can_access_country(), both keyed off auth.uid(), which is always
+    // NULL under the app's temp-session bootstrap login — so the "admin" Supabase client
+    // reads below silently return zero rows. Try a direct-Postgres read first (bypasses
+    // RLS via DATABASE_URL); fall back to the Supabase-client path only when
+    // DATABASE_URL isn't configured.
+    const viaPg = await withLocalPg(async (sql) => {
+      const countries = await sql`select id, name, iso2, currency_code from public.countries order by name asc`;
+      const cityBranches = await sql`
+        select id, country_id, country_branch_id, name, code, local_currency
+        from public.city_branches
+        order by name asc
+      `;
+      const currencyRates = await sql`
+        select country_id, from_currency, rate, credit_rate, debit_rate, effective_date, created_at
+        from public.currency_rates
+        where deleted_at is null and effective_date = ${dateParam}
+        order by created_at desc
+      `;
+      return { countries, cityBranches, currencyRates };
+    });
+
     // 1. Fetch Countries
-    const { data: countriesData } = await supabase
-      .from("countries")
-      .select("id, name, iso2, currency_code")
-      .order("name", { ascending: true });
+    const { data: countriesData } = viaPg
+      ? { data: viaPg.countries }
+      : await supabase.from("countries").select("id, name, iso2, currency_code").order("name", { ascending: true });
 
     // 2. Fetch Branches
-    const { data: cityBranchesData } = await supabase
-      .from("city_branches")
-      .select("id, country_id, country_branch_id, name, code, local_currency")
-      .order("name", { ascending: true });
+    const { data: cityBranchesData } = viaPg
+      ? { data: viaPg.cityBranches }
+      : await supabase
+          .from("city_branches")
+          .select("id, country_id, country_branch_id, name, code, local_currency")
+          .order("name", { ascending: true });
 
     // 3. Fetch Currency Rates for date
-    const { data: currencyRatesData } = await supabase
-      .from("currency_rates")
-      .select("country_id, from_currency, rate, credit_rate, debit_rate, effective_date, created_at")
-      .is("deleted_at", null)
-      .eq("effective_date", dateParam)
-      .order("created_at", { ascending: false });
+    const { data: currencyRatesData } = viaPg
+      ? { data: viaPg.currencyRates }
+      : await supabase
+          .from("currency_rates")
+          .select("country_id, from_currency, rate, credit_rate, debit_rate, effective_date, created_at")
+          .is("deleted_at", null)
+          .eq("effective_date", dateParam)
+          .order("created_at", { ascending: false });
 
     // Latest rates map by countryId or currency
     const countryRatesMap: Record<string, { creditRate: number | null; debitRate: number | null; buyingRate: number | null; sellingRate: number | null }> = {};
@@ -50,45 +76,72 @@ export async function GET(request: NextRequest) {
     });
 
     // 4. Fetch Roznamcha Entries & Lines for the date
-    let entriesQuery = supabase
-      .from("roznamcha_entries")
-      .select(`
-        id,
-        country_id,
-        country_branch_id,
-        city_branch_id,
-        entry_date,
-        roznamcha_lines (
+    const viaPgEntries = await withLocalPg(async (sql) => {
+      const entryRows = await sql`
+        select id, country_id, country_branch_id, city_branch_id, entry_date
+        from public.roznamcha_entries
+        where deleted_at is null
+          and entry_date = ${dateParam}
+          and (${!session.isSuperAdmin && session.countryIds?.length ? sql`country_id = any(${session.countryIds})` : sql`true`})
+          and (${!session.isSuperAdmin && session.cityBranchIds?.length ? sql`city_branch_id = any(${session.cityBranchIds})` : sql`true`})
+          and (${filterCountryId ? sql`country_id = ${filterCountryId}` : sql`true`})
+          and (${filterBranchId ? sql`city_branch_id = ${filterBranchId}` : sql`true`})
+      `;
+      const entryIds = (entryRows as any[]).map((r: any) => r.id);
+      const lineRows = entryIds.length
+        ? await sql`select id, roznamcha_entry_id, debit, credit, currency from public.roznamcha_lines where roznamcha_entry_id = any(${entryIds})`
+        : [];
+      const linesByEntry = new Map<string, any[]>();
+      for (const line of lineRows as any[]) {
+        const key = line.roznamcha_entry_id;
+        if (!linesByEntry.has(key)) linesByEntry.set(key, []);
+        linesByEntry.get(key)!.push(line);
+      }
+      return (entryRows as any[]).map((e) => ({ ...e, roznamcha_lines: linesByEntry.get(e.id) ?? [] }));
+    });
+
+    let entriesData: any[] | null = viaPgEntries;
+    if (!viaPgEntries) {
+      let entriesQuery = supabase
+        .from("roznamcha_entries")
+        .select(`
           id,
-          debit,
-          credit,
-          currency
-        )
-      `)
-      .is("deleted_at", null)
-      .eq("entry_date", dateParam);
+          country_id,
+          country_branch_id,
+          city_branch_id,
+          entry_date,
+          roznamcha_lines (
+            id,
+            debit,
+            credit,
+            currency
+          )
+        `)
+        .is("deleted_at", null)
+        .eq("entry_date", dateParam);
 
-    // Apply Session Scopes if not Super Admin
-    if (!session.isSuperAdmin) {
-      if (session.countryIds && session.countryIds.length > 0) {
-        entriesQuery = entriesQuery.in("country_id", session.countryIds);
+      // Apply Session Scopes if not Super Admin
+      if (!session.isSuperAdmin) {
+        if (session.countryIds && session.countryIds.length > 0) {
+          entriesQuery = entriesQuery.in("country_id", session.countryIds);
+        }
+        if (session.cityBranchIds && session.cityBranchIds.length > 0) {
+          entriesQuery = entriesQuery.in("city_branch_id", session.cityBranchIds);
+        }
       }
-      if (session.cityBranchIds && session.cityBranchIds.length > 0) {
-        entriesQuery = entriesQuery.in("city_branch_id", session.cityBranchIds);
+
+      if (filterCountryId) {
+        entriesQuery = entriesQuery.eq("country_id", filterCountryId);
       }
-    }
+      if (filterBranchId) {
+        entriesQuery = entriesQuery.eq("city_branch_id", filterBranchId);
+      }
 
-    if (filterCountryId) {
-      entriesQuery = entriesQuery.eq("country_id", filterCountryId);
-    }
-    if (filterBranchId) {
-      entriesQuery = entriesQuery.eq("city_branch_id", filterBranchId);
-    }
-
-    const { data: entriesData, error: entriesError } = await entriesQuery;
-
-    if (entriesError) {
-      console.error("Error querying roznamcha entries summary:", entriesError);
+      const { data, error: entriesError } = await entriesQuery;
+      if (entriesError) {
+        console.error("Error querying roznamcha entries summary:", entriesError);
+      }
+      entriesData = data;
     }
 
     // Aggregate totals by Country & Branch

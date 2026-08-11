@@ -16,6 +16,7 @@ import { ProfessionalReportViewer, type ReportColumn } from "@/components/report
 import { CashReceiptViewer, type CashReceiptData } from "@/components/reports/cash-receipt-viewer";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
@@ -782,14 +783,17 @@ function SuperAdminRoznamchaSummary({
   rows,
   ratesApplied,
   session,
-  typeFilter = "super_admin"
+  typeFilter = "super_admin",
+  lang = "en"
 }: {
   rows: SuperAdminRoznamchaRow[],
   ratesApplied: Record<string, number | string>,
   session: any,
-  typeFilter?: RoznamchaType
+  typeFilter?: RoznamchaType,
+  lang?: SupportedLanguage
 }) {
   const [showAllCountries, setShowAllCountries] = useState(false);
+  const trh = (label: string) => translateHeader(lang, label);
 
   if (!rows || rows.length === 0) return null;
 
@@ -908,37 +912,37 @@ function SuperAdminRoznamchaSummary({
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
             <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
-              {typeFilter === "branch" ? "1. BRANCH & USER DETAILS" : typeFilter === "country" ? "1. COUNTRY & USER DETAILS" : "1. BRANCH & USER DETAILS"}
+              {typeFilter === "branch" ? `1. ${trh("BRANCH & USER DETAILS")}` : typeFilter === "country" ? `1. ${trh("COUNTRY & USER DETAILS")}` : `1. ${trh("BRANCH & USER DETAILS")}`}
             </h4>
           </div>
           <div className="p-4 flex flex-col gap-2.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>Country:</span>
+              <span>{trh("COUNTRY")}:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">{getFlag(country)} {country}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Branch Name:</span>
+              <span>{trh("BRANCH NAME")}:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{branchName}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>User ID:</span>
+              <span>{trh("USER ID")}:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{userId}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>User Name:</span>
+              <span>{trh("USER NAME")}:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{userName}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Role:</span>
+              <span>{trh("ROLE")}:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{role}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Date & Time:</span>
+              <span>{trh("DATE & TIME")}:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{dateStr}, {timeStr}</span>
             </div>
             <div className="flex justify-between items-center mt-auto">
-              <span>Status:</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">Active</span>
+              <span>{trh("STATUS")}:</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">{trh("ACTIVE")}</span>
             </div>
           </div>
         </div>
@@ -950,32 +954,32 @@ function SuperAdminRoznamchaSummary({
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
             </div>
             <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
-              {typeFilter === "branch" ? "2. BRANCH FINANCIAL SUMMARY" : typeFilter === "country" ? "2. COUNTRY FINANCIAL SUMMARY" : "2. GLOBAL FINANCIAL SUMMARY (USD)"}
+              {typeFilter === "branch" ? `2. ${trh("BRANCH FINANCIAL SUMMARY")}` : typeFilter === "country" ? `2. ${trh("COUNTRY FINANCIAL SUMMARY")}` : `2. ${trh("GLOBAL FINANCIAL SUMMARY (USD)")}`}
             </h4>
           </div>
           <div className="p-4 flex flex-col gap-2.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>{typeFilter === "branch" ? "Total Branch Entries:" : typeFilter === "country" ? "Total Country Entries:" : "Total Global Entries:"}</span>
+              <span>{typeFilter === "branch" ? `${trh("TOTAL BRANCH ENTRIES")}:` : typeFilter === "country" ? `${trh("TOTAL COUNTRY ENTRIES")}:` : `${trh("TOTAL GLOBAL ENTRIES")}:`}</span>
               <span className="font-black text-slate-800 dark:text-slate-200">{totalGlobalEntries}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Debit / Credit Entries:</span>
+              <span>{trh("DEBIT / CREDIT ENTRIES")}:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{debitTrxCount} / {creditTrxCount}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Posted / Pending:</span>
+              <span>{trh("POSTED / PENDING")}:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200"><span className="text-emerald-600">{postedCount}</span> / <span className="text-amber-600">{pendingCount}</span></span>
             </div>
             <div className="flex justify-between items-center mt-1 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <span>Total Credit:</span>
+              <span>{trh("TOTAL CREDIT")}:</span>
               <span className="font-black text-emerald-700 dark:text-emerald-400 font-mono">{formatMoney(totalCreditUSD)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-rose-600 dark:text-rose-500">Total Debit:</span>
+              <span className="text-rose-600 dark:text-rose-500">{trh("TOTAL DEBIT")}:</span>
               <span className="font-black text-rose-700 dark:text-rose-400 font-mono">{formatMoney(totalDebitUSD)}</span>
             </div>
             <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-slate-600 dark:text-slate-400 uppercase font-bold">Balance:</span>
+              <span className="text-slate-600 dark:text-slate-400 uppercase font-bold">{trh("BALANCE")}:</span>
               <span className="font-black text-slate-900 dark:text-slate-100 font-mono text-sm">{formatMoney(Math.abs(totalBalanceUSD))}</span>
             </div>
           </div>
@@ -987,11 +991,11 @@ function SuperAdminRoznamchaSummary({
             <div className="bg-purple-600 p-1 rounded-full text-white">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
             </div>
-            <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400 truncate">3. ACTIVE OPERATIONS SUMMARY</h4>
+            <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400 truncate">3. {trh("ACTIVE OPERATIONS SUMMARY")}</h4>
           </div>
           <div className="p-4 flex flex-col items-center justify-center text-[11px] font-semibold text-slate-400 dark:text-slate-500 h-full min-h-[140px]">
             {/* Empty space as requested */}
-            <span>Reserved for future use</span>
+            <span>{trh("RESERVED FOR FUTURE USE")}</span>
           </div>
         </div>
 
@@ -1019,7 +1023,7 @@ function SuperAdminRoznamchaSummary({
                 <Globe className="h-3.5 w-3.5" />
               </div>
               <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">
-                {typeFilter === "country" ? "4. SCOPED BRANCHES REPORT DETAILS" : typeFilter === "branch" ? "4. BRANCH DETAILS BREAKDOWN" : "4. ALL COUNTRIES REPORT DETAILS"}
+                {typeFilter === "country" ? `4. ${trh("SCOPED BRANCHES REPORT DETAILS")}` : typeFilter === "branch" ? `4. ${trh("BRANCH DETAILS BREAKDOWN")}` : `4. ${trh("ALL COUNTRIES REPORT DETAILS")}`}
               </h4>
             </div>
             <div className={cn(
@@ -1031,11 +1035,11 @@ function SuperAdminRoznamchaSummary({
           </div>
           <div className="p-4 flex flex-col justify-center flex-1 w-full gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
             <p className="leading-relaxed">
-              Click to {showAllCountries ? "hide" : "view"} detailed breakdown for <span className="font-black text-slate-800 dark:text-slate-200">{activeCountriesCount}</span> scoped countries and their branches.
+              {trh("CLICK TO")} {showAllCountries ? trh("HIDE") : trh("VIEW")} {trh("DETAILED BREAKDOWN FOR")} <span className="font-black text-slate-800 dark:text-slate-200">{activeCountriesCount}</span> {trh("SCOPED COUNTRIES AND THEIR BRANCHES")}.
             </p>
             <div className="mt-2 flex items-center gap-2">
               <span className="flex h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">Live Updating</span>
+              <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400">{trh("LIVE UPDATING")}</span>
             </div>
           </div>
         </button>

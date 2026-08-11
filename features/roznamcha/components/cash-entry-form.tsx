@@ -51,6 +51,8 @@ import { BankPicker } from "@/features/banks/components/bank-picker";
 import { getBankById } from "@/features/banks/bank-api";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { Th } from "@/components/ui/translated-th";
+import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/verified-record-translations";
+import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
 
 function getRoznamchaCategoryLabel(row: any) {
   const sm = (row.source_module || "").toLowerCase();
@@ -500,6 +502,7 @@ export function CashEntryForm({
     try {
       setLoadingEntries(true);
       const params = new URLSearchParams({ limit: "100" });
+      params.set("language", lang);
       if (countryId) params.set("countryId", countryId);
       if (countryBranchId) params.set("countryBranchId", countryBranchId);
       if (cityBranchId) params.set("cityBranchId", cityBranchId);
@@ -1505,7 +1508,7 @@ export function CashEntryForm({
       { label: "Date", value: header.entry_date || "-" },
       { label: "Voucher No", value: header.voucher_no || "-" },
       { label: "Journal No", value: header.journal_no || "-" },
-      { label: "Narration", value: header.narration || "-" },
+      { label: "Narration", value: resolveVerifiedTranslation(header.translations?.narration, lang) || (lang === "en" ? (header.narration || "-") : translationPendingLabel(lang)) },
       { label: "Status", value: header.status || "-" }
     ];
     
@@ -1716,6 +1719,7 @@ export function CashEntryForm({
         paymentMethodId: null,
         referenceNo: referenceNo.trim() ? referenceNo.trim() : undefined,
         narration: finalNarration.trim() ? finalNarration.trim() : undefined,
+        originalLanguage: lang,
         sourceModule: "cash_entry",
         sourceTransactionType: roznamchaType,
         sourceReferenceNo: roznamchaNumber,
@@ -3103,7 +3107,7 @@ export function CashEntryForm({
                           </td>
                             <td className="p-3 text-[11px] font-medium leading-relaxed text-slate-600 dark:text-slate-400 max-w-[200px] border border-slate-200 dark:border-slate-800" title={line.description || row.narration || ""}>
                               <div className="line-clamp-3">
-                                {line.description || row.narration || "-"}
+                                {resolveVerifiedTranslation(row.translations?.[`lines.${idx}.description`] || row.translations?.narration, lang) || (lang === "en" ? (line.description || row.narration || "-") : translationPendingLabel(lang))}
                               </div>
                             </td>
                           <td className="p-3 text-center whitespace-nowrap border border-slate-200 dark:border-slate-800">
@@ -3120,6 +3124,7 @@ export function CashEntryForm({
                           <td className="p-3 text-center border border-slate-200 dark:border-slate-800">
                             {idx === 0 ? (
                               <div className="flex items-center justify-center gap-1.5">
+                                <RecordTranslationCorrectionDialog recordTable="roznamcha_entries" recordId={row.id} onSaved={fetchRecentEntries} />
                                 {canEditOrDelete && (
                                   <Button
                                     type="button"
