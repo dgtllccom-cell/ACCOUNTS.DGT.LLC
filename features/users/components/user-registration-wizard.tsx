@@ -122,7 +122,11 @@ const userWizardTranslations: Record<string, Record<SupportedLanguage, string>> 
   verifiedCompliant: { en: "Verified & Compliant", ur: "تصدیق شدہ و مکمل", ar: "متحقق ومطابق", fa: "تایید شده و معتبر", ps: "تصدیق شوی او بشپړ" },
   pendingVerification: { en: "Pending Document Verification", ur: "تصدیق زیر التوا", ar: "قيد التحقق من المستندات", fa: "در انتظار تایید مدارک", ps: "د اسنادو تصدیق پاتې" },
   optionalHint: { en: "(Optional - Empty field will not block Next)", ur: "(اختیاری - خالی چھوڑنے پر فارم بلاک نہیں ہوگا)", ar: "(اختياري - لن يمنع الحقل الفارغ المتابعة)", fa: "(اختیاری - خالی بودن مانع ادامه نمی‌شود)", ps: "(اختیاري - تش پریښودل ګام نه بندوي)" },
-  requiredHint: { en: "* Mandatory field", ur: "* لازمی فیلڈ", ar: "* حقل إجباري", fa: "* فیلد الزامی", ps: "* اړین فیلډ" }
+  requiredHint: { en: "* Mandatory field", ur: "* لازمی فیلڈ", ar: "* حقل إجباري", fa: "* فیلد الزامی", ps: "* اړین فیلډ" },
+  addNewEmployee: { en: "Add New Employee", ur: "نیا ملازم شامل کریں", ar: "إضافة موظف جديد", fa: "افزودن پرسنل جدید", ps: "نوی کارمند اضافه کړئ" },
+  newEmployeeModalTitle: { en: "New Employee Registration", ur: "نیا ملازم رجسٹریشن", ar: "تسجيل موظف جديد", fa: "ثبت پرسنل جدید", ps: "د نوي کارمند ثبت" },
+  employeeSearchPlaceholder: { en: "Search employee by code, name, designation...", ur: "کوڈ، نام یا عہدہ سے ملازم تلاش کریں...", ar: "ابحث عن الموظف بالرمز أو الاسم أو المسمى الوظيفي...", fa: "جستجوی پرسنل با کد، نام یا عنوان شغلی...", ps: "کارمند د کوډ، نوم یا دندې له مخې پلټئ..." },
+  noEmployeesFound: { en: "No matching employees found.", ur: "کوئی مماثل ملازم نہیں ملا۔", ar: "لم يتم العثور على موظفين مطابقين.", fa: "هیچ پرسنلی مطابقت پیدا نشد.", ps: "هیڅ ورته کارمند ونه موندل شو." }
 };
 
 function makeAutoUserCode() {
@@ -145,10 +149,18 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
   const [activeLang, setActiveLang] = useState<SupportedLanguage>("en");
   useEffect(() => {
-    if (typeof document !== "undefined") {
+    if (typeof document === "undefined") return;
+    function syncLang() {
       const docLang = document.documentElement.lang as SupportedLanguage;
       if (["en", "ur", "ar", "fa", "ps"].includes(docLang)) setActiveLang(docLang);
     }
+    syncLang();
+    // Previously read document.documentElement.lang only once on mount, so switching the
+    // active language while this wizard was open left the whole form (including the
+    // employee dropdown's names) stuck in whatever language it had when it first mounted.
+    const observer = new MutationObserver(syncLang);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
+    return () => observer.disconnect();
   }, []);
 
   const tr = (key: string) => userWizardTranslations[key]?.[activeLang] || userWizardTranslations[key]?.["en"] || key;
@@ -202,23 +214,30 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const [editUserId, setEditUserId] = useState<string | null>(null);
   const [isResettingBranch, setIsResettingBranch] = useState(true);
 
-  async function fetchHrEmployees() {
+  async function fetchHrEmployees(): Promise<any[]> {
     setHrEmployeesLoading(true);
     try {
-      const res = await fetch("/api/erp/hr-payroll/employees").then((r) => r.json());
+      // Resolve the linked Person Master name into the active language server-side —
+      // without this the dropdown always showed whatever script each employee's name was
+      // originally typed in, mixed record-to-record regardless of the selected language
+      // (the exact "names appearing in a different script" issue).
+      const res = await fetch(`/api/erp/hr-payroll/employees?lang=${activeLang}`).then((r) => r.json());
       if (res && res.employees && Array.isArray(res.employees)) {
         setHrEmployees(res.employees);
+        return res.employees;
       }
     } catch (err) {
       console.error("Failed to load HR employees list", err);
     } finally {
       setHrEmployeesLoading(false);
     }
+    return [];
   }
 
   useEffect(() => {
     fetchHrEmployees();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeLang]);
 
   // When Employee is selected from dropdown, populate fields
   useEffect(() => {
@@ -702,11 +721,40 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                   <SearchSelect
                     label={hrEmployeesLoading ? `${tr("selectEmployee")} (...)` : tr("selectEmployee")}
                     value={selectedEmployeeId}
-                    placeholder="Search employee by code, name, designation..."
+                    placeholder={tr("employeeSearchPlaceholder")}
+                    searchPlaceholder={tr("employeeSearchPlaceholder")}
+                    emptyLabel={tr("noEmployeesFound")}
                     options={employeeOptions}
                     disabled={hrEmployeesLoading}
                     onValueChange={setSelectedEmployeeId}
+                    createLabel={tr("addNewEmployee")}
+                    createButtonPlacement="both"
+                    onCreateNew={() => setShowEmployeeModal(true)}
                   />
+
+                  {showEmployeeModal ? (
+                    <SimpleModal
+                      title={tr("newEmployeeModalTitle")}
+                      onClose={() => setShowEmployeeModal(false)}
+                      className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto"
+                    >
+                      <EmployeeForm
+                        onSave={async (newEmployeeId) => {
+                          // Reuses the existing Employee/Person Master create flow, API,
+                          // translation pipeline and permissions in full — nothing
+                          // duplicated here. Refresh the dropdown from the same
+                          // already-localized endpoint and auto-select the new row so the
+                          // user can continue straight to Next Step.
+                          setShowEmployeeModal(false);
+                          const freshList = await fetchHrEmployees();
+                          if (newEmployeeId && freshList.some((e) => e.id === newEmployeeId)) {
+                            setSelectedEmployeeId(newEmployeeId);
+                          }
+                        }}
+                        onCancel={() => setShowEmployeeModal(false)}
+                      />
+                    </SimpleModal>
+                  ) : null}
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-1">

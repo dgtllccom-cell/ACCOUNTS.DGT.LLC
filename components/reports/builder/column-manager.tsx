@@ -3,6 +3,9 @@ import { useState } from "react";
 import { type ReportColumnConfig } from "./types";
 import { Button } from "@/components/ui/button";
 import { GripVertical, Eye, EyeOff } from "lucide-react";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type ColumnManagerProps = {
   columns: ReportColumnConfig[];
@@ -10,6 +13,7 @@ type ColumnManagerProps = {
 };
 
 export function ColumnManager({ columns, onChange }: ColumnManagerProps) {
+  const lang = useActiveLanguage();
   const [draggedId, setDraggedId] = useState<string | null>(null);
 
   const handleDragStart = (e: React.DragEvent, id: string) => {
@@ -48,7 +52,7 @@ export function ColumnManager({ columns, onChange }: ColumnManagerProps) {
   return (
     <div className="space-y-2 p-2">
       <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">
-        Drag to Reorder Columns
+        {t(lang, "report.builder_drag_to_reorder", "Drag to Reorder Columns")}
       </div>
       <div className="space-y-1">
         {columns.map((col) => (
@@ -75,7 +79,7 @@ export function ColumnManager({ columns, onChange }: ColumnManagerProps) {
               htmlFor={`col-${col.id}`}
               className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex-1 cursor-pointer"
             >
-              {col.label}
+              {translateHeader(lang, col.label)}
             </label>
             {col.visible ? (
               <Eye className="h-4 w-4 text-slate-400" />

@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireErpSession } from "@/lib/auth/session";
 import { ensureEmployeesTable } from "@/lib/services/ensure-employees-table";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 
 export const dynamic = "force-dynamic";
 
@@ -22,77 +24,19 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
     await requireErpSession();
     let supabase = createSupabaseAdminClient();
 
-    let { data: employee, error } = await supabase
-      .from("employees")
-      .select(`
-        *,
-        person:customers!person_master_id (
-          id,
-          customer_name,
-          company_name,
-          contact_person,
-          mobile,
-          whatsapp,
-          email,
-          address
-        ),
-        country:countries (
-          id,
-          name,
-          currency_code
-        ),
-        country_branch:country_branches (
-          id,
-          name,
-          code
-        ),
-        city_branch:city_branches (
-          id,
-          name,
-          code
-        )
-      `)
-      .eq("id", params.id)
-      .is("deleted_at", null)
-      .maybeSingle();
+    // See list_employees_with_relations / create_employee for why single-record reads also go
+    // through a SECURITY DEFINER RPC rather than a direct .from("employees").select(...).
+    let { data: employee, error } = await (supabase as any).rpc("get_employee_with_relations", {
+      p_id: params.id
+    });
 
     if (error && isSchemaCacheError(error.message)) {
       console.log("[HR-PAYROLL] Schema cache error detected on GET /employees/[id], auto-repairing...");
       await ensureEmployeesTable();
       supabase = createSupabaseAdminClient();
-      const retryRes = await supabase
-        .from("employees")
-        .select(`
-          *,
-          person:customers!person_master_id (
-            id,
-            customer_name,
-            company_name,
-            contact_person,
-            mobile,
-            whatsapp,
-            email,
-            address
-          ),
-          country:countries (
-            id,
-            name,
-            currency_code
-          ),
-          country_branch:country_branches (
-            id,
-            name,
-            code
-          ),
-          city_branch:city_branches (
-            id,
-            name,
-            code
-          )
-        `)
-        .eq("id", params.id)
-        .is("deleted_at", null)
-        .maybeSingle();
+      const retryRes = await (supabase as any).rpc("get_employee_with_relations", {
+        p_id: params.id
+      });
       employee = retryRes.data;
       error = retryRes.error;
     }
@@ -102,6 +46,15 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
     }
     if (!employee) {
       return NextResponse.json({ error: "Employee not found" }, { status: 404 });
+    }
+
+    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    // Always resolve — see customers/[id]/route.ts for why skipping lang === "en" would leak
+    // non-English source text into the English view.
+    if (employee.person) {
+      const [resolved] = await localizeRecordNames([employee.person as any], "customers", "customer_name", lang);
+      const [resolved2] = await localizeRecordNames([resolved], "customers", "company_name", lang);
+      employee = { ...employee, person: resolved2 };
     }
 
     return NextResponse.json({ employee });
@@ -231,29 +184,44 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
     if (loanAccountId !== undefined) updateData.loan_account_id = loanAccountId || null;
     if (deductionAccountId !== undefined) updateData.deduction_account_id = deductionAccountId || null;
 
-    let { data: updatedEmployee, error: updateError } = await supabase
-      .from("employees")
-      .update(updateData)
-      .eq("id", params.id)
-      .select()
-      .single();
+    delete updateData.updated_at; // update_employee() sets updated_at = now() itself
+
+    let { data: updatedId, error: updateError } = await (supabase as any).rpc("update_employee", {
+      p_id: params.id,
+      p_payload: updateData
+    });
 
     if (updateError && isSchemaCacheError(updateError.message)) {
       console.log("[HR-PAYROLL] Schema cache error detected on PATCH /employees/[id], auto-repairing...");
       await ensureEmployeesTable();
       supabase = createSupabaseAdminClient();
-      const retryUpdate = await supabase
-        .from("employees")
-        .update(updateData)
-        .eq("id", params.id)
-        .select()
-        .single();
-      updatedEmployee = retryUpdate.data;
+      const retryUpdate = await (supabase as any).rpc("update_employee", {
+        p_id: params.id,
+        p_payload: updateData
+      });
+      updatedId = retryUpdate.data;
       updateError = retryUpdate.error;
     }
 
     if (updateError) {
       return NextResponse.json({ error: updateError.message }, { status: 400 });
+    }
+
+    let { data: updatedEmployee, error: readBackError } = await (supabase as any).rpc("get_employee_with_relations", {
+      p_id: updatedId || params.id
+    });
+
+    if (readBackError) {
+      return NextResponse.json({ error: readBackError.message }, { status: 400 });
+    }
+
+    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    // Always resolve — see customers/[id]/route.ts for why skipping lang === "en" would leak
+    // non-English source text into the English view.
+    if (updatedEmployee?.person) {
+      const [resolved] = await localizeRecordNames([updatedEmployee.person as any], "customers", "customer_name", lang);
+      const [resolved2] = await localizeRecordNames([resolved], "customers", "company_name", lang);
+      updatedEmployee = { ...updatedEmployee, person: resolved2 };
     }
 
     return NextResponse.json({ employee: updatedEmployee });
@@ -268,23 +236,13 @@ export async function DELETE(request: NextRequest, props: { params: Promise<{ id
     await requireErpSession();
     let supabase = createSupabaseAdminClient();
 
-    let { error: deleteError } = await supabase
-      .from("employees")
-      .update({
-        deleted_at: new Date().toISOString()
-      })
-      .eq("id", params.id);
+    let { error: deleteError } = await (supabase as any).rpc("delete_employee", { p_id: params.id });
 
     if (deleteError && isSchemaCacheError(deleteError.message)) {
       console.log("[HR-PAYROLL] Schema cache error detected on DELETE /employees/[id], auto-repairing...");
       await ensureEmployeesTable();
       supabase = createSupabaseAdminClient();
-      const retryDelete = await supabase
-        .from("employees")
-        .update({
-          deleted_at: new Date().toISOString()
-        })
-        .eq("id", params.id);
+      const retryDelete = await (supabase as any).rpc("delete_employee", { p_id: params.id });
       deleteError = retryDelete.error;
     }
 

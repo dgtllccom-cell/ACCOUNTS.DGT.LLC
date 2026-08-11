@@ -499,7 +499,8 @@ export const bankCreateSchema = z.object({
   email: z.preprocess((val) => (val === "" || val === undefined ? null : val), z.string().trim().email().nullable().optional()),
   swiftBic: z.preprocess((val) => (val === "" || val === undefined ? null : val), z.string().trim().max(20).nullable().optional()),
   website: z.preprocess((val) => (val === "" || val === undefined ? null : val), z.string().trim().max(255).nullable().optional()),
-  remarks: z.preprocess((val) => (val === "" || val === undefined ? null : val), z.string().trim().max(2000).nullable().optional())
+  remarks: z.preprocess((val) => (val === "" || val === undefined ? null : val), z.string().trim().max(2000).nullable().optional()),
+  originalLanguage: z.enum(["en", "ur", "ar", "fa", "ps"]).optional()
 });
 
 export const bankUpdateSchema = bankCreateSchema.partial();

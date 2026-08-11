@@ -69,6 +69,13 @@ export async function writeAuditLog(input: {
   // Preferred path: database RPC writes actor_id from auth.uid().
   // During initial bootstrap we may only have the temp ERP session cookie (no Supabase JWT),
   // so we fall back to a privileged insert with actor_id=null.
+  //
+  // Both paths are wrapped so a logging failure can NEVER fail the caller's actual business
+  // write (customer/company/order/etc. already committed by the time this runs). Confirmed this
+  // was happening in practice: write_erp_audit_log() hard-requires auth.uid() (raises
+  // "Authentication is required" for the temp-session bootstrap login, which has no real
+  // Supabase JWT), and the admin-client fallback insert then hit audit_logs' RLS policy too —
+  // together turning a pure observability failure into a 500 on legitimate creates/updates.
   try {
     const supabase = await createApiSupabaseClient();
 
@@ -85,23 +92,22 @@ export async function writeAuditLog(input: {
     if (!error) return;
     throw new Error(error.message);
   } catch (error) {
-    const admin = createSupabaseAdminClient() as any;
-    const { error: insertError } = await admin.from("audit_logs").insert({
-      company_id: input.companyId ?? null,
-      actor_id: null,
-      action: input.action,
-      entity_table: input.entityTable,
-      entity_id: input.entityId ?? null,
-      before: input.before ?? null,
-      after: input.after ?? null,
-      ip_address: input.ipAddress ?? null
-    });
+    try {
+      const admin = createSupabaseAdminClient() as any;
+      const { error: insertError } = await admin.from("audit_logs").insert({
+        company_id: input.companyId ?? null,
+        actor_id: null,
+        action: input.action,
+        entity_table: input.entityTable,
+        entity_id: input.entityId ?? null,
+        before: input.before ?? null,
+        after: input.after ?? null,
+        ip_address: input.ipAddress ?? null
+      });
 
-    if (insertError) {
-      throw new Error(insertError.message);
+      if (insertError) throw new Error(insertError.message);
+    } catch (fallbackError) {
+      console.error("[writeAuditLog] Non-fatal: audit log write failed on both RPC and fallback paths:", error, fallbackError);
     }
-
-    // If the insert succeeded, we consider the audit log written even if RPC failed.
-    void error;
   }
 }

@@ -115,3 +115,75 @@ export function transliterateProperNoun(text: string, lang: SupportedLanguage): 
   }
   return out;
 }
+
+/**
+ * Reverse direction: Perso-Arabic script (Urdu/Arabic/Persian/Pashto) -> Latin romanization.
+ * Without this, a name typed in one of those scripts had no path to an English rendering at
+ * all — autoTranslateText() fell back to literally copying the original script into the
+ * "English" slot (a real source-language leak: selecting English would still show Urdu/Arabic/
+ * Farsi/Pashto text). Covers the full Urdu/Pashto/Persian/Arabic letter inventory (retroflex
+ * ٹ/ڈ/ڑ, Urdu/Pashto/Persian-only پ/چ/گ/ژ, Pashto-only ږ/ښ/ځ/ډ̢-family, Arabic-only ة/ث/ذ/ض/ظ/ع/غ,
+ * hamza forms, diacritics), longest-match-first so multi-letter combinations (e.g. "خواہ")
+ * resolve before single letters. Same "best-effort phonetic approximation" bar as the forward
+ * direction above — not a linguistic authority, correctable via the manual-correction path.
+ */
+const REVERSE_MULTI: Array<[string, string]> = [
+  // Common digraph-producing combinations, longest first.
+  ["ای", "ai"], ["او", "au"], ["وا", "wa"], ["یا", "ya"],
+  ["ھ", "h"] // aspiration marker (بھ -> bh handled by base+این combination via per-char pass below)
+];
+
+const REVERSE_SINGLES: Record<string, string> = {
+  // Base letters shared across Urdu/Arabic/Persian/Pashto
+  "ا": "a", "آ": "aa", "ب": "b", "پ": "p", "ت": "t", "ٹ": "t", "ث": "s",
+  "ج": "j", "چ": "ch", "ح": "h", "خ": "kh", "د": "d", "ڈ": "d", "ذ": "z",
+  "ر": "r", "ڑ": "r", "ز": "z", "ژ": "zh", "س": "s", "ش": "sh", "ص": "s",
+  "ض": "z", "ط": "t", "ظ": "z", "ع": "a", "غ": "gh", "ف": "f", "ق": "q",
+  "ک": "k", "گ": "g", "ل": "l", "م": "m", "ن": "n", "ں": "n", "و": "w",
+  "ہ": "h", "ۃ": "h", "ة": "h", "ء": "", "ی": "y", "ے": "e", "ئ": "y",
+  // Pashto-specific
+  "ټ": "t", "ډ": "d", "ړ": "r", "ږ": "g", "ښ": "kh", "ځ": "z", "څ": "ts",
+  "ڼ": "n", "ۍ": "ai", "ې": "e",
+  // Persian-specific / diacritics
+  "أ": "a", "إ": "e", "ؤ": "o", "ي": "y",
+  // Digits (Eastern Arabic-Indic) -> Latin
+  "۰": "0", "۱": "1", "۲": "2", "۳": "3", "۴": "4", "۵": "5", "۶": "6", "۷": "7", "۸": "8", "۹": "9"
+};
+
+/** Reverse of transliterateProperNoun: script text in ur/ar/fa/ps -> a Latin/English rendering. */
+export function transliterateToLatin(text: string): string {
+  const trimmed = text.trim();
+  if (!trimmed) return trimmed;
+
+  let out = "";
+  let i = 0;
+  while (i < trimmed.length) {
+    const rest = trimmed.slice(i);
+    let matched = false;
+    for (const [seq, rep] of REVERSE_MULTI) {
+      if (rest.startsWith(seq)) {
+        out += rep;
+        i += seq.length;
+        matched = true;
+        break;
+      }
+    }
+    if (matched) continue;
+    const ch = trimmed[i];
+    if (ch in REVERSE_SINGLES) {
+      out += REVERSE_SINGLES[ch];
+    } else {
+      // Not a recognized Perso-Arabic letter (space, digit, Latin passthrough, punctuation) —
+      // keep as-is rather than dropping it.
+      out += ch;
+    }
+    i += 1;
+  }
+  // Collapse accidental double spaces/letters from the char-by-char pass and title-case words.
+  return out
+    .replace(/\s+/g, " ")
+    .trim()
+    .split(" ")
+    .map((word) => (word ? word[0].toUpperCase() + word.slice(1) : word))
+    .join(" ");
+}

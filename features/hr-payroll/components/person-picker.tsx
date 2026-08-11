@@ -55,6 +55,7 @@ export function PersonPicker({
   const [loading, setLoading] = useState(false);
   const [people, setPeople] = useState<PersonRow[]>([]);
   const [openCreate, setOpenCreate] = useState(false);
+  const [editPersonId, setEditPersonId] = useState<string | null>(null);
 
   async function loadList() {
     setLoading(true);
@@ -62,6 +63,10 @@ export function PersonPicker({
       const qp = new URLSearchParams();
       if (countryId) qp.set("countryId", countryId);
       qp.set("limit", "50");
+      // Resolve customer_name/company_name into the active language server-side — without this
+      // every entry showed whatever script it was originally typed in, mixed record-to-record
+      // regardless of the selected language (see app/api/erp/customers/route.ts).
+      qp.set("lang", lang);
       const res = await apiGet<{ customers: PersonRow[] }>(`/api/erp/customers?${qp.toString()}`);
       setPeople(res.customers ?? []);
     } catch (e) {
@@ -74,7 +79,7 @@ export function PersonPicker({
   useEffect(() => {
     loadList().catch(() => null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [countryId]);
+  }, [countryId, lang]);
 
   useEffect(() => {
     if (!value) return;
@@ -83,7 +88,7 @@ export function PersonPicker({
     let cancelled = false;
     (async () => {
       try {
-        const res = await apiGet<{ customer: PersonRow }>(`/api/erp/customers/${encodeURIComponent(value)}`);
+        const res = await apiGet<{ customer: PersonRow }>(`/api/erp/customers/${encodeURIComponent(value)}?lang=${encodeURIComponent(lang)}`);
         if (cancelled) return;
         if (res.customer) {
           setPeople((current) => {
@@ -99,7 +104,7 @@ export function PersonPicker({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  }, [value, lang]);
 
   const options: SearchSelectOption[] = useMemo(() => people.map(toOption), [people]);
 
@@ -108,11 +113,15 @@ export function PersonPicker({
       <SearchSelect
         label={label}
         value={value}
-        placeholder={placeholder ?? (loading ? "Loading..." : "Search employee / person name")}
+        placeholder={placeholder ?? (loading ? t(lang, "common.loading", "Loading...") : t(lang, "hr.pp_search_placeholder", "Search employee / person name"))}
+        searchPlaceholder={t(lang, "common.search", "Search...")}
+        emptyLabel={t(lang, "hr.pp_no_matches", "No matches found.")}
+        editTitle={t(lang, "common.edit", "Edit")}
         disabled={disabled || loading}
         options={options}
         onValueChange={onValueChange}
-        createLabel="+ Add New Person Master"
+        onEditOption={(personId) => setEditPersonId(personId)}
+        createLabel={t(lang, "hr.pp_add_new_person_master", "+ Add New Person Master")}
         createButtonPlacement="both"
         onCreateNew={async () => {
           setOpenCreate(true);
@@ -126,12 +135,32 @@ export function PersonPicker({
           className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto"
         >
           <CustomerForm
-            lang="en"
+            lang={lang}
             mode="embedded"
             onSave={(newPersonId) => {
               loadList().catch(() => null);
               onValueChange(newPersonId);
               setOpenCreate(false);
+            }}
+          />
+        </SimpleModal>
+      ) : null}
+
+      {editPersonId ? (
+        <SimpleModal
+          title={t(lang, "hr.pp_edit_person_registry", "Edit Person Registry — Customer Master")}
+          onClose={() => setEditPersonId(null)}
+          className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto"
+        >
+          <CustomerForm
+            lang={lang}
+            mode="embedded"
+            initialCustomerId={editPersonId}
+            onSave={(savedPersonId) => {
+              // Refresh so the dropdown immediately shows the updated, correctly-localized name.
+              loadList().catch(() => null);
+              onValueChange(savedPersonId);
+              setEditPersonId(null);
             }}
           />
         </SimpleModal>

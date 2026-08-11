@@ -1,7 +1,6 @@
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { goodsRepository } from "@/lib/repositories/goods-repository";
-import { multilingualService } from "@/lib/services/multilingual-service";
+import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
 export type GoodsMasterInput = {
   chsCode: string;
@@ -138,125 +137,15 @@ export class GoodsService {
   // --- Helper Methods ---
 
   private async upsertMasterTranslations(goodsId: string, goodsName: string, lang: SupportedLanguage, actorId: string | null) {
-    const supabase = createSupabaseAdminClient() as any;
-    
     if (!goodsName || !goodsName.trim()) return;
-
-    const shell = multilingualService.createAutomaticTranslationShell(goodsName, lang);
-    const payload = multilingualService.createRecordTranslationPayload({
-      recordTable: "goods",
-      recordId: goodsId,
-      fieldName: "goods_name",
-      text: shell
-    });
-
-    const row = {
-      record_table: payload.recordTable,
-      record_id: payload.recordId,
-      field_name: payload.fieldName,
-      original_text: payload.originalText,
-      original_language_code: payload.originalLanguageCode,
-      english_text: payload.englishText,
-      arabic_text: payload.arabicText,
-      urdu_text: payload.urduText,
-      persian_text: payload.persianText,
-      pashto_text: payload.pashtoText,
-      source: "manual",
-      corrected_by: actorId,
-      corrected_at: actorId ? new Date().toISOString() : null,
-      updated_at: new Date().toISOString()
-    };
-
-    // record_translations is a VIEW; a plain .update()-then-.insert() against it is unreliable
-    // (see customers-service.ts for the confirmed-broken pattern this mirrors). Route through
-    // the proven upsert_record_translation RPC instead.
-    const { error: rpcError } = await supabase.rpc("upsert_record_translation", {
-      p_record_table: row.record_table,
-      p_record_id: row.record_id,
-      p_field_name: row.field_name,
-      p_original_text: row.original_text,
-      p_original_language_code: row.original_language_code,
-      p_english: row.english_text,
-      p_urdu: row.urdu_text,
-      p_arabic: row.arabic_text,
-      p_persian: row.persian_text,
-      p_pashto: row.pashto_text,
-      p_language_texts: {
-        en: row.english_text,
-        ur: row.urdu_text,
-        ar: row.arabic_text,
-        fa: row.persian_text,
-        ps: row.pashto_text
-      },
-      p_source: row.source,
-      p_translation_status: "complete",
-      p_translated_by_engine: "local_dictionary",
-      p_actor_id: row.corrected_by
-    });
-
-    if (rpcError) throw new Error(rpcError.message);
+    await translateMasterRecord("goods", goodsId, { goods_name: goodsName }, lang, actorId);
   }
 
   private async upsertVariationTranslations(variationId: string, size: string, brand: string, actorId: string | null) {
-    const supabase = createSupabaseAdminClient() as any;
-
-    const translatable = [
-      ["size", size],
-      ["brand", brand]
-    ].filter(([, val]) => Boolean(val && val.trim()));
-
-    for (const [fieldName, val] of translatable) {
-      const shell = multilingualService.createAutomaticTranslationShell(val, "en");
-      const payload = multilingualService.createRecordTranslationPayload({
-        recordTable: "goods_variations",
-        recordId: variationId,
-        fieldName,
-        text: shell
-      });
-
-      const row = {
-        record_table: payload.recordTable,
-        record_id: payload.recordId,
-        field_name: payload.fieldName,
-        original_text: payload.originalText,
-        original_language_code: payload.originalLanguageCode,
-        english_text: payload.englishText,
-        arabic_text: payload.arabicText,
-        urdu_text: payload.urduText,
-        persian_text: payload.persianText,
-        pashto_text: payload.pashtoText,
-        source: "manual",
-        corrected_by: actorId,
-        corrected_at: actorId ? new Date().toISOString() : null,
-        updated_at: new Date().toISOString()
-      };
-
-      const { error: rpcError } = await supabase.rpc("upsert_record_translation", {
-        p_record_table: row.record_table,
-        p_record_id: row.record_id,
-        p_field_name: row.field_name,
-        p_original_text: row.original_text,
-        p_original_language_code: row.original_language_code,
-        p_english: row.english_text,
-        p_urdu: row.urdu_text,
-        p_arabic: row.arabic_text,
-        p_persian: row.persian_text,
-        p_pashto: row.pashto_text,
-        p_language_texts: {
-          en: row.english_text,
-          ur: row.urdu_text,
-          ar: row.arabic_text,
-          fa: row.persian_text,
-          ps: row.pashto_text
-        },
-        p_source: row.source,
-        p_translation_status: "complete",
-        p_translated_by_engine: "local_dictionary",
-        p_actor_id: row.corrected_by
-      });
-
-      if (rpcError) throw new Error(rpcError.message);
-    }
+    // Registry (lib/i18n/translatable-fields.ts) only tracks "brand" for goods_variations —
+    // "size" values are unit/measurement strings (e.g. "500g") and are intentionally left
+    // untranslated, same as other technical/standard values.
+    await translateMasterRecord("goods_variations", variationId, { brand }, "en", actorId);
   }
 }
 

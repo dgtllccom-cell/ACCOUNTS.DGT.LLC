@@ -1,7 +1,6 @@
 import { companiesRepository, type CompanyContact, type CompanyRegistration } from "@/lib/repositories/companies-repository";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { multilingualService } from "@/lib/services/multilingual-service";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
 export type CompanyInput = {
   name: string;
@@ -26,26 +25,6 @@ export type CompanyInput = {
   registrations?: CompanyRegistration[];
   ownerIds?: CompanyRegistration[];
 };
-
-function translatableFields(input: CompanyInput) {
-  return [
-    ["name", input.name],
-    ["legal_name", input.legalName ?? ""],
-    ["owner_name", input.ownerName ?? ""],
-    ["business_type", input.businessType ?? ""],
-    ["country_name", input.countryName ?? ""],
-    ["state_name", input.stateName ?? ""],
-    ["district_name", input.districtName ?? ""],
-    ["city_name", input.cityName ?? ""],
-    ["area_name", input.areaName ?? ""],
-    ["address", input.address ?? ""]
-  ] as const;
-}
-
-function isUuid(value: string | null | undefined) {
-  if (!value) return false;
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
-}
 
 export class CompaniesService {
   async search(input: { query?: string | null; limit?: number }) {
@@ -80,7 +59,22 @@ export class CompaniesService {
       ownerIds: input.ownerIds ?? []
     });
 
-    await this.upsertTranslations("companies", companyId, input, actorId ?? null);
+    await translateMasterRecord(
+      "companies",
+      companyId,
+      {
+        name: input.name,
+        legal_name: input.legalName ?? null,
+        owner_name: input.ownerName ?? null,
+        country_name: input.countryName ?? null,
+        state_name: input.stateName ?? null,
+        district_name: input.districtName ?? null,
+        city_name: input.cityName ?? null,
+        area_name: input.areaName ?? null
+      },
+      input.originalLanguage,
+      actorId ?? null
+    );
     return companyId;
   }
 
@@ -93,96 +87,28 @@ export class CompaniesService {
 
     if (input.name || input.legalName || input.ownerName || input.businessType || input.address || input.originalLanguage) {
       const company = await companiesRepository.getById(id);
-      const snapshot: CompanyInput = {
-        name: input.name ?? company.name,
-        legalName: "legalName" in input ? (input.legalName ?? null) : company.legal_name,
-        baseCurrency: input.baseCurrency ?? company.base_currency,
-        ownerName: "ownerName" in input ? (input.ownerName ?? null) : company.owner_name,
-        businessType: "businessType" in input ? (input.businessType ?? null) : company.business_type,
-        countryName: "countryName" in input ? (input.countryName ?? null) : company.country_name,
-        stateName: "stateName" in input ? (input.stateName ?? null) : company.state_name,
-        districtName: "districtName" in input ? (input.districtName ?? null) : company.district_name,
-        cityName: "cityName" in input ? (input.cityName ?? null) : company.city_name,
-        areaName: "areaName" in input ? (input.areaName ?? null) : company.area_name,
-        address: "address" in input ? (input.address ?? null) : company.address,
-        originalLanguage: input.originalLanguage ?? "en"
-      };
-      await this.upsertTranslations("companies", id, snapshot, actorId ?? null);
+      const resolvedLang = input.originalLanguage ?? ((company as any).original_language_code as SupportedLanguage) ?? "en";
+      await translateMasterRecord(
+        "companies",
+        id,
+        {
+          name: input.name ?? company.name,
+          legal_name: "legalName" in input ? (input.legalName ?? null) : company.legal_name,
+          owner_name: "ownerName" in input ? (input.ownerName ?? null) : company.owner_name,
+          country_name: "countryName" in input ? (input.countryName ?? null) : company.country_name,
+          state_name: "stateName" in input ? (input.stateName ?? null) : company.state_name,
+          district_name: "districtName" in input ? (input.districtName ?? null) : company.district_name,
+          city_name: "cityName" in input ? (input.cityName ?? null) : company.city_name,
+          area_name: "areaName" in input ? (input.areaName ?? null) : company.area_name
+        },
+        resolvedLang,
+        actorId ?? null
+      );
     }
   }
 
   async softDelete(id: string) {
     await companiesRepository.softDelete(id);
-  }
-
-  private async upsertTranslations(recordTable: string, recordId: string, input: CompanyInput, actorId: string | null) {
-    const supabase = createSupabaseAdminClient() as any;
-    const correctedBy = isUuid(actorId) ? actorId : null;
-    const values = translatableFields(input)
-      .filter(([, value]) => Boolean(value && value.trim()))
-      .map(([fieldName, value]) => {
-        const shell = multilingualService.createAutomaticTranslationShell(value, input.originalLanguage);
-        const payload = multilingualService.createRecordTranslationPayload({
-          recordTable,
-          recordId,
-          fieldName,
-          text: shell
-        });
-        return {
-          record_table: payload.recordTable,
-          record_id: payload.recordId,
-          field_name: payload.fieldName,
-          original_text: payload.originalText,
-          original_language_code: payload.originalLanguageCode,
-          english_text: payload.englishText,
-          arabic_text: payload.arabicText,
-          urdu_text: payload.urduText,
-          persian_text: payload.persianText,
-          pashto_text: payload.pashtoText,
-          source: "manual",
-          corrected_by: correctedBy,
-          corrected_at: correctedBy ? new Date().toISOString() : null,
-          updated_at: new Date().toISOString()
-        };
-      });
-
-    if (!values.length) return;
-
-    // record_translations is a VIEW (fanning out to 5 per-language tables), not a base table.
-    // A plain PostgREST .update()-then-.insert() against it is unreliable for the same reason
-    // documented in customers-service.ts (confirmed via direct DB inspection: existing company
-    // records had zero translation rows despite this code path running). Route through the
-    // proven upsert_record_translation RPC instead, which correctly handles the view's PARTIAL
-    // unique index (WHERE deleted_at IS NULL).
-    for (const row of values) {
-      const { error: rpcError } = await supabase.rpc("upsert_record_translation", {
-        p_record_table: row.record_table,
-        p_record_id: row.record_id,
-        p_field_name: row.field_name,
-        p_original_text: row.original_text,
-        p_original_language_code: row.original_language_code,
-        p_english: row.english_text,
-        p_urdu: row.urdu_text,
-        p_arabic: row.arabic_text,
-        p_persian: row.persian_text,
-        p_pashto: row.pashto_text,
-        p_language_texts: {
-          en: row.english_text,
-          ur: row.urdu_text,
-          ar: row.arabic_text,
-          fa: row.persian_text,
-          ps: row.pashto_text
-        },
-        p_source: row.source,
-        p_translation_status: "complete",
-        p_translated_by_engine: "local_dictionary",
-        p_actor_id: row.corrected_by
-      });
-
-      if (rpcError) {
-        throw new Error(rpcError.message);
-      }
-    }
   }
 }
 

@@ -30,7 +30,11 @@ const paramsSchema = z.object({
  * before this pipeline existed have no stored itemId and are returned unchanged (English).
  */
 async function resolveGoodsEntriesLanguage(formData: any, lang: string) {
-  if (!formData || lang === "en" || !Array.isArray(formData.goodsEntries)) return formData;
+  // Always resolve, even for lang === "en": form_data.goodsEntries stores whatever text was
+  // originally typed at save time (which may not have been English), so skipping resolution
+  // for English would leak non-English source text into the English view — the same bug
+  // class fixed across customers/banks/employees.
+  if (!formData || !Array.isArray(formData.goodsEntries)) return formData;
   const ids = formData.goodsEntries.map((g: any) => g?.itemId).filter(Boolean);
   if (ids.length === 0) return formData;
 

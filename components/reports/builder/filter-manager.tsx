@@ -4,6 +4,9 @@ import { type ReportFilterRule, type ReportFieldDefinition } from "./types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, X, Filter } from "lucide-react";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type FilterManagerProps = {
   fields: ReportFieldDefinition[];
@@ -12,6 +15,7 @@ type FilterManagerProps = {
 };
 
 export function FilterManager({ fields, filters, onChange }: FilterManagerProps) {
+  const lang = useActiveLanguage();
   const addFilter = () => {
     if (fields.length === 0) return;
     const newFilter: ReportFilterRule = {
@@ -38,23 +42,23 @@ export function FilterManager({ fields, filters, onChange }: FilterManagerProps)
   return (
     <div className="space-y-4 p-2">
       <div className="flex items-center justify-between border-b pb-2">
-        <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
+        <h3 className="text-sm font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
           <Filter className="h-4 w-4" />
-          Active Filters ({filters.length})
+          {t(lang, "report.builder_active_filters", "Active Filters")} ({filters.length})
         </h3>
         <div className="flex gap-2">
           <Button variant="ghost" size="sm" onClick={clearFilters} disabled={filters.length === 0} className="text-xs h-7 text-red-500 hover:text-red-600 hover:bg-red-50">
-            Clear All
+            {t(lang, "report.builder_clear_all", "Clear All")}
           </Button>
           <Button variant="outline" size="sm" onClick={addFilter} className="text-xs h-7">
-            <Plus className="h-3 w-3 mr-1" /> Add Filter
+            <Plus className="h-3 w-3 mr-1" /> {t(lang, "report.builder_add_filter", "Add Filter")}
           </Button>
         </div>
       </div>
 
       {filters.length === 0 ? (
         <div className="text-center py-6 text-sm text-slate-500 italic border rounded bg-slate-50 dark:bg-slate-900 border-dashed">
-          No filters applied. Click "Add Filter" to refine results.
+          {t(lang, "report.builder_no_filters_applied", 'No filters applied. Click "Add Filter" to refine results.')}
         </div>
       ) : (
         <div className="space-y-3">
@@ -67,10 +71,10 @@ export function FilterManager({ fields, filters, onChange }: FilterManagerProps)
                   onChange={(e) => updateFilter(filter.id, { fieldId: e.target.value, value: "" })}
                   className="w-full sm:w-[160px] h-8 text-xs bg-white dark:bg-slate-950 border rounded px-2"
                 >
-                  <option value="" disabled>Select field</option>
+                  <option value="" disabled>{t(lang, "report.builder_select_field", "Select field")}</option>
                   {fields.map((f) => (
                     <option key={f.id} value={f.id}>
-                      {f.label}
+                      {translateHeader(lang, f.label)}
                     </option>
                   ))}
                 </select>
@@ -80,14 +84,14 @@ export function FilterManager({ fields, filters, onChange }: FilterManagerProps)
                   onChange={(e) => updateFilter(filter.id, { operator: e.target.value as any })}
                   className="w-full sm:w-[130px] h-8 text-xs bg-white dark:bg-slate-950 border rounded px-2"
                 >
-                  <option value="" disabled>Operator</option>
-                  <option value="contains">Contains</option>
-                  <option value="equals">Equals (=)</option>
-                  <option value="not_equals">Not Equals (!=)</option>
+                  <option value="" disabled>{t(lang, "report.builder_operator", "Operator")}</option>
+                  <option value="contains">{t(lang, "report.builder_op_contains", "Contains")}</option>
+                  <option value="equals">{t(lang, "report.builder_op_equals", "Equals (=)")}</option>
+                  <option value="not_equals">{t(lang, "report.builder_op_not_equals", "Not Equals (!=)")}</option>
                   {fieldDef?.type === "number" || fieldDef?.type === "date" || fieldDef?.type === "currency" ? (
                     <>
-                      <option value="greater_than">Greater Than (&gt;)</option>
-                      <option value="less_than">Less Than (&lt;)</option>
+                      <option value="greater_than">{t(lang, "report.builder_op_greater_than", "Greater Than (>)")}</option>
+                      <option value="less_than">{t(lang, "report.builder_op_less_than", "Less Than (<)")}</option>
                     </>
                   ) : null}
                 </select>
@@ -99,10 +103,10 @@ export function FilterManager({ fields, filters, onChange }: FilterManagerProps)
                       onChange={(e) => updateFilter(filter.id, { value: e.target.value })}
                       className="h-8 text-xs bg-white dark:bg-slate-950 w-full border rounded px-2"
                     >
-                      <option value="" disabled>Select value</option>
+                      <option value="" disabled>{t(lang, "report.builder_select_value", "Select value")}</option>
                       {fieldDef.options.map((opt) => (
                         <option key={opt.value} value={opt.value}>
-                          {opt.label}
+                          {translateHeader(lang, opt.label)}
                         </option>
                       ))}
                     </select>
@@ -111,7 +115,7 @@ export function FilterManager({ fields, filters, onChange }: FilterManagerProps)
                       type={fieldDef?.type === "number" || fieldDef?.type === "currency" ? "number" : fieldDef?.type === "date" ? "date" : "text"}
                       value={filter.value as string}
                       onChange={(e) => updateFilter(filter.id, { value: e.target.value })}
-                      placeholder="Enter value..."
+                      placeholder={t(lang, "report.builder_enter_value", "Enter value...")}
                       className="h-8 text-xs bg-white dark:bg-slate-950"
                     />
                   )}

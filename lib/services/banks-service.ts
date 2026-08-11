@@ -1,4 +1,5 @@
 import { banksRepository } from "@/lib/repositories/banks-repository";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type BankInput = {
   bankType: string;
@@ -23,6 +24,7 @@ export type BankInput = {
   swiftBic?: string | null;
   website?: string | null;
   remarks?: string | null;
+  originalLanguage?: SupportedLanguage;
 };
 
 export class BanksService {
@@ -34,12 +36,12 @@ export class BanksService {
     return await banksRepository.getById(id);
   }
 
-  async create(input: BankInput, _actorId?: string | null) {
-    return await banksRepository.create(input);
+  async create(input: BankInput, actorId?: string | null) {
+    return await banksRepository.create(input, actorId ?? null);
   }
 
-  async update(id: string, input: Partial<BankInput>, _actorId?: string | null) {
-    return await banksRepository.update(id, input);
+  async update(id: string, input: Partial<BankInput>, actorId?: string | null) {
+    return await banksRepository.update(id, input, actorId ?? null);
   }
 
   async softDelete(id: string) {

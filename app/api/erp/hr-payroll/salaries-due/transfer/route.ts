@@ -22,28 +22,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required parameters: dueRecordId, paymentLedgerId, and paymentDate are required" }, { status: 400 });
     }
 
-    // 1. Fetch salary due record and mapped employee profile
-    const { data: dueRecord, error: fetchError } = await supabase
-      .from("employee_salaries_due")
-      .select(`
-        *,
-        employee:employees (
-          id,
-          employee_code,
-          person:customers!person_master_id (
-            customer_name
-          ),
-          salary_expense_account_id,
-          employee_payable_account_id,
-          cash_account_id,
-          bank_account_id,
-          advance_salary_account_id,
-          loan_account_id
-        )
-      `)
-      .eq("id", dueRecordId)
-      .is("deleted_at", null)
-      .single();
+    // 1. Fetch salary due record and mapped employee profile — via SECURITY DEFINER RPC
+    // (see employees RPCs for the full rationale).
+    const { data: dueRecord, error: fetchError } = await (supabase as any).rpc("get_salary_due_with_employee", {
+      p_id: dueRecordId
+    });
 
     if (fetchError || !dueRecord) {
       return NextResponse.json({ error: "Salary due record not found" }, { status: 404 });
@@ -204,113 +187,42 @@ export async function POST(request: NextRequest) {
       paymentJournalEntryId = payJournalId as string;
     }
 
-    // 4. Update loan and advance balances
+    // 4. Update loan and advance balances (FIFO by payment_date) — via SECURITY DEFINER RPC.
     if (advanceRec > 0) {
-      const { data: advances, error: advError } = await supabase
-        .from("employee_advances_loans")
-        .select("*")
-        .eq("employee_id", emp.id)
-        .eq("status", "Active")
-        .not("type", "ilike", "%loan%")
-        .is("deleted_at", null)
-        .order("payment_date", { ascending: true });
-
-      if (!advError && advances) {
-        let remainingToDeduct = advanceRec;
-        for (const adv of advances) {
-          if (remainingToDeduct <= 0) break;
-          const toDeduct = Math.min(remainingToDeduct, Number(adv.remaining_balance || 0));
-          const newBalance = Number(adv.remaining_balance || 0) - toDeduct;
-          await supabase
-            .from("employee_advances_loans")
-            .update({
-              remaining_balance: newBalance,
-              status: newBalance <= 0 ? "Completed" : "Active"
-            })
-            .eq("id", adv.id);
-          remainingToDeduct -= toDeduct;
-        }
-      }
+      await (supabase as any).rpc("apply_advance_loan_recovery", {
+        p_employee_id: emp.id,
+        p_is_loan: false,
+        p_recovery_amount: advanceRec
+      });
     }
 
     if (loanRec > 0) {
-      const { data: loans, error: loanError } = await supabase
-        .from("employee_advances_loans")
-        .select("*")
-        .eq("employee_id", emp.id)
-        .eq("status", "Active")
-        .ilike("type", "%loan%")
-        .is("deleted_at", null)
-        .order("payment_date", { ascending: true });
-
-      if (!loanError && loans) {
-        let remainingToDeduct = loanRec;
-        for (const loan of loans) {
-          if (remainingToDeduct <= 0) break;
-          const toDeduct = Math.min(remainingToDeduct, Number(loan.remaining_balance || 0));
-          const newBalance = Number(loan.remaining_balance || 0) - toDeduct;
-          await supabase
-            .from("employee_advances_loans")
-            .update({
-              remaining_balance: newBalance,
-              status: newBalance <= 0 ? "Completed" : "Active"
-            })
-            .eq("id", loan.id);
-          remainingToDeduct -= toDeduct;
-        }
-      }
+      await (supabase as any).rpc("apply_advance_loan_recovery", {
+        p_employee_id: emp.id,
+        p_is_loan: true,
+        p_recovery_amount: loanRec
+      });
     }
 
-    // 5. Deduct employee advance/loan deductions from employee profile if balances completed
-    const { data: activeAdvLoans } = await supabase
-      .from("employee_advances_loans")
-      .select("type, monthly_deduction")
-      .eq("employee_id", emp.id)
-      .eq("status", "Active")
-      .is("deleted_at", null);
+    // 5. Recompute employee advance/loan deductions + net_salary from currently-Active
+    // advances/loans — via SECURITY DEFINER RPC.
+    await (supabase as any).rpc("recompute_employee_active_deductions", { p_employee_id: emp.id });
 
-    let activeLoanDed = 0;
-    let activeAdvDed = 0;
-    if (activeAdvLoans) {
-      for (const item of activeAdvLoans) {
-        if (item.type.toLowerCase().includes("loan")) {
-          activeLoanDed += Number(item.monthly_deduction || 0);
-        } else {
-          activeAdvDed += Number(item.monthly_deduction || 0);
-        }
-      }
-    }
-    const totalDeds = Number(emp.deduction || 0) + Number(emp.tax_deduction || 0);
-    const nextNet = Number(emp.basic_salary || 0) + Number(emp.allowance || 0) - totalDeds - activeAdvDed - activeLoanDed;
-
-    await supabase
-      .from("employees")
-      .update({
-        advance_deduction: activeAdvDed,
-        loan_deduction: activeLoanDed,
-        net_salary: Math.max(0, nextNet)
-      })
-      .eq("id", emp.id);
-
-    // 6. Finalize salary due record
-    const { data: updatedRecord, error: finalError } = await supabase
-      .from("employee_salaries_due")
-      .update({
-        status: "Paid",
+    // 6. Finalize salary due record — via SECURITY DEFINER RPC.
+    const { data: updatedRecord, error: finalError } = await (supabase as any).rpc("finalize_salary_due_payment", {
+      p_id: dueRecordId,
+      p_payload: {
         payment_method: "Bank/Cash Transfer",
         payment_account_id: paymentLedgerId,
         exchange_rate: activeRate,
         local_currency_amount: localAmount,
         journal_entry_id: journalEntryId,
         payment_journal_entry_id: paymentJournalEntryId,
-        transfer_date: new Date().toISOString(),
         posting_date: paymentDate,
-        paid_date: paymentDate,
-        transferred_by: session.userId
-      })
-      .eq("id", dueRecordId)
-      .select()
-      .single();
+        paid_date: paymentDate
+      },
+      p_actor_id: session.userId
+    });
 
     if (finalError) {
       return NextResponse.json({ error: finalError.message }, { status: 400 });

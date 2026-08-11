@@ -82,21 +82,21 @@ function PremiumNodeItem({
   const isChanged = CHANGED_KEYS.has(node.key);
 
   const rowClass = cn(
-    "group flex items-center justify-between rounded-xl transition-all duration-200 my-0.5",
-    depth === 0 ? "text-[12.5px] font-bold" : depth === 1 ? "text-[12px] font-semibold" : "text-[11.5px] font-medium",
+    "group flex items-center justify-between rounded-lg transition-all duration-150 my-1 cursor-pointer select-none",
+    depth === 0 ? "text-xs sm:text-[13.5px] font-bold" : depth === 1 ? "text-xs sm:text-[12.5px] font-semibold" : "text-xs sm:text-[12px] font-medium",
     isActive
-      ? "bg-gradient-to-r from-blue-600 via-indigo-600 to-blue-700 font-black text-white shadow-lg shadow-blue-500/30 ring-2 ring-blue-400/50 scale-[1.01]"
+      ? "bg-blue-600 text-white font-bold shadow-sm"
       : branchActive
-        ? "bg-blue-50/90 font-extrabold text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border-s-4 border-blue-600 shadow-xs"
-        : "text-slate-700 hover:bg-slate-100/90 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-white"
+        ? "bg-slate-100 text-blue-700 dark:bg-slate-800 dark:text-blue-400 font-semibold"
+        : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/80 dark:hover:text-white"
   );
 
   const iconClass = cn(
-    "shrink-0 transition-colors h-4 w-4",
-    isActive ? "text-white animate-pulse" : branchActive ? "text-blue-600 dark:text-blue-400 font-bold" : "text-slate-400 group-hover:text-blue-600 dark:text-slate-400"
+    "shrink-0 transition-colors h-4 w-4 sm:h-4.5 sm:w-4.5 me-2",
+    isActive ? "text-white" : branchActive ? "text-blue-600 dark:text-blue-400" : "text-slate-400 group-hover:text-slate-700 dark:text-slate-400 dark:group-hover:text-slate-200"
   );
 
-  const labelClass = "flex min-w-0 flex-1 items-center gap-2 py-1.5 px-2.5 overflow-hidden";
+  const labelClass = "flex min-w-0 flex-1 items-center py-2 px-3 overflow-hidden";
 
   return (
     <div>
@@ -114,22 +114,9 @@ function PremiumNodeItem({
             title={labelText}
           >
             <SidebarIcon name={node.iconKey} className={iconClass} />
-            <span className={cn("min-w-0 flex-1 text-start truncate whitespace-nowrap tracking-tight", (isActive || branchActive) && "font-bold text-blue-600 dark:text-blue-400", isActive && "text-white")}>
+            <span className={cn("min-w-0 flex-1 text-start truncate whitespace-nowrap tracking-tight leading-snug", (isActive || branchActive) && "font-bold", isActive && "text-white")}>
               {labelText}
             </span>
-            {isActive ? (
-              <span className="ms-1 shrink-0 rounded-full bg-white text-blue-700 px-1.5 py-0.5 text-[8.5px] font-black uppercase tracking-widest shadow-xs">
-                ACTIVE
-              </span>
-            ) : branchActive ? (
-              <span className="ms-1 shrink-0 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 text-[8.5px] font-black uppercase">
-                OPEN
-              </span>
-            ) : isChanged ? (
-              <span className="ms-1 shrink-0 rounded bg-amber-400 text-amber-950 px-1.5 py-0.5 text-[9px] font-black uppercase leading-none shadow-xs ring-1 ring-amber-500/50">
-                NEW
-              </span>
-            ) : null}
           </Link>
         ) : (
           <button
@@ -139,18 +126,9 @@ function PremiumNodeItem({
             title={labelText}
           >
             <SidebarIcon name={node.iconKey} className={iconClass} />
-            <span className={cn("min-w-0 flex-1 text-start truncate whitespace-nowrap tracking-tight", branchActive && "font-bold text-blue-600 dark:text-blue-400")}>
+            <span className={cn("min-w-0 flex-1 text-start truncate whitespace-nowrap tracking-tight leading-snug", branchActive && "font-bold text-blue-600 dark:text-blue-400")}>
               {labelText}
             </span>
-            {branchActive ? (
-              <span className="ms-1 shrink-0 rounded bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300 px-1.5 py-0.5 text-[8.5px] font-black uppercase">
-                OPEN
-              </span>
-            ) : isChanged ? (
-              <span className="ms-1 shrink-0 rounded bg-amber-400 text-amber-950 px-1.5 py-0.5 text-[9px] font-black uppercase leading-none shadow-xs ring-1 ring-amber-500/50">
-                NEW
-              </span>
-            ) : null}
           </button>
         )}
 
@@ -159,13 +137,13 @@ function PremiumNodeItem({
             type="button"
             onClick={() => onToggle(node.key)}
             className={cn(
-              "me-1.5 inline-flex h-6 w-6 shrink-0 items-center justify-center rounded-lg transition-colors",
+              "me-2 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors",
               isActive ? "text-white/90 hover:bg-white/20" : "text-slate-400 hover:bg-slate-200/70 hover:text-slate-600 dark:hover:bg-slate-700/60"
             )}
             aria-label="Toggle submenu"
             aria-expanded={isOpen}
           >
-            <ChevronRight className={cn("h-3.5 w-3.5 transition-transform duration-200", isOpen ? "rotate-90" : "rotate-0")} />
+            <ChevronRight className={cn("h-4 w-4 transition-transform duration-200", isOpen ? "rotate-90" : "rotate-0")} />
           </button>
         ) : null}
       </div>
@@ -173,7 +151,8 @@ function PremiumNodeItem({
       {hasChildren ? (
         <div className={cn("grid overflow-hidden transition-[grid-template-rows] duration-200 ease-out", isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]")}>
           <div className="min-h-0">
-            <div className="relative ms-2.5 mt-0.5 space-y-0.5 border-s border-slate-200/90 ps-1.5 dark:border-slate-800">
+            {/* Clean indentation without vertical tree lines */}
+            <div className="ms-3 sm:ms-4 mt-0.5 space-y-0.5 ps-2">
               {node.children!.map((child) => (
                 <PremiumNodeItem
                   key={child.key}

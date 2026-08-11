@@ -544,6 +544,22 @@ export const savedReports = pgTable("saved_reports", {
   ...timestamps
 });
 
+// Auto Email config attached to a saved report — see app/api/erp/reports/auto-email/route.ts.
+// No deletedAt column (unlike most tables here): rows are deleted outright via the FK cascade
+// when their parent saved_reports row is removed, so soft-delete doesn't apply.
+export const reportAutoEmailConfigs = pgTable("report_auto_email_configs", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  savedReportId: uuid("saved_report_id").references(() => savedReports.id, { onDelete: "cascade" }).notNull(),
+  recipients: jsonb("recipients").notNull(),
+  frequency: text("frequency").default("daily").notNull(),
+  format: text("format").default("pdf").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  lastSentAt: timestamp("last_sent_at", { withTimezone: true }),
+  createdBy: uuid("created_by").references(() => profiles.id),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull()
+});
+
 export const localPurchases = pgTable("local_purchases", {
   id: uuid("id").defaultRandom().primaryKey(),
   companyId: uuid("company_id").references(() => companies.id),

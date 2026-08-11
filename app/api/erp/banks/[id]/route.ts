@@ -4,14 +4,25 @@ import { auditApiAction } from "@/lib/api/audit";
 import { requireErpSession } from "@/lib/auth/session";
 import { bankUpdateSchema } from "@/lib/api/erp-validation";
 import { banksService } from "@/lib/services/banks-service";
+import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     await requireErpSession();
-    const bank = await banksService.getById((await params).id);
+    let bank: any = await banksService.getById((await params).id);
+    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    // Always resolve — see customers/[id]/route.ts for why skipping lang === "en" would leak
+    // non-English source text into the English view.
+    if (bank) {
+      const [r1] = await localizeRecordNames([bank], "banks", "bank_name", lang);
+      const [r2] = await localizeRecordNames([r1], "banks", "branch_name", lang);
+      const [r3] = await localizeRecordNames([r2], "banks", "short_name", lang);
+      bank = r3;
+    }
     return apiOk({ bank });
   } catch (error) {
     return handleApiError(error);

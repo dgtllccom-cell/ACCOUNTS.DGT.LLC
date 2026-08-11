@@ -1,6 +1,7 @@
 import { type SupportedLanguage } from "@/lib/i18n/languages";
 import { translateText } from "./multilingual-service";
-import { transliterateProperNoun } from "@/lib/i18n/transliteration";
+import { transliterateProperNoun, transliterateToLatin } from "@/lib/i18n/transliteration";
+import { detectScriptType } from "@/lib/i18n/multilingual-translator";
 
 export type TranslationMap = {
   en: string;
@@ -43,6 +44,23 @@ export async function autoTranslateText(
       ar: resolved.ar || val,
       fa: resolved.fa || val,
       ps: resolved.ps || val
+    };
+  }
+
+  // Source script determines which direction to transliterate. Perso-Arabic-script input
+  // (Urdu/Arabic/Persian/Pashto all share the same base script) has no forward path to
+  // English — without this branch, `en` fell back to the raw original text, meaning selecting
+  // English UI would still display the Urdu/Arabic/Farsi/Pashto source (a real leak). ur/ar/fa/ps
+  // keep the original script as-is (cross-RTL letter differences, e.g. Urdu ٹ/ڈ/ڑ vs standard
+  // Arabic, are a further refinement — not attempted here, matching the forward direction's own
+  // scope).
+  if (detectScriptType(val) === "arabic") {
+    return {
+      en: transliterateToLatin(val),
+      ur: val,
+      ar: val,
+      fa: val,
+      ps: val
     };
   }
 

@@ -184,7 +184,7 @@ export async function POST(request: Request) {
     const payload = {
       country_id: parsed.data.countryId,
       country_branch_id: parsed.data.countryBranchId,
-      city_name: (parsed.data.cityName ?? "").trim(),
+      city_name: (parsed.data.cityName || parsed.data.name || "").trim(),
       name: parsed.data.name.trim(),
       code: parsed.data.code.trim().toUpperCase(),
       local_currency: parsed.data.currencyCode.trim().toUpperCase(),
@@ -343,7 +343,7 @@ export async function PUT(request: Request) {
     const payload = {
       country_id: parsed.data.countryId,
       country_branch_id: parsed.data.countryBranchId,
-      city_name: (parsed.data.cityName ?? "").trim(),
+      city_name: (parsed.data.cityName || parsed.data.name || "").trim(),
       name: parsed.data.name.trim(),
       code: parsed.data.code.trim().toUpperCase(),
       local_currency: parsed.data.currencyCode.trim().toUpperCase(),

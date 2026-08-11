@@ -8,40 +8,24 @@ export async function GET(request: NextRequest) {
   try {
     await requireErpSession();
     const supabase = createSupabaseAdminClient();
-    
+
     const searchParams = request.nextUrl.searchParams;
     const employeeId = searchParams.get("employeeId");
     const status = searchParams.get("status");
 
-    let query = supabase
-      .from("employee_advances_loans")
-      .select(`
-        *,
-        employee:employees (
-          id,
-          employee_code,
-          person:customers!person_master_id (
-            customer_name
-          )
-        ),
-        payment_ledger:ledgers!payment_account_id (
-          id,
-          name,
-          code
-        )
-      `)
-      .is("deleted_at", null);
-
-    if (employeeId) query = query.eq("employee_id", employeeId);
-    if (status) query = query.eq("status", status);
-
-    const { data: records, error } = await query.order("payment_date", { ascending: false });
+    // employee_advances_loans has RLS (scoped via its parent employees row) and this app's
+    // client isn't guaranteed to carry a real service-role key — read via the SECURITY
+    // DEFINER RPC instead of a direct .from(...).select(...) (see employees RPCs).
+    const { data: records, error } = await (supabase as any).rpc("list_employee_advances_loans", {
+      p_employee_id: employeeId || null,
+      p_status: status || null
+    });
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ records });
+    return NextResponse.json({ records: records || [] });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -71,17 +55,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
     }
 
-    // 1. Fetch employee to check ledger setup
-    const { data: employee, error: empError } = await supabase
-      .from("employees")
-      .select(`
-        *,
-        person:customers!person_master_id (
-          customer_name
-        )
-      `)
-      .eq("id", employeeId)
-      .single();
+    // 1. Fetch employee to check ledger setup — via the same SECURITY DEFINER RPC the
+    // employees routes use, rather than a direct .from("employees").select().single().
+    const { data: employee, error: empError } = await (supabase as any).rpc("get_employee_with_relations", {
+      p_id: employeeId
+    });
 
     if (empError || !employee) {
       return NextResponse.json({ error: "Employee details not found" }, { status: 400 });
@@ -150,10 +128,11 @@ export async function POST(request: NextRequest) {
       journalEntryId = journalId as string;
     }
 
-    // 3. Save advance/loan record
-    const { data: record, error: insertError } = await supabase
-      .from("employee_advances_loans")
-      .insert({
+    // 3. Save advance/loan record AND update the employee's deduction fields — both done
+    // atomically inside create_employee_advance_loan (SECURITY DEFINER), which recomputes the
+    // deduction totals from the current DB row itself rather than trusting stale client state.
+    const { data: record, error: insertError } = await (supabase as any).rpc("create_employee_advance_loan", {
+      p_payload: {
         employee_id: employeeId,
         type,
         amount: Number(amount),
@@ -162,38 +141,16 @@ export async function POST(request: NextRequest) {
         payment_account_id: paymentAccountId,
         recovery_method: recoveryMethod || "Monthly Salary Deduction",
         monthly_deduction: Number(monthlyDeduction || 0),
-        remaining_balance: Number(amount),
         start_month: startMonth || null,
         remarks,
-        status: "Active",
-        journal_entry_id: journalEntryId,
-        created_by: session.userId
-      })
-      .select()
-      .single();
+        journal_entry_id: journalEntryId
+      },
+      p_actor_id: session.userId
+    });
 
     if (insertError) {
       return NextResponse.json({ error: insertError.message }, { status: 400 });
     }
-
-    // 4. Update employee active deductions details so that net salary reflects it
-    // Wait! Let's increase the deduction metrics on the employee record!
-    const updatedDeduction = Number(employee.deduction || 0) + Number(monthlyDeduction || 0);
-    const updatedAdvanceDeduction = type.toLowerCase().includes("loan") 
-      ? Number(employee.loan_deduction || 0) + Number(monthlyDeduction || 0)
-      : Number(employee.advance_deduction || 0) + Number(monthlyDeduction || 0);
-    
-    const updatedNetSalary = Number(employee.basic_salary || 0) + Number(employee.allowance || 0) - updatedDeduction;
-
-    await supabase
-      .from("employees")
-      .update({
-        deduction: updatedDeduction,
-        advance_deduction: type.toLowerCase().includes("loan") ? employee.advance_deduction : updatedAdvanceDeduction,
-        loan_deduction: type.toLowerCase().includes("loan") ? updatedAdvanceDeduction : employee.loan_deduction,
-        net_salary: updatedNetSalary
-      })
-      .eq("id", employeeId);
 
     return NextResponse.json({ record });
   } catch (err: any) {

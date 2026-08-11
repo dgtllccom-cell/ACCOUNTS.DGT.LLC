@@ -15,41 +15,20 @@ export async function GET(request: NextRequest) {
     const branchId = searchParams.get("branchId");
     const status = searchParams.get("status");
 
-    let query = supabase
-      .from("employee_salaries_due")
-      .select(`
-        *,
-        employee:employees (
-          id,
-          employee_code,
-          category,
-          designation,
-          basic_salary,
-          salary_currency,
-          salary_expense_account_id,
-          employee_payable_account_id,
-          cash_account_id,
-          bank_account_id,
-          person:customers!person_master_id (
-            customer_name,
-            company_name
-          )
-        )
-      `)
-      .is("deleted_at", null);
-
-    if (month) query = query.eq("salary_month", month);
-    if (countryId) query = query.eq("country_id", countryId);
-    if (branchId) query = query.eq("branch_id", branchId);
-    if (status) query = query.eq("status", status);
-
-    const { data: records, error } = await query.order("due_date", { ascending: false });
+    // employee_salaries_due has scoped RLS and this app's client isn't guaranteed to carry a
+    // real service-role key — read via the SECURITY DEFINER RPC (see employees RPCs).
+    const { data: records, error } = await (supabase as any).rpc("list_salaries_due", {
+      p_month: month || null,
+      p_country_id: countryId || null,
+      p_branch_id: branchId || null,
+      p_status: status || null
+    });
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
-    return NextResponse.json({ records });
+    return NextResponse.json({ records: records || [] });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
@@ -67,17 +46,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Salary Month (YYYY-MM) is required" }, { status: 400 });
     }
 
-    // 1. Fetch active employees matching scope
-    let empQuery = supabase
-      .from("employees")
-      .select("*")
-      .eq("status", "Active")
-      .is("deleted_at", null);
-
-    if (countryId) empQuery = empQuery.eq("country_id", countryId);
-    if (countryBranchId) empQuery = empQuery.eq("country_branch_id", countryBranchId);
-
-    const { data: employees, error: empError } = await empQuery;
+    // 1. Fetch active employees matching scope — via SECURITY DEFINER RPC (see employees RPCs).
+    const { data: employees, error: empError } = await (supabase as any).rpc("list_active_employees_in_scope", {
+      p_country_id: countryId || null,
+      p_branch_id: countryBranchId || null
+    });
     if (empError) throw empError;
 
     if (!employees || employees.length === 0) {
@@ -89,28 +62,23 @@ export async function POST(request: NextRequest) {
 
     for (const emp of employees) {
       // Check if due record already exists for this employee and month
-      const { data: existing, error: existError } = await supabase
-        .from("employee_salaries_due")
-        .select("id")
-        .eq("employee_id", emp.id)
-        .eq("salary_month", salaryMonth)
-        .is("deleted_at", null)
-        .maybeSingle();
+      const { data: alreadyExists, error: existError } = await (supabase as any).rpc("salary_due_exists", {
+        p_employee_id: emp.id,
+        p_salary_month: salaryMonth
+      });
 
       if (existError) throw existError;
-      if (existing) continue; // Already generated
+      if (alreadyExists) continue; // Already generated
 
       // Calculate recoveries for Loans and Advances
       let advanceRecovery = 0;
       let loanRecovery = 0;
 
       // Query active advances / loans
-      const { data: advLoans, error: alError } = await supabase
-        .from("employee_advances_loans")
-        .select("*")
-        .eq("employee_id", emp.id)
-        .eq("status", "Active")
-        .is("deleted_at", null);
+      const { data: advLoans, error: alError } = await (supabase as any).rpc("list_employee_advances_loans", {
+        p_employee_id: emp.id,
+        p_status: "Active"
+      });
 
       if (alError) throw alError;
 
@@ -143,9 +111,8 @@ export async function POST(request: NextRequest) {
       const netSalary = Math.max(0, Number(emp.basic_salary || 0) + totalAllowances - totalDeductions - advanceRecovery - loanRecovery);
 
       // Insert salary due registry row
-      const { error: insertError } = await supabase
-        .from("employee_salaries_due")
-        .insert({
+      const { error: insertError } = await (supabase as any).rpc("insert_salary_due", {
+        p_payload: {
           employee_id: emp.id,
           salary_month: salaryMonth,
           due_date: dueDate,
@@ -159,9 +126,10 @@ export async function POST(request: NextRequest) {
           currency: emp.salary_currency || "USD",
           status: "Due",
           country_id: emp.country_id,
-          branch_id: emp.country_branch_id,
-          created_by: session.userId
-        });
+          branch_id: emp.country_branch_id
+        },
+        p_actor_id: session.userId
+      });
 
       if (insertError) throw insertError;
       generatedCount++;

@@ -4,6 +4,8 @@ import { auditApiAction } from "@/lib/api/audit";
 import { requireErpSession } from "@/lib/auth/session";
 import { bankCreateSchema } from "@/lib/api/erp-validation";
 import { banksService } from "@/lib/services/banks-service";
+import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,6 +14,7 @@ export async function GET(request: NextRequest) {
     const query = request.nextUrl.searchParams.get("q");
     const countryId = request.nextUrl.searchParams.get("countryId");
     const limit = request.nextUrl.searchParams.get("limit");
+    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
 
     const result = await banksService.search({
       query,
@@ -19,7 +22,16 @@ export async function GET(request: NextRequest) {
       limit: limit ? Number(limit) : 50
     });
 
-    return apiOk(result);
+    let banks: any[] = (result as any).banks ?? [];
+    // Always resolve — see customers/[id]/route.ts for why skipping lang === "en" would leak
+    // non-English source text into the English view.
+    if (Array.isArray(banks) && banks.length > 0) {
+      banks = await localizeRecordNames<any>(banks, "banks", "bank_name", lang);
+      banks = await localizeRecordNames<any>(banks, "banks", "branch_name", lang);
+      banks = await localizeRecordNames<any>(banks, "banks", "short_name", lang);
+    }
+
+    return apiOk({ ...(result as any), banks });
   } catch (error) {
     return handleApiError(error);
   }
@@ -53,7 +65,8 @@ export async function POST(request: NextRequest) {
         email: body.email ?? null,
         swiftBic: body.swiftBic ?? null,
         website: body.website ?? null,
-        remarks: body.remarks ?? null
+        remarks: body.remarks ?? null,
+        originalLanguage: body.originalLanguage
       },
       session.userId
     );

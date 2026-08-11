@@ -60,9 +60,10 @@ export default function GlobalClientError({
           sessionStorage.removeItem("chunk_reload_attempt");
           sessionStorage.removeItem("chunk_reload_timestamp");
           sessionStorage.removeItem("erp_chunk_reload_timestamp");
+          sessionStorage.removeItem("erp_auto_chunk_cnt");
           for (let i = sessionStorage.length - 1; i >= 0; i--) {
             const key = sessionStorage.key(i);
-            if (key && (key.startsWith("chunk_reload") || key.startsWith("erp_chunk_reload"))) {
+            if (key && (key.startsWith("chunk_reload") || key.startsWith("erp_chunk_reload") || key.startsWith("erp_auto_chunk"))) {
               sessionStorage.removeItem(key);
             }
           }

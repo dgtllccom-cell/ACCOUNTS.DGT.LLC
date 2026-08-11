@@ -1,6 +1,6 @@
 import postgres from "postgres";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { transliterateProperNoun } from "@/lib/i18n/transliteration";
+import { transliterateProperNoun, transliterateToLatin } from "@/lib/i18n/transliteration";
 
 const ARABIC_SCRIPT_REGEX = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFE]/;
 
@@ -81,9 +81,13 @@ export async function localizeRecordNames<T extends { id: string }>(
         if (trans?.english_text && trans.english_text.trim()) {
           return { ...record, [field]: trans.english_text.trim() };
         }
-        // If raw base text is in Urdu/Arabic script (e.g. "محمد علي"), do not present Urdu as English!
+        // If raw base text is in Urdu/Arabic script (e.g. "محمد علي"), do not present Urdu as
+        // English! This only fires when no english_text row exists yet (record never went
+        // through translateMasterRecord, or predates it). transliterateProperNoun(x, "en") is
+        // a no-op passthrough by design (see transliteration.ts) — use the real reverse
+        // transliterator instead so this fallback never actually shows raw Perso-Arabic script.
         if (isArabicScript(rawValue)) {
-          const latinApprox = transliterateProperNoun(rawValue, "en");
+          const latinApprox = transliterateToLatin(rawValue);
           return {
             ...record,
             [field]: latinApprox && latinApprox !== rawValue ? latinApprox : `${rawValue} [EN Pending]`

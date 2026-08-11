@@ -23,6 +23,11 @@ export type ReportSortConfig = {
   direction: "asc" | "desc";
 } | null;
 
+export type ReportGroupConfig = {
+  fieldId: string | null;
+  showSubtotals: boolean;
+} | null;
+
 export type SavedReportConfig = {
   id?: string;
   name: string;
@@ -35,6 +40,10 @@ export type SavedReportConfig = {
     to: string;
     preset?: string;
   };
+  groupBy?: ReportGroupConfig;
+  showTotals?: boolean;
+  showChart?: boolean;
+  chartFieldId?: string | null;
   isPublic?: boolean;
 };
 

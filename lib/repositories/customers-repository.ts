@@ -1,6 +1,6 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 import { allocateFormSerials } from "@/lib/services/form-serials";
+import { withLocalPg } from "@/lib/db/local-postgres";
 
 export type CustomerRow = {
   id: string;
@@ -40,27 +40,51 @@ export type CustomerRegistrationRow = {
   created_at: string;
 };
 
+const CUSTOMER_COLUMNS = [
+  "id", "country_id", "state_province_id", "district_id", "city_id", "area_location_id",
+  "customer_name", "company_name", "contact_person", "mobile", "whatsapp", "email", "address",
+  "notes", "original_language_code", "is_active", "created_at", "updated_at"
+];
+
 function cleanQuery(value: string) {
   return value.trim().replace(/\s+/g, " ");
 }
 
 export class CustomersRepository {
+  // `customers` has scoped RLS (customers_scope_read) and this app's Supabase client is not
+  // guaranteed to carry a real service-role key that bypasses RLS on its own — confirmed live:
+  // list search silently returned an empty array and getById threw "Cannot coerce the result
+  // to a single JSON object" (PostgREST's 0-rows-under-RLS error for .single()). Reads go
+  // through a direct Postgres connection (DATABASE_URL, via withLocalPg — same proven bypass
+  // already used by companies-repository.ts) when available, falling back to the Supabase
+  // client otherwise. See banks-repository.ts for the same pattern.
   async search(input: { query?: string | null; countryId?: string | null; limit?: number }) {
-    const supabase = createSupabaseAdminClient() as any;
     const limit = Math.min(Math.max(input.limit ?? 20, 1), 50);
+    const q = cleanQuery(input.query ?? "");
+    const like = q ? `%${q}%` : null;
 
+    const viaPg = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        SELECT ${sql(CUSTOMER_COLUMNS)} FROM public.customers
+        WHERE deleted_at IS NULL
+          AND (${input.countryId ? sql`country_id = ${input.countryId}` : sql`true`})
+          AND (${like ? sql`(customer_name ILIKE ${like} OR company_name ILIKE ${like} OR email ILIKE ${like} OR mobile ILIKE ${like} OR whatsapp ILIKE ${like})` : sql`true`})
+        ORDER BY customer_name ASC
+        LIMIT ${limit}
+      `;
+      return { customers: rows as unknown as CustomerRow[], limit };
+    });
+    if (viaPg) return viaPg;
+
+    const supabase = createSupabaseAdminClient() as any;
     let query = supabase
       .from("customers")
-      .select(
-        "id, country_id, state_province_id, district_id, city_id, area_location_id, customer_name, company_name, contact_person, mobile, whatsapp, email, address, notes, original_language_code, is_active, created_at, updated_at"
-      )
+      .select(CUSTOMER_COLUMNS.join(", "))
+      .is("deleted_at", null)
       .order("customer_name", { ascending: true });
 
     if (input.countryId) query = query.eq("country_id", input.countryId);
-
-    const q = cleanQuery(input.query ?? "");
     if (q) {
-      const like = `%${q}%`;
       query = query.or(
         [
           `customer_name.ilike.${like}`,
@@ -81,12 +105,18 @@ export class CustomersRepository {
   }
 
   async getById(id: string) {
+    const viaPg = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        SELECT ${sql(CUSTOMER_COLUMNS)} FROM public.customers WHERE id = ${id}::uuid AND deleted_at IS NULL LIMIT 1
+      `;
+      return (rows[0] as unknown as CustomerRow) ?? null;
+    });
+    if (viaPg) return viaPg;
+
     const supabase = createSupabaseAdminClient() as any;
     const { data, error } = await supabase
       .from("customers")
-      .select(
-        "id, country_id, state_province_id, district_id, city_id, area_location_id, customer_name, company_name, contact_person, mobile, whatsapp, email, address, notes, original_language_code, is_active, created_at, updated_at"
-      )
+      .select(CUSTOMER_COLUMNS.join(", "))
       .eq("id", id)
       .is("deleted_at", null)
       .single();
@@ -95,6 +125,17 @@ export class CustomersRepository {
   }
 
   async getContacts(customerId: string) {
+    const viaPg = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        SELECT id, customer_id, contact_type, contact_value, is_primary, created_at
+        FROM public.customer_contacts
+        WHERE customer_id = ${customerId}::uuid AND deleted_at IS NULL
+        ORDER BY is_primary DESC, created_at ASC
+      `;
+      return rows as unknown as CustomerContactRow[];
+    });
+    if (viaPg) return viaPg;
+
     const supabase = createSupabaseAdminClient() as any;
     const { data, error } = await supabase
       .from("customer_contacts")
@@ -108,6 +149,17 @@ export class CustomersRepository {
   }
 
   async getRegistrations(customerId: string) {
+    const viaPg = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        SELECT id, customer_id, registration_type, registration_value, created_at
+        FROM public.customer_registrations
+        WHERE customer_id = ${customerId}::uuid AND deleted_at IS NULL
+        ORDER BY created_at ASC
+      `;
+      return rows as unknown as CustomerRegistrationRow[];
+    });
+    if (viaPg) return viaPg;
+
     const supabase = createSupabaseAdminClient() as any;
     const { data, error } = await supabase
       .from("customer_registrations")
@@ -135,6 +187,8 @@ export class CustomersRepository {
     notes?: string | null;
     originalLanguageCode: string;
   }) {
+    // create_customer is already a SECURITY DEFINER RPC — unaffected by the admin-client key
+    // issue, works as-is.
     const supabase = createSupabaseAdminClient() as any;
     const { data, error } = await supabase.rpc("create_customer", {
       p_country_id: input.countryId,
@@ -153,30 +207,48 @@ export class CustomersRepository {
       p_original_language_code: input.originalLanguageCode
     });
     if (error) throw new Error(error.message);
-    void translateMasterRecord("customers", data as string, { customer_name: input.customerName, company_name: input.companyName }, "en");
-    // 4-level serial (Global/Country/Branch/Entry) — independent 'customers' sequence.
+    // NOTE: translation writes are the caller's (customers-service.ts) responsibility — it
+    // calls translateMasterRecord with the real original language + actor. This repository
+    // previously ALSO fired its own translateMasterRecord call here, hardcoded to "en" and
+    // never awaited (fire-and-forget) — a duplicate, racing write that could overwrite the
+    // correct translation with a wrong English-sourced one depending on which call's RPC
+    // landed last. Removed; there is now exactly one write path.
     try {
       const serials = await allocateFormSerials("customers", { countryId: input.countryId, branchKey: input.cityId ?? null });
-      await supabase.from("customers").update({
+      const serialPatch = {
         super_admin_serial: serials.superAdminSerial,
         country_serial: serials.countrySerial,
         branch_serial: serials.branchSerial,
-        entry_serial: serials.entrySerial,
-      }).eq("id", data);
+        entry_serial: serials.entrySerial
+      };
+      const viaPg = await withLocalPg(async (sql) => {
+        await sql`UPDATE public.customers SET ${sql(serialPatch)} WHERE id = ${data}::uuid`;
+        return true;
+      });
+      if (!viaPg) {
+        await supabase.from("customers").update(serialPatch).eq("id", data);
+      }
     } catch { /* serial allocation is non-fatal */ }
     return data as string;
   }
 
   async insertContacts(customerId: string, contacts: Array<{ type: string; value: string; isPrimary?: boolean }>) {
     if (!contacts.length) return;
-    const supabase = createSupabaseAdminClient() as any;
-    const payload = contacts.map((c) => ({
+    const rows = contacts.map((c) => ({
       customer_id: customerId,
       contact_type: c.type,
       contact_value: c.value,
       is_primary: Boolean(c.isPrimary)
     }));
-    const { error } = await supabase.from("customer_contacts").insert(payload);
+
+    const viaPg = await withLocalPg(async (sql) => {
+      await sql`INSERT INTO public.customer_contacts ${sql(rows)}`;
+      return true;
+    });
+    if (viaPg) return;
+
+    const supabase = createSupabaseAdminClient() as any;
+    const { error } = await supabase.from("customer_contacts").insert(rows);
     if (error) throw new Error(error.message);
   }
 
@@ -185,13 +257,20 @@ export class CustomersRepository {
     regs: Array<{ type: string; value: string }>
   ) {
     if (!regs.length) return;
-    const supabase = createSupabaseAdminClient() as any;
-    const payload = regs.map((r) => ({
+    const rows = regs.map((r) => ({
       customer_id: customerId,
       registration_type: r.type,
       registration_value: r.value
     }));
-    const { error } = await supabase.from("customer_registrations").insert(payload);
+
+    const viaPg = await withLocalPg(async (sql) => {
+      await sql`INSERT INTO public.customer_registrations ${sql(rows)}`;
+      return true;
+    });
+    if (viaPg) return;
+
+    const supabase = createSupabaseAdminClient() as any;
+    const { error } = await supabase.from("customer_registrations").insert(rows);
     if (error) throw new Error(error.message);
   }
 
@@ -214,7 +293,6 @@ export class CustomersRepository {
       isActive: boolean;
     }>
   ) {
-    const supabase = createSupabaseAdminClient() as any;
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if ("stateProvinceId" in input) patch.state_province_id = input.stateProvinceId;
     if ("districtId" in input) patch.district_id = input.districtId;
@@ -231,16 +309,31 @@ export class CustomersRepository {
     if ("originalLanguageCode" in input) patch.original_language_code = input.originalLanguageCode;
     if ("isActive" in input) patch.is_active = input.isActive;
 
-    const { error } = await supabase.from("customers").update(patch).eq("id", id).is("deleted_at", null);
-    if (error) throw new Error(error.message);
-    void translateMasterRecord("customers", id, { customer_name: input.customerName, company_name: input.companyName }, "en");
+    const viaPg = await withLocalPg(async (sql) => {
+      await sql`UPDATE public.customers SET ${sql(patch)} WHERE id = ${id}::uuid AND deleted_at IS NULL`;
+      return true;
+    });
+    if (!viaPg) {
+      const supabase = createSupabaseAdminClient() as any;
+      const { error } = await supabase.from("customers").update(patch).eq("id", id).is("deleted_at", null);
+      if (error) throw new Error(error.message);
+    }
+    // Translation write stays the sole responsibility of customers-service.ts.update() — see
+    // the note in create() above.
   }
 
   async softDelete(id: string) {
+    const patch = { deleted_at: new Date().toISOString(), updated_at: new Date().toISOString(), is_active: false };
+    const viaPg = await withLocalPg(async (sql) => {
+      await sql`UPDATE public.customers SET ${sql(patch)} WHERE id = ${id}::uuid AND deleted_at IS NULL`;
+      return true;
+    });
+    if (viaPg) return;
+
     const supabase = createSupabaseAdminClient() as any;
     const { error } = await supabase
       .from("customers")
-      .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString(), is_active: false })
+      .update(patch)
       .eq("id", id)
       .is("deleted_at", null);
     if (error) throw new Error(error.message);
@@ -248,4 +341,3 @@ export class CustomersRepository {
 }
 
 export const customersRepository = new CustomersRepository();
-

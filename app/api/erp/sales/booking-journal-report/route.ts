@@ -5,6 +5,7 @@ import { uuidSchema } from "@/lib/api/erp-validation";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { withLocalPg } from "@/lib/db/local-postgres";
 
 const querySchema = z.object({
   id: uuidSchema.optional(),
@@ -168,54 +169,93 @@ export async function GET(request: NextRequest) {
       cityBranchId: query.cityBranchId ?? null
     });
 
-    const admin = createSupabaseAdminClient() as any;
-    let recordsQuery = admin
-      .from("sales_orders")
-      .select(`
-        id, country_id, country_branch_id, city_branch_id, customer_account_id, customer_ledger_id, purchase_order_id,
-        sales_order_no, sales_contract_no, order_date, customer_name, account_number, manual_reference_number,
-        customer_number, country_serial_number, branch_serial_number, product_summary, quantity, total_weight,
-        currency_code, exchange_rate, order_total, paid_amount, remaining_amount, sales_status, payment_status,
-        delivery_status, workflow_state, form_data, super_admin_serial_number, country_transaction_serial_number,
-        branch_transaction_serial_number, created_at,
-        countries(id, name, iso2, currency_code),
-        country_branches(id, name, code),
-        city_branches(id, name, code, city_name)
-      `)
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false });
+    // sales_orders has scoped RLS (sales_orders_scope_read) and this app's Supabase client
+    // is not guaranteed to carry a real service-role key that bypasses RLS on its own — read
+    // via a direct Postgres connection when available (same proven bypass as
+    // banks-repository.ts/customers-repository.ts), falling back to the Supabase client.
+    const viaPg = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        SELECT so.id, so.country_id, so.country_branch_id, so.city_branch_id, so.customer_account_id,
+          so.customer_ledger_id, so.purchase_order_id, so.sales_order_no, so.sales_contract_no, so.order_date,
+          so.customer_name, so.account_number, so.manual_reference_number, so.customer_number,
+          so.country_serial_number, so.branch_serial_number, so.product_summary, so.quantity, so.total_weight,
+          so.currency_code, so.exchange_rate, so.order_total, so.paid_amount, so.remaining_amount, so.sales_status,
+          so.payment_status, so.delivery_status, so.workflow_state, so.form_data, so.super_admin_serial_number,
+          so.country_transaction_serial_number, so.branch_transaction_serial_number, so.created_at,
+          to_jsonb(c.*) as countries, to_jsonb(cb.*) as country_branches, to_jsonb(cib.*) as city_branches
+        FROM public.sales_orders so
+        LEFT JOIN public.countries c ON c.id = so.country_id
+        LEFT JOIN public.country_branches cb ON cb.id = so.country_branch_id
+        LEFT JOIN public.city_branches cib ON cib.id = so.city_branch_id
+        WHERE so.deleted_at IS NULL
+          AND (${query.id ? sql`so.id = ${query.id}::uuid` : sql`true`})
+          AND (${query.salesOrderNo ? sql`so.sales_order_no = ${query.salesOrderNo}` : sql`true`})
+          AND (${query.countryId ? sql`so.country_id = ${query.countryId}::uuid` : !session.isSuperAdmin && session.countryIds.length ? sql`so.country_id = any(${session.countryIds}::uuid[])` : sql`true`})
+          AND (${query.countryBranchId ? sql`so.country_branch_id = ${query.countryBranchId}::uuid` : sql`true`})
+          AND (${query.cityBranchId ? sql`so.city_branch_id = ${query.cityBranchId}::uuid` : sql`true`})
+          AND (${query.dateFrom ? sql`so.order_date >= ${query.dateFrom}` : sql`true`})
+          AND (${query.dateTo ? sql`so.order_date <= ${query.dateTo}` : sql`true`})
+          AND (${query.q ? sql`(so.sales_order_no ILIKE ${"%" + query.q + "%"} OR so.customer_name ILIKE ${"%" + query.q + "%"} OR so.account_number ILIKE ${"%" + query.q + "%"} OR so.manual_reference_number ILIKE ${"%" + query.q + "%"})` : sql`true`})
+        ORDER BY so.created_at DESC
+        LIMIT ${query.limit}
+      `;
+      return rows;
+    });
 
-    if (query.id) {
-      recordsQuery = recordsQuery.eq("id", query.id);
-    }
-    if (query.salesOrderNo) {
-      recordsQuery = recordsQuery.eq("sales_order_no", query.salesOrderNo);
-    }
-    if (query.countryId) {
-      recordsQuery = recordsQuery.eq("country_id", query.countryId);
-    } else if (!session.isSuperAdmin && session.countryIds.length) {
-      recordsQuery = recordsQuery.in("country_id", session.countryIds);
-    }
-    if (query.countryBranchId) {
-      recordsQuery = recordsQuery.eq("country_branch_id", query.countryBranchId);
-    }
-    if (query.cityBranchId) {
-      recordsQuery = recordsQuery.eq("city_branch_id", query.cityBranchId);
-    }
-    if (query.dateFrom) {
-      recordsQuery = recordsQuery.gte("order_date", query.dateFrom);
-    }
-    if (query.dateTo) {
-      recordsQuery = recordsQuery.lte("order_date", query.dateTo);
-    }
-    if (query.q) {
-      const term = `%${query.q}%`;
-      recordsQuery = recordsQuery.or(`sales_order_no.ilike.${term},customer_name.ilike.${term},account_number.ilike.${term},manual_reference_number.ilike.${term}`);
-    }
+    let data: any[] | null;
+    if (viaPg) {
+      data = viaPg as any[];
+    } else {
+      const admin = createSupabaseAdminClient() as any;
+      let recordsQuery = admin
+        .from("sales_orders")
+        .select(`
+          id, country_id, country_branch_id, city_branch_id, customer_account_id, customer_ledger_id, purchase_order_id,
+          sales_order_no, sales_contract_no, order_date, customer_name, account_number, manual_reference_number,
+          customer_number, country_serial_number, branch_serial_number, product_summary, quantity, total_weight,
+          currency_code, exchange_rate, order_total, paid_amount, remaining_amount, sales_status, payment_status,
+          delivery_status, workflow_state, form_data, super_admin_serial_number, country_transaction_serial_number,
+          branch_transaction_serial_number, created_at,
+          countries(id, name, iso2, currency_code),
+          country_branches(id, name, code),
+          city_branches(id, name, code, city_name)
+        `)
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false });
 
-    const { data, error } = await withTimeout<any>(recordsQuery.limit(query.limit), "sales booking report query");
-    if (error) {
-      throw new Error(error.message);
+      if (query.id) {
+        recordsQuery = recordsQuery.eq("id", query.id);
+      }
+      if (query.salesOrderNo) {
+        recordsQuery = recordsQuery.eq("sales_order_no", query.salesOrderNo);
+      }
+      if (query.countryId) {
+        recordsQuery = recordsQuery.eq("country_id", query.countryId);
+      } else if (!session.isSuperAdmin && session.countryIds.length) {
+        recordsQuery = recordsQuery.in("country_id", session.countryIds);
+      }
+      if (query.countryBranchId) {
+        recordsQuery = recordsQuery.eq("country_branch_id", query.countryBranchId);
+      }
+      if (query.cityBranchId) {
+        recordsQuery = recordsQuery.eq("city_branch_id", query.cityBranchId);
+      }
+      if (query.dateFrom) {
+        recordsQuery = recordsQuery.gte("order_date", query.dateFrom);
+      }
+      if (query.dateTo) {
+        recordsQuery = recordsQuery.lte("order_date", query.dateTo);
+      }
+      if (query.q) {
+        const term = `%${query.q}%`;
+        recordsQuery = recordsQuery.or(`sales_order_no.ilike.${term},customer_name.ilike.${term},account_number.ilike.${term},manual_reference_number.ilike.${term}`);
+      }
+
+      const result = await withTimeout<any>(recordsQuery.limit(query.limit), "sales booking report query");
+      if (result.error) {
+        throw new Error(result.error.message);
+      }
+      data = result.data;
     }
 
     const normalized = (data ?? []).map(normalizeOrder);

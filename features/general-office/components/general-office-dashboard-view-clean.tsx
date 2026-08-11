@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import {
   Users, Building2, ScrollText, Clock, Calendar, Banknote,
@@ -310,6 +310,19 @@ export function GeneralOfficeDashboardView() {
   const initialTab = (searchParams.get("tab") as TabKey) || "management";
 
   const [activeTab, setActiveTab] = useState<TabKey>(initialTab);
+
+  // The in-page "Office Modules" panel (that duplicated the real left sidebar) has been
+  // removed — module switching is now driven entirely by the sidebar's ?tab= links
+  // (lib/navigation/sidebar.ts). Since sidebar navigation stays on this same route and only
+  // the query string changes, sync activeTab whenever it changes so those links actually work
+  // (useState's initial value only applies on first mount, not on subsequent client-side nav).
+  useEffect(() => {
+    const nextTab = searchParams.get("tab") as TabKey | null;
+    if (nextTab && nextTab !== activeTab) {
+      setActiveTab(nextTab);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
   const [lang, setLang] = useState<SupportedLanguage>("en");
   const [isRtl, setIsRtl] = useState(false);
   const t = useMemo(() => dict[lang] || dict.en || dict.en, [lang]);
@@ -351,25 +364,40 @@ export function GeneralOfficeDashboardView() {
   }, [initialTab]);
 
   // Fetch employees from API
+  const loadEmployeesRequestSeq = useRef(0);
   const loadEmployees = useCallback(async () => {
+    // `lang` starts at "en" and is corrected to the real active language by the syncLang
+    // effect immediately after mount (see below) — that correction fires a second call to
+    // this function with the right lang. Guard against the stale "en" request's response
+    // arriving *after* the corrected one and clobbering it (a real race observed here: the
+    // slower request would silently win and re-leak the source-language name).
+    const requestSeq = ++loadEmployeesRequestSeq.current;
     setLoading(true);
     try {
       const qp = new URLSearchParams();
       if (search) qp.set("search", search);
       if (categoryFilter) qp.set("category", categoryFilter);
       if (statusFilter) qp.set("status", statusFilter);
+      // Resolve the employee's linked Person Master name into the active language server-side —
+      // without this the Employee Name column always showed whatever script the underlying
+      // customer record happened to be typed in, regardless of the selected UI language.
+      qp.set("lang", lang);
 
       const res = await fetch(`/api/erp/hr-payroll/employees?${qp.toString()}`);
       if (res.ok) {
         const json = await res.json();
-        setEmployees(json.employees || []);
+        if (requestSeq === loadEmployeesRequestSeq.current) {
+          setEmployees(json.employees || []);
+        }
       }
     } catch (err) {
       console.error("Error loading employees:", err);
     } finally {
-      setLoading(false);
+      if (requestSeq === loadEmployeesRequestSeq.current) {
+        setLoading(false);
+      }
     }
-  }, [search, categoryFilter, statusFilter]);
+  }, [search, categoryFilter, statusFilter, lang]);
 
   useEffect(() => {
     void loadEmployees();
@@ -429,21 +457,6 @@ export function GeneralOfficeDashboardView() {
       }
     });
   };
-
-  // Nav menu items list
-  const navMenuItems: { key: TabKey; label: string; icon: any; count?: number }[] = [
-    { key: "master-setup", label: t.masterSetup, icon: Users },
-    { key: "management", label: t.empMgmt, icon: ClipboardList, count: employees.length || 4 },
-    { key: "departments", label: t.departments, icon: Building2, count: 4 },
-    { key: "designations", label: t.designations, icon: ScrollText, count: 4 },
-    { key: "attendance", label: t.attendance, icon: Clock, count: 98 },
-    { key: "leave", label: t.leave, icon: Calendar, count: 2 },
-    { key: "payroll", label: t.payroll, icon: Banknote },
-    { key: "assets", label: t.officeAssets, icon: ClipboardList, count: 2 },
-    { key: "documents", label: t.officeDocuments, icon: FileText },
-    { key: "id-cards", label: t.idCards, icon: IdBadgeIcon },
-    { key: "reports", label: t.reports, icon: BarChart3 },
-  ];
 
   return (
     <div className={cn("space-y-6 pb-16 min-h-screen", isRtl && "text-right")} dir={isRtl ? "rtl" : "ltr"}>
@@ -594,53 +607,11 @@ export function GeneralOfficeDashboardView() {
         </div>
       </div>
 
-      {/* ── TWO-PANEL ERP LAYOUT (LEFT: MENU | RIGHT: WORKSPACE) ── */}
-      <div className="grid gap-6 lg:grid-cols-12">
-        {/* ── LEFT PANEL: Navigation Menu (3 cols) ── */}
-        <div className="lg:col-span-3 space-y-2">
-          <div className="rounded-2xl border bg-card p-3 shadow-sm">
-            <div className="px-3 py-2 text-xs font-extrabold uppercase tracking-wider text-muted-foreground border-b mb-2">
-              Office Modules
-            </div>
-
-            <nav className="space-y-1">
-              {navMenuItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = activeTab === item.key;
-
-                return (
-                  <button
-                    key={item.key}
-                    onClick={() => setActiveTab(item.key)}
-                    className={cn(
-                      "w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold transition-all",
-                      isActive
-                        ? "bg-emerald-600 text-white shadow-md shadow-emerald-600/20"
-                        : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60"
-                    )}
-                  >
-                    <div className="flex items-center gap-2.5">
-                      <Icon className="h-4 w-4" />
-                      <span>{item.label}</span>
-                    </div>
-
-                    {item.count !== undefined && (
-                      <span className={cn(
-                        "rounded-full px-2 py-0.5 text-[10px] font-extrabold",
-                        isActive ? "bg-white/20 text-white" : "bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
-                      )}>
-                        {item.count}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </nav>
-          </div>
-        </div>
-
-        {/* ── RIGHT PANEL: Active Sub-Module Content (9 cols) ── */}
-        <div className="lg:col-span-9 space-y-6">
+      {/* ── WORKSPACE (full width — module switching lives only in the main left sidebar now;
+           see lib/navigation/sidebar.ts. The in-page "Office Modules" panel that duplicated it
+           has been removed so this content uses the full available width on every breakpoint). ── */}
+      <div className="space-y-6">
+        <div className="space-y-6">
           {/* TAB 1 & 2: EMPLOYEE MASTER SETUP & MANAGEMENT TABLE DIRECTORY */}
           {(activeTab === "master-setup" || activeTab === "management") && (
             <div className="space-y-4">

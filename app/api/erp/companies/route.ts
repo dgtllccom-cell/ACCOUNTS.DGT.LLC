@@ -4,6 +4,8 @@ import { auditApiAction } from "@/lib/api/audit";
 import { requireErpSession } from "@/lib/auth/session";
 import { companyCreateSchema } from "@/lib/api/erp-validation";
 import { companiesService } from "@/lib/services/companies-service";
+import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest) {
   try {
@@ -15,13 +17,23 @@ export async function GET(request: NextRequest) {
 
     const query = request.nextUrl.searchParams.get("q");
     const limit = request.nextUrl.searchParams.get("limit");
+    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
 
     const result = await companiesService.search({
       query,
       limit: limit ? Number(limit) : 500
     });
 
-    return apiOk(result);
+    let companies: any[] = (result as any).companies ?? [];
+    // Always resolve — see customers/[id]/route.ts for why skipping lang === "en" would leak
+    // non-English source text into the English view.
+    if (Array.isArray(companies) && companies.length > 0) {
+      companies = await localizeRecordNames<any>(companies, "companies", "name", lang);
+      companies = await localizeRecordNames<any>(companies, "companies", "legal_name", lang);
+      companies = await localizeRecordNames<any>(companies, "companies", "owner_name", lang);
+    }
+
+    return apiOk({ ...(result as any), companies });
   } catch (error) {
     return handleApiError(error);
   }

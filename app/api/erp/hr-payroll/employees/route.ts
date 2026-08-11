@@ -22,7 +22,7 @@ export async function GET(request: NextRequest) {
   try {
     await requireErpSession();
     let supabase = createSupabaseAdminClient();
-    
+
     const searchParams = request.nextUrl.searchParams;
     const countryId = searchParams.get("countryId");
     const branchId = searchParams.get("branchId");
@@ -30,94 +30,40 @@ export async function GET(request: NextRequest) {
     const status = searchParams.get("status");
     const search = searchParams.get("search")?.trim().toLowerCase();
 
-    let query = supabase
-      .from("employees")
-      .select(`
-        *,
-        person:customers!person_master_id (
-          id,
-          customer_name,
-          company_name,
-          contact_person,
-          mobile,
-          whatsapp,
-          email,
-          address
-        ),
-        country:countries (
-          id,
-          name,
-          currency_code
-        ),
-        country_branch:country_branches (
-          id,
-          name,
-          code
-        ),
-        city_branch:city_branches (
-          id,
-          name,
-          code
-        )
-      `)
-      .is("deleted_at", null);
-
-    if (countryId) query = query.eq("country_id", countryId);
-    if (branchId) query = query.eq("country_branch_id", branchId);
-    if (category) query = query.eq("category", category);
-    if (status) query = query.eq("status", status);
-
-    let { data: employees, error } = await query.order("created_at", { ascending: false });
+    // Reads go through a SECURITY DEFINER RPC (list_employees_with_relations) rather than a
+    // direct .from("employees").select(...) — employees has RLS enabled with scope-based
+    // policies (mirroring customers_scope_read), and the Supabase client used by this app is
+    // not guaranteed to carry a real service-role key that bypasses RLS. The RPC returns the
+    // same joined person/country/branch shape the client already expects.
+    // Cast to a loosely-typed client for these RPC calls — the generated Database types
+    // haven't been regenerated since the migration added these functions (same pattern used
+    // by lib/services/enterprise-multilingual-service.ts's EnterpriseDbClient cast).
+    let { data: rpcResult, error } = await (supabase as any).rpc("list_employees_with_relations", {
+      p_country_id: countryId || null,
+      p_branch_id: branchId || null,
+      p_category: category || null,
+      p_status: status || null
+    });
 
     if (error && isSchemaCacheError(error.message)) {
       console.log("[HR-PAYROLL] Schema cache error detected on GET /employees, attempting auto-repair...");
       await ensureEmployeesTable();
       supabase = createSupabaseAdminClient();
-      let retryQuery = supabase
-        .from("employees")
-        .select(`
-          *,
-          person:customers!person_master_id (
-            id,
-            customer_name,
-            company_name,
-            contact_person,
-            mobile,
-            whatsapp,
-            email,
-            address
-          ),
-          country:countries (
-            id,
-            name,
-            currency_code
-          ),
-          country_branch:country_branches (
-            id,
-            name,
-            code
-          ),
-          city_branch:city_branches (
-            id,
-            name,
-            code
-          )
-        `)
-        .is("deleted_at", null);
-
-      if (countryId) retryQuery = retryQuery.eq("country_id", countryId);
-      if (branchId) retryQuery = retryQuery.eq("country_branch_id", branchId);
-      if (category) retryQuery = retryQuery.eq("category", category);
-      if (status) retryQuery = retryQuery.eq("status", status);
-
-      const retryRes = await retryQuery.order("created_at", { ascending: false });
-      employees = retryRes.data;
-      error = retryRes.error;
+      const retry = await (supabase as any).rpc("list_employees_with_relations", {
+        p_country_id: countryId || null,
+        p_branch_id: branchId || null,
+        p_category: category || null,
+        p_status: status || null
+      });
+      rpcResult = retry.data;
+      error = retry.error;
     }
 
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
+
+    let employees: any[] = Array.isArray(rpcResult) ? rpcResult : [];
 
     const lang = (searchParams.get("lang") || "en") as any;
 
@@ -222,31 +168,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Employee category is required" }, { status: 400 });
     }
 
-    // Auto-generate employee code
-    let countRes = await supabase
-      .from("employees")
-      .select("id", { count: "exact", head: true });
-    
-    if (countRes.error && isSchemaCacheError(countRes.error.message)) {
-      console.log("[HR-PAYROLL] Schema cache error detected on count, auto-repairing...");
-      await ensureEmployeesTable();
-      supabase = createSupabaseAdminClient();
-      countRes = await supabase
-        .from("employees")
-        .select("id", { count: "exact", head: true });
-    }
-
-    if (countRes.error) {
-      return NextResponse.json({ error: countRes.error.message }, { status: 400 });
-    }
-
-    const count = countRes.count;
-    const sequence = String((count ?? 0) + 1).padStart(4, "0");
-    const employeeCode = `EMP-${sequence}`;
-
     const insertPayload = {
       person_master_id: personMasterId,
-      employee_code: employeeCode,
       category,
       designation,
       department,
@@ -299,27 +222,28 @@ export async function POST(request: NextRequest) {
       bank_account_id: bankAccountId || null,
       advance_salary_account_id: advanceSalaryAccountId || null,
       loan_account_id: loanAccountId || null,
-      deduction_account_id: deductionAccountId || null,
-      
-      created_by: session.userId
+      deduction_account_id: deductionAccountId || null
     };
 
-    let { data: newEmployee, error: insertError } = await supabase
-      .from("employees")
-      .insert(insertPayload)
-      .select()
-      .single();
+    // Write via the create_employee SECURITY DEFINER RPC instead of a direct
+    // .from("employees").insert(...) — employees has scoped RLS policies (see
+    // employees_scope_insert) and this app's Supabase client is not guaranteed to carry a
+    // real service-role key that bypasses RLS on its own. The RPC also auto-generates
+    // employee_code and binds created_by to the authenticated actor server-side.
+    let { data: newEmployeeId, error: insertError } = await (supabase as any).rpc("create_employee", {
+      p_payload: insertPayload,
+      p_actor_id: session.userId
+    });
 
     if (insertError && isSchemaCacheError(insertError.message)) {
       console.log("[HR-PAYROLL] Schema cache error detected on insert, auto-repairing...");
       await ensureEmployeesTable();
       supabase = createSupabaseAdminClient();
-      const retryInsert = await supabase
-        .from("employees")
-        .insert(insertPayload)
-        .select()
-        .single();
-      newEmployee = retryInsert.data;
+      const retryInsert = await (supabase as any).rpc("create_employee", {
+        p_payload: insertPayload,
+        p_actor_id: session.userId
+      });
+      newEmployeeId = retryInsert.data;
       insertError = retryInsert.error;
     }
 
@@ -330,8 +254,19 @@ export async function POST(request: NextRequest) {
     // 4-level serial (Global/Country/Branch/Entry) — independent 'employees' sequence.
     try {
       const s = await allocateFormSerials("employees", { countryId: countryId || null, branchKey: countryBranchId || null });
-      await supabase.from("employees").update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial }).eq("id", (newEmployee as any).id);
+      await supabase
+        .from("employees")
+        .update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial })
+        .eq("id", newEmployeeId as string);
     } catch { /* non-fatal */ }
+
+    const { data: newEmployee, error: readBackError } = await (supabase as any).rpc("get_employee_with_relations", {
+      p_id: newEmployeeId
+    });
+
+    if (readBackError) {
+      return NextResponse.json({ error: readBackError.message }, { status: 400 });
+    }
 
     return NextResponse.json({ employee: newEmployee });
   } catch (err: any) {

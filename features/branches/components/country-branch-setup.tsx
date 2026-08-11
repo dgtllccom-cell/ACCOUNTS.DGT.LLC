@@ -875,8 +875,8 @@ function CountryBranchSetupContent() {
       return;
     }
 
-    if (!isUuid(location.stateProvinceId) || !isUuid(location.cityId)) {
-      setBanner({ type: "error", message: t(lang, "branch.err_select_state_city", "Please select State/Province and City from Location Settings.") });
+    if (!location.cityId && !locationMeta.city?.name) {
+      setBanner({ type: "error", message: t(lang, "branch.err_select_city", "Please select a City from Location Settings.") });
       return;
     }
 

@@ -1,6 +1,7 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 import { allocateFormSerials } from "@/lib/services/form-serials";
+import { withLocalPg } from "@/lib/db/local-postgres";
 
 export type BankRow = {
   id: string;
@@ -31,33 +32,53 @@ export type BankRow = {
   updated_at: string;
 };
 
+const BANK_COLUMNS =
+  "id, bank_type, account_type, bank_name, branch_name, branch_code, branch_code_type, short_name, account_title, account_number, iban_number, currency, account_status, country_id, state_province_id, district_id, city_id, full_address, phone, email, swift_bic, website, remarks, is_active, created_at, updated_at";
+
 function cleanQuery(value: string) {
   return value.trim().replace(/\s+/g, " ");
 }
 
 export class BanksRepository {
+  // `banks` has RLS enabled with scoped policies (banks_scope_read/write — see the
+  // banks_rls_policy migration) and this app's Supabase client is not guaranteed to carry a
+  // real service-role key that bypasses RLS on its own. Reads/writes go through a direct
+  // Postgres connection (DATABASE_URL, via withLocalPg — same proven bypass already used by
+  // companies-repository.ts and lib/i18n/localize-records.ts) when available, falling back
+  // to the Supabase client otherwise.
   async search(input: {
     query?: string | null;
     countryId?: string | null;
     limit?: number;
   }) {
-    const supabase = createSupabaseAdminClient() as any;
     const limit = Math.min(Math.max(input.limit ?? 20, 1), 100);
+    const q = cleanQuery(input.query ?? "");
+    const like = q ? `%${q}%` : null;
 
+    const viaPg = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        SELECT ${sql(BANK_COLUMNS.split(", "))} FROM public.banks
+        WHERE deleted_at IS NULL
+          AND is_active = true
+          AND (${input.countryId ? sql`country_id = ${input.countryId}` : sql`true`})
+          AND (${like ? sql`(bank_name ILIKE ${like} OR account_title ILIKE ${like} OR account_number ILIKE ${like} OR branch_name ILIKE ${like} OR branch_code ILIKE ${like} OR short_name ILIKE ${like} OR iban_number ILIKE ${like})` : sql`true`})
+        ORDER BY bank_name ASC
+        LIMIT ${limit}
+      `;
+      return { banks: rows as unknown as BankRow[], limit };
+    });
+    if (viaPg) return viaPg;
+
+    const supabase = createSupabaseAdminClient() as any;
     let query = supabase
       .from("banks")
-      .select(
-        "id, bank_type, account_type, bank_name, branch_name, branch_code, branch_code_type, short_name, account_title, account_number, iban_number, currency, account_status, country_id, state_province_id, district_id, city_id, full_address, phone, email, swift_bic, website, remarks, is_active, created_at, updated_at"
-      )
+      .select(BANK_COLUMNS)
       .is("deleted_at", null)
       .eq("is_active", true)
       .order("bank_name", { ascending: true });
 
     if (input.countryId) query = query.eq("country_id", input.countryId);
-
-    const q = cleanQuery(input.query ?? "");
     if (q) {
-      const like = `%${q}%`;
       query = query.or(
         [
           `bank_name.ilike.${like}`,
@@ -77,12 +98,18 @@ export class BanksRepository {
   }
 
   async getById(id: string) {
+    const viaPg = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        SELECT ${sql(BANK_COLUMNS.split(", "))} FROM public.banks WHERE id = ${id}::uuid AND deleted_at IS NULL LIMIT 1
+      `;
+      return (rows[0] as unknown as BankRow) ?? null;
+    });
+    if (viaPg) return viaPg;
+
     const supabase = createSupabaseAdminClient() as any;
     const { data, error } = await supabase
       .from("banks")
-      .select(
-        "id, bank_type, account_type, bank_name, branch_name, branch_code, branch_code_type, short_name, account_title, account_number, iban_number, currency, account_status, country_id, state_province_id, district_id, city_id, full_address, phone, email, swift_bic, website, remarks, is_active, created_at, updated_at"
-      )
+      .select(BANK_COLUMNS)
       .eq("id", id)
       .is("deleted_at", null)
       .single();
@@ -113,44 +140,76 @@ export class BanksRepository {
     swiftBic?: string | null;
     website?: string | null;
     remarks?: string | null;
-  }) {
-    const supabase = createSupabaseAdminClient() as any;
-    const { data, error } = await supabase
-      .from("banks")
-      .insert({
-        bank_type: input.bankType,
-        account_type: input.accountType,
-        bank_name: input.bankName,
-        branch_name: input.branchName,
-        branch_code: input.branchCode,
-        branch_code_type: input.branchCodeType,
-        short_name: input.shortName,
-        account_title: input.accountTitle,
-        account_number: input.accountNumber,
-        iban_number: input.ibanNumber ?? null,
-        currency: input.currency,
-        account_status: input.accountStatus,
-        country_id: input.countryId ?? null,
-        state_province_id: input.stateProvinceId ?? null,
-        district_id: input.districtId ?? null,
-        city_id: input.cityId ?? null,
-        full_address: input.fullAddress ?? null,
-        phone: input.phone ?? null,
-        email: input.email ?? null,
-        swift_bic: input.swiftBic ?? null,
-        website: input.website ?? null,
-        remarks: input.remarks ?? null,
-        is_active: true
-      })
-      .select("id")
-      .single();
-    if (error) throw new Error(error.message);
-    void translateMasterRecord("banks", (data as { id: string }).id, { bank_name: input.bankName, short_name: input.shortName, branch_name: input.branchName }, "en");
+    originalLanguage?: string;
+  }, actorId?: string | null) {
+    const insertRow = {
+      bank_type: input.bankType,
+      account_type: input.accountType,
+      bank_name: input.bankName,
+      branch_name: input.branchName,
+      branch_code: input.branchCode,
+      branch_code_type: input.branchCodeType,
+      short_name: input.shortName,
+      account_title: input.accountTitle,
+      account_number: input.accountNumber,
+      iban_number: input.ibanNumber ?? null,
+      currency: input.currency,
+      account_status: input.accountStatus,
+      country_id: input.countryId ?? null,
+      state_province_id: input.stateProvinceId ?? null,
+      district_id: input.districtId ?? null,
+      city_id: input.cityId ?? null,
+      full_address: input.fullAddress ?? null,
+      phone: input.phone ?? null,
+      email: input.email ?? null,
+      swift_bic: input.swiftBic ?? null,
+      website: input.website ?? null,
+      remarks: input.remarks ?? null,
+      is_active: true
+    };
+
+    let bankId: string;
+    const viaPg = await withLocalPg(async (sql) => {
+      const rows = await sql`INSERT INTO public.banks ${sql(insertRow)} RETURNING id`;
+      return (rows[0] as any).id as string;
+    });
+
+    if (viaPg) {
+      bankId = viaPg;
+    } else {
+      const supabase = createSupabaseAdminClient() as any;
+      const { data, error } = await supabase.from("banks").insert(insertRow).select("id").single();
+      if (error) throw new Error(error.message);
+      bankId = (data as { id: string }).id;
+    }
+
+    // Was previously fire-and-forget, hardcoded to "en" regardless of the actual input
+    // language, and missing account_title — meaning Bank Master names never resolved
+    // correctly once a non-English language was selected. Now awaited, uses the real
+    // original language, covers all 4 translatable fields (see translatable-fields.ts),
+    // and records the actor.
+    await translateMasterRecord(
+      "banks",
+      bankId,
+      { bank_name: input.bankName, branch_name: input.branchName, short_name: input.shortName, account_title: input.accountTitle },
+      (input.originalLanguage as any) || "en",
+      actorId ?? null
+    );
+
     try {
       const s = await allocateFormSerials("banks", { countryId: input.countryId ?? null });
-      await supabase.from("banks").update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial }).eq("id", (data as { id: string }).id);
+      const serialPatch = { super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial };
+      const viaPgSerial = await withLocalPg(async (sql) => {
+        await sql`UPDATE public.banks SET ${sql(serialPatch)} WHERE id = ${bankId}::uuid`;
+        return true;
+      });
+      if (!viaPgSerial) {
+        const supabase = createSupabaseAdminClient() as any;
+        await supabase.from("banks").update(serialPatch).eq("id", bankId);
+      }
     } catch { /* non-fatal */ }
-    return (data as { id: string }).id;
+
+    return bankId;
   }
 
   async update(id: string, input: Partial<{
@@ -177,8 +236,8 @@ export class BanksRepository {
     website: string | null;
     remarks: string | null;
     isActive: boolean;
-  }>) {
-    const supabase = createSupabaseAdminClient() as any;
+    originalLanguage: string;
+  }>, actorId?: string | null) {
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if ("bankType" in input) patch.bank_type = input.bankType;
     if ("accountType" in input) patch.account_type = input.accountType;
@@ -204,16 +263,46 @@ export class BanksRepository {
     if ("remarks" in input) patch.remarks = input.remarks;
     if ("isActive" in input) patch.is_active = input.isActive;
 
-    const { error } = await supabase.from("banks").update(patch).eq("id", id).is("deleted_at", null);
-    if (error) throw new Error(error.message);
-    void translateMasterRecord("banks", id, { bank_name: input.bankName, short_name: input.shortName, branch_name: input.branchName }, "en");
+    const viaPg = await withLocalPg(async (sql) => {
+      await sql`UPDATE public.banks SET ${sql(patch)} WHERE id = ${id}::uuid AND deleted_at IS NULL`;
+      return true;
+    });
+
+    if (!viaPg) {
+      const supabase = createSupabaseAdminClient() as any;
+      const { error } = await supabase.from("banks").update(patch).eq("id", id).is("deleted_at", null);
+      if (error) throw new Error(error.message);
+    }
+
+    if (input.bankName || input.branchName || input.shortName || input.accountTitle) {
+      const current = await this.getById(id);
+      await translateMasterRecord(
+        "banks",
+        id,
+        {
+          bank_name: input.bankName ?? current?.bank_name,
+          branch_name: input.branchName ?? current?.branch_name,
+          short_name: input.shortName ?? current?.short_name,
+          account_title: input.accountTitle ?? current?.account_title
+        },
+        (input.originalLanguage as any) || "en",
+        actorId ?? null
+      );
+    }
   }
 
   async softDelete(id: string) {
+    const patch = { deleted_at: new Date().toISOString(), updated_at: new Date().toISOString(), is_active: false };
+    const viaPg = await withLocalPg(async (sql) => {
+      await sql`UPDATE public.banks SET ${sql(patch)} WHERE id = ${id}::uuid AND deleted_at IS NULL`;
+      return true;
+    });
+    if (viaPg) return;
+
     const supabase = createSupabaseAdminClient() as any;
     const { error } = await supabase
       .from("banks")
-      .update({ deleted_at: new Date().toISOString(), updated_at: new Date().toISOString(), is_active: false })
+      .update(patch)
       .eq("id", id)
       .is("deleted_at", null);
     if (error) throw new Error(error.message);

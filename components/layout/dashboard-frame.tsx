@@ -77,7 +77,16 @@ export function DashboardFrame({
 
     window.addEventListener("unhandledrejection", handleChunkError);
     window.addEventListener("error", handleChunkError);
+
+    // Reset auto-chunk retry count after 3s of stable page execution
+    const resetTimer = setTimeout(() => {
+      try {
+        sessionStorage.removeItem("erp_auto_chunk_cnt");
+      } catch {}
+    }, 3000);
+
     return () => {
+      clearTimeout(resetTimer);
       window.removeEventListener("unhandledrejection", handleChunkError);
       window.removeEventListener("error", handleChunkError);
     };
@@ -220,26 +229,12 @@ export function DashboardFrame({
       )}>
         <div className="border-b border-border/80 px-6 py-5 flex items-center justify-between gap-2">
           <Link href="/dashboard" className="block flex-1 min-w-0">
-            <div className="flex items-center gap-2.5">
-              <svg className="h-7 w-7 shrink-0 animate-[spin_20s_linear_infinite]" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path
-                  d="M20 5C11.7157 5 5 11.7157 5 20C5 28.2843 11.7157 35 20 35C28.2843 35 35 28.2843 35 20C35 15.5 32 11.5 28 10C24 8.5 19.5 10.5 18 14.5C16.5 18.5 18.5 23 22.5 24.5C26.5 26 31 24 32.5 20"
-                  stroke="url(#sidebar-logo-gradient)"
-                  strokeWidth="4.5"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-                <defs>
-                  <linearGradient id="sidebar-logo-gradient" x1="5" y1="5" x2="35" y2="35" gradientUnits="userSpaceOnUse">
-                    <stop offset="0%" stopColor="#10b981" />
-                    <stop offset="100%" stopColor="#06b6d4" />
-                  </linearGradient>
-                </defs>
-              </svg>
+            <div className="flex items-center gap-3">
+              <img src="/icons/digital-dock-icon.svg" alt="DAMAAN" className="h-8 w-8 shrink-0 object-contain" />
               <div className="min-w-0 flex-1">
-                <p className="text-lg font-black tracking-tight text-foreground leading-none">DAMAN</p>
-                <p className="mt-1 text-[8px] font-black uppercase tracking-[0.25em] text-muted-foreground truncate">
-                  BUSINESS GROUP
+                <p className="text-base font-black tracking-tight text-foreground leading-tight truncate">DAMAAN BUSINESS GROUP</p>
+                <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 truncate">
+                  Owner: Asmat Abdullah
                 </p>
               </div>
             </div>
@@ -253,16 +248,16 @@ export function DashboardFrame({
             <Menu className="h-4 w-4" />
           </Button>
         </div>
-        <div className="flex-1 overflow-y-auto px-4 py-4">
+        <div className="flex-1 overflow-y-auto px-3 py-3 bg-white dark:bg-slate-950">
           <PremiumSidebarNav nodes={filteredNodes} lang={lang} />
         </div>
-        <div className="border-t border-border/80 p-4">
-          <div className="rounded-xl bg-muted/40 p-3.5 border border-border/50">
+        <div className="border-t border-border/80 p-3.5 bg-white dark:bg-slate-950">
+          <div className="rounded-xl bg-slate-50 dark:bg-slate-900 p-3 border border-slate-200/80 dark:border-slate-800">
             <p className="text-[11px] font-bold text-foreground/90 flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
               {t(lang, "nav.erp_core_engine", "ERP Core Engine")}
             </p>
-            <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">
+            <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">
               {t(lang, "nav.erp_core_engine_subtitle", "Multi-country branches, accounts & exchange matrices are active.")}
             </p>
           </div>
@@ -278,26 +273,15 @@ export function DashboardFrame({
             aria-label={t(lang, "nav.close_navigation", "Close navigation")}
             onClick={() => setMobileOpen(false)}
           />
-          <div className="erp-mobile-drawer absolute inset-y-0 left-0 w-64 max-w-[85vw] border-r border-border bg-card shadow-2xl flex flex-col animate-in slide-in-from-left duration-300 text-card-foreground">
-            <div className="border-b border-border px-6 py-5 flex items-center justify-between">
-              <Link href="/dashboard" className="block" onClick={() => setMobileOpen(false)}>
+          <div className="erp-mobile-drawer absolute inset-y-0 left-0 w-72 max-w-[85vw] border-r border-border bg-white dark:bg-slate-950 shadow-2xl flex flex-col animate-in slide-in-from-left duration-300 text-card-foreground">
+            <div className="border-b border-border px-5 py-4 flex items-center justify-between">
+              <Link href="/dashboard" className="block min-w-0 flex-1" onClick={() => setMobileOpen(false)}>
                 <div className="flex items-center gap-2.5">
-                  <svg className="h-7 w-7 shrink-0" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path
-                      d="M20 5C11.7157 5 5 11.7157 5 20C5 28.2843 11.7157 35 20 35C28.2843 35 35 28.2843 35 20C35 15.5 32 11.5 28 10C24 8.5 19.5 10.5 18 14.5C16.5 18.5 18.5 23 22.5 24.5C26.5 26 31 24 32.5 20"
-                      stroke="url(#mobile-logo-gradient)"
-                      strokeWidth="4.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                    <defs>
-                      <linearGradient id="mobile-logo-gradient" x1="5" y1="5" x2="35" y2="35" gradientUnits="userSpaceOnUse">
-                        <stop offset="0%" stopColor="#10b981" />
-                        <stop offset="100%" stopColor="#06b6d4" />
-                      </linearGradient>
-                    </defs>
-                  </svg>
-                  <p className="text-xl font-bold tracking-tight text-slate-800 dark:text-white">DAMAAN</p>
+                  <img src="/icons/digital-dock-icon.svg" alt="DAMAAN" className="h-7 w-7 shrink-0 object-contain" />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-black tracking-tight text-slate-900 dark:text-white leading-tight truncate">DAMAAN BUSINESS GROUP</p>
+                    <p className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 truncate">Owner: Asmat Abdullah</p>
+                  </div>
                 </div>
               </Link>
               <Button

@@ -18075,3 +18075,309 @@ Error: insert or update on table "customers" violates foreign key constraint "cu
     at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
     at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
     at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+
+[2026-08-10T18:09:13.708Z] Error: insert or update on table "customers" violates foreign key constraint "customers_original_language_code_fkey"
+Error: insert or update on table "customers" violates foreign key constraint "customers_original_language_code_fkey"
+    at CustomersRepository.create (webpack-internal:///(rsc)/./lib/repositories/customers-repository.ts:89:26)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async CustomersService.create (webpack-internal:///(rsc)/./lib/services/customers-service.ts:55:28)
+    at async POST (webpack-internal:///(rsc)/./app/api/erp/customers/route.ts:51:28)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+
+[2026-08-10T18:13:05.403Z] Error: new row violates row-level security policy for table "audit_logs"
+Error: new row violates row-level security policy for table "audit_logs"
+    at writeAuditLog (webpack-internal:///(rsc)/./lib/api/supabase.ts:53:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async auditApiAction (webpack-internal:///(rsc)/./lib/api/audit.ts:12:5)
+    at async POST (webpack-internal:///(rsc)/./app/api/erp/customers/route.ts:69:9)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+
+[2026-08-10T18:19:00.979Z] Error: new row violates row-level security policy for table "audit_logs"
+Error: new row violates row-level security policy for table "audit_logs"
+    at writeAuditLog (webpack-internal:///(rsc)/./lib/api/supabase.ts:53:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async auditApiAction (webpack-internal:///(rsc)/./lib/api/audit.ts:12:5)
+    at async POST (webpack-internal:///(rsc)/./app/api/erp/customers/route.ts:69:9)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+
+[2026-08-10T18:22:27.713Z] Error: new row violates row-level security policy for table "audit_logs"
+Error: new row violates row-level security policy for table "audit_logs"
+    at writeAuditLog (webpack-internal:///(rsc)/./lib/api/supabase.ts:53:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async auditApiAction (webpack-internal:///(rsc)/./lib/api/audit.ts:12:5)
+    at async POST (webpack-internal:///(rsc)/./app/api/erp/customers/route.ts:69:9)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+
+[2026-08-10T18:48:56.173Z] ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "countryId"
+    ],
+    "message": "Required"
+  }
+]
+ZodError: [
+  {
+    "code": "invalid_type",
+    "expected": "string",
+    "received": "undefined",
+    "path": [
+      "countryId"
+    ],
+    "message": "Required"
+  }
+]
+    at get error (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:134:31)
+    at ZodObject.parse (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:209:22)
+    at PATCH (webpack-internal:///(rsc)/./app/api/erp/customers/[id]/route.ts:39:96)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+
+[2026-08-10T18:49:48.255Z] Error: Cannot coerce the result to a single JSON object
+Error: Cannot coerce the result to a single JSON object
+    at CustomersRepository.getById (webpack-internal:///(rsc)/./lib/repositories/customers-repository.ts:50:26)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async CustomersService.update (webpack-internal:///(rsc)/./lib/services/customers-service.ts:68:30)
+    at async PATCH (webpack-internal:///(rsc)/./app/api/erp/customers/[id]/route.ts:47:9)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+
+[2026-08-10T18:49:48.357Z] Error: Cannot coerce the result to a single JSON object
+Error: Cannot coerce the result to a single JSON object
+    at CustomersRepository.getById (webpack-internal:///(rsc)/./lib/repositories/customers-repository.ts:50:26)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async CustomersService.update (webpack-internal:///(rsc)/./lib/services/customers-service.ts:68:30)
+    at async PATCH (webpack-internal:///(rsc)/./app/api/erp/customers/[id]/route.ts:47:9)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+
+[2026-08-10T21:04:18.177Z] Error: new row violates row-level security policy for table "banks"
+Error: new row violates row-level security policy for table "banks"
+    at BanksRepository.create (webpack-internal:///(rsc)/./lib/repositories/banks-repository.ts:76:26)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async BanksService.create (webpack-internal:///(rsc)/./lib/services/banks-service.ts:16:16)
+    at async POST (webpack-internal:///(rsc)/./app/api/erp/banks/route.ts:50:24)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fbanks%2Froute&page=%2Fapi%2Ferp%2Fbanks%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fbanks%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fbanks%2Froute&page=%2Fapi%2Ferp%2Fbanks%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fbanks%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fbanks%2Froute&page=%2Fapi%2Ferp%2Fbanks%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fbanks%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+
+[2026-08-10T22:07:09.680Z] Error: Cannot coerce the result to a single JSON object
+Error: Cannot coerce the result to a single JSON object
+    at CustomersRepository.getById (webpack-internal:///(rsc)/./lib/repositories/customers-repository.ts:50:26)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async CustomersService.getById (webpack-internal:///(rsc)/./lib/services/customers-service.ts:15:26)
+    at async GET (webpack-internal:///(rsc)/./app/api/erp/customers/[id]/route.ts:33:22)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+
+[2026-08-10T22:07:10.641Z] Error: Cannot coerce the result to a single JSON object
+Error: Cannot coerce the result to a single JSON object
+    at CustomersRepository.getById (webpack-internal:///(rsc)/./lib/repositories/customers-repository.ts:50:26)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async CustomersService.getById (webpack-internal:///(rsc)/./lib/services/customers-service.ts:15:26)
+    at async GET (webpack-internal:///(rsc)/./app/api/erp/customers/[id]/route.ts:33:22)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+
+[2026-08-10T22:07:22.569Z] Error: Cannot coerce the result to a single JSON object
+Error: Cannot coerce the result to a single JSON object
+    at CustomersRepository.getById (webpack-internal:///(rsc)/./lib/repositories/customers-repository.ts:50:26)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async CustomersService.getById (webpack-internal:///(rsc)/./lib/services/customers-service.ts:15:26)
+    at async GET (webpack-internal:///(rsc)/./app/api/erp/customers/[id]/route.ts:33:22)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&page=%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fcustomers%2F%5Bid%5D%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)

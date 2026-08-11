@@ -213,9 +213,8 @@ export function CityBranchRegistrationWizard() {
   function stepError(index = stepIndex) {
     if (index === 0) {
       if (!location.countryId) return "Select Country first.";
-      if (!countryBranchId) return "Select Main Branch before State and City.";
-      if (!location.stateProvinceId) return "Select State / Province from Location Management.";
-      if (!location.cityId) return "Select City from Location Management.";
+      if (!countryBranchId) return "Select Main Branch.";
+      if (!location.cityId && !locationMeta.city?.name && !branchName.trim()) return "Select City or enter Branch Name.";
       if (!branchName.trim()) return "Enter Branch Name.";
       if (!branchCode.trim()) return "Enter Branch Code.";
       if (!currency.trim()) return "Currency is required.";

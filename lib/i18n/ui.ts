@@ -1,6 +1,80 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type UiKey =
+  | "report.builder_export_csv"
+  | "report.builder_classic_view"
+  | "report.builder_advanced_builder"
+  | "report.builder_sales_booking_register"
+  | "report.builder_group_by"
+  | "report.builder_no_grouping"
+  | "report.builder_show_group_subtotals"
+  | "report.builder_no_numeric_fields"
+  | "report.builder_chart_value"
+  | "report.builder_drag_to_reorder"
+  | "report.builder_ungrouped"
+  | "report.builder_subtotal"
+  | "report.builder_grand_total"
+  | "report.builder_loading"
+  | "report.builder_no_records"
+  | "report.builder_confirm_delete_saved"
+  | "report.builder_load_saved_report"
+  | "report.builder_no_saved_reports"
+  | "report.builder_save_as"
+  | "report.builder_save_custom_report"
+  | "report.builder_report_name"
+  | "report.builder_report_name_placeholder"
+  | "report.builder_share_public"
+  | "report.builder_this_will_save"
+  | "report.builder_save_item_columns"
+  | "report.builder_save_item_filters"
+  | "report.builder_save_item_date_range"
+  | "report.builder_save_item_sorting"
+  | "report.builder_save_item_grouping"
+  | "report.builder_save_report"
+  | "report.builder_saving"
+  | "report.builder_auto_email"
+  | "report.builder_setup_auto_email"
+  | "report.builder_save_first"
+  | "report.builder_recipients"
+  | "report.builder_frequency"
+  | "report.builder_daily"
+  | "report.builder_weekly"
+  | "report.builder_monthly"
+  | "report.builder_format"
+  | "report.builder_auto_email_note"
+  | "report.builder_config_saved"
+  | "report.builder_test_sent"
+  | "report.builder_action_failed"
+  | "report.builder_sending"
+  | "report.builder_send_test_now"
+  | "report.builder_save_config"
+  | "report.builder_active_filters"
+  | "report.builder_clear_all"
+  | "report.builder_add_filter"
+  | "report.builder_no_filters_applied"
+  | "report.builder_select_field"
+  | "report.builder_operator"
+  | "report.builder_op_contains"
+  | "report.builder_op_equals"
+  | "report.builder_op_not_equals"
+  | "report.builder_op_greater_than"
+  | "report.builder_op_less_than"
+  | "report.builder_select_value"
+  | "report.builder_enter_value"
+  | "report.builder_toggle_sidebar"
+  | "report.builder_sidebar"
+  | "report.builder_columns"
+  | "report.builder_group"
+  | "report.builder_show_totals"
+  | "report.builder_chart"
+  | "report.builder_print"
+  | "report.builder_pdf"
+  | "report.builder_excel"
+  | "report.builder_date_from"
+  | "report.builder_date_to"
+  | "report.builder_clear_dates"
+  | "report.builder_showing_records"
+  | "report.builder_filtered_from"
   | "nav.truck_recreation"
   | "nav.general_office_menu"
   | "nav.general_office_employee_mgmt"
@@ -1812,11 +1886,93 @@ export type UiKey =
   | "nav.journal_stock_checking_report"
   | "nav.daily_expenses_bill"
   | "nav.office_home_expenses_bill"
-  | "purchase.step4_verify_subtitle";
+  | "purchase.step4_verify_subtitle"
+  | "hr.pp_search_placeholder"
+  | "hr.pp_no_matches"
+  | "hr.pp_add_new_person_master"
+  | "hr.pp_edit_person_registry";
 
 type Dict = Record<UiKey, string>;
 
 const en: Dict = {
+  "report.builder_export_csv": "Export CSV",
+  "report.builder_classic_view": "Classic",
+  "report.builder_advanced_builder": "Advanced Builder",
+  "report.builder_sales_booking_register": "Sales Booking Journal Register",
+  "report.builder_group_by": "Group By",
+  "report.builder_no_grouping": "No grouping",
+  "report.builder_show_group_subtotals": "Show subtotals per group",
+  "report.builder_no_numeric_fields": "No numeric fields available to chart.",
+  "report.builder_chart_value": "Chart value",
+  "report.builder_drag_to_reorder": "Drag to Reorder Columns",
+  "report.builder_ungrouped": "(Ungrouped)",
+  "report.builder_subtotal": "Subtotal",
+  "report.builder_grand_total": "Grand Total",
+  "report.builder_loading": "Loading data...",
+  "report.builder_no_records": "No records found matching your filters.",
+  "report.builder_confirm_delete_saved": "Are you sure you want to delete this saved report?",
+  "report.builder_load_saved_report": "Load Saved Report...",
+  "report.builder_no_saved_reports": "No saved reports",
+  "report.builder_save_as": "Save As",
+  "report.builder_save_custom_report": "Save Custom Report",
+  "report.builder_report_name": "Report Name",
+  "report.builder_report_name_placeholder": "e.g., Pakistan Pending Payments",
+  "report.builder_share_public": "Share with other users (Public)",
+  "report.builder_this_will_save": "This will save:",
+  "report.builder_save_item_columns": "Selected columns & order",
+  "report.builder_save_item_filters": "Active filters",
+  "report.builder_save_item_date_range": "Date range",
+  "report.builder_save_item_sorting": "Sorting rules",
+  "report.builder_save_item_grouping": "Grouping & totals",
+  "report.builder_save_report": "Save Report",
+  "report.builder_saving": "Saving...",
+  "report.builder_auto_email": "Auto Email",
+  "report.builder_setup_auto_email": "Setup Auto Email",
+  "report.builder_save_first": "Save this report layout first (Save As) before configuring Auto Email.",
+  "report.builder_recipients": "Recipients (comma-separated)",
+  "report.builder_frequency": "Frequency",
+  "report.builder_daily": "Daily",
+  "report.builder_weekly": "Weekly",
+  "report.builder_monthly": "Monthly",
+  "report.builder_format": "Format",
+  "report.builder_auto_email_note": "Recurring delivery requires the recipients list to be saved here; actual scheduled sending depends on your server's task scheduler being configured to call this report's send job.",
+  "report.builder_config_saved": "Configuration saved.",
+  "report.builder_test_sent": "Test email sent.",
+  "report.builder_action_failed": "Action failed. Please try again.",
+  "report.builder_sending": "Sending...",
+  "report.builder_send_test_now": "Send Test Now",
+  "report.builder_save_config": "Save Config",
+  "report.builder_active_filters": "Active Filters",
+  "report.builder_clear_all": "Clear All",
+  "report.builder_add_filter": "Add Filter",
+  "report.builder_no_filters_applied": "No filters applied. Click \"Add Filter\" to refine results.",
+  "report.builder_select_field": "Select field",
+  "report.builder_operator": "Operator",
+  "report.builder_op_contains": "Contains",
+  "report.builder_op_equals": "Equals (=)",
+  "report.builder_op_not_equals": "Not Equals (!=)",
+  "report.builder_op_greater_than": "Greater Than (>)",
+  "report.builder_op_less_than": "Less Than (<)",
+  "report.builder_select_value": "Select value",
+  "report.builder_enter_value": "Enter value...",
+  "report.builder_toggle_sidebar": "Toggle Sidebar",
+  "report.builder_sidebar": "Sidebar",
+  "report.builder_columns": "Columns",
+  "report.builder_group": "Group",
+  "report.builder_show_totals": "Show Totals",
+  "report.builder_chart": "Chart",
+  "report.builder_print": "Print",
+  "report.builder_pdf": "PDF",
+  "report.builder_excel": "Excel",
+  "report.builder_date_from": "From",
+  "report.builder_date_to": "To",
+  "report.builder_clear_dates": "Clear dates",
+  "report.builder_showing_records": "Showing {count} records",
+  "report.builder_filtered_from": "filtered from {total}",
+  "hr.pp_search_placeholder": "Search employee / person name",
+  "hr.pp_no_matches": "No matches found.",
+  "hr.pp_add_new_person_master": "+ Add New Person Master",
+  "hr.pp_edit_person_registry": "Edit Person Registry — Customer Master",
   "purchase.step4_verify_subtitle": "Verify printable document sections, account postings, goods manifest, payment terms, and loading schedules before final verification.",
   "purchase.opt_advance_payment": "Advance Payment",
   "purchase.opt_invoice": "Invoice",
@@ -3604,6 +3760,84 @@ const en: Dict = {
 
 const ur: Dict = {
   ...en,
+  "report.builder_export_csv": "سی ایس وی برآمد کریں",
+  "report.builder_classic_view": "کلاسک",
+  "report.builder_advanced_builder": "ایڈوانسڈ بلڈر",
+  "report.builder_sales_booking_register": "سیلز بکنگ جرنل رجسٹر",
+  "report.builder_group_by": "گروپ بذریعہ",
+  "report.builder_no_grouping": "کوئی گروپ بندی نہیں",
+  "report.builder_show_group_subtotals": "ہر گروپ کے ذیلی مجموعے دکھائیں",
+  "report.builder_no_numeric_fields": "چارٹ کے لیے کوئی عددی فیلڈ دستیاب نہیں۔",
+  "report.builder_chart_value": "چارٹ ویلیو",
+  "report.builder_drag_to_reorder": "کالموں کی ترتیب بدلنے کے لیے گھسیٹیں",
+  "report.builder_ungrouped": "(غیر گروپ شدہ)",
+  "report.builder_subtotal": "ذیلی مجموعہ",
+  "report.builder_grand_total": "مجموعی کل",
+  "report.builder_loading": "ڈیٹا لوڈ ہو رہا ہے...",
+  "report.builder_no_records": "آپ کے فلٹرز سے مماثل کوئی ریکارڈ نہیں ملا۔",
+  "report.builder_confirm_delete_saved": "کیا آپ واقعی اس محفوظ شدہ رپورٹ کو حذف کرنا چاہتے ہیں؟",
+  "report.builder_load_saved_report": "محفوظ شدہ رپورٹ لوڈ کریں...",
+  "report.builder_no_saved_reports": "کوئی محفوظ شدہ رپورٹ نہیں",
+  "report.builder_save_as": "بطور محفوظ کریں",
+  "report.builder_save_custom_report": "حسب ضرورت رپورٹ محفوظ کریں",
+  "report.builder_report_name": "رپورٹ کا نام",
+  "report.builder_report_name_placeholder": "مثال کے طور پر، پاکستان زیر التواء ادائیگیاں",
+  "report.builder_share_public": "دیگر صارفین کے ساتھ شیئر کریں (عوامی)",
+  "report.builder_this_will_save": "یہ محفوظ ہوگا:",
+  "report.builder_save_item_columns": "منتخب کالم اور ترتیب",
+  "report.builder_save_item_filters": "فعال فلٹرز",
+  "report.builder_save_item_date_range": "تاریخ کی حد",
+  "report.builder_save_item_sorting": "ترتیب دینے کے قواعد",
+  "report.builder_save_item_grouping": "گروپ بندی اور مجموعے",
+  "report.builder_save_report": "رپورٹ محفوظ کریں",
+  "report.builder_saving": "محفوظ ہو رہا ہے...",
+  "report.builder_auto_email": "خودکار ای میل",
+  "report.builder_setup_auto_email": "خودکار ای میل ترتیب دیں",
+  "report.builder_save_first": "خودکار ای میل ترتیب دینے سے پہلے پہلے اس رپورٹ لے آؤٹ کو محفوظ کریں (بطور محفوظ کریں)۔",
+  "report.builder_recipients": "وصول کنندگان (کاما سے الگ)",
+  "report.builder_frequency": "تعدد",
+  "report.builder_daily": "روزانہ",
+  "report.builder_weekly": "ہفتہ وار",
+  "report.builder_monthly": "ماہانہ",
+  "report.builder_format": "فارمیٹ",
+  "report.builder_auto_email_note": "بار بار ترسیل کے لیے وصول کنندگان کی فہرست یہاں محفوظ ہونا ضروری ہے؛ اصل شیڈول شدہ ارسال آپ کے سرور کے ٹاسک شیڈیولر پر منحصر ہے۔",
+  "report.builder_config_saved": "ترتیب محفوظ ہو گئی۔",
+  "report.builder_test_sent": "ٹیسٹ ای میل بھیج دی گئی۔",
+  "report.builder_action_failed": "کارروائی ناکام ہوگئی۔ دوبارہ کوشش کریں۔",
+  "report.builder_sending": "بھیجا جا رہا ہے...",
+  "report.builder_send_test_now": "ابھی ٹیسٹ بھیجیں",
+  "report.builder_save_config": "ترتیب محفوظ کریں",
+  "report.builder_active_filters": "فعال فلٹرز",
+  "report.builder_clear_all": "سب صاف کریں",
+  "report.builder_add_filter": "فلٹر شامل کریں",
+  "report.builder_no_filters_applied": "کوئی فلٹر لاگو نہیں۔ نتائج بہتر بنانے کے لیے \"فلٹر شامل کریں\" پر کلک کریں۔",
+  "report.builder_select_field": "فیلڈ منتخب کریں",
+  "report.builder_operator": "آپریٹر",
+  "report.builder_op_contains": "شامل ہے",
+  "report.builder_op_equals": "برابر ہے (=)",
+  "report.builder_op_not_equals": "برابر نہیں (!=)",
+  "report.builder_op_greater_than": "اس سے بڑا (>)",
+  "report.builder_op_less_than": "اس سے کم (<)",
+  "report.builder_select_value": "ویلیو منتخب کریں",
+  "report.builder_enter_value": "ویلیو درج کریں...",
+  "report.builder_toggle_sidebar": "سائیڈبار ٹوگل کریں",
+  "report.builder_sidebar": "سائیڈبار",
+  "report.builder_columns": "کالم",
+  "report.builder_group": "گروپ",
+  "report.builder_show_totals": "مجموعے دکھائیں",
+  "report.builder_chart": "چارٹ",
+  "report.builder_print": "پرنٹ",
+  "report.builder_pdf": "پی ڈی ایف",
+  "report.builder_excel": "ایکسل",
+  "report.builder_date_from": "سے",
+  "report.builder_date_to": "تک",
+  "report.builder_clear_dates": "تاریخیں صاف کریں",
+  "report.builder_showing_records": "{count} ریکارڈ دکھائے جا رہے ہیں",
+  "report.builder_filtered_from": "{total} میں سے فلٹر شدہ",
+  "hr.pp_search_placeholder": "ملازم / شخص کا نام تلاش کریں",
+  "hr.pp_no_matches": "کوئی مماثلت نہیں ملی۔",
+  "hr.pp_add_new_person_master": "+ نیا پرسن ماسٹر شامل کریں",
+  "hr.pp_edit_person_registry": "پرسن رجسٹری میں ترمیم کریں — کسٹمر ماسٹر",
   "purchase.step4_verify_subtitle": "حتمی تصدیق سے پہلے پرنٹ ایبل دستاویز کے حصے، اکاؤنٹ پوسٹنگز، مال کی فہرست، ادائیگی کی شرائط، اور لوڈنگ شیڈول کی تصدیق کریں۔",
   "purchase.opt_advance_payment": "ایڈوانس ادائیگی",
   "purchase.opt_invoice": "انوائس",
@@ -5381,6 +5615,84 @@ const ur: Dict = {
 
 const ar: Dict = {
   ...en,
+  "report.builder_export_csv": "تصدير CSV",
+  "report.builder_classic_view": "كلاسيكي",
+  "report.builder_advanced_builder": "منشئ متقدم",
+  "report.builder_sales_booking_register": "سجل يومية حجوزات المبيعات",
+  "report.builder_group_by": "تجميع حسب",
+  "report.builder_no_grouping": "بدون تجميع",
+  "report.builder_show_group_subtotals": "إظهار الإجماليات الفرعية لكل مجموعة",
+  "report.builder_no_numeric_fields": "لا توجد حقول رقمية متاحة للرسم البياني.",
+  "report.builder_chart_value": "قيمة الرسم البياني",
+  "report.builder_drag_to_reorder": "اسحب لإعادة ترتيب الأعمدة",
+  "report.builder_ungrouped": "(غير مجمّع)",
+  "report.builder_subtotal": "الإجمالي الفرعي",
+  "report.builder_grand_total": "الإجمالي الكلي",
+  "report.builder_loading": "جارٍ تحميل البيانات...",
+  "report.builder_no_records": "لم يتم العثور على سجلات مطابقة لعوامل التصفية الخاصة بك.",
+  "report.builder_confirm_delete_saved": "هل أنت متأكد أنك تريد حذف هذا التقرير المحفوظ؟",
+  "report.builder_load_saved_report": "تحميل تقرير محفوظ...",
+  "report.builder_no_saved_reports": "لا توجد تقارير محفوظة",
+  "report.builder_save_as": "حفظ باسم",
+  "report.builder_save_custom_report": "حفظ التقرير المخصص",
+  "report.builder_report_name": "اسم التقرير",
+  "report.builder_report_name_placeholder": "مثال: مدفوعات باكستان المعلقة",
+  "report.builder_share_public": "المشاركة مع مستخدمين آخرين (عام)",
+  "report.builder_this_will_save": "سيتم حفظ ما يلي:",
+  "report.builder_save_item_columns": "الأعمدة المحددة وترتيبها",
+  "report.builder_save_item_filters": "عوامل التصفية النشطة",
+  "report.builder_save_item_date_range": "النطاق الزمني",
+  "report.builder_save_item_sorting": "قواعد الفرز",
+  "report.builder_save_item_grouping": "التجميع والإجماليات",
+  "report.builder_save_report": "حفظ التقرير",
+  "report.builder_saving": "جارٍ الحفظ...",
+  "report.builder_auto_email": "البريد الإلكتروني التلقائي",
+  "report.builder_setup_auto_email": "إعداد البريد الإلكتروني التلقائي",
+  "report.builder_save_first": "احفظ تخطيط هذا التقرير أولاً (حفظ باسم) قبل إعداد البريد الإلكتروني التلقائي.",
+  "report.builder_recipients": "المستلمون (مفصولون بفواصل)",
+  "report.builder_frequency": "التكرار",
+  "report.builder_daily": "يومي",
+  "report.builder_weekly": "أسبوعي",
+  "report.builder_monthly": "شهري",
+  "report.builder_format": "التنسيق",
+  "report.builder_auto_email_note": "يتطلب التسليم المتكرر حفظ قائمة المستلمين هنا؛ الإرسال المجدول الفعلي يعتمد على تكوين مجدول المهام في خادمك.",
+  "report.builder_config_saved": "تم حفظ الإعدادات.",
+  "report.builder_test_sent": "تم إرسال البريد الإلكتروني التجريبي.",
+  "report.builder_action_failed": "فشل الإجراء. يرجى المحاولة مرة أخرى.",
+  "report.builder_sending": "جارٍ الإرسال...",
+  "report.builder_send_test_now": "إرسال تجريبي الآن",
+  "report.builder_save_config": "حفظ الإعدادات",
+  "report.builder_active_filters": "عوامل التصفية النشطة",
+  "report.builder_clear_all": "مسح الكل",
+  "report.builder_add_filter": "إضافة عامل تصفية",
+  "report.builder_no_filters_applied": "لم يتم تطبيق أي عوامل تصفية. انقر على \"إضافة عامل تصفية\" لتحسين النتائج.",
+  "report.builder_select_field": "اختر الحقل",
+  "report.builder_operator": "المعامل",
+  "report.builder_op_contains": "يحتوي على",
+  "report.builder_op_equals": "يساوي (=)",
+  "report.builder_op_not_equals": "لا يساوي (!=)",
+  "report.builder_op_greater_than": "أكبر من (>)",
+  "report.builder_op_less_than": "أقل من (<)",
+  "report.builder_select_value": "اختر القيمة",
+  "report.builder_enter_value": "أدخل القيمة...",
+  "report.builder_toggle_sidebar": "تبديل الشريط الجانبي",
+  "report.builder_sidebar": "الشريط الجانبي",
+  "report.builder_columns": "الأعمدة",
+  "report.builder_group": "تجميع",
+  "report.builder_show_totals": "إظهار الإجماليات",
+  "report.builder_chart": "الرسم البياني",
+  "report.builder_print": "طباعة",
+  "report.builder_pdf": "PDF",
+  "report.builder_excel": "إكسل",
+  "report.builder_date_from": "من",
+  "report.builder_date_to": "إلى",
+  "report.builder_clear_dates": "مسح التواريخ",
+  "report.builder_showing_records": "عرض {count} سجل",
+  "report.builder_filtered_from": "تمت التصفية من {total}",
+  "hr.pp_search_placeholder": "البحث عن اسم الموظف / الشخص",
+  "hr.pp_no_matches": "لم يتم العثور على تطابق.",
+  "hr.pp_add_new_person_master": "+ إضافة سجل شخص رئيسي جديد",
+  "hr.pp_edit_person_registry": "تعديل سجل الشخص — سجل العميل الرئيسي",
   "purchase.step4_verify_subtitle": "تحقق من أقسام المستند القابل للطباعة، ترحيلات الحسابات، بيان البضائع، شروط الدفع، وجداول التحميل قبل التحقق النهائي.",
   "purchase.opt_advance_payment": "دفعة مقدمة",
   "purchase.opt_invoice": "فاتورة",
@@ -7157,6 +7469,84 @@ const ar: Dict = {
 
 const fa: Dict = {
   ...en,
+  "report.builder_export_csv": "خروجی CSV",
+  "report.builder_classic_view": "کلاسیک",
+  "report.builder_advanced_builder": "سازنده پیشرفته",
+  "report.builder_sales_booking_register": "دفتر ثبت رزرو فروش",
+  "report.builder_group_by": "گروه‌بندی بر اساس",
+  "report.builder_no_grouping": "بدون گروه‌بندی",
+  "report.builder_show_group_subtotals": "نمایش جمع‌های فرعی هر گروه",
+  "report.builder_no_numeric_fields": "هیچ فیلد عددی برای نمودار در دسترس نیست.",
+  "report.builder_chart_value": "مقدار نمودار",
+  "report.builder_drag_to_reorder": "برای مرتب‌سازی مجدد ستون‌ها بکشید",
+  "report.builder_ungrouped": "(بدون گروه)",
+  "report.builder_subtotal": "جمع فرعی",
+  "report.builder_grand_total": "جمع کل",
+  "report.builder_loading": "در حال بارگذاری داده‌ها...",
+  "report.builder_no_records": "هیچ رکوردی مطابق فیلترهای شما یافت نشد.",
+  "report.builder_confirm_delete_saved": "آیا مطمئن هستید که می‌خواهید این گزارش ذخیره‌شده را حذف کنید؟",
+  "report.builder_load_saved_report": "بارگذاری گزارش ذخیره‌شده...",
+  "report.builder_no_saved_reports": "هیچ گزارش ذخیره‌شده‌ای وجود ندارد",
+  "report.builder_save_as": "ذخیره به عنوان",
+  "report.builder_save_custom_report": "ذخیره گزارش سفارشی",
+  "report.builder_report_name": "نام گزارش",
+  "report.builder_report_name_placeholder": "مثلاً پرداخت‌های معوق پاکستان",
+  "report.builder_share_public": "اشتراک‌گذاری با سایر کاربران (عمومی)",
+  "report.builder_this_will_save": "این موارد ذخیره خواهد شد:",
+  "report.builder_save_item_columns": "ستون‌های انتخاب‌شده و ترتیب",
+  "report.builder_save_item_filters": "فیلترهای فعال",
+  "report.builder_save_item_date_range": "بازه تاریخ",
+  "report.builder_save_item_sorting": "قوانین مرتب‌سازی",
+  "report.builder_save_item_grouping": "گروه‌بندی و جمع‌ها",
+  "report.builder_save_report": "ذخیره گزارش",
+  "report.builder_saving": "در حال ذخیره...",
+  "report.builder_auto_email": "ایمیل خودکار",
+  "report.builder_setup_auto_email": "تنظیم ایمیل خودکار",
+  "report.builder_save_first": "ابتدا این چیدمان گزارش را ذخیره کنید (ذخیره به‌عنوان) سپس ایمیل خودکار را تنظیم کنید.",
+  "report.builder_recipients": "گیرندگان (جدا شده با کاما)",
+  "report.builder_frequency": "تناوب",
+  "report.builder_daily": "روزانه",
+  "report.builder_weekly": "هفتگی",
+  "report.builder_monthly": "ماهانه",
+  "report.builder_format": "قالب",
+  "report.builder_auto_email_note": "ارسال دوره‌ای نیازمند ذخیره لیست گیرندگان در اینجاست؛ ارسال زمان‌بندی‌شده واقعی به پیکربندی زمان‌بند سرور شما بستگی دارد.",
+  "report.builder_config_saved": "پیکربندی ذخیره شد.",
+  "report.builder_test_sent": "ایمیل آزمایشی ارسال شد.",
+  "report.builder_action_failed": "عملیات ناموفق بود. لطفاً دوباره تلاش کنید.",
+  "report.builder_sending": "در حال ارسال...",
+  "report.builder_send_test_now": "ارسال آزمایشی اکنون",
+  "report.builder_save_config": "ذخیره پیکربندی",
+  "report.builder_active_filters": "فیلترهای فعال",
+  "report.builder_clear_all": "پاک کردن همه",
+  "report.builder_add_filter": "افزودن فیلتر",
+  "report.builder_no_filters_applied": "هیچ فیلتری اعمال نشده است. برای بهبود نتایج روی «افزودن فیلتر» کلیک کنید.",
+  "report.builder_select_field": "انتخاب فیلد",
+  "report.builder_operator": "عملگر",
+  "report.builder_op_contains": "شامل باشد",
+  "report.builder_op_equals": "برابر است (=)",
+  "report.builder_op_not_equals": "برابر نیست (!=)",
+  "report.builder_op_greater_than": "بزرگتر از (>)",
+  "report.builder_op_less_than": "کوچکتر از (<)",
+  "report.builder_select_value": "انتخاب مقدار",
+  "report.builder_enter_value": "مقدار را وارد کنید...",
+  "report.builder_toggle_sidebar": "تغییر نوار کناری",
+  "report.builder_sidebar": "نوار کناری",
+  "report.builder_columns": "ستون‌ها",
+  "report.builder_group": "گروه",
+  "report.builder_show_totals": "نمایش جمع‌ها",
+  "report.builder_chart": "نمودار",
+  "report.builder_print": "چاپ",
+  "report.builder_pdf": "PDF",
+  "report.builder_excel": "اکسل",
+  "report.builder_date_from": "از",
+  "report.builder_date_to": "تا",
+  "report.builder_clear_dates": "پاک کردن تاریخ‌ها",
+  "report.builder_showing_records": "نمایش {count} رکورد",
+  "report.builder_filtered_from": "فیلتر شده از {total}",
+  "hr.pp_search_placeholder": "جستجوی نام کارمند / شخص",
+  "hr.pp_no_matches": "هیچ موردی یافت نشد.",
+  "hr.pp_add_new_person_master": "+ افزودن شخص اصلی جدید",
+  "hr.pp_edit_person_registry": "ویرایش ثبت شخص — مرجع مشتری",
   "purchase.step4_verify_subtitle": "بخش‌های سند قابل چاپ، ثبت حساب‌ها، فهرست کالا، شرایط پرداخت و برنامه بارگیری را قبل از تایید نهایی بررسی کنید.",
   "purchase.opt_advance_payment": "پیش‌پرداخت",
   "purchase.opt_invoice": "فاکتور",
@@ -8932,6 +9322,84 @@ const fa: Dict = {
 
 const ps: Dict = {
   ...en,
+  "report.builder_export_csv": "CSV صادرول",
+  "report.builder_classic_view": "کلاسیک",
+  "report.builder_advanced_builder": "پرمختللی جوړونکی",
+  "report.builder_sales_booking_register": "د پلور بکینګ جرنل راجستر",
+  "report.builder_group_by": "ګروپ کول له مخې",
+  "report.builder_no_grouping": "هېڅ ډلبندي نشته",
+  "report.builder_show_group_subtotals": "د هرې ډلې فرعي مجموعې وښایاست",
+  "report.builder_no_numeric_fields": "د چارت لپاره هیڅ عددي ساحه شتون نلري.",
+  "report.builder_chart_value": "د چارت ارزښت",
+  "report.builder_drag_to_reorder": "د کالمونو د بیا امر کولو لپاره کش کړئ",
+  "report.builder_ungrouped": "(بې ډلې)",
+  "report.builder_subtotal": "فرعي مجموعه",
+  "report.builder_grand_total": "لوی مجموعه",
+  "report.builder_loading": "معلومات لوډېږي...",
+  "report.builder_no_records": "ستاسو د فلټرونو سره سمون لرونکی هیڅ ریکارډ ونه موندل شو.",
+  "report.builder_confirm_delete_saved": "ایا تاسو ډاډه یاست چې دا خوندي شوې راپور حذف کړئ؟",
+  "report.builder_load_saved_report": "خوندي شوی راپور بار کړئ...",
+  "report.builder_no_saved_reports": "هیڅ خوندي شوی راپور نشته",
+  "report.builder_save_as": "ساتل په توګه",
+  "report.builder_save_custom_report": "دودیز راپور خوندي کړئ",
+  "report.builder_report_name": "د راپور نوم",
+  "report.builder_report_name_placeholder": "لکه، پاکستان پاتې تادیات",
+  "report.builder_share_public": "له نورو کاروونکو سره شریک کړئ (عامه)",
+  "report.builder_this_will_save": "دا به وساتل شي:",
+  "report.builder_save_item_columns": "غوره شوي کالمونه او ترتیب",
+  "report.builder_save_item_filters": "فعال فلټرونه",
+  "report.builder_save_item_date_range": "د نېټې دوره",
+  "report.builder_save_item_sorting": "د اڼونې قواعد",
+  "report.builder_save_item_grouping": "ډلبندي او مجموعې",
+  "report.builder_save_report": "راپور خوندي کړئ",
+  "report.builder_saving": "خوندي کېږي...",
+  "report.builder_auto_email": "اتومات بریښنالیک",
+  "report.builder_setup_auto_email": "اتومات بریښنالیک تنظیم کړئ",
+  "report.builder_save_first": "د اتومات بریښنالیک تنظیم کولو دمخه دا د راپور بڼه ساتل کړئ (ساتل په توګه).",
+  "report.builder_recipients": "ترلاسه کوونکي (د کوما سره جلا شوي)",
+  "report.builder_frequency": "تکرار",
+  "report.builder_daily": "ورځنی",
+  "report.builder_weekly": "اونیز",
+  "report.builder_monthly": "میاشتنی",
+  "report.builder_format": "بڼه",
+  "report.builder_auto_email_note": "تکراري لیږد ته اړتیا ده چې د ترلاسه کوونکو لیست دلته وساتل شي؛ اصلي مهالوېش شوی لیږد ستاسو د سرور د دندې مهالویش کوونکي پورې اړه لري.",
+  "report.builder_config_saved": "تنظیمات خوندي شوې.",
+  "report.builder_test_sent": "ازموینې بریښنالیک ولیږل شو.",
+  "report.builder_action_failed": "کړنه ناکامه شوه۔ بیا هڅه وکړئ.",
+  "report.builder_sending": "لیږل کېږي...",
+  "report.builder_send_test_now": "اوس ازموینه ولېږئ",
+  "report.builder_save_config": "تنظیمات خوندي کړئ",
+  "report.builder_active_filters": "فعال فلټرونه",
+  "report.builder_clear_all": "ټول پاک کړئ",
+  "report.builder_add_filter": "فلټر اضافه کړئ",
+  "report.builder_no_filters_applied": "هیڅ فلټر نه دی پلي شوی۔ د پایلو ښه کولو لپاره \"فلټر اضافه کړئ\" کلیک وکړئ.",
+  "report.builder_select_field": "ساحه غوره کړئ",
+  "report.builder_operator": "آپراتور",
+  "report.builder_op_contains": "لري",
+  "report.builder_op_equals": "مساوي دی (=)",
+  "report.builder_op_not_equals": "مساوي نه دی (!=)",
+  "report.builder_op_greater_than": "لوی له (>)",
+  "report.builder_op_less_than": "کم له (<)",
+  "report.builder_select_value": "ارزښت غوره کړئ",
+  "report.builder_enter_value": "ارزښت دننه کړئ...",
+  "report.builder_toggle_sidebar": "د څنګ پټه بدله کړئ",
+  "report.builder_sidebar": "څنګ پټه",
+  "report.builder_columns": "کالمونه",
+  "report.builder_group": "ډله",
+  "report.builder_show_totals": "مجموعې وښایاست",
+  "report.builder_chart": "چارت",
+  "report.builder_print": "چاپول",
+  "report.builder_pdf": "PDF",
+  "report.builder_excel": "اېکسل",
+  "report.builder_date_from": "له",
+  "report.builder_date_to": "تر",
+  "report.builder_clear_dates": "نېټې پاکې کړئ",
+  "report.builder_showing_records": "{count} ریکارډونه ښودل کیږي",
+  "report.builder_filtered_from": "له {total} څخه فلټر شوی",
+  "hr.pp_search_placeholder": "د کارکوونکي / فرد نوم وپلټئ",
+  "hr.pp_no_matches": "هیڅ سمون ونه موندل شو.",
+  "hr.pp_add_new_person_master": "+ نوی فرد ماسټر اضافه کړئ",
+  "hr.pp_edit_person_registry": "د فرد ثبت سمون — د مشتري ماسټر",
   "purchase.step4_verify_subtitle": "د وروستي تصدیق دمخه د چاپ وړ سند برخې، د حساب ثبتونه، د مالونو لیست، د تادیې شرایط، او د بارولو مهالویش وګورئ.",
   "purchase.opt_advance_payment": "مخکینۍ تادیه",
   "purchase.opt_invoice": "انوائس",

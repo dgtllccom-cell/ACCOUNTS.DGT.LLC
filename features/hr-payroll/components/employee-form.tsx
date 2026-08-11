@@ -29,7 +29,10 @@ import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 
 type EmployeeFormProps = {
   employeeId?: string | null;
-  onSave: () => void;
+  /** Called after a successful create/update. `newEmployeeId` is the created/updated
+   * employee's id — callers that embed this form to pick-and-create-on-the-fly (e.g. the
+   * User Registration wizard) use it to auto-select the new row without a second lookup. */
+  onSave: (newEmployeeId?: string) => void;
   onCancel: () => void;
 };
 
@@ -329,12 +332,14 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
     };
 
     try {
+      let savedId = employeeId ?? undefined;
       if (employeeId) {
         await apiPatch(`/api/erp/hr-payroll/employees/${employeeId}`, payload);
       } else {
-        await apiPost("/api/erp/hr-payroll/employees", payload);
+        const result = await apiPost<{ employee?: { id?: string } }>("/api/erp/hr-payroll/employees", payload);
+        savedId = result?.employee?.id;
       }
-      onSave();
+      onSave(savedId);
     } catch (err: any) {
       alert("Error saving employee profile: " + err.message);
     } finally {
