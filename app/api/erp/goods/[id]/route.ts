@@ -5,6 +5,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { goodsUpdateSchema } from "@/lib/api/erp-validation";
 import { goodsService } from "@/lib/services/goods-service";
+import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -16,7 +18,12 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       action: "read"
     });
 
-    const data = await goodsService.getById(id);
+    const data: any = await goodsService.getById(id);
+    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    if (data?.goods) {
+      const [resolved] = await localizeRecordNames([data.goods], "goods", "goods_name", lang);
+      data.goods = resolved;
+    }
     return apiOk(data);
   } catch (error) {
     return handleApiError(error);

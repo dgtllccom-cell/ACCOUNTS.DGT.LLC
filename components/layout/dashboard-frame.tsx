@@ -331,7 +331,7 @@ export function DashboardFrame({
             </div>
 
             {/* Smart Search, Date picker, Bell and Profile controls */}
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
               {/* Search trigger filter mockup */}
               {/* Search trigger filter */}
               <button
@@ -347,11 +347,16 @@ export function DashboardFrame({
                 </kbd>
               </button>
 
-              {/* Date selector indicator */}
+              {/* Date selector indicator — deferred to lg: (was md:, i.e. visible starting
+                  exactly at the 768px tablet breakpoint) because the topbar's right-hand
+                  button group (search, date filter, bell, divider, language/theme, avatar)
+                  together overflowed the available width at 768px, pushing the whole page
+                  into horizontal scroll instead of staying contained. This is the lowest
+                  priority item in the group, so it's the one deferred. */}
               <button
                 type="button"
                 onClick={() => setSearchOpen(true)}
-                className="hidden md:flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-foreground/80 hover:bg-muted/80 transition-colors"
+                className="hidden lg:flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-foreground/80 hover:bg-muted/80 transition-colors"
                 title={t(lang, "nav.filter_by_date_range", "Filter by date range")}
               >
                 <svg className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>

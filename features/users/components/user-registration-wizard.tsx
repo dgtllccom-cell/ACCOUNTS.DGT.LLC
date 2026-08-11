@@ -178,7 +178,16 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
 
   // Step 1: User Core State
-  const [userCode, setUserCode] = useState(() => makeAutoUserCode());
+  // Root cause of the page getting permanently stuck on "Loading..." on every hard
+  // navigation/full page load: makeAutoUserCode() uses Math.random(), so a useState lazy
+  // initializer here computes a DIFFERENT value on the server (SSR) than on the client's
+  // first render — a guaranteed text hydration mismatch on {userCode} every single time
+  // this route is server-rendered. Start empty (matches SSR) and generate the random code
+  // only after mount, client-side, where it can never disagree with what the server sent.
+  const [userCode, setUserCode] = useState("");
+  useEffect(() => {
+    setUserCode((current) => current || makeAutoUserCode());
+  }, []);
   const [fullName, setFullName] = useState("");
   const [loginUsername, setLoginUsername] = useState("");
   const [contactPhone, setContactPhone] = useState("");
@@ -352,7 +361,13 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         ]);
 
         if (!cancelled) {
-          const mbRows: MainBranchRow[] = (cbRes?.data || cbRes || []).map((b: any) => ({
+          // Root cause: /api/branch-management/country-branches responds with
+          // { countryBranches: [...] } and /city-branches with { cityBranches: [...] } — never
+          // a `data` key. The previous `cbRes?.data || cbRes || []` fallback therefore matched
+          // neither shape and fell through to the raw response OBJECT itself (always truthy,
+          // never an array), so .map() threw "is not a function" for every country selection,
+          // every time — not an edge case. Read the actual documented response keys instead.
+          const mbRows: MainBranchRow[] = (Array.isArray(cbRes?.countryBranches) ? cbRes.countryBranches : Array.isArray(cbRes) ? cbRes : []).map((b: any) => ({
             id: b.id,
             name: b.name,
             code: b.code,
@@ -362,7 +377,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
           }));
           setMainBranches(mbRows);
 
-          const cbRows: CityBranchRow[] = (ctyRes?.data || ctyRes || []).map((b: any) => ({
+          const cbRows: CityBranchRow[] = (Array.isArray(ctyRes?.cityBranches) ? ctyRes.cityBranches : Array.isArray(ctyRes) ? ctyRes : []).map((b: any) => ({
             id: b.id,
             name: b.name,
             code: b.code,
@@ -1062,9 +1077,9 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 }
 
 export function UserRegistrationWizard(props: { userIdProp?: string }) {
-  return (
-    <Suspense fallback={<div className="p-8 text-slate-400">Loading User Setup Wizard...</div>}>
-      <UserRegistrationWizardContent {...props} />
-    </Suspense>
-  );
+  // Every caller (registration/new-entry page, users/new, users/edit/[id]) already wraps this
+  // component in its own <Suspense> for useSearchParams() — this redundant second, nested
+  // Suspense boundary around the same content was never needed and could leave the page stuck
+  // showing "Loading User Setup Wizard..." indefinitely instead of committing the real content.
+  return <UserRegistrationWizardContent {...props} />;
 }

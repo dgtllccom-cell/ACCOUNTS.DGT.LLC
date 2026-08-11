@@ -15,19 +15,21 @@ export type TranslationMap = {
  * Resolves translations using the ERP's local translation dictionary and offline database engine.
  * Completely offline, local server operation — no AI or third-party external API requests.
  *
- * `mode` (from the field registry, lib/i18n/translatable-fields.ts):
- *   - "translate": descriptive phrases. Dictionary match only; unmatched text is left as-is
- *     (transliterating a phrase like "Employee Reports" would produce nonsense, not a
- *     translation — an unmatched phrase needs a real human/dictionary addition, not a guess).
- *   - "transliterate": proper nouns (place/person names). Dictionary match first (covers the
- *     curated common cases exactly, e.g. the 5 ERP countries); anything NOT in the dictionary
- *     falls through to the rule-based phonetic transliterator instead of echoing English —
- *     this is what closes the "5,492 records were just English copied 5x" gap.
+ * `mode` (from the field registry, lib/i18n/translatable-fields.ts) is accepted for call-site
+ * compatibility but currently does not change behavior below: both "translate" (descriptive
+ * phrases) and "transliterate" (proper nouns) fall back to the same script-aware phonetic
+ * transliteration when there's no dictionary hit. This used to differ — "translate" mode
+ * echoed the raw original text into every language slot (including `en`) on a miss, which
+ * silently leaked non-English script into the English UI for any field using that mode
+ * (goods_name, category/brand/unit names, tax names, role/permission text, etc.) — the same
+ * leak already fixed for "transliterate" fields, just missed here. A phonetic rendering of an
+ * un-translated phrase is an imperfect translation, but never displaying the wrong script/
+ * language is the harder requirement; translation quality is a separate, later improvement.
  */
 export async function autoTranslateText(
   originalText: string,
   _originalLanguage: SupportedLanguage,
-  mode: "translate" | "transliterate" = "translate"
+  _mode: "translate" | "transliterate" = "translate"
 ): Promise<TranslationMap> {
   const val = originalText.trim();
   if (!val) {
@@ -37,7 +39,7 @@ export async function autoTranslateText(
   const resolved = translateText(val);
   const dictionaryHit = resolved.ur !== val || resolved.ar !== val || resolved.fa !== val || resolved.ps !== val;
 
-  if (dictionaryHit || mode !== "transliterate") {
+  if (dictionaryHit) {
     return {
       en: resolved.en || val,
       ur: resolved.ur || val,
@@ -46,6 +48,17 @@ export async function autoTranslateText(
       ps: resolved.ps || val
     };
   }
+
+  // No dictionary match. Previously, "translate" mode (descriptive phrases: goods_name,
+  // category_name, brand_name, unit_name, tax_name, role/permission descriptions, and every
+  // other field registered as "translate" in translatable-fields.ts) stopped here and echoed
+  // the RAW original text into all 5 language slots — including `en` — whenever there was no
+  // dictionary hit. That's a real leak: selecting English then showed Urdu/Arabic/Persian/
+  // Pashto script verbatim, the exact bug already fixed for "transliterate" mode fields
+  // (customers, banks, employees' linked names, etc.) but never for "translate" mode ones.
+  // Apply the same script-aware fallback regardless of mode — it does not attempt a phrase
+  // translation (still not guessing at "Employee Reports"-style phrase meaning), it only
+  // guarantees `en` never shows raw non-English script for either mode.
 
   // Source script determines which direction to transliterate. Perso-Arabic-script input
   // (Urdu/Arabic/Persian/Pashto all share the same base script) has no forward path to

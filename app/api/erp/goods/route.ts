@@ -5,6 +5,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { goodsCreateSchema } from "@/lib/api/erp-validation";
 import { goodsService } from "@/lib/services/goods-service";
+import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,13 +19,21 @@ export async function GET(request: NextRequest) {
 
     const query = request.nextUrl.searchParams.get("q");
     const limit = request.nextUrl.searchParams.get("limit");
+    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
 
     const result = await goodsService.search({
       query,
       limit: limit ? Number(limit) : 50
     });
 
-    return apiOk(result);
+    // Always resolve — see customers/[id]/route.ts for why skipping lang === "en" would leak
+    // non-English source text into the English view.
+    let goods: any[] = (result as any).goods ?? [];
+    if (Array.isArray(goods) && goods.length > 0) {
+      goods = await localizeRecordNames<any>(goods, "goods", "goods_name", lang);
+    }
+
+    return apiOk({ ...(result as any), goods });
   } catch (error) {
     return handleApiError(error);
   }
