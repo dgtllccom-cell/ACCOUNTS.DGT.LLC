@@ -457,9 +457,9 @@ export function RoznamchaReportView({
               <Search className="h-4 w-4" aria-hidden />
               <span className="ms-2">{filtersOpen ? "Hide Filters" : "Search / Filters"}</span>
             </Button>
-            <Button type="button" variant="outline" onClick={() => window.print()} disabled={!selectedHeader}>
+            <Button type="button" variant="outline" onClick={() => openSelectedReport(false, "journal")} disabled={!selectedHeader}>
               <Printer className="h-4 w-4" aria-hidden />
-              <span className="ms-2">{t(lang, "ledger.print")}</span>
+              <span className="ms-2">{t(lang, "report.print_preview", "Print Preview")}</span>
             </Button>
 
             <div id="roznamcha-actions-menu" className="relative">

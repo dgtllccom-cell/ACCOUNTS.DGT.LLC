@@ -17,6 +17,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
+import { openGenericErpReport } from "@/lib/reports/open-generic-erp-report";
 import {
   getLedgerStatement,
   listLedgerReportLedgers,
@@ -323,7 +324,59 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
   }
 
   function printLedger() {
-    window.print();
+    if (!account) return;
+
+    openGenericErpReport({
+      title: "LEDGER REPORT",
+      subtitle: `${account.accountCode || account.ledgerCode || "Ledger"} · ${account.accountName || account.ledgerName || "Account Statement"}`,
+      lang: "en",
+      columns: [
+        { key: "entryDate", label: "Date", format: "date" },
+        { key: "superAdminSerialNo", label: "SA Serial", align: "center" },
+        { key: "countrySerialNo", label: "Country Serial", align: "center" },
+        { key: "branchSerialNo", label: "Branch Serial", align: "center" },
+        { key: "createdByName", label: "User" },
+        { key: "referenceNo", label: "Reference No" },
+        { key: "description", label: "Narration" },
+        { key: "debit", label: "Debit", format: "currency", align: "right", currency: account.ledgerCurrency || "USD" },
+        { key: "credit", label: "Credit", format: "currency", align: "right", currency: account.ledgerCurrency || "USD" },
+        { key: "runningBalance", label: "Balance", format: "currency", align: "right", currency: account.ledgerCurrency || "USD" },
+      ],
+      rows: lines.map((line) => ({
+        entryDate: line.entryDate,
+        superAdminSerialNo: line.superAdminSerialNo || "-",
+        countrySerialNo: line.countrySerialNo || "-",
+        branchSerialNo: line.branchSerialNo || "-",
+        createdByName: line.createdByName || "-",
+        referenceNo: line.referenceNo || "-",
+        description: line.description || "-",
+        debit: line.debit || 0,
+        credit: line.credit || 0,
+        runningBalance: line.runningBalance || 0,
+      })),
+      summary: {
+        totalEntries: totals.entries,
+        openingBalance,
+        totalDebit: totals.debit,
+        totalCredit: totals.credit,
+        closingBalance: totals.balance,
+      },
+      filters: [
+        { label: "Account", value: `${account.accountCode || account.ledgerCode || "-"} · ${account.accountName || account.ledgerName || "-"}` },
+        { label: "Country", value: account.countryName || selectedCountry || "All Countries" },
+        { label: "Branch", value: account.cityBranchName || account.countryBranchName || selectedBranch || "All Branches" },
+        { label: "From Date", value: fromDate || "Start" },
+        { label: "To Date", value: toDate || "Today" },
+      ],
+      companyInfo: {
+        name: "DIGITAL DOCK ERP",
+        printedBy: session?.user?.fullName || session?.user?.email || "ERP User",
+        country: account.countryName || selectedCountry || "All Countries",
+        branch: account.cityBranchName || account.countryBranchName || selectedBranch || "All Branches",
+        currency: account.ledgerCurrency || "USD",
+        reportPeriod: `${fromDate || "Start"} To ${toDate || "Today"}`,
+      },
+    });
   }
 
   function downloadCsv() {
