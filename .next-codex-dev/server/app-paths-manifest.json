@@ -1,4 +1,8 @@
 {
-  "/api/erp/reports/scoped/route": "app/api/erp/reports/scoped/route.js",
-  "/auth/login/page": "app/auth/login/page.js"
+  "/api/erp/accounting/reports/ledger/outstanding/route": "app/api/erp/accounting/reports/ledger/outstanding/route.js",
+  "/api/erp/auth/session/route": "app/api/erp/auth/session/route.js",
+  "/auth/login/page": "app/auth/login/page.js",
+  "/dashboard/super-admin/page": "app/dashboard/super-admin/page.js",
+  "/dashboard/reports/page": "app/dashboard/reports/page.js",
+  "/dashboard/ledger/outstanding/page": "app/dashboard/ledger/outstanding/page.js"
 }

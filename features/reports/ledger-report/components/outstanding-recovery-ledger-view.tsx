@@ -6,6 +6,7 @@ import { apiGet } from "@/lib/api/client";
 import { ReportActions } from "@/components/ui/report-actions";
 import { Th } from "@/components/ui/translated-th";
 import { cn } from "@/lib/utils";
+import { openGenericErpReport, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
 
 type Row = {
   id: string;
@@ -68,6 +69,13 @@ export function OutstandingRecoveryLedgerView({ lang = "en", pageTitle }: { lang
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+  const scopeSummary = sessionInfo?.scopes?.summary ?? null;
+  const scopeCountry = scopeSummary?.countryName || "All Countries";
+  const scopeBranch = scopeSummary?.branchDisplayName || scopeSummary?.branchName || "All Branches";
+  const scopeRole = sessionInfo?.roles?.[0]?.replace(/_/g, " ") || "ERP User";
+  const scopeUserName = sessionInfo?.user?.fullName || sessionInfo?.user?.email || "ERP User";
+  const scopeUserId = sessionInfo?.user?.id || "-";
+  const scopeStatus = sessionInfo?.authenticated ? "ACTIVE" : "SESSION UNKNOWN";
 
   useEffect(() => {
     fetch("/api/erp/auth/session", { credentials: "include" })
@@ -127,8 +135,8 @@ export function OutstandingRecoveryLedgerView({ lang = "en", pageTitle }: { lang
     >();
 
     for (const row of filtered) {
-      const countryName = "United Arab Emirates";
-      const branchName = "Main Branch";
+      const countryName = scopeSummary?.countryName || "All Countries";
+      const branchName = scopeSummary?.branchDisplayName || scopeSummary?.branchName || "All Branches";
       const currency = row.currency || "AED";
 
       if (!map.has(countryName)) {
@@ -169,7 +177,7 @@ export function OutstandingRecoveryLedgerView({ lang = "en", pageTitle }: { lang
     }
 
     return Array.from(map.values());
-  }, [filtered]);
+  }, [filtered, scopeSummary?.branchDisplayName, scopeSummary?.branchName, scopeSummary?.countryName]);
 
   const reportRows = filtered.map((x) => ({
     code: x.code,
@@ -192,6 +200,61 @@ export function OutstandingRecoveryLedgerView({ lang = "en", pageTitle }: { lang
     { key: "days", label: "Days" },
     { key: "status", label: "Status" },
   ];
+
+  const previewColumns: GenericReportColumn[] = [
+    { key: "code", label: "Code" },
+    { key: "name", label: "Account" },
+    { key: "currency", label: "Currency", align: "center" },
+    { key: "outstandingRaw", label: "Outstanding", align: "right", format: "currency" },
+    { key: "type", label: "Type", align: "center" },
+    { key: "lastMovementDate", label: "Last Movement", format: "date", align: "center" },
+    { key: "daysOutstanding", label: "Days", align: "center", format: "number" },
+    { key: "status", label: "Status", align: "center", format: "status" },
+  ];
+
+  const previewRows = filtered.map((x) => ({
+    code: x.code,
+    name: x.name,
+    currency: x.currency || "AED",
+    outstandingRaw: Math.abs(x.outstanding),
+    type: x.outstanding > 0 ? "Receivable" : x.outstanding < 0 ? "Payable" : "Zero",
+    lastMovementDate: x.lastMovementDate,
+    daysOutstanding: x.daysOutstanding ?? 0,
+    status: (x.daysOutstanding ?? 0) > overdueDays ? "overdue" : "active",
+  }));
+
+  function openReportPreview() {
+    openGenericErpReport({
+      title: pageTitle,
+      subtitle: `${filtered.length} account(s) • ${tab.toUpperCase()} scope`,
+      lang,
+      columns: previewColumns,
+      rows: previewRows,
+      summary: {
+        totalAccounts: summary?.accounts ?? rows.length,
+        totalReceivable: summary?.totalReceivable ?? 0,
+        totalPayable: summary?.totalPayable ?? 0,
+        netOutstanding: (summary?.totalReceivable ?? 0) - (summary?.totalPayable ?? 0),
+      },
+      filters: [
+        { label: "Country", value: scopeCountry },
+        { label: "Branch", value: scopeBranch },
+        { label: "Viewer", value: scopeUserName },
+        { label: "Role", value: scopeRole },
+        { label: "Tab", value: tab },
+        { label: "Search", value: q.trim() || "All Accounts" },
+      ],
+      companyInfo: {
+        country: scopeCountry,
+        branch: scopeBranch,
+        printedBy: scopeUserName,
+        reportPeriod: `Aging threshold ${overdueDays} days`,
+        currency: filtered[0]?.currency || rows[0]?.currency || "AED",
+      },
+      orientation: "landscape",
+      footerNotesHtml: `<p>Outstanding ledger preview follows the authenticated session scope and current screen filters.</p>`,
+    });
+  }
 
   const tabs: { key: Tab; label: string }[] = [
     { key: "all", label: "All Outstanding" },
@@ -219,11 +282,11 @@ export function OutstandingRecoveryLedgerView({ lang = "en", pageTitle }: { lang
       <div className="flex flex-wrap items-center justify-between gap-4 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 px-4 shadow-sm">
         <div className="flex items-center gap-2">
           <span>BRANCH NAME:</span>
-          <span className="text-slate-900 dark:text-slate-100 font-bold">UNITED ARAB EMIRATES MAIN BRANCH</span>
+          <span className="text-slate-900 dark:text-slate-100 font-bold">{scopeBranch}</span>
         </div>
         <div className="flex items-center gap-2">
           <span>USER NAME:</span>
-          <span className="text-slate-900 dark:text-slate-100 font-bold">{sessionInfo?.user?.fullName || "SUPER ADMIN"}</span>
+          <span className="text-slate-900 dark:text-slate-100 font-bold">{scopeUserName}</span>
         </div>
         <div className="flex items-center gap-2">
           <span>DATE:</span>
@@ -250,23 +313,23 @@ export function OutstandingRecoveryLedgerView({ lang = "en", pageTitle }: { lang
           <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
               <span>COUNTRY:</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">متحده عرب امارات</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{scopeCountry}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>BRANCH NAME:</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">MAIN BRANCH</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{scopeBranch}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>USER ID:</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] font-mono">{sessionInfo?.user?.id || "9B9D24D9-5532-47A1-B612-3E95F2285AB6"}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] font-mono">{scopeUserId}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>USER NAME:</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{sessionInfo?.user?.fullName || "SUPER ADMIN"}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{scopeUserName}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>ROLE:</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">SUPER ADMIN</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{scopeRole}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>DATE & TIME:</span>
@@ -274,7 +337,7 @@ export function OutstandingRecoveryLedgerView({ lang = "en", pageTitle }: { lang
             </div>
             <div className="flex justify-between items-center mt-auto pt-1">
               <span>STATUS:</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">ACTIVE</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">{scopeStatus}</span>
             </div>
           </div>
         </div>
@@ -510,19 +573,19 @@ export function OutstandingRecoveryLedgerView({ lang = "en", pageTitle }: { lang
               {exportMenuOpen && (
                 <div className="absolute right-0 top-full z-30 mt-1 w-44 rounded-xl border border-slate-200 bg-white p-1 shadow-xl dark:border-slate-800 dark:bg-slate-900">
                   <button
-                    onClick={() => { setExportMenuOpen(false); window.print(); }}
+                    onClick={() => { setExportMenuOpen(false); openReportPreview(); }}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                   >
-                    <Printer className="h-3.5 w-3.5 text-blue-600" /> Print Report
+                    <Printer className="h-3.5 w-3.5 text-blue-600" /> Print Preview
                   </button>
                   <button
-                    onClick={() => { setExportMenuOpen(false); window.print(); }}
+                    onClick={() => { setExportMenuOpen(false); openReportPreview(); }}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                   >
                     <FileText className="h-3.5 w-3.5 text-rose-600" /> PDF Export
                   </button>
                   <button
-                    onClick={() => { setExportMenuOpen(false); window.print(); }}
+                    onClick={() => { setExportMenuOpen(false); openReportPreview(); }}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                   >
                     <Download className="h-3.5 w-3.5 text-emerald-600" /> Excel Export

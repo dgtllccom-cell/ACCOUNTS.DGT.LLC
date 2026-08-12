@@ -626,7 +626,7 @@ export function LedgerReportView({
                     className="flex w-full items-center gap-2 px-3 py-2 text-sm hover:bg-muted"
                     onClick={() => {
                       setActionsOpen(false);
-                      window.print();
+                      setPrintMode(true);
                     }}
                   >
                     <Printer className="h-4 w-4" aria-hidden />

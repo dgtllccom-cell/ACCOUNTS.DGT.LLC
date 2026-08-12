@@ -11,6 +11,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { Th } from "@/components/ui/translated-th";
+import { openGenericErpReport, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
 
 type TabType = "summary" | "branch" | "user";
 
@@ -35,6 +36,7 @@ export function ComprehensiveDailyReportView() {
   const [countries, setCountries] = useState<any[]>([]);
   const [branches, setBranches] = useState<any[]>([]);
   const [users, setUsers] = useState<any[]>([]);
+  const [sessionInfo, setSessionInfo] = useState<any>(null);
 
   useEffect(() => {
     // Load metadata for filters
@@ -45,6 +47,11 @@ export function ComprehensiveDailyReportView() {
     apiGet<{ entries: any[] }>("/api/branch-management/city-branches?limit=100")
       .then((res) => setBranches(res.entries || []))
       .catch(console.error);
+
+    fetch("/api/erp/auth/session", { credentials: "include" })
+      .then((r) => r.json())
+      .then((info) => setSessionInfo(info))
+      .catch(() => null);
   }, []);
 
   const loadData = () => {
@@ -182,6 +189,73 @@ export function ComprehensiveDailyReportView() {
     return new Intl.NumberFormat("en-US", { style: "decimal", minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
   };
 
+  const selectedCountryName = countryId === "all" ? (sessionInfo?.scopes?.summary?.countryName || "All Countries") : (countries.find((c) => c.id === countryId)?.name || "Selected Country");
+  const selectedBranchName = branchId === "all" ? (sessionInfo?.scopes?.summary?.branchDisplayName || sessionInfo?.scopes?.summary?.branchName || "All Branches") : (branches.find((b) => b.id === branchId)?.name || "Selected Branch");
+  const selectedUserName = userId === "all" ? "All Users" : (users.find((u) => u.id === userId)?.name || "Selected User");
+
+  function openPreview() {
+    let columns: GenericReportColumn[] = [];
+    let rows: Record<string, unknown>[] = [];
+
+    if (activeTab === "summary") {
+      columns = [
+        { key: "date", label: "Date", format: "date", align: "center" },
+        { key: "count", label: "Entries", format: "number", align: "center" },
+        { key: "debit", label: "Debit", format: "currency", align: "right", currency: targetCurrency === "USD" ? "USD" : undefined },
+        { key: "credit", label: "Credit", format: "currency", align: "right", currency: targetCurrency === "USD" ? "USD" : undefined },
+      ];
+      rows = dailySummary;
+    } else if (activeTab === "branch") {
+      columns = [
+        { key: "country", label: "Country" },
+        { key: "name", label: "Branch" },
+        { key: "code", label: "Code", align: "center" },
+        { key: "count", label: "Entries", format: "number", align: "center" },
+        { key: "debit", label: "Debit", format: "currency", align: "right", currency: targetCurrency === "USD" ? "USD" : undefined },
+        { key: "credit", label: "Credit", format: "currency", align: "right", currency: targetCurrency === "USD" ? "USD" : undefined },
+      ];
+      rows = branchSummary;
+    } else {
+      columns = [
+        { key: "name", label: "User" },
+        { key: "count", label: "Entries", format: "number", align: "center" },
+        { key: "debit", label: "Debit", format: "currency", align: "right", currency: targetCurrency === "USD" ? "USD" : undefined },
+        { key: "credit", label: "Credit", format: "currency", align: "right", currency: targetCurrency === "USD" ? "USD" : undefined },
+      ];
+      rows = userSummary;
+    }
+
+    openGenericErpReport({
+      title: t(lang, "report.comprehensive_daily", "Comprehensive Daily Report"),
+      subtitle: `${activeTab.toUpperCase()} • ${rows.length} row(s)`,
+      lang,
+      columns,
+      rows,
+      summary: {
+        totalEntries: filteredEntries.length,
+        totalRows: rows.length,
+      },
+      filters: [
+        { label: "From", value: fromDate || "-" },
+        { label: "To", value: toDate || "-" },
+        { label: "Country", value: selectedCountryName },
+        { label: "Branch", value: selectedBranchName },
+        { label: "User", value: selectedUserName },
+        { label: "Voucher", value: voucherType === "all" ? "All" : voucherType.toUpperCase() },
+        { label: "Currency", value: targetCurrency },
+      ],
+      companyInfo: {
+        country: selectedCountryName,
+        branch: selectedBranchName,
+        printedBy: sessionInfo?.user?.fullName || sessionInfo?.user?.email || "ERP User",
+        reportPeriod: `${fromDate || "-"} to ${toDate || "-"}`,
+        currency: targetCurrency === "USD" ? "USD" : undefined,
+      },
+      orientation: activeTab === "user" ? "portrait" : "landscape",
+      footerNotesHtml: `<p>Comprehensive daily report preview follows the active screen scope, date range, voucher filter, and currency mode.</p>`,
+    });
+  }
+
   return (
     <div className="space-y-4">
       {/* Top Filter Bar */}
@@ -249,8 +323,8 @@ export function ComprehensiveDailyReportView() {
           <button onClick={handleExportCSV} className="h-8 flex items-center gap-1.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-md transition-colors">
             <Download className="h-3.5 w-3.5" /> {t(lang, "report.export_csv", "Export CSV")}
           </button>
-          <button onClick={() => window.print()} className="h-8 flex items-center gap-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-md transition-colors shadow-sm">
-            <Printer className="h-3.5 w-3.5" /> {t(lang, "report.print", "Print")}
+          <button onClick={openPreview} className="h-8 flex items-center gap-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-md transition-colors shadow-sm">
+            <Printer className="h-3.5 w-3.5" /> {t(lang, "report.print_preview", "Print Preview")}
           </button>
         </div>
       </div>
