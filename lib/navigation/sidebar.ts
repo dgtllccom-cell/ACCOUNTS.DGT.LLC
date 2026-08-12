@@ -124,6 +124,12 @@ export const sidebarTree: SidebarNode[] = [
             labelKey: "nav.branch_general_report",
             href: "/dashboard/branch-management/general-report" as Route,
             roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
+          },
+          {
+            key: "branch-org-chart",
+            labelKey: "nav.branch_org_chart",
+            href: "/dashboard/branch-management/org-chart" as Route,
+            roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
           }
         ]
       },
@@ -1425,6 +1431,7 @@ function impliedPermission(node: SidebarNode): PermissionRequirement | null {
   if (href.includes("/new-entry/users/journal-report")) return { resource: "users", action: "read" };
 
   if (href.includes("/branch-management/general-report")) return { resource: "reports", action: "read" };
+  if (href.includes("/branch-management/org-chart")) return { resource: "reports", action: "read" };
   if (href.includes("/branch-entry/country-branch")) return { resource: "country_branches", action: "create" };
   if (href.includes("/branch-entry/city-branch")) return { resource: "city_branches", action: "create" };
   if (href.includes("/new-entry/branches/super-admin")) return { resource: "countries", action: "create" };

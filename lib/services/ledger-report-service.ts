@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { withLocalPg } from "@/lib/db/local-postgres";
 import type { ErpSession } from "@/lib/auth/session";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { multilingualService } from "@/lib/services/multilingual-service";
@@ -162,18 +163,297 @@ function applySessionScopeFilter(query: any, session: ErpSession) {
   return query.eq("id", "00000000-0000-0000-0000-000000000000");
 }
 
+type ListLedgersInput = {
+  session: ErpSession;
+  reportScope: LedgerReportScope;
+  ledgerId?: string | string[] | null;
+  countryId?: string | null;
+  countryBranchId?: string | null;
+  cityBranchId?: string | null;
+  limit?: number;
+  language?: SupportedLanguage | null;
+  includeAllScopes?: boolean;
+};
+
 export class LedgerReportService {
-  async listLedgers(input: {
-    session: ErpSession;
-    reportScope: LedgerReportScope;
-    ledgerId?: string | string[] | null;
-    countryId?: string | null;
-    countryBranchId?: string | null;
-    cityBranchId?: string | null;
-    limit?: number;
-    language?: SupportedLanguage | null;
-    includeAllScopes?: boolean;
-  }): Promise<LedgerLookupRow[]> {
+  // `ledgers` (and the account/branch/company lookup tables it joins against) have
+  // scoped RLS gated on auth.uid()/is_super_admin(), which is always NULL under this
+  // app's temp-session bootstrap (no real Supabase Auth JWT) — so the Supabase "admin"
+  // client silently returns zero rows here even for a real super admin session
+  // (confirmed live: Ledger General Report showed "0 ledgers" despite 3 real ledgers
+  // existing in the DB). Reads go through a direct Postgres connection (DATABASE_URL,
+  // via withLocalPg — same proven bypass as goods-repository.ts/banks-repository.ts)
+  // when available, falling back to the Supabase client otherwise.
+  async listLedgers(input: ListLedgersInput): Promise<LedgerLookupRow[]> {
+    const viaPg = await withLocalPg((sql) => this.listLedgersViaPg(sql, input));
+    if (viaPg) return viaPg;
+    return this.listLedgersViaSupabase(input);
+  }
+
+  private async listLedgersViaPg(sql: any, input: ListLedgersInput): Promise<LedgerLookupRow[]> {
+    const limit = Math.max(1, Math.min(input.limit ?? 250, 3000));
+    const { session } = input;
+
+    const scopeCond = session.isSuperAdmin
+      ? sql`true`
+      : (session.cityBranchIds?.length || session.countryBranchIds?.length || session.countryIds?.length)
+        ? sql`(city_branch_id = ANY(${session.cityBranchIds ?? []}::uuid[]) OR country_branch_id = ANY(${session.countryBranchIds ?? []}::uuid[]) OR country_id = ANY(${session.countryIds ?? []}::uuid[]))`
+        : sql`false`;
+
+    const ledgerIdList = input.ledgerId ? (Array.isArray(input.ledgerId) ? input.ledgerId : [input.ledgerId]) : null;
+
+    const idCond = ledgerIdList ? sql`id = ANY(${ledgerIdList}::uuid[])` : sql`true`;
+    const countryCond = input.countryId ? sql`country_id = ${input.countryId}` : sql`true`;
+    const countryBranchCond = input.countryBranchId ? sql`country_branch_id = ${input.countryBranchId}` : sql`true`;
+    const cityBranchCond = input.cityBranchId ? sql`city_branch_id = ${input.cityBranchId}` : sql`true`;
+
+    const scopeTabCond =
+      !ledgerIdList && !input.includeAllScopes
+        ? input.reportScope === "country"
+          ? sql`scope != 'super_admin'`
+          : input.reportScope === "branch"
+            ? sql`scope = 'city_branch'`
+            : sql`true`
+        : sql`true`;
+
+    const ledgerRows = await sql`
+      SELECT id, scope, country_id, country_branch_id, city_branch_id, account_id, enterprise_account_id,
+             code, name, currency, normal_balance, current_balance, debit_total, credit_total, is_active, created_at
+      FROM public.ledgers
+      WHERE deleted_at IS NULL AND ${scopeCond} AND ${idCond} AND ${countryCond} AND ${countryBranchCond} AND ${cityBranchCond} AND ${scopeTabCond}
+      ORDER BY code ASC
+      LIMIT ${limit}
+    `;
+
+    const rows = ledgerRows as Array<{
+      id: string;
+      scope: string;
+      country_id: string | null;
+      country_branch_id: string | null;
+      city_branch_id: string | null;
+      account_id: string | null;
+      enterprise_account_id: string | null;
+      code: string;
+      name: string;
+      currency: string;
+      normal_balance: "debit" | "credit" | null;
+      current_balance: string | number | null;
+      debit_total: string | number | null;
+      credit_total: string | number | null;
+      is_active: boolean | null;
+      created_at: string | null;
+    }>;
+
+    const accountIds = unique(rows.map((r) => r.account_id));
+    const enterpriseAccountIds = unique(rows.map((r) => r.enterprise_account_id));
+    const countryIds = unique(rows.map((r) => r.country_id));
+    const countryBranchIds = unique(rows.map((r) => r.country_branch_id));
+    const cityBranchIds = unique(rows.map((r) => r.city_branch_id));
+
+    const [accounts, enterpriseAccounts, countries, countryBranches, cityBranches] = await Promise.all([
+      accountIds.length
+        ? sql`SELECT id, code, name, kind, currency, company_id FROM public.accounts WHERE id = ANY(${accountIds}::uuid[]) AND deleted_at IS NULL`
+        : Promise.resolve([]),
+      enterpriseAccountIds.length
+        ? sql`SELECT id, code, account_number, manual_reference_number, customer_number, country_serial_number, branch_serial_number, name, kind, currency, contacts FROM public.enterprise_accounts WHERE id = ANY(${enterpriseAccountIds}::uuid[]) AND deleted_at IS NULL`
+        : Promise.resolve([]),
+      countryIds.length
+        ? sql`SELECT id, name FROM public.countries WHERE id = ANY(${countryIds}::uuid[]) AND deleted_at IS NULL`
+        : Promise.resolve([]),
+      countryBranchIds.length
+        ? sql`SELECT id, name, code, state_province_id, city_id, address FROM public.country_branches WHERE id = ANY(${countryBranchIds}::uuid[]) AND deleted_at IS NULL`
+        : Promise.resolve([]),
+      cityBranchIds.length
+        ? sql`SELECT id, name, code, state_province_id, city_id, address FROM public.city_branches WHERE id = ANY(${cityBranchIds}::uuid[]) AND deleted_at IS NULL`
+        : Promise.resolve([])
+    ]);
+
+    const companyIds = unique((accounts as any[]).map((a) => a.company_id));
+    const stateIds = unique([...(countryBranches as any[]).map((b) => b.state_province_id), ...(cityBranches as any[]).map((b) => b.state_province_id)]);
+    const cityIds = unique([...(countryBranches as any[]).map((b) => b.city_id), ...(cityBranches as any[]).map((b) => b.city_id)]);
+
+    const [companies, states, cities] = await Promise.all([
+      companyIds.length ? sql`SELECT id, name FROM public.companies WHERE id = ANY(${companyIds}::uuid[]) AND deleted_at IS NULL` : Promise.resolve([]),
+      stateIds.length ? sql`SELECT id, name FROM public.states_provinces WHERE id = ANY(${stateIds}::uuid[]) AND deleted_at IS NULL` : Promise.resolve([]),
+      cityIds.length ? sql`SELECT id, name FROM public.cities WHERE id = ANY(${cityIds}::uuid[]) AND deleted_at IS NULL` : Promise.resolve([])
+    ]);
+
+    const result = this.assembleLedgerRows(rows, {
+      accounts: accounts as any[],
+      enterpriseAccounts: enterpriseAccounts as any[],
+      countries: countries as any[],
+      countryBranches: countryBranches as any[],
+      cityBranches: cityBranches as any[],
+      companies: companies as any[],
+      states: states as any[],
+      cities: cities as any[]
+    });
+
+    const language = input.language ?? null;
+    if (!language) return result;
+    return this.applyTranslations(result, language);
+  }
+
+  private assembleLedgerRows(
+    rows: Array<{
+      id: string;
+      scope: string;
+      country_id: string | null;
+      country_branch_id: string | null;
+      city_branch_id: string | null;
+      account_id: string | null;
+      enterprise_account_id: string | null;
+      code: string;
+      name: string;
+      currency: string;
+      normal_balance: "debit" | "credit" | null;
+      current_balance: string | number | null;
+      debit_total: string | number | null;
+      credit_total: string | number | null;
+      is_active: boolean | null;
+      created_at: string | null;
+    }>,
+    lookups: {
+      accounts: Array<{ id: string; code: string; name: string; kind: string; currency: string; company_id: string }>;
+      enterpriseAccounts: Array<{
+        id: string; code: string; account_number: string | null; manual_reference_number: string | null;
+        customer_number: string | null; country_serial_number: string | null; branch_serial_number: string | null;
+        name: string; kind: string; currency: string; contacts: any;
+      }>;
+      countries: Array<{ id: string; name: string }>;
+      countryBranches: Array<{ id: string; name: string; code: string; state_province_id: string | null; city_id: string | null; address: string | null }>;
+      cityBranches: Array<{ id: string; name: string; code: string; state_province_id: string | null; city_id: string | null; address: string | null }>;
+      companies: Array<{ id: string; name: string }>;
+      states: Array<{ id: string; name: string }>;
+      cities: Array<{ id: string; name: string }>;
+    }
+  ): LedgerLookupRow[] {
+    const accountById = new Map(lookups.accounts.map((a) => [a.id, a]));
+    const enterpriseAccountById = new Map(lookups.enterpriseAccounts.map((a) => [a.id, a]));
+    const countryById = new Map(lookups.countries.map((c) => [c.id, c]));
+    const countryBranchById = new Map(lookups.countryBranches.map((b) => [b.id, b]));
+    const cityBranchById = new Map(lookups.cityBranches.map((b) => [b.id, b]));
+    const companyById = new Map(lookups.companies.map((c) => [c.id, c]));
+    const stateById = new Map(lookups.states.map((s) => [s.id, s]));
+    const cityById = new Map(lookups.cities.map((c) => [c.id, c]));
+
+    return rows.map((row) => {
+      const enterpriseAccount = row.enterprise_account_id ? enterpriseAccountById.get(row.enterprise_account_id) ?? null : null;
+      const legacyAccount = row.account_id ? accountById.get(row.account_id) ?? null : null;
+      const account = enterpriseAccount ?? legacyAccount;
+      const company = legacyAccount?.company_id ? companyById.get(legacyAccount.company_id) ?? null : null;
+      const country = row.country_id ? countryById.get(row.country_id) ?? null : null;
+      const countryBranch = row.country_branch_id ? countryBranchById.get(row.country_branch_id) ?? null : null;
+      const cityBranch = row.city_branch_id ? cityBranchById.get(row.city_branch_id) ?? null : null;
+
+      const branchStateId = cityBranch?.state_province_id ?? countryBranch?.state_province_id ?? null;
+      const branchCityId = cityBranch?.city_id ?? countryBranch?.city_id ?? null;
+      const stateName = branchStateId ? stateById.get(branchStateId)?.name ?? null : null;
+      const cityName = branchCityId ? cityById.get(branchCityId)?.name ?? null : null;
+      const address = cityBranch?.address ?? countryBranch?.address ?? null;
+
+      return {
+        ledgerId: row.id,
+        ledgerCode: row.code,
+        ledgerName: row.name,
+        ledgerCurrency: row.currency,
+        normalBalance: row.normal_balance ?? "debit",
+        isActive: row.is_active !== false,
+        currentBalance: toNumber(row.current_balance),
+        debitTotal: toNumber(row.debit_total),
+        creditTotal: toNumber(row.credit_total),
+        scope: row.scope,
+        countryId: row.country_id,
+        countryName: country?.name ?? null,
+        countryBranchId: row.country_branch_id,
+        countryBranchName: countryBranch?.name ?? null,
+        cityBranchId: row.city_branch_id,
+        cityBranchName: cityBranch?.name ?? null,
+        accountId: row.enterprise_account_id ?? row.account_id,
+        accountCode: enterpriseAccount?.account_number ?? account?.code ?? null,
+        rawAccountCode: account?.code ?? null,
+        manualReferenceNumber: enterpriseAccount?.manual_reference_number ?? null,
+        customerNumber: enterpriseAccount?.customer_number ?? null,
+        countrySerialNumber: enterpriseAccount?.country_serial_number ?? null,
+        branchSerialNumber: enterpriseAccount?.branch_serial_number ?? null,
+        accountName: account?.name ?? null,
+        accountKind: (account as any)?.kind ?? null,
+        companyId: legacyAccount?.company_id ?? null,
+        companyName: company?.name ?? null,
+        stateId: branchStateId,
+        stateName,
+        cityId: branchCityId,
+        cityName,
+        address,
+        contacts: enterpriseAccount?.contacts ?? null,
+        createdAt: row.created_at ?? null
+      } as LedgerLookupRow;
+    });
+  }
+
+  private async applyTranslations(result: LedgerLookupRow[], language: SupportedLanguage): Promise<LedgerLookupRow[]> {
+    const supabase = createSupabaseAdminClient() as any;
+    const targets: Array<{ table: string; id: string; field: string }> = [];
+    for (const row of result) {
+      if (row.countryId) targets.push({ table: "countries", id: row.countryId, field: "name" });
+      if (row.countryBranchId) targets.push({ table: "country_branches", id: row.countryBranchId, field: "name" });
+      if (row.cityBranchId) targets.push({ table: "city_branches", id: row.cityBranchId, field: "name" });
+      if (row.companyId) targets.push({ table: "companies", id: row.companyId, field: "name" });
+      if (row.stateId) targets.push({ table: "states_provinces", id: row.stateId, field: "name" });
+      if (row.cityId) targets.push({ table: "cities", id: row.cityId, field: "name" });
+      if (row.accountId) {
+        targets.push({ table: "enterprise_accounts", id: row.accountId, field: "name" });
+        targets.push({ table: "enterprise_accounts", id: row.accountId, field: "code" });
+        targets.push({ table: "accounts", id: row.accountId, field: "name" });
+        targets.push({ table: "accounts", id: row.accountId, field: "code" });
+      }
+      targets.push({ table: "ledgers", id: row.ledgerId, field: "name" });
+    }
+
+    let translations: Map<string, string>;
+    try {
+      translations = await loadTranslations({ supabase, language, targets });
+    } catch {
+      // Translations are a nice-to-have enrichment; if the lookup itself is blocked
+      // (e.g. record_translations RLS), fall back to the original names rather than
+      // failing the whole report.
+      return result;
+    }
+
+    return result.map((row) => {
+      const countryName =
+        (row.countryId && translations.get(translationKey("countries", row.countryId, "name"))) || row.countryName;
+      const countryBranchName =
+        (row.countryBranchId &&
+          translations.get(translationKey("country_branches", row.countryBranchId, "name"))) ||
+        row.countryBranchName;
+      const cityBranchName =
+        (row.cityBranchId && translations.get(translationKey("city_branches", row.cityBranchId, "name"))) ||
+        row.cityBranchName;
+      const companyName =
+        (row.companyId && translations.get(translationKey("companies", row.companyId, "name"))) || row.companyName;
+      const stateName =
+        (row.stateId && translations.get(translationKey("states_provinces", row.stateId, "name"))) || row.stateName;
+      const cityName = (row.cityId && translations.get(translationKey("cities", row.cityId, "name"))) || row.cityName;
+
+      let accountName = row.accountName;
+      let accountCode = row.accountCode;
+      if (row.accountId) {
+        const nameEnterprise = translations.get(translationKey("enterprise_accounts", row.accountId, "name"));
+        const codeEnterprise = translations.get(translationKey("enterprise_accounts", row.accountId, "code"));
+        const nameLegacy = translations.get(translationKey("accounts", row.accountId, "name"));
+        const codeLegacy = translations.get(translationKey("accounts", row.accountId, "code"));
+        accountName = nameEnterprise || nameLegacy || accountName;
+        accountCode = codeEnterprise || codeLegacy || accountCode;
+      }
+
+      const ledgerName = translations.get(translationKey("ledgers", row.ledgerId, "name")) || row.ledgerName;
+
+      return { ...row, countryName, countryBranchName, cityBranchName, companyName, stateName, cityName, accountName, accountCode, ledgerName };
+    });
+  }
+
+  private async listLedgersViaSupabase(input: ListLedgersInput): Promise<LedgerLookupRow[]> {
     const supabase = createSupabaseAdminClient() as any;
     const limit = Math.max(1, Math.min(input.limit ?? 250, 3000));
 

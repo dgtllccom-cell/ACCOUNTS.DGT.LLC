@@ -228,10 +228,9 @@ export async function handleApiError(error: unknown) {
   
   try {
     const fs = require("fs");
-    fs.appendFileSync(
-      "C:\\Users\\dgtll\\.gemini\\antigravity-ide\\scratch\\error_logs.txt", 
-      new Date().toISOString() + " - " + code + " - " + message + " - " + JSON.stringify(details || {}) + "\n"
-    );
+    const path = require("path");
+    const logPath = path.join(process.cwd(), "api-error-log.txt");
+    fs.appendFileSync(logPath, `${new Date().toISOString()} - ${code} - ${message} - ${JSON.stringify(details || {})}\n`);
   } catch (e) {}
 
   return apiError(code, message, status, details, isSuperAdmin);

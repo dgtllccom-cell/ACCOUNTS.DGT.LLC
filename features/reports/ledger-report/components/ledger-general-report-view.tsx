@@ -1322,11 +1322,27 @@ export function LedgerReportView({
                     <div className="flex-1 overflow-hidden">
                       <ProfessionalReportViewer
                         lang={effectiveLang}
-                        title="Country Ledger / Super Admin Ledger"
+                        title={t(effectiveLang, "ledger.hub_general_report_title", "Ledger General Report")}
+                        subtitle={
+                          reportScope === "super_admin"
+                            ? t(effectiveLang, "report.scope_global", "Global")
+                            : reportScope === "country"
+                              ? t(effectiveLang, "report.scope_country", "Country")
+                              : reportScope === "branch"
+                                ? t(effectiveLang, "report.scope_branch", "Branch")
+                                : reportScope
+                        }
                         data={tableRows}
                         columns={columns}
                         filters={{
-                          Scope: reportScope,
+                          Scope:
+                            reportScope === "super_admin"
+                              ? t(effectiveLang, "report.scope_global", "Global")
+                              : reportScope === "country"
+                                ? t(effectiveLang, "report.scope_country", "Country")
+                                : reportScope === "branch"
+                                  ? t(effectiveLang, "report.scope_branch", "Branch")
+                                  : reportScope,
                           "Date From": fromDate,
                           "Date To": toDate,
                         }}

@@ -429,6 +429,7 @@ export type UiKey =
   | "nav.country_ledger_report"
   | "nav.branch_ledger_report"
   | "nav.branch_general_report"
+  | "nav.branch_org_chart"
   | "nav.other_reports"
   | "nav.kyc_reports"
   | "nav.sales_report"
@@ -1005,6 +1006,55 @@ export type UiKey =
   | "report.col_user"
   | "report.col_amount"
   | "report.col_reference"
+  | "pv.landscape"
+  | "pv.portrait"
+  | "pv.page_of"
+  | "pv.date_label"
+  | "pv.footer_note"
+  | "pv.close_preview"
+  | "pv.download_csv"
+  | "pv.download_excel"
+  | "pv.print_download_pdf"
+  | "pv.zoom_in"
+  | "pv.zoom_out"
+  | "pv.whatsapp_tooltip"
+  | "pv.email_tooltip"
+  | "pv.print_preview"
+  | "lp.title"
+  | "lp.subtitle"
+  | "lp.branch_scope_label"
+  | "lp.all_branches"
+  | "lp.search_label"
+  | "lp.search_placeholder"
+  | "lp.workflow_label"
+  | "lp.all_purchases"
+  | "lp.ready_to_pay"
+  | "lp.posted_ledger"
+  | "lp.create_button"
+  | "lp.back_to_registry"
+  | "lp.branch_user_details"
+  | "lp.financial_summary"
+  | "lp.bill_entry_summary"
+  | "lp.all_countries_report"
+  | "lp.show_country_report"
+  | "lp.hide_country_report"
+  | "lp.no_country_records"
+  | "lp.countries_label"
+  | "lp.country"
+  | "lp.branch_name"
+  | "lp.user_name"
+  | "lp.date_time"
+  | "lp.total_local_purchase_bills"
+  | "lp.total_purchase_amount"
+  | "lp.total_tax_amount"
+  | "lp.total_final_amount"
+  | "lp.total_bills"
+  | "lp.posted_accepted"
+  | "lp.draft_bills"
+  | "lp.pending_bills"
+  | "lp.bills_label"
+  | "lp.local_purchase_bills_title"
+  | "lp.records_label"
   | "branch.wizard_step1_title"
   | "branch.wizard_step1_desc"
   | "branch.wizard_step2_title"
@@ -2132,7 +2182,24 @@ export type UiKey =
   | "hr.pp_search_placeholder"
   | "hr.pp_no_matches"
   | "hr.pp_add_new_person_master"
-  | "hr.pp_edit_person_registry";
+  | "hr.pp_edit_person_registry"
+  | "orgchart.title"
+  | "orgchart.subtitle"
+  | "orgchart.stat_countries"
+  | "orgchart.stat_branches"
+  | "orgchart.stat_city_branches"
+  | "orgchart.stat_employees"
+  | "orgchart.loading"
+  | "orgchart.error"
+  | "orgchart.no_countries"
+  | "orgchart.no_branches"
+  | "orgchart.no_employees"
+  | "orgchart.unassigned"
+  | "orgchart.unassigned_hint"
+  | "orgchart.main_branch"
+  | "orgchart.city_locations"
+  | "orgchart.branches"
+  | "orgchart.staff";
 
 type Dict = Record<UiKey, string>;
 
@@ -3588,6 +3655,7 @@ const en: Dict = {
   "nav.country_ledger_report": "Country Ledger Report",
   "nav.branch_ledger_report": "Branch Ledger Report",
   "nav.branch_general_report": "Branch General Report",
+  "nav.branch_org_chart": "Organization Chart",
   "nav.other_reports": "Other Reports",
   "nav.kyc_reports": "KYC Reports",
   "nav.sales_report": "Sales Report",
@@ -4113,6 +4181,55 @@ const en: Dict = {
   "report.col_user": "User",
   "report.col_amount": "Amount",
   "report.col_reference": "Reference",
+  "pv.landscape": "Landscape",
+  "pv.portrait": "Portrait",
+  "pv.page_of": "Page {page} of {total}",
+  "pv.date_label": "Date",
+  "pv.footer_note": "This is a computer-generated report. Please verify before official use.",
+  "pv.close_preview": "Close Print Preview",
+  "pv.download_csv": "Download CSV",
+  "pv.download_excel": "Download Excel",
+  "pv.print_download_pdf": "Print / Download PDF",
+  "pv.zoom_in": "Zoom In",
+  "pv.zoom_out": "Zoom Out",
+  "pv.whatsapp_tooltip": "Share on WhatsApp",
+  "pv.email_tooltip": "Email",
+  "pv.print_preview": "Print Preview",
+  "lp.title": "Local Purchase Registry",
+  "lp.subtitle": "Record market purchases with custom empty weights and automated ledger postings.",
+  "lp.branch_scope_label": "Country / Branch / City",
+  "lp.all_branches": "All Countries / Branches",
+  "lp.search_label": "Search",
+  "lp.search_placeholder": "Search item, vendor...",
+  "lp.workflow_label": "Report Type",
+  "lp.all_purchases": "All Purchases Registry",
+  "lp.ready_to_pay": "Ready to Pay (Accepted)",
+  "lp.posted_ledger": "Posted Ledger Entries",
+  "lp.create_button": "New Purchase",
+  "lp.back_to_registry": "Back to Registry",
+  "lp.branch_user_details": "Branch & User Details",
+  "lp.financial_summary": "Financial Summary",
+  "lp.bill_entry_summary": "Bill Entry Summary",
+  "lp.all_countries_report": "All Countries Report",
+  "lp.show_country_report": "Show Country Report",
+  "lp.hide_country_report": "Hide Country Report",
+  "lp.no_country_records": "No country purchase records found.",
+  "lp.countries_label": "Countries",
+  "lp.country": "Country",
+  "lp.branch_name": "Branch Name",
+  "lp.user_name": "User Name",
+  "lp.date_time": "Date & Time",
+  "lp.total_local_purchase_bills": "Total Local Purchase Bills",
+  "lp.total_purchase_amount": "Total Purchase Amount",
+  "lp.total_tax_amount": "Total Tax Amount",
+  "lp.total_final_amount": "Total Final Amount",
+  "lp.total_bills": "Total Bills",
+  "lp.posted_accepted": "Posted / Accepted",
+  "lp.draft_bills": "Draft Bills",
+  "lp.pending_bills": "Pending Bills",
+  "lp.bills_label": "bills",
+  "lp.local_purchase_bills_title": "Local Purchase Bills",
+  "lp.records_label": "Record(s)",
   // Tax System
   "nav.tax": "Tax Setup & Rates",
   "nav.tax_settings": "Country Tax Settings",
@@ -4240,6 +4357,23 @@ const en: Dict = {
   "nav.email_inbox_sent": "Email Inbox & Sent",
   "nav.branch_email_setup": "Official Branch Email Setup (Titan SMTP)",
   "nav.truck_recreation": "Truck Recreation",
+  "orgchart.title": "Branch Organization Chart",
+  "orgchart.subtitle": "Live structure generated automatically from Country, Branch, City Branch, and Employee records — click any node to expand.",
+  "orgchart.stat_countries": "Countries",
+  "orgchart.stat_branches": "Main Branches",
+  "orgchart.stat_city_branches": "City Branches",
+  "orgchart.stat_employees": "Employees",
+  "orgchart.loading": "Loading organization chart...",
+  "orgchart.error": "Could not load the organization chart.",
+  "orgchart.no_countries": "No countries have been created yet.",
+  "orgchart.no_branches": "No branches created yet for this country.",
+  "orgchart.no_employees": "No employees assigned yet.",
+  "orgchart.unassigned": "Unassigned Employees",
+  "orgchart.unassigned_hint": "Not yet linked to a country or branch",
+  "orgchart.main_branch": "Main Branch",
+  "orgchart.city_locations": "City / Location Branches",
+  "orgchart.branches": "branches",
+  "orgchart.staff": "staff",
 };
 
 const ur: Dict = {
@@ -5687,6 +5821,7 @@ const ur: Dict = {
   "nav.country_ledger_report": "کنٹری لیجر رپورٹ",
   "nav.branch_ledger_report": "برانچ لیجر رپورٹ",
   "nav.branch_general_report": "برانچ جنرل رپورٹ",
+  "nav.branch_org_chart": "آرگنائزیشن چارٹ",
   "nav.other_reports": "دیگر رپورٹس",
   "nav.sales_report": "سیلز رپورٹ",
   "nav.purchase_report": "پرچیز رپورٹ",
@@ -5985,6 +6120,55 @@ const ur: Dict = {
   "report.col_user": "یوزر",
   "report.col_amount": "رقم",
   "report.col_reference": "حوالہ",
+  "pv.landscape": "لینڈ اسکیپ",
+  "pv.portrait": "پورٹریٹ",
+  "pv.page_of": "صفحہ {page} از {total}",
+  "pv.date_label": "تاریخ",
+  "pv.footer_note": "یہ کمپیوٹر سے تیار کردہ رپورٹ ہے۔ سرکاری استعمال سے پہلے تصدیق کر لیں۔",
+  "pv.close_preview": "پرنٹ پیش منظر بند کریں",
+  "pv.download_csv": "CSV ڈاؤن لوڈ کریں",
+  "pv.download_excel": "ایکسل ڈاؤن لوڈ کریں",
+  "pv.print_download_pdf": "پرنٹ / پی ڈی ایف ڈاؤن لوڈ کریں",
+  "pv.zoom_in": "زوم ان",
+  "pv.zoom_out": "زوم آؤٹ",
+  "pv.whatsapp_tooltip": "واٹس ایپ پر شیئر کریں",
+  "pv.email_tooltip": "ای میل",
+  "pv.print_preview": "پرنٹ پیش منظر",
+  "lp.title": "لوکل پرچیز رجسٹری",
+  "lp.subtitle": "کسٹم خالی وزن اور خودکار لیجر پوسٹنگز کے ساتھ مارکیٹ خریداریاں ریکارڈ کریں۔",
+  "lp.branch_scope_label": "ملک / برانچ / شہر",
+  "lp.all_branches": "تمام ممالک / برانچز",
+  "lp.search_label": "تلاش کریں",
+  "lp.search_placeholder": "آئٹم، وینڈر تلاش کریں...",
+  "lp.workflow_label": "رپورٹ کی قسم",
+  "lp.all_purchases": "تمام خریداری رجسٹری",
+  "lp.ready_to_pay": "ادائیگی کے لیے تیار (منظور شدہ)",
+  "lp.posted_ledger": "پوسٹ شدہ لیجر اندراجات",
+  "lp.create_button": "نئی خریداری",
+  "lp.back_to_registry": "رجسٹری پر واپس جائیں",
+  "lp.branch_user_details": "برانچ اور صارف کی تفصیلات",
+  "lp.financial_summary": "مالی خلاصہ",
+  "lp.bill_entry_summary": "بل اندراج کا خلاصہ",
+  "lp.all_countries_report": "تمام ممالک کی رپورٹ",
+  "lp.show_country_report": "ملکی رپورٹ دکھائیں",
+  "lp.hide_country_report": "ملکی رپورٹ چھپائیں",
+  "lp.no_country_records": "کوئی ملکی خریداری ریکارڈ نہیں ملا۔",
+  "lp.countries_label": "ممالک",
+  "lp.country": "ملک",
+  "lp.branch_name": "برانچ کا نام",
+  "lp.user_name": "صارف کا نام",
+  "lp.date_time": "تاریخ اور وقت",
+  "lp.total_local_purchase_bills": "کل لوکل خریداری بل",
+  "lp.total_purchase_amount": "کل خریداری رقم",
+  "lp.total_tax_amount": "کل ٹیکس رقم",
+  "lp.total_final_amount": "کل حتمی رقم",
+  "lp.total_bills": "کل بل",
+  "lp.posted_accepted": "پوسٹ شدہ / منظور شدہ",
+  "lp.draft_bills": "ڈرافٹ بل",
+  "lp.pending_bills": "زیر التوا بل",
+  "lp.bills_label": "بل",
+  "lp.local_purchase_bills_title": "لوکل خریداری بل",
+  "lp.records_label": "ریکارڈ",
   // Tax System Urdu
   "nav.tax": "ٹیکس سیٹ اپ اور شرحیں",
   "nav.tax_settings": "ملکی ٹیکس سیٹنگز",
@@ -6337,6 +6521,23 @@ const ur: Dict = {
   "nav.email_inbox_sent": "ای میل ان باکس اور بھیجے گئے",
   "nav.branch_email_setup": "آفیشل برانچ ای میل سیٹ اپ (Titan SMTP)",
   "nav.truck_recreation": "ٹرک ری کریئیشن",
+  "orgchart.title": "برانچ آرگنائزیشن چارٹ",
+  "orgchart.subtitle": "ملک، برانچ، سٹی برانچ اور ملازمین کے ریکارڈز سے خودکار طور پر تیار کردہ لائیو ڈھانچہ — کسی بھی نوڈ پر کلک کر کے وسعت دیں۔",
+  "orgchart.stat_countries": "ممالک",
+  "orgchart.stat_branches": "مین برانچز",
+  "orgchart.stat_city_branches": "سٹی برانچز",
+  "orgchart.stat_employees": "ملازمین",
+  "orgchart.loading": "آرگنائزیشن چارٹ لوڈ ہو رہا ہے...",
+  "orgchart.error": "آرگنائزیشن چارٹ لوڈ نہیں ہو سکا۔",
+  "orgchart.no_countries": "ابھی تک کوئی ملک نہیں بنایا گیا۔",
+  "orgchart.no_branches": "اس ملک کے لیے ابھی تک کوئی برانچ نہیں بنائی گئی۔",
+  "orgchart.no_employees": "ابھی تک کوئی ملازم تفویض نہیں کیا گیا۔",
+  "orgchart.unassigned": "غیر تفویض شدہ ملازمین",
+  "orgchart.unassigned_hint": "ابھی تک کسی ملک یا برانچ سے منسلک نہیں",
+  "orgchart.main_branch": "مین برانچ",
+  "orgchart.city_locations": "سٹی / مقام برانچز",
+  "orgchart.branches": "برانچز",
+  "orgchart.staff": "عملہ",
 };
 
 const ar: Dict = {
@@ -7760,6 +7961,7 @@ const ar: Dict = {
   "nav.country_ledger_report": "تقرير الدفتر (دولة)",
   "nav.branch_ledger_report": "تقرير الدفتر (فرع)",
   "nav.branch_general_report": "تقرير الفروع العام",
+  "nav.branch_org_chart": "الهيكل التنظيمي",
   "nav.other_reports": "تقارير أخرى",
   "nav.sales_report": "تقرير المبيعات",
   "nav.purchase_report": "تقرير المشتريات",
@@ -8053,6 +8255,55 @@ const ar: Dict = {
   "report.col_user": "المستخدم",
   "report.col_amount": "المبلغ",
   "report.col_reference": "المرجع",
+  "pv.landscape": "أفقي",
+  "pv.portrait": "عمودي",
+  "pv.page_of": "صفحة {page} من {total}",
+  "pv.date_label": "التاريخ",
+  "pv.footer_note": "هذا تقرير تم إنشاؤه بواسطة الكمبيوتر. يرجى التحقق قبل الاستخدام الرسمي.",
+  "pv.close_preview": "إغلاق معاينة الطباعة",
+  "pv.download_csv": "تنزيل CSV",
+  "pv.download_excel": "تنزيل Excel",
+  "pv.print_download_pdf": "طباعة / تنزيل PDF",
+  "pv.zoom_in": "تكبير",
+  "pv.zoom_out": "تصغير",
+  "pv.whatsapp_tooltip": "مشاركة عبر واتساب",
+  "pv.email_tooltip": "بريد إلكتروني",
+  "pv.print_preview": "معاينة الطباعة",
+  "lp.title": "سجل المشتريات المحلية",
+  "lp.subtitle": "سجّل مشتريات السوق مع أوزان فارغة مخصصة وترحيل تلقائي إلى دفتر الأستاذ.",
+  "lp.branch_scope_label": "الدولة / الفرع / المدينة",
+  "lp.all_branches": "جميع الدول / الفروع",
+  "lp.search_label": "بحث",
+  "lp.search_placeholder": "البحث عن صنف أو مورد...",
+  "lp.workflow_label": "نوع التقرير",
+  "lp.all_purchases": "سجل جميع المشتريات",
+  "lp.ready_to_pay": "جاهز للدفع (مقبول)",
+  "lp.posted_ledger": "قيود دفتر الأستاذ المُرحّلة",
+  "lp.create_button": "شراء جديد",
+  "lp.back_to_registry": "العودة إلى السجل",
+  "lp.branch_user_details": "تفاصيل الفرع والمستخدم",
+  "lp.financial_summary": "الملخص المالي",
+  "lp.bill_entry_summary": "ملخص إدخال الفواتير",
+  "lp.all_countries_report": "تقرير جميع الدول",
+  "lp.show_country_report": "إظهار تقرير الدولة",
+  "lp.hide_country_report": "إخفاء تقرير الدولة",
+  "lp.no_country_records": "لم يتم العثور على سجلات شراء لأي دولة.",
+  "lp.countries_label": "الدول",
+  "lp.country": "الدولة",
+  "lp.branch_name": "اسم الفرع",
+  "lp.user_name": "اسم المستخدم",
+  "lp.date_time": "التاريخ والوقت",
+  "lp.total_local_purchase_bills": "إجمالي فواتير الشراء المحلي",
+  "lp.total_purchase_amount": "إجمالي مبلغ الشراء",
+  "lp.total_tax_amount": "إجمالي مبلغ الضريبة",
+  "lp.total_final_amount": "إجمالي المبلغ النهائي",
+  "lp.total_bills": "إجمالي الفواتير",
+  "lp.posted_accepted": "مُرحّل / مقبول",
+  "lp.draft_bills": "فواتير مسودة",
+  "lp.pending_bills": "فواتير معلقة",
+  "lp.bills_label": "فواتير",
+  "lp.local_purchase_bills_title": "فواتير الشراء المحلي",
+  "lp.records_label": "سجل",
   // Tax System Arabic
   "nav.tax": "إعدادات الضرائب والنسب",
   "nav.tax_settings": "إعدادات ضرائب الدولة",
@@ -8433,6 +8684,23 @@ const ar: Dict = {
   "nav.email_inbox_sent": "بريد وارد وصادر",
   "nav.branch_email_setup": "إعداد البريد الرسمي للفرع (Titan SMTP)",
   "nav.truck_recreation": "إعادة إنشاء الشاحنة",
+  "orgchart.title": "الهيكل التنظيمي للفروع",
+  "orgchart.subtitle": "هيكل حي يتم إنشاؤه تلقائيًا من سجلات الدولة والفرع وفرع المدينة والموظفين — انقر على أي عقدة للتوسيع.",
+  "orgchart.stat_countries": "الدول",
+  "orgchart.stat_branches": "الفروع الرئيسية",
+  "orgchart.stat_city_branches": "فروع المدن",
+  "orgchart.stat_employees": "الموظفون",
+  "orgchart.loading": "جارٍ تحميل الهيكل التنظيمي...",
+  "orgchart.error": "تعذر تحميل الهيكل التنظيمي.",
+  "orgchart.no_countries": "لم يتم إنشاء أي دولة بعد.",
+  "orgchart.no_branches": "لم يتم إنشاء أي فرع لهذه الدولة بعد.",
+  "orgchart.no_employees": "لم يتم تعيين أي موظف بعد.",
+  "orgchart.unassigned": "موظفون غير معينين",
+  "orgchart.unassigned_hint": "غير مرتبط بعد بدولة أو فرع",
+  "orgchart.main_branch": "الفرع الرئيسي",
+  "orgchart.city_locations": "فروع المدن / المواقع",
+  "orgchart.branches": "فروع",
+  "orgchart.staff": "الموظفون",
 };
 
 const fa: Dict = {
@@ -9617,6 +9885,7 @@ const fa: Dict = {
   "nav.branch_entry": "شعبه",
   "nav.branch_menu": "شعبه",
   "nav.branch_general_report": "گزارش عمومی شعبه",
+  "nav.branch_org_chart": "نمودار سازمانی",
   "nav.super_admin_branch": "شعبه سوپر ادمین",
   "nav.country_branch": "شعبه کشور",
   "nav.city_branch": "شعبه شهر",
@@ -10097,6 +10366,55 @@ const fa: Dict = {
   "report.col_user": "کاربر",
   "report.col_amount": "مبلغ",
   "report.col_reference": "مرجع",
+  "pv.landscape": "افقی",
+  "pv.portrait": "عمودی",
+  "pv.page_of": "صفحه {page} از {total}",
+  "pv.date_label": "تاریخ",
+  "pv.footer_note": "این گزارش به‌صورت خودکار توسط کامپیوتر تولید شده است. لطفاً قبل از استفاده رسمی تأیید کنید.",
+  "pv.close_preview": "بستن پیش‌نمایش چاپ",
+  "pv.download_csv": "دانلود CSV",
+  "pv.download_excel": "دانلود اکسل",
+  "pv.print_download_pdf": "چاپ / دانلود PDF",
+  "pv.zoom_in": "بزرگ‌نمایی",
+  "pv.zoom_out": "کوچک‌نمایی",
+  "pv.whatsapp_tooltip": "اشتراک‌گذاری در واتساپ",
+  "pv.email_tooltip": "ایمیل",
+  "pv.print_preview": "پیش‌نمایش چاپ",
+  "lp.title": "ثبت خرید محلی",
+  "lp.subtitle": "ثبت خریدهای بازار با وزن خالی سفارشی و ثبت خودکار در دفتر کل.",
+  "lp.branch_scope_label": "کشور / شعبه / شهر",
+  "lp.all_branches": "همه کشورها / شعبه‌ها",
+  "lp.search_label": "جستجو",
+  "lp.search_placeholder": "جستجوی کالا، فروشنده...",
+  "lp.workflow_label": "نوع گزارش",
+  "lp.all_purchases": "ثبت همه خریدها",
+  "lp.ready_to_pay": "آماده پرداخت (تأییدشده)",
+  "lp.posted_ledger": "ثبت‌های دفتر کل",
+  "lp.create_button": "خرید جدید",
+  "lp.back_to_registry": "بازگشت به ثبت",
+  "lp.branch_user_details": "جزئیات شعبه و کاربر",
+  "lp.financial_summary": "خلاصه مالی",
+  "lp.bill_entry_summary": "خلاصه ورود صورتحساب",
+  "lp.all_countries_report": "گزارش همه کشورها",
+  "lp.show_country_report": "نمایش گزارش کشور",
+  "lp.hide_country_report": "پنهان کردن گزارش کشور",
+  "lp.no_country_records": "هیچ رکورد خرید کشوری یافت نشد.",
+  "lp.countries_label": "کشورها",
+  "lp.country": "کشور",
+  "lp.branch_name": "نام شعبه",
+  "lp.user_name": "نام کاربر",
+  "lp.date_time": "تاریخ و زمان",
+  "lp.total_local_purchase_bills": "مجموع صورتحساب‌های خرید محلی",
+  "lp.total_purchase_amount": "مجموع مبلغ خرید",
+  "lp.total_tax_amount": "مجموع مبلغ مالیات",
+  "lp.total_final_amount": "مجموع مبلغ نهایی",
+  "lp.total_bills": "مجموع صورتحساب‌ها",
+  "lp.posted_accepted": "ثبت‌شده / تأییدشده",
+  "lp.draft_bills": "صورتحساب‌های پیش‌نویس",
+  "lp.pending_bills": "صورتحساب‌های در انتظار",
+  "lp.bills_label": "صورتحساب",
+  "lp.local_purchase_bills_title": "صورتحساب‌های خرید محلی",
+  "lp.records_label": "رکورد",
   "nav.account_setup_report": "گزارش تنظیم حساب",
   "nav.account_type": "نوع حساب",
   "nav.afghanistan": "افغانستان",
@@ -10528,6 +10846,23 @@ const fa: Dict = {
   "nav.email_inbox_sent": "صندوق ورودی و ارسالی ایمیل",
   "nav.branch_email_setup": "تنظیم ایمیل رسمی شعبه (Titan SMTP)",
   "nav.truck_recreation": "بازسازی کامیون",
+  "orgchart.title": "نمودار سازمانی شعبه",
+  "orgchart.subtitle": "ساختار زنده‌ای که به‌طور خودکار از رکوردهای کشور، شعبه، شعبه شهری و کارمندان تولید می‌شود — برای بازکردن روی هر گره کلیک کنید.",
+  "orgchart.stat_countries": "کشورها",
+  "orgchart.stat_branches": "شعبه‌های اصلی",
+  "orgchart.stat_city_branches": "شعبه‌های شهری",
+  "orgchart.stat_employees": "کارمندان",
+  "orgchart.loading": "در حال بارگذاری نمودار سازمانی...",
+  "orgchart.error": "نمودار سازمانی بارگذاری نشد.",
+  "orgchart.no_countries": "هنوز هیچ کشوری ایجاد نشده است.",
+  "orgchart.no_branches": "هنوز هیچ شعبه‌ای برای این کشور ایجاد نشده است.",
+  "orgchart.no_employees": "هنوز هیچ کارمندی تخصیص نیافته است.",
+  "orgchart.unassigned": "کارمندان تخصیص‌نیافته",
+  "orgchart.unassigned_hint": "هنوز به کشور یا شعبه‌ای متصل نشده است",
+  "orgchart.main_branch": "شعبه اصلی",
+  "orgchart.city_locations": "شعبه‌های شهری / مکانی",
+  "orgchart.branches": "شعبه‌ها",
+  "orgchart.staff": "کارکنان",
 };
 
 const ps: Dict = {
@@ -11712,6 +12047,7 @@ const ps: Dict = {
   "nav.branch_entry": "برانچ",
   "nav.branch_menu": "برانچ",
   "nav.branch_general_report": "د څانګو عمومي راپور",
+  "nav.branch_org_chart": "تنظیمي چارټ",
   "nav.super_admin_branch": "د سوپر اډمین برانچ",
   "nav.country_branch": "د هېواد برانچ",
   "nav.city_branch": "د ښار برانچ",
@@ -12184,6 +12520,55 @@ const ps: Dict = {
   "report.col_user": "کارونکی",
   "report.col_amount": "مقدار",
   "report.col_reference": "حواله",
+  "pv.landscape": "افقي",
+  "pv.portrait": "عمودي",
+  "pv.page_of": "پاڼه {page} د {total}",
+  "pv.date_label": "نېټه",
+  "pv.footer_note": "دا د کمپیوټر لخوا جوړ شوی راپور دی. مهرباني وکړئ د رسمي کارونې دمخه تایید کړئ۔",
+  "pv.close_preview": "د چاپ مخکتنه بندول",
+  "pv.download_csv": "CSV ډاونلوډ کړئ",
+  "pv.download_excel": "ایکسل ډاونلوډ کړئ",
+  "pv.print_download_pdf": "چاپ / PDF ډاونلوډ کړئ",
+  "pv.zoom_in": "زوم ان",
+  "pv.zoom_out": "زوم آوټ",
+  "pv.whatsapp_tooltip": "په واټس اپ کې شریکول",
+  "pv.email_tooltip": "بریښنالیک",
+  "pv.print_preview": "د چاپ مخکتنه",
+  "lp.title": "د سيمه‌ييزو پيرودونو راجستري",
+  "lp.subtitle": "د بازار پيرودونه د دودیزو خالي وزنونو او اوتومات لېجر ثبتونو سره ثبت کړئ۔",
+  "lp.branch_scope_label": "هېواد / څانګه / ښار",
+  "lp.all_branches": "ټول هېوادونه / څانګې",
+  "lp.search_label": "لټون",
+  "lp.search_placeholder": "توکی، پلورونکی ولټوئ...",
+  "lp.workflow_label": "د راپور ډول",
+  "lp.all_purchases": "د ټولو پيرودونو راجستري",
+  "lp.ready_to_pay": "د تادیې لپاره چمتو (منظور شوی)",
+  "lp.posted_ledger": "ثبت شوي لېجر ننوتنې",
+  "lp.create_button": "نوی پيرود",
+  "lp.back_to_registry": "راجستري ته بېرته",
+  "lp.branch_user_details": "د څانګې او کارن جزئیات",
+  "lp.financial_summary": "مالي لنډیز",
+  "lp.bill_entry_summary": "د بېل ننوتنې لنډیز",
+  "lp.all_countries_report": "د ټولو هېوادونو راپور",
+  "lp.show_country_report": "د هېواد راپور ښودل",
+  "lp.hide_country_report": "د هېواد راپور پټول",
+  "lp.no_country_records": "د هېڅ هېواد د پیرود ریکارډ ونه موندل شو۔",
+  "lp.countries_label": "هېوادونه",
+  "lp.country": "هېواد",
+  "lp.branch_name": "د څانګې نوم",
+  "lp.user_name": "د کارن نوم",
+  "lp.date_time": "نېټه او وخت",
+  "lp.total_local_purchase_bills": "د سيمه‌ييزو پيرودونو ټول بېلونه",
+  "lp.total_purchase_amount": "د پیرود ټوله اندازه",
+  "lp.total_tax_amount": "د مالیې ټوله اندازه",
+  "lp.total_final_amount": "وروستۍ ټوله اندازه",
+  "lp.total_bills": "ټول بېلونه",
+  "lp.posted_accepted": "ثبت شوی / منظور شوی",
+  "lp.draft_bills": "مسوده بېلونه",
+  "lp.pending_bills": "په تمه بېلونه",
+  "lp.bills_label": "بېلونه",
+  "lp.local_purchase_bills_title": "د سيمه‌ييزو پيرودونو بېلونه",
+  "lp.records_label": "ریکارډ",
   "nav.account_setup_report": "د حساب تنظیم راپور",
   "nav.account_type": "د حساب ډول",
   "nav.afghanistan": "افغانستان",
@@ -12630,6 +13015,23 @@ const ps: Dict = {
   "nav.email_inbox_sent": "د بریښنالیک راغلي او لیږل شوي",
   "nav.branch_email_setup": "د څانګې رسمي بریښنالیک تنظیم (Titan SMTP)",
   "nav.truck_recreation": "د لارۍ بیا جوړول",
+  "orgchart.title": "د څانګې تنظیمي چارټ",
+  "orgchart.subtitle": "د هېواد، څانګې، ښاري څانګې او کارمندانو ریکارډونو څخه په اوتومات ډول جوړ شوی ژوندی جوړښت — د پراخولو لپاره په هر نوډ کلیک وکړئ۔",
+  "orgchart.stat_countries": "هېوادونه",
+  "orgchart.stat_branches": "اصلي څانګې",
+  "orgchart.stat_city_branches": "ښاري څانګې",
+  "orgchart.stat_employees": "کارمندان",
+  "orgchart.loading": "تنظیمي چارټ بارېږي...",
+  "orgchart.error": "تنظیمي چارټ نه شو بار کېدی۔",
+  "orgchart.no_countries": "تر اوسه هېڅ هېواد نه دی جوړ شوی۔",
+  "orgchart.no_branches": "تر اوسه د دې هېواد لپاره هېڅ څانګه نه ده جوړه شوې۔",
+  "orgchart.no_employees": "تر اوسه هېڅ کارمند نه دی ټاکل شوی۔",
+  "orgchart.unassigned": "ناټاکل شوي کارمندان",
+  "orgchart.unassigned_hint": "تر اوسه له هېواد یا څانګې سره نه دی نښلول شوی",
+  "orgchart.main_branch": "اصلي څانګه",
+  "orgchart.city_locations": "ښاري / ځايي څانګې",
+  "orgchart.branches": "څانګې",
+  "orgchart.staff": "کارکوونکي",
 };
 
 const dictionaries: Record<SupportedLanguage, Dict> = {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, Suspense } from "react";
+import { createPortal } from "react-dom";
 import { useSearchParams } from "next/navigation";
 import {
   BarChart3,
@@ -38,6 +39,7 @@ import { Th } from "@/components/ui/translated-th";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { useDraggableColumns } from "@/features/reports/hooks/use-draggable-columns";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ProfessionalReportViewer, type ReportColumn } from "@/components/reports/professional-report-viewer";
 
 type ReportType =
   | "cash-entry"
@@ -114,6 +116,7 @@ function ReportsHubContent() {
   const [generatedAt, setGeneratedAt] = useState<string>("");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [actionsOpen, setActionsOpen] = useState(false);
+  const [printMode, setPrintMode] = useState(false);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -247,9 +250,49 @@ function ReportsHubContent() {
   };
 
   const handlePrint = () => {
-    window.print();
+    setPrintMode(true);
     setActionsOpen(false);
   };
+
+  // Print/PDF view reuses the same visibleColumns + filteredRows the on-screen
+  // table renders from, so the printed report can never drift from what's shown.
+  const printColumns: ReportColumn<any>[] = useMemo(() => {
+    return visibleColumns.map((k) => ({
+      key: k,
+      header: tr(k.replace(/([A-Z])/g, " $1").toUpperCase()),
+      align: (typeof paginatedRows[0]?.[k] === "number" ? "right" : "left") as "left" | "right",
+      render: (row: any) => {
+        const val = row[k];
+        if (typeof val === "number") return val.toLocaleString();
+        if (k === "status") return tr(String(val ?? "-"));
+        return String(val ?? "-");
+      }
+    }));
+  }, [visibleColumns, paginatedRows, lang]);
+
+  const printFilters = useMemo(() => {
+    const countryName = filters.countryId !== "all" ? masterCountries.find((c) => c.id === filters.countryId)?.name : undefined;
+    const branchName = filters.branchId !== "all"
+      ? masterCityBranches.find((b) => b.id === filters.branchId)?.name
+      : filters.mainBranchId !== "all" ? masterMainBranches.find((b) => b.id === filters.mainBranchId)?.name : undefined;
+    return {
+      [t(lang, "report.filter_country", "Country")]: countryName || t(lang, "report.filter_all_countries", "All Countries"),
+      [t(lang, "report.filter_branch", "Branch")]: branchName || t(lang, "report.filter_all_branches", "All Branches"),
+      [t(lang, "report.filter_date_from", "From")]: filters.fromDate || "-",
+      [t(lang, "report.filter_date_to", "To")]: filters.toDate || "-",
+      [t(lang, "report.filter_currency", "Currency")]: filters.currency || "-"
+    };
+  }, [filters, masterCountries, masterMainBranches, masterCityBranches, lang]);
+
+  const printSummary = useMemo(() => {
+    if (!summary || typeof summary !== "object") return { [t(lang, "report.kpi_total_records", "Total Records")]: filteredRows.length };
+    const out: Record<string, string | number> = {};
+    for (const [k, v] of Object.entries(summary)) {
+      if (typeof v === "number" || typeof v === "string") out[k] = v;
+    }
+    if (Object.keys(out).length === 0) out[t(lang, "report.kpi_total_records", "Total Records")] = filteredRows.length;
+    return out;
+  }, [summary, filteredRows, lang]);
 
   const handleShareWhatsApp = () => {
     const text = encodeURIComponent(`Damaan ERP Report: ${activeMeta.title} generated on ${new Date().toLocaleDateString()}`);
@@ -325,8 +368,12 @@ function ReportsHubContent() {
             </button>
             {actionsOpen && (
               <div className="absolute right-0 top-full z-30 mt-2 w-48 overflow-hidden rounded-xl border border-slate-200 bg-white p-1 text-xs font-bold shadow-xl dark:border-slate-800 dark:bg-slate-900">
-                <button onClick={handlePrint} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
-                  <Printer className="h-4 w-4 text-blue-500" /> {t(lang, "report.print", "Print")} / PDF
+                <button
+                  onClick={handlePrint}
+                  disabled={selectedReport === "daily-comprehensive" || paginatedRows.length === 0}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-slate-700 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  <Printer className="h-4 w-4 text-blue-500" /> {t(lang, "pv.print_preview", "Print Preview")} / PDF
                 </button>
                 <button onClick={handleExportCSV} className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800">
                   <Download className="h-4 w-4 text-emerald-500" /> {t(lang, "report.export_csv", "Export CSV")}
@@ -635,6 +682,28 @@ function ReportsHubContent() {
           tr("Filter parameters can be adjusted via the top Filter Parameters curtain popover.")
         ]}
       />
+
+      {/* Print / A4 PDF Report View — reuses the exact same filtered data, columns
+          and filters the on-screen General Report is showing, so there is never a
+          mismatch between what the user reviewed and what gets printed. */}
+      {printMode && typeof document !== "undefined" && createPortal(
+        <div className="fixed inset-0 z-[100] bg-black/80 flex flex-col">
+          <div className="flex-1 overflow-hidden">
+            <ProfessionalReportViewer
+              lang={lang}
+              title={t(lang, activeMeta.titleKey, activeMeta.title)}
+              subtitle={t(lang, activeMeta.descriptionKey, activeMeta.description)}
+              data={Array.isArray(filteredRows) ? filteredRows : []}
+              columns={printColumns}
+              filters={printFilters}
+              summary={printSummary}
+              rowsPerPage={pageSize}
+              onClose={() => setPrintMode(false)}
+            />
+          </div>
+        </div>,
+        document.body
+      )}
     </div>
   );
 }

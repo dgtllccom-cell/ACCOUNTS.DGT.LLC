@@ -17,6 +17,8 @@ import { Button } from "@/components/ui/button";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
+import { t } from "@/lib/i18n/ui";
+import { BranchScopeDropdown } from "@/features/purchases/components/branch-scope-dropdown";
 
 const CURRENCIES = ["USD", "AED", "PKR", "AFN", "INR", "IRR"];
 const QUANTITY_NAMES = ["Bags", "Cartons", "Boxes", "Crates", "Bales", "Drums", "Pieces", "Custom"];
@@ -231,6 +233,7 @@ export function LocalPurchaseView({
   companies,
   countries = []
 }: LocalPurchaseViewProps) {
+  const lang = useActiveLanguage();
   const [goodsList, setGoodsList] = useState<any[]>(initialGoodsList);
   const [purchases, setPurchases] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
@@ -1148,6 +1151,10 @@ export function LocalPurchaseView({
              p.payment_mode?.toLowerCase().includes(q);
     });
   }, [purchases, searchQuery, activeTab]);
+  const acceptedCount = useMemo(
+    () => purchases.filter(p => (p.status || p.bill_status || p.billStatus) === "accepted").length,
+    [purchases]
+  );
   const localPurchaseDashboard = useMemo(() => {
     const countryLookup = new Map<string, string>();
     countryOptions.forEach((c: any) => countryLookup.set(String(c.id), c.name || "Unknown Country"));
@@ -1242,68 +1249,67 @@ export function LocalPurchaseView({
             <ShoppingCart className="h-6 w-6" />
           </div>
           <div>
-            <h1 className="text-xl font-black text-slate-800 tracking-tight">Local Purchase Registry</h1>
-            <p className="text-xs text-slate-500 font-medium">Record market purchases with custom empty weights and automated ledger postings.</p>
+            <h1 className="text-xl font-black text-slate-800 tracking-tight">{t(lang, "lp.title", "Local Purchase Registry")}</h1>
+            <p className="text-xs text-slate-500 font-medium">{t(lang, "lp.subtitle", "Record market purchases with custom empty weights and automated ledger postings.")}</p>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          {countryOptions.length > 0 && (
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                <Globe className="h-3 w-3 text-blue-500" /> Country
-              </span>
-              <select
-                value={selectedCountryId}
-                onChange={e => setSelectedCountryId(e.target.value)}
-                className="h-9 w-40 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-bold outline-none focus:border-blue-500"
-              >
-                <option value="">All Countries</option>
-                {countryOptions.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
-          )}
-
-          <div className="flex flex-col gap-1">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Country Branch</span>
-            <select
-              value={selectedBranchId}
-              onChange={e => setSelectedBranchId(e.target.value)}
-              className="h-9 w-48 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-bold outline-none focus:border-blue-500"
-            >
-              {filteredCountryBranches.map(b => (
-                <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
-              ))}
-            </select>
-          </div>
-
-          {activeCityBranches.length > 0 && (
-            <div className="flex flex-col gap-1">
-              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">City Branch</span>
-              <select
-                value={selectedCityBranchId}
-                onChange={e => setSelectedCityBranchId(e.target.value)}
-                className="h-9 w-44 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-bold outline-none focus:border-blue-500"
-              >
-                {activeCityBranches.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-              </select>
-            </div>
-          )}
+        {/* Consolidated control bar: one branch-scope dropdown + search + one report/workflow
+            dropdown + create button — replaces the previous 3 separate scope dropdowns and the
+            separate tab bar lower on the page. */}
+        <div className="flex flex-wrap items-end gap-3">
+          <BranchScopeDropdown
+            lang={lang}
+            countries={countryOptions}
+            countryBranches={countryBranches.map((b: any) => ({ id: b.id, name: b.name, code: b.code, countryId: b.countryId || b.country_id }))}
+            cityBranches={cityBranches.map((c: any) => ({ id: c.id, name: c.name, code: c.code, countryBranchId: c.countryBranchId || c.country_branch_id }))}
+            value={{ countryId: selectedCountryId, countryBranchId: selectedBranchId, cityBranchId: selectedCityBranchId }}
+            onChange={(next) => {
+              setSelectedCountryId(next.countryId);
+              setSelectedBranchId(next.countryBranchId);
+              setSelectedCityBranchId(next.cityBranchId);
+            }}
+          />
 
           {/* Global Search Bar */}
           <div className="flex flex-col gap-1 w-48 sm:w-60">
-            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Search Registry</span>
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t(lang, "lp.search_label", "Search")}</span>
             <div className="relative">
-              <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+              <Search className="absolute start-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
-                placeholder="Search item, vendor..."
+                placeholder={t(lang, "lp.search_placeholder", "Search item, vendor...")}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="h-9 w-full rounded-lg border border-slate-200 pl-8 pr-3 text-xs outline-none bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-semibold text-slate-800"
+                className="h-9 w-full rounded-lg border border-slate-200 ps-8 pe-3 text-xs outline-none bg-slate-50 focus:bg-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all font-semibold text-slate-800"
               />
             </div>
           </div>
+
+          {!isFormOpen && (
+            <div className="flex flex-col gap-1">
+              <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">{t(lang, "lp.workflow_label", "Report Type")}</span>
+              <div className="relative">
+                <select
+                  value={activeTab}
+                  onChange={e => setActiveTab(e.target.value as "all" | "accepted" | "posted")}
+                  className="h-9 w-52 rounded-lg border border-slate-200 bg-slate-50 px-2 text-xs font-bold outline-none focus:border-blue-500"
+                >
+                  <option value="all">{t(lang, "lp.all_purchases", "All Purchases Registry")}</option>
+                  <option value="accepted">
+                    {t(lang, "lp.ready_to_pay", "Ready to Pay (Accepted)")}
+                    {acceptedCount > 0 ? ` (${acceptedCount})` : ""}
+                  </option>
+                  <option value="posted">{t(lang, "lp.posted_ledger", "Posted Ledger Entries")}</option>
+                </select>
+                {activeTab !== "accepted" && acceptedCount > 0 && (
+                  <span className="pointer-events-none absolute -end-1.5 -top-1.5 rounded-full bg-red-500 px-1.5 py-0.5 text-[9px] font-black text-white shadow-sm">
+                    {acceptedCount}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
 
           {!isFormOpen ? (
             <Button
@@ -1313,17 +1319,17 @@ export function LocalPurchaseView({
                 setScopeCityBranchId(selectedCityBranchId || activeCityBranches[0]?.id || "");
                 setIsScopeModalOpen(true);
               }}
-              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 h-9 rounded-xl shadow-md shadow-blue-100 flex items-center gap-1.5 self-end"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 h-9 rounded-xl shadow-md shadow-blue-100 flex items-center gap-1.5"
             >
-              + Create Local Purchase
+              <Plus className="h-3.5 w-3.5" /> {t(lang, "lp.create_button", "New Purchase")}
             </Button>
           ) : (
             <Button
               onClick={() => setIsFormOpen(false)}
               variant="outline"
-              className="border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs px-4 h-9 rounded-xl shadow-xs self-end"
+              className="border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-bold text-xs px-4 h-9 rounded-xl shadow-xs"
             >
-              Back to Registry
+              {t(lang, "lp.back_to_registry", "Back to Registry")}
             </Button>
           )}
         </div>
@@ -1409,69 +1415,66 @@ export function LocalPurchaseView({
       )}
 
       {!isFormOpen && (
-        <div className="space-y-4">
-          <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-blue-700">
-                  <ShoppingCart className="h-4 w-4" /> Local Purchase Registry Dashboard
-                </div>
-                <p className="mt-1 text-xs font-semibold text-slate-500">Country-wise local purchase summary with branch breakdown and live registry below.</p>
+        <div className="space-y-3">
+          <div className="rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm">
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.18em] text-blue-700">
+                <ShoppingCart className="h-4 w-4" /> {t(lang, "lp.title", "Local Purchase Registry")}
               </div>
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setShowCountryReport(prev => !prev)}
-                className="h-9 rounded-xl border-blue-200 bg-blue-50 px-3 text-xs font-black text-blue-700 hover:bg-blue-100"
+                className="h-8 rounded-xl border-blue-200 bg-blue-50 px-3 text-[11px] font-black text-blue-700 hover:bg-blue-100"
               >
-                {showCountryReport ? "Hide Country Report" : "Show Country Report +"}
+                {showCountryReport ? t(lang, "lp.hide_country_report", "Hide Country Report") : `${t(lang, "lp.show_country_report", "Show Country Report")} +`}
               </Button>
             </div>
 
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
               <div className="rounded-xl border border-blue-100 bg-blue-50/60 p-3">
-                <p className="text-[10px] font-black uppercase tracking-wider text-blue-600">1. Branch & User Details</p>
-                <div className="mt-3 space-y-2 text-[11px] font-semibold text-slate-600">
-                  <div className="flex justify-between gap-3"><span>Country</span><b className="text-right text-slate-900">{activeBranch?.countryName || activeBranch?.country_name || "All"}</b></div>
-                  <div className="flex justify-between gap-3"><span>Branch Name</span><b className="text-right text-slate-900">{activeBranch?.name || "All Branches"}</b></div>
-                  <div className="flex justify-between gap-3"><span>User Name</span><b className="text-right text-slate-900">{session.fullName || session.email || "Super Admin"}</b></div>
-                  <div className="flex justify-between gap-3"><span>Date & Time</span><b suppressHydrationWarning className="text-right text-slate-900">{new Date().toLocaleString()}</b></div>
+                <p className="text-[10px] font-black uppercase tracking-wider text-blue-600">1. {t(lang, "lp.branch_user_details", "Branch & User Details")}</p>
+                <div className="mt-2.5 space-y-2 text-[11px] font-semibold text-slate-600">
+                  <div className="flex justify-between gap-3"><span>{t(lang, "lp.country", "Country")}</span><b className="text-right text-slate-900">{activeBranch?.countryName || activeBranch?.country_name || "All"}</b></div>
+                  <div className="flex justify-between gap-3"><span>{t(lang, "lp.branch_name", "Branch Name")}</span><b className="text-right text-slate-900">{activeBranch?.name || "All Branches"}</b></div>
+                  <div className="flex justify-between gap-3"><span>{t(lang, "lp.user_name", "User Name")}</span><b className="text-right text-slate-900">{session.fullName || session.email || "Super Admin"}</b></div>
+                  <div className="flex justify-between gap-3"><span>{t(lang, "lp.date_time", "Date & Time")}</span><b suppressHydrationWarning className="text-right text-slate-900">{new Date().toLocaleString()}</b></div>
                 </div>
               </div>
 
               <div className="rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
-                <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700">2. Global Financial Summary</p>
-                <div className="mt-3 space-y-2 text-[11px] font-semibold text-slate-600">
-                  <div className="flex justify-between"><span>Total Local Purchase Bills</span><b>{localPurchaseDashboard.totalBills}</b></div>
-                  <div className="flex justify-between"><span>Total Purchase Amount</span><b>{money(localPurchaseDashboard.totalPurchase, localCurrency)}</b></div>
-                  <div className="flex justify-between"><span>Total Tax Amount</span><b>{money(localPurchaseDashboard.totalTax, localCurrency)}</b></div>
-                  <div className="flex justify-between"><span>Total Final Amount</span><b className="text-emerald-700">{money(localPurchaseDashboard.totalFinal, localCurrency)}</b></div>
+                <p className="text-[10px] font-black uppercase tracking-wider text-emerald-700">2. {t(lang, "lp.financial_summary", "Financial Summary")}</p>
+                <div className="mt-2.5 space-y-2 text-[11px] font-semibold text-slate-600">
+                  <div className="flex justify-between"><span>{t(lang, "lp.total_local_purchase_bills", "Total Local Purchase Bills")}</span><b>{localPurchaseDashboard.totalBills}</b></div>
+                  <div className="flex justify-between"><span>{t(lang, "lp.total_purchase_amount", "Total Purchase Amount")}</span><b>{money(localPurchaseDashboard.totalPurchase, localCurrency)}</b></div>
+                  <div className="flex justify-between"><span>{t(lang, "lp.total_tax_amount", "Total Tax Amount")}</span><b>{money(localPurchaseDashboard.totalTax, localCurrency)}</b></div>
+                  <div className="flex justify-between"><span>{t(lang, "lp.total_final_amount", "Total Final Amount")}</span><b className="text-emerald-700">{money(localPurchaseDashboard.totalFinal, localCurrency)}</b></div>
                 </div>
               </div>
 
               <div className="rounded-xl border border-purple-100 bg-purple-50/60 p-3">
-                <p className="text-[10px] font-black uppercase tracking-wider text-purple-700">3. Bill Entry Summary</p>
-                <div className="mt-3 space-y-2 text-[11px] font-semibold text-slate-600">
-                  <div className="flex justify-between"><span>Total Bills</span><b>{localPurchaseDashboard.totalBills}</b></div>
-                  <div className="flex justify-between"><span>Posted / Accepted</span><b className="text-emerald-700">{localPurchaseDashboard.postedBills}</b></div>
-                  <div className="flex justify-between"><span>Draft Bills</span><b className="text-amber-700">{localPurchaseDashboard.draftBills}</b></div>
-                  <div className="flex justify-between"><span>Pending Bills</span><b className="text-rose-700">{localPurchaseDashboard.pendingBills}</b></div>
+                <p className="text-[10px] font-black uppercase tracking-wider text-purple-700">3. {t(lang, "lp.bill_entry_summary", "Bill Entry Summary")}</p>
+                <div className="mt-2.5 space-y-2 text-[11px] font-semibold text-slate-600">
+                  <div className="flex justify-between"><span>{t(lang, "lp.total_bills", "Total Bills")}</span><b>{localPurchaseDashboard.totalBills}</b></div>
+                  <div className="flex justify-between"><span>{t(lang, "lp.posted_accepted", "Posted / Accepted")}</span><b className="text-emerald-700">{localPurchaseDashboard.postedBills}</b></div>
+                  <div className="flex justify-between"><span>{t(lang, "lp.draft_bills", "Draft Bills")}</span><b className="text-amber-700">{localPurchaseDashboard.draftBills}</b></div>
+                  <div className="flex justify-between"><span>{t(lang, "lp.pending_bills", "Pending Bills")}</span><b className="text-rose-700">{localPurchaseDashboard.pendingBills}</b></div>
                 </div>
               </div>
 
               <div className="rounded-xl border border-orange-200 bg-orange-50/60 p-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-[10px] font-black uppercase tracking-wider text-orange-700">4. All Countries Report</p>
-                  <span className="rounded-full bg-white px-2 py-1 text-[10px] font-black text-orange-700">{localPurchaseDashboard.countries.length} Countries</span>
+                  <p className="text-[10px] font-black uppercase tracking-wider text-orange-700">4. {t(lang, "lp.all_countries_report", "All Countries Report")}</p>
+                  <span className="rounded-full bg-white px-2 py-1 text-[10px] font-black text-orange-700">{localPurchaseDashboard.countries.length} {t(lang, "lp.countries_label", "Countries")}</span>
                 </div>
-                <div className="mt-3 space-y-2">
+                <div className="mt-2.5 space-y-2">
                   {localPurchaseDashboard.countries.slice(0, 3).map((country: any) => (
                     <div key={country.id} className="flex items-center justify-between rounded-lg border border-orange-100 bg-white px-2 py-1.5 text-[11px] font-bold">
                       <span className="truncate text-slate-800">{country.countryName}</span>
-                      <span className="text-orange-700">{country.bills} bills</span>
+                      <span className="text-orange-700">{country.bills} {t(lang, "lp.bills_label", "bills")}</span>
                     </div>
                   ))}
-                  {localPurchaseDashboard.countries.length === 0 && <p className="text-xs font-semibold text-slate-400">No country purchase records found.</p>}
+                  {localPurchaseDashboard.countries.length === 0 && <p className="text-xs font-semibold text-slate-400">{t(lang, "lp.no_country_records", "No country purchase records found.")}</p>}
                 </div>
               </div>
             </div>
@@ -2706,50 +2709,14 @@ export function LocalPurchaseView({
     ) : (
         /* Full-Width Draft & In-Progress Bills Table */
         <div className="space-y-4 w-full animate-in fade-in duration-200">
-          
-          {/* Navigation Tabs (Workflow Modules separation) */}
-          <div className="flex border border-slate-200 bg-slate-50 p-1 rounded-2xl gap-1 shadow-xs max-w-2xl">
-            <button
-              type="button"
-              onClick={() => setActiveTab("all")}
-              className={`flex-1 py-2 text-[10px] font-black uppercase rounded-xl transition ${
-                activeTab === "all" ? "bg-white text-slate-800 shadow-sm border border-slate-200" : "text-slate-500 hover:text-slate-800"
-              }`}
-            >
-              All Purchases Registry
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("accepted")}
-              className={`flex-1 py-2 text-[10px] font-black uppercase rounded-xl transition flex items-center justify-center gap-1.5 ${
-                activeTab === "accepted" ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "text-slate-500 hover:text-slate-800"
-              }`}
-            >
-              <Coins className="h-3 w-3" /> Ready to Pay (Accepted)
-              {purchases.filter(p => (p.status || p.bill_status || p.billStatus) === "accepted").length > 0 && (
-                <span className="bg-red-500 text-white text-[9px] font-black px-1.5 py-0.2 rounded-full">
-                  {purchases.filter(p => (p.status || p.bill_status || p.billStatus) === "accepted").length}
-                </span>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("posted")}
-              className={`flex-1 py-2 text-[10px] font-black uppercase rounded-xl transition ${
-                activeTab === "posted" ? "bg-white text-slate-800 shadow-sm border border-slate-200" : "text-slate-500 hover:text-slate-800"
-              }`}
-            >
-              Posted Ledger entries
-            </button>
-          </div>
 
           <Card className="border-slate-200 bg-white shadow-sm rounded-2xl overflow-hidden">
             <CardHeader className="bg-slate-50 border-b border-slate-100 p-4 flex flex-row items-center justify-between">
               <CardTitle className="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
-                <Coins className="h-4 w-4 text-blue-600" /> LOCAL PURCHASE BILLS
+                <Coins className="h-4 w-4 text-blue-600" /> {t(lang, "lp.local_purchase_bills_title", "Local Purchase Bills")}
               </CardTitle>
               <span className="text-[10px] font-mono font-bold text-slate-500">
-                {filteredPurchases.length} Record(s)
+                {filteredPurchases.length} {t(lang, "lp.records_label", "Record(s)")}
               </span>
             </CardHeader>
             <CardContent className="p-0">

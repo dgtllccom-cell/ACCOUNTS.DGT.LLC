@@ -6,6 +6,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { ledgerReportService } from "@/lib/services/ledger-report-service";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { withLocalPg } from "@/lib/db/local-postgres";
 import { getRequestLanguage } from "@/lib/i18n/server";
 
 const querySchema = z.object({
@@ -125,7 +126,92 @@ export async function GET(request: NextRequest) {
       { debit: number; credit: number; balance: number; updatedAt: string; balanceDate: string }
     >();
 
-    if (ledgerIds.length) {
+    // ledger_balances / ledger_posting_lines / roznamcha_lines all have scoped RLS gated
+    // on auth.uid(), which is NULL under this app's temp-session bootstrap — the Supabase
+    // admin client silently returns zero rows here even though real postings exist
+    // (confirmed live: rows came back from ledgerReportService.listLedgers() but every
+    // ledger showed 0 entries / 0 balance, so the report's own "no entries" filter then
+    // stripped every row). Same withLocalPg-primary bypass as ledger-report-service.ts.
+    let batchLinesData: any[] = [];
+    let rozLinesData: any[] = [];
+
+    const viaPg = ledgerIds.length
+      ? await withLocalPg(async (sql) => {
+          const balanceRows = await sql`
+            SELECT ledger_id, balance_date, debit_total, credit_total, closing_balance, updated_at
+            FROM public.ledger_balances
+            WHERE ledger_id = ANY(${ledgerIds}::uuid[])
+            ORDER BY balance_date DESC
+          `;
+          const batchRows = await sql`
+            SELECT lpl.ledger_id, lpl.description, lpl.debit, lpl.credit, lpl.currency, lpl.usd_rate, lpl.usd_amount, lpl.created_at,
+                   lpb.entry_date AS batch_entry_date, lpb.reference_no AS batch_reference_no,
+                   lpb.created_by AS batch_created_by, lpb.created_at AS batch_created_at
+            FROM public.ledger_posting_lines lpl
+            INNER JOIN public.ledger_posting_batches lpb ON lpb.id = lpl.batch_id
+            WHERE lpl.ledger_id = ANY(${ledgerIds}::uuid[])
+              AND lpb.entry_date >= ${fromDate} AND lpb.entry_date <= ${toDate}
+            ORDER BY lpl.created_at ASC
+          `;
+          const rozRows = await sql`
+            SELECT rl.ledger_id, rl.description, rl.debit, rl.credit, rl.currency, rl.usd_rate, rl.usd_amount,
+                   re.entry_date AS entry_entry_date, re.voucher_no AS entry_voucher_no,
+                   re.created_by AS entry_created_by, re.created_at AS entry_created_at
+            FROM public.roznamcha_lines rl
+            INNER JOIN public.roznamcha_entries re ON re.id = rl.roznamcha_entry_id
+            WHERE rl.ledger_id = ANY(${ledgerIds}::uuid[])
+              AND re.entry_date >= ${fromDate} AND re.entry_date <= ${toDate}
+              AND re.deleted_at IS NULL
+            ORDER BY re.entry_date ASC, re.created_at ASC, rl.id ASC
+          `;
+          return { balanceRows, batchRows, rozRows };
+        })
+      : null;
+
+    if (viaPg) {
+      for (const row of viaPg.balanceRows as any[]) {
+        const ledgerId = row.ledger_id as string;
+        if (balanceMap.has(ledgerId)) continue;
+        balanceMap.set(ledgerId, {
+          debit: toNumber(row.debit_total),
+          credit: toNumber(row.credit_total),
+          balance: toNumber(row.closing_balance),
+          updatedAt: String(row.updated_at ?? ""),
+          balanceDate: String(row.balance_date ?? "")
+        });
+      }
+      batchLinesData = (viaPg.batchRows as any[]).map((row) => ({
+        ledger_id: row.ledger_id,
+        description: row.description,
+        debit: row.debit,
+        credit: row.credit,
+        currency: row.currency,
+        usd_rate: row.usd_rate,
+        usd_amount: row.usd_amount,
+        created_at: row.created_at,
+        ledger_posting_batches: {
+          entry_date: row.batch_entry_date,
+          reference_no: row.batch_reference_no,
+          created_by: row.batch_created_by,
+          created_at: row.batch_created_at
+        }
+      }));
+      rozLinesData = (viaPg.rozRows as any[]).map((row) => ({
+        ledger_id: row.ledger_id,
+        description: row.description,
+        debit: row.debit,
+        credit: row.credit,
+        currency: row.currency,
+        usd_rate: row.usd_rate,
+        usd_amount: row.usd_amount,
+        roznamcha_entries: {
+          entry_date: row.entry_entry_date,
+          voucher_no: row.entry_voucher_no,
+          created_by: row.entry_created_by,
+          created_at: row.entry_created_at
+        }
+      }));
+    } else if (ledgerIds.length) {
       const { data: balanceRows, error: balanceError } = await admin
         .from("ledger_balances")
         .select("ledger_id, balance_date, debit_total, credit_total, closing_balance, updated_at")
@@ -144,34 +230,34 @@ export async function GET(request: NextRequest) {
           balanceDate: String((row as any).balance_date ?? "")
         });
       }
+
+      const [batchLinesRes, rozLinesRes] = await Promise.all([
+        admin
+          .from("ledger_posting_lines")
+          .select(
+            "ledger_id, description, debit, credit, currency, usd_rate, usd_amount, created_at, ledger_posting_batches!inner(entry_date, reference_no, created_by, created_at)"
+          )
+          .in("ledger_id", ledgerIds)
+          .gte("ledger_posting_batches.entry_date", fromDate)
+          .lte("ledger_posting_batches.entry_date", toDate)
+          .order("created_at", { ascending: true }),
+        admin
+          .from("roznamcha_lines")
+          .select(
+            "ledger_id, description, debit, credit, currency, usd_rate, usd_amount, roznamcha_entries!inner(entry_date, voucher_no, created_by, created_at)"
+          )
+          .in("ledger_id", ledgerIds)
+          .gte("roznamcha_entries.entry_date", fromDate)
+          .lte("roznamcha_entries.entry_date", toDate)
+          .order("entry_date", { ascending: true, foreignTable: "roznamcha_entries" })
+          .order("created_at", { ascending: true, foreignTable: "roznamcha_entries" })
+      ]);
+
+      if ((batchLinesRes as any).error) throw new Error((batchLinesRes as any).error.message);
+      if ((rozLinesRes as any).error) throw new Error((rozLinesRes as any).error.message);
+      batchLinesData = (batchLinesRes as any).data ?? [];
+      rozLinesData = (rozLinesRes as any).data ?? [];
     }
-
-    const [batchLinesRes, rozLinesRes] = ledgerIds.length
-      ? await Promise.all([
-          admin
-            .from("ledger_posting_lines")
-            .select(
-              "ledger_id, description, debit, credit, currency, usd_rate, usd_amount, created_at, ledger_posting_batches!inner(entry_date, reference_no, created_by, created_at)"
-            )
-            .in("ledger_id", ledgerIds)
-            .gte("ledger_posting_batches.entry_date", fromDate)
-            .lte("ledger_posting_batches.entry_date", toDate)
-            .order("created_at", { ascending: true }),
-          admin
-            .from("roznamcha_lines")
-            .select(
-              "ledger_id, description, debit, credit, currency, usd_rate, usd_amount, roznamcha_entries!inner(entry_date, voucher_no, created_by, created_at)"
-            )
-            .in("ledger_id", ledgerIds)
-            .gte("roznamcha_entries.entry_date", fromDate)
-            .lte("roznamcha_entries.entry_date", toDate)
-            .order("entry_date", { ascending: true, foreignTable: "roznamcha_entries" })
-            .order("created_at", { ascending: true, foreignTable: "roznamcha_entries" })
-        ])
-      : [{ data: [], error: null }, { data: [], error: null }];
-
-    if ((batchLinesRes as any).error) throw new Error((batchLinesRes as any).error.message);
-    if ((rozLinesRes as any).error) throw new Error((rozLinesRes as any).error.message);
 
     type AggRow = {
       entries: number;
@@ -214,7 +300,7 @@ export async function GET(request: NextRequest) {
       return 0;
     }
 
-    for (const row of (batchLinesRes as any).data ?? []) {
+    for (const row of batchLinesData) {
       const ledgerId = String(row.ledger_id);
       const entry = ensure(ledgerId);
       entry.entries += 1;
@@ -236,7 +322,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    for (const row of (rozLinesRes as any).data ?? []) {
+    for (const row of rozLinesData) {
       const ledgerId = String(row.ledger_id);
       const entry = ensure(ledgerId);
       entry.entries += 1;

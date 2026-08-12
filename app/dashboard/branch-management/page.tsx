@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   Users
 } from "lucide-react";
+import { OrgChartLink } from "@/features/branch-management/components/org-chart-link";
 
 const hierarchy = [
   {
@@ -75,10 +76,13 @@ export default function BranchManagementPage() {
             Super Admin, country main branch, city branch, role access, and USD reporting foundation.
           </p>
         </div>
-        <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
-          <CheckCircle2 className="h-4 w-4" aria-hidden />
-          Foundation designed
-        </span>
+        <div className="flex items-center gap-2">
+          <OrgChartLink />
+          <span className="inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">
+            <CheckCircle2 className="h-4 w-4" aria-hidden />
+            Foundation designed
+          </span>
+        </div>
       </div>
 
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
