@@ -266,6 +266,52 @@ export function CustomerProfile({
               </div>
             </div>
 
+            {/* Customer Company Details Card */}
+            <div className="border rounded-xl p-3 bg-slate-50/50 space-y-1.5 dark:bg-slate-900/40 dark:border-slate-800">
+              <h3 className="text-[9px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1 dark:text-teal-400">Customer Company Details</h3>
+              <div className="space-y-1 text-xs">
+                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                  <span className="text-slate-500">Company Name</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100">{parsedMeta.companyName || customer.company_name || "-"}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                  <span className="text-slate-500">Registration Number</span>
+                  <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.companyRegNo || "-"}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                  <span className="text-slate-500">Tax / NTN Number</span>
+                  <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.companyTaxNo || "-"}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                  <span className="text-slate-500">Business Type</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyBusinessType || "-"}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                  <span className="text-slate-500">Phone Number</span>
+                  <span className="font-bold text-slate-800 font-mono dark:text-slate-200">{parsedMeta.companyPhone || "-"}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                  <span className="text-slate-500">Email Address</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200 text-right truncate max-w-[120px]" title={parsedMeta.companyEmail}>{parsedMeta.companyEmail || "-"}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                  <span className="text-slate-500">Country</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyCountry || parsedMeta.country || "-"}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                  <span className="text-slate-500">City</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyCity || parsedMeta.city || "-"}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-100/50 pb-1 dark:border-slate-800/50">
+                  <span className="text-slate-500">State</span>
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{parsedMeta.companyState || parsedMeta.stateProvince || "-"}</span>
+                </div>
+                <div className="flex justify-between pb-0.5">
+                  <span className="text-slate-500">Complete Address</span>
+                  <span className="font-bold text-slate-900 dark:text-slate-100 text-right truncate max-w-[120px]" title={parsedMeta.companyAddress || customer.address || ""}>{parsedMeta.companyAddress || customer.address || "-"}</span>
+                </div>
+              </div>
+            </div>
 
           </div>
 
@@ -488,7 +534,55 @@ export function CustomerProfile({
                 </div>
               </div>
 
-
+              {/* Customer Company Details Card */}
+              <div className="border rounded-xl p-4 bg-slate-50/50 space-y-3 relative">
+                <div className="absolute top-3 right-3 text-teal-600/30">
+                  <Building2 className="h-6 w-6" />
+                </div>
+                <h3 className="text-[10px] font-bold text-teal-800 uppercase tracking-wider border-b pb-1">Customer Company Details</h3>
+                <div className="space-y-2 text-xs">
+                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                    <span className="text-slate-500">Company Name</span>
+                    <span className="font-bold text-slate-800">{parsedMeta.companyName || customer.company_name || "-"}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                    <span className="text-slate-500">Registration Number</span>
+                    <span className="font-bold text-slate-800 font-mono">{parsedMeta.companyRegNo || "-"}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                    <span className="text-slate-500">Tax / NTN Number</span>
+                    <span className="font-bold text-slate-800 font-mono">{parsedMeta.companyTaxNo || "-"}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                    <span className="text-slate-500">Business Type</span>
+                    <span className="font-bold text-slate-800">{parsedMeta.companyBusinessType || "-"}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                    <span className="text-slate-500">Phone Number</span>
+                    <span className="font-bold text-slate-800 font-mono">{parsedMeta.companyPhone || "-"}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                    <span className="text-slate-500">Email Address</span>
+                    <span className="font-bold text-slate-800 text-right max-w-[150px] truncate text-[11px]" title={parsedMeta.companyEmail}>{parsedMeta.companyEmail || "-"}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                    <span className="text-slate-500">Country</span>
+                    <span className="font-bold text-slate-800">{parsedMeta.companyCountry || parsedMeta.country || "-"}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                    <span className="text-slate-500">City</span>
+                    <span className="font-bold text-slate-800">{parsedMeta.companyCity || parsedMeta.city || "-"}</span>
+                  </div>
+                  <div className="flex justify-between border-b border-slate-100 pb-1.5">
+                    <span className="text-slate-500">State</span>
+                    <span className="font-bold text-slate-800">{parsedMeta.companyState || parsedMeta.stateProvince || "-"}</span>
+                  </div>
+                  <div className="flex justify-between pb-0.5">
+                    <span className="text-slate-500">Complete Address</span>
+                    <span className="font-bold text-slate-900 text-right max-w-[150px] truncate" title={parsedMeta.companyAddress || customer.address || ""}>{parsedMeta.companyAddress || customer.address || "-"}</span>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Contacts Table style */}
