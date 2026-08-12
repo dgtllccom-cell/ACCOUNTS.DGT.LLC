@@ -20,9 +20,15 @@ export async function GET(request: NextRequest) {
     });
 
     const query = request.nextUrl.searchParams.get("q");
-    const countryId = request.nextUrl.searchParams.get("countryId");
+    let countryId = request.nextUrl.searchParams.get("countryId");
     const limit = request.nextUrl.searchParams.get("limit");
     const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+
+    // Enforce session scope: if user is not super admin and no countryId provided,
+    // restrict to their assigned country(ies)
+    if (!session.isSuperAdmin && !countryId && session.countryIds.length > 0) {
+      countryId = session.countryIds[0];
+    }
 
     const result = await customersService.search({
       query,
