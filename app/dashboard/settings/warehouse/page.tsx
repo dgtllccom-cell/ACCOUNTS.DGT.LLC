@@ -1,4 +1,4 @@
-import { WarehouseForm } from "@/features/warehouses/components/warehouse-form";
+import { WarehouseManagement } from "@/features/warehouses/components/warehouse-management";
 
 export const metadata = {
   title: "Warehouse Master Form",
@@ -6,9 +6,5 @@ export const metadata = {
 };
 
 export default function WarehouseSettingsPage() {
-  return (
-    <div className="mx-auto max-w-4xl py-6">
-      <WarehouseForm mode="standalone" />
-    </div>
-  );
+  return <WarehouseManagement />;
 }

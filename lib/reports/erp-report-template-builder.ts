@@ -73,15 +73,15 @@ export function generateReportHtml(input: {
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
 
   const compName = companyInfo.name || "DIGITAL DOCK ERP";
-  const compTagline = companyInfo.tagline || "Import | Export | Trading | ERP Solutions";
-  const compAddress = companyInfo.address || "Office No. 1, 1st Floor, Idat Plaza, Doctor Bano Road, Quetta, Pakistan";
-  const compPhone = companyInfo.phone || "+92 333 7764008";
-  const compEmail = companyInfo.email || "najib@dgt.llc";
-  const compWebsite = companyInfo.website || "www.dgtllc.com";
-  const printedBy = companyInfo.printedBy || "SUPER ADMIN";
+  const compTagline = companyInfo.tagline || "ERP Reporting System";
+  const compAddress = companyInfo.address || "Configured organization address";
+  const compPhone = companyInfo.phone || "Configured contact";
+  const compEmail = companyInfo.email || "Configured email";
+  const compWebsite = companyInfo.website || "Configured website";
+  const printedBy = companyInfo.printedBy || "ERP User";
   const printedDate = companyInfo.printedDate || new Date().toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short" });
-  const financialYear = companyInfo.financialYear || "2025 - 2026";
-  const reportPeriod = companyInfo.reportPeriod || `Jul 01, 2026 To ${formatDate(new Date().toISOString())}`;
+  const financialYear = companyInfo.financialYear || "Current Financial Year";
+  const reportPeriod = companyInfo.reportPeriod || formatDate(new Date().toISOString());
   const compLogo = companyInfo.logoUrl || "";
   // QR verification payload: company + report + date, so a printed sheet is verifiable.
   const qrPayload = `ERP|${compName}|${title}|${printedDate}|${reportPeriod}`;

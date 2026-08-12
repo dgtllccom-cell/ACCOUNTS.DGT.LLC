@@ -32,9 +32,10 @@
   "include": [
     "**/*.ts",
     "**/*.tsx",
+    "..\\..\\..\\AppData\\Local\\Temp\\dgt-nextjs\\.next/types/**/*.ts",
     ".next/types/**/*.ts",
     "next-env.d.ts",
-    "..\\..\\..\\AppData\\Local\\Temp\\dgt-nextjs\\.next/types/**/*.ts"
+    ".next-codex-dev/types/**/*.ts"
   ],
   "exclude": [
     "node_modules",

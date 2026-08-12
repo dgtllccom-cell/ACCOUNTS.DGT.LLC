@@ -1,0 +1,4 @@
+{
+  "/api/erp/reports/scoped/route": "app/api/erp/reports/scoped/route.js",
+  "/auth/login/page": "app/auth/login/page.js"
+}

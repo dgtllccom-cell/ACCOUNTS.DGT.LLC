@@ -17,7 +17,11 @@ type ReportMeta = {
     level: ReportScopeLevel;
     scopeLabel: string;
     lockedCountryId: string | null;
+    lockedCountryName?: string | null;
+    lockedMainBranchId?: string | null;
+    lockedMainBranchName?: string | null;
     lockedBranchId: string | null;
+    lockedBranchName?: string | null;
   };
   countries: ReportMetaItem[];
   mainBranches: ReportMetaItem[];
@@ -45,6 +49,7 @@ type ReportResult = {
 type Props = {
   lang: SupportedLanguage;
   initialScopeLevel?: ReportScopeLevel;
+  viewerName?: string;
 };
 
 const DEFAULT_FILTERS: ReportFilterValues = {
@@ -58,7 +63,7 @@ const DEFAULT_FILTERS: ReportFilterValues = {
   reportType: "roznamcha"
 };
 
-export function ReportPanel({ lang, initialScopeLevel = "global" }: Props) {
+export function ReportPanel({ lang, initialScopeLevel = "global", viewerName }: Props) {
   const _ = (key: UiKey, fallback?: string) => t(lang, key, fallback);
   const isRTL = ["ar", "ur", "fa", "ps"].includes(lang);
 
@@ -71,6 +76,16 @@ export function ReportPanel({ lang, initialScopeLevel = "global" }: Props) {
   const [reportLoading, setReportLoading] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [density, setDensity] = useState<"compact" | "comfortable">("comfortable");
+  const [visibleColumnKeys, setVisibleColumnKeys] = useState<string[]>([]);
+  const reportData = reportResult?.data ?? [];
+  const reportSummary = reportResult?.summary ?? {};
+  const baseColumns = getColumnsForReportType(
+    filters.reportType,
+    lang,
+    filters.currency !== "all" ? filters.currency : "USD"
+  );
 
   // Load metadata on mount
   useEffect(() => {
@@ -82,6 +97,12 @@ export function ReportPanel({ lang, initialScopeLevel = "global" }: Props) {
         if (cancelled) return;
         if (json.ok) {
           setMeta(json.data);
+          setFilters((prev) => ({
+            ...prev,
+            countryId: json.data.scope?.lockedCountryId ?? prev.countryId,
+            mainBranchId: json.data.scope?.lockedMainBranchId ?? prev.mainBranchId,
+            branchId: json.data.scope?.lockedBranchId ?? prev.branchId
+          }));
           // Set initial report type from first available
           if (json.data.reportTypes?.length) {
             setFilters((prev) => ({ ...prev, reportType: json.data.reportTypes[0].key }));
@@ -163,6 +184,49 @@ export function ReportPanel({ lang, initialScopeLevel = "global" }: Props) {
     ? "report.panel_subtitle_country"
     : "report.panel_subtitle_branch";
 
+  useEffect(() => {
+    setVisibleColumnKeys((current) => {
+      if (current.length === 0) {
+        return baseColumns.map((column) => column.key);
+      }
+      const allowedKeys = new Set(baseColumns.map((column) => column.key));
+      const next = current.filter((key) => allowedKeys.has(key));
+      const missing = baseColumns.map((column) => column.key).filter((key) => !next.includes(key));
+      return next.length ? [...next, ...missing] : baseColumns.map((column) => column.key);
+    });
+  }, [baseColumns]);
+
+  const visibleColumns = baseColumns.filter((column) => visibleColumnKeys.includes(column.key));
+  const previewFilters = [
+    { label: "Scope", value: reportResult?.scope?.label ?? scope?.scopeLabel ?? "Scoped Report" },
+    { label: "Country", value: scope?.lockedCountryName ?? meta?.countries.find((item) => item.id === filters.countryId)?.label ?? "All Countries" },
+    { label: "Branch", value: scope?.lockedBranchName ?? meta?.cityBranches.find((item) => item.id === filters.branchId)?.label ?? meta?.mainBranches.find((item) => item.id === filters.mainBranchId)?.label ?? "All Branches" },
+    { label: "From Date", value: filters.fromDate || "Start" },
+    { label: "To Date", value: filters.toDate || "Today" },
+    { label: "Currency", value: filters.currency !== "all" ? filters.currency : reportResult?.currency ?? "All" }
+  ];
+  const companyInfo = {
+    name: "DIGITAL DOCK ERP",
+    printedBy: viewerName || "ERP User",
+    country: previewFilters[1]?.value,
+    branch: previewFilters[2]?.value,
+    currency: filters.currency !== "all" ? filters.currency : reportResult?.currency ?? "USD",
+    reportPeriod: filters.fromDate || filters.toDate
+      ? `${filters.fromDate || "Start"} To ${filters.toDate || "Today"}`
+      : reportResult?.generatedAt
+      ? `As of ${new Date(reportResult.generatedAt).toLocaleDateString("en-GB")}`
+      : "Current Period"
+  };
+
+  const toggleColumn = (key: string) => {
+    setVisibleColumnKeys((current) => {
+      if (current.includes(key)) {
+        return current.length === 1 ? current : current.filter((item) => item !== key);
+      }
+      return [...current, key];
+    });
+  };
+
   if (metaLoading) {
     return (
       <div className="flex h-60 items-center justify-center">
@@ -182,9 +246,6 @@ export function ReportPanel({ lang, initialScopeLevel = "global" }: Props) {
       </div>
     );
   }
-
-  const reportData = reportResult?.data ?? [];
-  const reportSummary = reportResult?.summary ?? {};
 
   return (
     <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
@@ -242,8 +303,10 @@ export function ReportPanel({ lang, initialScopeLevel = "global" }: Props) {
         currencies={meta?.currencies ?? []}
         reportTypes={meta?.reportTypes ?? []}
         lockedCountryId={scope?.lockedCountryId}
+        lockedCountryName={scope?.lockedCountryName ?? undefined}
         lockedBranchId={scope?.lockedBranchId}
-        showCountryFilter={scope?.level === "global"}
+        lockedBranchName={scope?.lockedBranchName ?? scope?.lockedMainBranchName ?? undefined}
+        showCountryFilter
         showBranchFilter
         showUserFilter
         showCurrencyFilter
@@ -276,6 +339,15 @@ export function ReportPanel({ lang, initialScopeLevel = "global" }: Props) {
             isLoading={reportLoading}
             onReload={handleApply}
             currency={filters.currency}
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
+            density={density}
+            onDensityChange={setDensity}
+            columns={baseColumns}
+            visibleColumnKeys={visibleColumnKeys}
+            onToggleColumn={toggleColumn}
+            previewFilters={previewFilters}
+            companyInfo={companyInfo}
           />
 
           {/* KPI Cards */}
@@ -301,14 +373,17 @@ export function ReportPanel({ lang, initialScopeLevel = "global" }: Props) {
           {/* Data Table */}
           <ReportDataTable
             lang={lang}
-            columns={getColumnsForReportType(filters.reportType, lang, filters.currency !== "all" ? filters.currency : "USD")}
+            columns={visibleColumns}
             rows={reportData}
             isLoading={reportLoading}
             hasError={Boolean(reportError)}
             currency={filters.currency !== "all" ? filters.currency : "USD"}
-            searchable
+            searchable={false}
             pageSize={50}
             stripedRows
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
+            density={density}
           />
         </>
       )}

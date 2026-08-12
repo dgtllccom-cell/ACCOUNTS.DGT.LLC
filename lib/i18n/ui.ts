@@ -960,6 +960,7 @@ export type UiKey =
   | "report.export_excel"
   | "report.export_csv"
   | "report.print"
+  | "report.print_preview"
   | "report.share_whatsapp"
   | "report.share_email"
   | "report.reload"
@@ -4135,6 +4136,7 @@ const en: Dict = {
   "report.export_excel": "Export Excel",
   "report.export_csv": "Export CSV",
   "report.print": "Print",
+  "report.print_preview": "Print Preview",
   "report.share_whatsapp": "Share via WhatsApp",
   "report.share_email": "Share via Email",
   "report.reload": "Reload",
@@ -6076,6 +6078,7 @@ const ur: Dict = {
   "report.export_excel": "Excel برآمدگی",
   "report.export_csv": "CSV برآمدگی",
   "report.print": "پرنٹ",
+  "report.print_preview": "پرنٹ پیش منظر",
   "report.share_whatsapp": "واٹس ایپ پر شیئر کریں",
   "report.share_email": "ای میل پر شیئر کریں",
   "report.reload": "دوبارہ لوڈ کریں",
@@ -8211,6 +8214,7 @@ const ar: Dict = {
   "report.export_excel": "تصدير Excel",
   "report.export_csv": "تصدير CSV",
   "report.print": "طباعة",
+  "report.print_preview": "معاينة الطباعة",
   "report.share_whatsapp": "مشاركة عبر واتساب",
   "report.share_email": "مشاركة عبر البريد",
   "report.reload": "إعادة تحميل",
@@ -10322,6 +10326,7 @@ const fa: Dict = {
   "report.export_excel": "خروجی Excel",
   "report.export_csv": "خروجی CSV",
   "report.print": "چاپ",
+  "report.print_preview": "پیش‌نمایش چاپ",
   "report.share_whatsapp": "اشتراک‌گذاری از طریق واتساپ",
   "report.share_email": "اشتراک‌گذاری از طریق ایمیل",
   "report.reload": "بارگذاری مجدد",
@@ -12474,6 +12479,7 @@ const ps: Dict = {
   "report.export_excel": "Excel صادرول",
   "report.export_csv": "CSV صادرول",
   "report.print": "چاپ",
+  "report.print_preview": "د چاپ مخکتنه",
   "report.share_whatsapp": "واټساپ له لارې شریکول",
   "report.share_email": "بریښنالیک له لارې شریکول",
   "report.reload": "بیا ډکول",

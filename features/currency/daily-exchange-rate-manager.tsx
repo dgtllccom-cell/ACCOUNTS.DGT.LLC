@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { apiGet, apiPost } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
-import { Th } from "@/components/ui/translated-th";
+import { openGenericErpReport } from "@/lib/reports/open-generic-erp-report";
 
 type CountryRate = {
   id: string;
@@ -36,16 +36,19 @@ type CountryOption = {
   iso2: string | null;
 };
 
-const DEFAULT_COUNTRIES: CountryOption[] = [
-  { id: "c-af", name: "Afghanistan", currency_code: "AFN", iso2: "AF" },
-  { id: "c-pk", name: "Pakistan", currency_code: "PKR", iso2: "PK" },
-  { id: "c-ae", name: "United Arab Emirates", currency_code: "AED", iso2: "AE" },
-  { id: "c-us", name: "United States", currency_code: "USD", iso2: "US" },
-  { id: "c-sa", name: "Saudi Arabia", currency_code: "SAR", iso2: "SA" },
-  { id: "c-om", name: "Oman", currency_code: "OMR", iso2: "OM" },
-  { id: "c-gb", name: "United Kingdom", currency_code: "GBP", iso2: "GB" },
-  { id: "c-cn", name: "China", currency_code: "CNY", iso2: "CN" },
-];
+type SessionInfo = {
+  user?: { fullName?: string | null; email?: string | null };
+  scopes?: {
+    isSuperAdmin?: boolean;
+    countryIds?: string[];
+    summary?: {
+      countryId?: string | null;
+      countryName?: string | null;
+      branchDisplayName?: string | null;
+      scopeLabel?: string | null;
+    };
+  };
+};
 
 function money(value: number, digits = 4) {
   return new Intl.NumberFormat("en-US", {
@@ -73,19 +76,20 @@ function getFlag(iso2: string | null | undefined) {
 
 export function DailyExchangeRateManager() {
   const [rates, setRates] = useState<CountryRate[]>([]);
-  const [countries, setCountries] = useState<CountryOption[]>(DEFAULT_COUNTRIES);
+  const [countries, setCountries] = useState<CountryOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
 
   // Form Fields State
-  const [selectedCountryId, setSelectedCountryId] = useState<string>("c-af");
+  const [selectedCountryId, setSelectedCountryId] = useState<string>("");
   const [rateDate, setRateDate] = useState<string>(isoToday());
   const [rateTime, setRateTime] = useState<string>(currentTimeString());
-  const [creditPrice, setCreditPrice] = useState<string>("67.00");
-  const [debitPrice, setDebitPrice] = useState<string>("68.00");
-  const [operatorUser, setOperatorUser] = useState<string>("SUPER ADMIN");
-  const [operatorBranch, setOperatorBranch] = useState<string>("Pakistan Main Branch");
+  const [creditPrice, setCreditPrice] = useState<string>("");
+  const [debitPrice, setDebitPrice] = useState<string>("");
+  const [operatorUser, setOperatorUser] = useState<string>("");
+  const [operatorBranch, setOperatorBranch] = useState<string>("");
 
   // Table Filter & Search State
   const [filterCountryId, setFilterCountryId] = useState<string>("all");
@@ -113,27 +117,47 @@ export function DailyExchangeRateManager() {
       if (dateTo) params.set("dateTo", dateTo);
       if (searchQuery) params.set("query", searchQuery);
 
-      const [ratesRes, countriesRes] = await Promise.all([
+      const [ratesRes, countriesRes, sessionRes] = await Promise.all([
         apiGet<any>(`/api/erp/currency/daily-rates?${params.toString()}`),
-        apiGet<any>("/api/erp/admin/countries?limit=100"),
+        apiGet<any>("/api/erp/locations/countries?all=true&limit=100"),
+        apiGet<SessionInfo>("/api/erp/auth/session"),
       ]);
       
       const ratesList: CountryRate[] = Array.isArray(ratesRes) 
         ? ratesRes 
         : ratesRes?.rates ?? ratesRes?.data ?? [];
       
-      if (ratesList.length > 0) {
-        setRates(ratesList);
-      }
+      setRates(ratesList);
 
       const fetchedCountries: CountryOption[] = Array.isArray(countriesRes)
         ? countriesRes
         : countriesRes?.countries ?? countriesRes?.data ?? [];
-      const mergedCountries = fetchedCountries.length > 0 ? fetchedCountries : DEFAULT_COUNTRIES;
-      setCountries(mergedCountries);
+      const fallbackCountry =
+        fetchedCountries.length === 0 && sessionRes?.scopes?.summary?.countryId && sessionRes?.scopes?.summary?.countryName
+          ? [{
+              id: sessionRes.scopes.summary.countryId,
+              name: sessionRes.scopes.summary.countryName,
+              currency_code: "N/A",
+              iso2: null
+            }]
+          : [];
+      setCountries(fetchedCountries.length > 0 ? fetchedCountries : fallbackCountry);
+      setSessionInfo(sessionRes);
 
-      if (mergedCountries.length > 0 && !selectedCountryId) {
-        setSelectedCountryId(mergedCountries[0].id);
+      if (!operatorUser) {
+        setOperatorUser(sessionRes?.user?.fullName || sessionRes?.user?.email || "ERP USER");
+      }
+      if (!operatorBranch) {
+        setOperatorBranch(sessionRes?.scopes?.summary?.branchDisplayName || sessionRes?.scopes?.summary?.scopeLabel || "");
+      }
+
+      const scopedCountryId = sessionRes?.scopes?.summary?.countryId || sessionRes?.scopes?.countryIds?.[0] || "";
+      const defaultCountryId = sessionRes?.scopes?.isSuperAdmin
+        ? fetchedCountries[0]?.id || fallbackCountry[0]?.id || scopedCountryId
+        : scopedCountryId || fetchedCountries[0]?.id || fallbackCountry[0]?.id || "";
+
+      if (!selectedCountryId && defaultCountryId) {
+        setSelectedCountryId(defaultCountryId);
       }
     } catch (err) {
       console.error("Failed to load exchange rates:", err);
@@ -148,10 +172,15 @@ export function DailyExchangeRateManager() {
 
   // Update form inputs when selected country changes
   const selectedCountry = useMemo(() => {
-    return countries.find(c => c.id === selectedCountryId) || DEFAULT_COUNTRIES[0];
+    return countries.find(c => c.id === selectedCountryId) || null;
   }, [countries, selectedCountryId]);
 
+  const branchOptions = useMemo(() => {
+    return [...new Set(rates.map((rate) => rate.branch_name).filter(Boolean) as string[])].sort((a, b) => a.localeCompare(b));
+  }, [rates]);
+
   useEffect(() => {
+    if (!selectedCountryId || !selectedCountry) return;
     const existingRate = rates.find(r => r.country_id === selectedCountryId);
     if (existingRate) {
       setCreditPrice(String(existingRate.credit_rate || existingRate.selling_rate));
@@ -165,13 +194,17 @@ export function DailyExchangeRateManager() {
       else if (selectedCountry.currency_code === "PKR") { setCreditPrice("280.00"); setDebitPrice("278.50"); }
       else if (selectedCountry.currency_code === "AED") { setCreditPrice("3.68"); setDebitPrice("3.67"); }
       else if (selectedCountry.currency_code === "SAR") { setCreditPrice("3.76"); setDebitPrice("3.75"); }
-      else { setCreditPrice("1.00"); setDebitPrice("1.00"); }
+      else { setCreditPrice(""); setDebitPrice(""); }
       setRateTime(currentTimeString());
     }
-  }, [selectedCountryId]);
+  }, [rates, selectedCountry, selectedCountryId]);
 
   async function handleSaveRate(e: React.FormEvent) {
     e.preventDefault();
+    if (!selectedCountry) {
+      setMessage({ type: "error", text: "Please select a country first." });
+      return;
+    }
     const credit = Number(creditPrice);
     const debit = Number(debitPrice);
 
@@ -186,8 +219,8 @@ export function DailyExchangeRateManager() {
     const newRateEntry: CountryRate = {
       id: `rate-${Date.now()}`,
       country_id: selectedCountryId,
-      user_name: operatorUser || "SUPER ADMIN",
-      branch_name: operatorBranch || "Pakistan Main Branch",
+      user_name: operatorUser || sessionInfo?.user?.fullName || sessionInfo?.user?.email || "ERP USER",
+      branch_name: operatorBranch || sessionInfo?.scopes?.summary?.branchDisplayName || "",
       rate_date: rateDate || isoToday(),
       rate_time: rateTime || currentTimeString(),
       buying_rate: debit,
@@ -224,8 +257,8 @@ export function DailyExchangeRateManager() {
         countryName: selectedCountry.name,
         currencyCode: selectedCountry.currency_code,
         iso2: selectedCountry.iso2,
-        userName: operatorUser || "SUPER ADMIN",
-        branchName: operatorBranch || "Pakistan Main Branch"
+        userName: operatorUser || sessionInfo?.user?.fullName || sessionInfo?.user?.email || "ERP USER",
+        branchName: operatorBranch || sessionInfo?.scopes?.summary?.branchDisplayName || ""
       });
 
       setMessage({
@@ -252,7 +285,54 @@ export function DailyExchangeRateManager() {
   }
 
   function handlePrintTable() {
-    window.print();
+    const reportRows = rates.map((rate) => ({
+      date: rate.rate_date,
+      country: rate.countries?.name || countries.find((country) => country.id === rate.country_id)?.name || "-",
+      branch: rate.branch_name || "-",
+      user: rate.user_name || "-",
+      buyingRate: rate.buying_rate,
+      sellingRate: rate.selling_rate,
+      creditRate: rate.credit_rate,
+      debitRate: rate.debit_rate,
+      currency: rate.countries?.currency_code || rate.countries?.iso2 || "-"
+    }));
+
+    openGenericErpReport({
+      title: "EXCHANGE RATE REPORT",
+      subtitle: "Daily exchange rate management and branch-level updates",
+      lang: "en",
+      columns: [
+        { key: "date", label: "Date", format: "date" },
+        { key: "country", label: "Country" },
+        { key: "branch", label: "Branch" },
+        { key: "user", label: "User" },
+        { key: "buyingRate", label: "Buying Rate", format: "number", align: "right" },
+        { key: "sellingRate", label: "Selling Rate", format: "number", align: "right" },
+        { key: "creditRate", label: "Credit Rate", format: "number", align: "right" },
+        { key: "debitRate", label: "Debit Rate", format: "number", align: "right" },
+        { key: "currency", label: "Currency", align: "center" }
+      ],
+      rows: reportRows,
+      summary: {
+        totalEntries: reportRows.length,
+        filteredCountries: filterCountryId === "all" ? countries.length : 1,
+        branchScope: filterBranch === "all" ? branchOptions.length : 1
+      },
+      filters: [
+        { label: "Country", value: filterCountryId === "all" ? "All Countries" : selectedCountry?.name || countries.find((country) => country.id === filterCountryId)?.name || "Selected Country" },
+        { label: "Branch", value: filterBranch === "all" ? "All Branches" : filterBranch },
+        { label: "From Date", value: dateFrom || "Start" },
+        { label: "To Date", value: dateTo || "Today" },
+        { label: "Search", value: searchQuery || "No search filter" }
+      ],
+      companyInfo: {
+        name: "DIGITAL DOCK ERP",
+        printedBy: operatorUser || sessionInfo?.user?.fullName || sessionInfo?.user?.email || "ERP User",
+        country: filterCountryId === "all" ? "All Countries" : selectedCountry?.name || countries.find((country) => country.id === filterCountryId)?.name || "Selected Country",
+        branch: filterBranch === "all" ? "All Branches" : filterBranch,
+        reportPeriod: dateFrom || dateTo ? `${dateFrom || "Start"} To ${dateTo || "Today"}` : "Current Period"
+      }
+    });
   }
 
   return (
@@ -319,6 +399,7 @@ export function DailyExchangeRateManager() {
                 onChange={(e) => setSelectedCountryId(e.target.value)}
                 className="w-full h-10 px-3 rounded-xl bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-800 text-xs font-black text-slate-800 dark:text-slate-100 outline-none focus:border-blue-500 transition-all uppercase"
               >
+                <option value="">{countries.length ? "SELECT COUNTRY" : "NO COUNTRIES AVAILABLE"}</option>
                 {countries.map((c) => (
                   <option key={c.id} value={c.id}>
                     {getFlag(c.iso2)} {c.name} ({c.currency_code})
@@ -401,7 +482,7 @@ export function DailyExchangeRateManager() {
                   className="h-10 text-xs font-black font-mono text-emerald-700 dark:text-emerald-400 rounded-xl bg-emerald-50/50 dark:bg-emerald-950/30 border-emerald-300 dark:border-emerald-800 focus:border-emerald-500"
                 />
                 <span className="absolute right-3 top-2.5 text-[11px] font-mono font-bold text-slate-400">
-                  {selectedCountry.currency_code}
+                  {selectedCountry?.currency_code || "---"}
                 </span>
               </div>
             </div>
@@ -423,7 +504,7 @@ export function DailyExchangeRateManager() {
                   className="h-10 text-xs font-black font-mono text-blue-700 dark:text-blue-400 rounded-xl bg-blue-50/50 dark:bg-blue-950/30 border-blue-300 dark:border-blue-800 focus:border-blue-500"
                 />
                 <span className="absolute right-3 top-2.5 text-[11px] font-mono font-bold text-slate-400">
-                  {selectedCountry.currency_code}
+                  {selectedCountry?.currency_code || "---"}
                 </span>
               </div>
             </div>
@@ -503,12 +584,9 @@ export function DailyExchangeRateManager() {
                   className="w-full h-8 px-2 rounded-lg bg-slate-800 text-slate-100 border border-slate-700 text-[11px] font-bold outline-none uppercase"
                 >
                   <option value="all">ALL BRANCHES</option>
-                  <option value="Pakistan Main Branch">PAKISTAN MAIN</option>
-                  <option value="Dubai Central Branch">DUBAI CENTRAL</option>
-                  <option value="USA Division">USA DIVISION</option>
-                  <option value="Riyadh Branch">RIYADH BRANCH</option>
-                  <option value="Muscat Terminal">MUSCAT TERMINAL</option>
-                  <option value="Kabul Main Branch">KABUL MAIN</option>
+                  {branchOptions.map((branchName) => (
+                    <option key={branchName} value={branchName}>{branchName}</option>
+                  ))}
                 </select>
               </div>
 
@@ -544,22 +622,23 @@ export function DailyExchangeRateManager() {
               <table className="w-full text-xs text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-black uppercase text-[9px] border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
-                    <Th className="py-2.5 px-3 text-center">SR NO</Th>
-                    <Th className="py-2.5 px-3">COUNTRY NAME</Th>
-                    <Th className="py-2.5 px-3">BRANCH NAME</Th>
-                    <Th className="py-2.5 px-3">USER NAME</Th>
-                    <Th className="py-2.5 px-3 text-center">CURRENCY</Th>
-                    <Th className="py-2.5 px-3">DATE & TIME</Th>
-                    <Th className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400">CREDIT RATE ($)</Th>
-                    <Th className="py-2.5 px-3 text-right text-blue-600 dark:text-blue-400">DEBIT RATE ($)</Th>
-                    <Th className="py-2.5 px-3 text-right">LAST UPDATED</Th>
+                    <th className="py-2.5 px-3 text-center">SR NO</th>
+                    <th className="py-2.5 px-3">COUNTRY NAME</th>
+                    <th className="py-2.5 px-3">BRANCH NAME</th>
+                    <th className="py-2.5 px-3">USER NAME</th>
+                    <th className="py-2.5 px-3 text-center">CURRENCY</th>
+                    <th className="py-2.5 px-3">DATE & TIME</th>
+                    <th className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400">CREDIT RATE ($)</th>
+                    <th className="py-2.5 px-3 text-right text-blue-600 dark:text-blue-400">DEBIT RATE ($)</th>
+                    <th className="py-2.5 px-3 text-right">LAST UPDATED</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-150 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-200">
                   {rates.map((r, idx) => {
-                    const countryName = r.countries?.name ?? DEFAULT_COUNTRIES.find(c => c.id === r.country_id)?.name ?? "Country";
-                    const currencyCode = r.countries?.currency_code ?? DEFAULT_COUNTRIES.find(c => c.id === r.country_id)?.currency_code ?? "USD";
-                    const iso2 = r.countries?.iso2 ?? DEFAULT_COUNTRIES.find(c => c.id === r.country_id)?.iso2;
+                    const matchedCountry = countries.find((country) => country.id === r.country_id) || null;
+                    const countryName = r.countries?.name ?? matchedCountry?.name ?? "-";
+                    const currencyCode = r.countries?.currency_code ?? matchedCountry?.currency_code ?? "-";
+                    const iso2 = r.countries?.iso2 ?? matchedCountry?.iso2;
                     const isSelected = r.country_id === selectedCountryId;
 
                     return (
@@ -579,10 +658,10 @@ export function DailyExchangeRateManager() {
                           <span className="uppercase">{countryName}</span>
                         </td>
                         <td className="py-2.5 px-3 font-bold text-[10px] text-slate-600 dark:text-slate-300 uppercase">
-                          {r.branch_name || "Pakistan Main Branch"}
+                          {r.branch_name || "-"}
                         </td>
                         <td className="py-2.5 px-3 font-bold text-[10px] text-blue-700 dark:text-blue-400 uppercase">
-                          {r.user_name || "SUPER ADMIN"}
+                          {r.user_name || "-"}
                         </td>
                         <td className="py-2.5 px-3 text-center">
                           <span className="font-mono font-black bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded text-[9px]">

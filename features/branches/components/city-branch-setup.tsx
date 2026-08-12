@@ -1099,8 +1099,8 @@ function CityBranchSetupContent() {
       return;
     }
 
-    if ((!location.cityId || !isUuid(location.cityId)) && (!locationMeta.city?.name && !branchName.trim())) {
-      setBanner({ type: "error", message: "Please select a City from Location Settings or enter a Branch Name." });
+    if (!isUuid(location.stateProvinceId) || !isUuid(location.cityId) || !locationMeta.city?.name) {
+      setBanner({ type: "error", message: "Please select State/Province and City from Location Settings." });
       return;
     }
 
@@ -1445,7 +1445,7 @@ function CityBranchSetupContent() {
                 </div>
               </section>
 
-              <section hidden={activeStep !== 1} className={compactSectionClass(!location.countryId || (!location.cityId && !branchName.trim()) || changedFromSaved(fullAddress, activeExistingCityBranch?.address))}>
+              <section hidden={activeStep !== 1} className={compactSectionClass(!location.stateProvinceId || !location.cityId || !fullAddress.trim() || changedFromSaved(fullAddress, activeExistingCityBranch?.address))}>
                 <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
                   <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 1 - Branch Information: Location</h2>

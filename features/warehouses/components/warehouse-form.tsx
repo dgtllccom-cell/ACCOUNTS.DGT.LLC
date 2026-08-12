@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   CheckCircle2,
   Globe,
@@ -15,7 +15,9 @@ import {
   type LocationHierarchyMeta,
   type LocationHierarchyValue
 } from "@/features/locations/components/location-hierarchy-select";
-import { createWarehouse, type WarehouseRecord } from "@/features/warehouses/warehouse-api";
+import { createWarehouse, updateWarehouse, type WarehouseRecord } from "@/features/warehouses/warehouse-api";
+import { CustomerPicker } from "@/features/customers/components/customer-picker";
+import { apiGet } from "@/lib/api/client";
 
 const WAREHOUSE_TYPES = [
   "Normal Storage",
@@ -58,12 +60,14 @@ const emptyForm: WarehouseFormState = {
 
 export type WarehouseFormProps = {
   mode?: "standalone" | "embedded";
+  initialWarehouse?: WarehouseRecord | null;
   onSave?: (warehouseId: string, warehouse: WarehouseRecord) => void;
   onCancel?: () => void;
 };
 
 export function WarehouseForm({
   mode = "standalone",
+  initialWarehouse,
   onSave,
   onCancel
 }: WarehouseFormProps) {
@@ -80,10 +84,85 @@ export function WarehouseForm({
   const [saving, setSaving] = useState(false);
   const [savedWarehouse, setSavedWarehouse] = useState<WarehouseRecord | null>(null);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [ownerCustomerId, setOwnerCustomerId] = useState("");
+  const [ownerDetails, setOwnerDetails] = useState<any | null>(null);
 
   function set(field: keyof WarehouseFormState, value: string) {
     setForm((prev) => ({ ...prev, [field]: value }));
   }
+
+  useEffect(() => {
+    if (!initialWarehouse) {
+      setForm(emptyForm);
+      setLocation({ countryId: "", stateProvinceId: "", districtId: "", cityId: "", areaId: "" });
+      setSavedWarehouse(null);
+      setMessage(null);
+      setOwnerCustomerId("");
+      setOwnerDetails(null);
+      setCurrentStep(1);
+      return;
+    }
+
+    let parsedContacts: Array<{ type: string; value: string }> = [{ type: "Contract Number", value: "" }];
+    try {
+      parsedContacts = JSON.parse(initialWarehouse.contact_number || "[]");
+      if (!Array.isArray(parsedContacts) || parsedContacts.length === 0) {
+        parsedContacts = [{ type: "Contract Number", value: "" }];
+      }
+    } catch {
+      parsedContacts = [{ type: "Contract Number", value: "" }];
+    }
+
+    setForm({
+      warehouseName: initialWarehouse.warehouse_name || "",
+      ownerName: initialWarehouse.owner_name || "",
+      warehouseType: initialWarehouse.warehouse_type || "Normal Storage",
+      countryId: initialWarehouse.country_id || "",
+      stateProvinceId: initialWarehouse.state_province_id || "",
+      districtId: initialWarehouse.district_id || "",
+      cityId: initialWarehouse.city_id || "",
+      areaId: initialWarehouse.area_id || "",
+      fullAddress: initialWarehouse.full_address || "",
+      contracts: parsedContacts,
+      status: initialWarehouse.status || "Active"
+    });
+    setLocation({
+      countryId: initialWarehouse.country_id || "",
+      stateProvinceId: initialWarehouse.state_province_id || "",
+      districtId: initialWarehouse.district_id || "",
+      cityId: initialWarehouse.city_id || "",
+      areaId: initialWarehouse.area_id || ""
+    });
+    setSavedWarehouse(initialWarehouse);
+    setOwnerCustomerId(initialWarehouse.owner_customer_id || "");
+    setCurrentStep(1);
+  }, [initialWarehouse]);
+
+  useEffect(() => {
+    if (!ownerCustomerId) {
+      setOwnerDetails(null);
+      return;
+    }
+
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await apiGet<{ customer: any }>(`/api/erp/customers/${encodeURIComponent(ownerCustomerId)}`);
+        if (cancelled) return;
+        const customer = res.customer;
+        setOwnerDetails(customer || null);
+        if (customer?.customer_name) {
+          setForm((prev) => ({ ...prev, ownerName: customer.customer_name }));
+        }
+      } catch {
+        if (!cancelled) setOwnerDetails(null);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [ownerCustomerId]);
 
   function handleLocationChange(next: LocationHierarchyValue, meta: LocationHierarchyMeta) {
     setLocation(next);
@@ -119,9 +198,10 @@ export function WarehouseForm({
     setSaving(true);
     setMessage(null);
     try {
-      const warehouseId = await createWarehouse({
+      const payload = {
         warehouse_name: form.warehouseName,
         owner_name: form.ownerName || "",
+        owner_customer_id: ownerCustomerId || null,
         warehouse_type: form.warehouseType,
         country_id: form.countryId || null,
         state_province_id: form.stateProvinceId || null,
@@ -131,27 +211,43 @@ export function WarehouseForm({
         full_address: form.fullAddress || null,
         contact_number: JSON.stringify(form.contracts),
         status: form.status,
-      });
+      };
 
-      const saved: WarehouseRecord = {
-        id: warehouseId,
+      let saved: WarehouseRecord;
+      let warehouseId = initialWarehouse?.id || "";
+      if (initialWarehouse?.id) {
+        saved = await updateWarehouse(initialWarehouse.id, payload);
+        warehouseId = initialWarehouse.id;
+      } else {
+        warehouseId = await createWarehouse(payload as any);
+        saved = {
+          id: warehouseId,
+          owner_customer_id: ownerCustomerId || null,
+          warehouse_name: form.warehouseName,
+          owner_name: form.ownerName,
+          warehouse_type: form.warehouseType,
+          country_id: form.countryId || null,
+          state_province_id: form.stateProvinceId || null,
+          district_id: form.districtId || null,
+          city_id: form.cityId || null,
+          area_id: form.areaId || null,
+          full_address: form.fullAddress || null,
+          contact_number: JSON.stringify(form.contracts),
+          status: form.status,
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+      }
+
+      const normalizedSaved: WarehouseRecord = {
+        ...saved,
+        owner_customer_id: ownerCustomerId || saved.owner_customer_id || null,
         warehouse_name: form.warehouseName,
         owner_name: form.ownerName,
-        warehouse_type: form.warehouseType,
-        country_id: form.countryId || null,
-        state_province_id: form.stateProvinceId || null,
-        district_id: form.districtId || null,
-        city_id: form.cityId || null,
-        area_id: form.areaId || null,
-        full_address: form.fullAddress || null,
-        contact_number: JSON.stringify(form.contracts),
-        status: form.status,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
       };
-      setSavedWarehouse(saved);
-      setMessage({ type: "success", text: `Warehouse "${form.warehouseName}" saved successfully!` });
-      onSave?.(warehouseId, saved);
+      setSavedWarehouse(normalizedSaved);
+      setMessage({ type: "success", text: `Warehouse "${form.warehouseName}" ${initialWarehouse ? "updated" : "saved"} successfully!` });
+      onSave?.(warehouseId, normalizedSaved);
     } catch (err: any) {
       setMessage({ type: "error", text: err?.message ?? "Failed to save warehouse." });
     } finally {
@@ -164,10 +260,21 @@ export function WarehouseForm({
     setLocation({ countryId: "", stateProvinceId: "", districtId: "", cityId: "", areaId: "" });
     setSavedWarehouse(null);
     setMessage(null);
+    setOwnerCustomerId("");
+    setOwnerDetails(null);
     setCurrentStep(1);
   }
 
   const selectClass = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring";
+  const ownerContactSummary = useMemo(() => {
+    if (!ownerDetails) return [];
+    return [
+      { label: "Mobile", value: ownerDetails.mobile },
+      { label: "WhatsApp", value: ownerDetails.whatsapp },
+      { label: "Email", value: ownerDetails.email },
+      { label: "Address", value: ownerDetails.address }
+    ].filter((item) => item.value);
+  }, [ownerDetails]);
 
   return (
     <div className={mode === "standalone" ? "space-y-6" : "space-y-4"}>
@@ -258,13 +365,15 @@ export function WarehouseForm({
                   />
                 </div>
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">Owner Name</Label>
-                  <Input
-                    value={form.ownerName}
-                    onChange={(e) => set("ownerName", e.target.value)}
-                    placeholder="e.g. Damaan Group"
+                  <Label className="text-xs font-semibold">Warehouse Owner</Label>
+                  <CustomerPicker
+                    label=""
+                    value={ownerCustomerId}
+                    onValueChange={(customerId) => setOwnerCustomerId(customerId)}
+                    countryId={form.countryId || null}
+                    placeholder="Search owner from Customer / Person Master"
                   />
-                  <p className="text-[10px] text-muted-foreground">Name of the company or person that owns the warehouse.</p>
+                  <p className="text-[10px] text-muted-foreground">Select an existing shared customer/person/business owner or create one from the same master form.</p>
                 </div>
 
                 <div className="space-y-1.5">
@@ -317,6 +426,27 @@ export function WarehouseForm({
               </div>
 
               <div className="space-y-3 pt-2">
+                {ownerDetails && (
+                  <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 p-3 text-[11px]">
+                    <div className="mb-2 font-bold text-emerald-800">Linked Owner Details</div>
+                    <div className="grid gap-2 sm:grid-cols-2">
+                      <div>
+                        <div className="text-[10px] uppercase tracking-wider text-emerald-700">Owner / Business</div>
+                        <div className="font-semibold text-slate-800">{ownerDetails.customer_name || "-"}</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] uppercase tracking-wider text-emerald-700">Company</div>
+                        <div className="font-semibold text-slate-800">{ownerDetails.company_name || "-"}</div>
+                      </div>
+                      {ownerContactSummary.map((item) => (
+                        <div key={item.label}>
+                          <div className="text-[10px] uppercase tracking-wider text-emerald-700">{item.label}</div>
+                          <div className="font-semibold text-slate-800">{item.value}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center justify-between border-b pb-2">
                   <div className="flex items-center gap-2">
                     <Globe className="h-4.5 w-4.5 text-indigo-600" />
@@ -400,12 +530,44 @@ export function WarehouseForm({
 
           {/* Step 3: Review & Save */}
           {currentStep === 3 && (
-            <div className="space-y-4">
-              <p className="text-sm font-semibold text-slate-800">Review & Save</p>
-              <p className="text-xs text-muted-foreground">
-                Please review the warehouse details on the right panel. Once confirmed, you can save the warehouse record.
-              </p>
-            </div>
+            <section className="space-y-5 rounded-lg border bg-card p-5 shadow-sm">
+              <div className="flex items-center gap-2 border-b pb-3">
+                <Save className="h-4 w-4 text-indigo-600" aria-hidden />
+                <h2 className="text-sm font-bold uppercase tracking-wider text-foreground">Review & Save</h2>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3 text-xs">
+                <div className="rounded-lg border bg-slate-50 p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500">Warehouse</p>
+                  <p className="mt-1 font-bold text-slate-900">{form.warehouseName || "-"}</p>
+                </div>
+                <div className="rounded-lg border bg-slate-50 p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500">Owner</p>
+                  <p className="mt-1 font-bold text-slate-900">{form.ownerName || "-"}</p>
+                </div>
+                <div className="rounded-lg border bg-slate-50 p-3">
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500">Type / Status</p>
+                  <p className="mt-1 font-bold text-slate-900">{form.warehouseType || "-"} · {form.status || "-"}</p>
+                </div>
+                <div className="rounded-lg border bg-slate-50 p-3 md:col-span-2 xl:col-span-3">
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500">Address</p>
+                  <p className="mt-1 font-semibold text-slate-800">{form.fullAddress || "-"}</p>
+                </div>
+                <div className="rounded-lg border bg-slate-50 p-3 md:col-span-2 xl:col-span-3">
+                  <p className="text-[10px] uppercase tracking-wider text-slate-500">Contacts / Contracts</p>
+                  <div className="mt-2 grid gap-2 md:grid-cols-2">
+                    {form.contracts.filter((item) => item.value).map((item, index) => (
+                      <div key={`${item.type}-${index}`} className="flex items-center justify-between rounded border bg-white px-2 py-1.5">
+                        <span className="text-slate-500">{item.type}</span>
+                        <span className="font-mono text-slate-800">{item.value}</span>
+                      </div>
+                    ))}
+                    {form.contracts.filter((item) => item.value).length === 0 && (
+                      <div className="text-slate-400">No contact values added yet.</div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </section>
           )}
 
           {/* Message */}
@@ -502,6 +664,19 @@ export function WarehouseForm({
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Owner Name</p>
               <p className="font-semibold mt-0.5 text-slate-800">{savedWarehouse ? savedWarehouse.owner_name : form.ownerName || "-"}</p>
             </div>
+            {ownerContactSummary.length > 0 && !savedWarehouse && (
+              <div>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Owner Master Details</p>
+                <div className="mt-1 space-y-1">
+                  {ownerContactSummary.map((item) => (
+                    <div key={item.label} className="flex justify-between items-center text-slate-800">
+                      <span className="text-[10px] text-slate-500 font-medium">{item.label}</span>
+                      <span className="font-mono">{item.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Type</p>
               <p className="font-semibold mt-0.5 text-slate-900">{savedWarehouse ? savedWarehouse.warehouse_type : form.warehouseType || "-"}</p>

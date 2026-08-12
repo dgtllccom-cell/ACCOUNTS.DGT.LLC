@@ -5,7 +5,6 @@ import { Search, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { t, type UiKey } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
-import { Th } from "@/components/ui/translated-th";
 
 type SortDirection = "asc" | "desc" | null;
 
@@ -29,6 +28,9 @@ type Props = {
   searchable?: boolean;
   pageSize?: number;
   stripedRows?: boolean;
+  searchQuery?: string;
+  onSearchQueryChange?: (value: string) => void;
+  density?: "compact" | "comfortable";
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -103,15 +105,19 @@ export function ReportDataTable({
   currency,
   searchable = true,
   pageSize = 50,
-  stripedRows = true
+  stripedRows = true,
+  searchQuery,
+  onSearchQueryChange,
+  density = "comfortable"
 }: Props) {
   const _ = (key: UiKey, fallback?: string) => t(lang, key, fallback);
   const isRTL = ["ar", "ur", "fa", "ps"].includes(lang);
 
-  const [search, setSearch] = useState("");
+  const [internalSearch, setInternalSearch] = useState("");
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<SortDirection>(null);
   const [page, setPage] = useState(1);
+  const search = searchQuery ?? internalSearch;
 
   const handleSort = (colKey: string) => {
     if (sortKey !== colKey) {
@@ -180,7 +186,15 @@ export function ReportDataTable({
             type="text"
             placeholder={_("report.search_placeholder")}
             value={search}
-            onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              const nextValue = e.target.value;
+              if (onSearchQueryChange) {
+                onSearchQueryChange(nextValue);
+              } else {
+                setInternalSearch(nextValue);
+              }
+              setPage(1);
+            }}
             className={cn(
               "w-full text-sm rounded-xl border border-slate-200 bg-white dark:bg-slate-950 dark:border-slate-800",
               "py-2.5 outline-none focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200",
@@ -202,7 +216,7 @@ export function ReportDataTable({
             <thead>
               <tr className="bg-slate-900 dark:bg-slate-950">
                 {columns.map((col) => (
-                  <Th
+                  <th
                     key={col.key}
                     className={cn(
                       "px-4 py-3 font-black uppercase tracking-wider text-slate-100 whitespace-nowrap select-none",
@@ -225,7 +239,7 @@ export function ReportDataTable({
                         </span>
                       )}
                     </div>
-                  </Th>
+                  </th>
                 ))}
               </tr>
             </thead>
@@ -244,7 +258,7 @@ export function ReportDataTable({
                     <td
                       key={col.key}
                       className={cn(
-                        "px-4 py-2.5",
+                        density === "compact" ? "px-3 py-1.5" : "px-4 py-2.5",
                         col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
                       )}
                     >
