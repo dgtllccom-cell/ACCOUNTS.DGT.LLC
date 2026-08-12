@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Calendar, Download, Loader2, MoreVertical, Printer, RefreshCcw, Search, ChevronRight, User, Coins, Package, Globe, Building2 } from "lucide-react";
+import { ChevronDown, Calendar, Download, Loader2, MoreVertical, Printer, RefreshCcw, Search, ChevronRight, Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -199,6 +199,18 @@ function buildBranchLabel(row: GeneralReportRow) {
   return row.branch || row.cityBranchName || row.countryBranchName || row.countryName || "-";
 }
 
+function getFlag(countryName?: string | null) {
+  if (!countryName) return "🇦🇪";
+  const cName = countryName.toLowerCase();
+  if (cName.includes("uae") || cName.includes("united arab") || cName.includes("امارات")) return "🇦🇪";
+  if (cName.includes("pakistan") || cName.includes("پاکستان")) return "🇵🇰";
+  if (cName.includes("turkey") || cName.includes("تراکی")) return "🇹🇷";
+  if (cName.includes("china") || cName.includes("چین")) return "🇨🇳";
+  if (cName.includes("afghanistan") || cName.includes("افغانستان")) return "🇦🇫";
+  if (cName.includes("iran") || cName.includes("ایران")) return "🇮🇷";
+  return "🌐";
+}
+
 function badgeClass(status: "active" | "inactive") {
   return status === "active"
     ? "rounded-full border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:border-emerald-900/40 dark:bg-emerald-950/30 dark:text-emerald-300"
@@ -246,6 +258,7 @@ export function LedgerReportView({
   const [loading, setLoading] = useState(true);
   const [loadingStatement, setLoadingStatement] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [showAllCountries, setShowAllCountries] = useState(false);
   const [accountSearch, setAccountSearch] = useState("");
   const [branchFilter, setBranchFilter] = useState("");
   const [selectedCountry, setSelectedCountry] = useState("");
@@ -261,7 +274,6 @@ export function LedgerReportView({
   const [menuOpen, setMenuOpen] = useState(false);
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [printMode, setPrintMode] = useState(false);
-  const [showAllCountriesDetails, setShowAllCountriesDetails] = useState(true);
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
   const canViewConversionColumns = useMemo(() => {
     const roles = (sessionInfo?.roles ?? []).map((role) => String(role).toLowerCase());
@@ -508,6 +520,69 @@ export function LedgerReportView({
       }
     }
     return Array.from(map.values()).sort((a, b) => a.country.localeCompare(b.country));
+  }, [displayRows]);
+
+  const countryDashboardData = useMemo(() => {
+    const map = new Map<
+      string,
+      {
+        name: string;
+        currency: string;
+        activeAccounts: number;
+        entries: number;
+        debit: number;
+        credit: number;
+        balance: number;
+        branches: Set<string>;
+        branchData: Map<string, { name: string; entries: number; debit: number; credit: number; balance: number }>;
+      }
+    >();
+
+    for (const row of displayRows) {
+      const countryName = row.countryName || "United Arab Emirates";
+      const branchName = row.cityBranchName || row.countryBranchName || row.branch || "Main Branch";
+      const currency = row.ledgerCurrency || "AED";
+
+      if (!map.has(countryName)) {
+        map.set(countryName, {
+          name: countryName,
+          currency,
+          activeAccounts: 0,
+          entries: 0,
+          debit: 0,
+          credit: 0,
+          balance: 0,
+          branches: new Set(),
+          branchData: new Map()
+        });
+      }
+
+      const cData = map.get(countryName)!;
+      if (row.status === "active") cData.activeAccounts += 1;
+      cData.entries += row.entries || 0;
+      cData.debit += row.debit || 0;
+      cData.credit += row.credit || 0;
+      cData.balance += row.balance || 0;
+      cData.branches.add(branchName);
+
+      if (!cData.branchData.has(branchName)) {
+        cData.branchData.set(branchName, {
+          name: branchName,
+          entries: 0,
+          debit: 0,
+          credit: 0,
+          balance: 0
+        });
+      }
+
+      const bData = cData.branchData.get(branchName)!;
+      bData.entries += row.entries || 0;
+      bData.debit += row.debit || 0;
+      bData.credit += row.credit || 0;
+      bData.balance += row.balance || 0;
+    }
+
+    return Array.from(map.values()).sort((a, b) => a.name.localeCompare(b.name));
   }, [displayRows]);
 
 
@@ -851,201 +926,244 @@ export function LedgerReportView({
         </div>
       ) : null}
 
-      {/* Executive 4-Panel Summary Header matching ERP standard */}
-      <div className="space-y-3 mb-4 print:hidden">
-        {/* Sub-Header Meta Info Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-2 rounded-xl bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-[11px] font-black uppercase text-slate-500 dark:text-slate-400">
-          <div className="flex items-center gap-5 flex-wrap">
-            <span>BRANCH NAME: <strong className="text-slate-900 dark:text-slate-100">{selectedCountry ? `${selectedCountry.toUpperCase()} MAIN BRANCH` : "UNITED ARAB EMIRATES MAIN BRANCH"}</strong></span>
-            <span>USER NAME: <strong className="text-slate-900 dark:text-slate-100">{sessionInfo?.user?.fullName?.toUpperCase() || "SUPER ADMIN"}</strong></span>
-          </div>
-          <div className="flex items-center gap-5">
-            <span>DATE: <strong className="text-slate-900 dark:text-slate-100 font-mono">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}</strong></span>
-            <span>TIME: <strong className="text-slate-900 dark:text-slate-100 font-mono">{new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}</strong></span>
-          </div>
+      {/* Top Meta Bar & 4 KPI Summary Panels (as in Picture 1) */}
+      <div className="flex flex-wrap items-center justify-between gap-4 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 px-4 shadow-sm">
+        <div className="flex items-center gap-2">
+          <span>BRANCH NAME:</span>
+          <span className="text-slate-900 dark:text-slate-100 font-bold">UNITED ARAB EMIRATES MAIN BRANCH</span>
         </div>
-
-        {/* 4 Cards Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5">
-          {/* Panel 1: BRANCH & USER DETAILS */}
-          <div className="flex flex-col rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-blue-50/50 dark:bg-blue-900/10">
-              <div className="bg-blue-600 p-1.5 rounded-full text-white">
-                <User className="h-3.5 w-3.5" />
-              </div>
-              <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">1. BRANCH & USER DETAILS</h4>
-            </div>
-            <div className="p-4 flex flex-col gap-2 text-[10px] font-semibold text-slate-500 dark:text-slate-400 h-full justify-between">
-              <div className="flex justify-between items-center">
-                <span>COUNTRY:</span>
-                <span className="font-extrabold text-slate-900 dark:text-slate-100">{displayRows[0]?.countryName || "United Arab Emirates"}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>BRANCH NAME:</span>
-                <span className="font-extrabold text-slate-900 dark:text-slate-100 uppercase">{branchFilter ? (branchOptions.find(b => b.value === branchFilter)?.label || "MAIN BRANCH") : "MAIN BRANCH"}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>USER ID:</span>
-                <span className="font-mono font-extrabold text-slate-900 dark:text-slate-100 truncate max-w-[140px]" title={sessionInfo?.user?.id || "909D24D9-5532-47A1-B612-3E95F2285AB6"}>
-                  {sessionInfo?.user?.id?.toUpperCase() || "909D24D9-5532-47A1-B612-3E95F2285AB6"}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>USER NAME:</span>
-                <span className="font-extrabold text-slate-900 dark:text-slate-100 uppercase">{sessionInfo?.user?.fullName || "SUPER ADMIN"}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>ROLE:</span>
-                <span className="font-extrabold text-slate-900 dark:text-slate-100 uppercase">SUPER ADMIN</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>DATE & TIME:</span>
-                <span className="font-bold text-slate-900 dark:text-slate-100 font-mono">
-                  {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}, {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-                </span>
-              </div>
-              <div className="flex justify-between items-center pt-1.5 border-t border-slate-100 dark:border-slate-800">
-                <span>STATUS:</span>
-                <span className="font-extrabold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded text-[9px] uppercase tracking-wider">ACTIVE</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Panel 2: GLOBAL FINANCIAL SUMMARY */}
-          <div className="flex flex-col rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
-              <div className="bg-emerald-600 p-1.5 rounded-full text-white">
-                <Coins className="h-3.5 w-3.5" />
-              </div>
-              <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">2. GLOBAL FINANCIAL SUMMARY</h4>
-            </div>
-            <div className="p-4 flex flex-col gap-3 text-[10px] font-semibold text-slate-500 dark:text-slate-400 h-full justify-between">
-              <div className="flex justify-between items-center">
-                <span>TOTAL GLOBAL ENTRIES:</span>
-                <span className="font-black text-slate-900 dark:text-slate-100 font-mono text-xs">{summary?.entries ?? displayRows.reduce((a, r) => a + (r.entries || 0), 0)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>TOTAL PURCHASE / DEBIT (AED):</span>
-                <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono text-xs">
-                  {fmtNumber(summary?.debit ?? displayRows.reduce((a, r) => a + (r.debit || 0), 0))}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-rose-600 dark:text-rose-400 font-bold">TOTAL TRANSFERRED / CREDIT (AED):</span>
-                <span className="font-black text-rose-600 dark:text-rose-400 font-mono text-xs">
-                  {fmtNumber(summary?.credit ?? displayRows.reduce((a, r) => a + (r.credit || 0), 0))}
-                </span>
-              </div>
-              <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800">
-                <span className="text-slate-800 dark:text-slate-200 font-extrabold uppercase">BALANCE (AED):</span>
-                <span className="font-black text-blue-600 dark:text-blue-400 font-mono text-sm">
-                  {fmtNumber(summary?.balance ?? displayRows.reduce((a, r) => a + (r.balance || 0), 0))}
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Panel 3: BILL ENTRIES SUMMARY */}
-          <div className="flex flex-col rounded-2xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-            <div className="flex items-center gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-purple-50/50 dark:bg-purple-900/10">
-              <div className="bg-purple-600 p-1.5 rounded-full text-white">
-                <Package className="h-3.5 w-3.5" />
-              </div>
-              <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">3. BILL ENTRIES SUMMARY</h4>
-            </div>
-            <div className="p-4 flex flex-col gap-3 text-[10px] font-semibold text-slate-500 dark:text-slate-400 h-full justify-between">
-              <div className="flex justify-between items-center">
-                <span>TOTAL BILL / LEDGER ENTRIES:</span>
-                <span className="font-black text-purple-700 dark:text-purple-300 font-mono text-xs">{displayRows.length}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span>CLEARED ENTRIES:</span>
-                <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono text-xs">
-                  {displayRows.filter(r => r.balance === 0).length}
-                </span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-rose-600 dark:text-rose-400 font-bold">REMAINING ENTRIES:</span>
-                <span className="font-black text-rose-600 dark:text-rose-400 font-mono text-xs">
-                  {displayRows.filter(r => r.balance !== 0).length}
-                </span>
-              </div>
-              <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800">
-                <span>SYSTEM STATUS:</span>
-                <span className="font-black text-emerald-600 dark:text-emerald-400 uppercase text-[9px]">ONLINE & SYNCED</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Panel 4: ALL COUNTRIES REPORT */}
-          <div
-            onClick={() => setShowAllCountriesDetails(!showAllCountriesDetails)}
-            className={`flex flex-col rounded-2xl border-2 bg-white dark:bg-slate-900 shadow-xs overflow-hidden cursor-pointer transition-all duration-200 ${
-              showAllCountriesDetails
-                ? "border-amber-500 shadow-md ring-2 ring-amber-500/20"
-                : "border-slate-200 dark:border-slate-800 hover:border-amber-400"
-            }`}
-          >
-            <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-amber-50/50 dark:bg-amber-950/20">
-              <div className="flex items-center gap-2">
-                <div className="bg-amber-600 p-1.5 rounded-full text-white">
-                  <Globe className="h-3.5 w-3.5" />
-                </div>
-                <h4 className="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">4. ALL COUNTRIES REPORT</h4>
-              </div>
-              <span className="text-[9px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-2 py-0.5 rounded font-black text-slate-600 dark:text-slate-300 uppercase">
-                {showAllCountriesDetails ? "HIDE DETAILS" : "SHOW DETAILS"}
-              </span>
-            </div>
-            <div className="p-3 flex flex-col gap-2 text-[10px] font-semibold text-slate-500 dark:text-slate-400 h-full justify-between">
-              {countrySummaries.map((r, idx) => (
-                <div key={idx} className="flex justify-between items-center bg-slate-50 dark:bg-slate-850 p-2 rounded-xl border border-slate-200/60 dark:border-slate-800">
-                  <span className="font-extrabold text-slate-900 dark:text-slate-100 uppercase">{r.country}</span>
-                  <span className="bg-white dark:bg-slate-800 px-2 py-0.5 rounded text-[9px] font-black text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700">
-                    {r.activeAccounts} BRANCHES
-                  </span>
-                </div>
-              ))}
-              <div className="text-center pt-1 text-[9px] font-extrabold text-amber-600 dark:text-amber-400 uppercase tracking-wider">
-                {showAllCountriesDetails ? "SHOW REPORT DETAILS" : "CLICK TO SHOW REPORT DETAILS"}
-              </div>
-            </div>
-          </div>
+        <div className="flex items-center gap-2">
+          <span>USER NAME:</span>
+          <span className="text-slate-900 dark:text-slate-100 font-bold">{sessionInfo?.user?.fullName || "SUPER ADMIN"}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span>DATE:</span>
+          <span className="text-slate-900 dark:text-slate-100 font-bold">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <span>TIME:</span>
+          <span className="text-slate-900 dark:text-slate-100 font-bold">{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true }).toUpperCase()}</span>
         </div>
       </div>
 
-      {/* Country Cards Details Breakdown when toggle is active */}
-      {showAllCountriesDetails && countrySummaries.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 mb-4">
-          {countrySummaries.map((card) => (
-            <div key={card.country} className="rounded-xl border border-border bg-card dark:border-slate-700 dark:bg-[#0b1730] p-4 shadow-sm dark:shadow-[0_10px_40px_rgba(0,0,0,0.25)] transition-all hover:shadow-md dark:hover:shadow-[0_15px_50px_rgba(0,0,0,0.4)]">
-              <div className="mb-3 flex items-start justify-between gap-2 border-b border-border dark:border-slate-700/50 pb-3">
-                <div>
-                  <div className="text-[11px] font-black uppercase tracking-wider text-muted-foreground dark:text-slate-400">{card.country}</div>
-                  <div className="text-xs font-black text-blue-600 dark:text-blue-400">{card.currency || "-"}</div>
-                </div>
-                <span className="rounded-full bg-blue-100 border border-blue-200 dark:bg-blue-900/40 dark:border-blue-800/60 px-2.5 py-1 text-[10px] font-black text-blue-700 dark:text-blue-300">{card.activeAccounts} Active</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2 text-[10px] normal-case">
-                <div className="rounded-lg bg-slate-50 border border-slate-100 dark:bg-slate-800/50 dark:border-slate-700/50 p-2.5">
-                  <div className="font-bold uppercase text-slate-500 dark:text-slate-400 mb-0.5">Entries</div>
-                  <div className="font-mono text-sm font-black text-slate-700 dark:text-slate-200">{fmtNumber(card.totalEntries).replace(/\.00$/, '')}</div>
-                </div>
-                <div className="rounded-lg bg-emerald-50 border border-emerald-100 dark:bg-emerald-900/20 dark:border-emerald-800/30 p-2.5">
-                  <div className="font-bold uppercase text-emerald-600 dark:text-emerald-500 mb-0.5">Credit</div>
-                  <div className="font-mono text-xs font-black text-emerald-700 dark:text-emerald-400">{fmtNumber(card.credit)}</div>
-                </div>
-                <div className="rounded-lg bg-rose-50 border border-rose-100 dark:bg-rose-900/20 dark:border-rose-800/30 p-2.5">
-                  <div className="font-bold uppercase text-rose-600 dark:text-rose-500 mb-0.5">Debit</div>
-                  <div className="font-mono text-xs font-black text-rose-700 dark:text-rose-400">{fmtNumber(card.debit)}</div>
-                </div>
-                <div className="rounded-lg bg-blue-50 border border-blue-100 dark:bg-blue-900/20 dark:border-blue-800/30 p-2.5">
-                  <div className="font-bold uppercase text-blue-600 dark:text-blue-400 mb-0.5">Balance</div>
-                  <div className="font-mono text-xs font-black text-blue-700 dark:text-blue-300">{fmtNumber(card.balance)}</div>
-                </div>
-              </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+        {/* Panel 1: Branch & User Details */}
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-blue-50/50 dark:bg-blue-900/10">
+            <div className="bg-blue-600 p-1 rounded-full text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
-          ))}
+            <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
+              1. BRANCH & USER DETAILS
+            </h4>
+          </div>
+          <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+            <div className="flex justify-between items-center">
+              <span>COUNTRY:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">متحده عرب امارات</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>BRANCH NAME:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">MAIN BRANCH</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>USER ID:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] font-mono">{sessionInfo?.user?.id || "9B9D24D9-5532-47A1-B612-3E95F2285AB6"}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>USER NAME:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{sessionInfo?.user?.fullName || "SUPER ADMIN"}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>ROLE:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">SUPER ADMIN</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>DATE & TIME:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}</span>
+            </div>
+            <div className="flex justify-between items-center mt-auto pt-1">
+              <span>STATUS:</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">ACTIVE</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Panel 2: Global Financial Summary */}
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
+            <div className="bg-emerald-600 p-1 rounded-full text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+            </div>
+            <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
+              2. GLOBAL FINANCIAL SUMMARY
+            </h4>
+          </div>
+          <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+            <div className="flex justify-between items-center">
+              <span>TOTAL GLOBAL ENTRIES:</span>
+              <span className="font-black text-slate-800 dark:text-slate-200">{summary?.entries || displayRows.reduce((acc, r) => acc + (r.entries || 0), 0)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>TOTAL CREDIT (AED):</span>
+              <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono">{fmtNumber(summary?.credit || displayRows.reduce((acc, r) => acc + (r.credit || 0), 0))}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-rose-600 dark:text-rose-400">TOTAL DEBIT (AED):</span>
+              <span className="font-black text-rose-600 dark:text-rose-400 font-mono">{fmtNumber(summary?.debit || displayRows.reduce((acc, r) => acc + (r.debit || 0), 0))}</span>
+            </div>
+            <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
+              <span className="text-slate-700 dark:text-slate-300 font-bold">BALANCE (AED):</span>
+              <span className="font-black text-blue-600 dark:text-blue-400 font-mono text-sm">{fmtNumber(summary?.balance || displayRows.reduce((acc, r) => acc + (r.balance || 0), 0))}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Panel 3: Bill Entries Summary */}
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-purple-50/50 dark:bg-purple-900/10">
+            <div className="bg-purple-600 p-1 rounded-full text-white">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+            </div>
+            <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">
+              3. BILL ENTRIES SUMMARY
+            </h4>
+          </div>
+          <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+            <div className="flex justify-between items-center">
+              <span>TOTAL BILL ENTRIES:</span>
+              <span className="font-black text-slate-800 dark:text-slate-200">{displayRows.length}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>CLEARED ENTRIES:</span>
+              <span className="font-black text-emerald-600 dark:text-emerald-400">0</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-rose-600">REMAINING ENTRIES:</span>
+              <span className="font-black text-rose-600">{displayRows.length}</span>
+            </div>
+            <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+              <span>SYSTEM STATUS:</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">ONLINE & SYNCED</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Panel 4: All Countries Report Details Toggle */}
+        <button
+          type="button"
+          onClick={() => setShowAllCountries(!showAllCountries)}
+          className={cn(
+            "flex flex-col rounded-xl border transition-all duration-200 text-left overflow-hidden h-full group",
+            showAllCountries
+              ? "border-orange-500 bg-orange-50/30 shadow-md dark:border-orange-500/50 dark:bg-orange-950/20"
+              : "border-slate-200 bg-white shadow-sm hover:border-orange-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+          )}
+        >
+          <div className={cn(
+            "flex items-center justify-between px-4 py-3 border-b w-full transition-colors",
+            showAllCountries
+              ? "border-orange-200 bg-orange-100/50 dark:border-orange-900/50 dark:bg-orange-900/30"
+              : "border-slate-100 bg-orange-50/50 dark:border-slate-800 dark:bg-orange-900/10"
+          )}>
+            <div className="flex items-center gap-2">
+              <div className={cn(
+                "p-1 rounded-full text-white transition-colors",
+                showAllCountries ? "bg-orange-500" : "bg-orange-600"
+              )}>
+                <Globe className="h-3.5 w-3.5" />
+              </div>
+              <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">
+                4. ALL COUNTRIES REPORT
+              </h4>
+            </div>
+            <span className="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
+              {showAllCountries ? "HIDE DETAILS" : "SHOW DETAILS"}
+            </span>
+          </div>
+          <div className="p-4 flex flex-col justify-between flex-1 w-full gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
+            <div className="space-y-1.5">
+              {countryDashboardData.slice(0, 3).map((item) => (
+                <div key={item.name} className="flex justify-between items-center p-1.5 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
+                  <span className="font-bold text-slate-800 dark:text-slate-200">{item.name}</span>
+                  <span className="text-[10px] font-mono text-slate-500">{item.branches.size} BRANCHES</span>
+                </div>
+              ))}
+            </div>
+            <div className="mt-2 text-[10px] uppercase font-bold text-orange-600 dark:text-orange-400 hover:underline flex items-center gap-1">
+              {showAllCountries ? "HIDE REPORT DETAILS ↑" : "SHOW REPORT DETAILS →"}
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* Collapsible Country & Branch Breakdown Accordion */}
+      {showAllCountries && (
+        <div className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm overflow-hidden p-4 animate-in fade-in slide-in-from-top-2 duration-200 mb-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {countryDashboardData.map((item) => (
+              <details key={item.name} className="group/card overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900" open>
+                <summary className="cursor-pointer list-none">
+                  <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-3 text-white flex justify-between items-center">
+                    <span className="font-black tracking-wide text-sm flex items-center gap-2">
+                      <span className="transition-transform group-open/card:rotate-90">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
+                      </span>
+                      {getFlag(item.name)} {item.name}
+                    </span>
+                    <span className="bg-white/20 text-[10px] font-bold px-2 py-0.5 rounded-full">{item.entries} Trx</span>
+                  </div>
+                  <div className="p-4 space-y-3 bg-white dark:bg-slate-950">
+                    <div className="flex justify-between items-end border-b border-slate-100 dark:border-slate-800 pb-2">
+                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Currency</span>
+                      <span className="text-base font-black text-slate-800 dark:text-slate-200">{item.currency}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-slate-500">Total Credit</span>
+                      <span className="font-black text-emerald-600">{fmtNumber(item.credit)}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-bold text-slate-500">Total Debit</span>
+                      <span className="font-black text-rose-600">{fmtNumber(item.debit)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800">
+                      <span className="text-xs font-bold text-slate-500 uppercase">Balance</span>
+                      <span className="text-lg font-black text-slate-900 dark:text-slate-100">{fmtNumber(item.balance)}</span>
+                    </div>
+                    <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+                      <span className="font-semibold text-slate-500">{item.activeAccounts} Active Accounts</span>
+                      <span className="font-semibold text-slate-500">{item.branches.size} Branches</span>
+                    </div>
+                  </div>
+                </summary>
+
+                {/* Branch Details Expanded Content */}
+                <div className="bg-slate-50 dark:bg-slate-900/50 p-3 border-t border-slate-100 dark:border-slate-800 max-h-[300px] overflow-y-auto space-y-2">
+                  <div className="text-[10px] font-bold uppercase text-slate-500 mb-1 pl-1">Branch Breakdown</div>
+                  {Array.from(item.branchData.values()).map((b) => (
+                    <div key={b.name} className="bg-white dark:bg-slate-950 rounded-lg p-2.5 border border-slate-200 dark:border-slate-800 shadow-sm">
+                      <div className="flex justify-between items-center mb-2 pb-1.5 border-b border-slate-100 dark:border-slate-800">
+                        <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 uppercase truncate pr-2">{b.name}</span>
+                        <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 rounded">{b.entries} Trx</span>
+                      </div>
+                      <div className="flex justify-between items-center text-[10px] mb-1">
+                        <span className="font-semibold text-slate-500">Credit:</span>
+                        <span className="font-bold text-emerald-600">{fmtNumber(b.credit)}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-[10px] mb-1">
+                        <span className="font-semibold text-slate-500">Debit:</span>
+                        <span className="font-bold text-rose-600">{fmtNumber(b.debit)}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-[10px] pt-1 border-t border-slate-100 dark:border-slate-800">
+                        <span className="font-semibold text-slate-500">Balance:</span>
+                        <span className="font-bold text-blue-600">{fmtNumber(b.balance)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </details>
+            ))}
+          </div>
         </div>
       )}
 
