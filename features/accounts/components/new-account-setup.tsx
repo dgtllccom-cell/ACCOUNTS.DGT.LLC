@@ -579,7 +579,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
   const isEditMode = Boolean(initialAccountId);
   const accountPreview = lastCreated?.accountNumber || accountCode || (branchCode ? "AUTO" : "");
   const readyToSave = Boolean(country && branchType && branch && accountTitle && subType && category && accountName);
-  const saved = message.startsWith("Saved");
+  const saved = message?.startsWith("Saved") ?? false;
 
   useEffect(() => {
     if (!branchCode || branchCode === lastBranchCode) return;
