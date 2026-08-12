@@ -51,26 +51,40 @@ export function DashboardFrame({
 
   useEffect(() => {
     function handleChunkError(event: PromiseRejectionEvent | ErrorEvent) {
-      const reason = "reason" in event ? event.reason : event.error;
+      const reason = "reason" in event ? event.reason : (event as ErrorEvent).error;
       const msg = String(reason?.message || reason || "");
       const isChunkError =
         reason?.name === "ChunkLoadError" ||
         msg.includes("Loading chunk") ||
         msg.includes("ChunkLoadError") ||
+        msg.includes("failed to fetch") ||
         msg.includes("Failed to fetch dynamically imported module");
 
       if (isChunkError) {
         const countKey = "erp_auto_chunk_cnt";
-        const count = parseInt(sessionStorage.getItem(countKey) || "0", 10);
+        const tsKey = "erp_auto_chunk_ts";
+        const now = Date.now();
+        const lastTs = parseInt(sessionStorage.getItem(tsKey) || "0", 10);
+        let count = parseInt(sessionStorage.getItem(countKey) || "0", 10);
+
+        if (now - lastTs > 15000) count = 0;
+
         if (count < 3) {
           sessionStorage.setItem(countKey, String(count + 1));
+          sessionStorage.setItem(tsKey, String(now));
           if (window.isSecureContext && "serviceWorker" in navigator) {
             navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister())).catch(() => {});
           }
           if ("caches" in window) {
             caches.keys().then((keys) => keys.forEach((k) => caches.delete(k))).catch(() => {});
           }
-          window.location.replace(window.location.pathname + "?_v=" + Date.now());
+          let targetRoute: string | null = null;
+          try {
+            const match = msg.match(/_next\/static\/chunks\/app(\/[^.\?]+?)(?:\/page|\/layout|\/route|-[a-f0-9]+|\.js)/i);
+            if (match && match[1]) targetRoute = match[1];
+          } catch (e) {}
+          const dest = targetRoute || window.location.pathname;
+          window.location.replace(dest + (dest.includes("?") ? "&" : "?") + "_v=" + now);
         }
       }
     }
@@ -82,6 +96,7 @@ export function DashboardFrame({
     const resetTimer = setTimeout(() => {
       try {
         sessionStorage.removeItem("erp_auto_chunk_cnt");
+        sessionStorage.removeItem("erp_auto_chunk_ts");
       } catch {}
     }, 3000);
 

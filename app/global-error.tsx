@@ -27,9 +27,16 @@ export default function GlobalError({
         try {
           if (typeof window !== "undefined") {
             const countKey = "erp_auto_chunk_cnt";
-            const count = parseInt(sessionStorage.getItem(countKey) || "0", 10);
+            const tsKey = "erp_auto_chunk_ts";
+            const now = Date.now();
+            const lastTs = parseInt(sessionStorage.getItem(tsKey) || "0", 10);
+            let count = parseInt(sessionStorage.getItem(countKey) || "0", 10);
+
+            if (now - lastTs > 15000) count = 0;
+
             if (count < 3) {
               sessionStorage.setItem(countKey, String(count + 1));
+              sessionStorage.setItem(tsKey, String(now));
               if (window.isSecureContext && "serviceWorker" in navigator) {
                 const regs = await navigator.serviceWorker.getRegistrations();
                 for (const r of regs) await r.unregister();
@@ -38,7 +45,14 @@ export default function GlobalError({
                 const keys = await caches.keys();
                 for (const k of keys) await caches.delete(k);
               }
-              window.location.replace(window.location.pathname + "?_v=" + Date.now());
+              const msg = String(error?.message || error || "");
+              let targetRoute: string | null = null;
+              try {
+                const match = msg.match(/_next\/static\/chunks\/app(\/[^.\?]+?)(?:\/page|\/layout|\/route|-[a-f0-9]+|\.js)/i);
+                if (match && match[1]) targetRoute = match[1];
+              } catch (e) {}
+              const dest = targetRoute || window.location.pathname;
+              window.location.replace(dest + (dest.includes("?") ? "&" : "?") + "_v=" + now);
             }
           }
         } catch {}

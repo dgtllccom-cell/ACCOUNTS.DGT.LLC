@@ -11,9 +11,16 @@ function clearChunkReloadCache() {
         sessionStorage.removeItem("chunk_reload_attempt");
         sessionStorage.removeItem("chunk_reload_timestamp");
         sessionStorage.removeItem("erp_chunk_reload_timestamp");
+        sessionStorage.removeItem("erp_auto_chunk_cnt");
+        sessionStorage.removeItem("erp_auto_chunk_ts");
         for (let i = sessionStorage.length - 1; i >= 0; i--) {
           const key = sessionStorage.key(i);
-          if (key && (key.startsWith("chunk_reload") || key.startsWith("erp_chunk_reload"))) {
+          if (
+            key &&
+            (key.startsWith("chunk_reload") ||
+              key.startsWith("erp_chunk_reload") ||
+              key.startsWith("erp_auto_chunk"))
+          ) {
             sessionStorage.removeItem(key);
           }
         }
@@ -31,6 +38,16 @@ function clearChunkReloadCache() {
       }
     }
   } catch (e) {}
+}
+
+function extractTargetRouteFromChunkError(msg: string): string | null {
+  try {
+    const match = msg.match(/_next\/static\/chunks\/app(\/[^.\?]+?)(?:\/page|\/layout|\/route|-[a-f0-9]+|\.js)/i);
+    if (match && match[1]) {
+      return match[1];
+    }
+  } catch (e) {}
+  return null;
 }
 
 export default function DashboardError({
@@ -54,21 +71,32 @@ export default function DashboardError({
 
     if (isChunkError) {
       const countKey = "erp_auto_chunk_cnt";
-      const currentCount = parseInt(sessionStorage.getItem(countKey) || "0", 10);
+      const tsKey = "erp_auto_chunk_ts";
       const now = Date.now();
+      const lastTs = parseInt(sessionStorage.getItem(tsKey) || "0", 10);
+      let currentCount = parseInt(sessionStorage.getItem(countKey) || "0", 10);
+
+      if (now - lastTs > 15000) {
+        currentCount = 0;
+      }
 
       if (currentCount < 3) {
         clearChunkReloadCache();
         sessionStorage.setItem(countKey, String(currentCount + 1));
-        window.location.replace(window.location.pathname + "?_v=" + now);
+        sessionStorage.setItem(tsKey, String(now));
+        const targetRoute = extractTargetRouteFromChunkError(msg) || window.location.pathname;
+        window.location.replace(targetRoute + (targetRoute.includes("?") ? "&" : "?") + "_v=" + now);
         return;
       }
     }
   }, [error]);
 
+  const msg = String(error?.message || error || "");
+
   const handleTryAgain = () => {
     clearChunkReloadCache();
-    window.location.href = window.location.pathname + "?_t=" + Date.now();
+    const targetRoute = extractTargetRouteFromChunkError(msg) || window.location.pathname;
+    window.location.href = targetRoute + (targetRoute.includes("?") ? "&" : "?") + "_t=" + Date.now();
   };
 
   return (

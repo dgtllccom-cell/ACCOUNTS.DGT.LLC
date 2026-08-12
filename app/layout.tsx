@@ -105,11 +105,22 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function(regs) { regs.forEach(function(r) { r.unregister(); }); }).catch(function() {});
           }
+          var targetRoute = null;
+          try {
+            var match = str.match(/_next\/static\/chunks\/app(\/[^.\\?]+?)(?:\\/page|\\/layout|\\/route|-[a-f0-9]+|\\.js)/i);
+            if (match && match[1]) targetRoute = match[1];
+          } catch(e) {}
+          var dest = targetRoute || window.location.pathname;
           var countKey = 'erp_auto_chunk_cnt';
+          var tsKey = 'erp_auto_chunk_ts';
+          var now = Date.now();
+          var lastTs = parseInt(sessionStorage.getItem(tsKey) || '0', 10);
           var count = parseInt(sessionStorage.getItem(countKey) || '0', 10);
+          if (now - lastTs > 15000) count = 0;
           if (count < 3) {
             sessionStorage.setItem(countKey, String(count + 1));
-            window.location.replace(window.location.pathname + '?_v=' + Date.now());
+            sessionStorage.setItem(tsKey, String(now));
+            window.location.replace(dest + (dest.indexOf('?') !== -1 ? '&' : '?') + '_v=' + now);
           }
         }
       } catch (inner) {}
