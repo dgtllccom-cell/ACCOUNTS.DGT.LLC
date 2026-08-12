@@ -1,6 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
+import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 
 export function SimpleModal({
@@ -14,7 +15,7 @@ export function SimpleModal({
   onClose: () => void;
   className?: string;
 }) {
-  return (
+  const modal = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 p-2 sm:p-4 overflow-y-auto print:static print:bg-transparent print:p-0 print:block backdrop-blur-xs">
       <div
         className={cn(
@@ -43,4 +44,13 @@ export function SimpleModal({
       </div>
     </div>
   );
+
+  // Portal to document.body so this always positions against the true viewport, not whatever
+  // ancestor happens to establish a CSS containing block (e.g. a parent modal's backdrop-blur —
+  // `backdrop-filter` creates a containing block for `position: fixed` descendants, which was
+  // trapping/clipping a SimpleModal nested inside another SimpleModal instead of centering it on
+  // screen — the exact "New Customer" picker opened from inside "New Employee Registration",
+  // itself opened from inside the User Registration Wizard, three modals deep).
+  if (typeof document === "undefined") return modal;
+  return createPortal(modal, document.body);
 }

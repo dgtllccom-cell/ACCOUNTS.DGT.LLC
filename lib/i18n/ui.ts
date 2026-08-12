@@ -1638,6 +1638,13 @@ export type UiKey =
   | "common.create"
   | "common.register"
   | "common.actions"
+  | "ujr.view_details"
+  | "ujr.edit_user"
+  | "ujr.toggle_status"
+  | "ujr.delete_user"
+  | "ujr.more_actions"
+  | "ujr.showing_range"
+  | "ujr.no_records"
   | "common.status"
   | "common.active"
   | "common.inactive"
@@ -2833,6 +2840,13 @@ const en: Dict = {
   "common.create": "Create",
   "common.register": "Register",
   "common.actions": "Actions",
+  "ujr.view_details": "View Details",
+  "ujr.edit_user": "Edit User",
+  "ujr.toggle_status": "Toggle Status",
+  "ujr.delete_user": "Delete User",
+  "ujr.more_actions": "More Actions",
+  "ujr.showing_range": "Showing {from} to {to} of {count} entries",
+  "ujr.no_records": "No user journal records found for the selected filters.",
   "common.status": "Status",
   "common.active": "Active",
   "common.inactive": "Inactive",
@@ -4932,6 +4946,13 @@ const ur: Dict = {
   "common.create": "بنائیں",
   "common.register": "رجسٹر کریں",
   "common.actions": "کارروائیاں",
+  "ujr.view_details": "تفصیلات دیکھیں",
+  "ujr.edit_user": "صارف میں ترمیم کریں",
+  "ujr.toggle_status": "حیثیت تبدیل کریں",
+  "ujr.delete_user": "صارف حذف کریں",
+  "ujr.more_actions": "مزید کارروائیاں",
+  "ujr.showing_range": "{count} اندراجات میں سے {from} سے {to} تک دکھایا جا رہا ہے",
+  "ujr.no_records": "منتخب فلٹرز کے لیے کوئی صارف جرنل ریکارڈ نہیں ملا۔",
   "common.status": "حیثیت",
   "common.active": "فعال",
   "common.inactive": "غیر فعال",
@@ -7022,6 +7043,13 @@ const ar: Dict = {
   "common.create": "إنشاء",
   "common.register": "تسجيل",
   "common.actions": "الإجراءات",
+  "ujr.view_details": "عرض التفاصيل",
+  "ujr.edit_user": "تعديل المستخدم",
+  "ujr.toggle_status": "تبديل الحالة",
+  "ujr.delete_user": "حذف المستخدم",
+  "ujr.more_actions": "المزيد من الإجراءات",
+  "ujr.showing_range": "عرض {from} إلى {to} من {count} إدخال",
+  "ujr.no_records": "لم يتم العثور على سجلات يومية للمستخدم للفلاتر المحددة.",
   "common.status": "الحالة",
   "common.active": "نشط",
   "common.inactive": "غير نشط",
@@ -9111,6 +9139,13 @@ const fa: Dict = {
   "common.create": "ایجاد",
   "common.register": "ثبت",
   "common.actions": "عملیات",
+  "ujr.view_details": "مشاهده جزئیات",
+  "ujr.edit_user": "ویرایش کاربر",
+  "ujr.toggle_status": "تغییر وضعیت",
+  "ujr.delete_user": "حذف کاربر",
+  "ujr.more_actions": "عملیات بیشتر",
+  "ujr.showing_range": "نمایش {from} تا {to} از {count} ورودی",
+  "ujr.no_records": "هیچ رکورد دفتر روزنامه کاربری برای فیلترهای انتخاب‌شده یافت نشد.",
   "common.status": "وضعیت",
   "common.active": "فعال",
   "common.inactive": "غیرفعال",
@@ -11199,6 +11234,13 @@ const ps: Dict = {
   "common.create": "جوړول",
   "common.register": "ثبتول",
   "common.actions": "کړنې",
+  "ujr.view_details": "تفصیلات وګورئ",
+  "ujr.edit_user": "کارن سمون کړئ",
+  "ujr.toggle_status": "حالت بدل کړئ",
+  "ujr.delete_user": "کارن ړنګ کړئ",
+  "ujr.more_actions": "نورې کړنې",
+  "ujr.showing_range": "{count} ننوتنو کې څخه {from} تر {to} ښودل کیږي",
+  "ujr.no_records": "د ټاکل شویو فلټرونو لپاره د کارن جرنل ریکارډ ونه موندل شو.",
   "common.status": "حالت",
   "common.active": "فعال",
   "common.inactive": "غیرفعال",

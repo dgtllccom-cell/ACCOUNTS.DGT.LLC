@@ -43,6 +43,7 @@ import { listCities, listCountries, type LocationCity } from "@/features/locatio
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { enterpriseRolePermissions } from "@/lib/permissions/enterprise-roles";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { apiPost } from "@/lib/api/client";
 import { normalizeUserCode } from "@/lib/services/user-identity-service";
 import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
@@ -147,21 +148,13 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const searchParams = useSearchParams();
   const urlUserId = userIdProp || searchParams.get("userId");
 
-  const [activeLang, setActiveLang] = useState<SupportedLanguage>("en");
-  useEffect(() => {
-    if (typeof document === "undefined") return;
-    function syncLang() {
-      const docLang = document.documentElement.lang as SupportedLanguage;
-      if (["en", "ur", "ar", "fa", "ps"].includes(docLang)) setActiveLang(docLang);
-    }
-    syncLang();
-    // Previously read document.documentElement.lang only once on mount, so switching the
-    // active language while this wizard was open left the whole form (including the
-    // employee dropdown's names) stuck in whatever language it had when it first mounted.
-    const observer = new MutationObserver(syncLang);
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
-    return () => observer.disconnect();
-  }, []);
+  // Shared reactive language store (not a hand-rolled document.documentElement.lang watcher):
+  // that attribute holds the full BCP-47 tag (e.g. "ur-PK"), which never exact-matched the
+  // bare "ur"/"ar"/"fa"/"ps" codes a from-scratch watcher here checked against, so this wizard
+  // (including the employee dropdown's names) silently stayed stuck in English after a language
+  // switch. useActiveLanguage() checks localStorage's bare code first and is shared by every
+  // other translated component in the app, so this now reacts the same way they do.
+  const activeLang = useActiveLanguage();
 
   const tr = (key: string) => userWizardTranslations[key]?.[activeLang] || userWizardTranslations[key]?.["en"] || key;
 

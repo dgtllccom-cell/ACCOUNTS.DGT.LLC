@@ -6,6 +6,8 @@ import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import { createPortal } from "react-dom";
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import {
   Bookmark,
   Building2,
@@ -134,6 +136,7 @@ function formatDateTime(value: string) {
 }
 
 export function UserJournalReport() {
+  const lang = useActiveLanguage();
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -686,12 +689,7 @@ export function UserJournalReport() {
                         {row.branchCode || "-"}
                       </td>
                       <td className="border-b border-r border-[var(--ujr-line)] px-3 py-2 font-black whitespace-nowrap text-left">
-                        <div className="flex items-center gap-2">
-                          <div className="grid h-6 w-6 place-items-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-[8px] font-black text-white shrink-0 shadow-sm">
-                            {initials(row.fullName)}
-                          </div>
-                          <span>{row.fullName}</span>
-                        </div>
+                        {row.fullName}
                       </td>
                       {/* User ID (System) */}
                       <td className="border-b border-r border-[var(--ujr-line)] px-3 py-2 font-mono font-bold text-[10px] text-[var(--ujr-muted)] whitespace-nowrap">
@@ -747,23 +745,9 @@ export function UserJournalReport() {
                           </span>
                         </div>
                       </td>
-                      {/* Actions */}
+                      {/* Actions — a single ⋮ menu holds View/Edit/Toggle/Delete; no separate row buttons */}
                       <td className="border-b border-[var(--ujr-line)] px-3 py-2 ujr-action-container relative">
-                        <div className="flex items-center gap-2">
-                          {/* View Details icon */}
-                          <button className="ujr-icon-btn" type="button" onClick={() => setViewUser(row)} title="View Details">
-                            <Eye className="h-4 w-4" />
-                          </button>
-                          {/* Edit icon — direct navigate to edit page */}
-                          <button
-                            className="ujr-icon-btn ujr-icon-btn-edit"
-                            type="button"
-                            onClick={() => triggerEdit(row)}
-                            title="Edit User"
-                          >
-                            <Edit3 className="h-4 w-4" />
-                          </button>
-                          {/* More actions dropdown */}
+                        <div className="flex items-center justify-end">
                           <div className="relative">
                             <button
                               className="ujr-icon-btn"
@@ -772,39 +756,39 @@ export function UserJournalReport() {
                                 e.stopPropagation();
                                 setActiveActionUserId(activeActionUserId === row.userId ? null : row.userId);
                               }}
-                              title="More Actions"
+                              title={t(lang, "ujr.more_actions", "More Actions")}
                             >
                               <MoreVertical className="h-4 w-4" />
                             </button>
                             {activeActionUserId === row.userId && (
-                              <div className="ujr-action-dropdown absolute right-0 mt-1.5 w-44 bg-[var(--ujr-card)] border border-[var(--ujr-line)] rounded-lg shadow-lg z-[80] py-1 text-left">
+                              <div className="ujr-action-dropdown absolute end-0 mt-1.5 w-44 bg-[var(--ujr-card)] border border-[var(--ujr-line)] rounded-lg shadow-lg z-[80] py-1 text-start">
                                 <button
                                   type="button"
-                                  className="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold flex items-center gap-1.5 text-[var(--ujr-title)]"
+                                  className="w-full text-start px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold flex items-center gap-1.5 text-[var(--ujr-title)]"
                                   onClick={() => { setActiveActionUserId(null); setViewUser(row); }}
                                 >
-                                  <Eye className="h-3.5 w-3.5 text-[#1455ff]" /> View Details
+                                  <Eye className="h-3.5 w-3.5 text-[#1455ff]" /> {t(lang, "ujr.view_details", "View Details")}
                                 </button>
                                 <button
                                   type="button"
-                                  className="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold flex items-center gap-1.5 text-[var(--ujr-title)]"
+                                  className="w-full text-start px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold flex items-center gap-1.5 text-[var(--ujr-title)]"
                                   onClick={() => { setActiveActionUserId(null); triggerEdit(row); }}
                                 >
-                                  <Edit3 className="h-3.5 w-3.5 text-orange-500" /> Edit User
+                                  <Edit3 className="h-3.5 w-3.5 text-orange-500" /> {t(lang, "ujr.edit_user", "Edit User")}
                                 </button>
                                 <button
                                   type="button"
-                                  className="w-full text-left px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold flex items-center gap-1.5 text-[var(--ujr-title)]"
+                                  className="w-full text-start px-3 py-1.5 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold flex items-center gap-1.5 text-[var(--ujr-title)]"
                                   onClick={() => { setActiveActionUserId(null); handleToggleStatus(row.userId, row.status); }}
                                 >
-                                  <Power className="h-3.5 w-3.5 text-emerald-500" /> Toggle Status
+                                  <Power className="h-3.5 w-3.5 text-emerald-500" /> {t(lang, "ujr.toggle_status", "Toggle Status")}
                                 </button>
                                 <button
                                   type="button"
-                                  className="w-full text-left px-3 py-1.5 hover:bg-red-50 dark:hover:bg-red-950/40 text-xs font-semibold flex items-center gap-1.5 text-red-600"
+                                  className="w-full text-start px-3 py-1.5 hover:bg-red-50 dark:hover:bg-red-950/40 text-xs font-semibold flex items-center gap-1.5 text-red-600"
                                   onClick={() => { setActiveActionUserId(null); handleDeleteUser(row.userId, row.userCode, row.fullName); }}
                                 >
-                                  <Trash2 className="h-3.5 w-3.5" /> Delete User
+                                  <Trash2 className="h-3.5 w-3.5" /> {t(lang, "ujr.delete_user", "Delete User")}
                                 </button>
                               </div>
                             )}
@@ -814,7 +798,7 @@ export function UserJournalReport() {
                     </tr>
                   ))
                 ) : (
-                  <tr><td colSpan={13} className="px-4 py-8 text-center text-[var(--ujr-muted)]">No user journal records found for the selected filters.</td></tr>
+                  <tr><td colSpan={13} className="px-4 py-8 text-center text-[var(--ujr-muted)]">{t(lang, "ujr.no_records", "No user journal records found for the selected filters.")}</td></tr>
                 )}
               </tbody>
             </table>
@@ -822,7 +806,10 @@ export function UserJournalReport() {
 
           <div className="flex flex-col gap-2 px-4 py-2.5 text-xs font-semibold text-[var(--ujr-title)] sm:flex-row sm:items-center sm:justify-between">
             <div>
-              Showing {filteredRows.length ? pageStart + 1 : 0} to {pageEnd} of {filteredRows.length} entries
+              {t(lang, "ujr.showing_range", "Showing {from} to {to} of {count} entries")
+                .replace("{from}", String(filteredRows.length ? pageStart + 1 : 0))
+                .replace("{to}", String(pageEnd))
+                .replace("{count}", String(filteredRows.length))}
             </div>
             <div className="flex items-center gap-3">
               <select className="ujr-page-select" value={pageSize} onChange={(event) => setPageSize(Number(event.target.value))}>
