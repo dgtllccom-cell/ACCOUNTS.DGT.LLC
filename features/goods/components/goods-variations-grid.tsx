@@ -3,8 +3,10 @@
 import React, { useEffect, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
+  const lang = useActiveLanguage();
   const [goods, setGoods] = useState<any>(null);
   const [variations, setVariations] = useState<any[]>([]);
   const [countries, setCountries] = useState<any[]>([]);
@@ -21,7 +23,7 @@ export function GoodsVariationsGrid({ goodsId }: { goodsId: string }) {
     try {
       const [goodsRes, countriesRes] = await Promise.all([
         fetch(`/api/erp/goods/${goodsId}`).then(r => r.json()),
-        fetch("/api/erp/countries?limit=500").then(r => r.json())
+        fetch("/api/erp/locations/countries?limit=500").then(r => r.json())
       ]);
 
       if (goodsRes.ok && goodsRes.data) {
