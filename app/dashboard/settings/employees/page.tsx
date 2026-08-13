@@ -1,11 +1,9 @@
-"use client";
+import { EmployeeRegistry } from "@/features/employees/components/employee-registry";
 
-import { EmployeeManagementView } from "@/features/hr-payroll/components/employee-management-view";
-
-export default function EmployeeManagementPage() {
+export default function EmployeesPage() {
   return (
-    <div className="container mx-auto px-4 py-8">
-      <EmployeeManagementView />
+    <div className="p-6">
+      <EmployeeRegistry />
     </div>
   );
 }

@@ -1,10 +1,9 @@
-import { WarehouseManagement } from "@/features/warehouses/components/warehouse-management";
+import { WarehouseRegistry } from "@/features/warehouses/components/warehouse-registry";
 
-export const metadata = {
-  title: "Warehouse Master Form",
-  description: "Create and manage warehouses for the company.",
-};
-
-export default function WarehouseSettingsPage() {
-  return <WarehouseManagement />;
+export default function WarehousePage() {
+  return (
+    <div className="p-6">
+      <WarehouseRegistry />
+    </div>
+  );
 }

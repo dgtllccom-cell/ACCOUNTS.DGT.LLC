@@ -1,7 +1,9 @@
-import type { Route } from "next";
-import { redirect } from "next/navigation";
+﻿import { CompanyRegistrationTypeRegistry } from "@/features/company-registration-types/components/company-registration-type-registry";
 
-export default function CompanyRegistrationTypeSettingsRedirect() {
-  redirect("/dashboard/settings/management" as Route);
+export default function CompanyRegistrationTypePage() {
+  return (
+    <div className="p-6">
+      <CompanyRegistrationTypeRegistry />
+    </div>
+  );
 }
-
