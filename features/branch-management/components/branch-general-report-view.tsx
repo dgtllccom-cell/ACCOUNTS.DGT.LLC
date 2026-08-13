@@ -1765,7 +1765,7 @@ export function BranchGeneralReportView({
                                   label="Create User for Country"
                                   color="indigo"
                                   onClick={() => {
-                                    window.location.href = `/dashboard/settings/users/new?countryId=${encodeURIComponent(country.id)}`;
+                                    window.location.href = `/dashboard/users/new?countryId=${encodeURIComponent(country.id)}`;
                                     setActiveActionDropdownId(null);
                                     setActiveActionAnchorRect(null);
                                   }}
@@ -1922,7 +1922,7 @@ export function BranchGeneralReportView({
                                                   </button>
                                                   <button
                                                     onClick={() => {
-                                                      window.location.href = `/dashboard/settings/users/new?cityBranchId=${encodeURIComponent(cityBranch.id)}&countryId=${encodeURIComponent(country.id)}`;
+                                                      window.location.href = `/dashboard/users/new?cityBranchId=${encodeURIComponent(cityBranch.id)}&countryId=${encodeURIComponent(country.id)}`;
                                                     }}
                                                     className="rounded border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[8px] font-bold text-indigo-700 hover:bg-indigo-100 shadow-sm transition-all inline-flex items-center gap-0.5"
                                                     title={`Create new user for ${cityBranch.name}`}

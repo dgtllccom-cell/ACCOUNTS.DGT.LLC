@@ -77,9 +77,9 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
   {
     title: "Quick Setup",
     items: [
-      { icon: Users, label: "New User", href: "/dashboard/settings/users/new" },
-      { icon: Globe2, label: "New Country", href: "/dashboard/settings/countries/new" },
-      { icon: Building2, label: "New Branch", href: "/dashboard/settings/branches/new" },
+      { icon: Users, label: "New User", href: "/dashboard/users/new" },
+      { icon: Globe2, label: "New Country", href: "/dashboard/new-entry/branch-entry/country-branch" },
+      { icon: Building2, label: "New Branch", href: "/dashboard/new-entry/branch-entry/city-branch" },
     ],
   },
   {

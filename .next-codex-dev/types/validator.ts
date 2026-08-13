@@ -1928,6 +1928,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
   type __Unused = __Check
 }
 
+// Validate ../../app/api/erp/accounting/accounts/statement/export/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/erp/accounting/accounts/statement/export">> = Specific
+  const handler = {} as typeof import("../../app/api/erp/accounting/accounts/statement/export/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
 // Validate ../../app/api/erp/accounting/ledgers/[id]/statement/route.ts
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/erp/accounting/ledgers/[id]/statement">> = Specific
@@ -1995,6 +2004,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/erp/accounting/reports/ledger/balances">> = Specific
   const handler = {} as typeof import("../../app/api/erp/accounting/reports/ledger/balances/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/api/erp/accounting/reports/ledger/export/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/erp/accounting/reports/ledger/export">> = Specific
+  const handler = {} as typeof import("../../app/api/erp/accounting/reports/ledger/export/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check
@@ -3291,6 +3309,15 @@ type RouteHandlerConfig<Route extends AppRouteHandlerRoutes = AppRouteHandlerRou
 {
   type __IsExpected<Specific extends RouteHandlerConfig<"/api/erp/roznamcha/cash-summary">> = Specific
   const handler = {} as typeof import("../../app/api/erp/roznamcha/cash-summary/route.js")
+  type __Check = __IsExpected<typeof handler>
+  // @ts-ignore
+  type __Unused = __Check
+}
+
+// Validate ../../app/api/erp/roznamcha/export/route.ts
+{
+  type __IsExpected<Specific extends RouteHandlerConfig<"/api/erp/roznamcha/export">> = Specific
+  const handler = {} as typeof import("../../app/api/erp/roznamcha/export/route.js")
   type __Check = __IsExpected<typeof handler>
   // @ts-ignore
   type __Unused = __Check

@@ -1,0 +1,6 @@
+{
+  "/auth/login/page": "app/auth/login/page.js",
+  "/dashboard/ledger/outstanding/page": "app/dashboard/ledger/outstanding/page.js",
+  "/dashboard/reports/page": "app/dashboard/reports/page.js",
+  "/dashboard/super-admin/page": "app/dashboard/super-admin/page.js"
+}
