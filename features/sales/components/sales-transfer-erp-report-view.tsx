@@ -24,6 +24,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Th } from "@/components/ui/translated-th";
+import { deriveSalesBookingPostingState } from "@/lib/services/sales-booking-posting-state";
+import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
 
 /* ─────────────────────── helpers ─────────────────────── */
 
@@ -155,6 +157,7 @@ function SalesTransferErpReportViewContent({
   /* ── Derived values ────────────────────────────────────────── */
 
   const d = reportData;
+  const bookingPostingState = useMemo(() => deriveSalesBookingPostingState(d || {}), [d]);
 
   const goodsEntries: any[] = useMemo(() => {
     if (!d) return [];
@@ -172,6 +175,7 @@ function SalesTransferErpReportViewContent({
 
   const form = d?.form_data?.form || {};
   const totals = d?.form_data?.totals || {};
+  const paymentRoute = useMemo(() => resolveSalesBookingPaymentRoute(form.paymentType || d?.payment_type || "Advance Payment"), [form.paymentType, d?.payment_type]);
   const exchangeRate = Number(d?.exchange_rate || form.exchangeRate || 1);
   const currency = d?.currency || form.currencyType || "USD";
 
@@ -258,6 +262,8 @@ function getCurrencySymbol(c: string) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          paymentKind: paymentRoute.paymentKind,
+          paymentType: form.paymentType || paymentRoute.paymentLabel,
           advancePaid: 0
         })
       });
@@ -271,6 +277,7 @@ function getCurrencySymbol(c: string) {
         ...prev,
         ledger_posting_status: "posted",
         payment_status: json.data?.paymentStatus || "pending",
+        payment_kind: json.data?.paymentKind || paymentRoute.paymentKind,
         advance_paid: 0,
         remaining_due: totalSalesAmountPkr
       }));
@@ -515,7 +522,7 @@ function getCurrencySymbol(c: string) {
           const displayRemainingUsd = isPosted ? actualRemainingDueUsd : remainingBalanceUsd;
           const displayRemainingPkr = isPosted ? actualRemainingDuePkr : remainingBalancePkr;
           return (
-            <SectionCard icon={<CreditCard className="h-4 w-4" />} title="Payment Information" badge={d.payment_status || d.status}>
+            <SectionCard icon={<CreditCard className="h-4 w-4" />} title="Payment Information" badge={bookingPostingState.label}>
               <div className="grid sm:grid-cols-2 gap-x-8">
                 <div>
                   <InfoRow label="Total Purchase Amount" value={`${money(totalSalesAmountUsd)} ${currencySymbol} / ${money(totalSalesAmountPkr)} ${localCurrencySymbol}`} mono />
@@ -524,8 +531,9 @@ function getCurrencySymbol(c: string) {
                   <InfoRow label="Remaining Balance" value={`${money(displayRemainingUsd)} ${currencySymbol} / ${money(displayRemainingPkr)} ${localCurrencySymbol}`} mono />
                 </div>
                 <div>
-                  <InfoRow label="Payment Status" value={statusLabel(d.payment_status || d.status || "-")} />
-                  <InfoRow label="Payment Type" value={form.paymentType || "-"} />
+                  <InfoRow label="Payment Status" value={statusLabel(bookingPostingState.label === "BLACK" ? "completed" : d.payment_status || d.status || "-")} />
+                  <InfoRow label="Selected Mode" value={form.paymentType || "-"} />
+                  <InfoRow label="Payment Route" value={paymentRoute.paymentLabel} />
                   <InfoRow label="Due Date" value={fmtDate(form.dueDate || form.loadingDate)} />
                 </div>
               </div>

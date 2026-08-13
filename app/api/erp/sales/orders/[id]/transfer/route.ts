@@ -7,6 +7,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
+import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -94,6 +95,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const formData = orderRow.form_data || {};
     const form = formData.form || {};
     const workflow = formData.workflow || {};
+    const paymentRoute = resolveSalesBookingPaymentRoute(body?.paymentKind ?? body?.paymentType ?? form.paymentType ?? "Advance Payment");
 
     const alreadyTransferred =
       orderRow.ledger_posting_status === "transferred" ||
@@ -146,6 +148,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         transferStatus: "transferred",
         invoiceStatus: workflow.invoiceStatus || "available",
         paymentStatus: "pending",
+        paymentKind: paymentRoute.paymentKind,
+        paymentRouteLabel: paymentRoute.paymentLabel,
         journalStatus: "posted",
         ledgerStatus: "posted",
         currentStep: "sales_transfer_payment",
@@ -163,6 +167,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       transferTrace: {
         transferOnly: true,
         salesOrderId: params.id,
+        paymentKind: paymentRoute.paymentKind,
         systemBillNumber,
         manualBillNumber,
         partyName,
@@ -202,7 +207,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const { data: paymentId, error: rpcError } = await supabase.rpc("post_sales_booking_transfer", {
       p_actor_id: session.userId,
       p_sales_order_id: params.id,
-      p_payment_kind: "advance",
+      p_payment_kind: paymentRoute.paymentKind,
       p_entry_date: new Date().toISOString().slice(0, 10),
       p_amount: totalSalesAmount,
       p_currency_code: orderRow.currency_code || form.currencyType || "USD",
@@ -270,6 +275,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const patch = {
       ledger_posting_status: "posted",
       payment_status: "completed",
+      payment_kind: paymentRoute.paymentKind,
       paid_amount: totalSalesAmount,
       remaining_amount: 0,
       updated_at: now,
@@ -279,6 +285,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
           ...updatedFormData.workflow,
           journalStatus: "posted",
           ledgerStatus: "posted",
+          paymentKind: paymentRoute.paymentKind,
           lastPaymentId: paymentId,
           lastRoznamchaEntryId: paymentRecord.roznamcha_entry_id,
           lastPaymentPostedAt: now
@@ -288,6 +295,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
           roznamchaEntryId: paymentRecord.roznamcha_entry_id,
           debitLedgerId: debitLedgerId,
           creditLedgerId: creditLedgerId,
+          paymentKind: paymentRoute.paymentKind,
           superAdminSerialNumber: journalRecord.super_admin_serial_number,
           countryTransactionSerialNumber: journalRecord.country_transaction_serial_number,
           branchTransactionSerialNumber: journalRecord.branch_transaction_serial_number,
@@ -328,6 +336,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       transferOnly: true,
       ledgerPostingStatus: "posted",
       paymentStatus: "completed",
+      paymentKind: paymentRoute.paymentKind,
       paidAmount: totalSalesAmount,
       remainingAmount: 0
     };

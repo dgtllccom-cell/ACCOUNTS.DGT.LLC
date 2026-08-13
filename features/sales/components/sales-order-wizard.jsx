@@ -50,6 +50,7 @@ import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { openTradeDocumentWindow } from "@/lib/reports/open-trade-document-window";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
+import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
 import { SalesBookingJournalReportView } from "./sales-booking-journal-report-view";
 import { Th } from "@/components/ui/translated-th";
 
@@ -1474,6 +1475,7 @@ export function SalesOrderWizard({ session }) {
     setSaveMessage("");
     try {
       const nextOrderNo = (form.salesOrderNo || "").trim();
+      const paymentRoute = resolveSalesBookingPaymentRoute(form.paymentType || "Advance Payment");
       const transferPayload = buildSalesOrderPayload("Pending", nextOrderNo);
       const response = await fetch(savedOrderId ? `/api/erp/sales/orders/${savedOrderId}` : "/api/erp/sales/orders", {
         method: savedOrderId ? "PATCH" : "POST",
@@ -1492,7 +1494,10 @@ export function SalesOrderWizard({ session }) {
         const transferResponse = await fetch(`/api/erp/sales/orders/${returnedOrderId}/transfer`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({})
+          body: JSON.stringify({
+            paymentKind: paymentRoute.paymentKind,
+            paymentType: form.paymentType || paymentRoute.paymentLabel
+          })
         });
         const transferPayloadData = await transferResponse.json().catch(() => ({}));
         if (!transferResponse.ok || !transferPayloadData.ok) {
@@ -1507,7 +1512,7 @@ export function SalesOrderWizard({ session }) {
       setIsTransferred(true);
       setRegisterRefreshKey((key) => key + 1);
 
-      window.location.href = `/dashboard/journal/sales-order-payment/advance?salesOrderNo=${encodeURIComponent(returnedOrderNo)}`;
+      window.location.href = `${paymentRoute.path}?salesOrderNo=${encodeURIComponent(returnedOrderNo)}`;
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error saving order.";
       setSaveMessage(msg);

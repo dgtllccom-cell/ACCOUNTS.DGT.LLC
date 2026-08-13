@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
 import { apiGet, apiPatch } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
+import { deriveSalesBookingPostingState } from "@/lib/services/sales-booking-posting-state";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/verified-record-translations";
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
@@ -385,10 +386,11 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
                 const purchaseAmount = Number(order.order_total || 0);
                 const exRate = Number(order.exchange_rate || 1);
                 const finalAmount = purchaseAmount * exRate;
-                
+
                 const invPct = Number(f.invoicePercentage || 100);
                 const invoiceAmt = (purchaseAmount * invPct) / 100;
                 const finalInvoiceAmount = invoiceAmt * exRate;
+                const postingState = deriveSalesBookingPostingState(order as any);
 
                 const branchName = f.branchName || "-";
                 const branchCountry = f.branchCountry || "-";
@@ -430,22 +432,24 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
                     <td className="px-3 py-2.5 text-right font-mono font-black text-emerald-600 border-r border-slate-150">{order.currency_code} {finalInvoiceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                     <td className="px-3 py-2.5 border-r border-slate-150">
                       <span className={`px-2 py-0.2 rounded text-[8px] font-bold ${
-                        order.payment_status === "pending"
-                          ? "bg-amber-50 text-amber-700 border border-amber-100"
-                          : "bg-emerald-50 text-emerald-700 border border-emerald-100"
+                        postingState.visualStatus === "red"
+                          ? "bg-rose-50 text-rose-700 border border-rose-100"
+                          : "bg-slate-900 text-white border border-slate-900"
                       }`}>
-                        {order.payment_status}
+                        {postingState.label}
                       </span>
                     </td>
                     <td className="px-3 py-2.5 border-r border-slate-150">
                       <span className={`px-2 py-0.2 rounded text-[8px] font-bold ${
-                        order.sales_status === "draft"
+                        postingState.visualStatus === "red"
+                          ? "bg-rose-50 text-rose-700 border border-rose-100"
+                          : order.sales_status === "draft"
                           ? "bg-slate-100 text-slate-500 border border-slate-200"
                           : order.sales_status === "Confirmed" || order.sales_status === "confirmed"
                             ? "bg-blue-50 text-blue-700 border border-blue-150"
                             : "bg-emerald-50 text-emerald-700 border border-emerald-100"
                       }`}>
-                        {order.sales_status}
+                        {postingState.visualStatus === "red" ? "Pending" : order.sales_status}
                       </span>
                     </td>
 
