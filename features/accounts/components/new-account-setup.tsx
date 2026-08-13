@@ -541,6 +541,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
   }, [branchType, country, mainBranches]);
 
   const selectedCountry = useMemo(() => countries.find((item) => item.id === country) ?? null, [countries, country]);
+  const canonicalCountryId = selectedCountry?.id ?? "";
   const branchOptions = branchType === "Main" ? mainBranches : branchType === "City" ? cityBranches : [];
 
   const branchInfo = useMemo<BranchInfo | null>(() => {
@@ -1037,21 +1038,23 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                 <Button
                   type="button"
                   onClick={() => {
-                    const activeCountry = country || (countries.length > 0 ? countries[0].id : "c-uae-1001");
+                    const activeCountry = canonicalCountryId || countries[0]?.id || "";
                     const activeBranchType = branchType || "Main";
                     const activeBranch = branch || (branchOptions.length > 0 ? branchOptions[0].id : "b-main-001");
                     const activeTitle = accountTitle || "Company";
                     const activeSubType = subType || "Trading Company";
                     const activeCategory = category || "Sundry Debtors";
 
-                    if (!country) setCountry(activeCountry);
+                    if (!country && activeCountry) setCountry(activeCountry);
                     if (!branchType) setBranchType(activeBranchType);
                     if (!branch) setBranch(activeBranch);
                     if (!accountTitle) setAccountTitle(activeTitle);
                     if (!subType) setSubType(activeSubType);
                     if (!category) setCategory(activeCategory);
 
-                    if (accountName || manualReferenceNumber) {
+                    if (!activeCountry) {
+                      setMessage(getLabel("completeRequiredFields", lang));
+                    } else if (accountName || manualReferenceNumber) {
                       if (!accountName && manualReferenceNumber) setAccountName(`Account ${manualReferenceNumber}`);
                       setMessage(null);
                       setCurrentStep(nextStep);
@@ -1083,6 +1086,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
               <CustomerPicker
                 label={getLabel("customerMaster", lang)}
                 value={linkedCustomerId ?? ""}
+                countryId={canonicalCountryId || null}
                 onValueChange={(id) => {
                   setLinkedCustomerId(id || null);
                   if (!id) { setLinkedCustomerName(""); return; }
