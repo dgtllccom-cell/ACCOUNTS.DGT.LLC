@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { withLocalPg } from "@/lib/db/local-postgres";
+import { deriveLocalPurchasePostingState } from "@/lib/services/local-purchase-posting-state";
 import { z } from "zod";
 
 
@@ -86,31 +88,94 @@ export async function GET(request: NextRequest) {
       cityBranchId: params.cityBranchId ?? null,
     });
 
-    const supabase = createSupabaseAdminClient();
-    let queryBuilder = (supabase as any).from("local_purchases")
-      .select("*")
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false });
+    const matchesScope = (row: any) => {
+      if (params.cityBranchId) return String(row.city_branch_id || "") === params.cityBranchId;
+      if (params.countryBranchId) return String(row.country_branch_id || "") === params.countryBranchId;
+      if (params.countryId) return String(row.country_id || "") === params.countryId;
 
-    if (params.status) {
-      queryBuilder = queryBuilder.eq("status", params.status);
-    }
-    if (params.countryId) {
-      queryBuilder = queryBuilder.eq("country_id", params.countryId);
-    }
-    if (params.countryBranchId) {
-      queryBuilder = queryBuilder.eq("country_branch_id", params.countryBranchId);
-    }
-    if (params.cityBranchId) {
-      queryBuilder = queryBuilder.eq("city_branch_id", params.cityBranchId);
-    }
+      if (session.isSuperAdmin) return true;
+      const countryId = String(row.country_id || "");
+      const countryBranchId = String(row.country_branch_id || "");
+      const cityBranchId = String(row.city_branch_id || "");
 
-    const { data: records, error } = await queryBuilder;
-    if (error) throw error;
+      if (session.cityBranchIds.length > 0) {
+        return (
+          (cityBranchId && session.cityBranchIds.includes(cityBranchId)) ||
+          (!cityBranchId && session.countryIds.includes(countryId)) ||
+          (!cityBranchId && !countryBranchId && session.countryIds.includes(countryId))
+        );
+      }
+      if (session.countryBranchIds.length > 0) {
+        return session.countryBranchIds.includes(countryBranchId);
+      }
+      if (session.countryIds.length > 0) {
+        return session.countryIds.includes(countryId);
+      }
+      return false;
+    };
+
+    const recordsViaPg = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select *
+        from local_purchases
+        where deleted_at is null
+        order by created_at desc;
+      `;
+      return rows
+        .filter(matchesScope)
+        .filter((row: any) => !params.status || String(row.status || "").toLowerCase() === params.status)
+        .map((row: any) => {
+          const postingState = deriveLocalPurchasePostingState(row);
+          return {
+            ...row,
+            accounting_status: postingState.visualStatus,
+            accounting_status_label: postingState.label,
+            accounting_status_reason: postingState.reason,
+          };
+        });
+    });
+
+    if (recordsViaPg === null) {
+      const supabase = createSupabaseAdminClient();
+      let queryBuilder = (supabase as any).from("local_purchases")
+        .select("*")
+        .is("deleted_at", null)
+        .order("created_at", { ascending: false });
+
+      if (params.status) {
+        queryBuilder = queryBuilder.eq("status", params.status);
+      }
+      if (params.countryId) {
+        queryBuilder = queryBuilder.eq("country_id", params.countryId);
+      }
+      if (params.countryBranchId) {
+        queryBuilder = queryBuilder.eq("country_branch_id", params.countryBranchId);
+      }
+      if (params.cityBranchId) {
+        queryBuilder = queryBuilder.eq("city_branch_id", params.cityBranchId);
+      }
+
+      const { data: fallbackRecords, error } = await queryBuilder;
+      if (error) throw error;
+      return NextResponse.json({
+        ok: true,
+        data: {
+          purchases: (fallbackRecords ?? []).map((row: any) => {
+            const postingState = deriveLocalPurchasePostingState(row);
+            return {
+              ...row,
+              accounting_status: postingState.visualStatus,
+              accounting_status_label: postingState.label,
+              accounting_status_reason: postingState.reason,
+            };
+          })
+        }
+      });
+    }
 
     return NextResponse.json({
       ok: true,
-      data: { purchases: records }
+      data: { purchases: recordsViaPg }
     });
   } catch (err: any) {
     console.error("[GET /api/erp/purchases/local-purchase] Error:", err);

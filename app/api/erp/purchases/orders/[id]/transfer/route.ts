@@ -8,6 +8,7 @@ import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/l
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { ensurePurchaseSchemaAndEnums } from "@/lib/services/purchase-table-manager";
 import { isPurchaseBookingTransferLocked, resolvePurchaseBookingTransferDestination } from "@/lib/services/purchase-booking-transfer-routing";
+import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -299,11 +300,24 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       .select("ledger_id, debit, credit")
       .eq("roznamcha_entry_id", roznamchaEntryId);
     if (postedLinesError) throw postedLinesError;
-    const debitLine = postedLines?.find((line: any) => line.ledger_id === debitAccountObj.id && Number(line.debit) > 0 && Number(line.credit) === 0);
-    const creditLine = postedLines?.find((line: any) => line.ledger_id === creditAccountObj.id && Number(line.credit) > 0 && Number(line.debit) === 0);
-    if (!debitLine || !creditLine || postedLines?.length !== 2 || Number(debitLine.debit) !== Number(creditLine.credit)) {
-      throw new Error("Business Roznamcha verification failed: expected one Purchase DR and one distinct Sales/Payable CR line with equal amounts.");
-    }
+    assertDistinctBookingLedgers(debitAccountObj.id, creditAccountObj.id, "Business Roznamcha");
+    assertBalancedPostedLines({
+      label: "Business Roznamcha",
+      lines: postedLines,
+      expectedDebitLedgerId: debitAccountObj.id,
+      expectedCreditLedgerId: creditAccountObj.id,
+      expectedAmount: totalPurchaseAmount
+    });
+    assertPostedRoznamchaTrace({
+      label: "Business Roznamcha",
+      entry: await requireSupabaseData(
+        supabase
+          .from("roznamcha_entries")
+          .select("country_id, country_branch_id, city_branch_id, status, posted_at, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number")
+          .eq("id", roznamchaEntryId)
+          .maybeSingle()
+      )
+    });
 
     // NOTE: A separate journal_entries/journal_lines posting used to be written here for the same
     // bill. That duplicated the debit/credit already posted to roznamcha_entries/roznamcha_lines
@@ -363,7 +377,6 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       ledger_posting_status: "posted",
       payment_status: newPaymentStatus,
       is_edited_since_transfer: false,
-      roznamcha_entry_id: roznamchaEntryId,
       advance_paid: existingAdvance,
       remaining_due: newRemainingDue,
       updated_at: now,

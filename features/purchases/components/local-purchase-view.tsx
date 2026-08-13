@@ -19,6 +19,7 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 import { t } from "@/lib/i18n/ui";
 import { BranchScopeDropdown } from "@/features/purchases/components/branch-scope-dropdown";
+import { deriveLocalPurchasePostingState } from "@/lib/services/local-purchase-posting-state";
 
 const CURRENCIES = ["USD", "AED", "PKR", "AFN", "INR", "IRR"];
 const QUANTITY_NAMES = ["Bags", "Cartons", "Boxes", "Crates", "Bales", "Drums", "Pieces", "Custom"];
@@ -1173,6 +1174,7 @@ export function LocalPurchaseView({
     let draftBills = 0;
 
     filteredPurchases.forEach((row: any) => {
+      const postingState = deriveLocalPurchasePostingState(row);
       const status = String(row.status || row.bill_status || "draft").toLowerCase();
       const purchaseAmount = Number(row.purchaseCost || row.purchase_cost || row.sub_total || row.subTotal || 0);
       const taxAmount = Number(row.taxAmount || row.tax_amount || 0);
@@ -1180,7 +1182,7 @@ export function LocalPurchaseView({
       totalPurchase += purchaseAmount;
       totalTax += taxAmount;
       totalFinal += finalAmount;
-      if (["posted", "transferred", "accepted", "paid"].includes(status)) postedBills += 1;
+      if (postingState.isComplete) postedBills += 1;
       if (status === "draft") draftBills += 1;
 
       const countryId = String(row.countryId || row.country_id || activeBranch?.countryId || activeBranch?.country_id || "all");
@@ -1209,7 +1211,7 @@ export function LocalPurchaseView({
       country.totalPurchase += purchaseAmount;
       country.totalTax += taxAmount;
       country.totalFinal += finalAmount;
-      country.postedBills += ["posted", "transferred", "accepted", "paid"].includes(status) ? 1 : 0;
+      country.postedBills += postingState.isComplete ? 1 : 0;
       country.draftBills += status === "draft" ? 1 : 0;
 
       if (!country.branches.has(branchId)) {
@@ -1220,7 +1222,7 @@ export function LocalPurchaseView({
       branch.totalPurchase += purchaseAmount;
       branch.totalTax += taxAmount;
       branch.totalFinal += finalAmount;
-      branch.postedBills += ["posted", "transferred", "accepted", "paid"].includes(status) ? 1 : 0;
+      branch.postedBills += postingState.isComplete ? 1 : 0;
     });
 
     const countries = Array.from(byCountry.values()).map((country: any) => ({
@@ -2767,6 +2769,7 @@ export function LocalPurchaseView({
                     ) : (
                       filteredPurchases.map((row) => {
                         const rowStatus = row.status || row.bill_status || "draft";
+                        const postingState = deriveLocalPurchasePostingState(row);
                         const rowCurrency = row.local_currency || row.localCurrency || row.purchase_currency || row.purchaseCurrency || "PKR";
                         const rowFinalCost = Number(row.final_cost || row.finalCost || row.purchase_cost || row.purchaseCost || 0);
                         const rowBaseCost = Number(row.purchase_cost || row.purchaseCost || 0);
@@ -2782,13 +2785,9 @@ export function LocalPurchaseView({
                         const branchSerial = row.branchSerialNo || row.branch_serial_no || row.computedBranchSerial || `BR-${row.id?.slice(0, 4) || "001"}`;
                         const voucherCode = row.journal_serial_no || row.serial_no || row.serialNo || row.bill_no || row.billNo || `LP-2026-${row.id?.slice(0, 4) || "1001"}`;
 
-                        const statusBadge: Record<string, { bg: string; text: string; label: string }> = {
-                          draft: { bg: "bg-amber-100 border-amber-300", text: "text-amber-800", label: "DRAFT" },
-                          accepted: { bg: "bg-blue-100 border-blue-300", text: "text-blue-800", label: "ACCEPTED" },
-                          transferred: { bg: "bg-purple-100 border-purple-300", text: "text-purple-800", label: "TRANSFERRED" },
-                          posted: { bg: "bg-emerald-100 border-emerald-300", text: "text-emerald-800", label: "POSTED" },
-                        };
-                        const badge = statusBadge[rowStatus] || statusBadge.draft;
+                        const badge = postingState.visualStatus === "black"
+                          ? { bg: "bg-black border-black", text: "text-white", label: "BLACK" }
+                          : { bg: "bg-red-100 border-red-300", text: "text-red-800", label: "RED" };
 
                         return (
                           <tr key={row.id} className="hover:bg-blue-50/30 transition-colors border-b border-slate-100">
@@ -2817,7 +2816,10 @@ export function LocalPurchaseView({
                               {rowCurrency} {rowFinalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                             </td>
                             <td className="px-2 py-2 text-center border-r border-slate-150">
-                              <span className={`inline-flex px-2 py-0.5 rounded-full text-[8px] font-black uppercase border ${badge.bg} ${badge.text}`}>
+                              <span
+                                className={`inline-flex px-2 py-0.5 rounded-full text-[8px] font-black uppercase border ${badge.bg} ${badge.text}`}
+                                title={postingState.reason}
+                              >
                                 {badge.label}
                               </span>
                             </td>

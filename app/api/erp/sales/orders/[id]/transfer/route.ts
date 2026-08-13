@@ -6,6 +6,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -237,13 +238,34 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       entry_category: "business"
     }).eq("id", paymentRecord.roznamcha_entry_id);
 
+    const postedLines = await requireSupabaseData(
+      supabase
+        .from("roznamcha_lines")
+        .select("ledger_id, debit, credit")
+        .eq("roznamcha_entry_id", paymentRecord.roznamcha_entry_id)
+    ) as any[];
+
+    assertDistinctBookingLedgers(debitLedgerId, creditLedgerId, "Sales booking");
+    assertBalancedPostedLines({
+      label: "Sales booking",
+      lines: postedLines,
+      expectedDebitLedgerId: debitLedgerId,
+      expectedCreditLedgerId: creditLedgerId,
+      expectedAmount: totalSalesAmount
+    });
+
     const journalRecord = await requireSupabaseData(
       supabase
         .from("roznamcha_entries")
-        .select("id, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number")
+        .select("id, status, posted_at, country_id, country_branch_id, city_branch_id, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number")
         .eq("id", paymentRecord.roznamcha_entry_id)
         .maybeSingle()
     ) as any;
+
+    assertPostedRoznamchaTrace({
+      label: "Sales booking",
+      entry: journalRecord
+    });
 
     const patch = {
       ledger_posting_status: "posted",

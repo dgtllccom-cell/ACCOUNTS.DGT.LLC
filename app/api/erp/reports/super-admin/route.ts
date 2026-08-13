@@ -89,7 +89,7 @@ export async function GET(request: NextRequest) {
 
     const db = createSupabaseAdminClient() as any;
     const [countryResult, mainResult, cityResult] = await Promise.all([
-      db.from("countries").select("id, name, code, currency_code").eq("id", params.countryId).is("deleted_at", null).maybeSingle(),
+      db.from("countries").select("id, name, currency_code").eq("id", params.countryId).is("deleted_at", null).maybeSingle(),
       params.mainBranchId
         ? db.from("country_branches").select("id, name, code, country_id").eq("id", params.mainBranchId).eq("country_id", params.countryId).is("deleted_at", null).maybeSingle()
         : Promise.resolve({ data: null, error: null }),
@@ -127,8 +127,8 @@ export async function GET(request: NextRequest) {
     let sourceTables: string[] = [];
 
     if (params.reportType === "purchase" || params.reportType === "bills" || params.reportType === "project") {
-      let q = db.from("purchase_orders").select("id, purchase_order_no, order_date, status, order_total, advance_paid, remaining_due, currency_code, payment_status, ledger_posting_status, country_id, country_branch_id, city_branch_id, created_at, created_by, supplier_company_id, form_data, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number").order("order_date", { ascending: false });
-      q = applyOrderScope(q, "order_date");
+      let q = db.from("purchase_orders").select("id, purchase_order_no, status, order_total, advance_paid, remaining_due, currency_code, payment_status, ledger_posting_status, country_id, country_branch_id, city_branch_id, created_at, created_by, supplier_company_id, form_data, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number").order("created_at", { ascending: false });
+      q = applyOrderScope(q, "created_at");
       const purchaseRows = requireQuery(await q.limit(params.limit), "Purchase report query") ?? [];
       const supplierIds = [...new Set(purchaseRows.map((row: any) => row.supplier_company_id).filter(Boolean))];
       let supplierMap = new Map<string, string>();
@@ -139,7 +139,7 @@ export async function GET(request: NextRequest) {
       }
       const mapped = purchaseRows.filter((r: any) => currencyMatches(r.currency_code) && projectMatches(r.form_data)).map((r: any) => ({
         id: r.id, recordType: "purchase", reference: r.purchase_order_no, serial: r.super_admin_serial_number || r.purchase_order_no,
-        date: r.order_date, party: supplierMap.get(r.supplier_company_id) || r.supplier_company_id || "—", project: projectName(r.form_data) || "—", amount: money(r.order_total),
+        date: r.created_at, party: supplierMap.get(r.supplier_company_id) || r.supplier_company_id || "—", project: projectName(r.form_data) || "—", amount: money(r.order_total),
         paid: money(r.advance_paid), outstanding: money(r.remaining_due), currency: r.currency_code, status: r.status || r.payment_status,
         postingStatus: r.ledger_posting_status, country: country.name, branch: cityBranch?.name || mainBranch?.name || "Entire Country",
         user: r.created_by || "—", createdAt: r.created_at, approvedAt: null, sourceTable: "purchase_orders"
@@ -216,8 +216,42 @@ export async function GET(request: NextRequest) {
       if (params.toDate) q = q.lte("entry_date", params.toDate);
       if (params.userId) q = q.eq("created_by", params.userId);
       const batches = requireQuery(await q.limit(params.limit), "Ledger report query") ?? [];
-      rows = batches.flatMap((batch: any) => (batch.ledger_posting_lines ?? []).filter((line: any) => currencyMatches(line.currency)).map((line: any) => ({ id: line.id, batchId: batch.id, historyRecordId: batch.id, reference: batch.reference_no || batch.id.slice(0, 8), date: batch.entry_date, account: line.ledger_name_snapshot || line.account_number || line.ledger_id, accountNumber: line.account_number || "—", description: line.description || batch.narration || "—", opening: 0, debit: money(line.debit), credit: money(line.credit), closing: money(line.debit) - money(line.credit), currency: line.currency, status: batch.status, approvalStatus: batch.approval_status, country: country.name, branch: batch.branch_name_snapshot || cityBranch?.name || mainBranch?.name || "Entire Country", user: line.user_name_snapshot || batch.created_by || "—", createdAt: batch.created_at, approvedAt: batch.approved_at, approvedBy: batch.approved_by, sourceTable: "ledger_posting_batches" })));
-      sourceTables = ["ledger_posting_batches", "ledger_posting_lines"];
+      let rozQ = db.from("roznamcha_lines").select("id, roznamcha_entry_id, ledger_id, account_number, description, debit, credit, currency, usd_amount, ledgers(code, name), roznamcha_entries!inner(entry_date, voucher_no, narration, status, posted_at, created_at, created_by, country_id, country_branch_id, city_branch_id, deleted_at)")
+        .eq("roznamcha_entries.country_id", params.countryId)
+        .is("roznamcha_entries.deleted_at", null);
+      if (params.scopeMode === "main-branch") rozQ = rozQ.eq("roznamcha_entries.country_branch_id", params.mainBranchId).is("roznamcha_entries.city_branch_id", null);
+      if (params.scopeMode === "city-branch") rozQ = rozQ.eq("roznamcha_entries.city_branch_id", params.branchId);
+      if (params.fromDate) rozQ = rozQ.gte("roznamcha_entries.entry_date", params.fromDate);
+      if (params.toDate) rozQ = rozQ.lte("roznamcha_entries.entry_date", params.toDate);
+      if (params.userId) rozQ = rozQ.eq("roznamcha_entries.created_by", params.userId);
+      const roznamchaLines = requireQuery(await rozQ.limit(params.limit), "Roznamcha ledger report query") ?? [];
+
+      const batchRows = batches.flatMap((batch: any) => (batch.ledger_posting_lines ?? []).filter((line: any) => currencyMatches(line.currency)).map((line: any) => ({ id: line.id, batchId: batch.id, historyRecordId: batch.id, reference: batch.reference_no || batch.id.slice(0, 8), date: batch.entry_date, account: line.ledger_name_snapshot || line.account_number || line.ledger_id, accountNumber: line.account_number || "—", description: line.description || batch.narration || "—", opening: 0, debit: money(line.debit), credit: money(line.credit), closing: money(line.debit) - money(line.credit), currency: line.currency, status: batch.status, approvalStatus: batch.approval_status, country: country.name, branch: batch.branch_name_snapshot || cityBranch?.name || mainBranch?.name || "Entire Country", user: line.user_name_snapshot || batch.created_by || "—", createdAt: batch.created_at, approvedAt: batch.approved_at, approvedBy: batch.approved_by, sourceTable: "ledger_posting_batches" })));
+      const roznamchaRows = roznamchaLines.filter((line: any) => currencyMatches(line.currency)).map((line: any) => ({
+        id: line.id,
+        historyRecordId: line.roznamcha_entry_id,
+        reference: line.roznamcha_entries?.voucher_no || line.roznamcha_entry_id,
+        date: line.roznamcha_entries?.entry_date,
+        account: line.ledgers?.name || line.ledgers?.code || line.account_number || line.ledger_id,
+        accountNumber: line.account_number || line.ledgers?.code || "—",
+        description: line.description || line.roznamcha_entries?.narration || "—",
+        opening: 0,
+        debit: money(line.debit),
+        credit: money(line.credit),
+        closing: money(line.debit) - money(line.credit),
+        currency: line.currency,
+        status: line.roznamcha_entries?.status,
+        approvalStatus: line.roznamcha_entries?.posted_at ? "posted" : "pending",
+        country: country.name,
+        branch: cityBranch?.name || mainBranch?.name || "Entire Country",
+        user: line.roznamcha_entries?.created_by || "—",
+        createdAt: line.roznamcha_entries?.created_at,
+        approvedAt: line.roznamcha_entries?.posted_at,
+        approvedBy: line.roznamcha_entries?.created_by || null,
+        sourceTable: "roznamcha_entries"
+      }));
+      rows = [...batchRows, ...roznamchaRows];
+      sourceTables = ["ledger_posting_batches", "ledger_posting_lines", "roznamcha_entries", "roznamcha_lines", "ledgers"];
     }
 
     if (params.reportType === "user-activity") {

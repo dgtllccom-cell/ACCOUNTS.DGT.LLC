@@ -8,6 +8,7 @@ import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/l
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
+import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -358,7 +359,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const journalRecord = await requireSupabaseData(
       supabase
         .from("roznamcha_entries")
-        .select("id, source_module, source_transaction_type, source_transaction_id, source_reference_no, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, original_currency_code, currency_name, base_currency_amount")
+        .select("id, source_module, source_transaction_type, source_transaction_id, source_reference_no, status, posted_at, country_id, country_branch_id, city_branch_id, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, original_currency_code, currency_name, base_currency_amount")
         .eq("id", paymentRecord.roznamcha_entry_id)
         .maybeSingle()
     ) as any;
@@ -370,16 +371,18 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         .eq("roznamcha_entry_id", paymentRecord.roznamcha_entry_id)
     ) as any[];
 
-    const debitLine = (journalLines || []).find((line) => line.ledger_id === body.debitLedgerId && Number(line.debit || 0) > 0);
-    const creditLine = (journalLines || []).find((line) => line.ledger_id === body.creditLedgerId && Number(line.credit || 0) > 0);
-
-    if (!debitLine || !creditLine) {
-      throw new Error("Purchase payment posted, but Debit/Credit ledger lines were not created correctly.");
-    }
-
-    if (!journalRecord?.super_admin_serial_number || !journalRecord?.country_transaction_serial_number || !journalRecord?.branch_transaction_serial_number) {
-      throw new Error("Purchase payment posted, but Journal serial traceability is incomplete.");
-    }
+    assertDistinctBookingLedgers(body.debitLedgerId, body.creditLedgerId, "Purchase payment");
+    assertBalancedPostedLines({
+      label: "Purchase payment",
+      lines: journalLines,
+      expectedDebitLedgerId: body.debitLedgerId,
+      expectedCreditLedgerId: body.creditLedgerId,
+      expectedAmount: Number(body.amount)
+    });
+    assertPostedRoznamchaTrace({
+      label: "Purchase payment",
+      entry: journalRecord
+    });
 
     const postedWorkflow = {
       ...(orderRow.form_data?.workflow || {}),

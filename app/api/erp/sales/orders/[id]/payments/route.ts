@@ -8,6 +8,7 @@ import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/l
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
+import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -345,6 +346,33 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         .eq("id", paymentRecord.roznamcha_entry_id)
         .maybeSingle()
     ) as any;
+
+    const journalLines = await requireSupabaseData(
+      supabase
+        .from("roznamcha_lines")
+        .select("ledger_id, debit, credit")
+        .eq("roznamcha_entry_id", paymentRecord.roznamcha_entry_id)
+    ) as any[];
+
+    assertDistinctBookingLedgers(body.debitLedgerId, body.creditLedgerId, "Sales payment");
+    assertBalancedPostedLines({
+      label: "Sales payment",
+      lines: journalLines,
+      expectedDebitLedgerId: body.debitLedgerId,
+      expectedCreditLedgerId: body.creditLedgerId,
+      expectedAmount: Number(body.amount)
+    });
+    assertPostedRoznamchaTrace({
+      label: "Sales payment",
+      entry: {
+        ...journalRecord,
+        status: "posted",
+        posted_at: journalRecord?.posted_at ?? new Date().toISOString(),
+        country_id: orderRow.country_id || null,
+        country_branch_id: orderRow.country_branch_id || null,
+        city_branch_id: orderRow.city_branch_id || null
+      }
+    });
 
     const postedWorkflow = {
       ...(orderRow.form_data?.workflow || {}),
