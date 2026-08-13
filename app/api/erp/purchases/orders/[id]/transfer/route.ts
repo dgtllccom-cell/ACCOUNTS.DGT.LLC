@@ -1,12 +1,13 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { apiOk, apiError, handleApiError } from "@/lib/api/response";
+import { apiOk, handleApiError } from "@/lib/api/response";
 import { uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { ensurePurchaseSchemaAndEnums } from "@/lib/services/purchase-table-manager";
+import { isPurchaseBookingTransferLocked, resolvePurchaseBookingTransferDestination } from "@/lib/services/purchase-booking-transfer-routing";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -46,47 +47,59 @@ async function resolveLedgerOrAccount(adminSupabase: any, term: string | null | 
   const cleanTerm = term.trim();
   if (!cleanTerm) return null;
 
-  // 1. Try ledgers table by id or code
-  const { data: ledger } = await adminSupabase
-    .from("ledgers")
-    .select("id, code, name, country_id, country_branch_id, city_branch_id")
-    .or(`id.eq.${cleanTerm},code.eq.${cleanTerm}`)
-    .is("deleted_at", null)
-    .maybeSingle();
+  const ledgerColumns = "id, code, name, country_id, country_branch_id, city_branch_id, enterprise_account_id, account_id";
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(cleanTerm);
 
-  if (ledger) return ledger;
+  if (isUuid) {
+    const { data: directLedger } = await adminSupabase
+      .from("ledgers").select(ledgerColumns).eq("id", cleanTerm).is("deleted_at", null).maybeSingle();
+    if (directLedger) return directLedger;
 
-  // 2. Try accounts table by id or code
-  const { data: account } = await adminSupabase
-    .from("accounts")
-    .select("id, code, name, country_id, country_branch_id, city_branch_id")
-    .or(`id.eq.${cleanTerm},code.eq.${cleanTerm}`)
-    .is("deleted_at", null)
-    .maybeSingle();
+    const { data: linkedLedger } = await adminSupabase
+      .from("ledgers").select(ledgerColumns)
+      .or(`enterprise_account_id.eq.${cleanTerm},account_id.eq.${cleanTerm}`)
+      .is("deleted_at", null).limit(1).maybeSingle();
+    if (linkedLedger) return linkedLedger;
+  }
 
-  if (account) return account;
+  const { data: ledgerByCode } = await adminSupabase
+    .from("ledgers").select(ledgerColumns).eq("code", cleanTerm)
+    .is("deleted_at", null).limit(1).maybeSingle();
+  if (ledgerByCode) return ledgerByCode;
 
-  // 3. Try ledgers by name search (ilike)
-  const { data: ledgerByName } = await adminSupabase
-    .from("ledgers")
-    .select("id, code, name, country_id, country_branch_id, city_branch_id")
-    .ilike("name", `%${cleanTerm}%`)
-    .is("deleted_at", null)
-    .limit(1)
-    .maybeSingle();
+  // The booking picker stores an enterprise-account id/code. Resolve that
+  // selection to its linked ledger; never post directly to an accounts row.
+  let { data: enterpriseAccount } = await adminSupabase
+    .from("enterprise_accounts").select("id").eq("code", cleanTerm)
+    .is("deleted_at", null).limit(1).maybeSingle();
+  if (!enterpriseAccount) {
+    const byName = await adminSupabase
+      .from("enterprise_accounts").select("id").ilike("name", cleanTerm)
+      .is("deleted_at", null).limit(1).maybeSingle();
+    enterpriseAccount = byName.data;
+  }
+  if (enterpriseAccount?.id) {
+    const { data: enterpriseLedger } = await adminSupabase
+      .from("ledgers").select(ledgerColumns).eq("enterprise_account_id", enterpriseAccount.id)
+      .is("deleted_at", null).limit(1).maybeSingle();
+    if (enterpriseLedger) return enterpriseLedger;
+  }
 
-  if (ledgerByName) return ledgerByName;
-
-  // 4. Try accounts by name search (ilike)
-  const { data: accountByName } = await adminSupabase
-    .from("accounts")
-    .select("id, code, name, country_id, country_branch_id, city_branch_id")
-    .ilike("name", `%${cleanTerm}%`)
-    .is("deleted_at", null)
-    .limit(1)
-    .maybeSingle();
-
-  if (accountByName) return accountByName;
+  let { data: legacyAccount } = await adminSupabase
+    .from("accounts").select("id").eq("code", cleanTerm)
+    .is("deleted_at", null).limit(1).maybeSingle();
+  if (!legacyAccount) {
+    const byName = await adminSupabase
+      .from("accounts").select("id").ilike("name", cleanTerm)
+      .is("deleted_at", null).limit(1).maybeSingle();
+    legacyAccount = byName.data;
+  }
+  if (legacyAccount?.id) {
+    const { data: accountLedger } = await adminSupabase
+      .from("ledgers").select(ledgerColumns).eq("account_id", legacyAccount.id)
+      .is("deleted_at", null).limit(1).maybeSingle();
+    if (accountLedger) return accountLedger;
+  }
 
   return null;
 }
@@ -150,12 +163,6 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const form = formData.form || {};
     const workflow = formData.workflow || {};
 
-    // Idempotency guard: block re-transferring a bill that was already posted, mirroring the
-    // guard the Sales transfer route already applies (sales/orders/[id]/transfer/route.ts).
-    if (orderRow.ledger_posting_status === "posted" && !orderRow.is_edited_since_transfer) {
-      throw new Error("This purchase order has already been transferred to Roznamcha and cannot be transferred again.");
-    }
-
     const systemBillNumber = String(orderRow.purchase_order_no || form.purchaseOrderNo || "").trim();
     const manualBillNumber = String(
       form.manualBillNumber || form.manual_bill_number || form.billNo || form.purchaseContractNo || orderRow.purchase_contract_no || ""
@@ -173,24 +180,17 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const goodsAuditRemark = buildPurchaseGoodsAuditRemark(orderRow, referenceNo);
 
     // Resolve Account IDs for Debit (Purchase) & Credit (Supplier/Payable)
-    const purchaseAccountTerm = form.purchaseAccountNo || form.purchaseAccountNumber || form.purchaseAccountId || "UAE-001-AC-0001";
-    const creditAccountTerm = form.salesAccountNo || form.salesAccountNumber || form.supplierAccountNo || form.supplierAccountId || "UAE-001-AC-0005";
+    const purchaseAccountTerm = form.purchaseAccountLedgerId || form.purchaseAccountId || form.purchaseAccountNo || form.purchaseAccountNumber;
+    const creditAccountTerm = form.salesAccountLedgerId || form.salesAccountId || form.supplierAccountId || form.salesAccountNo || form.salesAccountNumber || form.supplierAccountNo;
 
-    let debitAccountObj = await resolveLedgerOrAccount(adminSupabase, purchaseAccountTerm);
-    let creditAccountObj = await resolveLedgerOrAccount(adminSupabase, creditAccountTerm);
-
-    if (!debitAccountObj) {
-      const { data: defaultDebit } = await adminSupabase.from("ledgers").select("id, code, name, country_id").is("deleted_at", null).limit(1).maybeSingle();
-      debitAccountObj = defaultDebit;
-    }
-
-    if (!creditAccountObj) {
-      const { data: defaultCredit } = await adminSupabase.from("ledgers").select("id, code, name, country_id").is("deleted_at", null).limit(1).maybeSingle();
-      creditAccountObj = defaultCredit;
-    }
+    const debitAccountObj = await resolveLedgerOrAccount(adminSupabase, purchaseAccountTerm);
+    const creditAccountObj = await resolveLedgerOrAccount(adminSupabase, creditAccountTerm);
 
     if (!debitAccountObj || !creditAccountObj) {
-      throw new Error("Failed to resolve Purchase Account or Payable Account ledgers in the database.");
+      throw new Error("The selected Purchase (DR) and Sales/Payable (CR) accounts must each have a linked ledger before transfer.");
+    }
+    if (debitAccountObj.id === creditAccountObj.id) {
+      throw new Error("Purchase (DR) and Sales/Payable (CR) must be different ledgers.");
     }
 
     // ── Rule 1: Country Scope Validation ──
@@ -200,21 +200,32 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
     const currencyCode = orderRow.currency_code || form.currencyType || "USD";
     const exRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
-    const localAmount = totalPurchaseAmount * exRate;
 
-    let roznamchaEntryId: string | null = (orderRow as any)?.roznamcha_entry_id || null;
+    let roznamchaEntryId: string | null = null;
     let paymentId: string | null = null;
 
-    // Check if an existing Roznamcha entry exists for this transaction
-    if (!roznamchaEntryId) {
-      const { data: existingRoz } = await adminSupabase
-        .from("roznamcha_entries")
-        .select("id")
-        .or(`source_transaction_id.eq.${params.id},reference_no.ilike.%${systemBillNumber}%`)
-        .maybeSingle();
-
-      if (existingRoz?.id) {
-        roznamchaEntryId = existingRoz.id;
+    // Reconcile an earlier RPC success whose final order update was interrupted.
+    const { data: existingPayment, error: existingPaymentError } = await adminSupabase
+      .from("purchase_order_payments")
+      .select("id, roznamcha_entry_id, amount, debit_ledger_id, credit_ledger_id")
+      .eq("purchase_order_id", params.id)
+      .eq("kind", "booking")
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (existingPaymentError) throw existingPaymentError;
+    if (existingPayment) {
+      if (isPurchaseBookingTransferLocked(orderRow)) {
+        throw new Error("This booking has already been transferred.");
+      }
+      paymentId = String(existingPayment.id);
+      roznamchaEntryId = existingPayment.roznamcha_entry_id;
+      if (
+        Number(existingPayment.amount) !== totalPurchaseAmount ||
+        existingPayment.debit_ledger_id !== debitAccountObj.id ||
+        existingPayment.credit_ledger_id !== creditAccountObj.id
+      ) {
+        throw new Error("An existing booking posting does not match this order's amount or selected DR/CR ledgers. Transfer was stopped for reconciliation.");
       }
     }
 
@@ -222,6 +233,9 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     // 1. Post to purchase_order_payments (RPC or direct insert)
     // ─────────────────────────────────────────────────────────────
     try {
+      if (paymentId) {
+        if (!roznamchaEntryId) throw new Error("The existing booking payment is missing its Roznamcha entry.");
+      } else {
       const { data: rpcPaymentId, error: rpcErr } = await supabase.rpc("post_purchase_booking_transfer", {
         p_actor_id: session.userId,
         p_purchase_order_id: params.id,
@@ -236,19 +250,25 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         p_narration: goodsAuditRemark
       });
 
-      if (!rpcErr && rpcPaymentId) {
-        paymentId = String(rpcPaymentId);
-        const { data: pRec } = await adminSupabase
-          .from("purchase_order_payments")
-          .select("roznamcha_entry_id")
-          .eq("id", paymentId)
-          .maybeSingle();
-        if (pRec?.roznamcha_entry_id) {
-          roznamchaEntryId = pRec.roznamcha_entry_id;
-        }
+      if (rpcErr) throw new Error(`Business Roznamcha posting failed: ${rpcErr.message}`);
+      if (!rpcPaymentId) throw new Error("Business Roznamcha posting did not return a payment id.");
+      paymentId = String(rpcPaymentId);
+      const { data: pRec, error: paymentRecordError } = await adminSupabase
+        .from("purchase_order_payments")
+        .select("roznamcha_entry_id")
+        .eq("id", paymentId)
+        .maybeSingle();
+      if (paymentRecordError || !pRec?.roznamcha_entry_id) {
+        throw new Error("Business Roznamcha posting completed without a linked Roznamcha entry.");
+      }
+      roznamchaEntryId = pRec.roznamcha_entry_id;
       }
     } catch (err) {
-      console.warn("post_purchase_booking_transfer RPC skipped/fallback:", err);
+      throw err instanceof Error ? err : new Error("Business Roznamcha posting failed.");
+    }
+
+    if (!paymentId || !roznamchaEntryId) {
+      throw new Error("Business Roznamcha transfer did not create a complete booking payment.");
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -262,122 +282,46 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     if (effectiveCityBranchId) rozType = "branch";
     else if (effectiveCountryBranchId || effectiveCountryId) rozType = "country";
 
-    if (!roznamchaEntryId) {
-      const { data: newRoz, error: rozErr } = await adminSupabase
-        .from("roznamcha_entries")
-        .insert({
-          country_id: effectiveCountryId,
-          country_branch_id: effectiveCountryBranchId,
-          city_branch_id: effectiveCityBranchId,
-          type: rozType,
-          journal_no: `JO-PURCHASE-${systemBillNumber}`,
-          voucher_no: `VO-PURCHASE-${systemBillNumber}`,
-          entry_date: now.slice(0, 10),
-          reference_no: referenceNo,
-          narration: goodsAuditRemark,
-          status: "posted",
-          source_module: "purchase",
-          source_transaction_type: "purchase_booking_transfer",
-          source_transaction_id: params.id,
-          entry_category: "business",
-          created_by: session.userId,
-          created_at: now,
-          updated_at: now
-        })
-        .select("id")
-        .single();
+    // The RPC is the sole transactional posting path. Only enrich its canonical
+    // Business Roznamcha entry with the booking's exact country/branch scope.
+    const { error: scopeUpdateError } = await adminSupabase.from("roznamcha_entries").update({
+      country_id: effectiveCountryId,
+      country_branch_id: effectiveCountryBranchId,
+      city_branch_id: effectiveCityBranchId,
+      type: rozType,
+      status: "posted",
+      entry_category: "business"
+    }).eq("id", roznamchaEntryId);
+    if (scopeUpdateError) throw scopeUpdateError;
 
-      if (!rozErr && newRoz?.id) {
-        roznamchaEntryId = newRoz.id;
-
-        // Post Debit & Credit Lines
-        await adminSupabase.from("roznamcha_lines").insert([
-          {
-            roznamcha_entry_id: roznamchaEntryId,
-            ledger_id: debitAccountObj.id,
-            debit: localAmount,
-            credit: 0,
-            currency: currencyCode,
-            exchange_rate: exRate,
-            usd_rate: exRate,
-            usd_amount: totalPurchaseAmount,
-            description: `DR: Purchase Account (${systemBillNumber}) - ${goodsAuditRemark}`
-          },
-          {
-            roznamcha_entry_id: roznamchaEntryId,
-            ledger_id: creditAccountObj.id,
-            debit: 0,
-            credit: localAmount,
-            currency: currencyCode,
-            exchange_rate: exRate,
-            usd_rate: exRate,
-            usd_amount: totalPurchaseAmount,
-            description: `CR: Payable Account (${systemBillNumber}) - ${goodsAuditRemark}`
-          }
-        ]);
-      }
-    } else {
-      // Ensure scope and type are updated on existing roznamcha_entries
-      await adminSupabase.from("roznamcha_entries").update({
-        country_id: effectiveCountryId,
-        country_branch_id: effectiveCountryBranchId,
-        city_branch_id: effectiveCityBranchId,
-        type: rozType,
-        status: "posted",
-        entry_category: "business"
-      }).eq("id", roznamchaEntryId);
+    const { data: postedLines, error: postedLinesError } = await adminSupabase
+      .from("roznamcha_lines")
+      .select("ledger_id, debit, credit")
+      .eq("roznamcha_entry_id", roznamchaEntryId);
+    if (postedLinesError) throw postedLinesError;
+    const debitLine = postedLines?.find((line: any) => line.ledger_id === debitAccountObj.id && Number(line.debit) > 0 && Number(line.credit) === 0);
+    const creditLine = postedLines?.find((line: any) => line.ledger_id === creditAccountObj.id && Number(line.credit) > 0 && Number(line.debit) === 0);
+    if (!debitLine || !creditLine || postedLines?.length !== 2 || Number(debitLine.debit) !== Number(creditLine.credit)) {
+      throw new Error("Business Roznamcha verification failed: expected one Purchase DR and one distinct Sales/Payable CR line with equal amounts.");
     }
 
     // NOTE: A separate journal_entries/journal_lines posting used to be written here for the same
     // bill. That duplicated the debit/credit already posted to roznamcha_entries/roznamcha_lines
-    // above (via the RPC or the direct insert), doubling every purchase transfer's ledger impact.
+    // above via the RPC, doubling every purchase transfer's ledger impact.
     // roznamcha_entries/roznamcha_lines is the single authoritative posting for this transfer,
     // matching how the Sales Order transfer route already works.
 
     // ─────────────────────────────────────────────────────────────
     // 4. Create purchase_order_payments record if still missing
     // ─────────────────────────────────────────────────────────────
-    if (!paymentId) {
-      const { data: existingPay } = await adminSupabase
-        .from("purchase_order_payments")
-        .select("id")
-        .eq("purchase_order_id", params.id)
-        .maybeSingle();
-
-      if (!existingPay) {
-        const { data: newPay } = await adminSupabase
-          .from("purchase_order_payments")
-          .insert({
-            purchase_order_id: params.id,
-            kind: "booking",
-            entry_date: now.slice(0, 10),
-            amount: totalPurchaseAmount,
-            currency_code: currencyCode,
-            exchange_rate: exRate,
-            debit_ledger_id: debitAccountObj.id,
-            credit_ledger_id: creditAccountObj.id,
-            roznamcha_entry_id: roznamchaEntryId,
-            status: "posted",
-            reference_no: referenceNo,
-            narration: goodsAuditRemark,
-            source_module: "purchase",
-            source_transaction_type: "purchase_booking_transfer",
-            created_at: now,
-            updated_at: now
-          })
-          .select("id")
-          .single();
-
-        if (newPay?.id) paymentId = newPay.id;
-      }
-    }
-
     // Update order status in purchase_orders table
     const existingAdvance = Number(orderRow.advance_paid) || 0;
     const newRemainingDue = totalPurchaseAmount - existingAdvance;
     let newPaymentStatus = "pending";
     if (newRemainingDue <= 0) newPaymentStatus = "completed";
     else if (existingAdvance > 0) newPaymentStatus = "partial";
+    const selectedPaymentType = form.paymentType || body?.paymentType || "";
+    const destination = resolvePurchaseBookingTransferDestination(selectedPaymentType);
 
     const updatedFormData = {
       ...formData,
@@ -402,8 +346,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         paymentStatus: newPaymentStatus,
         journalStatus: "posted",
         ledgerStatus: "posted",
-        currentStep: "purchase_transfer_payment",
-        currentStepName: "Purchase Transfer Payment",
+        currentStep: destination.currentStep,
+        currentStepName: destination.currentStepName,
         transferredAt: now,
         transferredBy: session.userId,
         systemBillNumber,
@@ -457,7 +401,9 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       ledgerPostingStatus: "posted",
       paymentStatus: newPaymentStatus,
       advancePaid: existingAdvance,
-      remainingDue: newRemainingDue
+      remainingDue: newRemainingDue,
+      paymentFlow: destination.flow,
+      destinationPath: destination.path
     };
 
     if (idempotencyKey && tenantHash) {

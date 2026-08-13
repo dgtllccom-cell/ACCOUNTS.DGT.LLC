@@ -1,5 +1,5 @@
 "use client";
-import React, { useMemo, useState, useEffect } from "react";
+import React, { useCallback, useMemo, useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -56,6 +56,9 @@ import { PurchaseBookingJournalReportView } from "./purchase-booking-journal-rep
 import { t } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { Th } from "@/components/ui/translated-th";
+import { buildPurchaseBookingTransferUrl } from "@/lib/services/purchase-booking-transfer-routing";
+import { translateHeader } from "@/lib/i18n/table-headers";
+import { translationPendingLabel } from "@/lib/i18n/purchase-order-translations";
 
 // --- Non-location constants (static values, not from master forms) ---
 const CURRENCY_OPTIONS = ["USD", "AED", "EUR", "GBP", "PKR", "AFN", "INR", "CNY", "SAR"];
@@ -481,6 +484,11 @@ function LightStatusBadge({ status }) {
 export function PurchaseOrderWizard({ session }) {
   const router = useRouter();
   const lang = useActiveLanguage();
+  const trUi = useCallback((label) => {
+    if (lang === "en") return label;
+    const translated = translateHeader(lang, label);
+    return translated === label ? translationPendingLabel(lang) : translated;
+  }, [lang]);
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("booking"); // "booking" | "goods" | "others" | "reports"
   const [isMounted, setIsMounted] = useState(false);
@@ -1475,6 +1483,18 @@ export function PurchaseOrderWizard({ session }) {
         }
 
         if (poData) {
+          const roles = activeSession?.roles || activeSession?.scopes?.roles || [];
+          const canEditTransferred = Boolean(
+            isSuperAdmin
+            || roles.includes("super_admin")
+            || roles.includes("admin")
+            || roles.includes("country_admin")
+          );
+          const isPostedBooking = ["posted", "transferred"].includes(String(poData.ledger_posting_status || poData.ledgerPostingStatus || "").toLowerCase());
+          if (isPostedBooking && !canEditTransferred) {
+            setIsFormOpen(false);
+            throw new Error(trUi("Transferred bookings can only be edited by an Admin or Country Admin."));
+          }
           const rawFormData = poData.form_data || {};
           const loadedForm = rawFormData.form || {};
           const loadedGoods = rawFormData.goodsEntries || [];
@@ -2411,6 +2431,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       }
       const returnedOrderId = payload.data?.purchaseOrderId || savedOrderId || payload.data?.id;
       const returnedOrderNo = payload.data?.purchaseOrderNo || savedOrderNo || form.purchaseOrderNo;
+      let transferDestination = buildPurchaseBookingTransferUrl(form.paymentType, returnedOrderNo);
       setSavedOrderId(returnedOrderId || "");
       setSavedOrderNo(returnedOrderNo);
       setSaveMessage(`Successfully saved Purchase Order: ${returnedOrderNo}.`);
@@ -2441,6 +2462,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
   };
 
   const handleTransfer = async () => {
+    if (isTransferred) {
+      alert(trUi("This booking has already been transferred."));
+      return;
+    }
     setSavingOrder(true);
     setSaveMessage("");
     try {
@@ -2466,12 +2491,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
         const transferResponse = await fetch(`/api/erp/purchases/orders/${returnedOrderId}/transfer`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({})
+          body: JSON.stringify({ paymentType: form.paymentType })
         });
         const transferPayload = await transferResponse.json().catch(() => ({}));
         if (!transferResponse.ok || !transferPayload.ok) {
           throw new Error(transferPayload?.error?.message || transferPayload?.error || "Roznamcha/Ledger Transfer failed.");
         }
+        transferDestination = `${transferPayload.data?.destinationPath || transferDestination.split("?")[0]}?purchaseOrderNo=${encodeURIComponent(returnedOrderNo || "")}`;
       }
 
       setSavedOrderId(returnedOrderId || "");
@@ -2482,7 +2508,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       setRegisterRefreshKey((key) => key + 1);
       
       // Redirect to Purchase Transfer Payment screen directly after successful transfer
-      window.location.href = `/dashboard/journal/purchase-order-payment/advance?purchaseOrderNo=${encodeURIComponent(returnedOrderNo)}`;
+      window.location.href = transferDestination;
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error saving order.";
       setSaveMessage(msg);
@@ -2493,6 +2519,10 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
   };
 
   const handleTransferEmpty = async () => {
+    if (isTransferred) {
+      alert(trUi("This booking has already been transferred."));
+      return;
+    }
     setSavingOrder(true);
     setSaveMessage("");
     try {
@@ -2512,18 +2542,20 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       }
       const returnedOrderId = payload.data?.purchaseOrderId || savedOrderId || payload.data?.id;
       const returnedOrderNo = payload.data?.purchaseOrderNo || savedOrderNo || form.purchaseOrderNo;
+      let transferDestination = buildPurchaseBookingTransferUrl(form.paymentType);
       
       // Now call the transfer API to actually post to Roznamcha
       if (returnedOrderId) {
         const transferResponse = await fetch(`/api/erp/purchases/orders/${returnedOrderId}/transfer`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({})
+          body: JSON.stringify({ paymentType: form.paymentType })
         });
         const transferPayload = await transferResponse.json().catch(() => ({}));
         if (!transferResponse.ok || !transferPayload.ok) {
           throw new Error(transferPayload?.error?.message || transferPayload?.error || "Roznamcha/Ledger Transfer failed.");
         }
+        transferDestination = transferPayload.data?.destinationPath || transferDestination;
       }
 
       setSavedOrderId(returnedOrderId || "");
@@ -2534,7 +2566,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       setRegisterRefreshKey((key) => key + 1);
       
       // Redirect to Purchase Transfer Payment screen (Empty form, no pre-fill)
-      window.location.href = `/dashboard/journal/purchase-order-payment/advance`;
+      window.location.href = transferDestination;
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error saving order.";
       setSaveMessage(msg);
@@ -5429,7 +5461,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   </div>
                   <div className="text-[10px] text-slate-500 pt-1 border-t border-slate-200/60">
                     <span className="block font-semibold">{t(lang, "purchase.target_route_label", "Target Route:")}</span>
-                    <code className="font-mono text-blue-700 bg-blue-50 px-1 py-0.5 rounded font-bold">/dashboard/journal/purchase-order-payment/advance</code>
+                    <code className="font-mono text-blue-700 bg-blue-50 px-1 py-0.5 rounded font-bold">{buildPurchaseBookingTransferUrl(form.paymentType)}</code>
                   </div>
                   <div className="text-[10px] text-slate-500">
                     <span>{t(lang, "purchase.transfer_timestamp_label", "Transfer Timestamp:")} </span>
@@ -5739,8 +5771,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           <div className="w-full max-w-xs rounded-xl border border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div>
-                <h3 className="text-sm font-bold tracking-tight text-foreground">Add New Country</h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">ISO codes and emails are auto-generated</p>
+                <h3 className="text-sm font-bold tracking-tight text-foreground">{trUi("Add New Country")}</h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{trUi("ISO codes and emails are auto-generated")}</p>
               </div>
               <button
                 type="button"
@@ -5753,7 +5785,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[10px] rounded px-3 py-2">{newCountryError}</div>
               )}
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">Country Name *</label>
+                <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Country Name")} *</label>
                 <input
                   type="text"
                   value={newCountryForm.name}
@@ -5764,14 +5796,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
                 />
               </div>
-              <p className="text-[9px] text-muted-foreground/60">ISO-2, ISO-3, currency code and system emails will be auto-generated. You can update them later in Location Setup.</p>
+              <p className="text-[9px] text-muted-foreground/60">{trUi("ISO-2, ISO-3, currency code and system emails will be auto-generated. You can update them later in Location Setup.")}</p>
             </div>
             <div className="flex justify-end gap-2 px-5 pb-4">
               <button
                 type="button"
                 onClick={() => { setNewCountryModal(false); setNewCountryError(""); setNewCountryForm({ name: "" }); }}
                 className="px-4 py-1.5 text-[11px] rounded border border-input text-muted-foreground hover:text-foreground transition-colors"
-              >Cancel</button>
+              >{trUi("Cancel")}</button>
               <button
                 type="button"
                 onClick={handleAddNewCountry}
@@ -5789,8 +5821,8 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           <div className="w-full max-w-sm rounded-xl border border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-150">
             <div className="flex items-center justify-between px-5 py-4 border-b border-border">
               <div>
-                <h3 className="text-sm font-bold tracking-tight text-foreground">Add New Good</h3>
-                <p className="text-[10px] text-muted-foreground mt-0.5">Creates a new item in the Goods Master</p>
+                <h3 className="text-sm font-bold tracking-tight text-foreground">{trUi("Add New Good")}</h3>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{trUi("Creates a new item in the Goods Master")}</p>
               </div>
               <button
                 type="button"
@@ -5804,7 +5836,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               )}
               <div className="grid grid-cols-2 gap-3">
                 <div className="col-span-2">
-                  <label className="block text-[10px] text-muted-foreground mb-1">Goods Name *</label>
+                  <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Goods Name")} *</label>
                   <input
                     type="text"
                     value={newGoodForm.goodsName}
@@ -5814,7 +5846,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-muted-foreground mb-1">HS Code *</label>
+                  <label className="block text-[10px] text-muted-foreground mb-1">{trUi("HS Code")} *</label>
                   <input
                     type="text"
                     value={newGoodForm.chsCode}
@@ -5824,14 +5856,14 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   />
                 </div>
               </div>
-              <p className="text-[9px] text-muted-foreground/60">After saving, this good will be auto-selected with HS Code pre-filled.</p>
+              <p className="text-[9px] text-muted-foreground/60">{trUi("After saving, this good will be auto-selected with HS Code pre-filled.")}</p>
             </div>
             <div className="flex justify-end gap-2 px-5 pb-4">
               <button
                 type="button"
                 onClick={() => { setNewGoodModal(false); setNewGoodError(""); setNewGoodForm({ goodsName: "", chsCode: "" }); }}
                 className="px-4 py-1.5 text-[11px] rounded border border-input text-muted-foreground hover:text-foreground transition-colors"
-              >Cancel</button>
+              >{trUi("Cancel")}</button>
               <button
                 type="button"
                 onClick={handleAddNewGood}
@@ -5867,13 +5899,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 <div className="bg-destructive/10 border border-destructive/30 text-destructive text-[10px] rounded px-3 py-2">{newPortError}</div>
               )}
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">Country Name *</label>
+                <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Country Name")} *</label>
                 <select
                   value={newPortForm.countryName || ""}
                   onChange={(e) => setNewPortForm(p => ({ ...p, countryName: e.target.value }))}
                   className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
                 >
-                  <option value="">Select Country...</option>
+                  <option value="">{trUi("Select Country")}</option>
                   {transitCountryOptions.map(c => <option key={c.name || c.id} value={c.name}>{c.name}</option>)}
                 </select>
               </div>
@@ -5902,7 +5934,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 type="button"
                 onClick={() => { setNewPortModal(false); setNewPortError(""); setNewPortForm(p => ({ ...p, portName: "" })); }}
                 className="px-4 py-1.5 text-[11px] rounded border border-input text-muted-foreground hover:text-foreground transition-colors"
-              >Cancel</button>
+              >{trUi("Cancel")}</button>
               <button
                 type="button"
                 disabled={!newPortForm.portName.trim()}
@@ -5913,7 +5945,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   }
                 }}
                 className="px-4 py-1.5 text-[11px] rounded bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity disabled:opacity-60"
-              >Save</button>
+              >{trUi("Save")}</button>
             </div>
           </div>
         </div>
@@ -5940,7 +5972,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             </div>
             <div className="p-5 space-y-3">
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">Goods Name</label>
+                <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Goods Name")}</label>
                 <input
                   type="text"
                   value={customVariationForm.goodsName}
@@ -5950,7 +5982,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               </div>
 
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">Brand Name *</label>
+                <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Brand Name")} *</label>
                 <input
                   type="text"
                   value={customVariationForm.brand}
@@ -5960,7 +5992,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 />
               </div>
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">Size Specification *</label>
+                <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Size Specification")} *</label>
                 <input
                   type="text"
                   value={customVariationForm.size}
@@ -5980,12 +6012,12 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 type="button"
                 onClick={() => setCustomVariationModal(false)}
                 className="px-4 py-1.5 text-[11px] rounded border border-input text-muted-foreground hover:text-foreground transition-colors"
-              >Cancel</button>
+              >{trUi("Cancel")}</button>
               <button
                 type="button"
                 onClick={handleSaveCustomVariation}
                 className="px-4 py-1.5 text-[11px] rounded bg-primary text-primary-foreground font-semibold hover:opacity-90 transition-opacity"
-              >Save</button>
+              >{trUi("Save")}</button>
             </div>
           </div>
         </div>
@@ -6018,7 +6050,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               )}
 
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">Account Name *</label>
+                <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Account Name")} *</label>
                 <input
                   type="text"
                   value={createAccountForm.name}
@@ -6030,7 +6062,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] text-muted-foreground mb-1">Account Code *</label>
+                  <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Account Code")} *</label>
                   <input
                     type="text"
                     value={createAccountForm.code}
@@ -6040,7 +6072,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   />
                 </div>
                 <div>
-                  <label className="block text-[10px] text-muted-foreground mb-1">Currency *</label>
+                  <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Currency")} *</label>
                   <select
                     value={createAccountForm.currency}
                     onChange={(e) => setCreateAccountForm(p => ({ ...p, currency: e.target.value }))}
@@ -6055,17 +6087,17 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-[10px] text-muted-foreground mb-1">Account Category *</label>
+                  <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Account Category")} *</label>
                   <select
                     value={createAccountForm.kind}
                     onChange={(e) => setCreateAccountForm(p => ({ ...p, kind: e.target.value }))}
                     className="w-full bg-background border border-input rounded px-3 py-1.5 text-foreground text-[11px] outline-none focus:border-primary"
                   >
-                    <option value="liability">Liability</option>
-                    <option value="asset">Asset</option>
-                    <option value="expense">Expense</option>
-                    <option value="income">Income</option>
-                    <option value="equity">Equity</option>
+                    <option value="liability">{trUi("Liability")}</option>
+                    <option value="asset">{trUi("Asset")}</option>
+                    <option value="expense">{trUi("Expense")}</option>
+                    <option value="income">{trUi("Income")}</option>
+                    <option value="equity">{trUi("Equity")}</option>
                   </select>
                 </div>
                 <div className="flex items-center pt-5">
@@ -6090,7 +6122,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 type="button"
                 onClick={() => setCreateAccountModalOpen(false)}
                 className="px-4 py-1.5 text-[11px] rounded border border-input text-muted-foreground hover:text-foreground transition-colors"
-              >Cancel</button>
+              >{trUi("Cancel")}</button>
               <button
                 type="button"
                 onClick={handleAddNewAccount}
@@ -6122,7 +6154,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
             </div>
             <form onSubmit={handleNewReportSubmit} className="p-5 space-y-4">
               <div>
-                <label className="text-xs font-bold text-foreground mb-1.5 block">Report Name <span className="text-red-500">*</span></label>
+                <label className="text-xs font-bold text-foreground mb-1.5 block">{trUi("Report Name")} <span className="text-red-500">*</span></label>
                 <input
                   type="text"
                   required
@@ -6133,7 +6165,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-foreground mb-1.5 block">Description</label>
+                <label className="text-xs font-bold text-foreground mb-1.5 block">{trUi("Description")}</label>
                 <input
                   type="text"
                   value={newReportForm.description}
@@ -6143,7 +6175,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 />
               </div>
               <div>
-                <label className="text-xs font-bold text-foreground mb-1.5 block">Notes</label>
+                <label className="text-xs font-bold text-foreground mb-1.5 block">{trUi("Notes")}</label>
                 <textarea
                   rows={3}
                   value={newReportForm.notes}
@@ -6200,7 +6232,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               )}
 
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">Company Name *</label>
+                <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Company Name")} *</label>
                 <input
                   type="text"
                   value={createCompanyForm.name}
@@ -6211,7 +6243,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               </div>
 
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">Legal Name</label>
+                <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Legal Name")}</label>
                 <input
                   type="text"
                   value={createCompanyForm.legalName}
@@ -6222,7 +6254,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               </div>
 
               <div>
-                <label className="block text-[10px] text-muted-foreground mb-1">Base Currency *</label>
+                <label className="block text-[10px] text-muted-foreground mb-1">{trUi("Base Currency")} *</label>
                 <select
                   value={createCompanyForm.baseCurrency}
                   onChange={(e) => setCreateCompanyForm(p => ({ ...p, baseCurrency: e.target.value }))}
@@ -6243,7 +6275,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 type="button"
                 onClick={() => setCreateCompanyModalOpen(false)}
                 className="px-4 py-1.5 text-[11px] rounded border border-input text-muted-foreground hover:text-foreground transition-colors"
-              >Cancel</button>
+              >{trUi("Cancel")}</button>
               <button
                 type="button"
                 onClick={handleAddNewCompany}
@@ -6274,19 +6306,19 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
               <div className="flex items-start gap-3 bg-blue-50 text-blue-800 p-3 rounded-lg border border-blue-100">
                 <CheckSquare className="h-5 w-5 shrink-0 mt-0.5 text-blue-600" />
                 <p className="font-semibold leading-relaxed">
-                  You are about to transfer this Purchase Booking to the <strong>Purchase Transfer Payment</strong> module.
+                  {trUi("You are about to transfer this Purchase Booking to the")} <strong>{trUi("Purchase Transfer Payment")}</strong> {trUi("module")}.
                   <br/><br/>
-                  <em>Note: No accounting entries (Roznamcha, Ledger) will be posted at this stage. Entries will only be posted when the payment is officially processed.</em>
+                  <em>{trUi("The transfer posts the booking through Business Roznamcha and then opens the selected payment flow.")}</em>
                 </p>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div className="border border-slate-200 rounded p-2.5 bg-white shadow-sm flex justify-between items-center">
-                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Invoice No</span>
+                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{trUi("Invoice No")}</span>
                   <div className="font-black font-mono text-slate-900">{form.purchaseOrderNo}</div>
                 </div>
                 <div className="border border-slate-200 rounded p-2.5 bg-white shadow-sm flex justify-between items-center">
-                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">Base Entry No</span>
+                  <span className="text-[9px] text-slate-500 font-bold uppercase tracking-wider">{trUi("Base Entry No")}</span>
                   <div className="font-black font-mono text-slate-900">{savedOrderNo || "Pending..."}</div>
                 </div>
               </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Globe2, AlertCircle, Loader2 } from "lucide-react";
+import { Globe2, AlertCircle, Loader2, X, Printer, History } from "lucide-react";
 import { t, type UiKey } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
@@ -9,6 +9,8 @@ import { ReportFilterBar, type ReportFilterValues, type ReportMetaItem } from ".
 import { ReportKpiCards } from "./report-kpi-cards";
 import { ReportDataTable, getColumnsForReportType } from "./report-data-table";
 import { ReportExportToolbar } from "./report-export-toolbar";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { openGenericErpReport } from "@/lib/reports/open-generic-erp-report";
 
 type ReportScopeLevel = "global" | "country" | "branch";
 
@@ -26,7 +28,8 @@ type ReportMeta = {
   countries: ReportMetaItem[];
   mainBranches: ReportMetaItem[];
   cityBranches: ReportMetaItem[];
-  users: { id: string; name: string }[];
+  users: { id: string; name: string; assignments?: Array<{ country_id?: string | null; country_branch_id?: string | null; city_branch_id?: string | null }> }[];
+  projects?: { id: string; name: string; country_id?: string; country_branch_id?: string; city_branch_id?: string }[];
   currencies: { code: string; name: string }[];
   reportTypes: { key: string; icon: string }[];
 };
@@ -44,18 +47,26 @@ type ReportResult = {
   summary: Record<string, any>;
   records: number;
   generatedAt: string;
+  generatedBy?: { id: string; name: string };
+  applied?: Record<string, any>;
+  history?: Record<string, any[]>;
+  sourceTables?: string[];
 };
 
 type Props = {
   lang: SupportedLanguage;
   initialScopeLevel?: ReportScopeLevel;
   viewerName?: string;
+  viewerId?: string;
+  workspace?: "standard" | "super-admin";
 };
 
 const DEFAULT_FILTERS: ReportFilterValues = {
   countryId: "all",
+  scopeMode: "entire-country",
   mainBranchId: "all",
   branchId: "all",
+  project: "all",
   fromDate: "",
   toDate: "",
   currency: "USD",
@@ -63,7 +74,8 @@ const DEFAULT_FILTERS: ReportFilterValues = {
   reportType: "roznamcha"
 };
 
-export function ReportPanel({ lang, initialScopeLevel = "global", viewerName }: Props) {
+export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", viewerName, viewerId, workspace = "standard" }: Props) {
+  const lang = useActiveLanguage() || initialLang;
   const _ = (key: UiKey, fallback?: string) => t(lang, key, fallback);
   const isRTL = ["ar", "ur", "fa", "ps"].includes(lang);
 
@@ -73,25 +85,30 @@ export function ReportPanel({ lang, initialScopeLevel = "global", viewerName }: 
 
   const [filters, setFilters] = useState<ReportFilterValues>(DEFAULT_FILTERS);
   const [reportResult, setReportResult] = useState<ReportResult | null>(null);
+  const [appliedFilters, setAppliedFilters] = useState<ReportFilterValues | null>(null);
   const [reportLoading, setReportLoading] = useState(false);
   const [reportError, setReportError] = useState<string | null>(null);
   const [hasLoaded, setHasLoaded] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [density, setDensity] = useState<"compact" | "comfortable">("comfortable");
   const [visibleColumnKeys, setVisibleColumnKeys] = useState<string[]>([]);
+  const [columnOrder, setColumnOrder] = useState<string[]>([]);
+  const [selectedRow, setSelectedRow] = useState<Record<string, any> | null>(null);
   const reportData = reportResult?.data ?? [];
   const reportSummary = reportResult?.summary ?? {};
+  const appliedReportType = reportResult?.reportType ?? filters.reportType;
+  const appliedCurrency = reportResult?.applied?.currency ?? filters.currency;
   const baseColumns = getColumnsForReportType(
-    filters.reportType,
+    appliedReportType,
     lang,
-    filters.currency !== "all" ? filters.currency : "USD"
+    appliedCurrency !== "all" ? appliedCurrency : "USD"
   );
 
   // Load metadata on mount
   useEffect(() => {
     let cancelled = false;
     setMetaLoading(true);
-    fetch("/api/erp/reports/meta")
+    fetch(`/api/erp/reports/meta?lang=${lang}${workspace === "super-admin" ? "&workspace=super-admin" : ""}`)
       .then((res) => res.json())
       .then((json) => {
         if (cancelled) return;
@@ -99,7 +116,7 @@ export function ReportPanel({ lang, initialScopeLevel = "global", viewerName }: 
           setMeta(json.data);
           setFilters((prev) => ({
             ...prev,
-            countryId: json.data.scope?.lockedCountryId ?? prev.countryId,
+            countryId: json.data.scope?.lockedCountryId ?? json.data.countries?.[0]?.id ?? prev.countryId,
             mainBranchId: json.data.scope?.lockedMainBranchId ?? prev.mainBranchId,
             branchId: json.data.scope?.lockedBranchId ?? prev.branchId
           }));
@@ -118,7 +135,7 @@ export function ReportPanel({ lang, initialScopeLevel = "global", viewerName }: 
         if (!cancelled) setMetaLoading(false);
       });
     return () => { cancelled = true; };
-  }, []);
+  }, [workspace, lang]);
 
   const fetchReport = useCallback(async (currentFilters: ReportFilterValues) => {
     setReportLoading(true);
@@ -136,12 +153,18 @@ export function ReportPanel({ lang, initialScopeLevel = "global", viewerName }: 
       ...(currentFilters.currency && currentFilters.currency !== "all" && { currency: currentFilters.currency }),
       ...(currentFilters.userId && currentFilters.userId !== "all" && { userId: currentFilters.userId })
     });
+    if (workspace === "super-admin") {
+      params.set("scopeMode", currentFilters.scopeMode);
+      if (currentFilters.project !== "all") params.set("project", currentFilters.project);
+    }
 
     try {
-      const res = await fetch(`/api/erp/reports/scoped?${params}`);
+      const endpoint = workspace === "super-admin" ? "/api/erp/reports/super-admin" : "/api/erp/reports/scoped";
+      const res = await fetch(`${endpoint}?${params}`, { cache: "no-store" });
       const json = await res.json();
       if (json.ok) {
         setReportResult(json.data);
+        setAppliedFilters({ ...currentFilters });
       } else {
         setReportError(json.error?.message || "Report fetch failed");
       }
@@ -150,7 +173,7 @@ export function ReportPanel({ lang, initialScopeLevel = "global", viewerName }: 
     } finally {
       setReportLoading(false);
     }
-  }, [lang]);
+  }, [lang, workspace]);
 
   const handleFilterChange = (key: keyof ReportFilterValues, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -159,9 +182,11 @@ export function ReportPanel({ lang, initialScopeLevel = "global", viewerName }: 
   const handleReset = () => {
     setFilters({
       ...DEFAULT_FILTERS,
-      reportType: meta?.reportTypes[0]?.key ?? "roznamcha"
+      countryId: meta?.scope.lockedCountryId ?? meta?.countries[0]?.id ?? "all",
+      reportType: meta?.reportTypes[0]?.key ?? (workspace === "super-admin" ? "ledger" : "roznamcha")
     });
     setReportResult(null);
+    setAppliedFilters(null);
     setHasLoaded(false);
   };
 
@@ -194,25 +219,55 @@ export function ReportPanel({ lang, initialScopeLevel = "global", viewerName }: 
       const missing = baseColumns.map((column) => column.key).filter((key) => !next.includes(key));
       return next.length ? [...next, ...missing] : baseColumns.map((column) => column.key);
     });
-  }, [baseColumns]);
+    setColumnOrder((current) => {
+      const allowed = baseColumns.map((column) => column.key);
+      const kept = current.filter((key) => allowed.includes(key));
+      return [...kept, ...allowed.filter((key) => !kept.includes(key))];
+    });
+  }, [appliedReportType, lang]);
 
-  const visibleColumns = baseColumns.filter((column) => visibleColumnKeys.includes(column.key));
+  useEffect(() => {
+    if (!reportResult || typeof window === "undefined") return;
+    const storageKey = `erp-report-columns:${viewerId || "anonymous"}:${appliedReportType}`;
+    try {
+      const saved = JSON.parse(window.localStorage.getItem(storageKey) || "null");
+      if (saved && Array.isArray(saved.visible) && Array.isArray(saved.order)) {
+        const allowed = new Set(baseColumns.map((column) => column.key));
+        const visible = saved.visible.filter((key: string) => allowed.has(key));
+        const order = saved.order.filter((key: string) => allowed.has(key));
+        setVisibleColumnKeys(visible.length ? visible : baseColumns.map((column) => column.key));
+        setColumnOrder([...order, ...baseColumns.map((column) => column.key).filter((key) => !order.includes(key))]);
+      }
+    } catch {
+      // Ignore invalid local preferences; allowed columns remain server/schema controlled.
+    }
+  }, [appliedReportType, reportResult, viewerId]);
+
+  const orderedColumns = columnOrder.map((key) => baseColumns.find((column) => column.key === key)).filter(Boolean) as typeof baseColumns;
+  const visibleColumns = orderedColumns.filter((column) => visibleColumnKeys.includes(column.key));
+  const applied = reportResult?.applied ?? {};
   const previewFilters = [
-    { label: "Scope", value: reportResult?.scope?.label ?? scope?.scopeLabel ?? "Scoped Report" },
-    { label: "Country", value: scope?.lockedCountryName ?? meta?.countries.find((item) => item.id === filters.countryId)?.label ?? "All Countries" },
-    { label: "Branch", value: scope?.lockedBranchName ?? meta?.cityBranches.find((item) => item.id === filters.branchId)?.label ?? meta?.mainBranches.find((item) => item.id === filters.mainBranchId)?.label ?? "All Branches" },
-    { label: "From Date", value: filters.fromDate || "Start" },
-    { label: "To Date", value: filters.toDate || "Today" },
-    { label: "Currency", value: filters.currency !== "all" ? filters.currency : reportResult?.currency ?? "All" }
+    { label: t(lang, "report.filter_report_type"), value: t(lang, `report.${appliedReportType.replace(/-/g, "_")}` as UiKey, appliedReportType) },
+    { label: t(lang, "report.filter_country"), value: applied.country ?? scope?.lockedCountryName ?? "—" },
+    { label: t(lang, "report.filter_scope" as UiKey, "Scope"), value: t(lang, `report.scope_${String(applied.scopeMode || "").replace(/-/g, "_")}` as UiKey, applied.scopeMode || reportResult?.scope?.label || "—") },
+    { label: t(lang, "report.filter_main_branch"), value: applied.mainBranch ?? "—" },
+    { label: t(lang, "report.filter_branch"), value: applied.branch ?? "—" },
+    { label: t(lang, "report.filter_project" as UiKey, "Project"), value: applied.project ?? t(lang, "report.filter_all_projects" as UiKey, "All Projects") },
+    { label: t(lang, "report.filter_user"), value: applied.userId ? meta?.users.find((item) => item.id === applied.userId)?.name || applied.userId : t(lang, "report.filter_all_users") },
+    { label: t(lang, "report.filter_date_from"), value: applied.fromDate ?? "—" },
+    { label: t(lang, "report.filter_date_to"), value: applied.toDate ?? "—" },
+    { label: t(lang, "report.filter_currency"), value: applied.currency ?? "all" },
+    { label: t(lang, "report.generated_by" as UiKey, "Generated by"), value: reportResult?.generatedBy?.name ?? viewerName ?? "—" },
+    { label: t(lang, "report.generated_at"), value: reportResult?.generatedAt ? new Date(reportResult.generatedAt).toLocaleString() : "—" }
   ];
   const companyInfo = {
     name: "DIGITAL DOCK ERP",
     printedBy: viewerName || "ERP User",
     country: previewFilters[1]?.value,
-    branch: previewFilters[2]?.value,
-    currency: filters.currency !== "all" ? filters.currency : reportResult?.currency ?? "USD",
-    reportPeriod: filters.fromDate || filters.toDate
-      ? `${filters.fromDate || "Start"} To ${filters.toDate || "Today"}`
+    branch: applied.branch || applied.mainBranch || applied.country || "—",
+    currency: applied.currency !== "all" ? applied.currency : "USD",
+    reportPeriod: applied.fromDate || applied.toDate
+      ? `${applied.fromDate || "Start"} To ${applied.toDate || "Today"}`
       : reportResult?.generatedAt
       ? `As of ${new Date(reportResult.generatedAt).toLocaleDateString("en-GB")}`
       : "Current Period"
@@ -226,6 +281,22 @@ export function ReportPanel({ lang, initialScopeLevel = "global", viewerName }: 
       return [...current, key];
     });
   };
+
+  const moveColumn = (key: string, direction: -1 | 1) => {
+    setColumnOrder((current) => {
+      const index = current.indexOf(key);
+      const target = index + direction;
+      if (index < 0 || target < 0 || target >= current.length) return current;
+      const next = [...current];
+      [next[index], next[target]] = [next[target], next[index]];
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    if (!reportResult || typeof window === "undefined") return;
+    window.localStorage.setItem(`erp-report-columns:${viewerId || "anonymous"}:${appliedReportType}`, JSON.stringify({ visible: visibleColumnKeys, order: columnOrder }));
+  }, [visibleColumnKeys, columnOrder, appliedReportType, reportResult, viewerId]);
 
   if (metaLoading) {
     return (
@@ -300,6 +371,7 @@ export function ReportPanel({ lang, initialScopeLevel = "global", viewerName }: 
         mainBranches={meta?.mainBranches ?? []}
         cityBranches={meta?.cityBranches ?? []}
         users={meta?.users ?? []}
+        projects={meta?.projects ?? []}
         currencies={meta?.currencies ?? []}
         reportTypes={meta?.reportTypes ?? []}
         lockedCountryId={scope?.lockedCountryId}
@@ -327,25 +399,47 @@ export function ReportPanel({ lang, initialScopeLevel = "global", viewerName }: 
 
       {hasLoaded && (
         <>
+          {reportResult && (
+            <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 dark:border-indigo-900/60 dark:bg-indigo-950/20">
+              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-xs font-black uppercase tracking-wider text-indigo-900 dark:text-indigo-200">
+                  {t(lang, "report.applied_filters" as UiKey, "Applied report snapshot")}
+                </h2>
+                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-black text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+                  {t(lang, "report.real_data" as UiKey, "Real database data")} · {(reportResult.sourceTables ?? []).join(", ")}
+                </span>
+              </div>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                {previewFilters.map((item) => (
+                  <div key={item.label} className="rounded-xl border border-white/80 bg-white/80 px-3 py-2 dark:border-slate-800 dark:bg-slate-900/80">
+                    <div className="text-[9px] font-black uppercase tracking-wide text-slate-400">{item.label}</div>
+                    <div className="mt-0.5 truncate text-xs font-bold text-slate-800 dark:text-slate-200">{item.value}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Export Toolbar */}
           <ReportExportToolbar
             lang={lang}
-            reportType={filters.reportType}
-            reportTitle={_(panelTitleKey)}
+            reportType={appliedReportType}
+            reportTitle={`${_(panelTitleKey)} — ${t(lang, `report.${appliedReportType.replace(/-/g, "_")}` as UiKey, appliedReportType)}`}
             data={reportData}
             summary={reportSummary}
             scopeLabel={reportResult?.scope?.label ?? scope?.scopeLabel ?? ""}
             generatedAt={reportResult?.generatedAt}
             isLoading={reportLoading}
-            onReload={handleApply}
-            currency={filters.currency}
+            onReload={() => appliedFilters && fetchReport(appliedFilters)}
+            currency={appliedCurrency}
             searchQuery={searchQuery}
             onSearchQueryChange={setSearchQuery}
             density={density}
             onDensityChange={setDensity}
-            columns={baseColumns}
+            columns={orderedColumns}
             visibleColumnKeys={visibleColumnKeys}
             onToggleColumn={toggleColumn}
+            onMoveColumn={moveColumn}
             previewFilters={previewFilters}
             companyInfo={companyInfo}
           />
@@ -354,8 +448,8 @@ export function ReportPanel({ lang, initialScopeLevel = "global", viewerName }: 
           <ReportKpiCards
             lang={lang}
             summary={reportSummary}
-            reportType={filters.reportType}
-            currency={filters.currency !== "all" ? filters.currency : "USD"}
+            reportType={appliedReportType}
+            currency={appliedCurrency !== "all" ? appliedCurrency : "USD"}
             isLoading={reportLoading}
           />
 
@@ -377,15 +471,58 @@ export function ReportPanel({ lang, initialScopeLevel = "global", viewerName }: 
             rows={reportData}
             isLoading={reportLoading}
             hasError={Boolean(reportError)}
-            currency={filters.currency !== "all" ? filters.currency : "USD"}
+            currency={appliedCurrency !== "all" ? appliedCurrency : "USD"}
             searchable={false}
             pageSize={50}
             stripedRows
             searchQuery={searchQuery}
             onSearchQueryChange={setSearchQuery}
             density={density}
+            onRowClick={setSelectedRow}
           />
         </>
+      )}
+
+      {selectedRow && reportResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedRow(null); }}>
+          <div className="max-h-[90vh] w-full max-w-4xl overflow-auto rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-950">
+            <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-slate-200 bg-white/95 px-5 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95">
+              <div>
+                <h2 className="text-base font-black text-slate-900 dark:text-white">{t(lang, "report.record_details" as UiKey, "Report record details")}</h2>
+                <p className="text-xs text-slate-500">{String(selectedRow.reference || selectedRow.serial || selectedRow.id)}</p>
+              </div>
+              <button
+                type="button"
+                className="ml-auto flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-2 text-xs font-black text-white hover:bg-indigo-700"
+                onClick={() => openGenericErpReport({ title: `${t(lang, "report.record_details" as UiKey, "Record details")} — ${String(selectedRow.reference || selectedRow.id)}`, lang, columns: visibleColumns, rows: [selectedRow], summary: reportSummary, filters: previewFilters, companyInfo })}
+              >
+                <Printer className="h-4 w-4" /> {t(lang, "report.print")}
+              </button>
+              <button type="button" aria-label="Close" onClick={() => setSelectedRow(null)} className="rounded-xl border border-slate-200 p-2 text-slate-500 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-900"><X className="h-4 w-4" /></button>
+            </div>
+            <div className="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3">
+              {Object.entries(selectedRow).filter(([key]) => !["sourceTable"].includes(key)).map(([key, value]) => (
+                <div key={key} className="rounded-2xl border border-slate-200 p-3 dark:border-slate-800">
+                  <div className="text-[9px] font-black uppercase tracking-wide text-slate-400">{key.replace(/([A-Z])/g, " $1")}</div>
+                  <div className="mt-1 break-words text-xs font-semibold text-slate-800 dark:text-slate-200">{value === null || value === undefined || value === "" ? "—" : typeof value === "object" ? JSON.stringify(value) : String(value)}</div>
+                </div>
+              ))}
+            </div>
+            <div className="border-t border-slate-200 p-5 dark:border-slate-800">
+              <h3 className="mb-3 flex items-center gap-2 text-sm font-black text-slate-900 dark:text-white"><History className="h-4 w-4" /> {t(lang, "report.activity_history" as UiKey, "Activity and edit history")}</h3>
+              {(reportResult.history?.[String(selectedRow.historyRecordId || selectedRow.id)] ?? []).length ? (
+                <div className="space-y-2">
+                  {(reportResult.history?.[String(selectedRow.historyRecordId || selectedRow.id)] ?? []).map((entry: any) => (
+                    <div key={entry.id} className="rounded-xl bg-slate-50 p-3 text-xs dark:bg-slate-900">
+                      <div className="font-bold text-slate-800 dark:text-slate-200">{entry.action} · {new Date(entry.created_at).toLocaleString()} · {entry.actor_id || "—"}</div>
+                      <div className="mt-1 text-slate-500">{(entry.changedFields ?? []).join(", ") || t(lang, "report.no_field_changes" as UiKey, "No field-level changes recorded")}</div>
+                    </div>
+                  ))}
+                </div>
+              ) : <p className="text-xs text-slate-500">{t(lang, "report.no_history" as UiKey, "No edit-history entries recorded for this record.")}</p>}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

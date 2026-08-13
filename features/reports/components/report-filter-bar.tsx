@@ -1,14 +1,16 @@
 "use client";
 
-import { Globe2, Building2, Users, Calendar, RefreshCw, Filter, X } from "lucide-react";
+import { Globe2, Building2, Users, Calendar, RefreshCw, Filter, X, FolderKanban } from "lucide-react";
 import { t, type UiKey } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
 
 export type ReportFilterValues = {
   countryId: string;
+  scopeMode: "entire-country" | "main-branch" | "city-branch";
   mainBranchId: string;
   branchId: string;
+  project: string;
   fromDate: string;
   toDate: string;
   currency: string;
@@ -35,7 +37,8 @@ type Props = {
   countries: ReportMetaItem[];
   mainBranches: ReportMetaItem[];
   cityBranches: ReportMetaItem[];
-  users: { id: string; name: string }[];
+  users: { id: string; name: string; assignments?: Array<{ country_id?: string | null; country_branch_id?: string | null; city_branch_id?: string | null }> }[];
+  projects?: { id: string; name: string; country_id?: string; country_branch_id?: string; city_branch_id?: string }[];
   currencies: { code: string; name: string }[];
   reportTypes: { key: string; icon: string }[];
 
@@ -63,6 +66,7 @@ export function ReportFilterBar({
   mainBranches,
   cityBranches,
   users,
+  projects = [],
   currencies,
   reportTypes,
   lockedCountryId,
@@ -88,6 +92,21 @@ export function ReportFilterBar({
     if (filters.countryId && filters.countryId !== "all" && cb.country_id !== filters.countryId) return false;
     if (filters.mainBranchId && filters.mainBranchId !== "all" && cb.country_branch_id !== filters.mainBranchId) return false;
     return true;
+  });
+  const filteredProjects = projects.filter((project) => {
+    if (filters.countryId !== "all" && project.country_id && project.country_id !== filters.countryId) return false;
+    if (filters.scopeMode === "main-branch" && filters.mainBranchId !== "all" && project.country_branch_id && project.country_branch_id !== filters.mainBranchId) return false;
+    if (filters.scopeMode === "city-branch" && filters.branchId !== "all" && project.city_branch_id && project.city_branch_id !== filters.branchId) return false;
+    return true;
+  });
+  const filteredUsers = users.filter((user) => {
+    if (!user.assignments?.length) return true;
+    return user.assignments.some((assignment) => {
+      if (filters.countryId !== "all" && assignment.country_id && assignment.country_id !== filters.countryId) return false;
+      if (filters.scopeMode === "main-branch" && filters.mainBranchId !== "all" && assignment.country_branch_id && assignment.country_branch_id !== filters.mainBranchId) return false;
+      if (filters.scopeMode === "city-branch" && filters.branchId !== "all" && assignment.city_branch_id && assignment.city_branch_id !== filters.branchId) return false;
+      return true;
+    });
   });
 
   const isRTL = ["ar", "ur", "fa", "ps"].includes(lang);
@@ -142,8 +161,11 @@ export function ReportFilterBar({
                 value={filters.countryId}
                 onChange={(e) => {
                   onFilterChange("countryId", e.target.value);
+                  onFilterChange("scopeMode", "entire-country");
                   onFilterChange("mainBranchId", "all");
                   onFilterChange("branchId", "all");
+                  onFilterChange("project", "all");
+                  onFilterChange("userId", "all");
                 }}
                 className="w-full text-xs font-semibold rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none dark:bg-slate-950 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200"
               >
@@ -156,8 +178,34 @@ export function ReportFilterBar({
           </div>
         )}
 
+        {/* Scope workflow */}
+        {showBranchFilter && (
+          <div className="min-w-[165px] flex-1 space-y-1">
+            <label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
+              <Building2 className="h-3 w-3 text-cyan-500" />
+              {t(lang, "report.filter_scope" as UiKey, "Scope")}
+            </label>
+            <select
+              value={filters.scopeMode}
+              onChange={(event) => {
+                const value = event.target.value as ReportFilterValues["scopeMode"];
+                onFilterChange("scopeMode", value);
+                onFilterChange("mainBranchId", "all");
+                onFilterChange("branchId", "all");
+                onFilterChange("project", "all");
+                onFilterChange("userId", "all");
+              }}
+              className="w-full text-xs font-semibold rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none dark:bg-slate-950 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200"
+            >
+              <option value="entire-country">{t(lang, "report.scope_entire_country" as UiKey, "Entire Country")}</option>
+              <option value="main-branch">{t(lang, "report.scope_main_branch" as UiKey, "Main Branch")}</option>
+              <option value="city-branch">{t(lang, "report.scope_city_branch" as UiKey, "City Branch")}</option>
+            </select>
+          </div>
+        )}
+
         {/* Main Branch */}
-        {showBranchFilter && !isBranchLocked && (
+        {showBranchFilter && filters.scopeMode !== "entire-country" && !isBranchLocked && (
           <div className="min-w-[150px] flex-1 space-y-1">
             <label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
               <Building2 className="h-3 w-3 text-blue-500" />
@@ -167,7 +215,9 @@ export function ReportFilterBar({
               value={filters.mainBranchId}
               onChange={(e) => {
                 onFilterChange("mainBranchId", e.target.value);
-                onFilterChange("branchId", "all");
+                  onFilterChange("branchId", "all");
+                  onFilterChange("project", "all");
+                  onFilterChange("userId", "all");
               }}
               className="w-full text-xs font-semibold rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none dark:bg-slate-950 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200"
             >
@@ -180,7 +230,7 @@ export function ReportFilterBar({
         )}
 
         {/* City Branch */}
-        {showBranchFilter && (
+        {showBranchFilter && filters.scopeMode === "city-branch" && (
           <div className="min-w-[150px] flex-1 space-y-1">
             <label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
               <Building2 className="h-3 w-3 text-violet-500" />
@@ -196,7 +246,11 @@ export function ReportFilterBar({
             ) : (
               <select
                 value={filters.branchId}
-                onChange={(e) => onFilterChange("branchId", e.target.value)}
+                onChange={(e) => {
+                  onFilterChange("branchId", e.target.value);
+                  onFilterChange("project", "all");
+                  onFilterChange("userId", "all");
+                }}
                 className="w-full text-xs font-semibold rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none dark:bg-slate-950 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200"
               >
                 <option value="all">{_("report.filter_all_branches")}</option>
@@ -207,6 +261,21 @@ export function ReportFilterBar({
             )}
           </div>
         )}
+
+        <div className="min-w-[160px] flex-1 space-y-1">
+          <label className="text-[10px] font-black uppercase text-slate-500 flex items-center gap-1">
+            <FolderKanban className="h-3 w-3 text-fuchsia-500" />
+            {t(lang, "report.filter_project" as UiKey, "Project")}
+          </label>
+          <select
+            value={filters.project}
+            onChange={(event) => onFilterChange("project", event.target.value)}
+            className="w-full text-xs font-semibold rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none dark:bg-slate-950 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200"
+          >
+            <option value="all">{t(lang, "report.filter_all_projects" as UiKey, "All Projects")}</option>
+            {filteredProjects.map((project) => <option key={project.id} value={project.name}>{project.name}</option>)}
+          </select>
+        </div>
 
         {/* Date From */}
         <div className="min-w-[150px] flex-1 space-y-1">
@@ -269,7 +338,7 @@ export function ReportFilterBar({
               className="w-full text-xs font-semibold rounded-xl border border-slate-200 bg-white px-3 py-2 outline-none dark:bg-slate-950 dark:border-slate-800 focus:ring-2 focus:ring-indigo-500 text-slate-800 dark:text-slate-200"
             >
               <option value="all">{_("report.filter_all_users")}</option>
-              {users.map((u) => (
+              {filteredUsers.map((u) => (
                 <option key={u.id} value={u.id}>{u.name}</option>
               ))}
             </select>

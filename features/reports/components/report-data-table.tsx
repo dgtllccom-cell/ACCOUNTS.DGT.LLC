@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Search, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { t, type UiKey } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -31,6 +31,7 @@ type Props = {
   searchQuery?: string;
   onSearchQueryChange?: (value: string) => void;
   density?: "compact" | "comfortable";
+  onRowClick?: (row: Record<string, any>) => void;
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -108,7 +109,8 @@ export function ReportDataTable({
   stripedRows = true,
   searchQuery,
   onSearchQueryChange,
-  density = "comfortable"
+  density = "comfortable",
+  onRowClick
 }: Props) {
   const _ = (key: UiKey, fallback?: string) => t(lang, key, fallback);
   const isRTL = ["ar", "ur", "fa", "ps"].includes(lang);
@@ -117,6 +119,7 @@ export function ReportDataTable({
   const [sortKey, setSortKey] = useState<string | null>(null);
   const [sortDir, setSortDir] = useState<SortDirection>(null);
   const [page, setPage] = useState(1);
+  const [columnFilters, setColumnFilters] = useState<Record<string, string>>({});
   const search = searchQuery ?? internalSearch;
 
   const handleSort = (colKey: string) => {
@@ -133,12 +136,12 @@ export function ReportDataTable({
   };
 
   const filtered = useMemo(() => {
-    if (!search.trim()) return rows;
-    const q = search.toLowerCase();
-    return rows.filter((row) =>
-      Object.values(row).some((v) => v !== null && v !== undefined && String(v).toLowerCase().includes(q))
-    );
-  }, [rows, search]);
+    const q = search.trim().toLowerCase();
+    return rows.filter((row) => {
+      if (q && !Object.values(row).some((v) => v !== null && v !== undefined && String(v).toLowerCase().includes(q))) return false;
+      return Object.entries(columnFilters).every(([key, value]) => !value.trim() || String(row[key] ?? "").toLowerCase().includes(value.trim().toLowerCase()));
+    });
+  }, [rows, search, columnFilters]);
 
   const sorted = useMemo(() => {
     if (!sortKey || !sortDir) return filtered;
@@ -156,6 +159,8 @@ export function ReportDataTable({
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
   const paged = sorted.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => setPage(1), [rows, columns, columnFilters]);
 
   if (isLoading) {
     return (
@@ -242,13 +247,33 @@ export function ReportDataTable({
                   </th>
                 ))}
               </tr>
+              <tr className="bg-slate-800 dark:bg-slate-900">
+                {columns.map((column) => (
+                  <th key={`${column.key}-filter`} className="px-2 py-1.5">
+                    <input
+                      value={columnFilters[column.key] ?? ""}
+                      onChange={(event) => setColumnFilters((current) => ({ ...current, [column.key]: event.target.value }))}
+                      onClick={(event) => event.stopPropagation()}
+                      placeholder={_("report.search", "Filter")}
+                      aria-label={`${_("report.search", "Filter")} ${column.label}`}
+                      className="w-full min-w-[80px] rounded-md border border-slate-600 bg-slate-900/70 px-2 py-1 text-[10px] font-medium text-white outline-none placeholder:text-slate-500 focus:border-indigo-400"
+                    />
+                  </th>
+                ))}
+              </tr>
             </thead>
             <tbody>
               {paged.map((row, rowIdx) => (
                 <tr
-                  key={rowIdx}
+                  key={String(row.id ?? row.serial ?? rowIdx)}
+                  onClick={() => onRowClick?.(row)}
+                  tabIndex={onRowClick ? 0 : undefined}
+                  onKeyDown={(event) => {
+                    if (onRowClick && (event.key === "Enter" || event.key === " ")) onRowClick(row);
+                  }}
                   className={cn(
                     "border-b border-slate-100 dark:border-slate-800 transition-colors hover:bg-indigo-50/40 dark:hover:bg-indigo-950/10",
+                    onRowClick && "cursor-pointer focus:outline-none focus:ring-2 focus:ring-inset focus:ring-indigo-500",
                     stripedRows && rowIdx % 2 === 0
                       ? "bg-white dark:bg-slate-950"
                       : "bg-slate-50/50 dark:bg-slate-900/50"
@@ -332,12 +357,16 @@ export function getColumnsForReportType(reportType: string, lang: SupportedLangu
   switch (reportType) {
     case "ledger":
       return [
-        ...common,
-        { key: "account", label: _("report.col_user", "Account") },
+        { key: "reference", label: _("report.col_reference"), sortable: true },
+        { key: "date", label: _("report.col_date"), format: "date", sortable: true },
+        { key: "accountNumber", label: _("report.col_serial", "Account No.") },
+        { key: "account", label: _("report.col_user", "Account / Ledger") },
         { key: "description", label: _("report.col_description") },
+        { key: "opening", label: _("report.col_opening" as UiKey, "Opening"), format: "currency", align: "right", currency },
         { key: "debit", label: _("report.col_debit"), format: "currency", align: "right", currency, sortable: true },
         { key: "credit", label: _("report.col_credit"), format: "currency", align: "right", currency, sortable: true },
-        { key: "balance", label: _("report.col_balance"), format: "currency", align: "right", currency, sortable: true },
+        { key: "closing", label: _("report.col_closing" as UiKey, "Closing"), format: "currency", align: "right", currency, sortable: true },
+        { key: "branch", label: _("report.col_branch") },
         { key: "status", label: _("report.col_status"), format: "status", align: "center" }
       ];
 
@@ -354,24 +383,109 @@ export function getColumnsForReportType(reportType: string, lang: SupportedLangu
         { key: "status", label: _("report.col_status"), format: "status", align: "center" }
       ];
 
+    case "bills":
+      return [
+        { key: "recordType", label: _("report.col_type" as UiKey, "Type") },
+        { key: "reference", label: _("report.col_reference"), sortable: true },
+        { key: "date", label: _("report.col_date"), format: "date", sortable: true },
+        { key: "party", label: _("report.col_party" as UiKey, "Party") },
+        { key: "project", label: _("report.filter_project" as UiKey, "Project") },
+        { key: "amount", label: _("report.col_amount"), format: "currency", align: "right", currency, sortable: true },
+        { key: "paid", label: _("report.col_paid" as UiKey, "Paid"), format: "currency", align: "right", currency },
+        { key: "outstanding", label: _("report.col_outstanding" as UiKey, "Outstanding"), format: "currency", align: "right", currency, sortable: true },
+        { key: "postingStatus", label: _("report.col_posting_status" as UiKey, "Posting") , format: "status", align: "center" },
+        { key: "status", label: _("report.col_status"), format: "status", align: "center" }
+      ];
+
+    case "payments":
+      return [
+        { key: "recordType", label: _("report.col_type" as UiKey, "Source") },
+        { key: "reference", label: _("report.col_reference"), sortable: true },
+        { key: "date", label: _("report.col_date"), format: "date", sortable: true },
+        { key: "paymentType", label: _("report.col_payment_type" as UiKey, "Payment Type") },
+        { key: "description", label: _("report.col_description") },
+        { key: "debit", label: _("report.col_debit"), format: "currency", align: "right", currency },
+        { key: "credit", label: _("report.col_credit"), format: "currency", align: "right", currency },
+        { key: "amount", label: _("report.col_amount"), format: "currency", align: "right", currency, sortable: true },
+        { key: "postingStatus", label: _("report.col_posting_status" as UiKey, "Journal / Roznamcha"), format: "status", align: "center" },
+        { key: "status", label: _("report.col_status"), format: "status", align: "center" }
+      ];
+
     case "purchase":
     case "purchase-booking":
       return [
-        ...common,
-        { key: "customer", label: _("report.col_user", "Customer") },
-        { key: "country", label: _("report.col_country") },
+        { key: "reference", label: _("report.col_reference"), sortable: true },
+        { key: "date", label: _("report.col_date"), format: "date", sortable: true },
+        { key: "party", label: _("report.col_party" as UiKey, "Supplier") },
+        { key: "project", label: _("report.filter_project" as UiKey, "Project") },
         { key: "amount", label: _("report.col_amount"), format: "currency", align: "right", currency, sortable: true },
-        { key: "advance", label: _("report.kpi_total_payment", "Advance"), format: "currency", align: "right", currency },
-        { key: "remaining", label: _("report.col_balance", "Remaining"), format: "currency", align: "right", currency, sortable: true },
+        { key: "paid", label: _("report.col_paid" as UiKey, "Advance / Paid"), format: "currency", align: "right", currency },
+        { key: "outstanding", label: _("report.col_outstanding" as UiKey, "Outstanding"), format: "currency", align: "right", currency, sortable: true },
+        { key: "postingStatus", label: _("report.col_posting_status" as UiKey, "Posting"), format: "status", align: "center" },
         { key: "status", label: _("report.col_status"), format: "status", align: "center" }
       ];
 
     case "sales":
       return [
-        ...common,
-        { key: "customer", label: _("report.col_user", "Customer") },
-        { key: "country", label: _("report.col_country") },
+        { key: "reference", label: _("report.col_reference"), sortable: true },
+        { key: "date", label: _("report.col_date"), format: "date", sortable: true },
+        { key: "party", label: _("report.col_party" as UiKey, "Customer") },
+        { key: "project", label: _("report.filter_project" as UiKey, "Project") },
         { key: "amount", label: _("report.col_amount"), format: "currency", align: "right", currency, sortable: true },
+        { key: "paid", label: _("report.col_paid" as UiKey, "Paid"), format: "currency", align: "right", currency },
+        { key: "outstanding", label: _("report.col_outstanding" as UiKey, "Outstanding"), format: "currency", align: "right", currency, sortable: true },
+        { key: "postingStatus", label: _("report.col_posting_status" as UiKey, "Posting"), format: "status", align: "center" },
+        { key: "status", label: _("report.col_status"), format: "status", align: "center" }
+      ];
+
+    case "user-activity":
+      return [
+        { key: "date", label: _("report.col_date"), format: "date", sortable: true },
+        { key: "user", label: _("report.col_user") },
+        { key: "action", label: _("report.col_action" as UiKey, "Action") },
+        { key: "resource", label: _("report.col_resource" as UiKey, "Resource") },
+        { key: "reference", label: _("report.col_reference") },
+        { key: "description", label: _("report.col_description") },
+        { key: "ip", label: _("report.col_ip" as UiKey, "IP Address") },
+        { key: "status", label: _("report.col_status"), format: "status", align: "center" }
+      ];
+
+    case "employee":
+      return [
+        { key: "reference", label: _("report.col_serial", "Employee Code") },
+        { key: "employee", label: _("report.employee" as UiKey, "Employee") },
+        { key: "department", label: _("report.col_department" as UiKey, "Department") },
+        { key: "designation", label: _("report.col_designation" as UiKey, "Designation") },
+        { key: "employmentType", label: _("report.col_type" as UiKey, "Employment Type") },
+        { key: "joiningDate", label: _("report.col_joining_date" as UiKey, "Joining Date"), format: "date" },
+        { key: "basicSalary", label: _("report.col_basic_salary" as UiKey, "Basic Salary"), format: "currency", align: "right", currency },
+        { key: "allowance", label: _("report.col_allowance" as UiKey, "Allowance"), format: "currency", align: "right", currency },
+        { key: "deduction", label: _("report.col_deduction" as UiKey, "Deduction"), format: "currency", align: "right", currency },
+        { key: "netSalary", label: _("report.col_net_salary" as UiKey, "Net Salary"), format: "currency", align: "right", currency },
+        { key: "status", label: _("report.col_status"), format: "status", align: "center" }
+      ];
+
+    case "branch":
+      return [
+        { key: "reference", label: _("report.col_serial", "Branch Code") },
+        { key: "branch", label: _("report.col_branch") },
+        { key: "branchType", label: _("report.col_type" as UiKey, "Branch Type") },
+        { key: "country", label: _("report.col_country") },
+        { key: "city", label: _("report.col_city" as UiKey, "City") },
+        { key: "currency", label: _("report.col_currency") },
+        { key: "createdAt", label: _("report.col_created" as UiKey, "Created"), format: "date" },
+        { key: "status", label: _("report.col_status"), format: "status", align: "center" }
+      ];
+
+    case "project":
+      return [
+        { key: "project", label: _("report.project" as UiKey, "Project") },
+        { key: "records", label: _("report.kpi_total_records"), format: "number", align: "right" },
+        { key: "purchase", label: _("report.purchase"), format: "currency", align: "right", currency },
+        { key: "sales", label: _("report.sales"), format: "currency", align: "right", currency },
+        { key: "paid", label: _("report.col_paid" as UiKey, "Paid"), format: "currency", align: "right", currency },
+        { key: "outstanding", label: _("report.col_outstanding" as UiKey, "Outstanding"), format: "currency", align: "right", currency },
+        { key: "currency", label: _("report.col_currency") },
         { key: "status", label: _("report.col_status"), format: "status", align: "center" }
       ];
 

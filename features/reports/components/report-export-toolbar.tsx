@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Download, FileText, Table2, Printer, Share2, RefreshCw, Clock, Search, Columns3, Rows3 } from "lucide-react";
+import { Download, FileText, Table2, Printer, Share2, RefreshCw, Clock, Search, Columns3, Rows3, ArrowUp, ArrowDown } from "lucide-react";
 import { t, type UiKey } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
@@ -26,16 +26,26 @@ type Props = {
   columns?: GenericReportColumn[];
   visibleColumnKeys?: string[];
   onToggleColumn?: (key: string) => void;
+  onMoveColumn?: (key: string, direction: -1 | 1) => void;
   previewFilters?: ERPFilterPill[];
   companyInfo?: ERPCompanyInfo;
 };
 
-function exportToCsv(data: Record<string, any>[], filename: string) {
-  if (!data.length) return;
-  const headers = Object.keys(data[0]).join(",");
+function csvCell(value: unknown) {
+  const text = String(value ?? "");
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function htmlCell(value: unknown) {
+  return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function exportToCsv(data: Record<string, any>[], columns: GenericReportColumn[], filename: string) {
+  if (!data.length || !columns.length) return;
+  const headers = columns.map((column) => csvCell(column.label)).join(",");
   const rows = data.map((r) =>
-    Object.values(r)
-      .map((v) => (v === null || v === undefined ? "" : String(v).replace(/,/g, ";")))
+    columns.map((column) => r[column.key])
+      .map(csvCell)
       .join(",")
   );
   const csv = [headers, ...rows].join("\n");
@@ -50,9 +60,9 @@ function exportToCsv(data: Record<string, any>[], filename: string) {
 
 function exportToExcel(data: Record<string, any>[], columns: GenericReportColumn[], filename: string) {
   if (!data.length || !columns.length) return;
-  const headerRow = columns.map((column) => `<th>${column.label}</th>`).join("");
+  const headerRow = columns.map((column) => `<th>${htmlCell(column.label)}</th>`).join("");
   const bodyRows = data
-    .map((row) => `<tr>${columns.map((column) => `<td>${String(row[column.key] ?? "")}</td>`).join("")}</tr>`)
+    .map((row) => `<tr>${columns.map((column) => `<td>${htmlCell(row[column.key])}</td>`).join("")}</tr>`)
     .join("");
   const html = `<!doctype html><html><head><meta charset="utf-8" /></head><body><table><thead><tr>${headerRow}</tr></thead><tbody>${bodyRows}</tbody></table></body></html>`;
   const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8;" });
@@ -82,6 +92,7 @@ export function ReportExportToolbar({
   columns = [],
   visibleColumnKeys = [],
   onToggleColumn,
+  onMoveColumn,
   previewFilters = [],
   companyInfo
 }: Props) {
@@ -96,7 +107,7 @@ export function ReportExportToolbar({
   const handleCsv = () => {
     setIsExporting(true);
     try {
-      exportToCsv(data, `${filename}.csv`);
+      exportToCsv(data, columns.filter((column) => visibleSet.has(column.key)), `${filename}.csv`);
     } finally {
       setTimeout(() => setIsExporting(false), 1000);
     }
@@ -218,16 +229,22 @@ export function ReportExportToolbar({
           {showColumns && (
             <div className={cn("absolute z-20 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-900", isRTL ? "left-0" : "right-0")}>
               <div className="max-h-72 space-y-1 overflow-auto">
-                {columns.map((column) => (
-                  <label key={column.key} className="flex cursor-pointer items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800">
+                {columns.map((column, index) => (
+                  <div key={column.key} className="flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs text-slate-700 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-800">
                     <input
                       type="checkbox"
                       checked={visibleSet.has(column.key)}
                       onChange={() => onToggleColumn(column.key)}
                       className="h-3.5 w-3.5 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
                     />
-                    <span>{column.label}</span>
-                  </label>
+                    <span className="min-w-0 flex-1 truncate">{column.label}</span>
+                    {onMoveColumn && (
+                      <span className="flex items-center gap-0.5">
+                        <button type="button" disabled={index === 0} onClick={() => onMoveColumn(column.key, -1)} className="rounded p-1 hover:bg-slate-200 disabled:opacity-25 dark:hover:bg-slate-700" aria-label={`Move ${column.label} up`}><ArrowUp className="h-3 w-3" /></button>
+                        <button type="button" disabled={index === columns.length - 1} onClick={() => onMoveColumn(column.key, 1)} className="rounded p-1 hover:bg-slate-200 disabled:opacity-25 dark:hover:bg-slate-700" aria-label={`Move ${column.label} down`}><ArrowDown className="h-3 w-3" /></button>
+                      </span>
+                    )}
+                  </div>
                 ))}
               </div>
             </div>
@@ -261,10 +278,20 @@ export function ReportExportToolbar({
       <button
         type="button"
         onClick={handlePrint}
+        disabled={isLoading || !data.length}
+        className="flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 shadow-sm transition-all hover:bg-rose-100 disabled:cursor-not-allowed disabled:opacity-40 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-400"
+      >
+        <FileText className="h-3.5 w-3.5" />
+        {_("report.export_pdf")}
+      </button>
+
+      <button
+        type="button"
+        onClick={handlePrint}
         className="flex items-center gap-1.5 rounded-xl border border-violet-200 bg-violet-50 dark:bg-violet-950/40 dark:border-violet-900 px-3 py-1.5 text-xs font-bold text-violet-700 dark:text-violet-400 hover:bg-violet-100 dark:hover:bg-violet-950/70 transition-all shadow-sm"
       >
         <Printer className="h-3.5 w-3.5" />
-        {_("report.print_preview", "Print Preview")}
+        {_("report.print", "Print")}
       </button>
 
       {/* WhatsApp Share */}

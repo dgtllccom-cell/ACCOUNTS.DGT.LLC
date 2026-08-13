@@ -17,6 +17,7 @@ import {
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 import { purchaseOrderTranslationFields } from "@/lib/i18n/purchase-order-translations";
 import { revalidatePath } from "next/cache";
+import { canEditTransferredPurchaseBooking } from "@/lib/services/purchase-booking-transfer-routing";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -99,11 +100,13 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
 
     // --- ENFORCE STRICT LOCK ON TRANSFERRED ORDERS ---
     if ((before as any)?.ledger_posting_status === "transferred" || (before as any)?.ledger_posting_status === "posted") {
-      // If this is a transfer request itself, and they had previously successfully edited it, allow the transfer
-      const isReTransferRequest = body.ledgerPostingStatus === "transferred" || body.ledgerPostingStatus === "posted";
-      
-      if (!session.isSuperAdmin && !isReTransferRequest) {
-        return handleApiError(new Error("Bill is transferred/posted and locked. Admin approval is required to edit or reverse."));
+      const canAuthorizeTransferredEdit = canEditTransferredPurchaseBooking(session);
+      if (!canAuthorizeTransferredEdit) {
+        return apiError(
+          "TRANSFERRED_BOOKING_EDIT_FORBIDDEN",
+          "Transferred bookings can only be edited by an Admin or Country Admin.",
+          403
+        );
       }
     }
     // -------------------------------------------------

@@ -57,6 +57,8 @@ import { t } from "@/lib/i18n/ui";
 import { translationPendingLabel } from "@/lib/i18n/purchase-order-translations";
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
 import { Th } from "@/components/ui/translated-th";
+import { buildPurchaseBookingTransferUrl } from "@/lib/services/purchase-booking-transfer-routing";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type PurchaseReport = {
   id: string;
@@ -1249,53 +1251,23 @@ export function PurchaseBookingJournalReportView({
 
   const handleTransfer = async () => {
     if (!selected) return;
+    const alreadyTransferred = selected.status === "Posted"
+      || selected.status === "Transferred"
+      || (selected as any).ledgerPostingStatus === "Posted"
+      || (selected as any).ledger_posting_status === "posted";
+    if (alreadyTransferred && !(selected as any).is_edited_since_transfer) {
+      alert(trUi("This booking has already been transferred."));
+      return;
+    }
     
     const form = selected.form_data?.form || {};
-    // City branch is inherently tied to the user's scope or booking record. No need to require frontend selection.
 
     setTransferring(true);
     try {
-      const updatedFormData = {
-        ...(selected.form_data || {}),
-        workflow: {
-          ...(selected.form_data?.workflow || {}),
-          currentStep: "Journal Entry & Payment",
-          nextStep: "Payment & Documents",
-          lifecycleStatus: "Booking Confirmed",
-          bookingStatus: "Saved",
-          confirmationStatus: "Confirmed",
-          journalStatus: "Posted",
-          paymentStatus: "Advance Paid",
-          containerStatus: "Pending",
-          inventoryStatus: "Pending",
-          deliveryStatus: "Pending",
-          transferredAt: new Date().toISOString()
-        }
-      };
-
-      const response = await fetch(`/api/erp/purchases/orders/${selected.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          formData: updatedFormData,
-          orderTotal: Number(String(selected.totalPurchaseAmount || (selected as any).order_total || 0).replace(/,/g, '')),
-          currencyCode: String(selected.currency || "USD").substring(0, 3).toUpperCase(),
-          exchangeRate: Number(String(selected.exchange_rate || 1).replace(/,/g, '')),
-          purchaseContractNo: selected.purchaseContractNo || selected.purchaseBookingOrderNumber,
-          paymentStatus: "pending"
-        })
-      });
-
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok || !payload.ok) {
-        throw new Error(payload?.error?.message || payload?.error || "Transfer failed.");
-      }
-
-      // Hit the transfer API to actually mark as transferred and post the initial booking ledger entry
       const transferResponse = await fetch(`/api/erp/purchases/orders/${selected.id}/transfer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({})
+        body: JSON.stringify({ paymentType: form.paymentType })
       });
 
       const transferPayload = await transferResponse.json().catch(() => ({}));
@@ -1306,7 +1278,11 @@ export function PurchaseBookingJournalReportView({
       setIsDrawerOpen(false);
       setMessage(`Sent ${selected.purchaseBookingOrderNumber} to Purchase Transfer Payment screen.`);
       // Navigate directly to the payment section
-      router.push(`/dashboard/journal/purchase-order-payment/advance?purchaseOrderNo=${encodeURIComponent(selected.purchaseBookingOrderNumber || "")}`);
+      router.push(
+        transferPayload.data?.destinationPath
+          ? `${transferPayload.data.destinationPath}?purchaseOrderNo=${encodeURIComponent(selected.purchaseBookingOrderNumber || "")}`
+          : buildPurchaseBookingTransferUrl(form.paymentType, selected.purchaseBookingOrderNumber)
+      );
     } catch (err) {
       alert(err instanceof Error ? err.message : "Error transferring booking.");
     } finally {
@@ -1354,6 +1330,11 @@ export function PurchaseBookingJournalReportView({
   };
 
   const activeLang = useActiveLanguage();
+  const trUi = useCallback((label: string) => {
+    if (activeLang === "en") return label;
+    const translated = translateHeader(activeLang, label);
+    return translated === label ? translationPendingLabel(activeLang) : translated;
+  }, [activeLang]);
   const trField = useCallback((row: any, fieldName: string, fallback: string) => {
     if (!fallback || fallback === "-") return fallback;
     const transObj = row?.translations?.[fieldName];
@@ -2319,6 +2300,7 @@ export function PurchaseBookingJournalReportView({
         {tableViewMode === "standard" ? (
           <div className="p-0 overflow-x-auto">
             <DarkTable
+              lang={activeLang}
               tableGroups={[
                 { label: "PURCHASE BOOKING REGISTER", span: 13, cls: "bg-[#0f2942] text-white border-b border-slate-800" }
               ]}
@@ -2373,23 +2355,23 @@ export function PurchaseBookingJournalReportView({
 
                   const isCompleted = report.status === "Completed" || report.status === "completed";
 
-                  let statusLabel = "Draft";
+                  let statusLabel = t(activeLang, "pb_register.status_draft", "Draft");
                   let statusBadgeClass = "bg-slate-100 text-slate-700 border-slate-300 dark:bg-slate-800 dark:text-slate-300";
                   let rowBgClass = "bg-white text-slate-900 font-semibold dark:bg-slate-950 dark:text-slate-100";
                   let rowTextColor = "text-slate-900 font-semibold";
 
                   if (isCompleted) {
-                    statusLabel = "Completed";
+                    statusLabel = t(activeLang, "pb_register.status_completed", "Completed");
                     statusBadgeClass = "bg-emerald-100 text-emerald-800 border-emerald-300 dark:bg-emerald-950/60 dark:text-emerald-300 font-bold";
                     rowBgClass = "bg-white text-slate-900 font-bold dark:bg-slate-950 dark:text-slate-100";
                     rowTextColor = "text-slate-900 font-bold";
                   } else if (isPosted) {
-                    statusLabel = "Transferred";
+                    statusLabel = t(activeLang, "pb_register.status_transferred", "Transferred");
                     statusBadgeClass = "bg-slate-900 text-white border-slate-900 dark:bg-slate-100 dark:text-slate-900 font-black";
                     rowBgClass = "bg-white text-slate-900 font-bold dark:bg-slate-950 dark:text-slate-100";
                     rowTextColor = "text-slate-900 font-bold";
                   } else if (isAccepted) {
-                    statusLabel = "Accepted (Not Transferred)";
+                    statusLabel = t(activeLang, "pb_register.accepted_not_transferred", "Accepted (Not Transferred)");
                     statusBadgeClass = "bg-red-600 text-white border-red-700 font-black shadow-sm";
                     rowBgClass = "bg-red-50/80 text-red-600 font-bold dark:bg-red-950/30 dark:text-red-400 border-l-4 border-l-red-600";
                     rowTextColor = "text-red-600 font-bold";
@@ -2427,29 +2409,29 @@ export function PurchaseBookingJournalReportView({
                       <Td center className={cn("font-bold text-[10px] uppercase", isAccepted ? "text-red-600 font-black" : "text-slate-700 dark:text-slate-300")}>{userName}</Td>
                       <Td center onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-1">
-                          <button
+                          {(!isPosted || isSuperAdmin || isCountryAdmin) && <button
                             type="button"
                             onClick={() => { setSelectedId(report.id); setIsDrawerOpen(true); }}
                             className="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition shadow-sm"
-                            title="Inspect / View Bill Details"
+                            title={trUi("Inspect / View Bill Details")}
                           >
                             <Eye className="h-3.5 w-3.5" />
-                          </button>
-                          <button
+                          </button>}
+                          {!isPosted && <button
                             type="button"
                             onClick={() => {
                               router.push(`/dashboard/purchase/new-purchase-booking-order?id=${encodeURIComponent(report.id)}&purchaseOrderNo=${encodeURIComponent(report.purchaseBookingOrderNumber)}`);
                             }}
                             className="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-blue-600 hover:bg-blue-50 transition shadow-sm"
-                            title="Edit Booking"
+                            title={trUi("Edit Booking")}
                           >
                             <Edit3 className="h-3.5 w-3.5" />
-                          </button>
+                          </button>}
                           <button
                             type="button"
                             onClick={() => { setSelectedId(report.id); handleTransfer(); }}
                             className="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-emerald-600 hover:bg-emerald-50 transition shadow-sm"
-                            title="Transfer / Confirm"
+                            title={trUi("Transfer / Confirm")}
                           >
                             <ArrowRight className="h-3.5 w-3.5" />
                           </button>
@@ -2682,6 +2664,7 @@ export function PurchaseBookingJournalReportView({
           /* ── Detailed 41-Column Audit Register View ──────────── */
           <div className="p-0 overflow-x-auto">
             <DarkTable
+              lang={activeLang}
               tableGroups={[
                 { label: "General Information", span: 11, cls: "bg-[#0f2942] text-white border-b border-slate-800 border-r border-slate-700" },
                 { label: "Product Information", span: 7, cls: "bg-[#143657] text-white border-b border-slate-800 border-r border-slate-700" },
@@ -2743,13 +2726,13 @@ export function PurchaseBookingJournalReportView({
                     <Td center className={cn("font-mono text-[10px]", rowTextColor)}>{branchSerialNo}</Td>
                     <Td className={cn("text-[10px]", rowTextColor)}>{purchaseAccCode}</Td>
                     <Td className={cn("text-[10px]", rowTextColor)}>{salesAccCode}</Td>
-                    <Td className={cn("text-[10px] font-semibold", rowTextColor)}>{ctyName}</Td>
-                    <Td className={cn("text-[10px] font-semibold", rowTextColor)}>{brName}</Td>
+                    <Td className={cn("text-[10px] font-semibold", rowTextColor)}>{trField(report, "countryName", ctyName)}</Td>
+                    <Td className={cn("text-[10px] font-semibold", rowTextColor)}>{trField(report, "branchName", brName)}</Td>
                     <Td center className={cn("text-[10px]", rowTextColor)}>{dateStr}</Td>
                     <Td className={cn("text-[10px] font-semibold", rowTextColor)}>{report.audit?.userName || "ADMIN"}</Td>
-                    <Td className={cn("text-[10px]", rowTextColor)}>{goodsName}</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>Standard</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>{ctyName}</Td>
+                    <Td className={cn("text-[10px]", rowTextColor)}>{trField(report, "productName", goodsName)}</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>{trField(report, "items.0.brand", g0?.brand || "Standard")}</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>{trField(report, "items.0.origin", g0?.origin || ctyName)}</Td>
                     <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatNumber(report.quantity || 0)}</Td>
                     <Td center className={cn("text-[10px]", rowTextColor)}>{report.unit || "KG"}</Td>
                     <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatNumber(report.totalGrossWeight || 0)}</Td>
@@ -2763,18 +2746,18 @@ export function PurchaseBookingJournalReportView({
                     <Td right className={cn("font-mono font-bold text-[10px]", rowTextColor)}>{formatMoney(report.totalPurchaseAmount || 0)}</Td>
                     <Td right className={cn("font-mono text-[10px]", rowTextColor)}>0.00</Td>
                     <Td center className={cn("text-[10px]", rowTextColor)}>100%</Td>
-                    <Td className={cn("text-[10px]", rowTextColor)}>Normal</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>By Road</Td>
-                    <Td className={cn("text-[10px]", rowTextColor)}>{ctyName}</Td>
-                    <Td className={cn("text-[10px]", rowTextColor)}>Port</Td>
+                    <Td className={cn("text-[10px]", rowTextColor)}>{trUi("Normal")}</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>{t(activeLang, "purchase.opt_by_road", "By Road")}</Td>
+                    <Td className={cn("text-[10px]", rowTextColor)}>{trField(report, "countryName", ctyName)}</Td>
+                    <Td className={cn("text-[10px]", rowTextColor)}>{trUi("Port")}</Td>
                     <Td center className={cn("text-[10px]", rowTextColor)}>{dateStr}</Td>
-                    <Td className={cn("text-[10px]", rowTextColor)}>{ctyName}</Td>
-                    <Td className={cn("text-[10px]", rowTextColor)}>Port</Td>
+                    <Td className={cn("text-[10px]", rowTextColor)}>{trField(report, "countryName", ctyName)}</Td>
+                    <Td className={cn("text-[10px]", rowTextColor)}>{trUi("Port")}</Td>
                     <Td center className={cn("text-[10px]", rowTextColor)}>{dateStr}</Td>
-                    <Td center><span className={cn("rounded px-2 py-0.5 text-[8px] font-bold", isAccepted ? "bg-red-100 text-red-700 border border-red-300" : "bg-emerald-50 text-emerald-700")}>{isAccepted ? "NO (PENDING)" : "YES"}</span></Td>
-                    <Td center><span className={cn("rounded px-2 py-0.5 text-[8px] font-semibold", isAccepted ? "bg-red-100 text-red-800" : "bg-slate-50 text-slate-700")}>{isAccepted ? "Accepted" : "Confirmed"}</span></Td>
-                    <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">Paid</span></Td>
-                    <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">Loaded</span></Td>
+                    <Td center><span className={cn("rounded px-2 py-0.5 text-[8px] font-bold", isAccepted ? "bg-red-100 text-red-700 border border-red-300" : "bg-emerald-50 text-emerald-700")}>{trUi(isAccepted ? "NO (PENDING)" : "YES")}</span></Td>
+                    <Td center><span className={cn("rounded px-2 py-0.5 text-[8px] font-semibold", isAccepted ? "bg-red-100 text-red-800" : "bg-slate-50 text-slate-700")}>{isAccepted ? t(activeLang, "pb_register.status_accepted", "Accepted") : trUi("Confirmed")}</span></Td>
+                    <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">{trUi("Paid")}</span></Td>
+                    <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">{trUi("Loaded")}</span></Td>
                     <Td center onClick={(e) => e.stopPropagation()}>
                       <UnifiedActionMenu
                         align="right"
@@ -2939,18 +2922,19 @@ export function PurchaseBookingJournalReportView({
 
       {/* ── Standardized Status Legend ──────────────────────────── */}
       <ReportStatusLegend
+        lang={activeLang}
         statuses={["Draft", "Accepted", "Transferred", "Completed"]}
         notes={[
-          "After Accept: Bill will appear in register in RED color.",
-          "After Transfer: Same bill will remain in register in BLACK color."
+          trUi("After Accept: Bill will appear in register in RED color."),
+          trUi("After Transfer: Same bill will remain in register in BLACK color.")
         ]}
       />
 
         <DetailDrawer
           isOpen={isDrawerOpen}
           onClose={() => setIsDrawerOpen(false)}
-          title="Purchase Transfer Verification Screen"
-          subtitle={`Booking Ref: ${selected?.purchaseBookingOrderNumber}`}
+          title={trUi("Purchase Transfer Verification Screen")}
+          subtitle={`${trUi("Booking Ref")}: ${selected?.purchaseBookingOrderNumber}`}
           className="sm:max-w-none md:max-w-none w-screen h-screen"
           actions={
             <div className="flex items-center gap-1.5 mr-2">
@@ -3659,7 +3643,12 @@ function SummaryCard({ icon, label, value, accent }: { icon: React.ReactNode; la
   );
 }
 
-function DarkTable({ headers, tableGroups, children }: { headers: string[]; tableGroups: {label: string, span: number, cls: string}[]; children: React.ReactNode }) {
+function DarkTable({ lang, headers, tableGroups, children }: { lang: Parameters<typeof translationPendingLabel>[0]; headers: string[]; tableGroups: {label: string, span: number, cls: string}[]; children: React.ReactNode }) {
+  const strictLabel = (label: string) => {
+    if (lang === "en") return label;
+    const translated = translateHeader(lang, label);
+    return translated === label ? translationPendingLabel(lang) : translated;
+  };
   return (
     <div className="overflow-x-auto overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-sm max-h-[calc(100vh-300px)] min-h-[420px]">
       <table className="w-max min-w-full border-collapse text-xs text-slate-800">
@@ -3672,14 +3661,14 @@ function DarkTable({ headers, tableGroups, children }: { headers: string[]; tabl
                 colSpan={group.span}
                 className={`${group.cls} px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-center border-r border-white/20 last:border-r-0`}
               >
-                {group.label}
+                {strictLabel(group.label)}
               </Th>
             ))}
           </tr>
           {/* Column header row */}
           <tr className="bg-slate-50 text-[10px] uppercase tracking-wide text-slate-600">
             {headers.map((header, idx) => (
-              <Th key={`${header}-${idx}`} className="whitespace-nowrap border-r border-slate-200 px-3 py-2.5 text-left font-black last:border-r-0">{header}</Th>
+              <Th key={`${header}-${idx}`} className="whitespace-nowrap border-r border-slate-200 px-3 py-2.5 text-left font-black last:border-r-0">{strictLabel(header)}</Th>
             ))}
           </tr>
         </thead>

@@ -52,6 +52,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { MultilingualText } from "@/lib/i18n/multilingual-translator";
 import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/purchase-order-translations";
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
+import { buildPurchaseBookingTransferUrl } from "@/lib/services/purchase-booking-transfer-routing";
 
 type PurchaseReport = {
   id: string;
@@ -2062,40 +2063,17 @@ export function PurchaseOrderManagementDashboard() {
     // Prevent duplicate transfer only if roznamcha_entry_id exists
     const hasRoznamchaEntry = Boolean(itemToTransfer.roznamcha_entry_id || itemToTransfer.form_data?.form?.roznamchaEntryId);
     if ((itemToTransfer.ledger_posting_status === "posted" || itemToTransfer.ledger_posting_status === "transferred") && hasRoznamchaEntry && !itemToTransfer.is_edited_since_transfer) {
-      alert("This booking has already been transferred to Payment and Roznamcha.");
+      alert(tr("This booking has already been transferred."));
       return;
     }
 
     setTransferring(true);
     try {
-      const updatedFormData = {
-        ...(itemToTransfer.form_data || {}),
-        workflow: {
-          ...(itemToTransfer.form_data?.workflow || {}),
-          lifecycleStatus: "Transfer to Payment",
-          paymentStatus: "Pending Payment"
-        }
-      };
-
-      const response = await fetch(`/api/erp/purchases/orders/${itemToTransfer.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          formData: updatedFormData,
-          paymentStatus: "pending"
-        })
-      });
-
-      const payload = await response.json().catch(() => ({}));
-      if (!response.ok || !payload.ok) {
-        throw new Error(payload?.error?.message || payload?.error || "Transfer failed.");
-      }
-
-      // Also hit the transfer API to mark as transferred
+      const paymentType = itemToTransfer.form_data?.form?.paymentType || itemToTransfer.paymentType;
       const transferResponse = await fetch(`/api/erp/purchases/orders/${itemToTransfer.id}/transfer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({})
+        body: JSON.stringify({ paymentType })
       });
 
       const transferPayload = await transferResponse.json().catch(() => ({}));
@@ -2106,7 +2084,10 @@ export function PurchaseOrderManagementDashboard() {
       // setIsDrawerOpen(false);
       await loadReports();
       // Redirect to Purchase Transfer Payment screen directly after successful transfer
-      window.location.href = `/dashboard/journal/purchase-order-payment/advance?purchaseOrderNo=${encodeURIComponent(itemToTransfer.purchaseBookingOrderNumber || itemToTransfer.purchase_order_no || itemToTransfer.purchaseOrderNo || "")}`;
+      const orderNo = itemToTransfer.purchaseBookingOrderNumber || itemToTransfer.purchase_order_no || itemToTransfer.purchaseOrderNo || "";
+      window.location.href = transferPayload.data?.destinationPath
+        ? `${transferPayload.data.destinationPath}?purchaseOrderNo=${encodeURIComponent(orderNo)}`
+        : buildPurchaseBookingTransferUrl(paymentType, orderNo);
     } catch (err) {
       alert(err instanceof Error ? err.message : "Error transferring booking.");
     } finally {
@@ -2846,7 +2827,7 @@ export function PurchaseOrderManagementDashboard() {
                         </td>
                         <td className="px-2 py-2" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-center gap-1">
-                            {(!isPosted || isSuperAdmin) && (
+                            {(!isPosted || isSuperAdmin || isCountryAdmin) && (
                               <button
                                 type="button"
                                 onClick={() => {
@@ -3020,7 +3001,10 @@ export function PurchaseOrderManagementDashboard() {
               <Button
                 type="button"
                 onClick={() => {
-                  window.location.href = `/dashboard/journal/purchase-order-payment/advance?purchaseOrderNo=${encodeURIComponent(selected.purchaseBookingOrderNumber || (selected as any).purchase_order_no || (selected as any).purchaseOrderNo || "")}`;
+                  window.location.href = buildPurchaseBookingTransferUrl(
+                    selected.form_data?.form?.paymentType || (selected as any).paymentType,
+                    selected.purchaseBookingOrderNumber || (selected as any).purchase_order_no || (selected as any).purchaseOrderNo || ""
+                  );
                 }}
                 className="h-8 bg-blue-600 hover:bg-blue-700 text-white font-bold text-[10px] uppercase px-3 shadow-sm border-none flex items-center gap-1.5 ml-2"
               >
