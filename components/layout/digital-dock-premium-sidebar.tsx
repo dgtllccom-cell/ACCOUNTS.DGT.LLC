@@ -197,9 +197,9 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
         icon: ShieldCheck,
         label: "Administration",
         children: [
-          { label: "Users", href: "/dashboard/settings/users", icon: Users },
-          { label: "Countries", href: "/dashboard/settings/countries", icon: Globe2 },
-          { label: "Branches", href: "/dashboard/settings/branches", icon: Building2 },
+          { label: "Users", href: "/dashboard/users", icon: Users },
+          { label: "Countries", href: "/dashboard/country", icon: Globe2 },
+          { label: "Branches", href: "/dashboard/branch-management", icon: Building2 },
           { label: "Exchange Rates", href: "/dashboard/exchange-rates", icon: RefreshCw },
         ],
       },
