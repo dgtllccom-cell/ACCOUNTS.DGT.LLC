@@ -1,20 +1,26 @@
 -- =============================================================================
---  ACCOUNTS TABLE WITH MULTI-LINKING SCHEMA
---  Supports linking multiple Companies, Banks, Warehouses, and Customers to one Account
+--  ACCOUNTS TABLE WITH MULTI-LINKING SCHEMA + 5-LANGUAGE SUPPORT
+--  - accounts table stores master record with canonical fields only
+--  - record_translations stores multilingual name/description (EN|UR|AR|FA|PS)
+--  - Supports linking multiple Companies, Banks, Warehouses, and Customers
 -- =============================================================================
 
--- Create main accounts table
+-- Create main accounts table (canonical fields only, no name/description here)
 CREATE TABLE IF NOT EXISTS public.accounts (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  code VARCHAR(50) NOT NULL,
-  name VARCHAR(255) NOT NULL,
+  code VARCHAR(50) NOT NULL UNIQUE,
   account_type_id UUID REFERENCES public.account_types(id) ON DELETE SET NULL,
   country_id UUID NOT NULL REFERENCES public.countries(id) ON DELETE RESTRICT,
   is_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-  UNIQUE(code, country_id)
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
+
+-- Translation support: Account names/descriptions stored in record_translations table
+-- This table is shared across all master entities (companies, banks, etc.)
+-- Example record_translations entry for account:
+--   record_table='accounts', record_id=<account-id>, field_name='name',
+--   english_text='Cash Account', urdu_text='نقد اکاؤنٹ', etc.
 
 -- Create junction table for Account <-> Company (many-to-many)
 CREATE TABLE IF NOT EXISTS public.account_companies (

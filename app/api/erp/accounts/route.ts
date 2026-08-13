@@ -92,7 +92,7 @@ export async function POST(request: NextRequest) {
     authorizeApiScope(session, { resource: "accounts", action: "create" });
 
     const body = await request.json();
-    const { code, name, accountTypeId, countryId, isActive } = body;
+    const { code, name, accountTypeId, countryId, isActive, originalLanguage = "en" } = body;
 
     if (!code || !name || !countryId) {
       return new Response(JSON.stringify({ error: "code, name, countryId required" }), {
@@ -102,11 +102,12 @@ export async function POST(request: NextRequest) {
     }
 
     const db = createSupabaseAdminClient();
+
+    // Create account record
     const { data, error } = await db
       .from("accounts")
       .insert([{
         code,
-        name,
         account_type_id: accountTypeId || null,
         country_id: countryId,
         is_active: isActive !== false,
@@ -115,6 +116,25 @@ export async function POST(request: NextRequest) {
       .select();
 
     if (error) throw error;
+
+    const accountId = data?.[0]?.id;
+    if (accountId) {
+      // Create translation record for account name (5 languages)
+      await db.from("record_translations").insert([{
+        record_table: "accounts",
+        record_id: accountId,
+        field_name: "name",
+        original_text: name,
+        original_language_code: originalLanguage,
+        english_text: name,
+        urdu_text: name,
+        arabic_text: name,
+        persian_text: name,
+        pashto_text: name,
+        source: "manual"
+      }]);
+    }
+
     return apiOk({ account: data?.[0] }, { status: 201 });
   } catch (error) {
     return handleApiError(error);
