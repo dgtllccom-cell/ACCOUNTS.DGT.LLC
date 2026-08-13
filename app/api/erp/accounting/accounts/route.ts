@@ -5,6 +5,7 @@ import { authorizeApiScope, getScopeFromSearchParams } from "@/lib/api/scope-mid
 import { requireErpSession } from "@/lib/auth/session";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { withLocalPg } from "@/lib/db/local-postgres";
 
 function isUuid(value: string | null | undefined) {
   return Boolean(
@@ -332,6 +333,280 @@ export async function POST(request: NextRequest) {
     
     if (!actorId) {
       throw new Error("A valid logged-in user ID is required to create an account.");
+    }
+
+    const localPgResult = await withLocalPg(async (sql) => {
+      return await sql.begin(async (tx) => {
+        await tx`
+          select set_config(
+            'request.jwt.claims',
+            ${JSON.stringify({ sub: session.userId, role: "authenticated" })},
+            true
+          );
+        `;
+
+        const profileRows = await tx`
+          select id
+          from profiles
+          where id = ${actorId}::uuid
+          limit 1
+          for update;
+        `;
+        if ((profileRows?.length ?? 0) === 0) {
+          await tx`
+            insert into profiles (id, full_name, user_code)
+            values (
+              ${actorId}::uuid,
+              ${session.fullName || session.email || "Bootstrapped User"},
+              ${"BOOTSTRAP-" + actorId.slice(0, 4).toUpperCase()}
+            )
+            on conflict (id) do nothing;
+          `;
+        }
+
+        const requestedCode = body.code.trim().toUpperCase();
+        let issuedCode = requestedCode === "AUTO" ? "SA-AC" : requestedCode;
+
+        if (requestedCode === "AUTO") {
+          let prefix = "SA-AC";
+          if (body.scope !== "super_admin" && body.countryId) {
+            const countryRows = await tx`
+              select name, iso2
+              from countries
+              where id = ${body.countryId}::uuid
+              limit 1;
+            `;
+            const country = (countryRows[0] as any) ?? {};
+            const countryName = String(country?.name ?? "");
+            const normalizedIso = normalizeCodePart(country?.iso2 ?? null, "CT");
+            const countryPrefix =
+              countryName.toLowerCase().includes("united arab emirates")
+                ? "UAE"
+                : normalizedIso;
+
+            prefix = `${countryPrefix}-AC`;
+
+            if ((body.scope === "main_branch" || body.scope === "city_branch") && body.cityBranchId) {
+              const cityBranchRows = await tx`
+                select city_name, code
+                from city_branches
+                where id = ${body.cityBranchId}::uuid
+                limit 1;
+              `;
+              const cityBranch = (cityBranchRows[0] as any) ?? {};
+              const cityPrefix =
+                cityShortCode(cityBranch?.city_name ?? null, "") ||
+                normalizeCodePart(cityBranch?.code ?? null, "BR").slice(0, 3);
+              prefix = `${countryPrefix}-${cityPrefix}-AC`;
+            }
+          }
+
+          const existingRows = await tx`
+            select code
+            from enterprise_accounts
+            where code ilike ${`${prefix}-%`}
+            order by code desc
+            limit 1;
+          `;
+          const latest = String((existingRows[0] as any)?.code ?? "");
+          const latestNo = latest ? Number(latest.split("-").pop()) : 0;
+          const nextNo = Number.isFinite(latestNo) ? latestNo + 1 : 1;
+          issuedCode = `${prefix}-${String(nextNo).padStart(4, "0")}`;
+        }
+
+        const branchCode = (() => {
+          if (body.scope === "super_admin") return "SUPER";
+          return "BRANCH";
+        })();
+
+        let countryPrefix = "SA";
+        let branchPrefix = branchCode;
+
+        if (body.scope !== "super_admin" && body.countryId) {
+          const countryRows = await tx`
+            select name, iso2
+            from countries
+            where id = ${body.countryId}::uuid
+            limit 1;
+          `;
+          const country = (countryRows[0] as any) ?? {};
+          countryPrefix = countrySerialPrefix(country);
+        }
+
+        if (body.scope === "city_branch" && body.cityBranchId) {
+          const cityBranchRows = await tx`
+            select code, name, city_name
+            from city_branches
+            where id = ${body.cityBranchId}::uuid
+            limit 1;
+          `;
+          const cityBranch = (cityBranchRows[0] as any) ?? {};
+          branchPrefix = cityShortCode(cityBranch?.city_name ?? cityBranch?.name ?? cityBranch?.code ?? null, "CITY");
+        } else if ((body.scope === "main_branch" || body.scope === "country") && body.countryBranchId) {
+          const branchRows = await tx`
+            select code, name
+            from country_branches
+            where id = ${body.countryBranchId}::uuid
+            limit 1;
+          `;
+          const countryBranch = (branchRows[0] as any) ?? {};
+          branchPrefix = normalizeCodePart(countryBranch?.code ?? countryBranch?.name ?? null, "MAIN");
+        }
+
+        const totalCountRows = await tx`
+          select count(*)::int as count
+          from enterprise_accounts;
+        `;
+        const countryCountRows = await tx`
+          select count(*)::int as count
+          from enterprise_accounts
+          where deleted_at is null
+            and manual_reference_number is not null
+            and ${body.countryId ?? null}::uuid is not distinct from country_id;
+        `;
+        const branchCountRows = await tx`
+          select count(*)::int as count
+          from enterprise_accounts
+          where scope = ${body.scope}
+            and deleted_at is null
+            and manual_reference_number is not null
+            and ${body.countryId ?? null}::uuid is not distinct from country_id
+            and ${body.countryBranchId ?? null}::uuid is not distinct from country_branch_id
+            and ${body.cityBranchId ?? null}::uuid is not distinct from city_branch_id;
+        `;
+
+        const accountSerialNumber = Number((totalCountRows[0] as any)?.count ?? 0) + 1;
+        const countrySerialNumber = `${countryPrefix}-${String(Number((countryCountRows[0] as any)?.count ?? 0) + 1).padStart(6, "0")}`;
+        const branchSequence = Number((branchCountRows[0] as any)?.count ?? 0) + 1;
+        const branchSerialNumber = `${countryPrefix}-${branchPrefix}-${String(branchSequence).padStart(6, "0")}`;
+        const customerNumber = `CUST-${issuedCode}`;
+        const manualReferenceNumber = body.manualReferenceNumber?.trim() || null;
+        const nowIso = new Date().toISOString();
+
+        const accountRows = await tx`
+          insert into enterprise_accounts ${tx({
+            scope: body.scope,
+            country_id: body.countryId ?? null,
+            country_branch_id: body.countryBranchId ?? null,
+            city_branch_id: body.cityBranchId ?? null,
+            parent_id: body.parentId ?? null,
+            customer_id: body.customerId ?? null,
+            company_id: body.companyId ?? null,
+            bank_id: body.bankId ?? null,
+            code: issuedCode,
+            account_number: issuedCode,
+            customer_number: customerNumber,
+            account_serial_number: accountSerialNumber,
+            country_serial_number: countrySerialNumber,
+            branch_serial_number: branchSerialNumber,
+            manual_reference_number: manualReferenceNumber,
+            creation_date: nowIso,
+            branch_code: branchCode,
+            branch_account_sequence: branchSequence,
+            name: body.name,
+            kind: body.kind,
+            currency: body.currency.toUpperCase(),
+            opening_balance: body.openingBalance,
+            current_balance: body.openingBalance,
+            status: body.status || "active",
+            is_control_account: body.isControlAccount,
+            contacts: body.contacts,
+            created_by: actorId
+          })}
+          returning id;
+        `;
+
+        const accountId = (accountRows[0] as any)?.id as string;
+        if (!accountId) {
+          throw new Error("Account creation did not return a record ID.");
+        }
+
+        const creditNormal = body.kind === "liability" || body.kind === "equity" || body.kind === "income";
+        let parentLedgerId: string | null = null;
+
+        if (body.parentId) {
+          const parentLedgerRows = await tx`
+            select id
+            from ledgers
+            where enterprise_account_id = ${body.parentId}::uuid
+              and deleted_at is null
+            limit 1;
+          `;
+          parentLedgerId = (parentLedgerRows[0] as any)?.id ?? null;
+        }
+
+        const ledgerRows = await tx`
+          insert into ledgers ${tx({
+            scope: body.scope,
+            country_id: body.countryId ?? null,
+            country_branch_id: body.countryBranchId ?? null,
+            city_branch_id: body.cityBranchId ?? null,
+            enterprise_account_id: accountId,
+            parent_ledger_id: parentLedgerId,
+            code: issuedCode,
+            name: body.name,
+            currency: body.currency.toUpperCase(),
+            opening_balance: body.openingBalance,
+            current_balance: body.openingBalance,
+            debit_total: 0,
+            credit_total: 0,
+            normal_balance: creditNormal ? "credit" : "debit",
+            is_active: true,
+            created_by: actorId
+          })}
+          returning id;
+        `;
+
+        const ledgerId = (ledgerRows[0] as any)?.id as string;
+        if (!ledgerId) {
+          throw new Error("Ledger creation did not return a record ID.");
+        }
+
+        await tx`
+          insert into enterprise_account_history ${tx({
+            enterprise_account_id: accountId,
+            account_number: issuedCode,
+            event_type: "created",
+            created_by: actorId,
+            debit_total: 0,
+            credit_total: 0,
+            current_balance: body.openingBalance,
+            details: {
+              customerNumber,
+              accountSerialNumber,
+              countrySerialNumber,
+              branchSerialNumber,
+              manualReferenceNumber,
+              branchCode,
+              branchAccountSequence: branchSequence,
+              linkedLedgerId: ledgerId,
+              sessionUser: {
+                id: session.userId,
+                email: session.email,
+                fullName: session.fullName
+              }
+            }
+          })}
+        `;
+
+        return {
+          accountId,
+          ledgerId,
+          accountCode: issuedCode,
+          accountNumber: issuedCode,
+          customerNumber,
+          accountSerialNumber,
+          countrySerialNumber,
+          branchSerialNumber,
+          manualReferenceNumber,
+          branchCode,
+          branchAccountSequence: branchSequence
+        };
+      });
+    });
+
+    if (localPgResult) {
+      return apiCreated(localPgResult);
     }
 
     // Verify the actorId exists in the profiles table
