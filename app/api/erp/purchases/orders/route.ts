@@ -14,7 +14,8 @@ import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterpr
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 import { revalidatePath } from "next/cache";
 import { purchaseOrderTranslationFields } from "@/lib/i18n/purchase-order-translations";
-import { withLocalPg } from "@/lib/db/local-postgres";
+import { buildVerifiedTranslationSet } from "@/lib/i18n/verified-record-translations";
+import { getDbUrl, withLocalPg } from "@/lib/db/local-postgres";
 
 const listQuerySchema = z.object({
   countryId: uuidSchema.optional(),
@@ -72,6 +73,114 @@ async function resolveEffectiveScope(req: { countryId?: string | null; countryBr
   }
 
   return { countryId: req.countryId ?? null, countryBranchId: null, cityBranchId: null };
+}
+
+async function saveVerifiedPurchaseTranslationsViaPg(
+  tx: any,
+  input: {
+    recordId: string;
+    originalLanguage: any;
+    fields: Array<{ fieldName: string; value: string | null | undefined; mode?: "translate" | "transliterate"; translations?: Record<string, string> }>;
+    actorId?: string | null;
+    source?: "auto" | "manual" | "imported";
+  }
+) {
+  for (const field of input.fields.filter((item) => typeof item.value === "string" && String(item.value).trim())) {
+    const originalText = String(field.value).trim();
+    const verified = await buildVerifiedTranslationSet({
+      value: originalText,
+      originalLanguage: input.originalLanguage,
+      mode: field.mode,
+      supplied: field.translations as any
+    });
+    await tx`
+      select upsert_record_translation(
+        ${"purchase_orders"},
+        ${input.recordId}::uuid,
+        ${field.fieldName},
+        ${originalText},
+        ${input.originalLanguage},
+        ${verified.translations.en ?? null},
+        ${verified.translations.ur ?? null},
+        ${verified.translations.ar ?? null},
+        ${verified.translations.fa ?? null},
+        ${verified.translations.ps ?? null},
+        ${JSON.stringify(verified.translations)}::jsonb,
+        ${input.source ?? "auto"},
+        ${verified.status},
+        ${verified.engine},
+        ${input.source === "manual" ? input.actorId ?? null : null}
+      )
+    `;
+  }
+}
+
+async function lookupEnterpriseAccountCountryScopeViaPg(
+  tx: any,
+  term: string,
+  targetCountryId: string | null | undefined
+) {
+  const clean = String(term || "").trim();
+  if (!clean) return null;
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clean);
+  const rows = isUuid
+    ? await tx`
+        select id, code, name, country_id
+        from enterprise_accounts
+        where id = ${clean}::uuid
+          and deleted_at is null
+        limit 1
+      `
+    : [];
+  const byId = rows?.[0] ?? null;
+  if (byId) return byId;
+  const byCode = await tx`
+    select id, code, name, country_id
+    from enterprise_accounts
+    where code = ${clean}
+      and deleted_at is null
+    limit 1
+  `;
+  const row = byCode?.[0] ?? null;
+  if (!row) return null;
+  if (targetCountryId && row.country_id && row.country_id !== targetCountryId) {
+    throw new Error(`Cross-country violation: Account '${row.name}' (${row.code}) belongs to a different country than the transaction target country.`);
+  }
+  return row;
+}
+
+async function lookupLedgerCountryScopeViaPg(
+  tx: any,
+  term: string,
+  targetCountryId: string | null | undefined
+) {
+  const clean = String(term || "").trim();
+  if (!clean) return null;
+  const isUuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(clean);
+  const rows = isUuid
+    ? await tx`
+        select id, code, name, country_id
+        from ledgers
+        where id = ${clean}::uuid
+          and deleted_at is null
+        limit 1
+      `
+    : [];
+  const byId = rows?.[0] ?? null;
+  if (byId) return byId;
+  const byCode = await tx`
+    select id, code, name, country_id
+    from ledgers
+    where code = ${clean}
+      and deleted_at is null
+    limit 1
+  `;
+  const row = byCode?.[0] ?? null;
+  if (!row) return null;
+  if (targetCountryId && row.country_id && row.country_id !== targetCountryId) {
+    throw new Error(`Cross-country violation: Ledger '${row.name}' (${row.code}) belongs to a different country than the transaction target country.`);
+  }
+  return row;
 }
 
 export async function GET(request: NextRequest) {
@@ -271,8 +380,9 @@ export async function POST(request: NextRequest) {
       cityBranchId: effective.cityBranchId
     });
 
-    const supabase = await createApiSupabaseClient();
-    const adminSupabase = createSupabaseAdminClient() as any;
+    const hasLocalPg = Boolean(getDbUrl());
+    const supabase = hasLocalPg ? null : await createApiSupabaseClient();
+    const adminSupabase = hasLocalPg ? null : (createSupabaseAdminClient() as any);
 
     // â”€â”€ Rule 1: Country Scope Validation for Purchase Accounts â”€â”€
     const form = body.formData?.form || {};

@@ -173,8 +173,8 @@ function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export function BlEntryView({ context = "purchase" }: { context?: "purchase" }) {
-  const moduleEyebrow = context === "purchase" ? "Purchase Workflow / B/L" : "Purchase Workflow / B/L";
+export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "purchase" }) {
+  const moduleEyebrow = context === "shipping" ? "Shipping Line / B/L Entry" : "Purchase Workflow / B/L";
   const [data, setData] = useState<ShippingData | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [query, setQuery] = useState("");
@@ -437,7 +437,11 @@ export function BlEntryView({ context = "purchase" }: { context?: "purchase" }) 
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.35em] text-cyan-600 dark:text-cyan-300">{moduleEyebrow}</p>
           <h1 className="text-2xl font-black tracking-tight">Bill of Lading (B/L)</h1>
-          <p className="text-xs text-muted-foreground">Purchase Order {"->"} Invoice {"->"} Payment {"->"} Confirmation {"->"} Loading Entry {"->"} B/L {"->"} Shipment.</p>
+          <p className="text-xs text-muted-foreground">
+            {context === "shipping"
+              ? "Shipping Line -> Vessel / Container Loading -> B/L Entry -> Shipment Tracking."
+              : "Purchase Order -> Invoice -> Payment -> Confirmation -> Loading Entry -> B/L -> Shipment."}
+          </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <div className="relative w-72">

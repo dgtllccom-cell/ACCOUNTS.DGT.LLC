@@ -1,0 +1,3 @@
+{
+  "error": "Error: TypeError: fetch is not a function\n    at __playwrightEvaluate (<anonymous>:2642:25)\n    at <anonymous>:2645:14\n    at runUserScript (<anonymous>:2646:10)\n    at <anonymous>:2650:10\n    at <anonymous>:2651:3"
+}

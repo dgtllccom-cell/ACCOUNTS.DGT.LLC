@@ -141,6 +141,162 @@ export type PaymentAllocation = {
   newRemainingLC: number;
 };
 
+export type PurchaseLoadingSummary = {
+  totalQuantity: number;
+  previousLoadedQuantity: number;
+  currentLoadedQuantity: number;
+  remainingQuantity: number;
+  totalPurchaseFC: number;
+  totalPurchaseLC: number;
+  paidAmountFC: number;
+  paidAmountLC: number;
+  remainingAmountFC: number;
+  remainingAmountLC: number;
+  loadedPurchaseFC: number;
+  loadedPurchaseLC: number;
+  loadedAdvanceFC: number;
+  loadedAdvanceLC: number;
+  remainingLoadingFC: number;
+  remainingLoadingLC: number;
+};
+
+export type PurchaseLoadingEntryInput = {
+  goodsName?: unknown;
+  quantityNo?: unknown;
+  loadedQuantity?: unknown;
+  loadingQuantity?: unknown;
+  qtyName?: unknown;
+  oneQtyKgs?: unknown;
+  oneEmptyKgs?: unknown;
+  priceType?: unknown;
+  priceRateC1?: unknown;
+  divideType?: unknown;
+  divideWeightValue?: unknown;
+  originCountry?: unknown;
+  hsCode?: unknown;
+  brand?: unknown;
+  sizeSpec?: unknown;
+  allotName?: unknown;
+  qualityReportRef?: unknown;
+  pricingCurrency?: unknown;
+  exchangeRatePKR?: unknown;
+};
+
+export type NormalizedPurchaseLoadingEntry = {
+  goodsName: string;
+  quantity: number;
+  qtyName: string | null;
+  oneQtyKgs: number | null;
+  oneEmptyKgs: number | null;
+  priceType: string | null;
+  priceRateC1: number | null;
+  divideType: string | null;
+  divideWeightValue: number | null;
+  originCountry: string | null;
+  hsCode: string | null;
+  brand: string | null;
+  sizeSpec: string | null;
+  allotName: string | null;
+  qualityReportRef: string | null;
+  pricingCurrency: string | null;
+  exchangeRatePKR: number | null;
+};
+
+export function normalizePurchaseLoadingEntry(entry: PurchaseLoadingEntryInput): NormalizedPurchaseLoadingEntry {
+  const goodsName = String(entry.goodsName ?? "").trim();
+  const quantity = toNum(entry.quantityNo ?? entry.loadedQuantity ?? entry.loadingQuantity, 0);
+  return {
+    goodsName,
+    quantity,
+    qtyName: String(entry.qtyName ?? "").trim() || null,
+    oneQtyKgs: toNum(entry.oneQtyKgs, NaN as number) || null,
+    oneEmptyKgs: toNum(entry.oneEmptyKgs, NaN as number) || null,
+    priceType: String(entry.priceType ?? "").trim() || null,
+    priceRateC1: toNum(entry.priceRateC1, NaN as number) || null,
+    divideType: String(entry.divideType ?? "").trim() || null,
+    divideWeightValue: toNum(entry.divideWeightValue, NaN as number) || null,
+    originCountry: String(entry.originCountry ?? "").trim() || null,
+    hsCode: String(entry.hsCode ?? "").trim() || null,
+    brand: String(entry.brand ?? "").trim() || null,
+    sizeSpec: String(entry.sizeSpec ?? "").trim() || null,
+    allotName: String(entry.allotName ?? "").trim() || null,
+    qualityReportRef: String(entry.qualityReportRef ?? "").trim() || null,
+    pricingCurrency: String(entry.pricingCurrency ?? "").trim() || null,
+    exchangeRatePKR: toNum(entry.exchangeRatePKR, NaN as number) || null
+  };
+}
+
+export function validatePurchaseLoadingEntries(input: {
+  entryCount: number;
+  entries: PurchaseLoadingEntryInput[];
+  totalQuantity: number;
+  previousLoadedQuantity?: number;
+}) {
+  const entryCount = Number(input.entryCount);
+  const previousLoadedQuantity = Math.max(0, toNum(input.previousLoadedQuantity, 0));
+  const totalQuantity = Math.max(0, toNum(input.totalQuantity, 0));
+  const normalized = (Array.isArray(input.entries) ? input.entries : []).map((entry) => normalizePurchaseLoadingEntry(entry));
+  const validEntries = normalized.filter((entry) => entry.goodsName && entry.quantity > 0);
+
+  if (![1, 2].includes(entryCount)) {
+    throw new Error("Entry count must be exactly 1 or 2.");
+  }
+
+  if (validEntries.length !== entryCount) {
+    throw new Error(`Provide exactly ${entryCount} goods entr${entryCount === 1 ? "y" : "ies"} before submit.`);
+  }
+
+  const loadedQuantity = validEntries.reduce((sum, entry) => sum + entry.quantity, 0);
+  const remainingQuantity = totalQuantity - previousLoadedQuantity - loadedQuantity;
+
+  if (loadedQuantity <= 0) {
+    throw new Error("Loading quantity must be greater than zero.");
+  }
+
+  if (remainingQuantity < 0) {
+    throw new Error("Loaded quantity exceeds the remaining purchase quantity.");
+  }
+
+  return {
+    entries: validEntries,
+    entryCount,
+    loadedQuantity,
+    remainingQuantity
+  };
+}
+
+export function resolvePurchaseLoadingSummary(
+  order: PurchaseOrderData,
+  previousLoadedQuantity = 0,
+  currentLoadedQuantity = 0,
+  paymentMadeForLoading = 0
+): PurchaseLoadingSummary {
+  const amounts = resolvePurchaseAmounts(order);
+  const prev = Math.max(0, toNum(previousLoadedQuantity, 0));
+  const current = Math.max(0, toNum(currentLoadedQuantity, 0));
+  const loadedQuantity = Math.min(amounts.totalQuantity, prev + current);
+  const proportions = resolveLoadingProportions(amounts, loadedQuantity, amounts.totalQuantity, paymentMadeForLoading);
+
+  return {
+    totalQuantity: proportions.totalQuantity,
+    previousLoadedQuantity: prev,
+    currentLoadedQuantity: current,
+    remainingQuantity: proportions.remainingQuantity,
+    totalPurchaseFC: amounts.totalPurchaseFC,
+    totalPurchaseLC: amounts.totalPurchaseLC,
+    paidAmountFC: amounts.paidAdvanceFC,
+    paidAmountLC: amounts.paidAdvanceLC,
+    remainingAmountFC: amounts.remainingPurchaseFC,
+    remainingAmountLC: amounts.remainingPurchaseLC,
+    loadedPurchaseFC: proportions.loadedPurchaseFC,
+    loadedPurchaseLC: proportions.loadedPurchaseLC,
+    loadedAdvanceFC: proportions.loadedAdvanceFC,
+    loadedAdvanceLC: proportions.loadedAdvanceLC,
+    remainingLoadingFC: proportions.remainingLoadingFC,
+    remainingLoadingLC: proportions.remainingLoadingLC
+  };
+}
+
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function toNum(val: unknown, fallback = 0): number {

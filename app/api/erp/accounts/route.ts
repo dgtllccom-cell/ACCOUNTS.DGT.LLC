@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
 
     const db = createSupabaseAdminClient();
 
-    // Get accounts with associated data
+    // Get accounts (using existing ledger accounts table)
     const { data: accounts, error } = await db
       .from("accounts")
       .select(`
@@ -19,10 +19,10 @@ export async function GET(request: NextRequest) {
         code,
         name,
         account_type_id,
-        country_id,
+        company_id,
+        branch_id,
         is_active,
-        created_at,
-        country:countries(name)
+        created_at
       `)
       .order("created_at", { ascending: false })
       .limit(500);
@@ -92,10 +92,10 @@ export async function POST(request: NextRequest) {
     authorizeApiScope(session, { resource: "accounts", action: "create" });
 
     const body = await request.json();
-    const { code, name, accountTypeId, countryId, isActive, originalLanguage = "en" } = body;
+    const { code, name, accountTypeId, branchId, companyId, isActive, originalLanguage = "en" } = body;
 
-    if (!code || !name || !countryId) {
-      return new Response(JSON.stringify({ error: "code, name, countryId required" }), {
+    if (!code || !name) {
+      return new Response(JSON.stringify({ error: "code and name required" }), {
         status: 400,
         headers: { "Content-Type": "application/json" }
       });
@@ -103,15 +103,16 @@ export async function POST(request: NextRequest) {
 
     const db = createSupabaseAdminClient();
 
-    // Create account record
+    // Create account record in existing ledger accounts table
     const { data, error } = await db
       .from("accounts")
       .insert([{
         code,
+        name,
         account_type_id: accountTypeId || null,
-        country_id: countryId,
-        is_active: isActive !== false,
-        created_at: new Date().toISOString()
+        branch_id: branchId || null,
+        company_id: companyId || null,
+        is_active: isActive !== false
       }])
       .select();
 

@@ -82,8 +82,10 @@ export function CompanyRegistry() {
   // Filters
   const [filters, setFilters] = useState<ReportFilterValues>({
     countryId: "all",
+    scopeMode: "entire-country",
     mainBranchId: "all",
     branchId: "all",
+    project: "",
     fromDate: "",
     toDate: "",
     currency: "USD",
@@ -249,11 +251,14 @@ export function CompanyRegistry() {
             lang={lang}
             filters={filters}
             onFilterChange={(k, v) => setFilters(prev => ({ ...prev, [k]: v }))}
-            onReset={() => setFilters({ countryId: "all", mainBranchId: "all", branchId: "all", fromDate: "", toDate: "", currency: "USD", userId: "all", reportType: "company" })}
+            onReset={() => setFilters({ countryId: "all", scopeMode: "entire-country", mainBranchId: "all", branchId: "all", project: "", fromDate: "", toDate: "", currency: "USD", userId: "all", reportType: "company" })}
             onApply={loadCompaniesFromDb}
             countries={[{ id: "pk", name: "Pakistan" }, { id: "uae", name: "UAE" }]}
             mainBranches={[]}
             cityBranches={[]}
+            users={[]}
+            currencies={[]}
+            reportTypes={[]}
           />
 
           <Button

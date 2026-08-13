@@ -9,6 +9,7 @@ import {
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Th } from "@/components/ui/translated-th";
+import { derivePurchaseStockLifecycle, normalizePurchaseStockDestination, purchaseStockDestinationLabel } from "@/lib/services/purchase-stock-lifecycle";
 
 const CONTAINER_TYPES = ["20 FT", "40 FT", "20 FT Reefer", "40 FT Reefer", "Reefer Container", "Non Reefer", "Open Top", "Flat Rack", "LCL / Bulk"];
 
@@ -22,6 +23,7 @@ export function PurchaseLoadingFormView() {
   const [selectedPO, setSelectedPO] = useState<any | null>(null);
 
   const [activeTab, setActiveTab] = useState<"bill" | "parties" | "goods" | "load">("bill");
+  const [nextDestination, setNextDestination] = useState<"warehouse" | "in-transit" | "export" | "re-export" | "local-sale">("warehouse");
   
   const [loadForm, setLoadForm] = useState({
     containerNumber: "",
@@ -129,7 +131,10 @@ export function PurchaseLoadingFormView() {
             loadingNote: loadForm.loadingNote,
             standalone: false,
             explicitPurchaseOrderLink: true,
-            sourceModule: "purchase-loading-wizard"
+            sourceModule: "purchase-loading-wizard",
+            lifecycleStage: "remaining",
+            stockStage: "Remaining Stock",
+            stockStatus: "RED"
           }
         })
       });
@@ -142,6 +147,7 @@ export function PurchaseLoadingFormView() {
       setLoadForm({ containerNumber: "", containerType: "40 FT", loadingQuantity: "", loadingDate: "", loadingNote: "" });
       setSelectedPO(null);
       setActiveTab("bill");
+      setNextDestination("warehouse");
       await loadData();
     } catch (error) {
       alert(error instanceof Error ? error.message : "Error saving loading record.");
@@ -162,6 +168,38 @@ export function PurchaseLoadingFormView() {
   
   const currentLoadingQty = Number(loadForm.loadingQuantity || 0);
   const liveBalance = poTotalQty - poAlreadyLoadedQty - currentLoadingQty;
+  const stockLifecycle = selectedPO ? derivePurchaseStockLifecycle(selectedPO, poRecords) : null;
+
+  async function handleMoveLoadingStage(action: "land" | "forward") {
+    if (!selectedPO || !poRecords.length) return;
+    const targetRecord = [...poRecords].sort((a: any, b: any) => new Date(b.updated_at || b.created_at).getTime() - new Date(a.updated_at || a.created_at).getTime())[0];
+    if (!targetRecord?.id) return;
+    if (action === "forward" && !normalizePurchaseStockDestination(nextDestination)) {
+      alert("Select a destination first.");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const response = await fetch(`/api/erp/purchases/loading-records/${targetRecord.id}/transfer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action,
+          destination: action === "forward" ? nextDestination : undefined
+        })
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload.error?.message || payload.error || "Stage transfer failed.");
+      }
+      await loadData();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : "Error transferring loading stage.");
+    } finally {
+      setSaving(false);
+    }
+  }
 
   if (!selectedPO) {
     return (
@@ -552,6 +590,56 @@ export function PurchaseLoadingFormView() {
                       </div>
                     </div>
                   </div>
+
+                  {stockLifecycle ? (
+                    <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-[10px] font-bold uppercase tracking-wider text-slate-600">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span>
+                          Stock Stage: <b className="text-slate-900">{stockLifecycle.lifecycleStage.replace(/-/g, " ").toUpperCase()}</b>
+                        </span>
+                        <span className={`rounded-full border px-2 py-0.5 text-[9px] font-black ${stockLifecycle.visualStatus === "black" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : "border-rose-200 bg-rose-50 text-rose-700"}`}>
+                          {stockLifecycle.statusLabel}
+                        </span>
+                      </div>
+                      <div className="mt-2 grid grid-cols-2 gap-2 text-[10px] font-semibold uppercase tracking-normal text-slate-500 sm:grid-cols-4">
+                        <div className="rounded-md bg-white px-2 py-1">Loaded: <b className="text-slate-900">{stockLifecycle.totalLoadedQuantity.toLocaleString()}</b></div>
+                        <div className="rounded-md bg-white px-2 py-1">Remaining: <b className="text-slate-900">{stockLifecycle.remainingQuantity.toLocaleString()}</b></div>
+                        <div className="rounded-md bg-white px-2 py-1">Payment: <b className="text-slate-900">{stockLifecycle.paymentProofComplete ? "Complete" : "Pending"}</b></div>
+                        <div className="rounded-md bg-white px-2 py-1">Next: <b className="text-slate-900">{purchaseStockDestinationLabel(nextDestination)}</b></div>
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 text-[10px] font-black uppercase tracking-wider"
+                          disabled={!stockLifecycle.paymentProofComplete || stockLifecycle.lifecycleStage === "land" || stockLifecycle.visualStatus === "black"}
+                          onClick={() => void handleMoveLoadingStage("land")}
+                        >
+                          Move to Land Stock
+                        </Button>
+                        <select
+                          value={nextDestination}
+                          onChange={(event) => setNextDestination(event.target.value as typeof nextDestination)}
+                          className="h-8 rounded-md border border-slate-300 bg-white px-2 text-[10px] font-bold uppercase tracking-wider text-slate-700 outline-none"
+                        >
+                          <option value="warehouse">Warehouse</option>
+                          <option value="in-transit">In Transit</option>
+                          <option value="re-export">Re-export</option>
+                          <option value="local-sale">Local Sale</option>
+                        </select>
+                        <Button
+                          type="button"
+                          size="sm"
+                          className="h-8 bg-indigo-600 text-[10px] font-black uppercase tracking-wider text-white hover:bg-indigo-700"
+                          disabled={!stockLifecycle.paymentProofComplete || stockLifecycle.lifecycleStage !== "land" || saving}
+                          onClick={() => void handleMoveLoadingStage("forward")}
+                        >
+                          Forward Destination
+                        </Button>
+                      </div>
+                    </div>
+                  ) : null}
 
                   <div className="mt-4 pt-4 border-t border-slate-100 flex justify-between">
                     <Button variant="outline" onClick={() => setActiveTab("goods")} className="h-8 text-[10px] uppercase font-bold tracking-wider text-slate-600">Back</Button>

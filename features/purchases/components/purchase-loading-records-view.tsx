@@ -752,11 +752,13 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
           shipmentStatus: previewBalanceQuantity > 0 ? "partial_loaded" : "fully_loaded",
           carrierName: vesselName || record.carrier_name || null,
           remarks: newLoadingNote || record.remarks || null,
-          loadedContainers: Number(containerCount) || 1,
+          loadedContainers: 1,
           loadedQuantity: newQuantity,
           reportPayload: {
             sourceRecordId: record.id,
             sourceLoadingRecordNo: record.loading_record_no,
+            entryCount: 1,
+            totalContainerCount: Number(containerCount) || 1,
             loadedQuantity: newQuantity,
             loadingQuantity: newQuantity,
             runningLoadedQuantity: savedLoadedQuantity + newQuantity,
@@ -774,6 +776,25 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
             receivingDate: receivingDateState,
             vesselName,
             action: "new_loading_entry",
+            goodsEntries: [{
+              goodsName,
+              quantityNo: quantityNo,
+              qtyName,
+              oneQtyKgs,
+              oneEmptyKgs,
+              divideType,
+              divideWeightValue,
+              priceType,
+              priceRateC1,
+              qualityReportRef,
+              pricingCurrency,
+              exchangeRatePKR,
+              originCountry,
+              hsCode,
+              allotName,
+              brand,
+              sizeSpec
+            }],
             originCountry, goodsName, hsCode, allotName, brand, sizeSpec,
             qtyName, quantityNo, oneQtyKgs, oneEmptyKgs, divideType, divideWeightValue,
             priceType, priceRateC1, qualityReportRef, pricingCurrency, exchangeRatePKR
@@ -951,14 +972,15 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                       />
                     </label>
                     <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 col-span-2">
-                      Containers Qty
-                      <input
-                        type="number"
-                        min="1"
+                      Entry Count
+                      <select
                         value={containerCount}
                         onChange={(e) => setContainerCount(e.target.value)}
                         className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold normal-case tracking-normal outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-800 dark:bg-slate-950"
-                      />
+                      >
+                        <option value="1">1 Entry</option>
+                        <option value="2">2 Entries</option>
+                      </select>
                     </label>
 
                     <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
@@ -3131,7 +3153,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                       "SR#",
                       "Country",
                       "Branch",
-                      "Purchase Booking No.",
+                      "Bill / Source",
                       "Sales Account",
                       "Purchase Account",
                       "Goods",
@@ -3149,7 +3171,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                       "Final Remaining (LC)",
                       "Loaded Qty",
                       "Remaining to Load",
-                      "Loading Status",
+                      "Stage / Payment / Next Step",
                       "Action"
                     ].map((head) => (
                       <Th key={head} className="whitespace-nowrap px-4 py-3 border-b border-slate-100 dark:border-slate-800">
@@ -3194,6 +3216,15 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                       const finalAmountLC = totalContractAmount * exRate;
                       const finalAdvanceLC = purchaseAdvanceUSD * exRate;
                       const finalRemainingLC = Math.max(0, finalAmountLC - finalAdvanceLC);
+                      const paymentStatus = String(poRow.payment_status || form.paymentStatus || form.payment_status || "pending");
+                      const primaryLoadingRecord = realRecords[0] || records[0] || null;
+                      const nextDestination = String(
+                        primaryLoadingRecord?.receiving_location ||
+                        form.receivedPort ||
+                        form.destinationPort ||
+                        form.destinationCountry ||
+                        "Land / In Transit"
+                      );
 
                       const countryLabel = `${records[0]?.countries?.name || form.branchCountry || "-"}${records[0]?.countries?.iso2 ? ` (${records[0].countries.iso2})` : ""}`;
                       const branchLabel = `${records[0]?.country_branches?.name || form.branchName || "-"}${records[0]?.country_branches?.code ? ` (${records[0].country_branches.code})` : ""}`;
@@ -3220,11 +3251,14 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                             <td className="whitespace-nowrap px-4 py-3 text-[10px] font-bold text-slate-400">{String(groupIdx + 1).padStart(2, "0")}</td>
                             <td className="whitespace-nowrap px-4 py-3 font-semibold">{countryLabel}</td>
                             <td className="whitespace-nowrap px-4 py-3 text-slate-500">{branchLabel}</td>
-                            <td className="whitespace-nowrap px-4 py-3 font-bold text-blue-600">
-                              <span className="inline-flex items-center gap-1.5">
+                            <td className="whitespace-nowrap px-4 py-3 leading-tight">
+                              <div className="inline-flex items-center gap-1.5 font-bold text-blue-600">
                                 <Link2 className="h-3.5 w-3.5 text-blue-500" />
                                 {poNo}
-                              </span>
+                              </div>
+                              <div className="mt-1 text-[9px] font-semibold uppercase tracking-wider text-slate-400">
+                                {primaryLoadingRecord?.loading_record_no || "Loading source pending"}
+                              </div>
                             </td>
                             <td className="whitespace-nowrap px-4 py-3 leading-tight">
                               <div className="font-mono text-[10px] font-bold text-slate-700 dark:text-slate-300">{salesAccountNo}</div>
@@ -3264,19 +3298,30 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                             <td className="whitespace-nowrap px-4 py-3 font-mono font-black text-teal-600 dark:text-teal-400">{totalLoadedQty.toLocaleString()} Bags</td>
                             <td className="whitespace-nowrap px-4 py-3 font-mono font-black text-rose-600">{remainingQtyToLoad.toLocaleString()} Bags</td>
                             <td className="whitespace-nowrap px-4 py-3">
-                              {isFullyLoaded ? (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-black uppercase text-white shadow-sm dark:bg-black">
-                                  100% Fully Loaded
+                              <div className="flex flex-col gap-1.5">
+                                {isFullyLoaded ? (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-black uppercase text-white shadow-sm dark:bg-black">
+                                    100% Fully Loaded
+                                  </span>
+                                ) : isPartiallyLoaded ? (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-[10px] font-black uppercase text-amber-950 shadow-sm">
+                                    {((totalLoadedQty / totalContractQty) * 100).toFixed(0)}% Partially Loaded
+                                  </span>
+                                ) : (
+                                  <span className="inline-flex items-center gap-1 rounded-full bg-rose-600 px-2.5 py-1 text-[10px] font-black uppercase text-white shadow-sm animate-pulse">
+                                    0% Loaded (Pending)
+                                  </span>
+                                )}
+                                <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                                  Payment: <span className="text-slate-800 dark:text-slate-200">{paymentStatus.replace(/_/g, " ")}</span>
                                 </span>
-                              ) : isPartiallyLoaded ? (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-amber-400 px-2.5 py-1 text-[10px] font-black uppercase text-amber-950 shadow-sm">
-                                  {((totalLoadedQty / totalContractQty) * 100).toFixed(0)}% Partially Loaded
+                                <span className="text-[10px] font-bold uppercase tracking-wide text-slate-500">
+                                  Next: <span className="text-blue-600 dark:text-blue-400">{nextDestination}</span>
                                 </span>
-                              ) : (
-                                <span className="inline-flex items-center gap-1 rounded-full bg-rose-600 px-2.5 py-1 text-[10px] font-black uppercase text-white shadow-sm animate-pulse">
-                                  0% Loaded (Pending)
+                                <span className="text-[10px] font-mono font-black text-rose-600">
+                                  Balance: {finalRemainingLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {localCurrencyCode}
                                 </span>
-                              )}
+                              </div>
                             </td>
                             <td className="whitespace-nowrap px-4 py-3">
                               <div className="flex items-center gap-1.5">

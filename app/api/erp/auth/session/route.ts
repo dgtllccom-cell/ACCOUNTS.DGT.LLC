@@ -2,8 +2,7 @@ import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { resolveReportScope } from "@/lib/permissions/middleware";
 import { dashboardByRole, enterpriseRoleScopes } from "@/lib/permissions/enterprise-roles";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { isSupabaseConfigured } from "@/lib/supabase/config";
+import { withLocalPg } from "@/lib/db/local-postgres";
 
 export async function GET() {
   try {
@@ -11,22 +10,24 @@ export async function GET() {
     const primaryRole = session.roles[0] ?? null;
     const reportScope = resolveReportScope(session);
 
-    const [countryRow, countryBranchRow, cityBranchRow] = isSupabaseConfigured()
-      ? await (async () => {
-          const admin = createSupabaseAdminClient() as any;
-          return Promise.all([
-            session.countryIds[0]
-              ? admin.from("countries").select("id, name, code").eq("id", session.countryIds[0]).maybeSingle()
-              : Promise.resolve({ data: null }),
-            session.countryBranchIds[0]
-              ? admin.from("country_branches").select("id, name, code, country_id").eq("id", session.countryBranchIds[0]).maybeSingle()
-              : Promise.resolve({ data: null }),
-            session.cityBranchIds[0]
-              ? admin.from("city_branches").select("id, name, code, country_id, country_branch_id").eq("id", session.cityBranchIds[0]).maybeSingle()
-              : Promise.resolve({ data: null })
-          ]);
-        })()
-      : [{ data: null }, { data: null }, { data: null }];
+    const [countryRow, countryBranchRow, cityBranchRow] = (await withLocalPg(async (sql) => {
+      const [country, countryBranch, cityBranch] = await Promise.all([
+        session.countryIds[0]
+          ? sql`select id, name, iso2 as code from public.countries where id = ${session.countryIds[0]}::uuid limit 1`
+          : Promise.resolve([]),
+        session.countryBranchIds[0]
+          ? sql`select id, name, code, country_id from public.country_branches where id = ${session.countryBranchIds[0]}::uuid limit 1`
+          : Promise.resolve([]),
+        session.cityBranchIds[0]
+          ? sql`select id, name, code, country_id, country_branch_id from public.city_branches where id = ${session.cityBranchIds[0]}::uuid limit 1`
+          : Promise.resolve([])
+      ]);
+      return [
+        { data: (country as any[])[0] ?? null },
+        { data: (countryBranch as any[])[0] ?? null },
+        { data: (cityBranch as any[])[0] ?? null }
+      ] as const;
+    })) ?? [{ data: null }, { data: null }, { data: null }];
 
     const countryName = countryRow?.data?.name ?? null;
     const countryBranchName = countryBranchRow?.data?.name ?? null;

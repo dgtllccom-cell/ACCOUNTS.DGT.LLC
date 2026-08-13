@@ -36,6 +36,9 @@ type PurchaseOrderRow = {
   ledger_posting_status?: string | null;
   created_at?: string | null;
   form_data?: any;
+  super_admin_serial_number?: string | null;
+  country_transaction_serial_number?: string | null;
+  branch_transaction_serial_number?: string | null;
 };
 
 type OrdersPayload = {
@@ -56,6 +59,10 @@ const countryCurrency: Record<string, string> = {
 
 function form(row: PurchaseOrderRow) {
   return row.form_data?.form || {};
+}
+
+function workflow(row: PurchaseOrderRow) {
+  return row.form_data?.workflow || {};
 }
 
 function goods(row: PurchaseOrderRow) {
@@ -132,7 +139,7 @@ function remaining(row: PurchaseOrderRow) {
 }
 
 function status(row: PurchaseOrderRow) {
-  return String(form(row).lifecycleStatus || row.payment_status || row.ledger_posting_status || form(row).status || "Pending");
+  return String(workflow(row).stockStatus || workflow(row).inventoryStatus || workflow(row).stockStage || form(row).lifecycleStatus || row.payment_status || row.ledger_posting_status || form(row).status || "Pending");
 }
 
 function date(value?: string | null) {
@@ -153,9 +160,48 @@ function statusClass(value: string) {
   return "border-slate-200 bg-slate-50 text-slate-700";
 }
 
+function normalizeStageKey(value: unknown) {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (!normalized) return "";
+  if (normalized.includes("booking")) return "booking";
+  if (normalized.includes("remain") || normalized.includes("loading") || normalized.includes("loaded") || normalized.includes("confirmed") || normalized.includes("partial")) return "remaining";
+  if (normalized.includes("land")) return "land";
+  if (normalized.includes("in transit") || normalized.includes("in-transit") || normalized.includes("transit")) return "in-transit";
+  if (normalized.includes("warehouse")) return "warehouse";
+  if (normalized.includes("re-export") || normalized.includes("re export") || normalized.includes("reexport")) return "re-export";
+  if (normalized.includes("local sale") || normalized.includes("delivered")) return "local-sale";
+  if (normalized.includes("export")) return "export";
+  if (normalized.includes("journal")) return "journal";
+  return normalized.replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+}
+
+function titleToStageKey(title: string) {
+  const normalized = title.toLowerCase();
+  if (normalized.includes("journal")) return "journal";
+  if (normalized.includes("booking")) return "booking";
+  if (normalized.includes("remaining")) return "remaining";
+  if (normalized.includes("land")) return "land";
+  if (normalized.includes("in transit")) return "in-transit";
+  if (normalized.includes("warehouse")) return "warehouse";
+  if (normalized.includes("re-export")) return "re-export";
+  if (normalized.includes("local sale") || normalized.includes("delivered")) return "local-sale";
+  if (normalized.includes("export")) return "export";
+  return "";
+}
+
 function stageMatches(row: PurchaseOrderRow, title: string, type: PurchaseModuleType) {
-  const haystack = `${title} ${status(row)} ${form(row).currentStep || ""} ${form(row).nextStep || ""} ${form(row).containerStatus || ""} ${form(row).inventoryStatus || ""}`.toLowerCase();
-  if (type === "stock") return true;
+  const haystack = `${title} ${status(row)} ${form(row).currentStep || ""} ${form(row).nextStep || ""} ${form(row).containerStatus || ""} ${form(row).inventoryStatus || ""} ${workflow(row).stockStage || ""}`.toLowerCase();
+  if (type === "stock") {
+    const expected = titleToStageKey(title);
+    if (!expected || expected === "journal") return true;
+    const actual = normalizeStageKey(workflow(row).stockStage || workflow(row).inventoryStatus || workflow(row).lifecycleStatus || form(row).currentStep || form(row).nextStep || form(row).inventoryStatus || row.payment_status || row.ledger_posting_status);
+    if (actual === expected) return true;
+    if (expected === "remaining" && (actual === "confirmed" || actual === "loaded")) return true;
+    if (expected === "land" && actual === "import") return true;
+    if (expected === "local-sale" && actual === "delivered") return true;
+    if (expected === "re-export" && actual === "export") return true;
+    return false;
+  }
   if (title.toLowerCase().includes("tracking")) return true;
   if (title.toLowerCase().includes("finalized")) return haystack.includes("final") || haystack.includes("complete") || haystack.includes("closed");
   if (title.toLowerCase().includes("loading")) return haystack.includes("loading") || haystack.includes("container");

@@ -45,7 +45,7 @@ const roleScopes: RoleScopeDefinition[] = [
 type ModuleItem = {
   key: string;
   label: string;
-  category: "dashboards" | "shipping_clearing" | "finance_operations" | "reports";
+  category: "dashboards" | "shipping_clearing" | "finance_operations" | "inventory_stock" | "reports";
   enabled: boolean;
   alertText: string;
 };
@@ -74,6 +74,9 @@ const defaultModuleList = [
   { key: "form_cash_entry", label: "Roznamcha Cash Entry (/dashboard/roznamcha/cash-entry)", category: "finance_operations" },
   { key: "form_expenses_bill", label: "Expenses Bill Entry (/dashboard/roznamcha/expenses-bill)", category: "finance_operations" },
   { key: "form_user_registration", label: "User Registration & Role Form (/dashboard/new-entry/users/registration)", category: "finance_operations" },
+
+  // Stock Menu
+  { key: "menu_purchase_stock_section", label: "Purchase Stock Menu (/dashboard/purchase/stock/*)", category: "inventory_stock" },
 
   // Reports
   { key: "report_general_hub", label: "Enterprise Reporting Hub (/dashboard/reports)", category: "reports" },
@@ -124,6 +127,9 @@ export default function DashboardSettingsPage() {
             
             // Default rules: super_admin has all enabled
             let isDefaultEnabled = true;
+            if (mod.category === "inventory_stock") {
+              isDefaultEnabled = false;
+            }
             if (scope.key === "agent_user" && mod.category !== "shipping_clearing" && mod.key !== "dash_logistics") {
               isDefaultEnabled = false;
             }
@@ -210,6 +216,7 @@ export default function DashboardSettingsPage() {
     dashboards: { label: "Dashboards & Overview Hubs", icon: LayoutDashboard, color: "text-blue-600 dark:text-blue-400" },
     shipping_clearing: { label: "Shipping Line & Clearing Agent Forms", icon: Ship, color: "text-cyan-600 dark:text-cyan-400" },
     finance_operations: { label: "Financial & Operational Entry Forms", icon: ClipboardList, color: "text-emerald-600 dark:text-emerald-400" },
+    inventory_stock: { label: "Purchase Stock Menu", icon: Truck, color: "text-amber-600 dark:text-amber-400" },
     reports: { label: "Reports & PDF Analytics", icon: FileText, color: "text-purple-600 dark:text-purple-400" }
   };
 
@@ -307,7 +314,7 @@ export default function DashboardSettingsPage() {
         </CardHeader>
 
         <CardContent className="p-6 space-y-8">
-          {(["dashboards", "shipping_clearing", "finance_operations", "reports"] as const).map((catKey) => {
+          {(["dashboards", "shipping_clearing", "finance_operations", "inventory_stock", "reports"] as const).map((catKey) => {
             const catMeta = categoryLabels[catKey];
             const CatIcon = catMeta.icon;
             const catModules = defaultModuleList.filter((m) => m.category === catKey);

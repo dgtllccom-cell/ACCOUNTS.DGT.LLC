@@ -1,5 +1,5 @@
-import { BlEntryView } from "@/features/shipping/components/bl-entry-view";
+import { redirect } from "next/navigation";
 
 export default function PurchaseBillOfLadingPage() {
-  return <BlEntryView context="purchase" />;
+  redirect("/dashboard/shipping-line/bl-entry");
 }

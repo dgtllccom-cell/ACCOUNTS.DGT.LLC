@@ -1,6 +1,6 @@
 export const dynamic = "force-dynamic";
 
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { optionalUuidSchema, uuidSchema } from "@/lib/api/erp-validation";
@@ -8,7 +8,7 @@ import { authorizeApiScope, enforceScopeFilter } from "@/lib/api/scope-middlewar
 import { requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
-import { resolvePurchaseAmounts, resolveLoadingProportions } from "@/lib/services/purchase-calculation-service";
+import { resolvePurchaseAmounts, resolvePurchaseLoadingSummary, validatePurchaseLoadingEntries } from "@/lib/services/purchase-calculation-service";
 
 const loadingStatusSchema = z.enum(["draft", "pending", "loaded", "received", "cancelled"]);
 
@@ -257,7 +257,7 @@ export async function GET(request: NextRequest) {
       }
 
       const { data: poList } = await poQuery.limit(100);
-      const existingPoIds = new Set(records.map(r => r.purchase_order_id).filter(Boolean));
+      const existingPoIds = new Set(records.map((r: any) => r.purchase_order_id).filter(Boolean));
       const syntheticRecords: any[] = [];
 
       if (poList && poList.length > 0) {
@@ -395,19 +395,6 @@ export async function POST(request: NextRequest) {
       if (po) {
         // Use unified calculation service
         const amounts = resolvePurchaseAmounts(po as any);
-        const proportions = resolveLoadingProportions(amounts, loadedQuantity, amounts.totalQuantity);
-
-        totalQuantity = proportions.totalQuantity;
-        loadingPercentage = proportions.loadingPercentage;
-        loadedPurchaseAmount = proportions.loadedPurchaseFC;
-        loadedAdvanceAmount = proportions.loadedAdvanceFC;
-        purchaseCurrency = amounts.purchaseCurrency;
-        orderExchangeRate = amounts.exchangeRate;
-        loadedPurchaseLocal = proportions.loadedPurchaseLC;
-        loadedAdvanceLocal = proportions.loadedAdvanceLC;
-        remainingLoadingBalance = proportions.remainingLoadingFC;
-        localCurrency = amounts.localCurrency;
-
         // Update workflow on the purchase order
         const formData = po.form_data || {};
         const workflow = formData.workflow || {};
@@ -416,23 +403,63 @@ export async function POST(request: NextRequest) {
         const goodsQuantity = goodsEntries.reduce((sum: number, item: any) => sum + Number(item.qtyNo || item.quantity || 0), 0);
         const totalContainers = Number(workflow.totalContainers || formData.form?.containerCount || formData.totals?.totalContainers || 0);
         const totalQty = Number(workflow.totalQuantity || formData.totals?.totalQuantity || goodsQuantity || formData.form?.quantity || 0);
+        const reportGoodsEntries = Array.isArray((body.reportPayload as any)?.goodsEntries) ? (body.reportPayload as any).goodsEntries : [];
+        const normalizedReportEntryCount = Number((body.reportPayload as any)?.entryCount ?? body.loadedContainers ?? reportGoodsEntries.length ?? 1);
+        const currentLoadedQuantity = Number(body.loadedQuantity || reportGoodsEntries.reduce((sum: number, item: any) => sum + Number(item.quantityNo || item.loadedQuantity || item.loadingQuantity || item.quantity || 0), 0));
+        const existingLoadingRows = await supabase
+          .from("purchase_loading_records")
+          .select("loaded_quantity, report_payload")
+          .eq("purchase_order_id", body.purchaseOrderId)
+          .is("deleted_at", null);
+        if (existingLoadingRows.error) {
+          throw new Error(existingLoadingRows.error.message);
+        }
+        const persistedLoadedQuantity = (existingLoadingRows.data ?? []).reduce((sum: number, row: any) => {
+          return sum + Number(row?.loaded_quantity || row?.report_payload?.loadedQuantity || row?.report_payload?.loadingQuantity || 0);
+        }, 0);
 
-        const currentLoadedContainers = Number(workflow.loadedContainers || 0);
-        const currentLoadedQuantity = Number(workflow.loadedQuantity || 0);
+        const validatedBundle = reportGoodsEntries.length > 0
+          ? validatePurchaseLoadingEntries({
+              entryCount: normalizedReportEntryCount,
+              entries: reportGoodsEntries,
+              totalQuantity: totalQty,
+              previousLoadedQuantity: persistedLoadedQuantity
+            })
+          : null;
 
-        const newLoadedContainers = currentLoadedContainers + body.loadedContainers;
-        const newLoadedQuantity = currentLoadedQuantity + body.loadedQuantity;
+        const entryLoadedQuantity = validatedBundle?.loadedQuantity ?? currentLoadedQuantity;
+        const newLoadedQuantity = persistedLoadedQuantity + entryLoadedQuantity;
 
-        const remainingContainers = Math.max(0, totalContainers - newLoadedContainers);
+        if (newLoadedQuantity > totalQty) {
+          throw new Error("Loaded quantity exceeds the remaining purchase quantity.");
+        }
+
+        const remainingContainers = Math.max(0, totalContainers - Number(body.loadedContainers || 1));
         const remainingQuantity = Math.max(0, totalQty - newLoadedQuantity);
+        const summary = resolvePurchaseLoadingSummary(po as any, persistedLoadedQuantity, entryLoadedQuantity);
+
+        totalQuantity = summary.totalQuantity;
+        loadingPercentage = Math.min(100, summary.totalQuantity > 0 ? (newLoadedQuantity / summary.totalQuantity) * 100 : 0);
+        loadedPurchaseAmount = summary.loadedPurchaseFC;
+        loadedAdvanceAmount = summary.loadedAdvanceFC;
+        purchaseCurrency = amounts.purchaseCurrency;
+        orderExchangeRate = amounts.exchangeRate;
+        loadedPurchaseLocal = summary.loadedPurchaseLC;
+        loadedAdvanceLocal = summary.loadedAdvanceLC;
+        remainingLoadingBalance = summary.remainingLoadingFC;
+        localCurrency = amounts.localCurrency;
 
         workflow.totalContainers = totalContainers;
-        workflow.loadedContainers = newLoadedContainers;
+        workflow.loadedContainers = Number(body.loadedContainers || 1) + Number(workflow.loadedContainers || 0);
         workflow.remainingContainers = remainingContainers;
 
         workflow.totalQuantity = totalQty;
         workflow.loadedQuantity = newLoadedQuantity;
         workflow.remainingQuantity = remainingQuantity;
+        workflow.stockStage = "remaining";
+        workflow.inventoryStatus = "Remaining Stock";
+        workflow.nextDestination = "Land Stock";
+        workflow.stockStatus = "RED";
 
         if (remainingContainers > 0) {
            workflow.containerStatus = "Partially Loaded";
@@ -452,6 +479,10 @@ export async function POST(request: NextRequest) {
         await supabase.from("purchase_orders").update({ 
            form_data: formData
         }).eq("id", body.purchaseOrderId);
+
+        if (validatedBundle) {
+          loadedQuantity = validatedBundle.loadedQuantity;
+        }
       }
     }
 
@@ -471,7 +502,10 @@ export async function POST(request: NextRequest) {
       shipment_status: body.shipmentStatus ?? null,
       carrier_name: body.carrierName ?? null,
       remarks: body.remarks ?? null,
-      report_payload: body.reportPayload ?? {},
+      report_payload: {
+        ...(body.reportPayload ?? {}),
+        goodsEntries: Array.isArray((body.reportPayload as any)?.goodsEntries) ? (body.reportPayload as any).goodsEntries : []
+      },
       // Proportional financial columns
       loaded_quantity: loadedQuantity,
       total_quantity: totalQuantity,

@@ -6,7 +6,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 export type ModuleAllotmentItem = {
   key: string;
   label: string;
-  category: "dashboards" | "shipping_clearing" | "finance_operations" | "reports";
+  category: "dashboards" | "shipping_clearing" | "finance_operations" | "inventory_stock" | "reports";
   enabled: boolean;
   alertText?: string;
 };
@@ -39,6 +39,9 @@ const defaultModuleDefinitions: Array<{ key: string; label: string; category: Mo
   { key: "form_cash_entry", label: "Roznamcha Cash Entry (/dashboard/roznamcha/cash-entry)", category: "finance_operations" },
   { key: "form_expenses_bill", label: "Expenses Bill Entry (/dashboard/roznamcha/expenses-bill)", category: "finance_operations" },
   { key: "form_user_registration", label: "User Registration & Role Setup (/dashboard/new-entry/users/registration)", category: "finance_operations" },
+
+  // Stock Menu
+  { key: "menu_purchase_stock_section", label: "Purchase Stock Menu (/dashboard/purchase/stock/*)", category: "inventory_stock" },
 
   // Reports
   { key: "report_general_hub", label: "Enterprise Reporting Hub (/dashboard/reports)", category: "reports" },

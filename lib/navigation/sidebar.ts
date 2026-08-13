@@ -30,6 +30,7 @@ export type SidebarNode = {
   href?: Route;
   roles?: EnterpriseRole[];
   permission?: PermissionRequirement;
+  menuSettingKey?: string;
   children?: SidebarNode[];
 };
 
@@ -37,6 +38,8 @@ type PermissionRequirement = {
   resource: string;
   action: string;
 };
+
+export type SidebarMenuVisibilityMap = Record<string, boolean>;
 
 export const sidebarTree: SidebarNode[] = [
   {
@@ -452,11 +455,6 @@ export const sidebarTree: SidebarNode[] = [
             href: "/dashboard/purchase/purchase-loading-records" as Route
           },
           {
-            key: "purchase-bill-of-lading",
-            labelKey: "nav.clearing_bill_entry",
-            href: "/dashboard/purchase/bill-of-lading" as Route
-          },
-          {
             key: "purchase-finalized-orders",
             labelKey: "nav.final_purchase_order",
             href: "/dashboard/purchase/finalized-purchase-orders" as Route
@@ -657,6 +655,7 @@ export const sidebarTree: SidebarNode[] = [
         key: "stock-sub",
         labelKey: "nav.stock",
         iconKey: "clipboard-list",
+        menuSettingKey: "menu_purchase_stock_section",
         children: [
           {
             key: "stock-booking",
@@ -720,6 +719,12 @@ export const sidebarTree: SidebarNode[] = [
         key: "shipping-shipment-details",
         labelKey: "nav.shipment_details",
         href: "/dashboard/shipping-line/shipment-details" as Route,
+        roles: ["super_admin", "agent_user"]
+      },
+      {
+        key: "shipping-bl-entry",
+        labelKey: "nav.clearing_bill_entry",
+        href: "/dashboard/shipping-line/bl-entry" as Route,
         roles: ["super_admin", "agent_user"]
       },
       {
@@ -1466,14 +1471,16 @@ function hasPermission(permissions: string[] | null, requiredPermission?: Permis
 export function filterSidebarTree(
   nodes: SidebarNode[],
   roles: EnterpriseRole[] | null,
-  permissions: string[] | null = null
+  permissions: string[] | null = null,
+  menuVisibility: SidebarMenuVisibilityMap | null = null
 ): SidebarNode[] {
   return nodes
     .map((node) => {
       if (!hasRole(roles, node.roles)) return null;
       if (!hasPermission(permissions, node.permission ?? impliedPermission(node))) return null;
+      if (node.menuSettingKey && menuVisibility?.[node.menuSettingKey] === false) return null;
 
-      const children = node.children ? filterSidebarTree(node.children, roles, permissions) : undefined;
+      const children = node.children ? filterSidebarTree(node.children, roles, permissions, menuVisibility) : undefined;
       const trimmed: SidebarNode = {
         key: node.key,
         labelKey: node.labelKey,
@@ -1481,6 +1488,7 @@ export function filterSidebarTree(
         href: node.href,
         roles: node.roles,
         permission: node.permission,
+        menuSettingKey: node.menuSettingKey,
         ...(children?.length ? { children } : {})
       };
 

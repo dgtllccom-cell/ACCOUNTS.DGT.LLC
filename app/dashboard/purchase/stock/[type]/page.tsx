@@ -4,15 +4,15 @@ import { PurchaseModuleWorkspace } from "@/features/purchases/components/purchas
 const stockPages: Record<string, { title: string; description: string }> = {
   booking: {
     title: "Booking Stock",
-    description: "Stock reserved immediately after Booking Purchase Order creation before confirmation."
+    description: "Canonical booking rows before loading or payment proof moves them forward."
   },
   confirmed: {
-    title: "Confirmed Stock",
-    description: "Stock linked with booking-confirmed purchase orders before container loading."
+    title: "Remaining Stock",
+    description: "Loaded vehicle rows that still have payment balance or are waiting for land transfer."
   },
   import: {
-    title: "Import Stock",
-    description: "Imported stock received from finalized purchase orders and linked shipping documents."
+    title: "Land Stock",
+    description: "Loaded rows whose remaining payment is complete and are ready for destination selection."
   },
   journal: {
     title: "Journal Stock",
@@ -24,15 +24,15 @@ const stockPages: Record<string, { title: string; description: string }> = {
   },
   "in-transit": {
     title: "In Transit Stock",
-    description: "Goods currently moving through loading, shipping, and receiving stages."
+    description: "Destination stock moved to in-transit after Land Stock selection."
   },
   export: {
-    title: "Export Stock",
-    description: "Export-ready stock connected with sales, warehouse, and delivery workflows."
+    title: "Re-export Stock",
+    description: "Destination stock moved to re-export after Land Stock selection."
   },
   delivered: {
-    title: "Delivered Stock",
-    description: "Delivered purchase stock with final branch, warehouse, and customer delivery status."
+    title: "Local Sale / Delivered Stock",
+    description: "Destination stock moved to local sale or delivered after Land Stock selection."
   }
 };
 

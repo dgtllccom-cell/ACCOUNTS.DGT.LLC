@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
 import { Menu, Search } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import type { SidebarNode } from "@/lib/navigation/sidebar";
+import type { SidebarMenuVisibilityMap, SidebarNode } from "@/lib/navigation/sidebar";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 import { filterSidebarTree } from "@/lib/navigation/sidebar";
@@ -47,7 +47,22 @@ export function DashboardFrame({
   const [dbResults, setDbResults] = useState<any[]>([]);
   const [searchingDb, setSearchingDb] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [sidebarMenuVisibility, setSidebarMenuVisibility] = useState<SidebarMenuVisibilityMap | null>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
+  const sidebarDefaultVisibility: SidebarMenuVisibilityMap = {
+    menu_purchase_stock_section: false
+  };
+
+  function resolveMenuRoleScope(): "super_admin" | "country_admin" | "branch_admin" | "agent_user" | null {
+    if (!roles || roles.length === 0) return null;
+    if (roles.includes("super_admin")) return "super_admin";
+    if (roles.includes("country_admin") || roles.includes("country_user")) return "country_admin";
+    if (roles.includes("main_branch_admin") || roles.includes("city_branch_admin") || roles.includes("accountant") || roles.includes("cashier")) {
+      return "branch_admin";
+    }
+    if (roles.includes("agent_user")) return "agent_user";
+    return "branch_admin";
+  }
 
   useEffect(() => {
     function handleChunkError(event: PromiseRejectionEvent | ErrorEvent) {
@@ -108,6 +123,47 @@ export function DashboardFrame({
   }, []);
 
   useEffect(() => {
+    const scopeKey = resolveMenuRoleScope();
+    if (!scopeKey) {
+      setSidebarMenuVisibility(null);
+      return;
+    }
+
+    let cancelled = false;
+    async function loadMenuVisibility() {
+      let allotments: any = null;
+
+      try {
+        const res = await fetch("/api/erp/admin/dashboard-settings", { cache: "no-store" });
+        const json = await res.json().catch(() => ({}));
+        allotments = json?.data?.allotments ?? null;
+      } catch {
+        allotments = null;
+      }
+
+      if (!allotments && typeof window !== "undefined") {
+        try {
+          const raw = localStorage.getItem("erp_dashboard_allotments_v2");
+          allotments = raw ? JSON.parse(raw) : null;
+        } catch {
+          allotments = null;
+        }
+      }
+
+      const visibility = {
+        ...sidebarDefaultVisibility,
+        ...(allotments?.[scopeKey] || {})
+      };
+      if (!cancelled) setSidebarMenuVisibility(visibility);
+    }
+
+    void loadMenuVisibility();
+    return () => {
+      cancelled = true;
+    };
+  }, [roles]);
+
+  useEffect(() => {
     const query = searchQuery.trim();
     if (query.length < 2) {
       setDbResults([]);
@@ -145,7 +201,10 @@ export function DashboardFrame({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const filteredNodes = useMemo(() => filterSidebarTree(nodes, roles, permissions ?? null), [nodes, roles, permissions]);
+  const filteredNodes = useMemo(
+    () => filterSidebarTree(nodes, roles, permissions ?? null, sidebarMenuVisibility),
+    [nodes, roles, permissions, sidebarMenuVisibility]
+  );
   const roleLabel = useMemo(() => {
     if (!roles || roles.length === 0) return null;
 

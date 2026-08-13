@@ -34,6 +34,70 @@ function sequencePrefix(value: string | null | undefined, fallback: string, leng
   return normalizeCodePart(value, fallback).slice(0, length) || fallback;
 }
 
+function isMissingPrivilegedSupabaseKey(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return message.includes("SUPABASE_SECRET_KEY") || message.includes("SUPABASE_SERVICE_ROLE_KEY");
+}
+
+async function buildAccountListViaLocalPg(
+  session: Awaited<ReturnType<typeof requireErpSession>>,
+  scope: ReturnType<typeof getScopeFromSearchParams>,
+  limit: number
+) {
+  const viaPg = await withLocalPg(async (sql) => {
+    const rows = await sql`
+      select
+        ea.id,
+        ea.code,
+        ea.name,
+        ea.kind,
+        ea.currency,
+        ea.status,
+        ea.scope,
+        ea.country_id,
+        ea.country_branch_id,
+        ea.city_branch_id,
+        ea.branch_code,
+        ea.manual_reference_number,
+        ea.account_number,
+        ea.created_at
+      from public.enterprise_accounts ea
+      where ea.deleted_at is null
+        and (
+          ${session.isSuperAdmin}
+          or ea.country_id = any(${session.countryIds ?? []}::uuid[])
+          or ea.country_branch_id = any(${session.countryBranchIds ?? []}::uuid[])
+          or ea.city_branch_id = any(${session.cityBranchIds ?? []}::uuid[])
+        )
+        ${scope.countryId ? sql`and (ea.country_id = ${scope.countryId}::uuid or ea.country_id is null)` : sql``}
+        ${scope.countryBranchId ? sql`and (ea.country_branch_id = ${scope.countryBranchId}::uuid or ea.country_branch_id is null)` : sql``}
+        ${scope.cityBranchId ? sql`and (ea.city_branch_id = ${scope.cityBranchId}::uuid or ea.city_branch_id is null)` : sql``}
+      order by ea.code asc, ea.created_at desc
+      limit ${limit}
+    `;
+
+    return {
+      accounts: (rows as Array<{
+        id: string;
+        code: string;
+        name: string;
+        kind: string | null;
+        currency: string | null;
+        status: string | null;
+      }>).map((row) => ({
+        ...row,
+        is_active: String(row.status ?? "").toLowerCase() === "active"
+      })),
+      limit
+    };
+  });
+
+  if (!viaPg) {
+    throw new Error("DATABASE_URL is not configured for local account list fallback.");
+  }
+  return viaPg;
+}
+
 function countrySerialPrefix(country: { name?: string | null; iso2?: string | null } | null | undefined) {
   const name = country?.name ?? "";
   const normalizedName = normalizeCodePart(name, "");
@@ -248,7 +312,15 @@ export async function GET(request: NextRequest) {
       ...scope
     });
 
-    const supabase = await createApiSupabaseClient();
+    let supabase;
+    try {
+      supabase = await createApiSupabaseClient();
+    } catch (error) {
+      if (isMissingPrivilegedSupabaseKey(error)) {
+        return apiOk(await buildAccountListViaLocalPg(session, scope, limit));
+      }
+      throw error;
+    }
     let query: any = supabase
       .from("enterprise_accounts")
       .select(

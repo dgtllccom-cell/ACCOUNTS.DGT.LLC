@@ -5,6 +5,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
 import { ledgerScopeSchema, supportedLanguageSchema, uuidSchema } from "@/lib/api/erp-validation";
+import { withLocalPg } from "@/lib/db/local-postgres";
 import { multilingualService } from "@/lib/services/multilingual-service";
 
 const querySchema = z.object({
@@ -186,6 +187,242 @@ function resolveTranslation(row: TranslationRow | null | undefined, language: "e
   ) || fallback;
 }
 
+function isMissingPrivilegedSupabaseKey(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return message.includes("SUPABASE_SECRET_KEY") || message.includes("SUPABASE_SERVICE_ROLE_KEY");
+}
+
+async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof requireErpSession>>, effectiveQuery: z.infer<typeof querySchema>) {
+  const viaPg = await withLocalPg(async (sql) => {
+    const limit = Math.max(1, Math.min(effectiveQuery.limit ?? 1000, 2000));
+    const scopeWhere = effectiveQuery.scope ? sql`and ea.scope = ${effectiveQuery.scope}` : sql``;
+    const countryWhere = effectiveQuery.countryId ? sql`and ea.country_id = ${effectiveQuery.countryId}` : sql``;
+    const countryBranchWhere = effectiveQuery.countryBranchId ? sql`and ea.country_branch_id = ${effectiveQuery.countryBranchId}` : sql``;
+    const cityBranchWhere = effectiveQuery.cityBranchId ? sql`and ea.city_branch_id = ${effectiveQuery.cityBranchId}` : sql``;
+    const statusWhere = effectiveQuery.status !== "all" ? sql`and ea.status = ${effectiveQuery.status}` : sql``;
+    const fromWhere = effectiveQuery.fromDate ? sql`and ea.created_at >= ${`${effectiveQuery.fromDate}T00:00:00.000Z`}` : sql``;
+    const toWhere = effectiveQuery.toDate ? sql`and ea.created_at <= ${`${effectiveQuery.toDate}T23:59:59.999Z`}` : sql``;
+
+    const rows = await sql`
+      select
+        ea.id,
+        ea.scope,
+        ea.country_id,
+        ea.country_branch_id,
+        ea.city_branch_id,
+        ea.parent_id,
+        ea.customer_id,
+        ea.company_id,
+        ea.bank_id,
+        ea.code,
+        ea.account_number,
+        ea.customer_number,
+        ea.account_serial_number,
+        ea.country_serial_number,
+        ea.branch_serial_number,
+        ea.manual_reference_number,
+        ea.creation_date,
+        ea.branch_code,
+        ea.branch_account_sequence,
+        ea.name,
+        ea.kind,
+        ea.currency,
+        ea.opening_balance,
+        ea.current_balance,
+        ea.status,
+        ea.is_control_account,
+        ea.contacts,
+        ea.created_at,
+        ea.updated_at,
+        c.name as country_name,
+        c.iso2 as country_code,
+        cb.name as country_branch_name,
+        cb.code as country_branch_code,
+        cib.city_name as city_name,
+        cib.code as city_code,
+        led.id as ledger_id,
+        led.code as ledger_code,
+        led.name as ledger_name,
+        led.currency as ledger_currency,
+        led.is_active as ledger_is_active,
+        co.name as company_name,
+        co.legal_name as company_legal_name,
+        co.owner_name as company_owner_name,
+        cust.customer_name as customer_name,
+        bank.bank_name as bank_name,
+        bank.branch_name as bank_branch_name,
+        bank.account_number as bank_account_number,
+        bank.phone as bank_phone,
+        bank.email as bank_email
+      from public.enterprise_accounts ea
+      left join public.countries c on c.id = ea.country_id
+      left join public.country_branches cb on cb.id = ea.country_branch_id
+      left join public.city_branches cib on cib.id = ea.city_branch_id
+      left join lateral (
+        select l.id, l.code, l.name, l.currency, l.is_active
+        from public.ledgers l
+        where l.enterprise_account_id = ea.id and l.deleted_at is null
+        order by l.created_at desc
+        limit 1
+      ) led on true
+      left join public.companies co on co.id = ea.company_id and co.deleted_at is null
+      left join public.customers cust on cust.id = ea.customer_id and cust.deleted_at is null
+      left join public.banks bank on bank.id = ea.bank_id and bank.deleted_at is null
+      where ea.deleted_at is null
+        ${scopeWhere}
+        ${countryWhere}
+        ${countryBranchWhere}
+        ${cityBranchWhere}
+        ${statusWhere}
+        ${fromWhere}
+        ${toWhere}
+      order by ea.created_at desc
+      limit ${limit}
+    `;
+
+    const filtered = (rows as Array<any>).map((account) => {
+      const contactsList = Array.isArray(account.contacts) ? account.contacts : [];
+      const companyName = account.company_legal_name || account.company_name || account.customer_name || "-";
+      const branchType = scopeLabel(account.scope);
+      const branchName =
+        account.scope === "city_branch"
+          ? `${account.city_name ?? "-"} (${account.city_code ?? "-"})`
+          : account.scope === "main_branch"
+            ? `${account.country_branch_name ?? "-"} (${account.country_branch_code ?? "-"})`
+            : account.scope === "country"
+              ? `${account.country_name ?? "-"} (${account.country_code ?? "-"})`
+              : "Super Admin";
+
+      return {
+        accountId: account.id,
+        accountCode: account.code ?? account.account_number ?? account.id,
+        rawAccountCode: account.code ?? null,
+        customerNumber: account.customer_number ?? null,
+        countrySerialNumber: account.country_serial_number ?? "-",
+        branchSerialNumber: account.branch_serial_number ?? "-",
+        manualReferenceNumber: account.manual_reference_number ?? null,
+        accountName: account.name ?? "-",
+        journalCode: account.ledger_code ?? account.code ?? "-",
+        ledgerId: account.ledger_id ?? null,
+        ledgerName: account.ledger_name ?? null,
+        ledgerStatus: account.ledger_is_active === false ? "inactive" : "active",
+        ledgerCurrency: account.ledger_currency ?? account.currency ?? "-",
+        branchType,
+        branchName,
+        mainBranchName: account.country_branch_name ?? "-",
+        cityBranchName: account.city_name ?? "-",
+        branchCode: account.branch_code || account.country_branch_code || account.city_code || "-",
+        countryId: account.country_id,
+        countryName: account.country_name ?? "-",
+        countryCode: account.country_code ?? "-",
+        stateName: "-",
+        stateCode: "-",
+        cityId: account.city_branch_id,
+        cityName: account.city_name ?? "-",
+        cityCode: account.city_code ?? "-",
+        currency: account.currency ?? "-",
+        accountCategory: titleCase(account.kind ?? "account"),
+        subType: account.is_control_account ? "Control Account" : "Normal Account",
+        status: account.status ?? "active",
+        createdAt: account.creation_date || account.created_at,
+        openingBalance: toNumber(account.opening_balance),
+        debitTotal: 0,
+        creditTotal: 0,
+        currentBalance: toNumber(account.current_balance),
+        linkedLedgerCount: account.ledger_id ? 1 : 0,
+        journalActivityCount: 0,
+        latestJournalNo: account.ledger_code ?? account.code ?? null,
+        latestActivityAt: account.updated_at ?? account.created_at,
+        companyName,
+        companyCode: account.company_id ? parseIdPrefix(account.company_id) : "-",
+        companyOwner: account.company_owner_name ?? "-",
+        bankName: account.bank_name ?? "-",
+        warehouseName: "-",
+        ownerName: account.company_owner_name ?? account.customer_name ?? "-",
+        mobile: contactsList.find((item: any) => String(item?.type ?? "").toLowerCase().includes("mobile"))?.value ?? account.bank_phone ?? null,
+        whatsapp: contactsList.find((item: any) => String(item?.type ?? "").toLowerCase().includes("whatsapp"))?.value ?? null,
+        email: contactsList.find((item: any) => String(item?.type ?? "").toLowerCase().includes("email"))?.value ?? account.bank_email ?? null,
+        recentActivityLabel: null,
+        recentActivityAt: account.updated_at ?? account.created_at,
+        accountSerialNumber: Number(account.account_serial_number ?? 0),
+        branchAccountSequence: Number(account.branch_account_sequence ?? 0),
+        recentMovements: [],
+        contacts: contactsList
+      };
+    });
+
+    const q = normalizeSearch(effectiveQuery.q ?? "");
+    const rowsFiltered = q
+      ? filtered.filter((row) =>
+          normalizeSearch(
+            [
+              row.accountCode,
+              row.rawAccountCode,
+              row.customerNumber,
+              row.countrySerialNumber,
+              row.branchSerialNumber,
+              row.manualReferenceNumber ?? "",
+              row.accountName,
+              row.journalCode,
+              row.ledgerName,
+              row.branchName,
+              row.branchCode,
+              row.countryName,
+              row.countryCode,
+              row.cityName,
+              row.cityCode,
+              row.branchType,
+              row.currency,
+              row.accountCategory,
+              row.subType,
+              row.status,
+              row.companyName,
+              row.companyCode,
+              row.companyOwner,
+              row.latestJournalNo ?? "",
+              row.recentActivityLabel ?? ""
+            ]
+              .filter(Boolean)
+              .join(" ")
+          ).includes(q)
+        )
+      : filtered;
+
+    const summary = {
+      totalAccounts: rowsFiltered.length,
+      activeAccounts: rowsFiltered.filter((row) => row.status === "active").length,
+      countryAccounts: rowsFiltered.filter((row) => row.branchType === "Country").length,
+      branchAccounts: rowsFiltered.filter((row) => row.branchType === "Main Branch" || row.branchType === "City Branch").length,
+      adminAccounts: rowsFiltered.filter((row) => row.branchType === "Super Admin").length,
+      totalLedgers: rowsFiltered.reduce((sum, row) => sum + row.linkedLedgerCount, 0),
+      activeLedgers: rowsFiltered.filter((row) => row.ledgerStatus === "active").length,
+      openingBalanceTotal: rowsFiltered.reduce((sum, row) => sum + row.openingBalance, 0),
+      debitTotal: rowsFiltered.reduce((sum, row) => sum + row.debitTotal, 0),
+      creditTotal: rowsFiltered.reduce((sum, row) => sum + row.creditTotal, 0),
+      currentBalanceTotal: rowsFiltered.reduce((sum, row) => sum + row.currentBalance, 0),
+      journalActivityTotal: rowsFiltered.reduce((sum, row) => sum + row.journalActivityCount, 0),
+      recentUpdates: rowsFiltered.filter((row) => row.latestActivityAt && new Date(row.latestActivityAt).getTime() >= Date.now() - 1000 * 60 * 60 * 24 * 7).length
+    };
+
+    return {
+      summary,
+      workspace: {
+        companyId: null,
+        companyName: rowsFiltered[0]?.companyName ?? "-",
+        companyCode: rowsFiltered[0]?.companyCode ?? "-",
+        companyOwner: rowsFiltered[0]?.companyOwner ?? "-"
+      },
+      rows: rowsFiltered,
+      generatedAt: new Date().toISOString()
+    };
+  });
+
+  if (!viaPg) {
+    throw new Error("DATABASE_URL is not configured for local account report fallback.");
+  }
+  return viaPg;
+}
+
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
@@ -239,7 +476,16 @@ export async function GET(request: NextRequest) {
       cityBranchId: effectiveQuery.cityBranchId ?? null
     });
 
-    const supabase = createSupabaseAdminClient() as any;
+    let supabase: any;
+    try {
+      supabase = createSupabaseAdminClient() as any;
+    } catch (error) {
+      if (isMissingPrivilegedSupabaseKey(error)) {
+        const fallback = await buildAccountsReportViaLocalPg(session, effectiveQuery);
+        return apiOk(fallback);
+      }
+      throw error;
+    }
     const sessionUserIdIsUuid = uuidSchema.safeParse(session.userId).success;
 
     const profileRes = sessionUserIdIsUuid
