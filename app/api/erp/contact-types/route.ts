@@ -15,7 +15,7 @@ const querySchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    authorizeApiScope(session, { resource: "banks", action: "read" });
+    authorizeApiScope(session, { resource: "contact_types", action: "read" });
 
     const query = querySchema.parse({
       limit: request.nextUrl.searchParams.get("limit"),
@@ -25,18 +25,7 @@ export async function GET(request: NextRequest) {
     });
 
     const db = createSupabaseAdminClient();
-
-    let qb = db
-      .from("banks")
-      .select(
-        `id, bank_code, bank_name, branch_name, country_id, account_title,
-         account_number, iban, swift_code, currency_code, is_active,
-         created_at, updated_at, country:countries(name)`
-      );
-
-    if (!session.isSuperAdmin && session.countryIds.length > 0) {
-      qb = qb.in("country_id", session.countryIds);
-    }
+    let qb = db.from("contact_types").select(`id, code, name, category, description, is_active, created_at`);
 
     if (query.status) {
       qb = qb.eq("is_active", query.status === "Active");
@@ -44,9 +33,7 @@ export async function GET(request: NextRequest) {
 
     if (query.search) {
       const searchLower = query.search.toLowerCase();
-      qb = qb.or(
-        `bank_name.ilike.%${searchLower}%,bank_code.ilike.%${searchLower}%,account_number.ilike.%${searchLower}%,iban.ilike.%${searchLower}%`
-      );
+      qb = qb.or(`name.ilike.%${searchLower}%,code.ilike.%${searchLower}%`);
     }
 
     const { data, error, count } = await qb
@@ -54,15 +41,12 @@ export async function GET(request: NextRequest) {
       .range(query.offset, query.offset + query.limit - 1);
 
     if (error) throw error;
-
     if (!data || data.length === 0) {
-      return apiOk({ banks: [], summary: { total: 0, active: 0, inactive: 0 } });
+      return apiOk({ contactTypes: [], summary: { total: 0, active: 0, inactive: 0 } });
     }
 
     const active = data.filter((d: any) => d.is_active).length;
-    const inactive = data.filter((d: any) => !d.is_active).length;
-
-    return apiOk({ banks: data, summary: { total: count || 0, active, inactive } });
+    return apiOk({ contactTypes: data, summary: { total: count || 0, active, inactive: data.length - active } });
   } catch (error) {
     return handleApiError(error);
   }
@@ -71,40 +55,27 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    authorizeApiScope(session, { resource: "banks", action: "create" });
+    authorizeApiScope(session, { resource: "contact_types", action: "create" });
 
     const body = await request.json();
-    const { bankName, bankCode, branchName, countryId, accountTitle, accountNumber, iban, swiftCode, currencyCode, isActive } = body;
+    const { name, code, category, description, isActive } = body;
 
-    if (!bankName || !countryId) {
-      return new Response(JSON.stringify({ error: "bankName and countryId are required" }), {
+    if (!name || !code) {
+      return new Response(JSON.stringify({ error: "name and code are required" }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
     }
 
-    if (!session.isSuperAdmin && !session.countryIds.includes(countryId)) {
-      return new Response(JSON.stringify({ error: "Not authorized for this country" }), {
-        status: 403,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
     const db = createSupabaseAdminClient();
-
     const { data, error } = await db
-      .from("banks")
+      .from("contact_types")
       .insert([
         {
-          bank_name: bankName,
-          bank_code: bankCode || null,
-          branch_name: branchName || null,
-          country_id: countryId,
-          account_title: accountTitle || null,
-          account_number: accountNumber || null,
-          iban: iban || null,
-          swift_code: swiftCode || null,
-          currency_code: currencyCode || "USD",
+          name,
+          code,
+          category: category || "General",
+          description: description || null,
           is_active: isActive !== false,
           created_at: new Date().toISOString(),
         },
@@ -112,8 +83,7 @@ export async function POST(request: NextRequest) {
       .select();
 
     if (error) throw error;
-
-    return apiOk({ bank: data?.[0] }, { status: 201 });
+    return apiOk({ contactType: data?.[0] }, { status: 201 });
   } catch (error) {
     return handleApiError(error);
   }

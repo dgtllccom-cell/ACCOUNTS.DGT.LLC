@@ -8,21 +8,17 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
   try {
     const session = await requireErpSession();
     const { id } = await params;
-    authorizeApiScope(session, { resource: "banks", action: "read" });
+    authorizeApiScope(session, { resource: "contact_types", action: "read" });
 
     const db = createSupabaseAdminClient();
     const { data, error } = await db
-      .from("banks")
-      .select(`*, country:countries(name)`)
+      .from("contact_types")
+      .select("*")
       .eq("id", id)
       .single();
 
-    if (error || !data) throw new Error("Bank not found");
-    if (!session.isSuperAdmin && !session.countryIds.includes(data.country_id)) {
-      throw new Error("Not authorized");
-    }
-
-    return apiOk({ bank: data });
+    if (error || !data) throw new Error("Contact type not found");
+    return apiOk({ contactType: data });
   } catch (error) {
     return handleApiError(error);
   }
@@ -33,25 +29,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     const session = await requireErpSession();
     const { id } = await params;
     const body = await request.json();
-    authorizeApiScope(session, { resource: "banks", action: "update" });
+    authorizeApiScope(session, { resource: "contact_types", action: "update" });
 
     const db = createSupabaseAdminClient();
-    const { data: existing } = await db.from("banks").select("country_id").eq("id", id).single();
-    if (!existing || (!session.isSuperAdmin && !session.countryIds.includes(existing.country_id))) {
-      throw new Error("Not authorized");
-    }
-
     const { data, error } = await db
-      .from("banks")
+      .from("contact_types")
       .update({
-        bank_name: body.bankName,
-        bank_code: body.bankCode || null,
-        branch_name: body.branchName || null,
-        account_title: body.accountTitle || null,
-        account_number: body.accountNumber || null,
-        iban: body.iban || null,
-        swift_code: body.swiftCode || null,
-        currency_code: body.currencyCode || "USD",
+        name: body.name,
+        code: body.code,
+        category: body.category,
+        description: body.description || null,
         is_active: body.isActive !== false,
         updated_at: new Date().toISOString(),
       })
@@ -60,7 +47,7 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
       .single();
 
     if (error) throw error;
-    return apiOk({ bank: data });
+    return apiOk({ contactType: data });
   } catch (error) {
     return handleApiError(error);
   }
@@ -70,15 +57,10 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
   try {
     const session = await requireErpSession();
     const { id } = await params;
-    authorizeApiScope(session, { resource: "banks", action: "delete" });
+    authorizeApiScope(session, { resource: "contact_types", action: "delete" });
 
     const db = createSupabaseAdminClient();
-    const { data: existing } = await db.from("banks").select("country_id").eq("id", id).single();
-    if (!existing || (!session.isSuperAdmin && !session.countryIds.includes(existing.country_id))) {
-      throw new Error("Not authorized");
-    }
-
-    await db.from("banks").delete().eq("id", id);
+    await db.from("contact_types").delete().eq("id", id);
     return apiOk({ message: "Deleted" });
   } catch (error) {
     return handleApiError(error);

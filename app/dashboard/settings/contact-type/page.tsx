@@ -1,6 +1,6 @@
-import { ContactTypeManagement } from "@/features/contact-types/components/contact-type-management";
+import { ContactTypeRegistry } from "@/features/contact-types/components/contact-type-registry";
 
-export default function ContactTypePage() {
-  return <ContactTypeManagement />;
+export default function ContactTypeSettingsPage() {
+  return <ContactTypeRegistry />;
 }
 

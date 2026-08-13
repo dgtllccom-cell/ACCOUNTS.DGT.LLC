@@ -1,5 +1,5 @@
-import { BankForm } from "@/features/banks/components/bank-form";
+import { BankRegistry } from "@/features/banks/components/bank-registry";
 
-export default function BankMasterFormPage() {
-  return <BankForm mode="standalone" />;
+export default function BankSettingsPage() {
+  return <BankRegistry />;
 }
