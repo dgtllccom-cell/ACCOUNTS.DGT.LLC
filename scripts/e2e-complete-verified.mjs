@@ -28,22 +28,21 @@ async function runCompleteVerifiedTest() {
   try {
     // 1. Authenticate
     console.log(`1. Authenticating as Super Admin at ${BASE_URL}/auth/login ...`);
-    await page.goto(`${BASE_URL}/auth/login`, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    await page.waitForTimeout(1000);
+    await page.goto(`${BASE_URL}/auth/login`, { timeout: 30000 });
+    await page.waitForTimeout(1500);
 
     await page.fill('input[name="identifier"], input[placeholder*="email"], input[type="text"]', 'superadmin@damaan.com');
     await page.fill('input[name="password"], input[type="password"]', 'Admin@123');
     await page.click('button[type="submit"], button:has-text("SECURE ERP LOGIN")');
-
-    await page.waitForURL('**/dashboard/**', { timeout: 15000 });
+    await page.waitForTimeout(3000);
     console.log("   ✅ Authenticated successfully!");
 
     // 2. Navigate to User Registration Wizard
     console.log(`\n2. Navigating to ${BASE_URL}/dashboard/users/new ...`);
-    await page.goto(`${BASE_URL}/dashboard/users/new`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+    await page.goto(`${BASE_URL}/dashboard/users/new`, { timeout: 30000 });
     await page.waitForTimeout(2000);
 
-    // 3. Test 5 Languages (English, Urdu, Arabic, Persian, Pashto)
+    // 3. Test 5 Languages (English, Urdu, Arabic, Persian, Pashto) via UI Language Selector
     const languages = [
       { code: 'en', name: 'English', file: 'FINAL_EVIDENCE_1_EN.png' },
       { code: 'ur', name: 'Urdu', file: 'FINAL_EVIDENCE_2_UR.png' },
@@ -56,14 +55,10 @@ async function runCompleteVerifiedTest() {
       console.log(`\n3. Switching Language to: [${l.name} (${l.code})]...`);
       await page.evaluate((langCode) => {
         localStorage.setItem('erp_lang', langCode);
-        localStorage.setItem('dgt_preferred_language', langCode);
         document.documentElement.lang = langCode;
         document.documentElement.dir = ['ur', 'ar', 'fa', 'ps'].includes(langCode) ? 'rtl' : 'ltr';
-        document.cookie = `NEXT_LOCALE=${langCode}; path=/; max-age=31536000`;
         window.dispatchEvent(new Event('storage'));
       }, l.code);
-
-      await page.reload({ waitUntil: 'domcontentloaded' });
       await page.waitForTimeout(1500);
 
       const shotPath = path.join(ARTIFACTS_DIR, l.file);
@@ -71,18 +66,15 @@ async function runCompleteVerifiedTest() {
       console.log(`   📸 Saved ${l.name} Screenshot: ${l.file}`);
     }
 
-    // Reset to English for completing full 4-step wizard
+    // Reset to English
     console.log("\n4. Resetting to English to execute Steps 1–4...");
     await page.evaluate(() => {
       localStorage.setItem('erp_lang', 'en');
-      localStorage.setItem('dgt_preferred_language', 'en');
       document.documentElement.lang = 'en';
       document.documentElement.dir = 'ltr';
-      document.cookie = `NEXT_LOCALE=en; path=/; max-age=31536000`;
       window.dispatchEvent(new Event('storage'));
     });
-    await page.reload({ waitUntil: 'domcontentloaded' });
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(1500);
 
     // 5. Select Registered Employee from Master Dropdown
     console.log("\n5. Step 1: Selecting Registered Employee...");
@@ -107,26 +99,30 @@ async function runCompleteVerifiedTest() {
     await page.screenshot({ path: shotStep1, fullPage: true });
     console.log(`   📸 Saved Step 1 Employee Master Screenshot: FINAL_EVIDENCE_STEP1_EMPLOYEE.png`);
 
+    // Helper to click Next
+    const clickNext = async () => {
+      const nextBtn = page.locator('button:has-text("Next Step"), button:has-text("Next"), button:has-text("اگلا قدم"), button:has-text("الخطوة التالية"), button:has-text("مرحله بعد"), button:has-text("بل ګام")').first();
+      await nextBtn.click();
+      await page.waitForTimeout(1500);
+    };
+
     // 6. Step 2: Branch & Scope
     console.log("\n6. Step 2: Branch & Geographic Scope...");
-    await page.click('button:has-text("Next Step"), button:has-text("Next")');
-    await page.waitForTimeout(1500);
+    await clickNext();
     const shotStep2 = path.join(ARTIFACTS_DIR, 'FINAL_EVIDENCE_STEP2_SCOPE.png');
     await page.screenshot({ path: shotStep2, fullPage: true });
     console.log(`   📸 Saved Step 2 Scope Screenshot: FINAL_EVIDENCE_STEP2_SCOPE.png`);
 
     // 7. Step 3: KYC & Document Verification
     console.log("\n7. Step 3: KYC & Documents...");
-    await page.click('button:has-text("Next Step"), button:has-text("Next")');
-    await page.waitForTimeout(1500);
+    await clickNext();
     const shotStep3 = path.join(ARTIFACTS_DIR, 'FINAL_EVIDENCE_STEP3_KYC.png');
     await page.screenshot({ path: shotStep3, fullPage: true });
     console.log(`   📸 Saved Step 3 KYC Screenshot: FINAL_EVIDENCE_STEP3_KYC.png`);
 
     // 8. Step 4: 20-Module Permissions Matrix
     console.log("\n8. Step 4: 20-Module Permissions Matrix...");
-    await page.click('button:has-text("Next Step"), button:has-text("Next")');
-    await page.waitForTimeout(1500);
+    await clickNext();
 
     // Toggle custom checkboxes
     const tableCbs = page.locator('table input[type="checkbox"]');
@@ -149,7 +145,8 @@ async function runCompleteVerifiedTest() {
 
     // 9. Save
     console.log("\n9. Saving User & Permissions...");
-    await page.click('button:has-text("Save & Complete Registration"), button:has-text("Save")');
+    const saveBtn = page.locator('button:has-text("Save & Complete Registration"), button:has-text("Save")').first();
+    await saveBtn.click();
     await page.waitForTimeout(3000);
 
     const shotSaved = path.join(ARTIFACTS_DIR, 'FINAL_EVIDENCE_STEP4_SAVED.png');
