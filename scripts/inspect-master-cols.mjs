@@ -1,26 +1,18 @@
-import fs from "node:fs";
-import postgres from "postgres";
+import postgres from 'postgres';
 
-function parseEnvFile(file) {
-  const env = {};
-  if (!fs.existsSync(file)) return env;
-  for (const line of fs.readFileSync(file, "utf8").split(/\r?\n/)) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const index = trimmed.indexOf("=");
-    if (index === -1) continue;
-    env[trimmed.slice(0, index)] = trimmed.slice(index + 1).replace(/^"|"$/g, "");
-  }
-  return env;
+const vpsSql = postgres('postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres', { ssl: { rejectUnauthorized: false }, prepare: false });
+
+async function inspectCols() {
+  const bCols = await vpsSql`SELECT column_name FROM information_schema.columns WHERE table_name = 'banks'`;
+  console.log('banks cols:', bCols.map(c => c.column_name));
+
+  const wCols = await vpsSql`SELECT column_name FROM information_schema.columns WHERE table_name = 'warehouses'`;
+  console.log('warehouses cols:', wCols.map(c => c.column_name));
+
+  const cCols = await vpsSql`SELECT column_name FROM information_schema.columns WHERE table_name = 'customers'`;
+  console.log('customers cols:', cCols.map(c => c.column_name));
+
+  await vpsSql.end();
 }
 
-const env = { ...parseEnvFile(".env"), ...parseEnvFile(".env.local") };
-const sql = postgres(env.DATABASE_URL, { max: 1, prepare: false });
-
-async function checkPersonMaster() {
-  const emp = await sql`SELECT person_master_id FROM public.employees LIMIT 1`;
-  console.log("Existing employee person_master_id:", emp[0]);
-  process.exit(0);
-}
-
-checkPersonMaster();
+inspectCols().catch(console.error);
