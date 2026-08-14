@@ -23,7 +23,7 @@ import { translateHeader, hasHeaderTranslation } from "@/lib/i18n/table-headers"
 
 type Row = { ur: string; ar: string; fa: string; ps: string };
 
-const VALUE_TRANSLATIONS: Record<string, Row> = {
+export const VALUE_TRANSLATIONS: Record<string, Row> = {
   // ── Lifecycle / current status ───────────────────────────────────────────
   "IN WAREHOUSE": { ur: "گودام میں", ar: "في المستودع", fa: "در انبار", ps: "په ګودام کې" },
   "IN LOADING": { ur: "لوڈنگ میں", ar: "قيد التحميل", fa: "در حال بارگیری", ps: "په بارولو کې" },

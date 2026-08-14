@@ -18,7 +18,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 // Header translation dictionary — 278 entries covering all module tables.
 type Row = { ur: string; ar: string; fa: string; ps: string };
 
-const HEADER_TRANSLATIONS: Record<string, Row> = {
+export const HEADER_TRANSLATIONS: Record<string, Row> = {
   // ── Group / section headers ──────────────────────────────────────────────
   "GENERAL INFORMATION": { ur: "عمومی معلومات", ar: "معلومات عامة", fa: "اطلاعات عمومی", ps: "عمومي معلومات" },
   "PRODUCT INFORMATION": { ur: "پروڈکٹ کی معلومات", ar: "معلومات المنتج", fa: "اطلاعات محصول", ps: "د محصول معلومات" },
