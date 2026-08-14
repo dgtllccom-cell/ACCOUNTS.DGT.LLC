@@ -1090,7 +1090,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                   setLinkedCustomerId(id || null);
                   if (!id) { setLinkedCustomerName(""); return; }
                   // Populate account name from customer selection if not already set
-                  fetch(`/api/erp/customers/${id}`)
+                  fetch(`/api/erp/customers/${id}?lang=${lang}`)
                     .then((r) => r.json())
                     .then((json) => {
                       const name = json?.customer?.customer_name ?? json?.data?.customer_name ?? "";
@@ -1144,7 +1144,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                 onValueChange={(id) => {
                   setLinkedCompanyId(id || null);
                   if (!id) { setLinkedCompanyName(""); return; }
-                  fetch(`/api/erp/companies/${id}`)
+                  fetch(`/api/erp/companies/${id}?lang=${lang}`)
                     .then((r) => r.json())
                     .then((json) => {
                       const name = json?.company?.name ?? json?.company?.legal_name ?? "";
@@ -1199,7 +1199,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                 onValueChange={(id) => {
                   setLinkedBankId(id || null);
                   if (!id) { setLinkedBankName(""); return; }
-                  fetch(`/api/erp/banks/${id}`)
+                  fetch(`/api/erp/banks/${id}?lang=${lang}`)
                     .then((r) => r.json())
                     .then((json) => {
                       const name = json?.data?.bank?.bank_name ?? json?.bank?.bank_name ?? json?.bank_name ?? "";
