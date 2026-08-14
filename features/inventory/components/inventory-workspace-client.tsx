@@ -28,6 +28,7 @@ import { apiGet, apiPost, apiPut } from "@/lib/api/client";
 import { listGoods, type GoodsListRow } from "@/features/inventory/goods-api";
 import { rtlLanguages, normalizeSupportedLanguage } from "@/lib/i18n/languages";
 import { translateValue } from "@/lib/i18n/table-values";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type InventoryBalance = {
   id: string;
@@ -156,6 +157,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
   const activeLang = normalizeSupportedLanguage(session?.lang || (typeof document !== "undefined" ? document.documentElement.lang : "en"));
   const isRtl = rtlLanguages.includes(activeLang);
   const tv = (value: string | null | undefined) => translateValue(activeLang, value);
+  const tr = (label: string) => translateHeader(activeLang, label);
 
   async function fetchBalances() {
     setBusy(true);
@@ -294,13 +296,13 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
             onClick={() => handleOpenMovementModal("STOCK_IN")} 
             className="bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm"
           >
-            <ArrowDownLeft className="mr-2 h-4 w-4" /> Stock In (Receiving)
+            <ArrowDownLeft className="mr-2 h-4 w-4" /> {tr("Stock In (Receiving)")}
           </Button>
           <Button 
             onClick={() => handleOpenMovementModal("STOCK_OUT")} 
             className="bg-rose-600 hover:bg-rose-700 text-white font-medium shadow-sm"
           >
-            <ArrowUpRight className="mr-2 h-4 w-4" /> Stock Out (Issuance)
+            <ArrowUpRight className="mr-2 h-4 w-4" /> {tr("Stock Out (Issuance)")}
           </Button>
           <Button 
             variant="outline" 
@@ -339,7 +341,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
               <Boxes className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Unique Items in Stock</p>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{tr("Unique Items in Stock")}</p>
               <h3 className="text-2xl font-bold">{summary.total_items}</h3>
             </div>
           </CardContent>
@@ -350,7 +352,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
               <TrendingUp className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Quantity On Hand</p>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{tr("Total Quantity On Hand")}</p>
               <h3 className="text-2xl font-bold">{Number(summary.total_quantity_on_hand).toLocaleString()}</h3>
             </div>
           </CardContent>
@@ -361,7 +363,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
               <Package className="h-6 w-6" />
             </div>
             <div>
-              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Total Available Quantity</p>
+              <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{tr("Total Available Quantity")}</p>
               <h3 className="text-2xl font-bold">{Number(summary.total_quantity_available).toLocaleString()}</h3>
             </div>
           </CardContent>
@@ -379,7 +381,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             }`}
           >
-            Inventory Balances
+            {tr("Inventory Balances")}
           </button>
           <button
             onClick={() => setActiveTab("movements")}
@@ -389,7 +391,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
             }`}
           >
-            Stock Movement History
+            {tr("Stock Movement History")}
           </button>
         </div>
 
@@ -410,7 +412,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
             onChange={(e) => setSelectedWarehouseFilter(e.target.value)}
             className="px-3 py-1.5 text-sm border rounded-md bg-background"
           >
-            <option value="">All Warehouses</option>
+            <option value="">{tr("All Warehouses")}</option>
             {warehouses.map((w) => (
               <option key={w.id} value={w.id}>
                 {w.warehouse_name || w.name} ({w.warehouse_code || w.code})
@@ -439,7 +441,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
             className="h-8 gap-1.5 rounded-md border-slate-700 bg-slate-900 px-3 text-xs font-bold text-cyan-400 hover:bg-slate-800"
           >
             <Printer className="h-3.5 w-3.5" />
-            Print / Report
+            {tr("Print / Report")}
           </Button>
         </div>
       </div>
