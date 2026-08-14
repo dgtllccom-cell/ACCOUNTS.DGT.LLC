@@ -35,7 +35,11 @@ import {
   XCircle,
   FileSpreadsheet,
   CheckSquare,
-  Square
+  Square,
+  DollarSign,
+  Clock,
+  Layers,
+  Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -109,17 +113,17 @@ const userWizardTranslations: Record<string, Record<SupportedLanguage, string>> 
     fa: "اتصال به پرسنل، تعیین دسترسی‌های کشور و شعبه، تنظیم مجوزهای فرم‌ها، احراز هویت KYC و صدور اطلاعات ورود.",
     ps: "د کارمندانو اسناد، د هیواد او څانګې واکونه، د فورمو واکونه، د KYC تصدیق او ننوتلو سوابق برابرول."
   },
-  step1Label: { en: "1. General Information", ur: "1. عام معلومات", ar: "1. المعلومات العامة", fa: "1. اطلاعات عمومی", ps: "1. عمومي معلومات" },
+  step1Label: { en: "1. Employee Information", ur: "1. ملازم کی معلومات", ar: "1. معلومات الموظف", fa: "1. مشخصات پرسنل", ps: "1. د کارمند معلومات" },
   step2Label: { en: "2. Employee & Branch Access", ur: "2. ایمپلائی و برانچ رسائی", ar: "2. صلاحيات الموظف والفرع", fa: "2. دسترسی پرسنل و شعبه", ps: "2. د کارمند او څانګې لاسرسی" },
   step3Label: { en: "3. KYC & Document Verification", ur: "3. کے وائی سی و دستاویزات", ar: "3. التحقق من الهوية (KYC)", fa: "3. احراز هویت (KYC)", ps: "3. د پیژندګلوۍ تصدیق (KYC)" },
-  step4Label: { en: "4. Review & Complete", ur: "4. ریویو و پرمیشنز", ar: "4. المراجعة والصلاحيات", fa: "4. مرور و مجوزها", ps: "4. کتنه او واکونه" },
+  step4Label: { en: "4. Review & Permissions", ur: "4. ریویو و پرمیشنز", ar: "4. المراجعة والصلاحيات", fa: "4. مرور و مجوزها", ps: "4. کتنه او واکونه" },
   next: { en: "Next Step", ur: "اگلا قدم", ar: "الخطوة التالية", fa: "مرحله بعد", ps: "بل ګام" },
   previous: { en: "Previous", ur: "پچھلا", ar: "السابق", fa: "قبلی", ps: "پخوانی" },
   saveUser: { en: "Save & Complete Registration", ur: "محفوظ کریں اور مکمل کریں", ar: "حفظ وإكمال التسجيل", fa: "ذخیره و تکمیل ثبت نام", ps: "خوندي او ثبت بشپړول" },
   savingText: { en: "Saving User Record...", ur: "صارف محفوظ ہو رہا ہے...", ar: "جاري حفظ بيانات المستخدم...", fa: "در حال ذخیره...", ps: "د کارونکي معلومات خوندي کیږي..." },
   printCard: { en: "Print A4 User Card", ur: "A4 یوزر کارڈ پرنٹ کریں", ar: "طباعة بطاقة المستخدم A4", fa: "چاپ کارت کاربر A4", ps: "د A4 د کارونکي کارت چاپول" },
   addNewUser: { en: "+ New User Registration", ur: "+ نیا صارف رجسٹر کریں", ar: "+ تسجيل مستخدم جديد", fa: "+ ثبت کاربر جدید", ps: "+ نوی کارونکی ثبت کړئ" },
-  selectEmployee: { en: "Select Registered Employee", ur: "رجسٹرڈ ایمپلائی منتخب کریں", ar: "اختر الموظف المسجل", fa: "انتخاب پرسنل ثبت شده", ps: "ثبت شوی کارمند وټاکئ" },
+  selectEmployee: { en: "Select Registered Employee (Master Profile)", ur: "رجسٹرڈ ایمپلائی منتخب کریں (ماسٹر پروفائل)", ar: "اختر الموظف المسجل (الملف التعريفي الرئيسي)", fa: "انتخاب پرسنل ثبت شده (پروفایل اصلی)", ps: "ثبت شوی کارمند وټاکئ (اصلي پروفایل)" },
   fullName: { en: "User Full Name *", ur: "صارف کا مکمل نام *", ar: "الاسم الكامل للمستخدم *", fa: "نام کامل کاربر *", ps: "د کارونکي بشپړ نوم *" },
   username: { en: "Login Username / Identifier *", ur: "لاگ ان یوزر نام *", ar: "اسم المستخدم للدخول *", fa: "نام کاربری ورود *", ps: "د ننوتلو کارن نوم *" },
   designation: { en: "Designation / Role Title", ur: "عہدہ / ڈیزگنیشن", ar: "المسمى الوظيفي", fa: "عنوان شغلی", ps: "دندې سرلیک" },
@@ -136,7 +140,7 @@ const userWizardTranslations: Record<string, Record<SupportedLanguage, string>> 
   address: { en: "Permanent Residential Address", ur: "مستقل رہائشی پتہ", ar: "العنوان السكني الدائم", fa: "آدرس کامل سکونت", ps: "د استوګنې بشپړ پته" },
   verifiedCompliant: { en: "Verified & Compliant", ur: "تصدیق شدہ و مکمل", ar: "متحقق ومطابق", fa: "تایید شده و معتبر", ps: "تصدیق شوی او بشپړ" },
   pendingVerification: { en: "Pending Document Verification", ur: "تصدیق زیر التوا", ar: "قيد التحقق من المستندات", fa: "در انتظار تایید مدارک", ps: "د اسنادو تصدیق پاتې" },
-  optionalHint: { en: "(Optional - Empty field will not block Next)", ur: "(اختیاری - خالی چھوڑنے پر فارم بلاک نہیں ہوگا)", ar: "(اختياري - لن يمنع الحقل الفارغ المتابعة)", fa: "(اختیاری - خالی بودن مانع ادامه نمی‌شود)", ps: "(اختیاري - تش پریښودل ګام نه بندوي)" },
+  optionalHint: { en: "(Auto-filled from Employee Master)", ur: "(ملازم کے ماسٹر ریکارڈ سے خودکار بھرا گیا)", ar: "(تم التعبئة تلقائياً من سجل الموظف)", fa: "(تکمیل خودکار از پرونده پرسنل)", ps: "(د کارمند له ماسټر ریکارډ څخه اتومات ډک شوی)" },
   addNewEmployee: { en: "Add New Employee", ur: "نیا ملازم شامل کریں", ar: "إضافة موظف جديد", fa: "افزودن پرسنل جدید", ps: "نوی کارمند اضافه کړئ" },
   newEmployeeModalTitle: { en: "New Employee Registration", ur: "نیا ملازم رجسٹریشن", ar: "تسجيل موظف جديد", fa: "ثبت پرسنل جدید", ps: "د نوي کارمند ثبت" },
   employeeSearchPlaceholder: { en: "Search employee by code, name, designation...", ur: "کوڈ، نام یا عہدہ سے ملازم تلاش کریں...", ar: "ابحث عن الموظف بالرمز أو الاسم أو المسمى الوظيفي...", fa: "جستجوی پرسنل با کد، نام یا عنوان شغلی...", ps: "کارمند د کوډ، نوم یا دندې له مخې پلټئ..." },
@@ -183,6 +187,36 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
   const [employeeCode, setEmployeeCode] = useState<string>("");
 
+  // Complete Detailed Employee Master Profile State
+  const [employeeProfile, setEmployeeProfile] = useState<{
+    firstName?: string;
+    middleName?: string;
+    lastName?: string;
+    fullName?: string;
+    employeeCode?: string;
+    gender?: string;
+    designation?: string;
+    department?: string;
+    employmentType?: string;
+    jobStatus?: string;
+    workingShift?: string;
+    dutyStartTime?: string;
+    dutyEndTime?: string;
+    joiningDate?: string;
+    contractStartDate?: string;
+    contractEndDate?: string;
+    basicSalary?: number;
+    salaryCurrency?: string;
+    salaryType?: string;
+    phone?: string;
+    whatsapp?: string;
+    email?: string;
+    address?: string;
+    countryName?: string;
+    cityName?: string;
+    photoUrl?: string;
+  }>({});
+
   // Step 1: User Core State
   const [userCode, setUserCode] = useState("");
   useEffect(() => {
@@ -219,6 +253,9 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
 
+  // Active Category Filter for Permissions Table
+  const [selectedPermissionCategory, setSelectedPermissionCategory] = useState<string>("All Categories");
+
   // Interactive Form/Module Capabilities State (Manually assignable checkboxes)
   const [moduleCapabilities, setModuleCapabilities] = useState<ModulePermissionCapability[]>(() => {
     return buildAllModulesCapabilities("staff_user", enterpriseRolePermissions["staff_user"]);
@@ -239,11 +276,9 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
       if (mod.moduleKey === moduleKey) {
         const nextVal = !mod[field];
         const updated = { ...mod, [field]: nextVal };
-        // If creating/editing/deleting/posting is enabled, view must also be enabled
         if (field !== "canView" && nextVal && !updated.canView) {
           updated.canView = true;
         }
-        // If view is disabled, disable all sub-actions
         if (field === "canView" && !nextVal) {
           updated.canCreate = false;
           updated.canEdit = false;
@@ -277,6 +312,24 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     }));
   };
 
+  // Toggle all capabilities for an entire category
+  const handleToggleCategory = (categoryName: string, grant: boolean) => {
+    setModuleCapabilities(prev => prev.map(mod => {
+      if (categoryName === "All Categories" || mod.category === categoryName) {
+        return {
+          ...mod,
+          canView: grant,
+          canCreate: grant,
+          canEdit: grant,
+          canDelete: grant,
+          canPostApprove: grant,
+          canPrintExport: grant
+        };
+      }
+      return mod;
+    }));
+  };
+
   async function fetchHrEmployees(): Promise<any[]> {
     setHrEmployeesLoading(true);
     try {
@@ -298,17 +351,19 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLang]);
 
-  // When Employee is selected from dropdown, populate fields across steps
+  // When Employee is selected from dropdown, populate rich profile across steps
   useEffect(() => {
     if (!selectedEmployeeId) {
       setEmployeeCode("");
+      setEmployeeProfile({});
       return;
     }
     const emp = hrEmployees.find((e) => e.id === selectedEmployeeId);
     if (emp) {
       const empName = emp.person?.customer_name || emp.name || emp.full_name || "";
+      const code = emp.employee_code || emp.code || "EMP-001";
       setFullName(empName);
-      setEmployeeCode(emp.employee_code || emp.code || "EMP-001");
+      setEmployeeCode(code);
       if (!loginUsername) {
         setLoginUsername(empName.toLowerCase().replace(/\s+/g, "."));
       }
@@ -332,12 +387,38 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         setCityBranchId(emp.city_branch_id);
       }
 
-      if (emp.person?.national_id_or_passport) {
-        setCnicPassportNo(emp.person.national_id_or_passport);
+      if (emp.person?.national_id_or_passport || emp.person?.tax_id) {
+        setCnicPassportNo(emp.person.national_id_or_passport || emp.person.tax_id || "");
       }
       if (emp.person?.address) {
         setResidentialAddress(emp.person.address);
       }
+
+      // Populate rich employee master profile object
+      setEmployeeProfile({
+        fullName: empName,
+        employeeCode: code,
+        designation: emp.designation || "Staff",
+        department: emp.department || "General Office",
+        employmentType: emp.employmentType || emp.employment_type || "Full-Time",
+        jobStatus: emp.jobStatus || emp.job_status || "Active",
+        workingShift: emp.workingShift || emp.working_shift || "General Day Shift",
+        dutyStartTime: emp.dutyStartTime || emp.duty_start_time || "09:00 AM",
+        dutyEndTime: emp.dutyEndTime || emp.duty_end_time || "06:00 PM",
+        joiningDate: emp.joiningDate || emp.joining_date,
+        contractStartDate: emp.contractStartDate || emp.contract_start_date,
+        contractEndDate: emp.contractEndDate || emp.contract_end_date,
+        basicSalary: emp.basicSalary || emp.basic_salary || 0,
+        salaryCurrency: emp.salaryCurrency || emp.salary_currency || "USD",
+        salaryType: emp.salaryType || emp.salary_type || "Monthly",
+        phone: emp.person?.mobile,
+        whatsapp: emp.person?.whatsapp || emp.person?.mobile,
+        email: emp.person?.email,
+        address: emp.person?.address,
+        countryName: emp.country?.name,
+        cityName: emp.city_branch?.name || emp.city_branch?.cityName,
+        photoUrl: emp.photo_url || emp.person?.photo_url
+      });
     }
   }, [selectedEmployeeId, hrEmployees]);
 
@@ -655,6 +736,12 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         passwordVaultRef: `VAULT-DGT-${issuedCode}`,
         permissions: effectivePermissions,
         moduleCapabilities: moduleCapabilities,
+        employmentType: employeeProfile.employmentType,
+        jobStatus: employeeProfile.jobStatus,
+        workingShift: employeeProfile.workingShift,
+        joiningDate: employeeProfile.joiningDate,
+        contractStartDate: employeeProfile.contractStartDate,
+        contractEndDate: employeeProfile.contractEndDate,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -709,6 +796,12 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         kycStatus: kycStatus,
         residentialAddress: residentialAddress,
         passwordVaultRef: `VAULT-DGT-${userCode}`,
+        employmentType: employeeProfile.employmentType,
+        joiningDate: employeeProfile.joiningDate,
+        contractStartDate: employeeProfile.contractStartDate,
+        contractEndDate: employeeProfile.contractEndDate,
+        jobStatus: employeeProfile.jobStatus,
+        workingShift: employeeProfile.workingShift,
         lastActivity: new Date().toISOString(),
         lastActivityAction: "user.registered",
         rawPassword: `VAULT-DGT-${userCode}`
@@ -719,6 +812,17 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
   const allowedModulesCount = moduleCapabilities.filter(m => m.canView || m.canCreate || m.canEdit).length;
   const restrictedModulesCount = moduleCapabilities.filter(m => !m.canView && !m.canCreate && !m.canEdit).length;
+
+  const categoriesList = useMemo(() => {
+    const cats = new Set<string>();
+    ERP_MODULE_DEFINITIONS.forEach(m => cats.add(m.category));
+    return ["All Categories", ...Array.from(cats)];
+  }, []);
+
+  const filteredModuleCapabilities = useMemo(() => {
+    if (selectedPermissionCategory === "All Categories") return moduleCapabilities;
+    return moduleCapabilities.filter(m => m.category === selectedPermissionCategory);
+  }, [moduleCapabilities, selectedPermissionCategory]);
 
   return (
     <div className="space-y-6">
@@ -762,6 +866,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                 setStep(1);
                 setBanner(null);
                 setSavedUserData(null);
+                setEmployeeProfile({});
               }}
               className="gap-1.5 text-xs font-semibold"
             >
@@ -855,9 +960,9 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
             </CardHeader>
 
             <CardContent className="p-4 space-y-4">
-              {/* STEP 1: General Information */}
+              {/* STEP 1: Employee Master Profile Information */}
               {step === 1 && (
-                <div className="space-y-3">
+                <div className="space-y-4">
                   <SearchSelect
                     label={hrEmployeesLoading ? `${tr("selectEmployee")} (...)` : tr("selectEmployee")}
                     value={selectedEmployeeId}
@@ -891,6 +996,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </SimpleModal>
                   ) : null}
 
+                  {/* Core Identity Fields */}
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-1">
                       <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("fullName")}</Label>
@@ -913,37 +1019,43 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex justify-between">
-                        <span>{tr("designation")}</span>
-                        <span className="text-[10px] text-slate-400 font-normal">{tr("optionalHint")}</span>
-                      </Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("designation")}</Label>
                       <Input value={designation} onChange={(e) => setDesignation(e.target.value)} placeholder="e.g. Senior Accountant" className="h-9 text-xs" />
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex justify-between">
-                        <span>{tr("department")}</span>
-                        <span className="text-[10px] text-slate-400 font-normal">{tr("optionalHint")}</span>
-                      </Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("department")}</Label>
                       <Input value={department} onChange={(e) => setDepartment(e.target.value)} placeholder="e.g. Finance & Accounts" className="h-9 text-xs" />
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex justify-between">
-                        <span>{tr("phone")}</span>
-                        <span className="text-[10px] text-slate-400 font-normal">{tr("optionalHint")}</span>
-                      </Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("phone")}</Label>
                       <Input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="+92 300 1234567" className="h-9 text-xs" />
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex justify-between">
-                        <span>{tr("email")}</span>
-                        <span className="text-[10px] text-slate-400 font-normal">{tr("optionalHint")}</span>
-                      </Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("email")}</Label>
                       <Input value={personalEmail} onChange={(e) => setPersonalEmail(e.target.value)} placeholder="user@dgt.llc" className="h-9 text-xs" />
                     </div>
                   </div>
+
+                  {/* Additional Employee Master Fields if Linked */}
+                  {selectedEmployeeId && (
+                    <div className="rounded-xl border border-slate-200 bg-slate-50/70 dark:bg-slate-900/50 p-3.5 space-y-2 text-xs">
+                      <div className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5 border-b pb-1.5">
+                        <Briefcase className="h-3.5 w-3.5 text-blue-600" />
+                        <span>Linked Employment Contract & Schedule Data</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-2 text-[11px]">
+                        <div><span className="text-slate-500">Employment Type:</span> <strong>{employeeProfile.employmentType || "Full-Time"}</strong></div>
+                        <div><span className="text-slate-500">Job Status:</span> <strong>{employeeProfile.jobStatus || "Active"}</strong></div>
+                        <div><span className="text-slate-500">Working Shift:</span> <strong>{employeeProfile.workingShift || "Day Shift"}</strong></div>
+                        <div><span className="text-slate-500">Duty Hours:</span> <strong>{`${employeeProfile.dutyStartTime || "09:00 AM"} - ${employeeProfile.dutyEndTime || "06:00 PM"}`}</strong></div>
+                        <div><span className="text-slate-500">Contract End:</span> <strong>{employeeProfile.contractEndDate || "Permanent"}</strong></div>
+                        <div><span className="text-slate-500">Salary Schedule:</span> <strong>{`${employeeProfile.salaryType || "Monthly"} (${employeeProfile.salaryCurrency || "USD"})`}</strong></div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1021,7 +1133,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                 <div className="space-y-3">
                   <div className="rounded-lg border border-amber-200 bg-amber-50/60 p-2.5 text-xs text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300 flex items-center gap-2">
                     <Info className="h-4 w-4 text-amber-600 shrink-0" />
-                    <span>{tr("optionalHint")} — KYC details can be entered now or updated later without blocking registration.</span>
+                    <span>KYC details are synchronized with the Employee Master Record and stored securely.</span>
                   </div>
 
                   <div className="grid gap-3 sm:grid-cols-2">
@@ -1061,7 +1173,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                   {/* Summary of Steps 1-3 */}
                   <div className="rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-900/60 p-3.5 space-y-2 text-xs">
                     <div className="font-bold text-slate-900 dark:text-slate-100 border-b pb-1 flex items-center justify-between">
-                      <span>User & Organizational Master Summary</span>
+                      <span>User & Master Profile Summary</span>
                       <span className="text-[10px] font-mono text-emerald-600 font-bold">{userCode}</span>
                     </div>
                     <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
@@ -1077,11 +1189,11 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                   </div>
 
                   {/* MANUALLY ASSIGNABLE FORM/MODULE PERMISSIONS MATRIX */}
-                  <div className="space-y-2">
+                  <div className="space-y-2.5">
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
                         <ShieldCheck className="h-4 w-4 text-blue-600" />
-                        <span>Interactive Form / Module Permission Matrix (Tick/Untick Controls)</span>
+                        <span>Interactive Form / Module Permission Matrix</span>
                       </Label>
                       <div className="flex items-center gap-1.5">
                         <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded font-bold border border-emerald-200 dark:border-emerald-800">
@@ -1093,10 +1205,44 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       </div>
                     </div>
 
-                    <p className="text-[10px] text-slate-500 leading-tight">
-                      Administrators can manually authorize or revoke specific capabilities (View, Create, Edit, Delete, Post/Approve, Print/Export) per module for this user.
-                    </p>
+                    {/* Category Filter & Global Controls */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 bg-slate-100 dark:bg-slate-800/80 p-2 rounded-lg text-xs">
+                      <div className="flex items-center gap-1.5 overflow-x-auto">
+                        {categoriesList.map((cat) => (
+                          <button
+                            key={cat}
+                            type="button"
+                            onClick={() => setSelectedPermissionCategory(cat)}
+                            className={`px-2.5 py-1 rounded-md text-[11px] font-semibold transition-all whitespace-nowrap ${
+                              selectedPermissionCategory === cat
+                                ? "bg-white dark:bg-slate-900 text-blue-600 shadow-sm border border-slate-200 dark:border-slate-700"
+                                : "text-slate-600 hover:text-slate-900 dark:text-slate-400"
+                            }`}
+                          >
+                            {cat}
+                          </button>
+                        ))}
+                      </div>
 
+                      <div className="flex items-center gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => handleToggleCategory(selectedPermissionCategory, true)}
+                          className="px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-600 text-white hover:bg-emerald-500 shadow-xs"
+                        >
+                          Select All
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleToggleCategory(selectedPermissionCategory, false)}
+                          className="px-2 py-0.5 text-[10px] font-bold rounded bg-slate-200 dark:bg-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-300"
+                        >
+                          Deselect All
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Matrix Table */}
                     <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-72 overflow-y-auto">
                       <table className="w-full text-left text-xs">
                         <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-[9px] sticky top-0 z-10">
@@ -1112,7 +1258,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
-                          {moduleCapabilities.map((mod) => (
+                          {filteredModuleCapabilities.map((mod) => (
                             <tr key={mod.moduleKey} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
                               <td className="p-2.5 font-medium text-slate-900 dark:text-slate-100">
                                 <div>{mod.moduleName}</div>
@@ -1286,79 +1432,101 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
         {/* Right Side COMPLETE LIVE REGISTRATION REPORT (5 Columns) */}
         <div className="space-y-4 lg:col-span-5">
-          <Card className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm space-y-3.5 dark:border-slate-800 dark:bg-slate-950">
-            <div className="flex items-center justify-between border-b pb-2.5">
-              <div className="flex items-center gap-2">
-                <UserCheck className="h-4 w-4 text-emerald-600" />
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Complete Live Registration Report</span>
+          <Card className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm space-y-4 dark:border-slate-800 dark:bg-slate-950">
+            
+            {/* Live Card Header with Photo & Name */}
+            <div className="flex items-center justify-between border-b pb-3">
+              <div className="flex items-center gap-3">
+                <div className="h-12 w-12 rounded-xl bg-slate-900 text-emerald-400 font-bold flex items-center justify-center border border-slate-800 shadow-inner overflow-hidden shrink-0">
+                  {employeeProfile.photoUrl ? (
+                    <img src={employeeProfile.photoUrl} alt="Employee" className="h-full w-full object-cover" />
+                  ) : (
+                    <User className="h-6 w-6 text-emerald-400" />
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate block">
+                      {fullName || "Employee Name"}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
+                    <span className="font-mono text-emerald-600 font-bold">{employeeCode || userCode}</span>
+                    <span>•</span>
+                    <span className="truncate">{designation}</span>
+                  </div>
+                </div>
               </div>
-              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
+
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
                 kycStatus === "VERIFIED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"
               }`}>
                 {kycStatus === "VERIFIED" ? "Verified" : "Pending KYC"}
               </span>
             </div>
 
-            {/* Section 1: Employee Master & Personal */}
-            <div className="space-y-1.5 text-xs">
-              <div className="font-bold text-[11px] text-blue-600 uppercase tracking-wider flex items-center gap-1">
+            {/* Section 1: Complete Employee Master Profile (Step 1+) */}
+            <div className="space-y-2 text-xs">
+              <div className="font-bold text-[11px] text-blue-600 uppercase tracking-wider flex items-center gap-1.5">
                 <Building2 className="h-3.5 w-3.5" />
-                <span>Employee Master & Organization</span>
+                <span>1. Employee Master & Employment</span>
               </div>
-              <div className="space-y-1 pl-1 text-[11px] text-slate-600 dark:text-slate-300">
-                <div className="flex justify-between"><span className="text-slate-400">Employee Code:</span><span className="font-mono font-bold text-slate-900 dark:text-slate-100">{employeeCode || "EMP-LINKED"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Full Name:</span><span className="font-bold text-slate-900 dark:text-slate-100">{fullName || "Not Selected"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Designation:</span><span className="font-semibold">{designation}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Department:</span><span className="font-semibold">{department}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Phone / WhatsApp:</span><span>{contactPhone || "Not Provided"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Personal Email:</span><span>{personalEmail || "Auto-Generated"}</span></div>
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1 pl-1 text-[11px] text-slate-600 dark:text-slate-300">
+                <div><span className="text-slate-400">Department:</span> <span className="font-semibold">{department}</span></div>
+                <div><span className="text-slate-400">Employment:</span> <span>{employeeProfile.employmentType || "Full-Time"}</span></div>
+                <div><span className="text-slate-400">Shift:</span> <span>{employeeProfile.workingShift || "Day Shift"}</span></div>
+                <div><span className="text-slate-400">Job Status:</span> <span>{employeeProfile.jobStatus || "Active Permanent"}</span></div>
+                <div><span className="text-slate-400">Phone:</span> <span>{contactPhone || "-"}</span></div>
+                <div><span className="text-slate-400">WhatsApp:</span> <span>{employeeProfile.whatsapp || contactPhone || "-"}</span></div>
+                <div className="col-span-2"><span className="text-slate-400">Email:</span> <span className="font-medium truncate">{personalEmail || "user@dgt.llc"}</span></div>
+                <div className="col-span-2 border-t pt-1 mt-0.5"><span className="text-slate-400">Address:</span> <span className="font-medium text-slate-800 dark:text-slate-200">{residentialAddress || "Not Provided"}</span></div>
               </div>
             </div>
 
-            {/* Section 2: Country & Branch Scope */}
-            <div className="space-y-1.5 text-xs border-t pt-2.5">
-              <div className="font-bold text-[11px] text-emerald-600 uppercase tracking-wider flex items-center gap-1">
+            {/* Section 2: Country & Branch Scope (Step 2+) */}
+            <div className="space-y-2 text-xs border-t pt-3">
+              <div className="font-bold text-[11px] text-emerald-600 uppercase tracking-wider flex items-center gap-1.5">
                 <MapPin className="h-3.5 w-3.5" />
-                <span>Geographic Scope & Branch</span>
+                <span>2. Geographic Scope & Branch Access</span>
               </div>
-              <div className="space-y-1 pl-1 text-[11px] text-slate-600 dark:text-slate-300">
-                <div className="flex justify-between"><span className="text-slate-400">Country Scope:</span><span className="font-bold text-slate-900 dark:text-slate-100">{selectedCountry?.name || "Global Scope"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Assigned Branch:</span><span className="font-semibold">{branchCode || selectedMainBranch?.name || "Main Branch"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Currency:</span><span className="font-mono font-bold">{selectedMainBranch?.local_currency || "USD"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Assigned Role:</span><span className="font-bold text-blue-600 uppercase">{role}</span></div>
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1 pl-1 text-[11px] text-slate-600 dark:text-slate-300">
+                <div><span className="text-slate-400">Country:</span> <span className="font-bold text-slate-900 dark:text-slate-100">{selectedCountry?.name || "Global Scope"}</span></div>
+                <div><span className="text-slate-400">Branch:</span> <span className="font-semibold">{branchCode || selectedMainBranch?.name || "Main Branch"}</span></div>
+                <div><span className="text-slate-400">Currency:</span> <span className="font-mono font-bold text-emerald-600">{selectedMainBranch?.local_currency || "USD"}</span></div>
+                <div><span className="text-slate-400">Role:</span> <span className="font-bold text-blue-600 uppercase">{role}</span></div>
               </div>
             </div>
 
-            {/* Section 3: KYC & Security */}
-            <div className="space-y-1.5 text-xs border-t pt-2.5">
-              <div className="font-bold text-[11px] text-purple-600 uppercase tracking-wider flex items-center gap-1">
+            {/* Section 3: KYC & Security Credentials (Step 3+) */}
+            <div className="space-y-2 text-xs border-t pt-3">
+              <div className="font-bold text-[11px] text-purple-600 uppercase tracking-wider flex items-center gap-1.5">
                 <Lock className="h-3.5 w-3.5" />
-                <span>KYC & Security Credentials</span>
+                <span>3. KYC & Credential Vault</span>
               </div>
-              <div className="space-y-1 pl-1 text-[11px] text-slate-600 dark:text-slate-300">
-                <div className="flex justify-between"><span className="text-slate-400">Login Username:</span><span className="font-mono font-bold text-emerald-600">{loginUsername || userCode}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">CNIC / Passport:</span><span className="font-mono font-bold">{cnicPassportNo || "Not Provided"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Expiry Date:</span><span>{idExpiryDate || "Permanent"}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">Vault Reference:</span><span className="font-mono font-bold text-purple-600">{`VAULT-DGT-${userCode}`}</span></div>
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1 pl-1 text-[11px] text-slate-600 dark:text-slate-300">
+                <div><span className="text-slate-400">Login ID:</span> <span className="font-mono font-bold text-emerald-600">{loginUsername || userCode}</span></div>
+                <div><span className="text-slate-400">CNIC/Passport:</span> <span className="font-mono font-bold">{cnicPassportNo || "Not Provided"}</span></div>
+                <div><span className="text-slate-400">Expiry Date:</span> <span>{idExpiryDate || "Permanent"}</span></div>
+                <div><span className="text-slate-400">Vault Ref:</span> <span className="font-mono font-bold text-purple-600">{`VAULT-DGT-${userCode}`}</span></div>
               </div>
             </div>
 
-            {/* Section 4: Live Interactive Permission Breakdown */}
-            <div className="space-y-1.5 text-xs border-t pt-2.5">
+            {/* Section 4: Live Interactive Permission Breakdown (Step 4+) */}
+            <div className="space-y-2 text-xs border-t pt-3">
               <div className="font-bold text-[11px] text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center justify-between">
                 <span className="flex items-center gap-1">
                   <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
-                  <span>Assigned Permissions ({allowedModulesCount}/10)</span>
+                  <span>4. Assigned Permissions ({allowedModulesCount}/19)</span>
                 </span>
                 <span className="text-[10px] text-emerald-600 font-mono font-bold">{effectivePermissions.length} rules</span>
               </div>
-              <div className="grid grid-cols-3 gap-1 pt-1 text-[10px] text-center">
-                <div className="p-1 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">View</span><strong className="text-emerald-600">{moduleCapabilities.filter(m => m.canView).length}</strong></div>
-                <div className="p-1 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">Create</span><strong className="text-emerald-600">{moduleCapabilities.filter(m => m.canCreate).length}</strong></div>
-                <div className="p-1 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">Edit</span><strong className="text-blue-600">{moduleCapabilities.filter(m => m.canEdit).length}</strong></div>
-                <div className="p-1 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">Delete</span><strong className="text-red-600">{moduleCapabilities.filter(m => m.canDelete).length}</strong></div>
-                <div className="p-1 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">Approve</span><strong className="text-purple-600">{moduleCapabilities.filter(m => m.canPostApprove).length}</strong></div>
-                <div className="p-1 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">Export</span><strong className="text-emerald-600">{moduleCapabilities.filter(m => m.canPrintExport).length}</strong></div>
+              <div className="grid grid-cols-3 gap-1.5 pt-1 text-[10px] text-center">
+                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">View</span><strong className="text-emerald-600 text-xs">{moduleCapabilities.filter(m => m.canView).length}</strong></div>
+                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">Create</span><strong className="text-emerald-600 text-xs">{moduleCapabilities.filter(m => m.canCreate).length}</strong></div>
+                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">Edit</span><strong className="text-blue-600 text-xs">{moduleCapabilities.filter(m => m.canEdit).length}</strong></div>
+                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">Delete</span><strong className="text-red-600 text-xs">{moduleCapabilities.filter(m => m.canDelete).length}</strong></div>
+                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">Approve</span><strong className="text-purple-600 text-xs">{moduleCapabilities.filter(m => m.canPostApprove).length}</strong></div>
+                <div className="p-1.5 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">Export</span><strong className="text-emerald-600 text-xs">{moduleCapabilities.filter(m => m.canPrintExport).length}</strong></div>
               </div>
             </div>
 
