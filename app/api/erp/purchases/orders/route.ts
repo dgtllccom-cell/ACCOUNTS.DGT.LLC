@@ -1,4 +1,4 @@
-export const dynamic = "force-dynamic";
+﻿export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
 import { z } from "zod";
@@ -12,6 +12,8 @@ import { allocateFormSerials } from "@/lib/services/form-serials";
 import { safeInsertPurchaseOrderItems, safeInsertPurchaseOrderExpenses } from "@/lib/services/purchase-table-manager";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import { ensurePurchaseSchemaAndEnums } from "@/lib/services/purchase-table-manager";
+import { createPurchaseOrderViaLocalPg } from "@/lib/services/purchase-order-local-pg";
 import { revalidatePath } from "next/cache";
 import { purchaseOrderTranslationFields } from "@/lib/i18n/purchase-order-translations";
 import { buildVerifiedTranslationSet } from "@/lib/i18n/verified-record-translations";
@@ -52,6 +54,31 @@ async function resolveCountryCurrency(admin: any, countryId: string | null | und
 }
 
 async function resolveEffectiveScope(req: { countryId?: string | null; countryBranchId?: string | null; cityBranchId?: string | null }) {
+  if (getDbUrl()) {
+    const viaPg = await withLocalPg(async (sql) => {
+      if (req.cityBranchId) {
+        const rows: any[] = await sql`
+          select id, country_id, country_branch_id
+          from city_branches
+          where id = ${req.cityBranchId}::uuid
+          limit 1
+        `;
+        if (rows[0]) return { countryId: rows[0].country_id, countryBranchId: rows[0].country_branch_id, cityBranchId: req.cityBranchId };
+      }
+      if (req.countryBranchId) {
+        const rows: any[] = await sql`
+          select id, country_id
+          from country_branches
+          where id = ${req.countryBranchId}::uuid
+          limit 1
+        `;
+        if (rows[0]) return { countryId: rows[0].country_id, countryBranchId: req.countryBranchId, cityBranchId: null };
+      }
+      return { countryId: req.countryId ?? null, countryBranchId: null, cityBranchId: null };
+    });
+    if (viaPg) return viaPg;
+  }
+
   const supabase = await createApiSupabaseClient();
   
   if (req.cityBranchId) {
@@ -347,8 +374,8 @@ export async function POST(request: NextRequest) {
       req: request,
       scopeModule: "PURCHASE_ORDER",
       userId: session.userId,
-      countryId: session.countryId,
-      cityBranchId: session.cityBranchId,
+      countryId: session.countryIds[0] ?? null,
+      cityBranchId: session.cityBranchIds[0] ?? null,
       businessReference: rawBody?.purchaseOrderNo || rawBody?.purchaseContractNo,
       payload: rawBody
     });
@@ -383,6 +410,22 @@ export async function POST(request: NextRequest) {
     const hasLocalPg = Boolean(getDbUrl());
     const supabase = hasLocalPg ? null : await createApiSupabaseClient();
     const adminSupabase = hasLocalPg ? null : (createSupabaseAdminClient() as any);
+    if (hasLocalPg) {
+      const responsePayload = await createPurchaseOrderViaLocalPg({ session, body, effective });
+      await writeAuditLog({
+        action: "create_purchase_order",
+        entityTable: "purchase_orders",
+        entityId: responsePayload.purchaseOrderId,
+        before: null,
+        after: responsePayload,
+        ipAddress: request.headers.get("x-forwarded-for") ?? null
+      });
+      revalidatePath("/dashboard/purchase/purchase-order");
+      if (idempotencyKey && tenantHash) {
+        await commitIdempotencySuccess(idempotencyKey, tenantHash, 201, responsePayload);
+      }
+      return apiCreated(responsePayload);
+    }
 
     // â”€â”€ Rule 1: Country Scope Validation for Purchase Accounts â”€â”€
     const form = body.formData?.form || {};
@@ -675,3 +718,4 @@ export async function POST(request: NextRequest) {
     return handleApiError(error);
   }
 }
+

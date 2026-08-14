@@ -6,9 +6,11 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getDbUrl } from "@/lib/db/local-postgres";
 import { ensurePurchaseSchemaAndEnums } from "@/lib/services/purchase-table-manager";
 import { isPurchaseBookingTransferLocked, resolvePurchaseBookingTransferDestination } from "@/lib/services/purchase-booking-transfer-routing";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
+import { transferPurchaseBookingViaLocalPg } from "@/lib/services/purchase-booking-transfer-local-pg";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -120,8 +122,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       req: request,
       scopeModule: "PURCHASE_TRANSFER",
       userId: session.userId,
-      countryId: session.countryId,
-      cityBranchId: session.cityBranchId,
+      countryId: session.countryIds[0] ?? null,
+      cityBranchId: session.cityBranchIds[0] ?? null,
       businessReference: params.id,
       payload: body
     });
@@ -136,6 +138,18 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
     idempotencyKey = lockRes.idempotencyKey;
     tenantHash = lockRes.tenantHash;
+
+    if (getDbUrl()) {
+      const responsePayload = await transferPurchaseBookingViaLocalPg({
+        session,
+        orderId: params.id,
+        body
+      });
+      if (idempotencyKey && tenantHash) {
+        await commitIdempotencySuccess(idempotencyKey, tenantHash, 200, responsePayload);
+      }
+      return apiOk(responsePayload);
+    }
 
     const supabase = await createApiSupabaseClient();
     const adminSupabase = createSupabaseAdminClient() as any;
