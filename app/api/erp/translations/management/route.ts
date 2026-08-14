@@ -1,5 +1,6 @@
 import { NextRequest } from "next/server";
 import { apiCreated, apiOk, handleApiError, apiError } from "@/lib/api/response";
+import { invalidateSystemDictionaryCache } from "@/lib/i18n/localize-records";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { z } from "zod";
@@ -185,6 +186,9 @@ export async function POST(request: NextRequest) {
       entityId: resultData.id,
       after: payload
     });
+
+    // If a central dictionary term was saved/approved, refresh the ERP-wide dictionary cache now.
+    if (payload.record_table === "system_dictionary") invalidateSystemDictionaryCache();
 
     return apiCreated({
       translation: resultData

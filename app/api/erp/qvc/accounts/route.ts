@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { apiOk, handleApiError, apiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { invalidateSystemDictionaryCache } from "@/lib/i18n/localize-records";
 
 // QVC Review Queue — database-driven. Lists imported/pending accounts with their
 // per-account 5-language translation status, for one-by-one manual review & approval.
@@ -102,6 +103,8 @@ export async function PATCH(request: NextRequest) {
       .update({ qvc_status: body.qvc_status, qvc_notes: body.qvc_notes ?? undefined, qvc_reviewed_by: session.userId, qvc_reviewed_at: new Date().toISOString() })
       .eq("id", body.id);
     if (error) throw error;
+    // Approved translations must be usable ERP-wide immediately — drop the dictionary cache.
+    invalidateSystemDictionaryCache();
     return apiOk({ ok: true });
   } catch (error) {
     return handleApiError(error);
