@@ -52,9 +52,9 @@ function assertScopeForRole(role: EnterpriseRole, scope: { countryId: string | n
     return;
   }
 
-  // City/branch-scoped roles.
-  if (!scope.countryBranchId || !scope.cityBranchId) {
-    throw new Error("countryBranchId and cityBranchId are required for this role.");
+  // Branch-scoped roles (accountant, cashier, staff_user, agent_user, city_branch_admin).
+  if (!scope.countryBranchId && !scope.cityBranchId) {
+    throw new Error("A branch assignment (Main Branch or City Branch) is required for this role.");
   }
 }
 
