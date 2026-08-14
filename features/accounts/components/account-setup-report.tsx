@@ -14,6 +14,9 @@ import { useRouter } from "next/navigation";
 import { rtlLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
+import { translateValue } from "@/lib/i18n/table-values";
 
 /* Types */
 type AccountRow = {
@@ -113,14 +116,10 @@ function exportCSV(rows: AccountRow[]) {
 export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguage }) {
   const router = useRouter();
 
-  const lang = useMemo(() => {
-    if (propLang) return propLang;
-    if (typeof document !== "undefined") {
-      const d = document.documentElement.lang as SupportedLanguage;
-      return ["en", "ar", "ur", "fa", "ps"].includes(d) ? d : "en";
-    }
-    return "en";
-  }, [propLang]);
+  const activeLang = useActiveLanguage();
+  const lang = propLang || activeLang;
+  const tr = (label: string) => translateHeader(lang, label);
+  const tv = (value: string | null | undefined) => translateValue(lang, value);
 
   const isRtl = useMemo(() => rtlLanguages.includes(lang), [lang]);
 
@@ -337,10 +336,10 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
       {/* Portals to main page header */}
       {titlePortalNode && createPortal(
         <div className="flex items-center gap-2 flex-wrap">
-          <h1 className="text-xs font-black text-slate-900 dark:text-slate-100 whitespace-nowrap">Account Setup Report</h1>
-          <span className="asr-badge text-[9px] px-1.5 py-0.5">{loading ? "..." : filtered.length} accounts</span>
+          <h1 className="text-xs font-black text-slate-900 dark:text-slate-100 whitespace-nowrap">{tr("Account Setup Report")}</h1>
+          <span className="asr-badge text-[9px] px-1.5 py-0.5">{loading ? "..." : filtered.length} {tr("accounts")}</span>
           {hasActiveFilters && (
-            <span className="asr-badge asr-badge-orange text-[9px] px-1.5 py-0.5">{activeFilterCount} active</span>
+            <span className="asr-badge asr-badge-orange text-[9px] px-1.5 py-0.5">{activeFilterCount} {tr("active")}</span>
           )}
           
           <div className="hidden lg:flex items-center gap-1.5 text-[9px] text-slate-400 font-medium">
@@ -403,7 +402,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
             onClick={() => setFiltersOpen(v => !v)}
           >
             <Filter className="h-3 w-3" />
-            <span>Filters</span>
+            <span>{tr("Filters")}</span>
             {activeFilterCount > 0 && (
               <span className="asr-filter-count">{activeFilterCount}</span>
             )}
@@ -523,7 +522,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
             </div>
           </div>
           <div className="flex items-center gap-2 mt-3">
-            <button type="button" className="asr-btn-primary" onClick={applyFilters}>Apply Filters</button>
+            <button type="button" className="asr-btn-primary" onClick={applyFilters}>{tr("Apply Filters")}</button>
             <button type="button" className="asr-btn-secondary" onClick={resetFilters}>
               <X className="h-3.5 w-3.5" /> Reset
             </button>
@@ -538,13 +537,13 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
             <div className="flex items-center gap-2">
               <span className="grid h-5 w-5 place-items-center rounded-md bg-blue-600 text-white font-black text-[10px] shadow-sm">Global</span>
               <h2 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">
-                Country-Wise Accounts Summary Report ({countryBreakdowns.length} {countryBreakdowns.length === 1 ? "Country" : "Countries"})
+                {tr("Country-Wise Accounts Summary Report")} ({countryBreakdowns.length} {countryBreakdowns.length === 1 ? tr("Country") : tr("Countries")})
               </h2>
               <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-[10px] font-extrabold text-slate-600 dark:text-slate-300">
-                <span>Total Accounts: <strong className="text-blue-600 dark:text-blue-400">{filtered.length}</strong></span> |
-                <span>Customers: <strong className="text-emerald-600 dark:text-emerald-400">{customers}</strong></span> |
-                <span>Companies: <strong className="text-purple-600 dark:text-purple-400">{companies}</strong></span> |
-                <span>Banks: <strong className="text-amber-600 dark:text-amber-400">{banks}</strong></span>
+                <span>{tr("Total Accounts")}: <strong className="text-blue-600 dark:text-blue-400">{filtered.length}</strong></span> |
+                <span>{tr("Customers")}: <strong className="text-emerald-600 dark:text-emerald-400">{customers}</strong></span> |
+                <span>{tr("Companies")}: <strong className="text-purple-600 dark:text-purple-400">{companies}</strong></span> |
+                <span>{tr("Banks")}: <strong className="text-amber-600 dark:text-amber-400">{banks}</strong></span>
               </span>
             </div>
             {hasActiveFilters && (
@@ -728,7 +727,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
 
                       {/* Account Type */}
                       <td className="asr-td">
-                        <span className="asr-type-badge">{row.subType}</span>
+                        <span className="asr-type-badge">{tv(row.subType)}</span>
                       </td>
 
                       {/* Category */}
@@ -740,14 +739,14 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
                           "asr-cat-liability": row.accountCategory.toLowerCase() === "liability",
                           "asr-cat-equity":    row.accountCategory.toLowerCase() === "equity",
                         })}>
-                          {row.accountCategory}
+                          {tv(row.accountCategory)}
                         </span>
                       </td>
 
                       {/* Branch Name */}
                       <td className="asr-td">
                         <div className="font-semibold text-[11px] leading-tight">{row.branchName}</div>
-                        <div className="text-[9px] text-[var(--asr-muted)] mt-0.5">{row.branchType}</div>
+                        <div className="text-[9px] text-[var(--asr-muted)] mt-0.5">{tv(row.branchType)}</div>
                       </td>
 
                       {/* Branch Code */}
@@ -870,8 +869,8 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
 
         {/* Table Footer */}
         <div className="asr-table-footer">
-          <span>Showing <strong>{filtered.length}</strong> of <strong>{rows.length}</strong> accounts</span>
-          <span className="text-[var(--asr-muted)]">Generated {fmt(generatedAt)} at {fmtTime(generatedAt)}</span>
+          <span>{tr("Showing")} <strong>{filtered.length}</strong> {tr("of")} <strong>{rows.length}</strong> {tr("accounts")}</span>
+          <span className="text-[var(--asr-muted)]">{tr("Generated")} {fmt(generatedAt)} {tr("at")} {fmtTime(generatedAt)}</span>
         </div>
       </div>
     </div>
