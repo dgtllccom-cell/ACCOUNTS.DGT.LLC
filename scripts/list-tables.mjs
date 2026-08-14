@@ -1,34 +1,26 @@
-import fs from "node:fs";
-import postgres from "postgres";
+import postgres from 'postgres';
 
-function loadEnvLocal() {
-  if (!fs.existsSync(".env.local")) return;
-  for (const line of fs.readFileSync(".env.local", "utf8").split(/\r?\n/)) {
-    const match = line.match(/^([^#=]+)=(.*)$/);
-    if (!match) continue;
-    const key = match[1].trim();
-    const value = match[2].trim().replace(/^['"]|['"]$/g, "");
-    if (key && !process.env[key]) process.env[key] = value;
-  }
+const vpsSql = postgres('postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres', { ssl: { rejectUnauthorized: false } });
+
+async function checkTables() {
+  const tables = await vpsSql`
+    SELECT table_name 
+    FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+    ORDER BY table_name;
+  `;
+  console.log("=== ALL PUBLIC TABLES ON DATABASE ===");
+  console.log(tables.map(t => t.table_name));
+
+  // Check account linking tables
+  const accountTables = tables.filter(t => t.table_name.includes('account') || t.table_name.includes('link'));
+  console.log("\nAccount & Linking Tables:", accountTables.map(t => t.table_name));
+
+  // Check inventory tables
+  const inventoryTables = tables.filter(t => t.table_name.includes('stock') || t.table_name.includes('inventory') || t.table_name.includes('goods'));
+  console.log("\nInventory & Stock Tables:", inventoryTables.map(t => t.table_name));
+
+  await vpsSql.end();
 }
 
-loadEnvLocal();
-const sql = postgres(process.env.DATABASE_URL, { ssl: "require", max: 1 });
-
-async function listTables() {
-  try {
-    const tables = await sql`
-      SELECT tablename 
-      FROM pg_tables 
-      WHERE schemaname = 'public' 
-      ORDER BY tablename
-    `;
-    console.log(tables.map(t => t.tablename).join(", "));
-  } catch(e) {
-    console.error(e);
-  } finally {
-    await sql.end();
-  }
-}
-
-listTables();
+checkTables().catch(console.error);
