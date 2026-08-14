@@ -91,6 +91,7 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
         children: [
           { label: "Journal", href: "/dashboard/journal", icon: NotebookPen },
           { label: "Ledgers", href: "/dashboard/ledgers", icon: BookOpen },
+          { label: "Journal Report PDF ERP", href: "/dashboard/reports/handover", icon: FileText, badge: "PDF" },
         ],
       },
     ],
@@ -206,9 +207,9 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: "System & Handover",
+    title: "System & Reports",
     items: [
-      { icon: FileText, label: "ERP Development & Handover Report", href: "/dashboard/reports/handover", badge: "Live" },
+      { icon: FileText, label: "Journal Report PDF ERP", href: "/dashboard/reports/handover", badge: "PDF" },
       { icon: Settings, label: "Settings", href: "/dashboard/settings" }
     ],
   },

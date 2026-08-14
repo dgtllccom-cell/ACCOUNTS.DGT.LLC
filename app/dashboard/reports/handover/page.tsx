@@ -127,11 +127,11 @@ export default function HandoverReportPage() {
       <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 rounded-xl shadow-lg border border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div className="space-y-1">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-semibold uppercase tracking-wider">
-            <FileCheck className="w-3.5 h-3.5" /> Living Production Handover Document
+            <FileCheck className="w-3.5 h-3.5" /> Living Production System & Journal Report PDF
           </div>
-          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">ERP Development & Handover Report</h1>
+          <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Journal Report PDF ERP</h1>
           <p className="text-slate-400 text-sm max-w-3xl">
-            Permanent, living technical record of all development, database migrations, testing, and architecture across the ACCOUNTS.DGT.LLC multi-tenant platform.
+            Complete ERP system architecture, database data migration proof, multilingual translation audit, and live Journal Report PDF handover.
           </p>
         </div>
 
