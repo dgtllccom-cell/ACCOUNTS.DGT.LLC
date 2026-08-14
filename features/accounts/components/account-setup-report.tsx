@@ -117,7 +117,9 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
   const router = useRouter();
 
   const activeLang = useActiveLanguage();
-  const lang = propLang || activeLang;
+  // Prefer the live client-selected language (localStorage-backed, same source <Th> uses)
+  // over the server-rendered propLang hint, so dynamic cell values translate in sync with headers.
+  const lang = activeLang || propLang;
   const tr = (label: string) => translateHeader(lang, label);
   const tv = (value: string | null | undefined) => translateValue(lang, value);
 
