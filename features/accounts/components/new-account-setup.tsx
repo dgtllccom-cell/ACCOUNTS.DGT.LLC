@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import {
   BookOpen,
   CheckCircle2,
@@ -184,14 +185,12 @@ function localizedOption(value: string, lang: SupportedLanguage) {
 export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: SupportedLanguage; initialAccountId?: string }) {
   const router = useRouter();
 
-  const lang = useMemo(() => {
-    if (propLang) return propLang;
-    if (typeof document !== "undefined") {
-      const docLang = document.documentElement.lang as SupportedLanguage;
-      return ["en", "ar", "ur", "fa", "ps"].includes(docLang) ? docLang : "en";
-    }
-    return "en";
-  }, [propLang]);
+  // Reactive language: prefer the live client-selected language (localStorage-backed store,
+  // the same source <Th> uses) over the server-rendered propLang hint, so BOTH static labels
+  // AND database-backed master-data values (re-fetched with ?lang=) switch when the user
+  // changes language. propLang is only the SSR fallback for the very first paint.
+  const activeLang = useActiveLanguage();
+  const lang = (activeLang || propLang || "en") as SupportedLanguage;
 
   const isRtl = useMemo(() => rtlLanguages.includes(lang), [lang]);
 
@@ -310,7 +309,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
             if (acc.customer_id) {
               setAccountTitle("Customer");
               setLinkedCustomerId(acc.customer_id);
-              fetch(`/api/erp/customers/${acc.customer_id}`)
+              fetch(`/api/erp/customers/${acc.customer_id}?lang=${lang}`)
                 .then((r) => r.json())
                 .then((json) => {
                   const name = json?.customer?.customer_name ?? json?.data?.customer_name ?? "";
@@ -320,7 +319,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
             } else if (acc.company_id) {
               setAccountTitle("Company");
               setLinkedCompanyId(acc.company_id);
-              fetch(`/api/erp/companies/${acc.company_id}`)
+              fetch(`/api/erp/companies/${acc.company_id}?lang=${lang}`)
                 .then((r) => r.json())
                 .then((json) => {
                   const name = json?.company?.name ?? json?.company?.legal_name ?? "";
@@ -330,7 +329,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
             } else if (acc.bank_id) {
               setAccountTitle("Bank");
               setLinkedBankId(acc.bank_id);
-              fetch(`/api/erp/banks/${acc.bank_id}`)
+              fetch(`/api/erp/banks/${acc.bank_id}?lang=${lang}`)
                 .then((r) => r.json())
                 .then((json) => {
                   const name = json?.data?.bank?.bank_name ?? json?.bank?.bank_name ?? json?.bank_name ?? "";
@@ -404,20 +403,20 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
   useEffect(() => {
     if (!linkedCustomerId) { setCustomerDetail(null); return; }
     let cancelled = false;
-    fetch(`/api/erp/customers/${linkedCustomerId}`)
+    fetch(`/api/erp/customers/${linkedCustomerId}?lang=${lang}`)
       .then((r) => r.json())
       .then((json) => {
         if (!cancelled && json?.ok && (json?.data || json?.customer)) setCustomerDetail(json.data ?? json.customer);
       })
       .catch(() => null);
     return () => { cancelled = true; };
-  }, [linkedCustomerId]);
+  }, [linkedCustomerId, lang]);
 
   // Fetch company details when linkedCompanyId changes
   useEffect(() => {
     if (!linkedCompanyId) { setCompanyDetail(null); return; }
     let cancelled = false;
-    fetch(`/api/erp/companies/${linkedCompanyId}`)
+    fetch(`/api/erp/companies/${linkedCompanyId}?lang=${lang}`)
       .then((r) => r.json())
       .then((json) => {
         if (cancelled) return;
@@ -451,20 +450,20 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
         }
       });
     return () => { cancelled = true; };
-  }, [linkedCompanyId]);
+  }, [linkedCompanyId, lang]);
 
   // Fetch bank details when linkedBankId changes
   useEffect(() => {
     if (!linkedBankId) { setBankDetail(null); return; }
     let cancelled = false;
-    fetch(`/api/erp/banks/${linkedBankId}`)
+    fetch(`/api/erp/banks/${linkedBankId}?lang=${lang}`)
       .then((r) => r.json())
       .then((json) => {
         if (!cancelled && json?.ok && (json?.data?.bank || json?.bank)) setBankDetail(json.data?.bank ?? json.bank);
       })
       .catch(() => null);
     return () => { cancelled = true; };
-  }, [linkedBankId]);
+  }, [linkedBankId, lang]);
 
   // Fetch warehouse details when linkedWarehouseId changes
   useEffect(() => {
