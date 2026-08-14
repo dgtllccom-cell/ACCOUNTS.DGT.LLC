@@ -7,6 +7,10 @@ import { ReportActions } from "@/components/ui/report-actions";
 import { Th } from "@/components/ui/translated-th";
 import { cn } from "@/lib/utils";
 import { openGenericErpReport, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
+import { translateValue } from "@/lib/i18n/table-values";
+import { rtlLanguages } from "@/lib/i18n/languages";
 
 type Row = {
   id: string;
@@ -56,7 +60,12 @@ function getFlag(countryName?: string | null) {
   return "🌐";
 }
 
-export function OutstandingRecoveryLedgerView({ lang = "en", pageTitle }: { lang?: string; pageTitle: string }) {
+export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle }: { lang?: string; pageTitle: string }) {
+  const activeLang = useActiveLanguage();
+  const lang = activeLang || langProp;
+  const tr = (label: string) => translateHeader(lang, label);
+  const tv = (value: string | null | undefined) => translateValue(lang, value);
+  const isRtl = rtlLanguages.includes(lang);
   const [rows, setRows] = useState<Row[]>([]);
   const [summary, setSummary] = useState<Resp["summary"] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -257,22 +266,22 @@ export function OutstandingRecoveryLedgerView({ lang = "en", pageTitle }: { lang
   }
 
   const tabs: { key: Tab; label: string }[] = [
-    { key: "all", label: "All Outstanding" },
-    { key: "receivable", label: "Recovery (Receivable)" },
-    { key: "payable", label: "Payable" },
-    { key: "overdue", label: `Overdue > ${overdueDays} days` },
+    { key: "all", label: tr("All Outstanding") },
+    { key: "receivable", label: tr("Recovery (Receivable)") },
+    { key: "payable", label: tr("Payable") },
+    { key: "overdue", label: `${tr("Overdue")} > ${overdueDays} ${tr("days")}` },
   ];
 
   return (
-    <div className="space-y-4 p-4 sm:p-6">
+    <div className="space-y-4 p-4 sm:p-6" dir={isRtl ? "rtl" : "ltr"}>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{pageTitle}</h1>
-          <p className="text-xs text-slate-500">Account-wise remaining balances, aging &amp; recovery. Overdue = 10+ days since last transaction.</p>
+          <p className="text-xs text-slate-500">{tr("Account-wise remaining balances, aging & recovery. Overdue = 10+ days since last transaction.")}</p>
         </div>
         <div className="flex items-center gap-2">
           <button onClick={load} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300">
-            <RefreshCcw className="h-4 w-4" /> Refresh
+            <RefreshCcw className="h-4 w-4" /> {tr("Refresh")}
           </button>
           <ReportActions title={pageTitle} rows={reportRows} columns={columns} filename="outstanding_recovery_ledger" lang={lang} subtitle={`${filtered.length} accounts`} />
         </div>
@@ -518,10 +527,10 @@ export function OutstandingRecoveryLedgerView({ lang = "en", pageTitle }: { lang
 
       {summary && (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <SummaryCard label="Outstanding Accounts" value={String(summary.accounts)} />
-          <SummaryCard label="Total Receivable" value={fmt(summary.totalReceivable)} tone="emerald" />
-          <SummaryCard label="Total Payable" value={fmt(summary.totalPayable)} tone="amber" />
-          <SummaryCard label="Overdue > 10 days" value={String(summary.overdue10)} tone="red" />
+          <SummaryCard label={tr("Outstanding Accounts")} value={String(summary.accounts)} />
+          <SummaryCard label={tr("Total Receivable")} value={fmt(summary.totalReceivable)} tone="emerald" />
+          <SummaryCard label={tr("Total Payable")} value={fmt(summary.totalPayable)} tone="amber" />
+          <SummaryCard label={`${tr("Overdue")} > 10 ${tr("days")}`} value={String(summary.overdue10)} tone="red" />
         </div>
       )}
 
@@ -540,13 +549,13 @@ export function OutstandingRecoveryLedgerView({ lang = "en", pageTitle }: { lang
         <div className="flex items-center gap-2">
           {tab === "overdue" && (
             <label className="flex items-center gap-1 text-xs text-slate-500">
-              Days ≥
+              {tr("Days")} ≥
               <input type="number" min={0} value={overdueDays} onChange={(e) => setOverdueDays(Number(e.target.value) || 0)} className="w-16 rounded-md border border-slate-200 px-2 py-1 text-xs dark:border-slate-700 dark:bg-slate-900" />
             </label>
           )}
           <div className="relative">
             <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search account…" className="w-48 rounded-lg border border-slate-200 py-1.5 pl-7 pr-2 text-xs dark:border-slate-700 dark:bg-slate-900" />
+            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Search account…")} className="w-48 rounded-lg border border-slate-200 py-1.5 pl-7 pr-2 text-xs dark:border-slate-700 dark:bg-slate-900" />
           </div>
         </div>
       </div>
@@ -601,29 +610,29 @@ export function OutstandingRecoveryLedgerView({ lang = "en", pageTitle }: { lang
           <table className="w-full min-w-[1350px] text-xs">
             <thead className="bg-slate-50/80 text-left font-bold uppercase text-slate-600 dark:bg-slate-800/80 dark:text-slate-300">
               <tr className="border-b border-slate-200 dark:border-slate-700">
-                <th className="px-3 py-3 text-center text-[10px] tracking-wider">SR#</th>
+                <th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("SR#")}</th>
                 <th className="px-3 py-3 text-center text-[10px] tracking-wider">
-                  <div>START DATE</div>
-                  <div className="text-[9px] font-normal text-emerald-600 normal-case">(This is start date)</div>
+                  <div>{tr("START DATE")}</div>
+                  <div className="text-[9px] font-normal text-emerald-600 normal-case">({tr("This is start date")})</div>
                 </th>
-                <th className="px-3 py-3 text-[10px] tracking-wider">CODE</th>
-                <th className="px-3 py-3 text-[10px] tracking-wider">ACCOUNT NO</th>
-                <th className="px-3 py-3 text-[10px] tracking-wider">ACCOUNT NAME</th>
-                <th className="px-3 py-3 text-[10px] tracking-wider">ACCOUNT TYPE</th>
-                <th className="px-3 py-3 text-[10px] tracking-wider">ACCOUNT STATUS</th>
-                <th className="px-3 py-3 text-right text-[10px] tracking-wider text-emerald-600">CREDIT (AED)</th>
-                <th className="px-3 py-3 text-right text-[10px] tracking-wider text-rose-600">DEBIT (AED)</th>
-                <th className="px-3 py-3 text-center text-[10px] tracking-wider">CURR</th>
-                <th className="px-3 py-3 text-center text-[10px] tracking-wider">TYPE</th>
-                <th className="px-3 py-3 text-right text-[10px] tracking-wider">BALANCE (AED)</th>
+                <th className="px-3 py-3 text-[10px] tracking-wider">{tr("CODE")}</th>
+                <th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT NO")}</th>
+                <th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT NAME")}</th>
+                <th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT TYPE")}</th>
+                <th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT STATUS")}</th>
+                <th className="px-3 py-3 text-right text-[10px] tracking-wider text-emerald-600">{tr("Credit")} (AED)</th>
+                <th className="px-3 py-3 text-right text-[10px] tracking-wider text-rose-600">{tr("Debit")} (AED)</th>
+                <th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("CURR")}</th>
+                <th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("TYPE")}</th>
+                <th className="px-3 py-3 text-right text-[10px] tracking-wider">{tr("Balance")} (AED)</th>
                 <th className="px-3 py-3 text-center text-[10px] tracking-wider">
-                  <div>LAST DATE</div>
-                  <div className="text-[9px] font-normal text-rose-600 normal-case">(This is last date)</div>
+                  <div>{tr("LAST DATE")}</div>
+                  <div className="text-[9px] font-normal text-rose-600 normal-case">({tr("This is last date")})</div>
                 </th>
-                <th className="px-3 py-3 text-right text-[10px] tracking-wider">DAYS (Diff.)</th>
-                <th className="px-3 py-3 text-[10px] tracking-wider">CONTRACT NO</th>
-                <th className="px-3 py-3 text-center text-[10px] tracking-wider">CONTACT</th>
-                <th className="px-3 py-3 text-center text-[10px] tracking-wider">ACTIONS</th>
+                <th className="px-3 py-3 text-right text-[10px] tracking-wider">{tr("DAYS (Diff.)")}</th>
+                <th className="px-3 py-3 text-[10px] tracking-wider">{tr("CONTRACT NO")}</th>
+                <th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("CONTACT")}</th>
+                <th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("ACTIONS")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -632,7 +641,7 @@ export function OutstandingRecoveryLedgerView({ lang = "en", pageTitle }: { lang
               ) : err ? (
                 <tr><td colSpan={17} className="px-3 py-12 text-center text-red-500">{err}</td></tr>
               ) : pagedRows.length === 0 ? (
-                <tr><td colSpan={17} className="px-3 py-12 text-center text-slate-400">No ledger entries found.</td></tr>
+                <tr><td colSpan={17} className="px-3 py-12 text-center text-slate-400">{tr("No ledger entries found.")}</td></tr>
               ) : (
                 pagedRows.map((x, idx) => {
                   const isOverdue = (x.daysOutstanding ?? 0) > 10;
@@ -668,16 +677,16 @@ export function OutstandingRecoveryLedgerView({ lang = "en", pageTitle }: { lang
                         {x.name}
                       </td>
                       <td className="px-3 py-3 text-xs font-medium text-slate-600 dark:text-slate-400">
-                        {accType}
+                        {tv(accType)}
                       </td>
                       <td className="px-3 py-3">
                         {isOverdue ? (
                           <span className="inline-flex items-center rounded-full bg-rose-100 px-2.5 py-0.5 text-[10px] font-bold text-rose-700 dark:bg-rose-900/40 dark:text-rose-300">
-                            Overdue
+                            {tv("Overdue")}
                           </span>
                         ) : (
                           <span className="inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
-                            Active
+                            {tv("Active")}
                           </span>
                         )}
                       </td>

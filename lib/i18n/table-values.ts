@@ -120,6 +120,9 @@ const VALUE_TRANSLATIONS: Record<string, Row> = {
   "ROZNAMCHA": { ur: "روزنامچہ", ar: "دفتر اليومية", fa: "روزنامچه", ps: "روزنامچه" },
   "OPENING BALANCE": { ur: "ابتدائی بیلنس", ar: "الرصيد الافتتاحي", fa: "مانده اولیه", ps: "پرانستی بیلانس" },
   "CLOSING BALANCE": { ur: "اختتامی بیلنس", ar: "الرصيد الختامي", fa: "مانده پایانی", ps: "پای بیلانس" },
+  "OVERDUE": { ur: "زائد المیعاد", ar: "متأخر", fa: "سررسیدگذشته", ps: "له نېټې تېر" },
+  "GENERAL": { ur: "عام", ar: "عام", fa: "عمومی", ps: "عمومي" },
+  "ZERO": { ur: "صفر", ar: "صفر", fa: "صفر", ps: "صفر" },
 
   // ── System-generated goods defaults (not user master data) ───────────────
   "GENERAL GOODS": { ur: "عام سامان", ar: "بضائع عامة", fa: "کالای عمومی", ps: "عمومي توکي" },
