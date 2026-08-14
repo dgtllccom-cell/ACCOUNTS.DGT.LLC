@@ -1,24 +1,19 @@
 import postgres from "postgres";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { transliterateProperNoun, transliterateToLatin } from "@/lib/i18n/transliteration";
-
-const ARABIC_SCRIPT_REGEX = /[\u0600-\u06FF\u0750-\u077F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFE]/;
-
-function isArabicScript(text: string): boolean {
-  return ARABIC_SCRIPT_REGEX.test(text || "");
-}
 
 /**
  * Dynamic Per-Language Master Data Resolver.
  * Resolves fields on records into the active language (`en`, `ur`, `ar`, `fa`, `ps`),
  * querying `record_translations` for all 5 languages.
  *
- * Rules:
- * 1. If active language has a stored, non-empty translation -> use it.
- * 2. If active language is EN, but raw base text is in Urdu/Arabic script and no EN translation exists ->
- *    return transliterated Latin or formatted indicator so Urdu is NOT displayed as English.
- * 3. If active language is UR/AR/FA/PS, but raw base text is in English script and no target translation exists ->
- *    return transliterated Perso-Arabic so English is NOT displayed as Urdu/Arabic.
+ * Rules (approved-translation-or-honest-fallback — NEVER machine-guess a spelling):
+ * 1. Use the target-language value ONLY when it is a genuine approved translation:
+ *    non-empty, different from the raw base value, AND different from the stored English
+ *    (placeholder rows copy English into every language column, so those are NOT genuine).
+ * 2. Otherwise fall back to the real stored value (english_text if present, else the raw
+ *    value as-is). We do NOT transliterate/generate a spelling and present it as a
+ *    translation — that produced wrong names. The audit (scripts/audit-*) flags records
+ *    with placeholder/empty translations for human approval.
  */
 export async function localizeRecordNames<T extends { id: string }>(
   records: T[],
@@ -70,44 +65,35 @@ export async function localizeRecordNames<T extends { id: string }>(
 
       const trans = translationMap.get(record.id);
 
-      // Check if target language column in record_translations has a non-empty value
+      // APPROVED-TRANSLATION-OR-HONEST-FALLBACK (no machine-guessed spellings).
+      // Per product rule: a name is only shown in the target language when an APPROVED
+      // translation genuinely exists in record_translations. We NEVER generate/transliterate
+      // a spelling and present it as if it were the translation — that produced wrong names
+      // (e.g. bad Urdu spelling of a company). If no approved translation exists, fall back to
+      // the real stored value (English/original) and let the audit flag the record for review.
       const targetVal = trans ? (trans[targetCol as keyof typeof trans] as string | null) : null;
-      if (targetVal && targetVal.trim() && targetVal.trim() !== rawValue) {
-        return { ...record, [field]: targetVal.trim() };
+
+      // A genuine, approved translation is: non-empty AND different from the raw base value
+      // AND different from the stored English (placeholder rows copy English into every column).
+      const englishVal = (trans?.english_text || "").trim();
+      const isGenuine =
+        !!targetVal &&
+        targetVal.trim().length > 0 &&
+        targetVal.trim() !== rawValue &&
+        targetVal.trim() !== englishVal;
+
+      if (isGenuine) {
+        return { ...record, [field]: targetVal!.trim() };
       }
 
-      // If active language is English (en)
+      // English view: prefer a stored english_text, else the raw value as-is.
       if (lang === "en") {
-        if (trans?.english_text && trans.english_text.trim()) {
-          return { ...record, [field]: trans.english_text.trim() };
-        }
-        // If raw base text is in Urdu/Arabic script (e.g. "محمد علي"), do not present Urdu as
-        // English! This only fires when no english_text row exists yet (record never went
-        // through translateMasterRecord, or predates it). transliterateProperNoun(x, "en") is
-        // a no-op passthrough by design (see transliteration.ts) — use the real reverse
-        // transliterator instead so this fallback never actually shows raw Perso-Arabic script.
-        if (isArabicScript(rawValue)) {
-          const latinApprox = transliterateToLatin(rawValue);
-          return {
-            ...record,
-            [field]: latinApprox && latinApprox !== rawValue ? latinApprox : `${rawValue} [EN Pending]`
-          };
-        }
+        if (englishVal) return { ...record, [field]: englishVal };
         return record;
       }
 
-      // For Non-English active languages (ur, ar, fa, ps)
-      const isRawArabicScript = isArabicScript(rawValue);
-
-      // If raw text is English (e.g. "Digital Dock LLC"), transliterate or format pending indicator
-      if (!isRawArabicScript) {
-        const scriptApprox = transliterateProperNoun(rawValue, lang);
-        return {
-          ...record,
-          [field]: scriptApprox && scriptApprox !== rawValue ? scriptApprox : `${rawValue} (${lang.toUpperCase()})`
-        };
-      }
-
+      // Non-English with no approved translation → honest fallback to the real stored value.
+      // No transliteration, no "(UR)"/"[EN Pending]" guesses. Audit surfaces these for approval.
       return record;
     });
   } finally {

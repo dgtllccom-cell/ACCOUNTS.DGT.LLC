@@ -7,25 +7,6 @@ import { requireErpSession } from "@/lib/auth/session";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { multilingualService } from "@/lib/services/multilingual-service";
 import { ledgerScopeSchema, optionalUuidSchema, scopeSchema, supportedLanguageSchema } from "@/lib/api/erp-validation";
-import { transliterateProperNoun } from "@/lib/i18n/transliteration";
-
-const ARABIC_SCRIPT = /[؀-ۿݐ-ݿࢠ-ࣿﭐ-﷿ﹰ-﻾]/;
-
-// When record_translations holds only English placeholders (a very common case — the
-// translation rows were auto-created but never populated), the resolved value equals the
-// raw Latin name. For non-English languages, transliterate the proper noun into the target
-// script (mirrors localizeRecordNames, which companies/customers/banks already use) so the
-// account name is not left in English on an Urdu/Arabic/Farsi/Pashto screen.
-function withTransliterationFallback(resolved: string, raw: string, language: "en" | "ar" | "ur" | "fa" | "ps") {
-  if (language === "en") return resolved;
-  const isTargetScript = ARABIC_SCRIPT.test(resolved || "");
-  if (resolved && resolved.trim() && resolved.trim() !== raw.trim() && isTargetScript) return resolved;
-  if (!ARABIC_SCRIPT.test(raw || "")) {
-    const approx = transliterateProperNoun(raw, language);
-    if (approx && approx !== raw) return approx;
-  }
-  return resolved;
-}
 
 function isUuid(value: string | null | undefined) {
   return Boolean(
@@ -171,8 +152,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
     if (translationError) throw new Error(translationError.message);
 
-    const resolvedName = resolveTranslation((translations ?? null) as TranslationRow | null, language, account.name);
-    const localizedName = withTransliterationFallback(resolvedName, account.name, language);
+    const localizedName = resolveTranslation((translations ?? null) as TranslationRow | null, language, account.name);
     const localizedAccount = {
       ...account,
       raw_name: account.name,
