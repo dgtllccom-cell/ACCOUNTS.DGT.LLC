@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { translateValue } from "@/lib/i18n/table-values";
 import {
   Package, Building2, Download, Printer, Coins,
   Globe, Loader2, X, Eye, CheckCircle, Clock, Plane, Truck, Calendar, User, ChevronDown, ChevronUp, MapPin, Filter
@@ -145,6 +146,9 @@ export default function JournalReport({
 }) {
   const lang = useActiveLanguage();
   const tr = (label: string) => translateHeader(lang, label);
+  // Controlled-vocabulary cell VALUE translator (status, shipment type, units, origin…).
+  const tv = (value: string | null | undefined) => translateValue(lang, value);
+  const isRtl = lang === "ur" || lang === "ar" || lang === "fa" || lang === "ps";
 
   // --- State ---
   const [records, setRecords] = useState<JournalBillRecord[]>([]);
@@ -373,7 +377,7 @@ export default function JournalReport({
   const currentLevel = initialLevel || "salesman";
 
   return (
-    <div className="text-slate-800 dark:text-slate-100">
+    <div className="text-slate-800 dark:text-slate-100" dir={isRtl ? "rtl" : "ltr"}>
 
       {/* --- Title Portal (Injects into ERP Top Header Bar) --- */}
       {titleSlot && createPortal(
@@ -794,13 +798,13 @@ export default function JournalReport({
                     <tr>
                       <td colSpan={17} className="py-12 text-center text-slate-400">
                         <Loader2 className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600" />
-                        Loading bill records...
+                        {tr("Loading bill records...")}
                       </td>
                     </tr>
                   ) : records.length === 0 ? (
                     <tr>
                       <td colSpan={17} className="py-12 text-center text-slate-400">
-                        No bills match your current filters.
+                        {tr("No bills match your current filters.")}
                       </td>
                     </tr>
                   ) : (
@@ -846,13 +850,13 @@ export default function JournalReport({
                           <td className="py-3 px-4 whitespace-nowrap">
                             <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider ${shipmentBg}`}>
                               {shipmentIcon}
-                              {r.shipmentType}
+                              {tv(r.shipmentType)}
                             </span>
                           </td>
-                          <td className="py-3 px-4 text-slate-750 dark:text-slate-200 font-bold uppercase whitespace-nowrap">{r.goods?.[0]?.name || "General Goods"}</td>
-                          <td className="py-3 px-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">{r.goods?.[0]?.origin || "-"}</td>
+                          <td className="py-3 px-4 text-slate-750 dark:text-slate-200 font-bold uppercase whitespace-nowrap">{tv(r.goods?.[0]?.name || "General Goods")}</td>
+                          <td className="py-3 px-4 text-slate-500 dark:text-slate-400 whitespace-nowrap">{tv(r.goods?.[0]?.origin || "-")}</td>
                           <td className="py-3 px-4 text-right font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
-                            {r.totalQuantity || r.goods?.[0]?.quantity ? `${fmtNum(r.totalQuantity || r.goods?.[0]?.quantity || 0, 0)} ${r.qtyUnit || r.goods?.[0]?.qtyName || ""}` : "-"}
+                            {r.totalQuantity || r.goods?.[0]?.quantity ? `${fmtNum(r.totalQuantity || r.goods?.[0]?.quantity || 0, 0)} ${tv(r.qtyUnit || r.goods?.[0]?.qtyName || "")}` : "-"}
                           </td>
                           <td className="py-3 px-4 text-right font-bold text-slate-600 dark:text-slate-450 whitespace-nowrap">
                             {r.netWeight ? `${r.netWeight} Kgs` : "-"}
@@ -866,12 +870,12 @@ export default function JournalReport({
                           <td className="py-3 px-4 whitespace-nowrap">
                             <span className="inline-flex items-center gap-1 font-bold text-slate-500 dark:text-slate-450">
                               <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                              {r.currentStatus}
+                              {tv(r.currentStatus)}
                             </span>
                           </td>
                           <td className="py-3 px-4 whitespace-nowrap">
                             <span className={`inline-flex items-center border px-2 py-0.5 rounded-md text-[10px] font-black ${badgeStyle}`}>
-                              {r.nextStep}
+                              {tv(r.nextStep)}
                             </span>
                           </td>
                           <td className="py-3 px-4 text-center print:hidden" onClick={e => e.stopPropagation()}>
@@ -897,7 +901,7 @@ export default function JournalReport({
 
             {/* Pagination / Total count bar */}
             <div className="border-t border-slate-150 dark:border-slate-850 p-4 flex items-center justify-between text-[11px] text-slate-400 font-bold bg-slate-50/20 dark:bg-slate-900/10">
-              <span>Showing 1 to {records.length} of {records.length} entries</span>
+              <span>{tr("Showing")} 1 {tr("to")} {records.length} {tr("of")} {records.length} {tr("entries")}</span>
               <span className="font-mono text-[10px]">Falcon ERP v5.2</span>
             </div>
           </div>
@@ -1125,9 +1129,9 @@ export default function JournalReport({
                                   </div>
                                   <div>
                                     <p className={`font-extrabold uppercase ${step.status === "completed" ? "text-slate-800 dark:text-slate-200" : step.status === "active" ? "text-blue-700 dark:text-blue-400" : "text-slate-400"}`}>
-                                      {step.name}
+                                      {tv(step.name)}
                                     </p>
-                                    <p className="text-[7.5px] text-slate-400 font-semibold">{step.operator} ⬢ {step.dateTime}</p>
+                                    <p className="text-[7.5px] text-slate-400 font-semibold">{tv(step.operator)} ⬢ {step.dateTime}</p>
                                   </div>
                                 </div>
                               ))}
@@ -1210,8 +1214,8 @@ export default function JournalReport({
                               <tbody className="divide-y divide-slate-150 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-200">
                                 <tr>
                                   <td className="py-2 px-2 text-center font-bold">1</td>
-                                  <td className="py-2 px-2 font-bold uppercase">{selectedRecord.goods?.[0]?.name || "RED ONIONS PREMIUM"}</td>
-                                  <td className="py-2 px-2 text-center">{selectedRecord.goods?.[0]?.origin || "India"}</td>
+                                  <td className="py-2 px-2 font-bold uppercase">{tv(selectedRecord.goods?.[0]?.name || "RED ONIONS PREMIUM")}</td>
+                                  <td className="py-2 px-2 text-center">{tv(selectedRecord.goods?.[0]?.origin || "India")}</td>
                                   <td className="py-2 px-2 text-right font-mono">{fmtNum(selectedRecord.totalQuantity || 10000, 0)} Kgs</td>
                                   <td className="py-2 px-2 text-right font-mono">{fmtNum(selectedRecord.totalQuantity || 10000, 0)} Kgs</td>
                                   <td className="py-2 px-2 text-center font-bold">USD</td>
