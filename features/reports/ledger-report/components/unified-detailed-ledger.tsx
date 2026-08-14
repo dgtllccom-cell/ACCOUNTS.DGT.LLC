@@ -346,7 +346,7 @@ export function UnifiedDetailedLedgerView() {
 
       {/* Ledger Entries */}
       <div className="mt-4 bg-white p-3 border border-slate-200 rounded-md shadow-sm overflow-x-auto report-section">
-        <h5 className="mb-3">Ledger Entries</h5>
+        <h5 className="mb-3">{tr("Ledger Entries")}</h5>
         <table className="w-full text-left border-collapse entry-table">
           <thead>
             <tr>
