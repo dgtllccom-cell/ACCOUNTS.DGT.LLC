@@ -33,7 +33,9 @@ import {
   ExternalLink,
   Edit,
   XCircle,
-  FileSpreadsheet
+  FileSpreadsheet,
+  CheckSquare,
+  Square
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -46,7 +48,13 @@ import type { LocationCountry } from "@/features/locations/location-api";
 import { listCities, listCountries, type LocationCity } from "@/features/locations/location-api";
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { enterpriseRolePermissions } from "@/lib/permissions/enterprise-roles";
-import { buildRbacRoleSummary } from "@/lib/permissions/rbac-matrix-builder";
+import { 
+  buildRbacRoleSummary, 
+  buildAllModulesCapabilities, 
+  convertMatrixToPermissions,
+  ModulePermissionCapability,
+  ERP_MODULE_DEFINITIONS 
+} from "@/lib/permissions/rbac-matrix-builder";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { apiPost } from "@/lib/api/client";
@@ -95,16 +103,16 @@ const userWizardTranslations: Record<string, Record<SupportedLanguage, string>> 
     ps: "د سیسټم د کارونکي اډیټ فورمه"
   },
   headerDesc: {
-    en: "Link Employee master records, assign Country & Branch scopes, verify KYC identity, and issue System Login Credentials.",
-    ur: "ملازمین کے ماسٹر ریکارڈز، ملک اور برانچ کے اختیارات، KYC تصدیق اور لاگ ان کی تفصیلات مرتب کریں۔",
-    ar: "ربط سجلات الموظفين، وتعيين نطاقات الدولة والفرع، والتحقق من KYC وإصدار بيانات الدخول.",
-    fa: "اتصال به پرسنل، تعیین دسترسی‌های کشور و شعبه، احراز هویت KYC و صدور اطلاعات ورود.",
-    ps: "د کارمندانو اسناد، د هیواد او څانګې واکونه، د KYC تصدیق او ننوتلو سوابق برابرول."
+    en: "Link Employee master records, assign Country & Branch scopes, customize form permissions, verify KYC identity, and issue System Login Credentials.",
+    ur: "ملازمین کے ماسٹر ریکارڈز، ملک اور برانچ کے اختیارات، فارم پرمیشنز، KYC تصدیق اور لاگ ان کی تفصیلات مرتب کریں۔",
+    ar: "ربط سجلات الموظفين، وتعيين نطاقات الدولة والفرع، وتخصيص صلاحيات النماذج، والتحقق من KYC وإصدار بيانات الدخول.",
+    fa: "اتصال به پرسنل، تعیین دسترسی‌های کشور و شعبه، تنظیم مجوزهای فرم‌ها، احراز هویت KYC و صدور اطلاعات ورود.",
+    ps: "د کارمندانو اسناد، د هیواد او څانګې واکونه، د فورمو واکونه، د KYC تصدیق او ننوتلو سوابق برابرول."
   },
   step1Label: { en: "1. General Information", ur: "1. عام معلومات", ar: "1. المعلومات العامة", fa: "1. اطلاعات عمومی", ps: "1. عمومي معلومات" },
   step2Label: { en: "2. Employee & Branch Access", ur: "2. ایمپلائی و برانچ رسائی", ar: "2. صلاحيات الموظف والفرع", fa: "2. دسترسی پرسنل و شعبه", ps: "2. د کارمند او څانګې لاسرسی" },
   step3Label: { en: "3. KYC & Document Verification", ur: "3. کے وائی سی و دستاویزات", ar: "3. التحقق من الهوية (KYC)", fa: "3. احراز هویت (KYC)", ps: "3. د پیژندګلوۍ تصدیق (KYC)" },
-  step4Label: { en: "4. Review & Complete", ur: "4. ریویو و محفوظ کریں", ar: "4. المراجعة والإكمال", fa: "4. مرور و تکمیل", ps: "4. کتنه او بشپړول" },
+  step4Label: { en: "4. Review & Complete", ur: "4. ریویو و پرمیشنز", ar: "4. المراجعة والصلاحيات", fa: "4. مرور و مجوزها", ps: "4. کتنه او واکونه" },
   next: { en: "Next Step", ur: "اگلا قدم", ar: "الخطوة التالية", fa: "مرحله بعد", ps: "بل ګام" },
   previous: { en: "Previous", ur: "پچھلا", ar: "السابق", fa: "قبلی", ps: "پخوانی" },
   saveUser: { en: "Save & Complete Registration", ur: "محفوظ کریں اور مکمل کریں", ar: "حفظ وإكمال التسجيل", fa: "ذخیره و تکمیل ثبت نام", ps: "خوندي او ثبت بشپړول" },
@@ -113,8 +121,6 @@ const userWizardTranslations: Record<string, Record<SupportedLanguage, string>> 
   addNewUser: { en: "+ New User Registration", ur: "+ نیا صارف رجسٹر کریں", ar: "+ تسجيل مستخدم جديد", fa: "+ ثبت کاربر جدید", ps: "+ نوی کارونکی ثبت کړئ" },
   selectEmployee: { en: "Select Registered Employee", ur: "رجسٹرڈ ایمپلائی منتخب کریں", ar: "اختر الموظف المسجل", fa: "انتخاب پرسنل ثبت شده", ps: "ثبت شوی کارمند وټاکئ" },
   fullName: { en: "User Full Name *", ur: "صارف کا مکمل نام *", ar: "الاسم الكامل للمستخدم *", fa: "نام کامل کاربر *", ps: "د کارونکي بشپړ نوم *" },
-  firstName: { en: "First Name *", ur: "پہلا نام *", ar: "الاسم الأول *", fa: "نام *", ps: "لومړی نوم *" },
-  lastName: { en: "Last Name / Surname", ur: "آخری نام / خاندانی نام", ar: "اسم العائلة / اللقب", fa: "نام خانوادگی", ps: "تخلص / کورنی نوم" },
   username: { en: "Login Username / Identifier *", ur: "لاگ ان یوزر نام *", ar: "اسم المستخدم للدخول *", fa: "نام کاربری ورود *", ps: "د ننوتلو کارن نوم *" },
   designation: { en: "Designation / Role Title", ur: "عہدہ / ڈیزگنیشن", ar: "المسمى الوظيفي", fa: "عنوان شغلی", ps: "دندې سرلیک" },
   department: { en: "Department", ur: "شعبہ / ڈیپارٹمنٹ", ar: "القسم", fa: "بخش / دپارتمان", ps: "څانګه / دیپارتمنت" },
@@ -131,7 +137,6 @@ const userWizardTranslations: Record<string, Record<SupportedLanguage, string>> 
   verifiedCompliant: { en: "Verified & Compliant", ur: "تصدیق شدہ و مکمل", ar: "متحقق ومطابق", fa: "تایید شده و معتبر", ps: "تصدیق شوی او بشپړ" },
   pendingVerification: { en: "Pending Document Verification", ur: "تصدیق زیر التوا", ar: "قيد التحقق من المستندات", fa: "در انتظار تایید مدارک", ps: "د اسنادو تصدیق پاتې" },
   optionalHint: { en: "(Optional - Empty field will not block Next)", ur: "(اختیاری - خالی چھوڑنے پر فارم بلاک نہیں ہوگا)", ar: "(اختياري - لن يمنع الحقل الفارغ المتابعة)", fa: "(اختیاری - خالی بودن مانع ادامه نمی‌شود)", ps: "(اختیاري - تش پریښودل ګام نه بندوي)" },
-  requiredHint: { en: "* Mandatory field", ur: "* لازمی فیلڈ", ar: "* حقل إجباري", fa: "* فیلد الزامی", ps: "* اړین فیلډ" },
   addNewEmployee: { en: "Add New Employee", ur: "نیا ملازم شامل کریں", ar: "إضافة موظف جديد", fa: "افزودن پرسنل جدید", ps: "نوی کارمند اضافه کړئ" },
   newEmployeeModalTitle: { en: "New Employee Registration", ur: "نیا ملازم رجسٹریشن", ar: "تسجيل موظف جديد", fa: "ثبت پرسنل جدید", ps: "د نوي کارمند ثبت" },
   employeeSearchPlaceholder: { en: "Search employee by code, name, designation...", ur: "کوڈ، نام یا عہدہ سے ملازم تلاش کریں...", ar: "ابحث عن الموظف بالرمز أو الاسم أو المسمى الوظيفي...", fa: "جستجوی پرسنل با کد، نام یا عنوان شغلی...", ps: "کارمند د کوډ، نوم یا دندې له مخې پلټئ..." },
@@ -184,11 +189,6 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     setUserCode((current) => current || makeAutoUserCode());
   }, []);
   const [fullName, setFullName] = useState("");
-  // Separate First Name + Last Name/Surname. The person master (customers) stores a single
-  // combined `customer_name`, so on employee-select we split it; fullName stays derived from
-  // both so the rest of the flow (username, save payload, preview) keeps working unchanged.
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
   const [loginUsername, setLoginUsername] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [personalEmail, setPersonalEmail] = useState("");
@@ -214,17 +214,68 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const [kycStatus, setKycStatus] = useState<"VERIFIED" | "PENDING">("VERIFIED");
   const [residentialAddress, setResidentialAddress] = useState("");
 
-  // Step 4: Login Password
+  // Step 4: Login Password & Custom Permissions Matrix
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+
+  // Interactive Form/Module Capabilities State (Manually assignable checkboxes)
+  const [moduleCapabilities, setModuleCapabilities] = useState<ModulePermissionCapability[]>(() => {
+    return buildAllModulesCapabilities("staff_user", enterpriseRolePermissions["staff_user"]);
+  });
+
+  // When role changes, pre-populate default module capabilities for that role
+  useEffect(() => {
+    setModuleCapabilities(buildAllModulesCapabilities(role, enterpriseRolePermissions[role] || []));
+  }, [role]);
 
   // Editing User
   const [editUserId, setEditUserId] = useState<string | null>(null);
   const [isResettingBranch, setIsResettingBranch] = useState(true);
 
-  // Dynamic RBAC summary computed in real-time
-  const rbacSummary = useMemo(() => buildRbacRoleSummary(role), [role]);
+  // Toggle individual capability checkbox for a module
+  const handleToggleCapability = (moduleKey: string, field: "canView" | "canCreate" | "canEdit" | "canDelete" | "canPostApprove" | "canPrintExport") => {
+    setModuleCapabilities(prev => prev.map(mod => {
+      if (mod.moduleKey === moduleKey) {
+        const nextVal = !mod[field];
+        const updated = { ...mod, [field]: nextVal };
+        // If creating/editing/deleting/posting is enabled, view must also be enabled
+        if (field !== "canView" && nextVal && !updated.canView) {
+          updated.canView = true;
+        }
+        // If view is disabled, disable all sub-actions
+        if (field === "canView" && !nextVal) {
+          updated.canCreate = false;
+          updated.canEdit = false;
+          updated.canDelete = false;
+          updated.canPostApprove = false;
+          updated.canPrintExport = false;
+        }
+        return updated;
+      }
+      return mod;
+    }));
+  };
+
+  // Toggle all capabilities for a single module
+  const handleToggleAllForModule = (moduleKey: string) => {
+    setModuleCapabilities(prev => prev.map(mod => {
+      if (mod.moduleKey === moduleKey) {
+        const hasAll = mod.canView && mod.canCreate && mod.canEdit && mod.canDelete && mod.canPostApprove && mod.canPrintExport;
+        const target = !hasAll;
+        return {
+          ...mod,
+          canView: target,
+          canCreate: target,
+          canEdit: target,
+          canDelete: target,
+          canPostApprove: target,
+          canPrintExport: target
+        };
+      }
+      return mod;
+    }));
+  };
 
   async function fetchHrEmployees(): Promise<any[]> {
     setHrEmployeesLoading(true);
@@ -247,23 +298,16 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLang]);
 
-  // Keep combined fullName derived from the separate First/Last fields so the rest of the flow
-  // (username default, save payload, live preview, review step) works unchanged.
-  useEffect(() => {
-    setFullName([firstName.trim(), lastName.trim()].filter(Boolean).join(" "));
-  }, [firstName, lastName]);
-
   // When Employee is selected from dropdown, populate fields across steps
   useEffect(() => {
-    if (!selectedEmployeeId) return;
+    if (!selectedEmployeeId) {
+      setEmployeeCode("");
+      return;
+    }
     const emp = hrEmployees.find((e) => e.id === selectedEmployeeId);
     if (emp) {
       const empName = emp.person?.customer_name || emp.name || emp.full_name || "";
-      // Person master stores a single combined name → split into First + Last/Surname
-      // (first token = first name, rest = surname). Both fields auto-populate; no re-typing.
-      const parts = empName.trim().split(/\s+/).filter(Boolean);
-      setFirstName(parts.length ? parts[0] : "");
-      setLastName(parts.length > 1 ? parts.slice(1).join(" ") : "");
+      setFullName(empName);
       setEmployeeCode(emp.employee_code || emp.code || "EMP-001");
       if (!loginUsername) {
         setLoginUsername(empName.toLowerCase().replace(/\s+/g, "."));
@@ -303,11 +347,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
       if (res && res.data) {
         const data = res.data;
         setEditUserId(data.userId);
-        {
-          const parts = String(data.fullName || "").trim().split(/\s+/).filter(Boolean);
-          setFirstName(parts.length ? parts[0] : "");
-          setLastName(parts.length > 1 ? parts.slice(1).join(" ") : "");
-        }
+        setFullName(data.fullName || "");
         setUserCode(data.userCode || makeAutoUserCode());
         setRole(data.role || "staff_user");
         setCountryId(data.countryId || "");
@@ -327,6 +367,10 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         } else if (data.cityBranchId) {
           setBranchType("city");
           setCityBranchId(data.cityBranchId);
+        }
+
+        if (Array.isArray(data.permissions) && data.permissions.length > 0) {
+          setModuleCapabilities(buildAllModulesCapabilities(data.role || "staff_user", data.permissions));
         }
 
         setStep(1);
@@ -434,19 +478,11 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
       hrEmployees.map((e) => {
         const empName = e.person?.customer_name || e.name || e.full_name || "Employee";
         const empCode = e.employee_code || e.code || "EMP";
-        const phone = e.person?.mobile || e.person?.phone || "";
         const desig = e.designation ? ` - ${e.designation}` : "";
-        // Surname-first display so users can identify the right person when first names collide:
-        // "Surname, FirstName (CODE - Designation)". Falls back to the raw name if single-token.
-        const parts = empName.trim().split(/\s+/).filter(Boolean);
-        const first = parts.length ? parts[0] : empName;
-        const last = parts.length > 1 ? parts.slice(1).join(" ") : "";
-        const display = last ? `${last}, ${first}` : empName;
         return {
           value: e.id,
-          label: `${display} (${empCode}${desig})`,
-          // Searchable by surname, first name, full name, code, designation AND phone.
-          keywords: `${last} ${first} ${empName} ${empCode} ${e.designation ?? ""} ${phone}`.trim()
+          label: `${empName} (${empCode}${desig})`,
+          keywords: `${empName} ${empCode} ${e.designation ?? ""}`
         };
       }),
     [hrEmployees]
@@ -461,6 +497,15 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     if (branchType === "city") return selectedCityBranch?.code ?? "";
     return "";
   }, [branchType, selectedMainBranch, selectedCityBranch]);
+
+  // Derive effective calculated permissions from current interactive checkbox state
+  const effectivePermissions = useMemo(() => {
+    return convertMatrixToPermissions(role, moduleCapabilities);
+  }, [role, moduleCapabilities]);
+
+  const rbacSummary = useMemo(() => {
+    return buildRbacRoleSummary(role, effectivePermissions);
+  }, [role, effectivePermissions]);
 
   function isStepValid(currentStep: WizardStep) {
     if (currentStep === 1) {
@@ -560,7 +605,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         idExpiryDate,
         kycStatus,
         residentialAddress: residentialAddress.trim(),
-        permissions: enterpriseRolePermissions[role] || []
+        permissions: effectivePermissions
       };
 
       let resUserId = editUserId;
@@ -608,12 +653,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         kycStatus: kycStatus,
         residentialAddress: residentialAddress.trim(),
         passwordVaultRef: `VAULT-DGT-${issuedCode}`,
+        permissions: effectivePermissions,
+        moduleCapabilities: moduleCapabilities,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
 
       setSavedUserData(completedUser);
-      setBanner({ tone: "ok", text: isEdit ? "User record & KYC updated successfully." : "User registered & KYC linked successfully." });
+      setBanner({ tone: "ok", text: isEdit ? "User profile & customized RBAC permissions updated successfully." : "User registered & customized RBAC permissions saved successfully." });
     } catch (e: any) {
       const errMsg = e?.message || (typeof e === "string" ? e : "User registration operation failed.");
       if (errMsg.includes("already registered") || errMsg.includes("already exists")) {
@@ -638,7 +685,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
   const handlePrintCard = () => {
     openUserA4ReportWindow({
-      title: "User Profile & Access Authorization Report",
+      title: "Comprehensive User Profile & Authorization Report",
       subtitle: "Official Centralized ERP User Registry Record",
       userData: {
         userId: editUserId || "USR-PREVIEW",
@@ -651,7 +698,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         role: role,
         registrationDate: new Date().toISOString(),
         status: "Active",
-        permissions: [],
+        permissions: effectivePermissions,
         department: department,
         designation: designation,
         employeeCode: employeeCode,
@@ -664,12 +711,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         passwordVaultRef: `VAULT-DGT-${userCode}`,
         lastActivity: new Date().toISOString(),
         lastActivityAction: "user.registered",
-        rawPassword: `VAULT-DGT-${userCode}`,
-        activityCounts: { logins: 1, transactions: 0, roznamcha: 0, purchases: 0, payments: 0, accounts: 0, approvals: 0, edits: 0 }
+        rawPassword: `VAULT-DGT-${userCode}`
       },
       lang: activeLang
     });
   };
+
+  const allowedModulesCount = moduleCapabilities.filter(m => m.canView || m.canCreate || m.canEdit).length;
+  const restrictedModulesCount = moduleCapabilities.filter(m => !m.canView && !m.canCreate && !m.canEdit).length;
 
   return (
     <div className="space-y-6">
@@ -844,21 +893,11 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("firstName")}</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("fullName")}</Label>
                       <Input
-                        value={firstName}
-                        onChange={(e) => setFirstName(e.target.value)}
-                        placeholder="e.g. Muhammad"
-                        className="h-9 text-xs font-medium"
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("lastName")}</Label>
-                      <Input
-                        value={lastName}
-                        onChange={(e) => setLastName(e.target.value)}
-                        placeholder="e.g. Ali Shah"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        placeholder="e.g. Muhammad Ali Shah"
                         className="h-9 text-xs font-medium"
                       />
                     </div>
@@ -1016,7 +1055,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                 </div>
               )}
 
-              {/* STEP 4: Review & Complete + Roles & Permissions Matrix */}
+              {/* STEP 4: Review & Complete + MANUALLY ASSIGNABLE PERMISSION MATRIX */}
               {step === 4 && (
                 <div className="space-y-4">
                   {/* Summary of Steps 1-3 */}
@@ -1037,41 +1076,120 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
                   </div>
 
-                  {/* Dynamic Roles & Permissions Matrix */}
+                  {/* MANUALLY ASSIGNABLE FORM/MODULE PERMISSIONS MATRIX */}
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
                       <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
-                        <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
-                        <span>Assigned Role Authorization Matrix ({rbacSummary.roleTitle})</span>
+                        <ShieldCheck className="h-4 w-4 text-blue-600" />
+                        <span>Interactive Form / Module Permission Matrix (Tick/Untick Controls)</span>
                       </Label>
-                      <span className="text-[10px] font-mono text-blue-600 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded font-bold border border-blue-200 dark:border-blue-800">
-                        {rbacSummary.accessibleModules.length} Modules Authorized
-                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] font-mono text-emerald-600 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded font-bold border border-emerald-200 dark:border-emerald-800">
+                          {allowedModulesCount} Allowed
+                        </span>
+                        <span className="text-[10px] font-mono text-red-600 bg-red-50 dark:bg-red-950/60 px-2 py-0.5 rounded font-bold border border-red-200 dark:border-red-800">
+                          {restrictedModulesCount} Restricted
+                        </span>
+                      </div>
                     </div>
 
-                    <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden max-h-48 overflow-y-auto">
-                      <table className="w-full text-left text-[11px]">
-                        <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-[9px] sticky top-0">
+                    <p className="text-[10px] text-slate-500 leading-tight">
+                      Administrators can manually authorize or revoke specific capabilities (View, Create, Edit, Delete, Post/Approve, Print/Export) per module for this user.
+                    </p>
+
+                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden max-h-72 overflow-y-auto">
+                      <table className="w-full text-left text-xs">
+                        <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-[9px] sticky top-0 z-10">
                           <tr>
-                            <th className="p-2">Module</th>
+                            <th className="p-2.5">Module / Form</th>
                             <th className="p-2 text-center">View</th>
                             <th className="p-2 text-center">Create</th>
                             <th className="p-2 text-center">Edit</th>
                             <th className="p-2 text-center">Delete</th>
                             <th className="p-2 text-center">Approve</th>
                             <th className="p-2 text-center">Export</th>
+                            <th className="p-2 text-center">All</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                          {rbacSummary.accessibleModules.map((m) => (
-                            <tr key={m.moduleKey} className="hover:bg-slate-50/50">
-                              <td className="p-2 font-medium text-slate-900 dark:text-slate-100">{m.moduleName}</td>
-                              <td className="p-2 text-center">{m.canView ? <span className="text-emerald-600 font-bold">✓</span> : <span className="text-slate-300">-</span>}</td>
-                              <td className="p-2 text-center">{m.canCreate ? <span className="text-emerald-600 font-bold">✓</span> : <span className="text-slate-300">-</span>}</td>
-                              <td className="p-2 text-center">{m.canEdit ? <span className="text-blue-600 font-bold">✓</span> : <span className="text-slate-300">-</span>}</td>
-                              <td className="p-2 text-center">{m.canDelete ? <span className="text-red-600 font-bold">✓</span> : <span className="text-slate-300">-</span>}</td>
-                              <td className="p-2 text-center">{m.canPostApprove ? <span className="text-purple-600 font-bold">✓</span> : <span className="text-slate-300">-</span>}</td>
-                              <td className="p-2 text-center">{m.canPrintExport ? <span className="text-emerald-600 font-bold">✓</span> : <span className="text-slate-300">-</span>}</td>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800 text-[11px]">
+                          {moduleCapabilities.map((mod) => (
+                            <tr key={mod.moduleKey} className="hover:bg-slate-50/60 dark:hover:bg-slate-800/40">
+                              <td className="p-2.5 font-medium text-slate-900 dark:text-slate-100">
+                                <div>{mod.moduleName}</div>
+                                <div className="text-[9px] text-slate-400 font-normal">{mod.category}</div>
+                              </td>
+                              
+                              {/* View Checkbox */}
+                              <td className="p-2 text-center">
+                                <input
+                                  type="checkbox"
+                                  checked={mod.canView}
+                                  onChange={() => handleToggleCapability(mod.moduleKey, "canView")}
+                                  className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                                />
+                              </td>
+
+                              {/* Create Checkbox */}
+                              <td className="p-2 text-center">
+                                <input
+                                  type="checkbox"
+                                  checked={mod.canCreate}
+                                  onChange={() => handleToggleCapability(mod.moduleKey, "canCreate")}
+                                  className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                                />
+                              </td>
+
+                              {/* Edit Checkbox */}
+                              <td className="p-2 text-center">
+                                <input
+                                  type="checkbox"
+                                  checked={mod.canEdit}
+                                  onChange={() => handleToggleCapability(mod.moduleKey, "canEdit")}
+                                  className="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 cursor-pointer"
+                                />
+                              </td>
+
+                              {/* Delete Checkbox */}
+                              <td className="p-2 text-center">
+                                <input
+                                  type="checkbox"
+                                  checked={mod.canDelete}
+                                  onChange={() => handleToggleCapability(mod.moduleKey, "canDelete")}
+                                  className="h-4 w-4 rounded border-slate-300 text-red-600 focus:ring-red-500 cursor-pointer"
+                                />
+                              </td>
+
+                              {/* Approve Checkbox */}
+                              <td className="p-2 text-center">
+                                <input
+                                  type="checkbox"
+                                  checked={mod.canPostApprove}
+                                  onChange={() => handleToggleCapability(mod.moduleKey, "canPostApprove")}
+                                  className="h-4 w-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer"
+                                />
+                              </td>
+
+                              {/* Export Checkbox */}
+                              <td className="p-2 text-center">
+                                <input
+                                  type="checkbox"
+                                  checked={mod.canPrintExport}
+                                  onChange={() => handleToggleCapability(mod.moduleKey, "canPrintExport")}
+                                  className="h-4 w-4 rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
+                                />
+                              </td>
+
+                              {/* Toggle All Checkbox */}
+                              <td className="p-2 text-center">
+                                <button
+                                  type="button"
+                                  onClick={() => handleToggleAllForModule(mod.moduleKey)}
+                                  className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 text-slate-700 dark:text-slate-300"
+                                  title="Toggle all permissions for this module"
+                                >
+                                  {mod.canView && mod.canCreate && mod.canEdit && mod.canDelete && mod.canPostApprove && mod.canPrintExport ? "None" : "All"}
+                                </button>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -1145,7 +1263,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         onClick={() => setShowProfileModal(true)}
                         className="gap-1.5 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-sm"
                       >
-                        <Eye className="h-4 w-4" />
+                        <Eye className="h-3.5 w-3.5" />
                         <span>View Profile Report</span>
                       </Button>
                     )}
@@ -1166,57 +1284,81 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
           </Card>
         </div>
 
-        {/* Right Side Live User ID Card & KYC Status (5 Columns) */}
+        {/* Right Side COMPLETE LIVE REGISTRATION REPORT (5 Columns) */}
         <div className="space-y-4 lg:col-span-5">
-          <Card className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm space-y-3 dark:border-slate-800 dark:bg-slate-950">
-            <div className="flex items-center justify-between border-b pb-2">
+          <Card className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm space-y-3.5 dark:border-slate-800 dark:bg-slate-950">
+            <div className="flex items-center justify-between border-b pb-2.5">
               <div className="flex items-center gap-2">
                 <UserCheck className="h-4 w-4 text-emerald-600" />
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Live Persistent User Card</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Complete Live Registration Report</span>
               </div>
-              <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${
                 kycStatus === "VERIFIED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"
               }`}>
                 {kycStatus === "VERIFIED" ? "Verified" : "Pending KYC"}
               </span>
             </div>
 
-            <div className="space-y-2 text-xs">
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-semibold">{tr("fullName")}:</span>
-                <span className="font-bold text-slate-900 dark:text-slate-100">{fullName || "User Name"}</span>
+            {/* Section 1: Employee Master & Personal */}
+            <div className="space-y-1.5 text-xs">
+              <div className="font-bold text-[11px] text-blue-600 uppercase tracking-wider flex items-center gap-1">
+                <Building2 className="h-3.5 w-3.5" />
+                <span>Employee Master & Organization</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-semibold">{tr("username")}:</span>
-                <span className="font-mono font-bold text-emerald-600">{loginUsername || userCode}</span>
+              <div className="space-y-1 pl-1 text-[11px] text-slate-600 dark:text-slate-300">
+                <div className="flex justify-between"><span className="text-slate-400">Employee Code:</span><span className="font-mono font-bold text-slate-900 dark:text-slate-100">{employeeCode || "EMP-LINKED"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">Full Name:</span><span className="font-bold text-slate-900 dark:text-slate-100">{fullName || "Not Selected"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">Designation:</span><span className="font-semibold">{designation}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">Department:</span><span className="font-semibold">{department}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">Phone / WhatsApp:</span><span>{contactPhone || "Not Provided"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">Personal Email:</span><span>{personalEmail || "Auto-Generated"}</span></div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-semibold">{tr("designation")}:</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">{designation}</span>
+            </div>
+
+            {/* Section 2: Country & Branch Scope */}
+            <div className="space-y-1.5 text-xs border-t pt-2.5">
+              <div className="font-bold text-[11px] text-emerald-600 uppercase tracking-wider flex items-center gap-1">
+                <MapPin className="h-3.5 w-3.5" />
+                <span>Geographic Scope & Branch</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-semibold">{tr("department")}:</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">{department}</span>
+              <div className="space-y-1 pl-1 text-[11px] text-slate-600 dark:text-slate-300">
+                <div className="flex justify-between"><span className="text-slate-400">Country Scope:</span><span className="font-bold text-slate-900 dark:text-slate-100">{selectedCountry?.name || "Global Scope"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">Assigned Branch:</span><span className="font-semibold">{branchCode || selectedMainBranch?.name || "Main Branch"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">Currency:</span><span className="font-mono font-bold">{selectedMainBranch?.local_currency || "USD"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">Assigned Role:</span><span className="font-bold text-blue-600 uppercase">{role}</span></div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-semibold">{tr("role")}:</span>
-                <span className="font-bold text-blue-600 uppercase">{role}</span>
+            </div>
+
+            {/* Section 3: KYC & Security */}
+            <div className="space-y-1.5 text-xs border-t pt-2.5">
+              <div className="font-bold text-[11px] text-purple-600 uppercase tracking-wider flex items-center gap-1">
+                <Lock className="h-3.5 w-3.5" />
+                <span>KYC & Security Credentials</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-semibold">{tr("country")}:</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedCountry?.name || "Global Scope"}</span>
+              <div className="space-y-1 pl-1 text-[11px] text-slate-600 dark:text-slate-300">
+                <div className="flex justify-between"><span className="text-slate-400">Login Username:</span><span className="font-mono font-bold text-emerald-600">{loginUsername || userCode}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">CNIC / Passport:</span><span className="font-mono font-bold">{cnicPassportNo || "Not Provided"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">Expiry Date:</span><span>{idExpiryDate || "Permanent"}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">Vault Reference:</span><span className="font-mono font-bold text-purple-600">{`VAULT-DGT-${userCode}`}</span></div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-semibold">{tr("assignedBranch")}:</span>
-                <span className="font-semibold text-slate-800 dark:text-slate-200">{branchCode || selectedMainBranch?.name || "Main Branch"}</span>
+            </div>
+
+            {/* Section 4: Live Interactive Permission Breakdown */}
+            <div className="space-y-1.5 text-xs border-t pt-2.5">
+              <div className="font-bold text-[11px] text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center justify-between">
+                <span className="flex items-center gap-1">
+                  <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
+                  <span>Assigned Permissions ({allowedModulesCount}/10)</span>
+                </span>
+                <span className="text-[10px] text-emerald-600 font-mono font-bold">{effectivePermissions.length} rules</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-slate-500 font-semibold">{tr("cnicPassport")}:</span>
-                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{cnicPassportNo || "Not Provided"}</span>
-              </div>
-              <div className="flex justify-between border-t pt-2 mt-2">
-                <span className="text-slate-500 font-semibold">Vault Reference:</span>
-                <span className="font-mono font-bold text-purple-600">{`VAULT-DGT-${userCode}`}</span>
+              <div className="grid grid-cols-3 gap-1 pt-1 text-[10px] text-center">
+                <div className="p-1 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">View</span><strong className="text-emerald-600">{moduleCapabilities.filter(m => m.canView).length}</strong></div>
+                <div className="p-1 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">Create</span><strong className="text-emerald-600">{moduleCapabilities.filter(m => m.canCreate).length}</strong></div>
+                <div className="p-1 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">Edit</span><strong className="text-blue-600">{moduleCapabilities.filter(m => m.canEdit).length}</strong></div>
+                <div className="p-1 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">Delete</span><strong className="text-red-600">{moduleCapabilities.filter(m => m.canDelete).length}</strong></div>
+                <div className="p-1 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">Approve</span><strong className="text-purple-600">{moduleCapabilities.filter(m => m.canPostApprove).length}</strong></div>
+                <div className="p-1 rounded bg-slate-50 dark:bg-slate-900 border"><span className="text-slate-400 block">Export</span><strong className="text-emerald-600">{moduleCapabilities.filter(m => m.canPrintExport).length}</strong></div>
               </div>
             </div>
 
@@ -1225,7 +1367,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                 <Button
                   size="sm"
                   onClick={() => setShowProfileModal(true)}
-                  className="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold gap-1.5"
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold gap-1.5 shadow-sm"
                 >
                   <Eye className="h-3.5 w-3.5" />
                   <span>Open Full User Profile Report</span>

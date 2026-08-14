@@ -4,6 +4,7 @@ import { enterpriseRolePermissions, enterpriseRoleScopes } from "./enterprise-ro
 export interface ModulePermissionCapability {
   moduleKey: string;
   moduleName: string;
+  category: "Finance & Accounting" | "Trading & Inventory" | "Logistics & Customs" | "Administration & System";
   canView: boolean;
   canCreate: boolean;
   canEdit: boolean;
@@ -23,7 +24,7 @@ export interface RbacRoleSummary {
   supervisorPrivileges: string[];
 }
 
-export const ERP_MODULE_DEFINITIONS: Array<{
+export interface ErpModuleDef {
   key: string;
   name: string;
   category: "Finance & Accounting" | "Trading & Inventory" | "Logistics & Customs" | "Administration & System";
@@ -33,7 +34,9 @@ export const ERP_MODULE_DEFINITIONS: Array<{
   deletePerms: string[];
   approvePerms: string[];
   exportPerms: string[];
-}> = [
+}
+
+export const ERP_MODULE_DEFINITIONS: ErpModuleDef[] = [
   {
     key: "chart_of_accounts",
     name: "Chart of Accounts & Multi-Linking",
@@ -146,13 +149,18 @@ export const ERP_MODULE_DEFINITIONS: Array<{
   }
 ];
 
-export function buildRbacRoleSummary(role: EnterpriseRole): RbacRoleSummary {
+export function getRoleDefaultPermissions(role: EnterpriseRole): string[] {
+  return enterpriseRolePermissions[role] || [];
+}
+
+export function buildRbacRoleSummary(role: EnterpriseRole, customPermissions?: string[]): RbacRoleSummary {
   const isSuperAdmin = role === "super_admin";
-  const userPerms = new Set<string>(enterpriseRolePermissions[role] || []);
+  const userPerms = new Set<string>(customPermissions && customPermissions.length > 0 ? customPermissions : enterpriseRolePermissions[role] || []);
 
   const hasWildcard = isSuperAdmin || userPerms.has("*:*");
 
   const checkPerm = (requiredPerms: string[]) => {
+    if (requiredPerms.length === 0) return false;
     if (hasWildcard) return true;
     return requiredPerms.some(p => userPerms.has(p) || userPerms.has(`${p.split(':')[0]}:*`));
   };
@@ -168,10 +176,11 @@ export function buildRbacRoleSummary(role: EnterpriseRole): RbacRoleSummary {
     const canPostApprove = checkPerm(mod.approvePerms);
     const canPrintExport = checkPerm(mod.exportPerms);
 
-    if (canView || canCreate || canEdit || canDelete || canPostApprove) {
+    if (canView || canCreate || canEdit || canDelete || canPostApprove || canPrintExport) {
       accessibleModules.push({
         moduleKey: mod.key,
         moduleName: mod.name,
+        category: mod.category,
         canView,
         canCreate,
         canEdit,
@@ -225,4 +234,51 @@ export function buildRbacRoleSummary(role: EnterpriseRole): RbacRoleSummary {
     restrictedModules,
     supervisorPrivileges
   };
+}
+
+export function buildAllModulesCapabilities(role: EnterpriseRole, activePermissions: string[]): ModulePermissionCapability[] {
+  const isSuperAdmin = role === "super_admin";
+  const userPerms = new Set<string>(activePermissions);
+  const hasWildcard = isSuperAdmin || userPerms.has("*:*");
+
+  const checkPerm = (requiredPerms: string[]) => {
+    if (requiredPerms.length === 0) return false;
+    if (hasWildcard) return true;
+    return requiredPerms.some(p => userPerms.has(p) || userPerms.has(`${p.split(':')[0]}:*`));
+  };
+
+  return ERP_MODULE_DEFINITIONS.map(mod => ({
+    moduleKey: mod.key,
+    moduleName: mod.name,
+    category: mod.category,
+    canView: checkPerm(mod.viewPerms),
+    canCreate: checkPerm(mod.createPerms),
+    canEdit: checkPerm(mod.editPerms),
+    canDelete: checkPerm(mod.deletePerms),
+    canPostApprove: checkPerm(mod.approvePerms),
+    canPrintExport: checkPerm(mod.exportPerms),
+    notes: checkPerm(mod.approvePerms) ? "Authorized for Financial Posting" : checkPerm(mod.createPerms) ? "Data Entry Authorized" : checkPerm(mod.viewPerms) ? "Read-Only Access" : "No Access"
+  }));
+}
+
+export function convertMatrixToPermissions(role: EnterpriseRole, capabilities: ModulePermissionCapability[]): string[] {
+  if (role === "super_admin") {
+    return ["*:*"];
+  }
+
+  const result = new Set<string>();
+
+  capabilities.forEach(cap => {
+    const def = ERP_MODULE_DEFINITIONS.find(d => d.key === cap.moduleKey);
+    if (!def) return;
+
+    if (cap.canView) def.viewPerms.forEach(p => result.add(p));
+    if (cap.canCreate) def.createPerms.forEach(p => result.add(p));
+    if (cap.canEdit) def.editPerms.forEach(p => result.add(p));
+    if (cap.canDelete) def.deletePerms.forEach(p => result.add(p));
+    if (cap.canPostApprove) def.approvePerms.forEach(p => result.add(p));
+    if (cap.canPrintExport) def.exportPerms.forEach(p => result.add(p));
+  });
+
+  return Array.from(result);
 }

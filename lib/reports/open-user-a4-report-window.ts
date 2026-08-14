@@ -165,7 +165,7 @@ export function openUserA4ReportWindow(input: {
 
   const u = input.userData;
   const role = (u.role || "staff_user") as EnterpriseRole;
-  const rbac = buildRbacRoleSummary(role);
+  const rbac = buildRbacRoleSummary(role, u.permissions);
 
   const htmlContent = `
 <!DOCTYPE html>
