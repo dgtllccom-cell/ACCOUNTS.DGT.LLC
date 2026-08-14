@@ -27,6 +27,7 @@ import { Th } from "@/components/ui/translated-th";
 import { apiGet, apiPost, apiPut } from "@/lib/api/client";
 import { listGoods, type GoodsListRow } from "@/features/inventory/goods-api";
 import { rtlLanguages, normalizeSupportedLanguage } from "@/lib/i18n/languages";
+import { translateValue } from "@/lib/i18n/table-values";
 
 type InventoryBalance = {
   id: string;
@@ -154,6 +155,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
 
   const activeLang = normalizeSupportedLanguage(session?.lang || (typeof document !== "undefined" ? document.documentElement.lang : "en"));
   const isRtl = rtlLanguages.includes(activeLang);
+  const tv = (value: string | null | undefined) => translateValue(activeLang, value);
 
   async function fetchBalances() {
     setBusy(true);
@@ -537,7 +539,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
                         >
                           {m.movement_type === "STOCK_IN" && <ArrowDownLeft className="h-3 w-3" />}
                           {m.movement_type === "STOCK_OUT" && <ArrowUpRight className="h-3 w-3" />}
-                          {m.movement_type}
+                          {tv(m.movement_type)}
                         </span>
                       </td>
                       <td className="py-3.5 px-4">
@@ -722,7 +724,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
               </div>
               <div>
                 <span className="text-xs text-muted-foreground block">Movement Type</span>
-                <span className="font-bold">{viewMovement.movement_type}</span>
+                <span className="font-bold">{tv(viewMovement.movement_type)}</span>
               </div>
             </div>
 
@@ -788,7 +790,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
             <div className="bg-muted/40 p-3 rounded-md text-xs space-y-1">
               <div><strong>Item:</strong> {editMovement.goods_name} (CHS: {editMovement.chs_code})</div>
               <div><strong>Warehouse:</strong> {editMovement.warehouse_name}</div>
-              <div><strong>Type:</strong> {editMovement.movement_type}</div>
+              <div><strong>Type:</strong> {tv(editMovement.movement_type)}</div>
             </div>
 
             <div>

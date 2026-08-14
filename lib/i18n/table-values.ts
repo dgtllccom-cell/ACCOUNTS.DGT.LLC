@@ -91,6 +91,16 @@ const VALUE_TRANSLATIONS: Record<string, Row> = {
   "UNITED ARAB EMIRATES": { ur: "متحدہ عرب امارات", ar: "الإمارات العربية المتحدة", fa: "امارات متحده عربی", ps: "متحده عربي امارات" },
   "LOCAL": { ur: "مقامی", ar: "محلي", fa: "محلی", ps: "سیمه ییز" },
 
+  // ── Inventory / stock movement types & statuses ──────────────────────────
+  "STOCK_IN": { ur: "اسٹاک اِن", ar: "إدخال مخزون", fa: "ورود موجودی", ps: "سټاک ننوتل" },
+  "STOCK_OUT": { ur: "اسٹاک آؤٹ", ar: "إخراج مخزون", fa: "خروج موجودی", ps: "سټاک وتل" },
+  "STOCK IN": { ur: "اسٹاک اِن", ar: "إدخال مخزون", fa: "ورود موجودی", ps: "سټاک ننوتل" },
+  "STOCK OUT": { ur: "اسٹاک آؤٹ", ar: "إخراج مخزون", fa: "خروج موجودی", ps: "سټاک وتل" },
+  "ADJUSTMENT": { ur: "ایڈجسٹمنٹ", ar: "تسوية", fa: "تعدیل", ps: "برابرول" },
+  "TRANSFER": { ur: "منتقلی", ar: "تحويل", fa: "انتقال", ps: "لېږد" },
+  "ON HAND": { ur: "موجود", ar: "المتوفر", fa: "موجود", ps: "شته" },
+  "AVAILABLE": { ur: "دستیاب", ar: "متاح", fa: "در دسترس", ps: "شته" },
+
   // ── System-generated goods defaults (not user master data) ───────────────
   "GENERAL GOODS": { ur: "عام سامان", ar: "بضائع عامة", fa: "کالای عمومی", ps: "عمومي توکي" },
   "GENERAL SUPPLIER": { ur: "عام سپلائر", ar: "مورد عام", fa: "تأمین‌کننده عمومی", ps: "عمومي عرضه کوونکی" },
