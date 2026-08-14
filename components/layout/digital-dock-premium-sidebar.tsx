@@ -206,8 +206,11 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
     ],
   },
   {
-    title: "System",
-    items: [{ icon: Settings, label: "Settings", href: "/dashboard/settings" }],
+    title: "System & Handover",
+    items: [
+      { icon: FileText, label: "ERP Development & Handover Report", href: "/dashboard/reports/handover", badge: "Live" },
+      { icon: Settings, label: "Settings", href: "/dashboard/settings" }
+    ],
   },
 ];
 

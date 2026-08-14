@@ -1415,6 +1415,12 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
+    key: "handover-report",
+    labelKey: "nav.reports" as any,
+    iconKey: "file-text",
+    href: "/dashboard/reports/handover" as Route
+  },
+  {
     key: "walkthrough-video",
     labelKey: "nav.walkthrough_video",
     iconKey: "video",
