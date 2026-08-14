@@ -59,7 +59,7 @@ export interface UniversalReportModalProps<T = any> {
   exportFileName?: string;
 }
 
-export function UniversalReportModal<T = Record<string, any>>({
+export function UniversalReportModal<T extends Record<string, any> = Record<string, any>>({
   isOpen,
   onClose,
   title,
