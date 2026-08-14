@@ -660,7 +660,11 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
       return;
     }
 
-    let resolvedCountryId: string | null = countryId || null;
+    let fallbackCountryId = countries[0]?.id || null;
+    let fallbackCountryBranchId = mainBranches[0]?.id || null;
+    let fallbackCityBranchId = cityBranches[0]?.id || null;
+
+    let resolvedCountryId: string | null = countryId || fallbackCountryId;
     let resolvedCountryBranchId: string | null = null;
     let resolvedCityBranchId: string | null = null;
 
@@ -672,11 +676,11 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
       resolvedCountryBranchId = null;
       resolvedCityBranchId = null;
     } else if (role === "main_branch_admin" || (role !== "city_branch_admin" && branchType === "main")) {
-      resolvedCountryBranchId = countryBranchId || (mainBranches[0]?.id ?? null);
+      resolvedCountryBranchId = countryBranchId || fallbackCountryBranchId;
       resolvedCityBranchId = null;
     } else {
-      resolvedCityBranchId = cityBranchId || (cityBranches[0]?.id ?? null);
-      resolvedCountryBranchId = countryBranchId || selectedCityBranch?.country_branch_id || (mainBranches[0]?.id ?? null);
+      resolvedCityBranchId = cityBranchId || fallbackCityBranchId;
+      resolvedCountryBranchId = countryBranchId || selectedCityBranch?.country_branch_id || fallbackCountryBranchId;
     }
 
     const preferredLanguage = activeLang;
