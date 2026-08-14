@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { 
   FileText, 
   Download, 
@@ -18,9 +18,15 @@ import {
   Boxes,
   Users,
   Landmark,
-  FileCheck
+  FileCheck,
+  FileSpreadsheet,
+  Lock,
+  Search,
+  KeyRound,
+  ShieldAlert
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { COUNTRY_BRANCH_ACCESS_REGISTER, AccessRegisterEntry } from "@/lib/repositories/access-register-repository";
 
 interface DailyLog {
   date: string;
@@ -39,9 +45,10 @@ const DAILY_DEVELOPMENT_LOGS: DailyLog[] = [
   {
     date: "14 August 2026",
     developer: "Antigravity Senior AI Agent & Systems Engineer",
-    title: "VPS Database Data Migration, Stock/Inventory Merge, Universal Ledger Reports & PDF Handover",
-    summary: "Completed complete migration of 33 local PostgreSQL tables to VPS production database (72.60.209.121). Merged and tested Stock/Inventory system with live balance recalculation. Verified Account Multi-Linking with 0 orphan foreign keys. Standardized UniversalReportModal across 14+ modules with 5-language RTL support and generated master handover PDF.",
+    title: "Country / Branch Login Access Register, Living Handover PDF, VPS Migration & Multi-Linking",
+    summary: "Generated Centralized Country / Branch Login Access Register in Excel & PDF formats. Migrated 33 local PostgreSQL tables to VPS production database (72.60.209.121). Merged Stock/Inventory system with live balance recalculation. Verified Account Multi-Linking with 0 orphan foreign keys. Standardized UniversalReportModal across 14+ modules with 5-language RTL support and generated master handover PDF.",
     modulesAffected: [
+      "Country / Branch Login Access Register (Excel & PDF)",
       "Stock Movements & Inventory Balances",
       "Chart of Accounts & Account Multi-Linking",
       "Companies, Banks, Warehouses, Customers Registries",
@@ -51,8 +58,9 @@ const DAILY_DEVELOPMENT_LOGS: DailyLog[] = [
     ],
     databaseChanges: "Full non-destructive migration Local -> VPS (companies: 213, banks: 152, warehouses: 171, customers: 211, employees: 54, accounts: 4, goods: 12, stock_movements: 6, translations: 11,154).",
     testingStatus: "VPS_TESTED",
-    gitRef: "dev (commit bb8ed85, 94f86f6)",
+    gitRef: "dev (commit 43e31c0, bb8ed85)",
     issuesFixed: [
+      "Added Centralized Country / Branch Login Access Register with Password Vault IDs (zero plaintext passwords)",
       "Resolved translation discrepancy (reconciled 11,154 valid 5-language rows on VPS)",
       "Fixed employee foreign key mapping for country_branches and city_branches",
       "Fixed UniversalReportModal column alignment for RTL languages",
@@ -107,8 +115,11 @@ const DAILY_DEVELOPMENT_LOGS: DailyLog[] = [
 ];
 
 export default function HandoverReportPage() {
-  const [activeTab, setActiveTab] = useState<"overview" | "timeline" | "database" | "i18n" | "rbac" | "guide">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "access-register" | "timeline" | "database" | "i18n" | "rbac" | "guide">("access-register");
   const [isDownloading, setIsDownloading] = useState(false);
+  const [accessSearch, setAccessSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("all");
+  const [countryFilter, setCountryFilter] = useState("all");
 
   const handleDownloadPdf = () => {
     setIsDownloading(true);
@@ -121,6 +132,41 @@ export default function HandoverReportPage() {
     setTimeout(() => setIsDownloading(false), 1500);
   };
 
+  const handleDownloadAccessExcel = () => {
+    const link = document.createElement("a");
+    link.href = "/api/erp/reports/access-register/excel";
+    link.download = "Country_Branch_Login_Access_Register.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleDownloadAccessPdf = () => {
+    const link = document.createElement("a");
+    link.href = "/api/erp/reports/access-register/pdf";
+    link.download = "Country_Branch_Login_Access_Register.pdf";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const filteredAccessEntries = useMemo(() => {
+    return COUNTRY_BRANCH_ACCESS_REGISTER.filter(entry => {
+      const matchesSearch = accessSearch === "" ||
+        entry.country.toLowerCase().includes(accessSearch.toLowerCase()) ||
+        entry.mainBranch.toLowerCase().includes(accessSearch.toLowerCase()) ||
+        entry.cityBranch.toLowerCase().includes(accessSearch.toLowerCase()) ||
+        entry.responsiblePerson.toLowerCase().includes(accessSearch.toLowerCase()) ||
+        entry.username.toLowerCase().includes(accessSearch.toLowerCase()) ||
+        entry.passwordVaultRef.toLowerCase().includes(accessSearch.toLowerCase());
+
+      const matchesRole = roleFilter === "all" || entry.role === roleFilter;
+      const matchesCountry = countryFilter === "all" || entry.country.includes(countryFilter);
+
+      return matchesSearch && matchesRole && matchesCountry;
+    });
+  }, [accessSearch, roleFilter, countryFilter]);
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       {/* Header Banner */}
@@ -131,44 +177,49 @@ export default function HandoverReportPage() {
           </div>
           <h1 className="text-2xl md:text-3xl font-bold tracking-tight">Journal Report PDF ERP</h1>
           <p className="text-slate-400 text-sm max-w-3xl">
-            Complete ERP system architecture, database data migration proof, multilingual translation audit, and live Journal Report PDF handover.
+            Country & Branch Login Access Register, complete ERP system architecture, database data migration proof, and living PDF handover.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <Button 
+            onClick={handleDownloadAccessExcel} 
+            className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium text-xs shadow-sm transition-all"
+          >
+            <FileSpreadsheet className="w-3.5 h-3.5 mr-1.5" />
+            Download Excel Register
+          </Button>
+          <Button 
+            onClick={handleDownloadAccessPdf} 
+            className="bg-purple-600 hover:bg-purple-500 text-white font-medium text-xs shadow-sm transition-all"
+          >
+            <Download className="w-3.5 h-3.5 mr-1.5" />
+            Download PDF Register
+          </Button>
           <Button 
             onClick={handleDownloadPdf} 
             disabled={isDownloading}
-            className="bg-blue-600 hover:bg-blue-500 text-white font-medium shadow-sm transition-all"
+            className="bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs shadow-sm transition-all"
           >
-            <Download className="w-4 h-4 mr-2" />
-            {isDownloading ? "Downloading..." : "Download Latest PDF"}
+            <Download className="w-3.5 h-3.5 mr-1.5" />
+            {isDownloading ? "Downloading..." : "Download Handover PDF"}
           </Button>
-          <a
-            href="/reports/COMPLETE_ERP_SYSTEM_HANDOVER_REPORT.pdf"
-            target="_blank"
-            rel="noreferrer"
-            className="inline-flex items-center justify-center rounded-md border border-slate-700 bg-slate-800/80 px-4 py-2 text-sm font-medium text-slate-200 hover:bg-slate-700 transition-colors"
-          >
-            <ExternalLink className="w-4 h-4 mr-2" />
-            Open in Tab
-          </a>
         </div>
       </div>
 
       {/* Metrics Row */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm text-center">
-          <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 font-mono">33</div>
+          <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 font-mono">14</div>
+          <div className="text-xs uppercase font-semibold text-slate-500 mt-1">Branch Logins Registered</div>
+        </div>
+        <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm text-center">
+          <div className="text-2xl font-bold text-blue-600 font-mono">33</div>
           <div className="text-xs uppercase font-semibold text-slate-500 mt-1">Verified DB Tables</div>
         </div>
         <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm text-center">
-          <div className="text-2xl font-bold text-blue-600 font-mono">11,154</div>
+          <div className="text-2xl font-bold text-emerald-600 font-mono">11,154</div>
           <div className="text-xs uppercase font-semibold text-slate-500 mt-1">Real DB Translations</div>
-        </div>
-        <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm text-center">
-          <div className="text-2xl font-bold text-emerald-600 font-mono">5 Languages</div>
-          <div className="text-xs uppercase font-semibold text-slate-500 mt-1">EN, UR, AR, FA, PS</div>
         </div>
         <div className="bg-white dark:bg-slate-900 p-4 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm text-center">
           <div className="text-2xl font-bold text-indigo-600 font-mono">100% PASS</div>
@@ -179,6 +230,7 @@ export default function HandoverReportPage() {
       {/* Interactive Tabs */}
       <div className="flex border-b border-slate-200 dark:border-slate-800 gap-2 overflow-x-auto pb-1">
         {[
+          { key: "access-register", label: "Country / Branch Login Access Register", icon: KeyRound },
           { key: "overview", label: "Executive Overview", icon: Layers },
           { key: "timeline", label: "Daily Development Timeline (Living Log)", icon: Calendar },
           { key: "database", label: "Database Post-Migration Audit (33 Tables)", icon: Database },
@@ -205,7 +257,119 @@ export default function HandoverReportPage() {
         })}
       </div>
 
-      {/* Tab 1: Overview */}
+      {/* Tab: Country / Branch Login Access Register */}
+      {activeTab === "access-register" && (
+        <div className="space-y-4">
+          <div className="bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 p-4 rounded-xl flex items-start gap-3">
+            <ShieldAlert className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+            <div className="space-y-1 text-xs text-red-800 dark:text-red-300">
+              <div className="font-bold text-sm">Super Admin Restricted Credential Register</div>
+              <p>
+                In compliance with strict security policies, plaintext passwords are never stored, exported, or displayed. Every login account is linked to the approved enterprise credential vault via its <strong>Password Vault Reference / Credential ID</strong>. To reset credentials, utilize the verified identity provisioning channel.
+              </p>
+            </div>
+          </div>
+
+          {/* Search & Filters */}
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm flex flex-col sm:flex-row gap-3 items-center justify-between">
+            <div className="relative w-full sm:w-80">
+              <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Search Country, Branch, Person, Vault ID..."
+                value={accessSearch}
+                onChange={(e) => setAccessSearch(e.target.value)}
+                className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-slate-900 dark:text-slate-100"
+              />
+            </div>
+
+            <div className="flex items-center gap-3 w-full sm:w-auto justify-end">
+              <select
+                value={countryFilter}
+                onChange={(e) => setCountryFilter(e.target.value)}
+                className="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none text-slate-700 dark:text-slate-300"
+              >
+                <option value="all">All Countries</option>
+                <option value="Global">Global</option>
+                <option value="United Arab Emirates">UAE</option>
+                <option value="Pakistan">Pakistan</option>
+                <option value="Afghanistan">Afghanistan</option>
+                <option value="India">India</option>
+                <option value="Iran">Iran</option>
+              </select>
+
+              <select
+                value={roleFilter}
+                onChange={(e) => setRoleFilter(e.target.value)}
+                className="px-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none text-slate-700 dark:text-slate-300"
+              >
+                <option value="all">All Roles</option>
+                <option value="Super Admin">Super Admin</option>
+                <option value="Country Admin">Country Admin</option>
+                <option value="Main Branch Admin">Main Branch Admin</option>
+                <option value="City Branch User">City Branch User</option>
+                <option value="Clearing Agent">Clearing Agent</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Access Table */}
+          <div className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-xs text-left">
+                <thead className="bg-slate-50 dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 uppercase font-semibold text-[11px]">
+                  <tr>
+                    <th className="p-3">Country</th>
+                    <th className="p-3">Main Branch</th>
+                    <th className="p-3">City Branch</th>
+                    <th className="p-3">User / Person</th>
+                    <th className="p-3">Role</th>
+                    <th className="p-3">Username / Login ID</th>
+                    <th className="p-3">Assigned Permissions</th>
+                    <th className="p-3">Vault Ref ID</th>
+                    <th className="p-3">Status</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                  {filteredAccessEntries.map((entry) => {
+                    let roleBadge = "bg-slate-100 text-slate-800 border-slate-200 dark:bg-slate-800 dark:text-slate-300";
+                    if (entry.role === "Super Admin") roleBadge = "bg-red-100 text-red-800 border-red-200 dark:bg-red-950/60 dark:text-red-300";
+                    else if (entry.role === "Country Admin") roleBadge = "bg-indigo-100 text-indigo-800 border-indigo-200 dark:bg-indigo-950/60 dark:text-indigo-300";
+                    else if (entry.role === "Main Branch Admin") roleBadge = "bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-950/60 dark:text-blue-300";
+                    else if (entry.role === "Clearing Agent") roleBadge = "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-950/60 dark:text-amber-300";
+
+                    return (
+                      <tr key={entry.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                        <td className="p-3 font-bold text-slate-900 dark:text-slate-100">{entry.country}</td>
+                        <td className="p-3 text-slate-700 dark:text-slate-300">{entry.mainBranch}</td>
+                        <td className="p-3 text-slate-600 dark:text-slate-400">{entry.cityBranch}</td>
+                        <td className="p-3 font-semibold text-slate-900 dark:text-slate-100">{entry.responsiblePerson}</td>
+                        <td className="p-3">
+                          <span className={`px-2 py-0.5 text-[10px] font-bold rounded border ${roleBadge}`}>
+                            {entry.role}
+                          </span>
+                        </td>
+                        <td className="p-3 font-mono text-[11px] text-blue-600 dark:text-blue-400">{entry.username}</td>
+                        <td className="p-3 text-slate-600 dark:text-slate-400 text-[11px] max-w-xs">{entry.assignedPermissions}</td>
+                        <td className="p-3 font-mono font-bold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-800/60 rounded px-2 py-1">
+                          {entry.passwordVaultRef}
+                        </td>
+                        <td className="p-3">
+                          <span className="px-2 py-0.5 text-[10px] font-semibold rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                            {entry.status}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Tab: Overview */}
       {activeTab === "overview" && (
         <div className="space-y-6">
           <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
@@ -220,6 +384,7 @@ export default function HandoverReportPage() {
               <div className="p-4 bg-slate-50 dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700/60">
                 <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 mb-2">Core Architectures Implemented</h3>
                 <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-1.5 list-disc pl-4">
+                  <li><strong>Country / Branch Login Register:</strong> Centralized multi-tier access mapping.</li>
                   <li><strong>Account Multi-Linking:</strong> 4 junction tables linking single accounts across entities.</li>
                   <li><strong>Universal Report Modal:</strong> Standardized Journal/Ledger print, PDF & CSV suite.</li>
                   <li><strong>Stock Movements:</strong> In/Out tracking, warehouse balance recalculation, variations.</li>
@@ -240,7 +405,7 @@ export default function HandoverReportPage() {
         </div>
       )}
 
-      {/* Tab 2: Timeline */}
+      {/* Tab: Timeline */}
       {activeTab === "timeline" && (
         <div className="space-y-6">
           <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 p-4 rounded-lg text-xs text-blue-800 dark:text-blue-300">
@@ -296,7 +461,7 @@ export default function HandoverReportPage() {
         </div>
       )}
 
-      {/* Tab 3: Database Audit */}
+      {/* Tab: Database Audit */}
       {activeTab === "database" && (
         <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Direct SQL Row Counts (Local vs VPS PostgreSQL)</h2>
@@ -349,7 +514,7 @@ export default function HandoverReportPage() {
         </div>
       )}
 
-      {/* Tab 4: i18n Audit */}
+      {/* Tab: i18n Audit */}
       {activeTab === "i18n" && (
         <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">5-Language Translation Audit (11,154 Database Records)</h2>
@@ -376,7 +541,7 @@ export default function HandoverReportPage() {
         </div>
       )}
 
-      {/* Tab 5: RBAC */}
+      {/* Tab: RBAC */}
       {activeTab === "rbac" && (
         <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Role-Based Access Control (RBAC) Hierarchy</h2>
@@ -431,7 +596,7 @@ export default function HandoverReportPage() {
         </div>
       )}
 
-      {/* Tab 6: Guide */}
+      {/* Tab: Guide */}
       {activeTab === "guide" && (
         <div className="bg-white dark:bg-slate-900 p-6 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
           <h2 className="text-base font-bold text-slate-900 dark:text-slate-100">Instructions for Future Developers & Engineers</h2>
