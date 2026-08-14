@@ -7,20 +7,20 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    authorizeApiScope(session, { resource: "document_types", action: "read" });
+    authorizeApiScope(session, { resource: "product_units", action: "read" });
 
     const searchParams = request.nextUrl.searchParams;
     const q = searchParams.get("q")?.trim();
 
     const data = await withLocalPg(async (sql) => {
       let query = sql`
-        SELECT id, code, name, description, is_active, created_at, name_en, name_ur, name_ar, name_fa, name_ps
-        FROM public.document_types
+        SELECT id, unit_code, unit_name, base_unit_code, conversion_factor, is_active, created_at
+        FROM public.product_units
         WHERE deleted_at IS NULL
       `;
       if (q) {
         const pattern = `%${q}%`;
-        query = sql`${query} AND (name ILIKE ${pattern} OR code ILIKE ${pattern} OR description ILIKE ${pattern})`;
+        query = sql`${query} AND (unit_name ILIKE ${pattern} OR unit_code ILIKE ${pattern})`;
       }
       return await sql`${query} ORDER BY created_at DESC LIMIT 500`;
     });
@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
     const list = data || [];
     const active = list.filter((item: any) => item.is_active).length;
     return apiOk({
-      documentTypes: list,
+      units: list,
+      productUnits: list,
       summary: { total: list.length, active, inactive: list.length - active }
     });
   } catch (error) {
@@ -39,15 +40,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    authorizeApiScope(session, { resource: "document_types", action: "create" });
+    authorizeApiScope(session, { resource: "product_units", action: "create" });
 
     const body = await request.json();
-    const name = typeof body.name === "string" ? body.name.trim() : "";
-    const code = typeof body.code === "string" ? body.code.trim().toUpperCase() : "";
-    const description = typeof body.description === "string" ? body.description.trim() : null;
+    const unitName = typeof body.unitName === "string" ? body.unitName.trim() : (body.name || "");
+    const unitCode = typeof body.unitCode === "string" ? body.unitCode.trim().toUpperCase() : (body.code || "");
 
-    if (!name || !code) {
-      return new Response(JSON.stringify({ error: "name and code required" }), {
+    if (!unitName || !unitCode) {
+      return new Response(JSON.stringify({ error: "unitName and unitCode required" }), {
         status: 400,
         headers: { "Content-Type": "application/json" }
       });
@@ -55,12 +55,13 @@ export async function POST(request: NextRequest) {
 
     const created = await withLocalPg(async (sql) => {
       const rows = await sql`
-        INSERT INTO public.document_types (
-          code, name, description, is_active, created_by, created_at, updated_at
+        INSERT INTO public.product_units (
+          unit_code, unit_name, base_unit_code, conversion_factor, is_active, created_by, created_at, updated_at
         ) VALUES (
-          ${code},
-          ${name},
-          ${description},
+          ${unitCode},
+          ${unitName},
+          ${body.baseUnitCode || null},
+          ${body.conversionFactor ? Number(body.conversionFactor) : 1},
           ${body.isActive !== false},
           ${session.userId ? sql`${session.userId}::uuid` : null},
           NOW(),
@@ -71,7 +72,7 @@ export async function POST(request: NextRequest) {
       return rows[0];
     });
 
-    return apiOk({ documentType: created }, { status: 201 });
+    return apiOk({ unit: created, productUnit: created }, { status: 201 });
   } catch (error) {
     return handleApiError(error);
   }

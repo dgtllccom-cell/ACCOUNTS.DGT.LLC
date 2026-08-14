@@ -3,6 +3,8 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,6 +16,9 @@ export async function GET(request: NextRequest) {
     const warehouseId = searchParams.get("warehouseId")?.trim();
     const limit = Number(searchParams.get("limit") || "200");
     const offset = Number(searchParams.get("offset") || "0");
+
+    const rawLang = (searchParams.get("lang") || request.headers.get("accept-language") || "en").toLowerCase();
+    const lang = (["en", "ur", "ar", "fa", "ps"].includes(rawLang) ? rawLang : "en") as SupportedLanguage;
 
     const result = await withLocalPg(async (sql) => {
       let query = sql`
@@ -59,11 +64,35 @@ export async function GET(request: NextRequest) {
         )`;
       }
 
-      const rows = await sql`
+      let rows = await sql`
         ${query}
         ORDER BY g.goods_name ASC, w.warehouse_name ASC
         LIMIT ${limit} OFFSET ${offset}
       `;
+
+      if (rows.length > 0) {
+        // Localize goods_name
+        const goodsItems = rows.map(r => ({ id: r.goods_id, goods_name: r.goods_name })).filter(r => r.id);
+        const localizedGoods = await localizeRecordNames(goodsItems, "goods", "goods_name", lang);
+        const goodsMap = new Map(localizedGoods.map(g => [g.id, g.goods_name]));
+
+        // Localize warehouse_name
+        const whItems = rows.map(r => ({ id: r.warehouse_id, warehouse_name: r.warehouse_name })).filter(r => r.id);
+        const localizedWh = await localizeRecordNames(whItems, "warehouses", "warehouse_name", lang);
+        const whMap = new Map(localizedWh.map(w => [w.id, w.warehouse_name]));
+
+        // Localize country_name
+        const countryItems = rows.map(r => ({ id: r.country_id, name: r.country_name })).filter(r => r.id);
+        const localizedCountries = await localizeRecordNames(countryItems, "countries", "name", lang);
+        const countryMap = new Map(localizedCountries.map(c => [c.id, c.name]));
+
+        rows = rows.map(r => ({
+          ...r,
+          goods_name: r.goods_id ? (goodsMap.get(r.goods_id) || r.goods_name) : r.goods_name,
+          warehouse_name: r.warehouse_id ? (whMap.get(r.warehouse_id) || r.warehouse_name) : r.warehouse_name,
+          country_name: r.country_id ? (countryMap.get(r.country_id) || r.country_name) : r.country_name
+        }));
+      }
 
       const summary = await sql`
         SELECT 

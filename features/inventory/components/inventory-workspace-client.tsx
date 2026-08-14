@@ -24,6 +24,7 @@ import { SimpleModal } from "@/components/ui/simple-modal";
 import { Th } from "@/components/ui/translated-th";
 import { apiGet, apiPost, apiPut } from "@/lib/api/client";
 import { listGoods, type GoodsListRow } from "@/features/inventory/goods-api";
+import { rtlLanguages, normalizeSupportedLanguage } from "@/lib/i18n/languages";
 
 type InventoryBalance = {
   id: string;
@@ -148,12 +149,16 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
     }
   }
 
+  const activeLang = normalizeSupportedLanguage(session?.lang || (typeof document !== "undefined" ? document.documentElement.lang : "en"));
+  const isRtl = rtlLanguages.includes(activeLang);
+
   async function fetchBalances() {
     setBusy(true);
     try {
       const params = new URLSearchParams();
       if (q) params.set("q", q);
       if (selectedWarehouseFilter) params.set("warehouseId", selectedWarehouseFilter);
+      params.set("lang", activeLang);
       const res = await apiGet<{ balances: InventoryBalance[]; summary: any }>(`/api/erp/inventory/balances?${params.toString()}`);
       setBalances(res.balances || []);
       if (res.summary) setSummary(res.summary);
@@ -171,6 +176,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
       if (q) params.set("q", q);
       if (selectedWarehouseFilter) params.set("warehouseId", selectedWarehouseFilter);
       if (selectedMovementTypeFilter) params.set("movementType", selectedMovementTypeFilter);
+      params.set("lang", activeLang);
       const res = await apiGet<{ movements: StockMovement[]; total: number }>(`/api/erp/inventory/stock-movements?${params.toString()}`);
       setMovements(res.movements || []);
     } catch (e: any) {
@@ -269,7 +275,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
   const selectedGoodsRecord = goodsList.find(g => g.id === form.goodsId);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" dir={isRtl ? "rtl" : "ltr"}>
       {/* Top Title & Header Actions */}
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>

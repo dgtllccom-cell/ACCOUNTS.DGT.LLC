@@ -7,20 +7,20 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    authorizeApiScope(session, { resource: "document_types", action: "read" });
+    authorizeApiScope(session, { resource: "product_brands", action: "read" });
 
     const searchParams = request.nextUrl.searchParams;
     const q = searchParams.get("q")?.trim();
 
     const data = await withLocalPg(async (sql) => {
       let query = sql`
-        SELECT id, code, name, description, is_active, created_at, name_en, name_ur, name_ar, name_fa, name_ps
-        FROM public.document_types
+        SELECT id, brand_code, brand_name, description, is_active, created_at
+        FROM public.product_brands
         WHERE deleted_at IS NULL
       `;
       if (q) {
         const pattern = `%${q}%`;
-        query = sql`${query} AND (name ILIKE ${pattern} OR code ILIKE ${pattern} OR description ILIKE ${pattern})`;
+        query = sql`${query} AND (brand_name ILIKE ${pattern} OR brand_code ILIKE ${pattern})`;
       }
       return await sql`${query} ORDER BY created_at DESC LIMIT 500`;
     });
@@ -28,7 +28,8 @@ export async function GET(request: NextRequest) {
     const list = data || [];
     const active = list.filter((item: any) => item.is_active).length;
     return apiOk({
-      documentTypes: list,
+      brands: list,
+      productBrands: list,
       summary: { total: list.length, active, inactive: list.length - active }
     });
   } catch (error) {
@@ -39,15 +40,14 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    authorizeApiScope(session, { resource: "document_types", action: "create" });
+    authorizeApiScope(session, { resource: "product_brands", action: "create" });
 
     const body = await request.json();
-    const name = typeof body.name === "string" ? body.name.trim() : "";
-    const code = typeof body.code === "string" ? body.code.trim().toUpperCase() : "";
-    const description = typeof body.description === "string" ? body.description.trim() : null;
+    const brandName = typeof body.brandName === "string" ? body.brandName.trim() : (body.name || "");
+    const brandCode = typeof body.brandCode === "string" ? body.brandCode.trim().toUpperCase() : (body.code || "");
 
-    if (!name || !code) {
-      return new Response(JSON.stringify({ error: "name and code required" }), {
+    if (!brandName || !brandCode) {
+      return new Response(JSON.stringify({ error: "brandName and brandCode required" }), {
         status: 400,
         headers: { "Content-Type": "application/json" }
       });
@@ -55,12 +55,12 @@ export async function POST(request: NextRequest) {
 
     const created = await withLocalPg(async (sql) => {
       const rows = await sql`
-        INSERT INTO public.document_types (
-          code, name, description, is_active, created_by, created_at, updated_at
+        INSERT INTO public.product_brands (
+          brand_code, brand_name, description, is_active, created_by, created_at, updated_at
         ) VALUES (
-          ${code},
-          ${name},
-          ${description},
+          ${brandCode},
+          ${brandName},
+          ${body.description || null},
           ${body.isActive !== false},
           ${session.userId ? sql`${session.userId}::uuid` : null},
           NOW(),
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
       return rows[0];
     });
 
-    return apiOk({ documentType: created }, { status: 201 });
+    return apiOk({ brand: created, productBrand: created }, { status: 201 });
   } catch (error) {
     return handleApiError(error);
   }
