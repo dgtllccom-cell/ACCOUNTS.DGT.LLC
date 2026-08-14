@@ -113,6 +113,8 @@ const userWizardTranslations: Record<string, Record<SupportedLanguage, string>> 
   addNewUser: { en: "+ New User Registration", ur: "+ نیا صارف رجسٹر کریں", ar: "+ تسجيل مستخدم جديد", fa: "+ ثبت کاربر جدید", ps: "+ نوی کارونکی ثبت کړئ" },
   selectEmployee: { en: "Select Registered Employee", ur: "رجسٹرڈ ایمپلائی منتخب کریں", ar: "اختر الموظف المسجل", fa: "انتخاب پرسنل ثبت شده", ps: "ثبت شوی کارمند وټاکئ" },
   fullName: { en: "User Full Name *", ur: "صارف کا مکمل نام *", ar: "الاسم الكامل للمستخدم *", fa: "نام کامل کاربر *", ps: "د کارونکي بشپړ نوم *" },
+  firstName: { en: "First Name *", ur: "پہلا نام *", ar: "الاسم الأول *", fa: "نام *", ps: "لومړی نوم *" },
+  lastName: { en: "Last Name / Surname", ur: "آخری نام / خاندانی نام", ar: "اسم العائلة / اللقب", fa: "نام خانوادگی", ps: "تخلص / کورنی نوم" },
   username: { en: "Login Username / Identifier *", ur: "لاگ ان یوزر نام *", ar: "اسم المستخدم للدخول *", fa: "نام کاربری ورود *", ps: "د ننوتلو کارن نوم *" },
   designation: { en: "Designation / Role Title", ur: "عہدہ / ڈیزگنیشن", ar: "المسمى الوظيفي", fa: "عنوان شغلی", ps: "دندې سرلیک" },
   department: { en: "Department", ur: "شعبہ / ڈیپارٹمنٹ", ar: "القسم", fa: "بخش / دپارتمان", ps: "څانګه / دیپارتمنت" },
@@ -182,6 +184,11 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     setUserCode((current) => current || makeAutoUserCode());
   }, []);
   const [fullName, setFullName] = useState("");
+  // Separate First Name + Last Name/Surname. The person master (customers) stores a single
+  // combined `customer_name`, so on employee-select we split it; fullName stays derived from
+  // both so the rest of the flow (username, save payload, preview) keeps working unchanged.
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [loginUsername, setLoginUsername] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [personalEmail, setPersonalEmail] = useState("");
@@ -240,13 +247,23 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLang]);
 
+  // Keep combined fullName derived from the separate First/Last fields so the rest of the flow
+  // (username default, save payload, live preview, review step) works unchanged.
+  useEffect(() => {
+    setFullName([firstName.trim(), lastName.trim()].filter(Boolean).join(" "));
+  }, [firstName, lastName]);
+
   // When Employee is selected from dropdown, populate fields across steps
   useEffect(() => {
     if (!selectedEmployeeId) return;
     const emp = hrEmployees.find((e) => e.id === selectedEmployeeId);
     if (emp) {
       const empName = emp.person?.customer_name || emp.name || emp.full_name || "";
-      setFullName(empName);
+      // Person master stores a single combined name → split into First + Last/Surname
+      // (first token = first name, rest = surname). Both fields auto-populate; no re-typing.
+      const parts = empName.trim().split(/\s+/).filter(Boolean);
+      setFirstName(parts.length ? parts[0] : "");
+      setLastName(parts.length > 1 ? parts.slice(1).join(" ") : "");
       setEmployeeCode(emp.employee_code || emp.code || "EMP-001");
       if (!loginUsername) {
         setLoginUsername(empName.toLowerCase().replace(/\s+/g, "."));
@@ -286,7 +303,11 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
       if (res && res.data) {
         const data = res.data;
         setEditUserId(data.userId);
-        setFullName(data.fullName || "");
+        {
+          const parts = String(data.fullName || "").trim().split(/\s+/).filter(Boolean);
+          setFirstName(parts.length ? parts[0] : "");
+          setLastName(parts.length > 1 ? parts.slice(1).join(" ") : "");
+        }
         setUserCode(data.userCode || makeAutoUserCode());
         setRole(data.role || "staff_user");
         setCountryId(data.countryId || "");
@@ -413,11 +434,19 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
       hrEmployees.map((e) => {
         const empName = e.person?.customer_name || e.name || e.full_name || "Employee";
         const empCode = e.employee_code || e.code || "EMP";
+        const phone = e.person?.mobile || e.person?.phone || "";
         const desig = e.designation ? ` - ${e.designation}` : "";
+        // Surname-first display so users can identify the right person when first names collide:
+        // "Surname, FirstName (CODE - Designation)". Falls back to the raw name if single-token.
+        const parts = empName.trim().split(/\s+/).filter(Boolean);
+        const first = parts.length ? parts[0] : empName;
+        const last = parts.length > 1 ? parts.slice(1).join(" ") : "";
+        const display = last ? `${last}, ${first}` : empName;
         return {
           value: e.id,
-          label: `${empName} (${empCode}${desig})`,
-          keywords: `${empName} ${empCode} ${e.designation ?? ""}`
+          label: `${display} (${empCode}${desig})`,
+          // Searchable by surname, first name, full name, code, designation AND phone.
+          keywords: `${last} ${first} ${empName} ${empCode} ${e.designation ?? ""} ${phone}`.trim()
         };
       }),
     [hrEmployees]
@@ -815,11 +844,21 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
                   <div className="grid gap-3 sm:grid-cols-2">
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("fullName")}</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("firstName")}</Label>
                       <Input
-                        value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
-                        placeholder="e.g. Muhammad Ali Shah"
+                        value={firstName}
+                        onChange={(e) => setFirstName(e.target.value)}
+                        placeholder="e.g. Muhammad"
+                        className="h-9 text-xs font-medium"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("lastName")}</Label>
+                      <Input
+                        value={lastName}
+                        onChange={(e) => setLastName(e.target.value)}
+                        placeholder="e.g. Ali Shah"
                         className="h-9 text-xs font-medium"
                       />
                     </div>
