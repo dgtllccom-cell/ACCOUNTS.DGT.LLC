@@ -9,6 +9,10 @@ import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-se
 import { getLedgerStatement, listLedgerReportLedgers, type LedgerLookupRow, type LedgerStatementLine } from "@/features/reports/ledger-report/ledger-report-api";
 import { Loader2 } from "lucide-react";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
+import { translateValue } from "@/lib/i18n/table-values";
+import { rtlLanguages } from "@/lib/i18n/languages";
 
 type SessionInfo = {
   user: { id: string; email: string | null; fullName: string | null };
@@ -20,6 +24,10 @@ function fmt(n: number) {
 }
 
 export function SuperAdminDetailedLedgerView() {
+  const lang = useActiveLanguage();
+  const tr = (label: string) => translateHeader(lang, label);
+  const tv = (value: string | null | undefined) => translateValue(lang, value);
+  const isRtl = rtlLanguages.includes(lang);
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
   const [portalNode, setPortalNode] = useState<HTMLElement | null>(null);
 
@@ -191,7 +199,7 @@ export function SuperAdminDetailedLedgerView() {
   }, [lines, filterType, filterValue, header]);
 
   return (
-    <div className="p-4 bg-[#f7f8fb] min-h-screen">
+    <div className="p-4 bg-[#f7f8fb] min-h-screen" dir={isRtl ? "rtl" : "ltr"}>
       <style dangerouslySetInnerHTML={{ __html: `
         .report-section h5 { margin-bottom:6px; font-weight:600; font-size:13px; color:#111827; border-bottom:2px solid #dee2e6; padding-bottom:4px; }
         .report-row { display:flex; flex-wrap:wrap; justify-content:space-between; margin-bottom:10px; gap: 10px; }
@@ -221,14 +229,14 @@ export function SuperAdminDetailedLedgerView() {
                   setLines([]);
                 }
               }}
-              placeholder="Search Account No..."
+              placeholder={tr("Search Account No...")}
             />
           </div>
-          
+
           <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-md px-1.5 py-0.5">
-            <span className="text-[10px] text-slate-500 font-semibold px-1">From</span>
+            <span className="text-[10px] text-slate-500 font-semibold px-1">{tr("From")}</span>
             <Input type="date" className="h-6 w-[105px] text-xs border-0 shadow-none bg-transparent p-0 focus-visible:ring-0" value={fromDate} onChange={e => setFromDate(e.target.value)} />
-            <span className="text-[10px] text-slate-500 font-semibold px-1 border-l border-slate-200 ml-1 pl-2">To</span>
+            <span className="text-[10px] text-slate-500 font-semibold px-1 border-l border-slate-200 ml-1 pl-2">{tr("To")}</span>
             <Input type="date" className="h-6 w-[105px] text-xs border-0 shadow-none bg-transparent p-0 focus-visible:ring-0" value={toDate} onChange={e => setToDate(e.target.value)} />
           </div>
 
@@ -242,10 +250,10 @@ export function SuperAdminDetailedLedgerView() {
                   setFilterValue("");
                 }}
               >
-                <option value="none">Filter By</option>
-                <option value="country">Country</option>
-                <option value="branch">Branch</option>
-                <option value="user">User</option>
+                <option value="none">{tr("Filter By")}</option>
+                <option value="country">{tr("Country")}</option>
+                <option value="branch">{tr("Branch")}</option>
+                <option value="user">{tr("User")}</option>
               </select>
             </div>
           </div>
@@ -263,9 +271,9 @@ export function SuperAdminDetailedLedgerView() {
 
           <div className="flex gap-1 ml-1">
             <Button size="sm" onClick={handleApply} disabled={loading} className="text-[10px] h-7 px-3">
-              {loading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null} Apply
+              {loading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null} {tr("Apply")}
             </Button>
-            <Button size="sm" variant="outline" onClick={handleReset} className="text-[10px] h-7 px-2">Reset</Button>
+            <Button size="sm" variant="outline" onClick={handleReset} className="text-[10px] h-7 px-2">{tr("Reset")}</Button>
           </div>
         </div>,
         portalNode
@@ -274,36 +282,36 @@ export function SuperAdminDetailedLedgerView() {
       {/* Top Row Details (4 Boxes now) */}
       <div className="report-row report-section">
         <div className="report-col">
-          <h5>Account Details</h5>
-          <div className="kv"><div className="k">A/c Name:</div><div className="v">{header?.accountName || header?.ledgerName || "-"}</div></div>
-          <div className="kv"><div className="k">A/c Number:</div><div className="v">{header?.accountCode || header?.ledgerCode || "-"}</div></div>
-          <div className="kv"><div className="k">Category:</div><div className="v">{header?.accountKind || "-"}</div></div>
-          <div className="kv"><div className="k">Type:</div><div className="v">{header?.normalBalance || "-"}</div></div>
-          <div className="kv"><div className="k">Currency:</div><div className="v">{header?.ledgerCurrency || "-"}</div></div>
+          <h5>{tr("Account Details")}</h5>
+          <div className="kv"><div className="k">{tr("A/c Name")}:</div><div className="v">{header?.accountName || header?.ledgerName || "-"}</div></div>
+          <div className="kv"><div className="k">{tr("A/c Number")}:</div><div className="v">{header?.accountCode || header?.ledgerCode || "-"}</div></div>
+          <div className="kv"><div className="k">{tr("Category")}:</div><div className="v">{tv(header?.accountKind) || "-"}</div></div>
+          <div className="kv"><div className="k">{tr("Type")}:</div><div className="v">{tv(header?.normalBalance) || "-"}</div></div>
+          <div className="kv"><div className="k">{tr("Currency")}:</div><div className="v">{header?.ledgerCurrency || "-"}</div></div>
         </div>
 
         <div className="report-col">
-          <h5>Company Details</h5>
-          <div className="kv"><div className="k">Company Name:</div><div className="v">{header?.companyName || header?.countryName || "—"}</div></div>
-          <div className="kv"><div className="k">City:</div><div className="v">{header?.cityName || "-"}</div></div>
-          <div className="kv"><div className="k">State:</div><div className="v">{header?.stateName || "-"}</div></div>
-          <div className="kv"><div className="k">Address:</div><div className="v">{header?.address || "-"}</div></div>
+          <h5>{tr("Company Details")}</h5>
+          <div className="kv"><div className="k">{tr("Company Name")}:</div><div className="v">{header?.companyName || header?.countryName || "—"}</div></div>
+          <div className="kv"><div className="k">{tr("City")}:</div><div className="v">{header?.cityName || "-"}</div></div>
+          <div className="kv"><div className="k">{tr("State")}:</div><div className="v">{header?.stateName || "-"}</div></div>
+          <div className="kv"><div className="k">{tr("Address")}:</div><div className="v">{header?.address || "-"}</div></div>
         </div>
 
         <div className="report-col">
-          <h5>Branch & Session Details</h5>
-          <div className="kv"><div className="k">Branch Name:</div><div className="v">{header?.cityBranchName || header?.countryBranchName || "-"}</div></div>
-          <div className="kv"><div className="k">Country:</div><div className="v">{header?.countryName || "-"}</div></div>
-          <div className="kv"><div className="k">User Name:</div><div className="v">{sessionInfo?.user?.fullName || "Admin"}</div></div>
-          <div className="kv"><div className="k">Login Date:</div><div className="v">{new Date().toLocaleDateString()}</div></div>
+          <h5>{tr("Branch & Session Details")}</h5>
+          <div className="kv"><div className="k">{tr("Branch Name")}:</div><div className="v">{header?.cityBranchName || header?.countryBranchName || "-"}</div></div>
+          <div className="kv"><div className="k">{tr("Country")}:</div><div className="v">{header?.countryName || "-"}</div></div>
+          <div className="kv"><div className="k">{tr("User Name")}:</div><div className="v">{sessionInfo?.user?.fullName || "Admin"}</div></div>
+          <div className="kv"><div className="k">{tr("Login Date")}:</div><div className="v">{new Date().toLocaleDateString()}</div></div>
         </div>
 
         <div className="report-col">
-          <h5>Ledger Summary</h5>
-          <div className="kv"><div className="k">Entries:</div><div className="v">{lines.length}</div></div>
-          <div className="kv"><div className="k">Dr:</div><div className="v text-rose-600">{fmt(calculatedTotals.sumDr)}</div></div>
-          <div className="kv"><div className="k">Cr:</div><div className="v text-emerald-600">{fmt(calculatedTotals.sumCr)}</div></div>
-          <div className="kv"><div className="k">Balance:</div><div className={`v ${calculatedTotals.running < 0 ? 'text-rose-600' : calculatedTotals.running > 0 ? 'text-emerald-600' : 'text-slate-500'}`}>{fmt(calculatedTotals.running)}</div></div>
+          <h5>{tr("Ledger Summary")}</h5>
+          <div className="kv"><div className="k">{tr("Entries")}:</div><div className="v">{lines.length}</div></div>
+          <div className="kv"><div className="k">{tr("Dr")}:</div><div className="v text-rose-600">{fmt(calculatedTotals.sumDr)}</div></div>
+          <div className="kv"><div className="k">{tr("Cr")}:</div><div className="v text-emerald-600">{fmt(calculatedTotals.sumCr)}</div></div>
+          <div className="kv"><div className="k">{tr("Balance")}:</div><div className={`v ${calculatedTotals.running < 0 ? 'text-rose-600' : calculatedTotals.running > 0 ? 'text-emerald-600' : 'text-slate-500'}`}>{fmt(calculatedTotals.running)}</div></div>
         </div>
 
 
@@ -311,7 +319,7 @@ export function SuperAdminDetailedLedgerView() {
 
       {/* Ledger Entries */}
       <div className="mt-4 bg-white p-3 border border-slate-200 rounded-md shadow-sm overflow-x-auto report-section">
-        <h5 className="mb-3">Ledger Entries</h5>
+        <h5 className="mb-3">{tr("Ledger Entries")}</h5>
         <table className="w-full text-left border-collapse entry-table">
           <thead>
             <tr>
@@ -337,16 +345,16 @@ export function SuperAdminDetailedLedgerView() {
                 <td className="whitespace-nowrap">{line.branchSerialNo || line.countrySerialNo || line.superAdminSerialNo || "-"}</td>
                 <td className="whitespace-nowrap"><a href="#" className="text-blue-600 hover:underline">{line.createdByName || "-"}</a></td>
                 <td className="whitespace-nowrap">{line.branchName || "-"}</td>
-                <td className="whitespace-nowrap font-medium text-slate-700">{line.sourceTable === "ledger_posting_batches" ? "Opening Balance" : line.sourceTable === "roznamcha_entries" ? "Roznamcha" : line.sourceTable || "-"}</td>
+                <td className="whitespace-nowrap font-medium text-slate-700">{line.sourceTable === "ledger_posting_batches" ? tr("Opening Balance") : line.sourceTable === "roznamcha_entries" ? tr("Roznamcha") : tv(line.sourceTable) || "-"}</td>
                 <td className="whitespace-nowrap">{line.referenceNo || "-"}</td>
                 <td>
                   <div>{line.description || "-"}</div>
                   {((line as any).perKgRate || (line as any).purchaseCurrency || (line as any).totalPurchaseAmount) ? (
                     <div className="text-[10px] text-slate-500 mt-1 pt-1 border-t border-slate-100">
                       {[
-                        (line as any).perKgRate ? `Per KG Rate: ${fmt((line as any).perKgRate)}` : null,
-                        (line as any).purchaseCurrency ? `Purch. Cur: ${(line as any).purchaseCurrency}` : null,
-                        (line as any).totalPurchaseAmount ? `Total Purch: ${fmt((line as any).totalPurchaseAmount)}` : null
+                        (line as any).perKgRate ? `${tr("Per KG Rate")}: ${fmt((line as any).perKgRate)}` : null,
+                        (line as any).purchaseCurrency ? `${tr("Purch. Cur")}: ${(line as any).purchaseCurrency}` : null,
+                        (line as any).totalPurchaseAmount ? `${tr("Total Purch")}: ${fmt((line as any).totalPurchaseAmount)}` : null
                       ].filter(Boolean).join(" | ")}
                     </div>
                   ) : null}
@@ -363,19 +371,19 @@ export function SuperAdminDetailedLedgerView() {
             ))}
             {calculatedTotals.lines.length === 0 && !loading && (
               <tr>
-                <td colSpan={13} className="text-center py-6 text-slate-500">No entries found. Select an account and apply filters.</td>
+                <td colSpan={13} className="text-center py-6 text-slate-500">{tr("No entries found. Select an account and apply filters.")}</td>
               </tr>
             )}
             {loading && (
               <tr>
-                <td colSpan={13} className="text-center py-6 text-slate-500"><Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" /> Loading data...</td>
+                <td colSpan={13} className="text-center py-6 text-slate-500"><Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" /> {tr("Loading data...")}</td>
               </tr>
             )}
           </tbody>
           {calculatedTotals.lines.length > 0 && (
             <tfoot>
               <tr className="bg-slate-100 font-bold border-t-2 border-slate-300">
-                <td colSpan={7} className="text-right">Totals</td>
+                <td colSpan={7} className="text-right">{tr("Totals")}</td>
                 <td className="text-right text-rose-700">{fmt(calculatedTotals.sumDr)}</td>
                 <td className="text-right text-emerald-700">{fmt(calculatedTotals.sumCr)}</td>
                 <td className={`text-right ${calculatedTotals.running < 0 ? 'text-rose-700' : calculatedTotals.running > 0 ? 'text-emerald-700' : ''}`}>{fmt(calculatedTotals.running)}</td>
