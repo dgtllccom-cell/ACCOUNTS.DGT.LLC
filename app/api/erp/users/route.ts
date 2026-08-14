@@ -167,7 +167,13 @@ export async function POST(request: NextRequest) {
         phone: body.phone ?? null,
         company_id: body.companyId ?? null,
         id_type: body.idType ?? null,
-        id_value: body.idValue ?? null
+        id_value: body.idValue ?? null,
+        designation: body.designation ?? null,
+        department: body.department ?? null,
+        cnic_passport_no: body.cnicPassportNo ?? null,
+        id_expiry_date: body.idExpiryDate ?? null,
+        kyc_status: body.kycStatus ?? "VERIFIED",
+        residential_address: body.residentialAddress ?? null
       }
     });
 
@@ -336,6 +342,15 @@ export async function GET(request: NextRequest) {
       permissions,
       email: authUser?.email ?? "",
       phone: authUser?.user_metadata?.phone ?? "",
+      designation: authUser?.user_metadata?.designation ?? "",
+      department: authUser?.user_metadata?.department ?? "",
+      cnicPassportNo: authUser?.user_metadata?.cnic_passport_no ?? "",
+      idExpiryDate: authUser?.user_metadata?.id_expiry_date ?? "",
+      kycStatus: authUser?.user_metadata?.kyc_status ?? "VERIFIED",
+      residentialAddress: authUser?.user_metadata?.residential_address ?? "",
+      passwordVaultRef: `VAULT-DGT-${profile.user_code || "USR"}`,
+      createdAt: assignment?.created_at ?? profile.created_at ?? new Date().toISOString(),
+      updatedAt: assignment?.updated_at ?? profile.updated_at ?? new Date().toISOString(),
       purpose: authUser?.user_metadata?.purpose ?? ""
     });
   } catch (error) {
@@ -359,6 +374,12 @@ export async function PATCH(request: NextRequest) {
       permissions: z.array(z.string()).optional(),
       email: z.string().trim().email().optional(),
       phone: z.string().trim().optional(),
+      designation: z.string().trim().optional(),
+      department: z.string().trim().optional(),
+      cnicPassportNo: z.string().trim().optional(),
+      idExpiryDate: z.string().trim().optional(),
+      kycStatus: z.string().trim().optional(),
+      residentialAddress: z.string().trim().optional(),
       purpose: z.string().trim().optional()
     }).parse(await request.json());
 
@@ -410,8 +431,19 @@ export async function PATCH(request: NextRequest) {
       if (profileError) throw new Error(profileError.message);
     }
 
-    // 2. Update Supabase Auth if password, email, phone, or purpose is provided
-    if (body.password !== undefined || body.email !== undefined || body.phone !== undefined || body.purpose !== undefined) {
+    // 2. Update Supabase Auth if password, email, phone, or metadata is provided
+    if (
+      body.password !== undefined ||
+      body.email !== undefined ||
+      body.phone !== undefined ||
+      body.purpose !== undefined ||
+      body.designation !== undefined ||
+      body.department !== undefined ||
+      body.cnicPassportNo !== undefined ||
+      body.idExpiryDate !== undefined ||
+      body.kycStatus !== undefined ||
+      body.residentialAddress !== undefined
+    ) {
       const updates: any = {};
       if (body.password !== undefined) updates.password = body.password;
       if (body.email !== undefined) updates.email = body.email;
@@ -419,6 +451,12 @@ export async function PATCH(request: NextRequest) {
       const userMetadata: any = {};
       if (body.phone !== undefined) userMetadata.phone = body.phone;
       if (body.purpose !== undefined) userMetadata.purpose = body.purpose;
+      if (body.designation !== undefined) userMetadata.designation = body.designation;
+      if (body.department !== undefined) userMetadata.department = body.department;
+      if (body.cnicPassportNo !== undefined) userMetadata.cnic_passport_no = body.cnicPassportNo;
+      if (body.idExpiryDate !== undefined) userMetadata.id_expiry_date = body.idExpiryDate;
+      if (body.kycStatus !== undefined) userMetadata.kyc_status = body.kycStatus;
+      if (body.residentialAddress !== undefined) userMetadata.residential_address = body.residentialAddress;
       
       if (Object.keys(userMetadata).length > 0) {
         // Merge with existing metadata

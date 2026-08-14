@@ -29,7 +29,11 @@ import {
   FileCheck,
   Calendar,
   Home,
-  Info
+  Info,
+  ExternalLink,
+  Edit,
+  XCircle,
+  FileSpreadsheet
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -42,11 +46,13 @@ import type { LocationCountry } from "@/features/locations/location-api";
 import { listCities, listCountries, type LocationCity } from "@/features/locations/location-api";
 import type { EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { enterpriseRolePermissions } from "@/lib/permissions/enterprise-roles";
+import { buildRbacRoleSummary } from "@/lib/permissions/rbac-matrix-builder";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { apiPost } from "@/lib/api/client";
 import { normalizeUserCode } from "@/lib/services/user-identity-service";
 import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
+import { UserProfileReportModal, UserProfileData } from "./user-profile-report-modal";
 
 type MainBranchRow = { id: string; name: string; code: string; local_currency: string; is_main: boolean; city_id?: string | null };
 type CityBranchRow = { id: string; name: string; code: string; city_name: string; local_currency: string; country_branch_id: string };
@@ -61,16 +67,16 @@ const branchTypeOptions = [
 ] as const;
 
 const roleOptions: Array<{ value: EnterpriseRole; label: string; help: string }> = [
-  { value: "super_admin", label: "Super Admin User", help: "Global scope (full access)." },
-  { value: "country_admin", label: "Country Admin User", help: "Country scope (one country)." },
-  { value: "country_user", label: "Country User", help: "Country scope user (one country)." },
-  { value: "main_branch_admin", label: "Main Branch Admin User", help: "Main branch scope." },
-  { value: "city_branch_admin", label: "City/Branch User", help: "City branch scope." },
-  { value: "accountant", label: "Accountant", help: "Branch scope with accounting permissions." },
-  { value: "cashier", label: "Cashier", help: "Branch scope with payment permissions." },
-  { value: "agent_user", label: "Agent User", help: "Limited branch access." },
-  { value: "staff_user", label: "Staff User", help: "Limited branch access." },
-  { value: "auditor_viewer", label: "Auditor / Viewer", help: "Read-only scope." }
+  { value: "super_admin", label: "Super Admin User", help: "Global scope (full root system control)." },
+  { value: "country_admin", label: "Country Admin User", help: "Country scope (full country ledger & branches)." },
+  { value: "country_user", label: "Country Operations User", help: "Country scope user." },
+  { value: "main_branch_admin", label: "Main Branch Admin User", help: "Main branch scope (Roznamcha & daily book closing)." },
+  { value: "city_branch_admin", label: "City/Branch User", help: "City branch scope (transactions & entry)." },
+  { value: "accountant", label: "Accountant", help: "Branch scope with direct ledger & financial posting." },
+  { value: "cashier", label: "Cashier", help: "Branch scope with cash receipts & payments." },
+  { value: "agent_user", label: "Clearing / Customs Agent", help: "Port & customs clearance limited scope." },
+  { value: "staff_user", label: "Staff User", help: "Standard operational branch access." },
+  { value: "auditor_viewer", label: "Auditor / Viewer", help: "Read-only audit & reporting scope." }
 ];
 
 const userWizardTranslations: Record<string, Record<SupportedLanguage, string>> = {
@@ -148,13 +154,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const searchParams = useSearchParams();
   const urlUserId = userIdProp || searchParams.get("userId");
 
-  // Shared reactive language store (not a hand-rolled document.documentElement.lang watcher):
-  // that attribute holds the full BCP-47 tag (e.g. "ur-PK"), which never exact-matched the
-  // bare "ur"/"ar"/"fa"/"ps" codes a from-scratch watcher here checked against, so this wizard
-  // (including the employee dropdown's names) silently stayed stuck in English after a language
-  // switch. useActiveLanguage() checks localStorage's bare code first and is shared by every
-  // other translated component in the app, so this now reacts the same way they do.
   const activeLang = useActiveLanguage();
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang);
 
   const tr = (key: string) => userWizardTranslations[key]?.[activeLang] || userWizardTranslations[key]?.["en"] || key;
 
@@ -165,18 +166,17 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   // Modal for creating new employee on the fly
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
 
+  // Modal for viewing full saved user profile
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [savedUserData, setSavedUserData] = useState<UserProfileData | null>(null);
+
   // HR Employees list for Step 1 dropdown
   const [hrEmployees, setHrEmployees] = useState<any[]>([]);
   const [hrEmployeesLoading, setHrEmployeesLoading] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
+  const [employeeCode, setEmployeeCode] = useState<string>("");
 
   // Step 1: User Core State
-  // Root cause of the page getting permanently stuck on "Loading..." on every hard
-  // navigation/full page load: makeAutoUserCode() uses Math.random(), so a useState lazy
-  // initializer here computes a DIFFERENT value on the server (SSR) than on the client's
-  // first render — a guaranteed text hydration mismatch on {userCode} every single time
-  // this route is server-rendered. Start empty (matches SSR) and generate the random code
-  // only after mount, client-side, where it can never disagree with what the server sent.
   const [userCode, setUserCode] = useState("");
   useEffect(() => {
     setUserCode((current) => current || makeAutoUserCode());
@@ -216,13 +216,12 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const [editUserId, setEditUserId] = useState<string | null>(null);
   const [isResettingBranch, setIsResettingBranch] = useState(true);
 
+  // Dynamic RBAC summary computed in real-time
+  const rbacSummary = useMemo(() => buildRbacRoleSummary(role), [role]);
+
   async function fetchHrEmployees(): Promise<any[]> {
     setHrEmployeesLoading(true);
     try {
-      // Resolve the linked Person Master name into the active language server-side —
-      // without this the dropdown always showed whatever script each employee's name was
-      // originally typed in, mixed record-to-record regardless of the selected language
-      // (the exact "names appearing in a different script" issue).
       const res = await fetch(`/api/erp/hr-payroll/employees?lang=${activeLang}`).then((r) => r.json());
       if (res && res.employees && Array.isArray(res.employees)) {
         setHrEmployees(res.employees);
@@ -241,13 +240,14 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLang]);
 
-  // When Employee is selected from dropdown, populate fields
+  // When Employee is selected from dropdown, populate fields across steps
   useEffect(() => {
     if (!selectedEmployeeId) return;
     const emp = hrEmployees.find((e) => e.id === selectedEmployeeId);
     if (emp) {
       const empName = emp.person?.customer_name || emp.name || emp.full_name || "";
       setFullName(empName);
+      setEmployeeCode(emp.employee_code || emp.code || "EMP-001");
       if (!loginUsername) {
         setLoginUsername(empName.toLowerCase().replace(/\s+/g, "."));
       }
@@ -270,6 +270,13 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         setBranchType("city");
         setCityBranchId(emp.city_branch_id);
       }
+
+      if (emp.person?.national_id_or_passport) {
+        setCnicPassportNo(emp.person.national_id_or_passport);
+      }
+      if (emp.person?.address) {
+        setResidentialAddress(emp.person.address);
+      }
     }
   }, [selectedEmployeeId, hrEmployees]);
 
@@ -285,6 +292,12 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         setCountryId(data.countryId || "");
         if (data.email) setPersonalEmail(data.email);
         if (data.phone) setContactPhone(data.phone);
+        if (data.designation) setDesignation(data.designation);
+        if (data.department) setDepartment(data.department);
+        if (data.cnicPassportNo) setCnicPassportNo(data.cnicPassportNo);
+        if (data.idExpiryDate) setIdExpiryDate(data.idExpiryDate);
+        if (data.kycStatus) setKycStatus(data.kycStatus);
+        if (data.residentialAddress) setResidentialAddress(data.residentialAddress);
 
         if (data.countryBranchId && !data.cityBranchId) {
           setBranchType("main");
@@ -354,12 +367,6 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         ]);
 
         if (!cancelled) {
-          // Root cause: /api/branch-management/country-branches responds with
-          // { countryBranches: [...] } and /city-branches with { cityBranches: [...] } — never
-          // a `data` key. The previous `cbRes?.data || cbRes || []` fallback therefore matched
-          // neither shape and fell through to the raw response OBJECT itself (always truthy,
-          // never an array), so .map() threw "is not a function" for every country selection,
-          // every time — not an edge case. Read the actual documented response keys instead.
           const mbRows: MainBranchRow[] = (Array.isArray(cbRes?.countryBranches) ? cbRes.countryBranches : Array.isArray(cbRes) ? cbRes : []).map((b: any) => ({
             id: b.id,
             name: b.name,
@@ -426,17 +433,6 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     return "";
   }, [branchType, selectedMainBranch, selectedCityBranch]);
 
-  const cityName = useMemo(() => {
-    if (branchType === "city") return selectedCityBranch?.city_name ?? "";
-    if (branchType === "main") {
-      const cityId = selectedMainBranch?.city_id ?? null;
-      if (!cityId) return "";
-      const match = cities.find((c) => c.id === cityId);
-      return match?.name ?? "";
-    }
-    return "";
-  }, [branchType, selectedCityBranch, selectedMainBranch, cities]);
-
   function isStepValid(currentStep: WizardStep) {
     if (currentStep === 1) {
       return Boolean(fullName.trim().length >= 2 || selectedEmployeeId);
@@ -447,7 +443,6 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
       return true;
     }
     if (currentStep === 3) {
-      // Step 3 (KYC) is optional - always allows Next!
       return true;
     }
     if (currentStep === 4) {
@@ -539,7 +534,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         permissions: enterpriseRolePermissions[role] || []
       };
 
-      let res;
+      let resUserId = editUserId;
       if (isEdit) {
         payload.userId = editUserId;
         if (password) payload.password = password;
@@ -551,14 +546,44 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         });
         const json = await fetchRes.json();
         if (!fetchRes.ok) throw new Error(json?.error?.message || json?.error || "Failed to update user.");
-        res = { userId: editUserId!, userCode: issuedCode };
       } else {
         payload.email = email;
         payload.password = password || "User@123456";
         payload.preferredLanguage = preferredLanguage;
-        res = await apiPost<{ userId: string; userCode: string }>("/api/erp/users", payload);
+        const createRes = await apiPost<{ userId: string; userCode: string }>("/api/erp/users", payload);
+        if (createRes && (createRes as any).userId) {
+          resUserId = (createRes as any).userId;
+        }
       }
 
+      const completedUser: UserProfileData = {
+        userId: resUserId || "USR-RECORD",
+        userCode: issuedCode,
+        fullName: fullName.trim(),
+        username: loginUsername || issuedCode,
+        email: email,
+        phone: contactPhone.trim(),
+        designation: designation,
+        department: department,
+        employeeCode: employeeCode || "EMP-LINKED",
+        countryName: selectedCountry?.name || "Global Scope",
+        mainBranchName: selectedMainBranch?.name || "Main Branch",
+        mainBranchCode: selectedMainBranch?.code || "MAIN-001",
+        cityBranchName: selectedCityBranch?.name || "City Branch",
+        cityBranchCode: selectedCityBranch?.code || "CITY-001",
+        localCurrency: selectedMainBranch?.local_currency || "USD",
+        role: role,
+        status: "Active",
+        cnicPassportNo: cnicPassportNo.trim(),
+        idExpiryDate: idExpiryDate,
+        kycStatus: kycStatus,
+        residentialAddress: residentialAddress.trim(),
+        passwordVaultRef: `VAULT-DGT-${issuedCode}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      };
+
+      setSavedUserData(completedUser);
       setBanner({ tone: "ok", text: isEdit ? "User record & KYC updated successfully." : "User registered & KYC linked successfully." });
     } catch (e: any) {
       const errMsg = e?.message || (typeof e === "string" ? e : "User registration operation failed.");
@@ -582,9 +607,44 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     { number: 4 as const, label: tr("step4Label"), icon: <ShieldCheck className="h-4 w-4" /> }
   ];
 
+  const handlePrintCard = () => {
+    openUserA4ReportWindow({
+      title: "User Profile & Access Authorization Report",
+      subtitle: "Official Centralized ERP User Registry Record",
+      userData: {
+        userId: editUserId || "USR-PREVIEW",
+        userCode: userCode,
+        fullName: fullName || "User Name",
+        countryName: selectedCountry?.name || "Pakistan",
+        branchName: (branchType === "main" ? selectedMainBranch?.name : selectedCityBranch?.name) || "Main Branch",
+        branchCode: branchCode || "PK-MAIN-001",
+        branchType: designation || "Company Staff",
+        role: role,
+        registrationDate: new Date().toISOString(),
+        status: "Active",
+        permissions: [],
+        department: department,
+        designation: designation,
+        employeeCode: employeeCode,
+        phone: contactPhone,
+        email: personalEmail,
+        cnicPassportNo: cnicPassportNo,
+        idExpiryDate: idExpiryDate,
+        kycStatus: kycStatus,
+        residentialAddress: residentialAddress,
+        passwordVaultRef: `VAULT-DGT-${userCode}`,
+        lastActivity: new Date().toISOString(),
+        lastActivityAction: "user.registered",
+        rawPassword: `VAULT-DGT-${userCode}`,
+        activityCounts: { logins: 1, transactions: 0, roznamcha: 0, purchases: 0, payments: 0, accounts: 0, approvals: 0, edits: 0 }
+      },
+      lang: activeLang
+    });
+  };
+
   return (
     <div className="space-y-6">
-      {/* Header Bar aligned with ERP theme */}
+      {/* Header Bar */}
       <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
@@ -600,6 +660,17 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          {savedUserData && (
+            <Button
+              size="sm"
+              onClick={() => setShowProfileModal(true)}
+              className="gap-1.5 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-sm"
+            >
+              <Eye className="h-3.5 w-3.5" />
+              <span>View User Profile Report</span>
+            </Button>
+          )}
+
           {editUserId && (
             <Button
               variant="outline"
@@ -612,6 +683,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                 setUserCode(makeAutoUserCode());
                 setStep(1);
                 setBanner(null);
+                setSavedUserData(null);
               }}
               className="gap-1.5 text-xs font-semibold"
             >
@@ -622,25 +694,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
           <Button
             size="sm"
-            onClick={() => {
-              openUserA4ReportWindow({
-                userId: editUserId || "USR-PREVIEW",
-                userCode: userCode,
-                fullName: fullName || "User Name",
-                countryName: selectedCountry?.name || "Pakistan",
-                branchName: (branchType === "main" ? selectedMainBranch?.name : selectedCityBranch?.name) || "Main Branch",
-                branchCode: branchCode || "PK-MAIN-001",
-                branchType: designation || "Company Staff",
-                role: role,
-                registrationDate: new Date().toISOString(),
-                status: "Active",
-                permissions: [],
-                lastActivity: new Date().toISOString(),
-                lastActivityAction: "user.registered",
-                rawPassword: password || "••••••••",
-                activityCounts: { logins: 1, transactions: 0, roznamcha: 0, purchases: 0, payments: 0, accounts: 0, approvals: 0, edits: 0 }
-              });
-            }}
+            onClick={handlePrintCard}
             className="gap-1.5 text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-sm"
           >
             <Printer className="h-3.5 w-3.5 text-emerald-400" />
@@ -748,11 +802,6 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     >
                       <EmployeeForm
                         onSave={async (newEmployeeId) => {
-                          // Reuses the existing Employee/Person Master create flow, API,
-                          // translation pipeline and permissions in full — nothing
-                          // duplicated here. Refresh the dropdown from the same
-                          // already-localized endpoint and auto-select the new row so the
-                          // user can continue straight to Next Step.
                           setShowEmployeeModal(false);
                           const freshList = await fetchHrEmployees();
                           if (newEmployeeId && freshList.some((e) => e.id === newEmployeeId)) {
@@ -928,35 +977,73 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                 </div>
               )}
 
-              {/* STEP 4: Review & Complete Password */}
+              {/* STEP 4: Review & Complete + Roles & Permissions Matrix */}
               {step === 4 && (
-                <div className="space-y-3">
-                  <div className="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-2 text-xs">
-                    <div className="flex justify-between border-b pb-1">
-                      <span className="font-semibold text-slate-500">{tr("fullName")}:</span>
-                      <span className="font-bold text-slate-900">{fullName || "-"}</span>
+                <div className="space-y-4">
+                  {/* Summary of Steps 1-3 */}
+                  <div className="rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-900/60 p-3.5 space-y-2 text-xs">
+                    <div className="font-bold text-slate-900 dark:text-slate-100 border-b pb-1 flex items-center justify-between">
+                      <span>User & Organizational Master Summary</span>
+                      <span className="text-[10px] font-mono text-emerald-600 font-bold">{userCode}</span>
                     </div>
-                    <div className="flex justify-between border-b pb-1">
-                      <span className="font-semibold text-slate-500">{tr("username")}:</span>
-                      <span className="font-bold text-emerald-600 font-mono">{loginUsername || userCode}</span>
-                    </div>
-                    <div className="flex justify-between border-b pb-1">
-                      <span className="font-semibold text-slate-500">{tr("role")}:</span>
-                      <span className="font-bold text-slate-900 uppercase">{role}</span>
-                    </div>
-                    <div className="flex justify-between border-b pb-1">
-                      <span className="font-semibold text-slate-500">{tr("assignedBranch")}:</span>
-                      <span className="font-bold text-slate-900">{branchCode || selectedCountry?.name || "Global Scope"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="font-semibold text-slate-500">{tr("kycStatus")}:</span>
-                      <span className="font-bold text-emerald-600">{kycStatus === "VERIFIED" ? tr("verifiedCompliant") : tr("pendingVerification")}</span>
+                    <div className="grid grid-cols-2 gap-2 pt-1 text-[11px]">
+                      <div><span className="text-slate-500">Full Name:</span> <strong className="text-slate-900 dark:text-slate-100">{fullName || "-"}</strong></div>
+                      <div><span className="text-slate-500">Username:</span> <strong className="text-emerald-600 font-mono">{loginUsername || userCode}</strong></div>
+                      <div><span className="text-slate-500">Designation:</span> <strong>{designation}</strong></div>
+                      <div><span className="text-slate-500">Department:</span> <strong>{department}</strong></div>
+                      <div><span className="text-slate-500">Country Scope:</span> <strong>{selectedCountry?.name || "Global Scope"}</strong></div>
+                      <div><span className="text-slate-500">Assigned Branch:</span> <strong>{branchCode || selectedMainBranch?.name || "Main Branch"}</strong></div>
+                      <div><span className="text-slate-500">KYC Status:</span> <strong className="text-emerald-600">{kycStatus === "VERIFIED" ? "Verified & Compliant" : "Pending Verification"}</strong></div>
+                      <div><span className="text-slate-500">CNIC / ID:</span> <strong className="font-mono">{cnicPassportNo || "Not Provided"}</strong></div>
                     </div>
                   </div>
 
-                  <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t">
+                  {/* Dynamic Roles & Permissions Matrix */}
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+                        <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
+                        <span>Assigned Role Authorization Matrix ({rbacSummary.roleTitle})</span>
+                      </Label>
+                      <span className="text-[10px] font-mono text-blue-600 bg-blue-50 dark:bg-blue-950/60 px-2 py-0.5 rounded font-bold border border-blue-200 dark:border-blue-800">
+                        {rbacSummary.accessibleModules.length} Modules Authorized
+                      </span>
+                    </div>
+
+                    <div className="rounded-lg border border-slate-200 dark:border-slate-800 overflow-hidden max-h-48 overflow-y-auto">
+                      <table className="w-full text-left text-[11px]">
+                        <thead className="bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold uppercase text-[9px] sticky top-0">
+                          <tr>
+                            <th className="p-2">Module</th>
+                            <th className="p-2 text-center">View</th>
+                            <th className="p-2 text-center">Create</th>
+                            <th className="p-2 text-center">Edit</th>
+                            <th className="p-2 text-center">Delete</th>
+                            <th className="p-2 text-center">Approve</th>
+                            <th className="p-2 text-center">Export</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                          {rbacSummary.accessibleModules.map((m) => (
+                            <tr key={m.moduleKey} className="hover:bg-slate-50/50">
+                              <td className="p-2 font-medium text-slate-900 dark:text-slate-100">{m.moduleName}</td>
+                              <td className="p-2 text-center">{m.canView ? <span className="text-emerald-600 font-bold">✓</span> : <span className="text-slate-300">-</span>}</td>
+                              <td className="p-2 text-center">{m.canCreate ? <span className="text-emerald-600 font-bold">✓</span> : <span className="text-slate-300">-</span>}</td>
+                              <td className="p-2 text-center">{m.canEdit ? <span className="text-blue-600 font-bold">✓</span> : <span className="text-slate-300">-</span>}</td>
+                              <td className="p-2 text-center">{m.canDelete ? <span className="text-red-600 font-bold">✓</span> : <span className="text-slate-300">-</span>}</td>
+                              <td className="p-2 text-center">{m.canPostApprove ? <span className="text-purple-600 font-bold">✓</span> : <span className="text-slate-300">-</span>}</td>
+                              <td className="p-2 text-center">{m.canPrintExport ? <span className="text-emerald-600 font-bold">✓</span> : <span className="text-slate-300">-</span>}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Password & Security Credentials */}
+                  <div className="grid gap-3 sm:grid-cols-2 pt-2 border-t border-slate-200 dark:border-slate-800">
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800">Account Password *</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Account Password *</Label>
                       <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
@@ -972,7 +1059,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     </div>
 
                     <div className="space-y-1">
-                      <Label className="text-xs font-bold text-slate-800">Confirm Password *</Label>
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Confirm Password *</Label>
                       <Input
                         type="password"
                         value={confirmPassword}
@@ -1011,16 +1098,29 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     <ChevronRight className="h-4 w-4" />
                   </Button>
                 ) : (
-                  <Button
-                    type="button"
-                    size="sm"
-                    onClick={finish}
-                    disabled={saving || !isStepValid(4)}
-                    className="gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm px-4"
-                  >
-                    <CheckCircle2 className="h-4 w-4" />
-                    <span>{saving ? tr("savingText") : tr("saveUser")}</span>
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {savedUserData && (
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => setShowProfileModal(true)}
+                        className="gap-1.5 text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white shadow-sm"
+                      >
+                        <Eye className="h-4 w-4" />
+                        <span>View Profile Report</span>
+                      </Button>
+                    )}
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={finish}
+                      disabled={saving || !isStepValid(4)}
+                      className="gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm px-4"
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      <span>{saving ? tr("savingText") : tr("saveUser")}</span>
+                    </Button>
+                  </div>
                 )}
               </div>
             </CardContent>
@@ -1033,9 +1133,11 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
             <div className="flex items-center justify-between border-b pb-2">
               <div className="flex items-center gap-2">
                 <UserCheck className="h-4 w-4 text-emerald-600" />
-                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Live User Card Preview</span>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">Live Persistent User Card</span>
               </div>
-              <span className="bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded text-[10px] font-bold border border-emerald-200">
+              <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
+                kycStatus === "VERIFIED" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-amber-50 text-amber-700 border-amber-200"
+              }`}>
                 {kycStatus === "VERIFIED" ? "Verified" : "Pending KYC"}
               </span>
             </div>
@@ -1051,28 +1153,67 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500 font-semibold">{tr("designation")}:</span>
-                <span className="font-semibold text-slate-800">{designation}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{designation}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-semibold">{tr("department")}:</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{department}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-semibold">{tr("role")}:</span>
+                <span className="font-bold text-blue-600 uppercase">{role}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500 font-semibold">{tr("country")}:</span>
-                <span className="font-semibold text-slate-800">{selectedCountry?.name || "Pakistan"}</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{selectedCountry?.name || "Global Scope"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500 font-semibold">{tr("assignedBranch")}:</span>
+                <span className="font-semibold text-slate-800 dark:text-slate-200">{branchCode || selectedMainBranch?.name || "Main Branch"}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-500 font-semibold">{tr("cnicPassport")}:</span>
-                <span className="font-mono font-bold text-slate-800">{cnicPassportNo || "Not Provided"}</span>
+                <span className="font-mono font-bold text-slate-800 dark:text-slate-200">{cnicPassportNo || "Not Provided"}</span>
+              </div>
+              <div className="flex justify-between border-t pt-2 mt-2">
+                <span className="text-slate-500 font-semibold">Vault Reference:</span>
+                <span className="font-mono font-bold text-purple-600">{`VAULT-DGT-${userCode}`}</span>
               </div>
             </div>
+
+            {savedUserData && (
+              <div className="pt-2 border-t">
+                <Button
+                  size="sm"
+                  onClick={() => setShowProfileModal(true)}
+                  className="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold gap-1.5"
+                >
+                  <Eye className="h-3.5 w-3.5" />
+                  <span>Open Full User Profile Report</span>
+                </Button>
+              </div>
+            )}
           </Card>
         </div>
       </div>
+
+      {/* Full User Profile Report Modal */}
+      {savedUserData && (
+        <UserProfileReportModal
+          user={savedUserData}
+          isOpen={showProfileModal}
+          onClose={() => setShowProfileModal(false)}
+          onEdit={(id) => {
+            setShowProfileModal(false);
+            setEditUserId(id);
+            setStep(1);
+          }}
+        />
+      )}
     </div>
   );
 }
 
 export function UserRegistrationWizard(props: { userIdProp?: string }) {
-  // Every caller (registration/new-entry page, users/new, users/edit/[id]) already wraps this
-  // component in its own <Suspense> for useSearchParams() — this redundant second, nested
-  // Suspense boundary around the same content was never needed and could leave the page stuck
-  // showing "Loading User Setup Wizard..." indefinitely instead of committing the real content.
   return <UserRegistrationWizardContent {...props} />;
 }
