@@ -384,6 +384,7 @@ export type UiKey =
   | "nav.cash_entry_country"
   | "nav.cash_entry_branch"
   | "nav.ledgers"
+  | "nav.journal_report_pdf_erp"
   | "nav.new_ledger"
   | "nav.super_admin_ledger"
   | "nav.country_ledger"
@@ -3649,6 +3650,7 @@ const en: Dict = {
   "nav.cash_entry_country": "Country Cash Entry",
   "nav.cash_entry_branch": "Branch Cash Entry",
   "nav.ledgers": "Ledgers",
+  "nav.journal_report_pdf_erp": "Journal Report PDF ERP",
   "nav.new_ledger": "New Ledger",
   "nav.super_admin_ledger": "Super Admin Ledger",
   "nav.country_ledger": "Country Ledger",
@@ -5820,6 +5822,7 @@ const ur: Dict = {
   "nav.cash_entry_country": "کنٹری کیش انٹری",
   "nav.cash_entry_branch": "برانچ کیش انٹری",
   "nav.ledgers": "لیجر",
+  "nav.journal_report_pdf_erp": "جرنل رپورٹ پی ڈی ایف ERP",
   "nav.new_ledger": "نیا لیجر",
   "nav.super_admin_ledger": "سپر ایڈمن لیجر",
   "nav.country_ledger": "کنٹری لیجر",
@@ -7966,6 +7969,7 @@ const ar: Dict = {
   "nav.cash_entry_country": "إدخال نقدي (دولة)",
   "nav.cash_entry_branch": "إدخال نقدي (فرع)",
   "nav.ledgers": "دفاتر الأستاذ",
+  "nav.journal_report_pdf_erp": "تقرير اليومية PDF ERP",
   "nav.new_ledger": "دفتر أستاذ جديد",
   "nav.super_admin_ledger": "دفتر المشرف الأعلى",
   "nav.country_ledger": "دفتر الدولة",
@@ -10136,6 +10140,7 @@ const fa: Dict = {
   "nav.cash_entry_country": "ثبت نقدی (کشور)",
   "nav.cash_entry_branch": "ثبت نقدی (شعبه)",
   "nav.ledgers": "دفاتر کل",
+  "nav.journal_report_pdf_erp": "گزارش روزنامه PDF ERP",
   "nav.new_ledger": "دفتر کل جدید",
   "nav.super_admin_ledger": "دفتر کل سوپر ادمین",
   "nav.country_ledger": "دفتر کل کشور",
@@ -12353,6 +12358,7 @@ const ps: Dict = {
   "nav.cash_entry_country": "نغدي داخلول (هېواد)",
   "nav.cash_entry_branch": "نغدي داخلول (څانګه)",
   "nav.ledgers": "لېجرونه",
+  "nav.journal_report_pdf_erp": "د ژورنال راپور PDF ERP",
   "nav.new_ledger": "نوی لېجر",
   "nav.super_admin_ledger": "د سوپر اډمین لېجر",
   "nav.country_ledger": "د هېواد لېجر",

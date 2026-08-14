@@ -183,6 +183,12 @@ export const sidebarTree: SidebarNode[] = [
     iconKey: "book-open",
     children: [
       {
+        key: "ledgers-journal-report-pdf",
+        labelKey: "nav.journal_report_pdf_erp",
+        iconKey: "file-text",
+        href: "/dashboard/reports/handover" as Route
+      },
+      {
         key: "ledgers-new",
         labelKey: "nav.new_ledger",
         href: "/dashboard/ledger/new" as Route,
@@ -789,6 +795,12 @@ export const sidebarTree: SidebarNode[] = [
     iconKey: "bar-chart",
     href: "/dashboard/reports" as Route,
     children: [
+      {
+        key: "reports-journal-report-pdf",
+        labelKey: "nav.journal_report_pdf_erp",
+        iconKey: "file-text",
+        href: "/dashboard/reports/handover" as Route
+      },
       // ─── NEW: Dynamic Role-Based Report Panels ──────────────────────
       {
         key: "reports-super-admin-panel",
@@ -1416,7 +1428,7 @@ export const sidebarTree: SidebarNode[] = [
   },
   {
     key: "handover-report",
-    labelKey: "nav.reports" as any,
+    labelKey: "nav.journal_report_pdf_erp",
     iconKey: "file-text",
     href: "/dashboard/reports/handover" as Route
   },
