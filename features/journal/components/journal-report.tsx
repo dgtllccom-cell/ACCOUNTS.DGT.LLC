@@ -726,10 +726,10 @@ export default function JournalReport({
                   onChange={e => setShipmentTypeFilter(e.target.value)}
                   className="bg-white dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 font-bold"
                 >
-                  <option value="all">All Shipment Types</option>
-                  <option value="Warehouse">Warehouse</option>
-                  <option value="Loading">Loading</option>
-                  <option value="Export">Export</option>
+                  <option value="all">{tr("All Shipment Types")}</option>
+                  <option value="Warehouse">{tv("Warehouse")}</option>
+                  <option value="Loading">{tv("Loading")}</option>
+                  <option value="Export">{tv("Export")}</option>
                 </select>
 
                 <select
@@ -737,13 +737,13 @@ export default function JournalReport({
                   onChange={e => setStatusFilter(e.target.value)}
                   className="bg-white dark:bg-slate-850 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-1.5 text-xs text-slate-700 dark:text-slate-200 font-bold"
                 >
-                  <option value="all">All Status</option>
-                  <option value="In Warehouse">In Warehouse</option>
-                  <option value="In Loading">In Loading</option>
-                  <option value="In Transit (Export)">In Transit (Export)</option>
-                  <option value="Invoice Payment Hua">Invoice Payment Hua</option>
-                  <option value="Invoice Payment Pending">Invoice Payment Pending</option>
-                  <option value="Remaining Payment">Remaining Payment</option>
+                  <option value="all">{tr("All Status")}</option>
+                  <option value="In Warehouse">{tv("In Warehouse")}</option>
+                  <option value="In Loading">{tv("In Loading")}</option>
+                  <option value="In Transit (Export)">{tv("In Transit (Export)")}</option>
+                  <option value="Invoice Payment Hua">{tv("Invoice Payment Hua")}</option>
+                  <option value="Invoice Payment Pending">{tv("Invoice Payment Pending")}</option>
+                  <option value="Remaining Payment">{tv("Remaining Payment")}</option>
                 </select>
 
                 <select
