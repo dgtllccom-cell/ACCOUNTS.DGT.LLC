@@ -192,7 +192,13 @@ export const userCreateSchema = scopeSchema.extend({
   cnicPassportNo: z.string().trim().max(120).optional(),
   idExpiryDate: z.string().trim().max(50).optional(),
   kycStatus: z.string().trim().max(50).optional(),
-  residentialAddress: z.string().trim().max(500).optional()
+  residentialAddress: z.string().trim().max(500).optional(),
+  employeeId: optionalUuidSchema,
+  personMasterId: optionalUuidSchema,
+  firstName: z.string().trim().max(100).optional(),
+  middleName: z.string().trim().max(100).optional(),
+  lastName: z.string().trim().max(100).optional(),
+  photoUrl: z.string().trim().max(2000).optional()
 });
 
 export const accountCreateSchema = scopeSchema.extend({

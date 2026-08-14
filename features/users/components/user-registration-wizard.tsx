@@ -7,6 +7,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ShieldCheck,
+  User,
   UserPlus,
   MapPin,
   Building2,
@@ -189,6 +190,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
   // Complete Detailed Employee Master Profile State
   const [employeeProfile, setEmployeeProfile] = useState<{
+    personMasterId?: string;
     firstName?: string;
     middleName?: string;
     lastName?: string;
@@ -351,7 +353,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeLang]);
 
-  // When Employee is selected from dropdown, populate rich profile across steps
+  // When Employee is selected or language changes, populate rich profile across steps
   useEffect(() => {
     if (!selectedEmployeeId) {
       setEmployeeCode("");
@@ -394,8 +396,18 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         setResidentialAddress(emp.person.address);
       }
 
+      // Extract first/last name
+      const nameParts = empName.trim().split(" ");
+      const firstName = nameParts[0] || "";
+      const lastName = nameParts.length > 1 ? nameParts[nameParts.length - 1] : "";
+      const middleName = nameParts.length > 2 ? nameParts.slice(1, -1).join(" ") : "";
+
       // Populate rich employee master profile object
       setEmployeeProfile({
+        personMasterId: emp.person_master_id || emp.person?.id,
+        firstName,
+        middleName,
+        lastName,
         fullName: empName,
         employeeCode: code,
         designation: emp.designation || "Staff",
@@ -420,7 +432,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         photoUrl: emp.photo_url || emp.person?.photo_url
       });
     }
-  }, [selectedEmployeeId, hrEmployees]);
+  }, [selectedEmployeeId, hrEmployees, activeLang]);
 
   async function fetchSpecificUser(id: string) {
     try {
@@ -440,6 +452,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         if (data.idExpiryDate) setIdExpiryDate(data.idExpiryDate);
         if (data.kycStatus) setKycStatus(data.kycStatus);
         if (data.residentialAddress) setResidentialAddress(data.residentialAddress);
+        if (data.employeeId) setSelectedEmployeeId(data.employeeId);
 
         if (data.countryBranchId && !data.cityBranchId) {
           setBranchType("main");
@@ -686,6 +699,12 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         idExpiryDate,
         kycStatus,
         residentialAddress: residentialAddress.trim(),
+        employeeId: selectedEmployeeId || null,
+        personMasterId: employeeProfile.personMasterId || null,
+        firstName: employeeProfile.firstName || null,
+        middleName: employeeProfile.middleName || null,
+        lastName: employeeProfile.lastName || null,
+        photoUrl: employeeProfile.photoUrl || null,
         permissions: effectivePermissions
       };
 
@@ -716,6 +735,9 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         userCode: issuedCode,
         fullName: fullName.trim(),
         username: loginUsername || issuedCode,
+        firstName: employeeProfile.firstName,
+        middleName: employeeProfile.middleName,
+        lastName: employeeProfile.lastName,
         email: email,
         phone: contactPhone.trim(),
         designation: designation,
@@ -778,6 +800,9 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         userId: editUserId || "USR-PREVIEW",
         userCode: userCode,
         fullName: fullName || "User Name",
+        firstName: employeeProfile.firstName,
+        middleName: employeeProfile.middleName,
+        lastName: employeeProfile.lastName,
         countryName: selectedCountry?.name || "Pakistan",
         branchName: (branchType === "main" ? selectedMainBranch?.name : selectedCityBranch?.name) || "Main Branch",
         branchCode: branchCode || "PK-MAIN-001",
@@ -1516,7 +1541,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               <div className="font-bold text-[11px] text-slate-700 dark:text-slate-300 uppercase tracking-wider flex items-center justify-between">
                 <span className="flex items-center gap-1">
                   <ShieldCheck className="h-3.5 w-3.5 text-blue-600" />
-                  <span>4. Assigned Permissions ({allowedModulesCount}/19)</span>
+                  <span>4. Assigned Permissions ({allowedModulesCount}/20)</span>
                 </span>
                 <span className="text-[10px] text-emerald-600 font-mono font-bold">{effectivePermissions.length} rules</span>
               </div>

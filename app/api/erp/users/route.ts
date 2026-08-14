@@ -228,13 +228,19 @@ export async function POST(request: NextRequest) {
     if (!newUserId) throw new Error("Failed to create user account.");
 
     // Ensure profile exists.
-    const profilePayload = {
+    const profilePayload: any = {
       id: newUserId,
       full_name: body.fullName,
       user_code: issuedUserCode,
       preferred_language_code: body.preferredLanguage,
       default_company_id: body.companyId ?? null,
       raw_password: body.password,
+      employee_id: body.employeeId ?? null,
+      person_master_id: body.personMasterId ?? null,
+      first_name: body.firstName ?? null,
+      middle_name: body.middleName ?? null,
+      last_name: body.lastName ?? null,
+      photo_url: body.photoUrl ?? null,
       updated_at: new Date().toISOString()
     };
 
@@ -348,6 +354,12 @@ export async function GET(request: NextRequest) {
       idExpiryDate: authUser?.user_metadata?.id_expiry_date ?? "",
       kycStatus: authUser?.user_metadata?.kyc_status ?? "VERIFIED",
       residentialAddress: authUser?.user_metadata?.residential_address ?? "",
+      employeeId: profile.employee_id ?? authUser?.user_metadata?.employee_id ?? null,
+      personMasterId: profile.person_master_id ?? authUser?.user_metadata?.person_master_id ?? null,
+      firstName: profile.first_name ?? authUser?.user_metadata?.first_name ?? "",
+      middleName: profile.middle_name ?? authUser?.user_metadata?.middle_name ?? "",
+      lastName: profile.last_name ?? authUser?.user_metadata?.last_name ?? "",
+      photoUrl: profile.photo_url ?? authUser?.user_metadata?.photo_url ?? "",
       passwordVaultRef: `VAULT-DGT-${profile.user_code || "USR"}`,
       createdAt: assignment?.created_at ?? profile.created_at ?? new Date().toISOString(),
       updatedAt: assignment?.updated_at ?? profile.updated_at ?? new Date().toISOString(),
@@ -380,6 +392,12 @@ export async function PATCH(request: NextRequest) {
       idExpiryDate: z.string().trim().optional(),
       kycStatus: z.string().trim().optional(),
       residentialAddress: z.string().trim().optional(),
+      employeeId: optionalUuidSchema,
+      personMasterId: optionalUuidSchema,
+      firstName: z.string().trim().optional(),
+      middleName: z.string().trim().optional(),
+      lastName: z.string().trim().optional(),
+      photoUrl: z.string().trim().optional(),
       purpose: z.string().trim().optional()
     }).parse(await request.json());
 
@@ -414,14 +432,30 @@ export async function PATCH(request: NextRequest) {
       }
     }
 
-    // 1. Update profiles table if fullName or password is provided
-    if (body.fullName !== undefined || body.password !== undefined || body.companyId !== undefined) {
+    // 1. Update profiles table if profile fields are provided
+    if (
+      body.fullName !== undefined ||
+      body.password !== undefined ||
+      body.companyId !== undefined ||
+      body.employeeId !== undefined ||
+      body.personMasterId !== undefined ||
+      body.firstName !== undefined ||
+      body.middleName !== undefined ||
+      body.lastName !== undefined ||
+      body.photoUrl !== undefined
+    ) {
       const profileUpdates: any = {
         updated_at: new Date().toISOString()
       };
       if (body.fullName !== undefined) profileUpdates.full_name = body.fullName;
       if (body.password !== undefined) profileUpdates.raw_password = body.password;
       if (body.companyId !== undefined) profileUpdates.default_company_id = body.companyId;
+      if (body.employeeId !== undefined) profileUpdates.employee_id = body.employeeId;
+      if (body.personMasterId !== undefined) profileUpdates.person_master_id = body.personMasterId;
+      if (body.firstName !== undefined) profileUpdates.first_name = body.firstName;
+      if (body.middleName !== undefined) profileUpdates.middle_name = body.middleName;
+      if (body.lastName !== undefined) profileUpdates.last_name = body.lastName;
+      if (body.photoUrl !== undefined) profileUpdates.photo_url = body.photoUrl;
 
       const { error: profileError } = await admin
         .from("profiles")
