@@ -12,6 +12,7 @@ import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
+import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 
 type LocationRecord = {
   id: string;
@@ -43,6 +44,7 @@ export function LocationRegistry() {
   const [pageSize] = useState(50);
   const [summary, setSummary] = useState({ total: 0, active: 0, inactive: 0 });
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [showReport, setShowReport] = useState(false);
 
   async function loadLocations() {
     setLoading(true);
@@ -201,7 +203,7 @@ export function LocationRegistry() {
               <option value="Active">Active Only</option>
               <option value="Inactive">Inactive Only</option>
             </select>
-            <Button variant="outline" onClick={handlePrint}>
+            <Button variant="outline" onClick={() => setShowReport(true)}>
               <Printer className="w-4 h-4" />
             </Button>
           </div>
@@ -349,6 +351,38 @@ export function LocationRegistry() {
           )}
         </CardContent>
       </Card>
+
+      <UniversalReportModal
+        isOpen={showReport}
+        onClose={() => setShowReport(false)}
+        title="Location Master Registry Report"
+        subtitle="Countries, States, Districts, Cities — Full Location Hierarchy"
+        exportFileName="location_registry_report"
+        filters={[
+          { label: "Search", value: searchQuery || "All" },
+          { label: "Status", value: statusFilter === "all" ? "All" : statusFilter }
+        ]}
+        columns={[
+          { key: "name", label: "Location Name" },
+          { key: "code", label: "Code" },
+          { key: "country", label: "Country" },
+          { key: "state", label: "State / Province" },
+          { key: "district", label: "District" },
+          { key: "city", label: "City" },
+          { key: "postal_code", label: "Postal Code" },
+          { key: "status", label: "Status", align: "center" }
+        ]}
+        data={filtered.map(l => ({
+          name: l.name,
+          code: l.code || "-",
+          country: l.country?.name || "-",
+          state: l.state?.name || "-",
+          district: l.district?.name || "-",
+          city: l.city?.name || "-",
+          postal_code: l.postal_code || "-",
+          status: l.is_active ? "Active" : "Inactive"
+        }))}
+      />
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
   Package, 
   Pencil, 
   Plus, 
+  Printer,
   RefreshCw, 
   Search, 
   TrendingDown, 
@@ -21,6 +22,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { SimpleModal } from "@/components/ui/simple-modal";
+import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 import { Th } from "@/components/ui/translated-th";
 import { apiGet, apiPost, apiPut } from "@/lib/api/client";
 import { listGoods, type GoodsListRow } from "@/features/inventory/goods-api";
@@ -75,6 +77,7 @@ type WarehouseOption = {
 
 export default function InventoryWorkspaceClient({ session }: { session: any }) {
   const [activeTab, setActiveTab] = useState<"balances" | "movements">("balances");
+  const [showReport, setShowReport] = useState(false);
   const [q, setQ] = useState("");
   const [busy, setBusy] = useState(false);
   const [banner, setBanner] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -426,6 +429,16 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
               <option value="TRANSFER">Transfer</option>
             </select>
           )}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowReport(true)}
+            className="h-8 gap-1.5 rounded-md border-slate-700 bg-slate-900 px-3 text-xs font-bold text-cyan-400 hover:bg-slate-800"
+          >
+            <Printer className="h-3.5 w-3.5" />
+            Print / Report
+          </Button>
         </div>
       </div>
 
@@ -833,6 +846,59 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
           </div>
         </SimpleModal>
       )}
+
+      <UniversalReportModal
+        isOpen={showReport}
+        onClose={() => setShowReport(false)}
+        title={activeTab === "balances" ? "Inventory Balances Report" : "Stock Movement History Report"}
+        subtitle="Real-Time Warehouse Stock Quantities, Movements, and Valuation"
+        exportFileName={activeTab === "balances" ? "inventory_balances_report" : "stock_movements_report"}
+        filters={[
+          { label: "Active Tab", value: activeTab === "balances" ? "Inventory Balances" : "Stock Movements" },
+          { label: "Search Query", value: q || "None" },
+          { label: "Warehouse Filter", value: selectedWarehouseFilter || "All Warehouses" }
+        ]}
+        columns={
+          activeTab === "balances"
+            ? [
+                { key: "goods_name", label: "Goods Name" },
+                { key: "chs_code", label: "CHS Code" },
+                { key: "warehouse_name", label: "Warehouse" },
+                { key: "country_name", label: "Country Scope" },
+                { key: "quantity_on_hand", label: "On Hand Qty", align: "right", isNumeric: true },
+                { key: "quantity_available", label: "Available Qty", align: "right", isNumeric: true }
+              ]
+            : [
+                { key: "created_at", label: "Date & Time" },
+                { key: "movement_type", label: "Movement Type", align: "center" },
+                { key: "goods_name", label: "Goods Item" },
+                { key: "warehouse_name", label: "Warehouse" },
+                { key: "quantity", label: "Quantity", align: "right", isNumeric: true },
+                { key: "unit_cost", label: "Unit Cost", align: "right", isNumeric: true },
+                { key: "reference_no", label: "Reference No" }
+              ]
+        }
+        data={
+          activeTab === "balances"
+            ? balances.map(b => ({
+                goods_name: b.goods_name,
+                chs_code: b.chs_code || "-",
+                warehouse_name: b.warehouse_name,
+                country_name: b.country_name || "All",
+                quantity_on_hand: b.quantity_on_hand,
+                quantity_available: b.quantity_available
+              }))
+            : movements.map(m => ({
+                created_at: new Date(m.created_at).toLocaleString(),
+                movement_type: m.movement_type,
+                goods_name: m.goods_name,
+                warehouse_name: m.warehouse_name,
+                quantity: m.quantity,
+                unit_cost: m.unit_cost,
+                reference_no: m.reference_no || "-"
+              }))
+        }
+      />
     </div>
   );
 }

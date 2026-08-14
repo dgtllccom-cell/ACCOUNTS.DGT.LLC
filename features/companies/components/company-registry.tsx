@@ -17,6 +17,7 @@ import { ReportStatusLegend } from "@/features/reports/components/report-status-
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 
 export type CompanyDisplayRecord = {
   id: string;
@@ -74,6 +75,7 @@ export function CompanyRegistry() {
   const [viewingCompany, setViewingCompany] = useState<CompanyDisplayRecord | null>(null);
   const [selectedOwnerGroup, setSelectedOwnerGroup] = useState<{ ownerName: string; companies: CompanyDisplayRecord[] } | null>(null);
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [showReport, setShowReport] = useState(false);
 
   // Pagination
   const [page, setPage] = useState(1);
@@ -260,6 +262,16 @@ export function CompanyRegistry() {
             currencies={[]}
             reportTypes={[]}
           />
+
+          <Button
+            type="button"
+            onClick={() => setShowReport(true)}
+            variant="outline"
+            className="gap-2 border-slate-700 hover:bg-slate-800 text-slate-200 font-bold h-10 px-4 rounded-xl text-xs shadow-md"
+          >
+            <Printer className="h-4 w-4 text-cyan-400" />
+            Print / Report
+          </Button>
 
           <Button
             type="button"
@@ -590,6 +602,32 @@ export function CompanyRegistry() {
           </div>
         </div>
       )}
+
+      <UniversalReportModal
+        isOpen={showReport}
+        onClose={() => setShowReport(false)}
+        title="Company Registry Report"
+        subtitle="Complete Master Incorporated Companies and Business Entities"
+        exportFileName="company_registry_report"
+        filters={[
+          { label: "Country", value: filters.countryId },
+          { label: "Search Query", value: searchQuery || "None" }
+        ]}
+        columns={[
+          { key: "companyName", label: "Company Name" },
+          { key: "ownerName", label: "Owner / Chairman" },
+          { key: "legalName", label: "Legal Business Name" },
+          { key: "jurisdiction", label: "Jurisdiction / Location" },
+          { key: "contactInfo", label: "Contact Details" }
+        ]}
+        data={savedCompanies.map(c => ({
+          companyName: c.companyName,
+          ownerName: c.ownerName,
+          legalName: c.businessName || "-",
+          jurisdiction: [c.city, c.state, c.country].filter(Boolean).join(", "),
+          contactInfo: c.contacts.map(ct => `${ct.type}: ${ct.value}`).join("; ") || "-"
+        }))}
+      />
     </div>
   );
 }

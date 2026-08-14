@@ -12,6 +12,7 @@ import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
+import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 
 type BankRecord = {
   id: string;
@@ -42,6 +43,7 @@ export function BankRegistry() {
   const [pageSize] = useState(50);
   const [summary, setSummary] = useState({ total: 0, active: 0, inactive: 0 });
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [showReport, setShowReport] = useState(false);
 
   async function loadBanks() {
     setLoading(true);
@@ -95,73 +97,7 @@ export function BankRegistry() {
   }
 
   function handlePrint() {
-    const html = `
-      <!DOCTYPE html>
-      <html>
-        <head>
-          <title>Banks Report</title>
-          <style>
-            @page { size: A4 landscape; margin: 10mm; }
-            body { font-family: system-ui, sans-serif; color: #0f172a; margin: 0; padding: 20px; }
-            .header { border-bottom: 2px solid #1e3a8a; padding-bottom: 10px; margin-bottom: 20px; }
-            .title { font-size: 20px; font-weight: 800; color: #1e3a8a; }
-            table { width: 100%; border-collapse: collapse; font-size: 10px; }
-            th { background: #1e3a8a; color: white; padding: 6px; text-align: left; font-weight: 700; }
-            td { border-bottom: 1px solid #e2e8f0; padding: 6px; }
-            .active { color: #16a34a; font-weight: 600; }
-            .inactive { color: #dc2626; font-weight: 600; }
-          </style>
-        </head>
-        <body>
-          <div class="header">
-            <div class="title">Bank Registry Report</div>
-            <div style="font-size: 12px; color: #64748b;">Generated: ${new Date().toLocaleString()}</div>
-          </div>
-          <table>
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Bank Name</th>
-                <th>Code</th>
-                <th>Branch</th>
-                <th>Country</th>
-                <th>Account Title</th>
-                <th>Account Number</th>
-                <th>IBAN</th>
-                <th>SWIFT</th>
-                <th>Currency</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${paginated
-                .map(
-                  (bank, idx) => `
-                <tr>
-                  <td>${(page - 1) * pageSize + idx + 1}</td>
-                  <td><strong>${bank.bank_name}</strong></td>
-                  <td>${bank.bank_code || "-"}</td>
-                  <td>${bank.branch_name || "-"}</td>
-                  <td>${bank.country?.name || "-"}</td>
-                  <td>${bank.account_title || "-"}</td>
-                  <td>${bank.account_number || "-"}</td>
-                  <td>${bank.iban || "-"}</td>
-                  <td>${bank.swift_code || "-"}</td>
-                  <td>${bank.currency_code}</td>
-                  <td><span class="${bank.is_active ? "active" : "inactive"}">${bank.is_active ? "Active" : "Inactive"}</span></td>
-                </tr>
-              `
-                )
-                .join("")}
-            </tbody>
-          </table>
-          <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #e2e8f0;">
-            <strong>Total:</strong> ${filtered.length} | <strong>Active:</strong> ${filtered.filter((b) => b.is_active).length} | <strong>Inactive:</strong> ${filtered.filter((b) => !b.is_active).length}
-          </div>
-        </body>
-      </html>
-    `;
-    openA4ReportWindow(html, "banks-report");
+    setShowReport(true);
   }
 
   const totalPages = Math.ceil(filtered.length / pageSize);
@@ -330,6 +266,40 @@ export function BankRegistry() {
           )}
         </CardContent>
       </Card>
+
+      <UniversalReportModal
+        isOpen={showReport}
+        onClose={() => setShowReport(false)}
+        title="Bank Registry Report"
+        subtitle="Master Financial Institution Accounts and Banking Details"
+        exportFileName="bank_registry_report"
+        filters={[
+          { label: "Status Filter", value: statusFilter },
+          { label: "Search Query", value: searchQuery || "None" }
+        ]}
+        columns={[
+          { key: "bank_name", label: "Bank Name" },
+          { key: "bank_code", label: "Code" },
+          { key: "branch_name", label: "Branch" },
+          { key: "country_name", label: "Country" },
+          { key: "account_title", label: "Account Title" },
+          { key: "account_number", label: "Account Number" },
+          { key: "iban", label: "IBAN" },
+          { key: "currency_code", label: "Currency" },
+          { key: "status", label: "Status", align: "center" }
+        ]}
+        data={filtered.map(b => ({
+          bank_name: b.bank_name,
+          bank_code: b.bank_code || "-",
+          branch_name: b.branch_name || "-",
+          country_name: b.country?.name || "-",
+          account_title: b.account_title || "-",
+          account_number: b.account_number || "-",
+          iban: b.iban || "-",
+          currency_code: b.currency_code,
+          status: b.is_active ? "Active" : "Inactive"
+        }))}
+      />
     </div>
   );
 }

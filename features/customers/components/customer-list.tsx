@@ -17,6 +17,7 @@ import { apiGet, apiDelete } from "@/lib/api/client";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLabel } from "./translations";
 import { Th } from "@/components/ui/translated-th";
+import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 
 type CustomerRow = {
   id: string;
@@ -44,6 +45,7 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
   const [statusFilter, setStatusFilter] = useState("all");
   const [error, setError] = useState<string | null>(null);
   const [selectedCustomerId, setSelectedCustomerId] = useState<string | null>(null);
+  const [showReport, setShowReport] = useState(false);
   
   // State to track which row action menu is open
   const [openMenuId, setOpenMenuId] = useState<string | null>(null);
@@ -383,14 +385,25 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
             {getLabel("createOrUpdateCustomerSub", lang)}
           </p>
         </div>
-        <Button
-          type="button"
-          onClick={() => router.push("/dashboard/settings/customers/setup" as Route)}
-          className="gap-2 bg-teal-600 hover:bg-teal-700 text-white font-medium shadow-sm h-10 px-4 rounded-lg text-xs"
-        >
-          <Plus className="h-4 w-4" />
-          Add Customer
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setShowReport(true)}
+            className="gap-2 border-slate-700 hover:bg-slate-800 text-slate-200 font-medium shadow-sm h-10 px-4 rounded-lg text-xs"
+          >
+            <Printer className="h-4 w-4 text-cyan-400" />
+            Print / Report
+          </Button>
+          <Button
+            type="button"
+            onClick={() => router.push("/dashboard/settings/customers/setup" as Route)}
+            className="gap-2 bg-teal-600 hover:bg-teal-700 text-white font-medium shadow-sm h-10 px-4 rounded-lg text-xs"
+          >
+            <Plus className="h-4 w-4" />
+            Add Customer
+          </Button>
+        </div>
       </div>
 
       {error ? (
@@ -703,6 +716,35 @@ export function CustomerList({ lang }: { lang: SupportedLanguage }) {
           />
         )}
       </DetailDrawer>
+
+      <UniversalReportModal
+        isOpen={showReport}
+        onClose={() => setShowReport(false)}
+        title="Customer / Owner Directory Report"
+        subtitle="Complete Master Customer, Client, and Business Owner Directory"
+        exportFileName="customer_directory_report"
+        filters={[
+          { label: "Search Query", value: searchQuery || "None" }
+        ]}
+        columns={[
+          { key: "customer_name", label: "Customer / Owner Name" },
+          { key: "company_name", label: "Company / Firm Name" },
+          { key: "contact_person", label: "Contact Person" },
+          { key: "mobile", label: "Mobile Number" },
+          { key: "whatsapp", label: "WhatsApp" },
+          { key: "email", label: "Email Address" },
+          { key: "address", label: "Address" }
+        ]}
+        data={filteredCustomers.map(c => ({
+          customer_name: c.customer_name,
+          company_name: c.company_name || "-",
+          contact_person: c.contact_person || "-",
+          mobile: c.mobile || "-",
+          whatsapp: c.whatsapp || "-",
+          email: c.email || "-",
+          address: c.address || "-"
+        }))}
+      />
     </div>
   );
 }

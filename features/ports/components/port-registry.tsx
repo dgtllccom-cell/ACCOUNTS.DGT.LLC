@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Loader2, Plus, Trash2 } from "lucide-react";
+import { Loader2, Plus, Trash2, Printer } from "lucide-react";
 import { Th } from "@/components/ui/translated-th";
+import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 
 type PortRecord = { id: string; code: string; name: string; border_type: string; country_id: string; is_active: boolean; created_at: string; country?: { name: string } };
 
@@ -16,6 +17,7 @@ export function PortRegistry() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "Active" | "Inactive">("all");
   const [summary, setSummary] = useState({ total: 0, active: 0, inactive: 0 });
+  const [showReport, setShowReport] = useState(false);
 
   async function loadPorts() {
     setLoading(true);
@@ -53,15 +55,21 @@ export function PortRegistry() {
   }
 
   return (
+    <>
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Ports/Boundaries</CardTitle>
           <p className="text-sm text-slate-500 mt-1">Manage border crossing ports</p>
         </div>
-        <Button onClick={() => alert("Add form coming soon")} size="sm">
-          <Plus className="w-4 h-4 mr-1" /> New
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setShowReport(true)} size="sm" variant="outline">
+            <Printer className="w-4 h-4 mr-1" /> Print Preview
+          </Button>
+          <Button onClick={() => alert("Add form coming soon")} size="sm">
+            <Plus className="w-4 h-4 mr-1" /> New
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex gap-2">
@@ -132,5 +140,32 @@ export function PortRegistry() {
         )}
       </CardContent>
     </Card>
+
+    <UniversalReportModal
+      isOpen={showReport}
+      onClose={() => setShowReport(false)}
+      title="Port / Boundary Master Report"
+      subtitle="Official Ports, Border Crossings & Entry/Exit Points Registry"
+      exportFileName="port_boundary_report"
+      filters={[
+        { label: "Search", value: searchQuery || "All" },
+        { label: "Status", value: statusFilter === "all" ? "All" : statusFilter }
+      ]}
+      columns={[
+        { key: "code", label: "Port Code" },
+        { key: "name", label: "Port / Boundary Name" },
+        { key: "border_type", label: "Border Type" },
+        { key: "country", label: "Country" },
+        { key: "status", label: "Status", align: "center" }
+      ]}
+      data={filtered.map(p => ({
+        code: p.code || "-",
+        name: p.name,
+        border_type: p.border_type || "-",
+        country: p.country?.name || "-",
+        status: p.is_active ? "Active" : "Inactive"
+      }))}
+    />
+    </>
   );
 }

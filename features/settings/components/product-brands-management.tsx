@@ -7,6 +7,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { ReportActions } from "@/components/ui/report-actions";
 import { Th } from "@/components/ui/translated-th";
+import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 
 type Brand = {
   id: string;
@@ -28,6 +29,7 @@ export function ProductBrandsManagementView({ lang }: { lang: SupportedLanguage 
   const [form, setForm] = useState<typeof empty>(empty);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -177,6 +179,27 @@ export function ProductBrandsManagementView({ lang }: { lang: SupportedLanguage 
           </div>
         </div>
       ) : null}
+
+      <UniversalReportModal
+        isOpen={showReport}
+        onClose={() => setShowReport(false)}
+        title="Product Brands Report"
+        subtitle="Master Brand Registry"
+        exportFileName="product_brands_report"
+        filters={[{ label: "Search", value: query || "All" }]}
+        columns={[
+          { key: "brandCode", label: "Brand Code" },
+          { key: "brandName", label: "Brand Name" },
+          { key: "description", label: "Description" },
+          { key: "status", label: "Status", align: "center" }
+        ]}
+        data={filtered.map(b => ({
+          brandCode: b.brandCode || "-",
+          brandName: b.brandName,
+          description: b.description || "-",
+          status: b.isActive ? "Active" : "Inactive"
+        }))}
+      />
     </div>
   );
 }

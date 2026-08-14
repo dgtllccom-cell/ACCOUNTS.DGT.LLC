@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import { Loader2, Plus, Trash2, Eye } from "lucide-react";
+import { Loader2, Plus, Trash2, Eye, Printer } from "lucide-react";
 import { Th } from "@/components/ui/translated-th";
+import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 
 type AccountRecord = {
   id: string;
@@ -26,6 +27,7 @@ export function AccountRegistry() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<"all" | "Active" | "Inactive">("all");
   const [summary, setSummary] = useState({ total: 0, active: 0, inactive: 0 });
+  const [showReport, setShowReport] = useState(false);
 
   async function loadAccounts() {
     setLoading(true);
@@ -69,9 +71,14 @@ export function AccountRegistry() {
           <CardTitle>Accounts</CardTitle>
           <p className="text-sm text-slate-500 mt-1">Manage chart of accounts with multi-link support</p>
         </div>
-        <Button onClick={() => alert("Add form coming soon")} size="sm">
-          <Plus className="w-4 h-4 mr-1" /> New
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => setShowReport(true)} variant="outline" size="sm" className="flex items-center gap-1.5 border-slate-700 hover:bg-slate-800">
+            <Printer className="w-4 h-4 text-cyan-400" /> Print / Report
+          </Button>
+          <Button onClick={() => alert("Add form coming soon")} size="sm">
+            <Plus className="w-4 h-4 mr-1" /> New
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex gap-2">
@@ -147,6 +154,36 @@ export function AccountRegistry() {
             </table>
           </div>
         )}
+
+        <UniversalReportModal
+          isOpen={showReport}
+          onClose={() => setShowReport(false)}
+          title="Account Registry Report"
+          subtitle="Complete Master Chart of Accounts with Multi-Link Counts"
+          exportFileName="account_registry_report"
+          filters={[
+            { label: "Status Filter", value: statusFilter },
+            { label: "Search Query", value: searchQuery || "None" }
+          ]}
+          columns={[
+            { key: "code", label: "Account Code" },
+            { key: "name", label: "Account Name" },
+            { key: "country_name", label: "Country" },
+            { key: "company_links", label: "Companies Linked", align: "center", isNumeric: true },
+            { key: "bank_links", label: "Banks Linked", align: "center", isNumeric: true },
+            { key: "warehouse_links", label: "Warehouses Linked", align: "center", isNumeric: true },
+            { key: "status", label: "Status", align: "center" }
+          ]}
+          data={filtered.map(a => ({
+            code: a.code,
+            name: a.name,
+            country_name: a.country?.name || "-",
+            company_links: a.links?.companies || 0,
+            bank_links: a.links?.banks || 0,
+            warehouse_links: a.links?.warehouses || 0,
+            status: a.is_active ? "Active" : "Inactive"
+          }))}
+        />
       </CardContent>
     </Card>
   );

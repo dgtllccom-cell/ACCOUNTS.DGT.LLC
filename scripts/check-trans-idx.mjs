@@ -1,0 +1,19 @@
+import postgres from "postgres";
+
+const vpsEnv = {
+  DATABASE_URL: "postgresql://postgres.inmayhrxucimxqhgseqi:9z2_v5b6oZKPrbwoEL-z6awkg53gPDmPf3_pNFbSFsSVQdDk@aws-0-ap-southeast-2.pooler.supabase.com:5432/postgres"
+};
+const vpsSql = postgres(vpsEnv.DATABASE_URL, { max: 1, prepare: false, ssl: { rejectUnauthorized: false } });
+
+async function checkTransIndexes() {
+  const indexes = await vpsSql`
+    SELECT indexname, indexdef
+    FROM pg_indexes
+    WHERE tablename = 'record_translations';
+  `;
+  console.log("Indexes on record_translations:", indexes);
+  await vpsSql.end();
+  process.exit(0);
+}
+
+checkTransIndexes();

@@ -58,7 +58,9 @@ interface JournalBillRecord {
   currentStatus: string;
   nextStep: string;
   nextStepColor: "green" | "orange" | "red" | "blue" | "gray";
-  salesmanId: string;
+  // Optional: MOCK_JOURNAL_BILLS omit it and it is assigned later in processedMockBills;
+  // db/local records set it directly from row.created_by.
+  salesmanId?: string;
   journey: JourneyStep[];
   goods: BillGoodsItem[];
   payments: BillPaymentItem[];
@@ -458,15 +460,22 @@ export async function GET(request: NextRequest) {
 
     interface GoodsEntry {
       goodsName?: string;
+      [key: string]: any;
     }
+    // form_data is untyped JSON persisted from many form versions; keep the known
+    // fields for readability but allow any additional key so the mapping below
+    // (purchaseAccountName, totalGrossWeight, goodsEntries, buyerName, …) type-checks.
     interface FormPayload {
       form?: {
         supplierName?: string;
         goodsName?: string;
         shipmentType?: string;
         lifecycleStatus?: string;
+        goodsEntries?: GoodsEntry[];
+        [key: string]: any;
       };
       goodsEntries?: GoodsEntry[];
+      [key: string]: any;
     }
 
     // Map db data and filter for confirmed orders (where advance is paid, status is completed/confirmed, or ledger is posted)
@@ -546,7 +555,7 @@ export async function GET(request: NextRequest) {
           amount: Number(g.totalOriginal || g.finalAmount || g.totalAmount || 0)
         }));
 
-        const baseCurrency = row.countries?.currency_code || "USD";
+        const baseCurrency = (row.countries as any)?.currency_code || "USD";
         const exchangeRate = Number(row.exchange_rate || form.exchangeRate || 1);
         const localCurrency = "PKR";
         
@@ -570,7 +579,7 @@ export async function GET(request: NextRequest) {
             currency: baseCurrency,
             localAmount: Number(row.remaining_paid || 0),
             localCurrency,
-            date: String(row.updated_at || row.created_at || "").slice(0, 10),
+            date: String((row as any).updated_at || row.created_at || "").slice(0, 10),
             method: "Bank Transfer",
             status: "Cleared"
           });
@@ -627,7 +636,7 @@ export async function GET(request: NextRequest) {
         if (!rawRow) return false;
         const isConfirmed = Number(rawRow.advance_paid || 0) > 0 ||
                             (rawRow.payment_status && rawRow.payment_status !== "pending" && rawRow.payment_status !== "draft") ||
-                            rawRow.ledger_posting_status === "posted" ||
+                            (rawRow as any).ledger_posting_status === "posted" ||
                             String((rawRow.form_data as any)?.form?.lifecycleStatus || "").toLowerCase().includes("confirm");
         return isConfirmed;
       });
@@ -729,7 +738,7 @@ export async function GET(request: NextRequest) {
             name: row.goods_name || "General Goods",
             size: row.size || "-",
             brand: row.brand || "-",
-            origin: row.origin_country_name || "Local",
+            origin: (row as any).origin_country_name || "Local",
             quantity: Number(row.quantity_kgs || 1),
             qtyName: row.quantity_name || "Kgs",
             rate: Number(row.purchase_rate || 0),
@@ -749,7 +758,7 @@ export async function GET(request: NextRequest) {
               localAmount: Number(row.advance_amount || 0) * exchangeRate,
               localCurrency,
               date: String(row.created_at || "").slice(0, 10),
-              method: row.payment_mode || "Cash",
+              method: (row as any).payment_mode || "Cash",
               status: "Cleared"
             });
           }
@@ -765,7 +774,7 @@ export async function GET(request: NextRequest) {
           const netWeight = row.net_weight || "-";
           const totalQuantity = row.quantity_kgs || 0;
           const qtyUnit = row.quantity_name || "Kgs";
-          const paymentCondition = row.payment_mode || "Cash/Advance";
+          const paymentCondition = (row as any).payment_mode || "Cash/Advance";
 
           return {
             id: row.id,

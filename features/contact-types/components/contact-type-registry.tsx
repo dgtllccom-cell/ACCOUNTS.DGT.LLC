@@ -2,13 +2,14 @@
 
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, PencilLine, Trash2, Plus, Search, Loader2 } from "lucide-react";
+import { Eye, PencilLine, Trash2, Plus, Search, Loader2, Printer } from "lucide-react";
 import { apiGet, apiDelete } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
+import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 
 type ContactTypeRecord = {
   id: string;
@@ -29,6 +30,7 @@ export function ContactTypeRegistry() {
   const [page, setPage] = useState(1);
   const [pageSize] = useState(50);
   const [summary, setSummary] = useState({ total: 0, active: 0, inactive: 0 });
+  const [showReport, setShowReport] = useState(false);
 
   async function loadTypes() {
     setLoading(true);
@@ -71,15 +73,21 @@ export function ContactTypeRegistry() {
   }
 
   return (
+    <>
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <div>
           <CardTitle>Contact Types</CardTitle>
           <p className="text-sm text-slate-500 mt-1">Manage contact type categories</p>
         </div>
-        <Button onClick={() => router.push("/dashboard/settings/contact-type/new")}>
-          <Plus className="w-4 h-4 mr-1" /> New Type
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setShowReport(true)}>
+            <Printer className="w-4 h-4 mr-1" /> Print Preview
+          </Button>
+          <Button onClick={() => router.push("/dashboard/settings/contact-type/new")}>
+            <Plus className="w-4 h-4 mr-1" /> New Type
+          </Button>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex gap-2">
@@ -175,5 +183,32 @@ export function ContactTypeRegistry() {
         )}
       </CardContent>
     </Card>
+
+    <UniversalReportModal
+      isOpen={showReport}
+      onClose={() => setShowReport(false)}
+      title="Contact Type Report"
+      subtitle="Master Contact Type Classification Registry"
+      exportFileName="contact_types_report"
+      filters={[
+        { label: "Search", value: searchQuery || "All" },
+        { label: "Status", value: statusFilter === "all" ? "All" : statusFilter }
+      ]}
+      columns={[
+        { key: "code", label: "Code" },
+        { key: "name", label: "Contact Type Name" },
+        { key: "category", label: "Category" },
+        { key: "description", label: "Description" },
+        { key: "status", label: "Status", align: "center" }
+      ]}
+      data={filtered.map(t => ({
+        code: t.code || "-",
+        name: t.name,
+        category: t.category || "-",
+        description: t.description || "-",
+        status: t.is_active ? "Active" : "Inactive"
+      }))}
+    />
+    </>
   );
 }

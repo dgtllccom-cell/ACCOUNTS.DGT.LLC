@@ -7,6 +7,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { ReportActions } from "@/components/ui/report-actions";
 import { Th } from "@/components/ui/translated-th";
+import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 
 type Category = {
   id: string;
@@ -28,6 +29,7 @@ export function ProductCategoriesManagementView({ lang }: { lang: SupportedLangu
   const [form, setForm] = useState<typeof empty>(empty);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showReport, setShowReport] = useState(false);
 
   async function load() {
     setLoading(true);
@@ -177,6 +179,27 @@ export function ProductCategoriesManagementView({ lang }: { lang: SupportedLangu
           </div>
         </div>
       ) : null}
+
+      <UniversalReportModal
+        isOpen={showReport}
+        onClose={() => setShowReport(false)}
+        title="Product Categories Report"
+        subtitle="Master Product Category Classification"
+        exportFileName="product_categories_report"
+        filters={[{ label: "Search", value: query || "All" }]}
+        columns={[
+          { key: "categoryCode", label: "Category Code" },
+          { key: "categoryName", label: "Category Name" },
+          { key: "description", label: "Description" },
+          { key: "status", label: "Status", align: "center" }
+        ]}
+        data={filtered.map(c => ({
+          categoryCode: c.categoryCode || "-",
+          categoryName: c.categoryName,
+          description: c.description || "-",
+          status: c.isActive ? "Active" : "Inactive"
+        }))}
+      />
     </div>
   );
 }

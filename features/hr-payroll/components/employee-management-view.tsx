@@ -9,6 +9,7 @@ import { AdvanceLoanModal } from "./advance-loan-modal";
 import { EmployeeLedgerPanel } from "./employee-ledger-panel";
 import { PayrollReportsView } from "./payroll-reports-view";
 import { printEmployeeCertificate } from "@/components/ui/employee-certificate-print";
+import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
@@ -30,6 +31,7 @@ export function EmployeeManagementView() {
 
   // Modals state
   const [showFormModal, setShowFormModal] = useState(false);
+  const [showReport, setShowReport] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
 
   const [selectedEmployeeForLoan, setSelectedEmployeeForLoan] = useState<any | null>(null);
@@ -221,6 +223,16 @@ export function EmployeeManagementView() {
                 <option value="Suspended">{t(lang, "common.suspended", "Suspended")}</option>
               </select>
             </div>
+
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => setShowReport(true)}
+              className="h-8 gap-1.5 rounded-md border-slate-700 bg-slate-900 px-3 text-xs font-bold text-cyan-400 hover:bg-slate-800"
+            >
+              Print / Report
+            </Button>
           </div>
 
           {/* Master Employee Table */}
@@ -420,6 +432,37 @@ export function EmployeeManagementView() {
           />
         </SimpleModal>
       )}
+
+      <UniversalReportModal
+        isOpen={showReport}
+        onClose={() => setShowReport(false)}
+        title="Employee Master Report"
+        subtitle="Comprehensive Employee Registry — HR & Payroll Division"
+        exportFileName="employee_master_report"
+        filters={[
+          { label: "Search", value: search || "All" },
+          { label: "Category", value: category || "All" },
+          { label: "Status", value: status || "All" }
+        ]}
+        columns={[
+          { key: "employee_code", label: "Employee Code" },
+          { key: "person_name", label: "Person / Customer Name" },
+          { key: "category", label: "Category" },
+          { key: "designation", label: "Designation" },
+          { key: "salary", label: "Salary", align: "right", isNumeric: true },
+          { key: "status", label: "Status", align: "center" },
+          { key: "join_date", label: "Join Date" }
+        ]}
+        data={employees.map(e => ({
+          employee_code: e.employee_code || "-",
+          person_name: e.person?.customer_name || "-",
+          category: e.category || "-",
+          designation: e.designation || "-",
+          salary: e.salary ?? 0,
+          status: e.status || "Active",
+          join_date: e.join_date ? new Date(e.join_date).toLocaleDateString() : "-"
+        }))}
+      />
     </div>
   );
 }

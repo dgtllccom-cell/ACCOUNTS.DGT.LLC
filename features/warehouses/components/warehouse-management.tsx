@@ -8,11 +8,13 @@ import {
   Plus,
   RefreshCw,
   Search,
+  Printer,
   Warehouse as WarehouseIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SimpleModal } from "@/components/ui/simple-modal";
+import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { WarehouseForm } from "@/features/warehouses/components/warehouse-form";
 import {
@@ -58,6 +60,7 @@ export function WarehouseManagement() {
   const [cities, setCities] = useState<LocationCity[]>([]);
   const [areas, setAreas] = useState<LocationArea[]>([]);
   const [modalMode, setModalMode] = useState<WarehouseMode>("create");
+  const [showReport, setShowReport] = useState(false);
   const [editingWarehouse, setEditingWarehouse] = useState<WarehouseRecord | null>(null);
   const [viewWarehouse, setViewWarehouse] = useState<WarehouseRecord | null>(null);
 
@@ -211,6 +214,16 @@ export function WarehouseManagement() {
           <option value="Closed">Closed</option>
         </select>
       </div>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={() => setShowReport(true)}
+        className="h-7 gap-1 rounded-lg border-slate-700 bg-slate-900 px-2.5 text-[10px] font-bold text-cyan-400 hover:bg-slate-800"
+      >
+        <Printer className="h-3.5 w-3.5" />
+        Print / Report
+      </Button>
       <Button
         type="button"
         variant="outline"
@@ -476,6 +489,36 @@ export function WarehouseManagement() {
           </div>
         </SimpleModal>
       ) : null}
+
+      <UniversalReportModal
+        isOpen={showReport}
+        onClose={() => setShowReport(false)}
+        title="Warehouse Registry Report"
+        subtitle="Complete Storage Facility, Yard, & Logistics Master Registry"
+        exportFileName="warehouse_registry_report"
+        filters={[
+          { label: "Status Filter", value: statusFilter },
+          { label: "Search Query", value: search || "None" }
+        ]}
+        columns={[
+          { key: "warehouse_name", label: "Warehouse Name" },
+          { key: "warehouse_code", label: "Code" },
+          { key: "country_name", label: "Country" },
+          { key: "city_name", label: "City" },
+          { key: "warehouse_type", label: "Type" },
+          { key: "full_address", label: "Address" },
+          { key: "status", label: "Status", align: "center" }
+        ]}
+        data={filteredWarehouses.map(w => ({
+          warehouse_name: w.warehouse_name,
+          warehouse_code: w.warehouse_code || "-",
+          country_name: w.country_name || "-",
+          city_name: w.city_name || "-",
+          warehouse_type: w.warehouse_type || "-",
+          full_address: w.full_address || "-",
+          status: w.status || "Active"
+        }))}
+      />
     </>
   );
 }

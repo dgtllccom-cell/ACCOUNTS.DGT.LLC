@@ -23,6 +23,7 @@ import { t, type UiKey } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
+import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 
 type CountryOption = {
   id: string;
@@ -68,6 +69,7 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
   const [editingTax, setEditingTax] = useState<Partial<TaxRateItem> | null>(null);
   const [saving, setSaving] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
+  const [showReport, setShowReport] = useState(false);
 
   // Form State
   const [formCountryId, setFormCountryId] = useState("");
@@ -675,6 +677,38 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
           </div>
         </div>
       )}
+
+      <UniversalReportModal
+        isOpen={showReport}
+        onClose={() => setShowReport(false)}
+        title="Tax Code / VAT Registry Report"
+        subtitle="Country-Specific Tax Rates, TRN Numbers, and Application Scope"
+        exportFileName="tax_codes_report"
+        filters={[
+          { label: "Country", value: selectedCountryId ? countries.find(c => c.id === selectedCountryId)?.name || selectedCountryId : "All" },
+          { label: "Search", value: search || "All" }
+        ]}
+        columns={[
+          { key: "tax_code", label: "Tax Code" },
+          { key: "tax_name", label: "Tax Name" },
+          { key: "rate", label: "Rate %", align: "right", isNumeric: true },
+          { key: "trn_number", label: "TRN Number" },
+          { key: "country_name", label: "Country" },
+          { key: "applies_to", label: "Applies To" },
+          { key: "is_default", label: "Default", align: "center" },
+          { key: "status", label: "Status", align: "center" }
+        ]}
+        data={filteredTaxes.map(tx => ({
+          tax_code: tx.taxCode || "-",
+          tax_name: tx.taxName || "-",
+          rate: tx.taxRate,
+          trn_number: tx.trnNumber || "-",
+          country_name: tx.countryName || "-",
+          applies_to: tx.appliesTo || "-",
+          is_default: tx.isDefault ? "Yes" : "No",
+          status: tx.isActive ? "Active" : "Inactive"
+        }))}
+      />
     </div>
   );
 }
