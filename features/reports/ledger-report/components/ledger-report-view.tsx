@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { ReportPageHeader } from "@/components/reports/report-page-header";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { ReportFilterBar, type DatePresetKey } from "@/components/reports/report-filter-bar";
 import { ReportFilterMenu } from "@/components/reports/report-filter-menu";
 import { ReportTd, ReportTh } from "@/components/reports/report-primitives";
@@ -607,6 +608,28 @@ export function LedgerReportView({
         subtitle={t(lang, "ledger.report_subtitle")}
         actions={
           <div className="flex items-center gap-2">
+            <JournalPrintButton
+              title={pageTitle}
+              subtitle={`Ledger Code: ${header?.ledgerCode || ""} | ${fromDate} to ${toDate}`}
+              columns={[
+                { key: "date", label: "Date", format: "date" },
+                { key: "voucherNo", label: "Voucher No" },
+                { key: "type", label: "Type", format: "status" },
+                { key: "description", label: "Description" },
+                { key: "debit", label: "Debit (FC)", format: "currency" },
+                { key: "credit", label: "Credit (FC)", format: "currency" },
+                { key: "debitLc", label: "Debit (LC)", format: "currency" },
+                { key: "creditLc", label: "Credit (LC)", format: "currency" },
+                { key: "balanceLc", label: "Balance (LC)", format: "currency" },
+              ]}
+              rows={filteredLines as unknown as Record<string, unknown>[]}
+              summary={{
+                OpeningBalance: header?.openingBalance || 0,
+                TotalDebit: displayTotals?.debit || 0,
+                TotalCredit: displayTotals?.credit || 0,
+                ClosingBalance: displayTotals?.balance || 0
+              }}
+            />
             <div className="relative" ref={actionsRef}>
               <Button
                 type="button"
