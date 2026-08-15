@@ -10,6 +10,7 @@ import { translateMasterRecord } from "@/lib/services/translation-trigger-servic
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { locationsRepository } from "@/lib/repositories/locations-repository";
 
 function formatError(message: string, isSuperAdmin: boolean) {
   if (isSuperAdmin) {
@@ -85,7 +86,8 @@ export async function GET(request: Request) {
     const session = await requireErpSession();
     const url = new URL(request.url);
     const id = url.searchParams.get("id");
-    const countryId = url.searchParams.get("countryId");
+    const countryIdRaw = url.searchParams.get("countryId");
+    const countryId = countryIdRaw ? await locationsRepository.resolveCountryUuid(countryIdRaw) : null;
 
     // Root-cause bypass: country_branches_scope_read gates on is_super_admin()/
     // can_access_country(), both keyed off auth.uid(), which is always NULL under
@@ -95,7 +97,7 @@ export async function GET(request: Request) {
     // Supabase-client path only when DATABASE_URL isn't configured.
     const viaPg = await withLocalPg(async (sql) => {
       if (id && !isUuid(id)) return { countryBranches: [] as any[] };
-      if (countryId && !session.isSuperAdmin && !session.countryIds.includes(countryId)) {
+      if (countryId && !session.isSuperAdmin && session.countryIds.length > 0 && !session.countryIds.includes(countryId)) {
         return { countryBranches: [] as any[] };
       }
       if (!countryId && !session.isSuperAdmin && session.countryIds.length === 0) {
@@ -109,7 +111,7 @@ export async function GET(request: Request) {
         from public.country_branches
         where deleted_at is null
           and (${id && isUuid(id) ? sql`id = ${id}` : sql`true`})
-          and (${countryId ? sql`country_id = ${countryId}` : sql`true`})
+          and (${countryId ? sql`country_id = ${countryId}::uuid` : sql`true`})
           and (${!countryId && !session.isSuperAdmin ? sql`country_id = any(${session.countryIds})` : sql`true`})
         order by created_at asc
       `;

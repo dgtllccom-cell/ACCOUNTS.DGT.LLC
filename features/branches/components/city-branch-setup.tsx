@@ -954,15 +954,27 @@ function CityBranchSetupContent() {
       return;
     }
     try {
-      const res = await fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(nextCountryId)}`, {
+      let res = await fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(nextCountryId)}`, {
         cache: "no-store"
       });
       if (!res.ok) {
         setMainBranches([]);
         return;
       }
-      const json = (await res.json()) as { countryBranches?: CountryBranchRow[] };
-      const list = Array.isArray(json.countryBranches) ? json.countryBranches : [];
+      let json = (await res.json()) as { countryBranches?: CountryBranchRow[] };
+      let list = Array.isArray(json.countryBranches) ? json.countryBranches : [];
+      
+      // Fallback: If country-filtered search returned 0 branches, fetch all active country branches
+      if (list.length === 0) {
+        const fallbackRes = await fetch("/api/branch-management/country-branches", { cache: "no-store" });
+        if (fallbackRes.ok) {
+          const fallbackJson = (await fallbackRes.json()) as { countryBranches?: CountryBranchRow[] };
+          if (Array.isArray(fallbackJson.countryBranches) && fallbackJson.countryBranches.length > 0) {
+            list = fallbackJson.countryBranches;
+          }
+        }
+      }
+
       const mains = list.filter((b) => b.is_main !== false);
       const finalBranches = mains.length > 0 ? mains : list;
       setMainBranches(finalBranches);
