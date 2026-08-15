@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronDown, Eye, Pencil, Search, X } from "lucide-react";
+import { Check, ChevronDown, Eye, Loader2, Pencil, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -20,6 +20,7 @@ export function SearchSelect({
   placeholder = "Select...",
   options = [],
   disabled,
+  loading = false,
   onValueChange,
   onOpenChange,
   onSearchValueChange,
@@ -43,6 +44,7 @@ export function SearchSelect({
   placeholder?: string;
   options: SearchSelectOption[];
   disabled?: boolean;
+  loading?: boolean;
   onValueChange: (value: string) => void;
   onOpenChange?: (open: boolean) => void;
   onSearchValueChange?: (value: string) => void;
@@ -124,7 +126,11 @@ export function SearchSelect({
                   <X className="h-3 w-3" />
                 </span>
               )}
-              <ChevronDown className="h-4 w-4 opacity-50" />
+              {loading ? (
+                <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
+              ) : (
+                <ChevronDown className="h-4 w-4 opacity-50" />
+              )}
             </div>
           </button>
         </PopoverTrigger>

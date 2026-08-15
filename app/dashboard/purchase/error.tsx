@@ -13,6 +13,19 @@ export default function PurchaseError({
 }) {
   useEffect(() => {
     console.error("Purchase module exception caught:", error);
+    if (
+      typeof window !== "undefined" &&
+      error?.message &&
+      (error.message.includes("Loading chunk") ||
+        error.message.includes("ChunkLoadError") ||
+        error.message.includes("failed to fetch"))
+    ) {
+      const reloadedKey = `chunk_reload_${window.location.pathname}`;
+      if (!sessionStorage.getItem(reloadedKey)) {
+        sessionStorage.setItem(reloadedKey, "1");
+        window.location.reload();
+      }
+    }
   }, [error]);
 
   const handleRetry = () => {

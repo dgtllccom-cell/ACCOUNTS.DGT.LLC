@@ -319,10 +319,11 @@ export function LocationHierarchySelect({
           {showCountry && (
             <div className="space-y-2">
               <SearchSelect
-                label={loadingCountries ? `${loc("country")} (...)` : loc("country")}
+                label={loc("country")}
                 value={value.countryId}
                 placeholder={loc("selectCountry")}
                 disabled={disabled || loadingCountries}
+                loading={loadingCountries}
                 options={toOptions(countries)}
                 onValueChange={(countryId) => {
                   const next: LocationHierarchyValue = { countryId, stateProvinceId: "", districtId: "", cityId: "", areaId: "" };
@@ -341,11 +342,17 @@ export function LocationHierarchySelect({
 
               {allowManageLink ? (
                 <div className="flex justify-end">
-                  <Button asChild type="button" variant="ghost" size="sm" className="h-8 px-2 text-xs">
-                    <Link href="/dashboard/settings/location">
-                      {loc("manageLocations")} <ExternalLink className="ms-1 h-3.5 w-3.5" aria-hidden />
-                    </Link>
-                  </Button>
+                  <a
+                    href="/dashboard/settings/locations"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-blue-600 hover:text-blue-700 hover:underline dark:text-blue-400 py-1 px-2 cursor-pointer"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                    }}
+                  >
+                    {loc("manageLocations")} <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+                  </a>
                 </div>
               ) : null}
             </div>
@@ -353,10 +360,11 @@ export function LocationHierarchySelect({
 
           {showState && (
             <SearchSelect
-              label={loadingStates ? `${loc("state")} (...)` : loc("state")}
+              label={loc("state")}
               value={value.stateProvinceId}
               placeholder={value.countryId ? loc("selectState") : loc("selectCountryFirst")}
               disabled={disabled || !value.countryId || loadingStates}
+              loading={loadingStates}
               options={toOptions(states)}
               onValueChange={(stateProvinceId) => {
                 const next: LocationHierarchyValue = { ...value, stateProvinceId, districtId: "", cityId: "", areaId: "" };
@@ -376,10 +384,11 @@ export function LocationHierarchySelect({
 
           {showDistrict && (
             <SearchSelect
-              label={loadingDistricts ? `${loc("district")} (...)` : loc("district")}
+              label={loc("district")}
               value={value.districtId}
               placeholder={value.stateProvinceId || value.countryId ? loc("district") : loc("selectCountryFirst")}
               disabled={disabled || (!value.countryId && !value.stateProvinceId) || loadingDistricts}
+              loading={loadingDistricts}
               options={toOptions(districts)}
               onValueChange={(districtId) => {
                 const foundDistrict = districts.find((d) => d.id === districtId);
@@ -411,10 +420,11 @@ export function LocationHierarchySelect({
         <div className={`grid gap-3 md:grid-cols-${secondRowItems.length}`}>
           {showCity && (
             <SearchSelect
-              label={loadingCities ? `${loc("city")} (...)` : loc("city")}
+              label={loc("city")}
               value={value.cityId}
               placeholder={value.countryId ? loc("selectCity") : loc("selectCountryFirst")}
               disabled={disabled || !value.countryId || loadingCities}
+              loading={loadingCities}
               options={toOptions(cities)}
               onValueChange={(cityId) => {
                 const foundCity = cities.find((c) => c.id === cityId);
@@ -444,10 +454,11 @@ export function LocationHierarchySelect({
           {showArea && (
             <div className="space-y-1.5">
               <SearchSelect
-                label={loadingAreas ? `${loc("area")} (...)` : loc("area")}
+                label={loc("area")}
                 value={value.areaId ?? ""}
                 placeholder={value.cityId ? loc("selectArea") : loc("selectCity")}
                 disabled={disabled || !value.cityId || loadingAreas}
+                loading={loadingAreas}
                 options={toOptions(areas)}
                 onValueChange={(areaId) => {
                   const next: LocationHierarchyValue = { ...value, areaId };

@@ -1,12 +1,24 @@
-export default function AgentCustomEntryPage() {
+import { Metadata } from "next";
+import { requireErpSession } from "@/lib/auth/session";
+import { AgentCustomEntryManagementView } from "@/features/clearing-agent/components/agent-custom-entry-management";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
+
+export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Agent Custom Entry — Clearing Agent",
+  description: "Record agent custom entry declarations, customs station GDs and duties.",
+};
+
+export default async function AgentCustomEntryPage() {
+  const session = await requireErpSession();
+  const lang = (session?.preferredLanguage ?? "en") as SupportedLanguage;
+
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Agent Custom Entry</h1>
-        <p className="text-sm text-muted-foreground">Placeholder screen.</p>
+    <div className="min-h-screen bg-slate-50/50 p-4 dark:bg-slate-950/50 sm:p-6 lg:p-8">
+      <div className="mx-auto max-w-screen-2xl">
+        <AgentCustomEntryManagementView lang={lang} />
       </div>
-      <section className="rounded-lg border bg-card p-5 text-sm text-muted-foreground">Form will be added here.</section>
     </div>
   );
 }
-

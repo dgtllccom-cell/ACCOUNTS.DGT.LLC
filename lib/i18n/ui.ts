@@ -176,6 +176,7 @@ export type UiKey =
   | "nav.agent_dashboard"
   | "nav.shipping_line_dashboard"
   | "nav.clearing_agent_dashboard"
+  | "nav.customer_order"
   | "nav.new_entry"
   | "nav.branch_entry"
   | "nav.branch_menu"
@@ -3821,6 +3822,7 @@ const en: Dict = {
   "nav.filter_by_date_range": "Filter by date range",
   "nav.all_dates": "All Dates",
   "nav.dashboard": "Dashboard",
+  "nav.customer_order": "Customer Order",
   "nav.open_navigation": "Open navigation",
   "nav.close_navigation": "Close navigation",
   "nav.expand_sidebar": "Expand sidebar",
@@ -6343,6 +6345,7 @@ const ur: Dict = {
   "nav.filter_by_date_range": "تاریخ کی حد کے مطابق فلٹر کریں",
   "nav.all_dates": "تمام تاریخیں",
   "nav.dashboard": "ڈیش بورڈ",
+  "nav.customer_order": "کسٹمر آرڈر",
   "nav.open_navigation": "نیویگیشن کھولیں",
   "nav.close_navigation": "نیویگیشن بند کریں",
   "nav.expand_sidebar": "سائیڈ بار پھیلائیں",
@@ -8504,6 +8507,7 @@ const ar: Dict = {
   "nav.filter_by_date_range": "تصفية حسب النطاق الزمني",
   "nav.all_dates": "جميع التواريخ",
   "nav.dashboard": "لوحة التحكم",
+  "nav.customer_order": "طلب العميل",
   "nav.open_navigation": "فتح التنقل",
   "nav.close_navigation": "إغلاق التنقل",
   "nav.expand_sidebar": "توسيع الشريط الجانبي",
@@ -10652,6 +10656,7 @@ const fa: Dict = {
   "nav.filter_by_date_range": "فیلتر بر اساس بازه تاریخ",
   "nav.all_dates": "همه تاریخ‌ها",
   "nav.dashboard": "داشبورد",
+  "nav.customer_order": "سفارش مشتری",
   "nav.open_navigation": "باز کردن ناوبری",
   "nav.close_navigation": "بستن ناوبری",
   "nav.expand_sidebar": "گسترش نوار کناری",
@@ -12827,6 +12832,7 @@ const ps: Dict = {
   "nav.filter_by_date_range": "د نیټې د حد له مخې فلټر کول",
   "nav.all_dates": "ټولې نیټې",
   "nav.dashboard": "ډشبورډ",
+  "nav.customer_order": "د پیرودونکي امر",
   "nav.open_navigation": "نیویګیشن خلاص کړئ",
   "nav.close_navigation": "نیویګیشن بند کړئ",
   "nav.expand_sidebar": "څنګ پټه پراخه کړئ",
