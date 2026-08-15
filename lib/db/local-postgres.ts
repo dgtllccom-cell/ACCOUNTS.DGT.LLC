@@ -1,3 +1,5 @@
+import fs from "fs";
+import path from "path";
 import postgres from "postgres";
 
 /**
@@ -15,13 +17,11 @@ import postgres from "postgres";
 export function getDbUrl(): string {
   if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
   try {
-    const fs = require("fs");
-    const path = require("path");
     for (const file of [".env.local", ".env"]) {
       const filePath = path.join(process.cwd(), file);
       if (fs.existsSync(filePath)) {
         const content = fs.readFileSync(filePath, "utf8");
-        const match = content.match(/^DATABASE_URL=(.+)$/m);
+        const match = content.match(/^DATABASE_URL\s*=\s*(.+)$/m);
         if (match) return match[1].trim().replace(/^['"]|['"]$/g, "");
       }
     }

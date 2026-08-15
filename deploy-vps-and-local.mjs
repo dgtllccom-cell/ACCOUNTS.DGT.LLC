@@ -48,7 +48,7 @@ try {
 
   execSync('git add -A', { stdio: 'inherit' });
   try {
-    execSync('git commit -m "feat(i18n): deploy 5 dedicated per-language tables architecture and multilingual auto-translation sync"', { stdio: 'inherit' });
+    execSync('git commit -m "feat(bank-roznamcha): deploy complete Bank Roznamcha / Cheque Management Report system to local and VPS"', { stdio: 'inherit' });
   } catch (e) {
     console.log("No new changes to commit or commit already up to date.");
   }
