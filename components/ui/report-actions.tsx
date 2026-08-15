@@ -125,34 +125,15 @@ export function ReportActions({
   }
 
   async function printDoc() {
-    const b = await fetchBranding(countryId);
-    const head = columns.map((c) => `<Th>${esc(c.label)}</Th>`).join("");
-    const body = rows.map((r) => `<tr>${columns.map((c) => `<td>${esc(cell(r[c.key]))}</td>`).join("")}</tr>`).join("");
-    const footer = brandingFooter(b, lang) || watermarkOf(b, lang);
-    const html = `<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title>
-      <style>
-        @page { size: A4 landscape; margin: 14mm; }
-        body { font-family: Arial, Helvetica, sans-serif; color: #111; }
-        .hdr { display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #1e3a8a; padding-bottom:6px; margin-bottom:10px; }
-        .hdr h1 { font-size:18px; margin:0; color:#1e3a8a; }
-        .hdr .left { display:flex; align-items:center; gap:12px; }
-        .hdr .logo { height:52px; width:auto; max-width:120px; object-fit:contain; }
-        .hdr .brand { font-size:12px; font-weight:bold; text-align:right; }
-        .meta { font-size:10px; color:#555; font-weight:normal; }
-        table { width:100%; border-collapse:collapse; font-size:11px; }
-        th,td { border:1px solid #cbd5e1; padding:5px 7px; text-align:left; }
-        thead th { background:#eef2ff; }
-        tbody tr:nth-child(even){ background:#f8fafc; }
-        .ftr { margin-top:14px; font-size:9px; color:#888; text-align:center; }
-        .watermark { position:fixed; inset:0; display:flex; align-items:center; justify-content:center; opacity:0.05; font-size:120px; font-weight:900; color:#1e3a8a; z-index:-1; }
-      </style></head><body>
-      <div class="watermark">${watermarkOf(b, lang)}</div>
-      ${brandHeader(b, title, lang, subtitle, `Rows: ${rows.length}`)}
-      <table><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>
-      <div class="ftr">${esc(footer)} — ${esc(title)}</div>
-      <script>window.onload=function(){window.print();}</script>
-      </body></html>`;
-    openWindow(html);
+    const { openGenericErpReport } = await import("@/lib/reports/open-generic-erp-report");
+    openGenericErpReport({
+      title,
+      subtitle: subtitle || `Total ${rows.length} records`,
+      lang,
+      columns: columns.map((c) => ({ key: c.key, label: c.label })),
+      rows: rows as Record<string, unknown>[],
+      summary: { TotalRecords: rows.length },
+    });
   }
 
   const btn = "inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800";

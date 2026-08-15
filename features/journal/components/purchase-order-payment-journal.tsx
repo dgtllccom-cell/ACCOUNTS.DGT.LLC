@@ -6899,8 +6899,42 @@ function ReportActions({ rows, mode }: { rows: PurchaseOrderRow[]; mode: Payment
         <MenuAction icon={<Eye />} label="Plate View" onClick={() => handleReportAction(() => undefined)} />
         <MenuAction icon={<DownloadActionIcon />} label="Download" onClick={() => handleReportAction(() => exportRows(rows, mode))} />
         <MenuAction icon={<FileSpreadsheet />} label="Export Excel" onClick={() => handleReportAction(() => exportRows(rows, mode))} />
-        <MenuAction icon={<DownloadActionIcon />} label="Export PDF" onClick={() => handleReportAction(() => window.print())} />
-        <MenuAction icon={<Printer />} label="Print" onClick={() => handleReportAction(() => window.print())} />
+        <MenuAction icon={<DownloadActionIcon />} label="Export PDF" onClick={() => handleReportAction(() => {
+          import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
+            openGenericErpReport({
+              title: "Purchase Order Payment Journal",
+              subtitle: `Mode: ${mode.toUpperCase()} | Total ${rows.length} Records`,
+              columns: [
+                { key: "po_no", label: "PO Booking #" },
+                { key: "branch", label: "Branch" },
+                { key: "supplier_customer", label: "Party Name" },
+                { key: "mode", label: "Mode" },
+                { key: "bank_name", label: "Bank Account" },
+                { key: "amount", label: "Amount", format: "currency" },
+                { key: "status", label: "Status", format: "status" }
+              ],
+              rows: rows as Record<string, unknown>[]
+            });
+          });
+        })} />
+        <MenuAction icon={<Printer />} label="Print" onClick={() => handleReportAction(() => {
+          import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => {
+            openGenericErpReport({
+              title: "Purchase Order Payment Journal",
+              subtitle: `Mode: ${mode.toUpperCase()} | Total ${rows.length} Records`,
+              columns: [
+                { key: "po_no", label: "PO Booking #" },
+                { key: "branch", label: "Branch" },
+                { key: "supplier_customer", label: "Party Name" },
+                { key: "mode", label: "Mode" },
+                { key: "bank_name", label: "Bank Account" },
+                { key: "amount", label: "Amount", format: "currency" },
+                { key: "status", label: "Status", format: "status" }
+              ],
+              rows: rows as Record<string, unknown>[]
+            });
+          });
+        })} />
       </div>
     </details>
   );

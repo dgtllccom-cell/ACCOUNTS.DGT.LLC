@@ -361,7 +361,7 @@ export function SalesModuleWorkspace({
                   <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-bold hover:bg-slate-100 dark:hover:bg-slate-900" onClick={() => exportCsv(rows, title)}>
                     <FileSpreadsheet className="h-4 w-4 text-emerald-500" /> Export Excel
                   </button>
-                  <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-bold hover:bg-slate-100 dark:hover:bg-slate-900" onClick={() => window.print()}>
+                  <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-bold hover:bg-slate-100 dark:hover:bg-slate-900" onClick={() => { import("@/lib/reports/open-generic-erp-report").then(({ openGenericErpReport }) => { openGenericErpReport({ title: title || "Sales Report", lang, columns: columns.map(c => ({ key: c.key, label: c.label })), rows: rows as Record<string, unknown>[] }); }); }}>
                     <Printer className="h-4 w-4 text-cyan-500" /> Print / PDF
                   </button>
                   <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-bold hover:bg-slate-100 dark:hover:bg-slate-900" onClick={() => exportCsv(rows, title)}>
