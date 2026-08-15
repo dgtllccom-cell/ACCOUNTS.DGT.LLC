@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 
 type PurchaseModuleType = "purchase" | "stock";
 
@@ -353,20 +354,6 @@ export function PurchaseModuleWorkspace({
           <div className="flex flex-wrap items-center gap-1.5">
             <div className="relative">
               <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder={t(lang, "purchase.pmw_search_placeholder", "Search PO, Supplier...")} className="h-8 w-56 rounded-lg border bg-background pl-7 pr-2 text-xs outline-none focus:ring-2 focus:ring-ring" />
-            </div>
-            <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => setFiltersOpen((value) => !value)}>
-              <Filter className="h-3.5 w-3.5" /> {t(lang, "purchase.pmw_filter", "Filter")}
-            </Button>
-            <Button type="button" variant="outline" size="sm" className="h-8" onClick={() => { setQuery(""); setCountryFilter(""); setStatusFilter(""); void loadOrders(); }}>
-              <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} /> {t(lang, "purchase.pmw_reset_refresh", "Reset & Refresh")}
-            </Button>
-            <span className="hidden h-8 items-center gap-1 rounded-lg border px-2 text-[10px] font-bold text-muted-foreground lg:inline-flex"><CalendarDays className="h-3.5 w-3.5" /> {reportNow ? `${reportNow.date}, ${reportNow.time}` : "-"}</span>
-            <div className="relative">
-              <Button type="button" variant="outline" size="icon" className="h-8 w-8" onClick={() => setActionsOpen((value) => !value)} aria-label={t(lang, "common.actions", "Actions")}><MoreVertical className="h-4 w-4" /></Button>
-              {actionsOpen ? (
-                <div className="absolute right-0 z-20 mt-1 w-44 rounded-xl border bg-popover p-1 text-xs shadow-xl">
-                  <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left font-semibold hover:bg-muted" onClick={() => exportCsv(rows, title)}><FileSpreadsheet className="h-3.5 w-3.5 text-emerald-600" /> {t(lang, "purchase.pmw_export_excel", "Export Excel")}</button>
                   <button
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left font-semibold hover:bg-muted"
                     onClick={() => {

@@ -13,6 +13,7 @@ import { ReportTd, ReportTh } from "@/components/reports/report-primitives";
 import { ReportPagination } from "@/features/reports/components/report-pagination";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { apiGet } from "@/lib/api/client";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { cn } from "@/lib/utils";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
@@ -372,6 +373,43 @@ export function RoznamchaTypeReportView({
               <Search className="h-4 w-4" aria-hidden />
               <span className="ms-2">{filtersOpen ? "Hide Filters" : "Search / Filters"}</span>
             </Button>
+            <JournalPrintButton
+              title={pageTitle}
+              subtitle={`Roznamcha Official Report · ${entryCategory === "all" ? "All entry types" : getCategoryLabel(entryCategory, activeLang)}`}
+              columns={[
+                { key: "voucher_no", label: "Voucher No", align: "center" },
+                { key: "entry_date", label: "Date", align: "center", format: "date" },
+                { key: "countryName", label: "Country", align: "left" },
+                { key: "branchName", label: "Branch", align: "left" },
+                { key: "category", label: "Category", align: "left" },
+                { key: "account", label: "Account / Ledger", align: "left" },
+                { key: "narration", label: "Narration", align: "left" },
+                { key: "currency", label: "Cur", align: "center" },
+                { key: "debit", label: "Debit", align: "right", format: "currency" },
+                { key: "credit", label: "Credit", align: "right", format: "currency" },
+                { key: "usd_amount", label: "USD Amount", align: "right", format: "currency" }
+              ]}
+              rows={rows.map(r => ({
+                voucher_no: r.voucher_no,
+                entry_date: r.entry_date,
+                countryName: r.country_name || "—",
+                branchName: r.branch_name || "—",
+                category: getCategoryLabel(r.payment_entry_type || r.type || "other", activeLang),
+                account: `${r.account_code || r.ledger_code || ""} ${r.account_name || r.ledger_name || ""}`.trim() || "—",
+                narration: r.narration || r.description || "—",
+                currency: r.currency || "AED",
+                debit: Number(r.debit || 0),
+                credit: Number(r.credit || 0),
+                usd_amount: Number(r.usd_amount || 0)
+              }))}
+              summary={data ? {
+                TotalDebit: data.totalDebit,
+                TotalCredit: data.totalCredit,
+                TotalRecords: rows.length
+              } : undefined}
+              size="default"
+              className="border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 font-extrabold shadow-sm"
+            />
             <Button type="button" variant="outline" onClick={printReport} disabled={!rows.length}>
               <Printer className="h-4 w-4" aria-hidden />
               <span className="ms-2">Print / PDF</span>
