@@ -222,12 +222,15 @@ export function LocationHierarchySelect({
     setDistricts([]);
     setCities([]);
     setAreas([]);
-    if (!value.stateProvinceId) return;
+    if (!value.countryId && !value.stateProvinceId) return;
 
     (async () => {
       setLoadingDistricts(true);
       try {
-        const rows = await listDistricts({ stateProvinceId: value.stateProvinceId });
+        const rows = await listDistricts({
+          countryId: value.countryId || undefined,
+          stateProvinceId: value.stateProvinceId || undefined
+        });
         if (!cancelled) setDistricts(rows);
       } finally {
         if (!cancelled) setLoadingDistricts(false);
@@ -237,7 +240,7 @@ export function LocationHierarchySelect({
     return () => {
       cancelled = true;
     };
-  }, [value.stateProvinceId]);
+  }, [value.countryId, value.stateProvinceId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -375,14 +378,23 @@ export function LocationHierarchySelect({
             <SearchSelect
               label={loadingDistricts ? `${loc("district")} (...)` : loc("district")}
               value={value.districtId}
-              placeholder={value.stateProvinceId ? loc("district") : loc("selectStateFirst")}
-              disabled={disabled || !value.stateProvinceId || loadingDistricts}
+              placeholder={value.stateProvinceId || value.countryId ? loc("district") : loc("selectCountryFirst")}
+              disabled={disabled || (!value.countryId && !value.stateProvinceId) || loadingDistricts}
               options={toOptions(districts)}
               onValueChange={(districtId) => {
-                const next: LocationHierarchyValue = { ...value, districtId, cityId: "", areaId: "" };
+                const foundDistrict = districts.find((d) => d.id === districtId);
+                const nextStateId = foundDistrict?.state_province_id || value.stateProvinceId;
+                const next: LocationHierarchyValue = {
+                  ...value,
+                  stateProvinceId: nextStateId,
+                  districtId,
+                  cityId: "",
+                  areaId: ""
+                };
                 onChange(next, {
                   ...meta,
-                  district: districts.find((d) => d.id === districtId) ?? null,
+                  state: states.find((s) => s.id === nextStateId) ?? meta.state,
+                  district: foundDistrict ?? null,
                   city: null,
                   area: null
                 });

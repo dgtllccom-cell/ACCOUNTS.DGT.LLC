@@ -73,8 +73,10 @@ export async function listStates(params: { countryId: string; q?: string }) {
   return res.states ?? [];
 }
 
-export async function listDistricts(params: { stateProvinceId: string; q?: string }) {
-  const qp = new URLSearchParams({ stateProvinceId: params.stateProvinceId });
+export async function listDistricts(params: { countryId?: string; stateProvinceId?: string; q?: string }) {
+  const qp = new URLSearchParams();
+  if (params.countryId) qp.set("countryId", params.countryId);
+  if (params.stateProvinceId) qp.set("stateProvinceId", params.stateProvinceId);
   if (params.q) qp.set("q", params.q);
   const res = await apiGet<{ districts: LocationDistrict[] }>(`/api/erp/locations/districts?${qp.toString()}`);
   return res.districts ?? [];

@@ -17,17 +17,51 @@ export async function GET(request: NextRequest) {
     } catch {
       // Unauthenticated dropdown access
     }
+    const countryId = request.nextUrl.searchParams.get("countryId");
     const stateProvinceId = request.nextUrl.searchParams.get("stateProvinceId");
-    if (!stateProvinceId) {
+    if (!countryId && !stateProvinceId) {
       return apiOk({ districts: [] });
     }
 
     const q = request.nextUrl.searchParams.get("q");
-    let districts = await locationsRepository.listDistricts({
-      stateProvinceId,
-      query: q,
-      limit: 500
-    });
+    let districts: any[] = [];
+
+    try {
+      const { createSupabaseAdminClient } = await import("@/lib/supabase/admin");
+      const supabase = createSupabaseAdminClient() as any;
+      let query = supabase
+        .from("districts")
+        .select("id, country_id, state_province_id, name, code, postal_code, phone_area_code, is_active")
+        .is("deleted_at", null)
+        .order("name", { ascending: true });
+
+      if (stateProvinceId) {
+        query = query.eq("state_province_id", stateProvinceId);
+      } else if (countryId) {
+        const resolvedCountryId = await locationsRepository.resolveCountryUuid(countryId);
+        query = query.eq("country_id", resolvedCountryId);
+      }
+
+      if (q) {
+        query = query.or(`name.ilike.%${q}%,code.ilike.%${q}%`);
+      }
+
+      const { data } = await query.limit(500);
+      if (data && data.length > 0) {
+        districts = data;
+      }
+    } catch {
+      // Fallback to repo if needed
+    }
+
+    if (!districts.length && stateProvinceId) {
+      districts = await locationsRepository.listDistricts({
+        stateProvinceId,
+        query: q,
+        limit: 500
+      }).catch(() => []);
+    }
+
     const lang = await getRequestLanguage();
     districts = await localizeRecordNames(districts, "districts", "name", lang);
 
