@@ -296,12 +296,6 @@ export function LocationHierarchySelect({
     area: selectedArea
   };
 
-  useEffect(() => {
-    if (!value.countryId && !value.stateProvinceId && !value.districtId && !value.cityId && !value.areaId) return;
-    onChange(value, meta);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCountry, selectedState, selectedDistrict, selectedCity, selectedArea]);
-
   // Construct layouts based on shown columns
   const firstRowItems = [];
   if (showCountry) firstRowItems.push("country");

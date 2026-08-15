@@ -949,23 +949,29 @@ function CityBranchSetupContent() {
   }, [existingCityBranches, existingCitySearch]);
 
   async function loadMainBranches(nextCountryId: string) {
-    if (!isUuid(nextCountryId)) {
+    if (!nextCountryId?.trim()) {
       setMainBranches([]);
       return;
     }
-    const res = await fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(nextCountryId)}`, {
-      cache: "no-store"
-    });
-    if (!res.ok) {
+    try {
+      const res = await fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(nextCountryId)}`, {
+        cache: "no-store"
+      });
+      if (!res.ok) {
+        setMainBranches([]);
+        return;
+      }
+      const json = (await res.json()) as { countryBranches?: CountryBranchRow[] };
+      const list = Array.isArray(json.countryBranches) ? json.countryBranches : [];
+      const mains = list.filter((b) => b.is_main !== false);
+      const finalBranches = mains.length > 0 ? mains : list;
+      setMainBranches(finalBranches);
+      if (finalBranches.length > 0 && !countryBranchId) {
+        await onMainBranchSelected(finalBranches[0].id);
+      }
+    } catch (e) {
+      console.error("Failed to load main branches:", e);
       setMainBranches([]);
-      return;
-    }
-    const json = (await res.json()) as { countryBranches?: CountryBranchRow[] };
-    const list = Array.isArray(json.countryBranches) ? json.countryBranches : [];
-    const mains = list.filter((b) => b.is_main);
-    setMainBranches(mains);
-    if (mains.length > 0 && !countryBranchId) {
-      await onMainBranchSelected(mains[0].id);
     }
   }
 
