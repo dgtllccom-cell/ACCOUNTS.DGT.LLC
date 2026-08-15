@@ -23,7 +23,8 @@ async function localizeAccountNames<T extends { accountId: string; accountName: 
     rows.map((row) => ({ id: row.accountId, name: row.accountName })),
     "enterprise_accounts",
     "name",
-    language
+    language,
+    { phraseFallback: true }
   );
   const nameById = new Map(localized.map((row) => [row.id, row.name] as const));
   for (const row of rows) {

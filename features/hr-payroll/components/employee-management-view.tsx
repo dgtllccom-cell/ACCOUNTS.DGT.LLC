@@ -9,6 +9,7 @@ import { AdvanceLoanModal } from "./advance-loan-modal";
 import { EmployeeLedgerPanel } from "./employee-ledger-panel";
 import { PayrollReportsView } from "./payroll-reports-view";
 import { printEmployeeCertificate } from "@/components/ui/employee-certificate-print";
+import { UniversalReportModal } from "@/components/ui/universal-report-modal";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";

@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { Th } from "@/components/ui/translated-th";
 
 type SalesModuleType = "sales" | "stock";
@@ -288,103 +289,153 @@ export function SalesModuleWorkspace({
   }), [rows]);
 
   return (
-    <div className="w-full space-y-3 px-2 py-2 sm:px-4 text-slate-100 min-h-screen">
-      <section className="rounded-xl border border-slate-800 bg-slate-950/40 px-3 py-2 shadow-sm">
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex min-w-0 items-center gap-2">
-            <Button type="button" variant="outline" size="sm" className="h-8 px-2 border-slate-800 bg-slate-900 text-white hover:bg-slate-800" onClick={() => window.history.back()}>
-              <ArrowLeft className="h-3.5 w-3.5" /> Back
+    <div className="w-full max-w-[1600px] mx-auto p-2 sm:p-4 md:p-6 space-y-6 text-slate-900 dark:text-slate-100 font-sans min-h-screen">
+      
+      {/* Header Banner — Standard ERP Gradient Hero */}
+      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-white rounded-3xl border border-slate-800 p-5 sm:p-7 shadow-lg">
+        <div className="relative z-10 flex flex-wrap items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <Button type="button" variant="outline" size="sm" className="h-9 px-3 border-slate-700 bg-slate-800 text-white hover:bg-slate-700 rounded-xl font-bold transition" onClick={() => window.history.back()}>
+              <ArrowLeft className="h-4 w-4 mr-1" /> Back
             </Button>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="truncate text-sm font-black text-white sm:text-base">{title}</h1>
-                <span className="rounded-full bg-cyan-600/10 px-2 py-0.5 text-[10px] font-black uppercase text-cyan-400 border border-cyan-900/30">Spreadsheet Dashboard</span>
+                <h1 className="truncate text-xl sm:text-2xl md:text-3xl font-black text-white">{title}</h1>
+                <span className="rounded-full bg-emerald-500/20 px-2.5 py-0.5 text-[10px] font-black uppercase text-emerald-400 border border-emerald-500/30">Spreadsheet Dashboard</span>
               </div>
-              <p className="truncate text-[11px] text-slate-400">{description}</p>
+              <p className="truncate text-xs sm:text-sm text-slate-300 font-medium mt-0.5">{description}</p>
             </div>
           </div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            <div className="relative">
-              <Search className="pointer-events-none absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-500" />
-              <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search SO, Customer..." className="h-8 w-56 rounded-lg border border-slate-800 bg-slate-950 pl-7 pr-2 text-xs outline-none focus:border-cyan-500 text-white placeholder-slate-600" />
-            </div>
-            <Button type="button" variant="outline" size="sm" className="h-8 border-slate-800 bg-slate-900 text-white hover:bg-slate-800" onClick={() => setFiltersOpen((value) => !value)}>
-              <Filter className="h-3.5 w-3.5" /> Filter
+          <div className="flex flex-wrap items-center gap-2">
+            <JournalPrintButton
+              fetchData={async () => rows}
+              reportTitle={`${title} Journal`}
+              columns={[
+                { key: (row) => soNumber(row), label: "SO Number" },
+                { key: (row) => contractNumber(row), label: "Contract No" },
+                { key: (row) => date(row.created_at), label: "Date" },
+                { key: (row) => country(row), label: "Country" },
+                { key: (row) => branch(row), label: "Branch" },
+                { key: (row) => customer(row), label: "Customer" },
+                { key: (row) => product(row), label: "Goods" },
+                { key: (row) => quantity(row).toLocaleString(), label: "Qty", align: "right" },
+                { key: (row) => money(amount(row), currency(row)), label: "Total Amount", align: "right" },
+                { key: (row) => status(row), label: "Status" },
+              ]}
+              className="h-9 font-extrabold shadow-md"
+            />
+          </div>
+        </div>
+        <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+      </div>
+
+      {/* Toolbar & Filters */}
+      <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="relative flex-1 min-w-[240px]">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search SO, Customer, Goods, Branch..."
+              className="h-10 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 pl-9 pr-3 text-xs sm:text-sm outline-none focus:ring-2 focus:ring-emerald-500 text-slate-900 dark:text-slate-100 placeholder-slate-400 font-medium"
+            />
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2">
+            <Button type="button" variant="outline" size="sm" className="h-10 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 hover:bg-slate-100 font-bold px-3.5 rounded-xl" onClick={() => setFiltersOpen((value) => !value)}>
+              <Filter className="h-4 w-4 mr-1.5 text-slate-500" /> Filter
             </Button>
-            <Button type="button" variant="outline" size="sm" className="h-8 border-slate-800 bg-slate-900 text-white hover:bg-slate-800" onClick={() => { setQuery(""); setCountryFilter(""); setStatusFilter(""); void loadOrders(); }}>
-              <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} /> Reset & Refresh
+            <Button type="button" variant="outline" size="sm" className="h-10 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 hover:bg-slate-100 font-bold px-3.5 rounded-xl" onClick={() => { setQuery(""); setCountryFilter(""); setStatusFilter(""); void loadOrders(); }}>
+              <RefreshCw className={cn("h-4 w-4 mr-1.5 text-slate-500", loading && "animate-spin")} /> Refresh
             </Button>
-            <span className="hidden h-8 items-center gap-1 rounded-lg border border-slate-800 px-2 text-[10px] font-bold text-slate-400 lg:inline-flex"><CalendarDays className="h-3.5 w-3.5" /> {reportNow ? `${reportNow.date}, ${reportNow.time}` : "-"}</span>
+            <span className="hidden h-10 items-center gap-1.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 text-xs font-bold text-slate-600 dark:text-slate-400 lg:inline-flex">
+              <CalendarDays className="h-4 w-4 text-emerald-500" /> {reportNow ? `${reportNow.date}, ${reportNow.time}` : "-"}
+            </span>
             <div className="relative">
-              <Button type="button" variant="outline" size="icon" className="h-8 w-8 border-slate-800 bg-slate-900 text-white hover:bg-slate-800" onClick={() => setActionsOpen((value) => !value)} aria-label="Actions"><MoreVertical className="h-4 w-4" /></Button>
+              <Button type="button" variant="outline" size="icon" className="h-10 w-10 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 hover:bg-slate-100 rounded-xl" onClick={() => setActionsOpen((value) => !value)} aria-label="Actions">
+                <MoreVertical className="h-4 w-4" />
+              </Button>
               {actionsOpen ? (
-                <div className="absolute right-0 z-20 mt-1 w-44 rounded-xl border border-slate-800 bg-slate-950 p-1 text-xs shadow-xl text-slate-300">
-                  <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left font-semibold hover:bg-slate-900" onClick={() => exportCsv(rows, title)}><FileSpreadsheet className="h-3.5 w-3.5 text-emerald-500" /> Export Excel</button>
-                  <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left font-semibold hover:bg-slate-900" onClick={() => window.print()}><Printer className="h-3.5 w-3.5 text-cyan-500" /> Print / PDF</button>
-                  <button className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left font-semibold hover:bg-slate-900" onClick={() => exportCsv(rows, title)}><Download className="h-3.5 w-3.5 text-slate-400" /> Download CSV</button>
+                <div className="absolute right-0 z-20 mt-1 w-48 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 p-1.5 text-xs shadow-xl text-slate-800 dark:text-slate-200 font-medium">
+                  <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-bold hover:bg-slate-100 dark:hover:bg-slate-900" onClick={() => exportCsv(rows, title)}>
+                    <FileSpreadsheet className="h-4 w-4 text-emerald-500" /> Export Excel
+                  </button>
+                  <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-bold hover:bg-slate-100 dark:hover:bg-slate-900" onClick={() => window.print()}>
+                    <Printer className="h-4 w-4 text-cyan-500" /> Print / PDF
+                  </button>
+                  <button className="flex w-full items-center gap-2 rounded-xl px-3 py-2 text-left font-bold hover:bg-slate-100 dark:hover:bg-slate-900" onClick={() => exportCsv(rows, title)}>
+                    <Download className="h-4 w-4 text-slate-400" /> Download CSV
+                  </button>
                 </div>
               ) : null}
             </div>
           </div>
         </div>
+
         {filtersOpen ? (
-          <div className="mt-3 grid gap-2 border-t border-slate-800 pt-3 sm:grid-cols-3">
-            <select value={countryFilter} onChange={(event) => setCountryFilter(event.target.value)} className="h-8 rounded-lg border border-slate-800 bg-slate-950 px-2 text-xs text-white">
+          <div className="mt-3 grid gap-3 border-t border-slate-200 dark:border-slate-800 pt-3 sm:grid-cols-3">
+            <select value={countryFilter} onChange={(event) => setCountryFilter(event.target.value)} className="h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 font-semibold">
               <option value="">All Countries</option>
               {countries.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
-            <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="h-8 rounded-lg border border-slate-800 bg-slate-950 px-2 text-xs text-white">
+            <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} className="h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 font-semibold">
               <option value="">All Status</option>
               {statuses.map((item) => <option key={item} value={item}>{item}</option>)}
             </select>
-            <input type="date" className="h-8 rounded-lg border border-slate-800 bg-slate-950 px-2 text-xs text-white" />
+            <input type="date" className="h-10 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-3 text-xs sm:text-sm text-slate-900 dark:text-slate-100 font-semibold" />
           </div>
         ) : null}
       </section>
 
-      <section className="rounded-xl border border-slate-800 bg-slate-950/20 p-3 shadow-sm">
-        <div className="mb-2 flex flex-wrap items-center gap-x-6 gap-y-1 border-b border-slate-850 pb-2 text-[11px] font-bold uppercase text-slate-500">
-          <span>Branch Name: <b className="text-slate-200">{rows[0] ? branch(rows[0]) : "All Branches"}</b></span>
-          <span>User Name: <b className="text-slate-200">Super Admin</b></span>
-          <span>Date: <b className="text-slate-200">{reportNow?.date || "-"}</b></span>
-          <span>Time: <b className="text-slate-200">{reportNow?.time || "-"}</b></span>
+      {/* Country Breakdown Cards */}
+      <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm space-y-3">
+        <div className="flex flex-wrap items-center gap-x-6 gap-y-1 border-b border-slate-200 dark:border-slate-800 pb-3 text-xs font-bold uppercase text-slate-500 dark:text-slate-400">
+          <span>Branch Name: <b className="text-slate-900 dark:text-slate-100">{rows[0] ? branch(rows[0]) : "All Branches"}</b></span>
+          <span>User Name: <b className="text-slate-900 dark:text-slate-100">Super Admin</b></span>
+          <span>Date: <b className="text-slate-900 dark:text-slate-100">{reportNow?.date || "-"}</b></span>
+          <span>Time: <b className="text-slate-900 dark:text-slate-100">{reportNow?.time || "-"}</b></span>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 pt-2">
           {countryCards.length ? countryCards.map((countryCard) => (
-            <div key={countryCard.country} className="rounded-xl border border-slate-800 bg-slate-950 p-4 shadow-sm">
-              <div className="mb-3 flex items-center justify-between border-b border-slate-850 pb-2">
-                <div className="font-black uppercase tracking-wide text-cyan-400">{countryCard.country}</div>
-                <span className="rounded-full bg-cyan-600/10 border border-cyan-800 px-2 py-0.5 text-[10px] font-black text-cyan-400">{countryCard.totalOrders} SOs</span>
+            <div key={countryCard.country} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 p-4 shadow-xs">
+              <div className="mb-3 flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
+                <div className="font-black uppercase tracking-wide text-cyan-600 dark:text-cyan-400">{countryCard.country}</div>
+                <span className="rounded-full bg-cyan-500/10 border border-cyan-300 dark:border-cyan-800 px-2.5 py-0.5 text-[10px] font-black text-cyan-700 dark:text-cyan-400">{countryCard.totalOrders} SOs</span>
               </div>
               
               <div className="space-y-4">
                 {countryCard.currencies.map(curr => (
                   <div key={curr.currency} className="space-y-2">
-                    <div className="text-[11px] font-black uppercase text-slate-400">{curr.currency} <span className="font-semibold lowercase text-slate-500">({curr.count} SOs)</span></div>
-                    <div className="grid grid-cols-2 gap-2 text-[10px]">
-                      <div className="rounded-lg bg-slate-900/60 p-2 border border-slate-800"><span className="block text-slate-500">Total Sales</span><b className="text-slate-200">{money(curr.invoice, curr.currency)}</b></div>
-                      <div className="rounded-lg bg-emerald-950/30 p-2 border border-emerald-900/40"><span className="block text-emerald-400">Paid</span><b className="text-emerald-300">{money(curr.advance, curr.currency)}</b></div>
-                      <div className="col-span-2 rounded-lg bg-rose-950/30 p-2 text-rose-400 border border-rose-900/40"><span className="block text-slate-500">Receivable Balance</span><b className="text-[11px]">{money(curr.remaining, curr.currency)}</b></div>
+                    <div className="text-[11px] font-black uppercase text-slate-500 dark:text-slate-400">{curr.currency} <span className="font-bold lowercase text-slate-400">({curr.count} SOs)</span></div>
+                    <div className="grid grid-cols-2 gap-2 text-[10px] sm:text-xs">
+                      <div className="rounded-xl bg-white dark:bg-slate-900 p-2.5 border border-slate-200 dark:border-slate-800"><span className="block text-slate-400 font-bold uppercase text-[9px]">Total Sales</span><b className="text-slate-900 dark:text-slate-100 font-mono">{money(curr.invoice, curr.currency)}</b></div>
+                      <div className="rounded-xl bg-emerald-50 dark:bg-emerald-950/30 p-2.5 border border-emerald-200 dark:border-emerald-900/40"><span className="block text-emerald-600 dark:text-emerald-400 font-bold uppercase text-[9px]">Paid</span><b className="text-emerald-700 dark:text-emerald-300 font-mono">{money(curr.advance, curr.currency)}</b></div>
+                      <div className="col-span-2 rounded-xl bg-rose-50 dark:bg-rose-950/30 p-2.5 text-rose-700 dark:text-rose-400 border border-rose-200 dark:border-rose-900/40"><span className="block text-slate-400 font-bold uppercase text-[9px]">Receivable Balance</span><b className="text-xs font-mono font-black">{money(curr.remaining, curr.currency)}</b></div>
                     </div>
                   </div>
                 ))}
               </div>
             </div>
           )) : (
-            <div className="col-span-full rounded-xl border border-dashed border-slate-800 p-4 text-sm text-slate-500">No sales records found for this dashboard scope.</div>
+            <div className="col-span-full rounded-2xl border border-dashed border-slate-300 dark:border-slate-800 p-6 text-center text-sm font-medium text-slate-500">No sales records found for this dashboard scope.</div>
           )}
         </div>
       </section>
 
-      <section className="rounded-xl border border-slate-800 bg-slate-950/20 p-3 shadow-sm">
-        <div className="mb-2 flex items-center justify-between">
+      {/* Mini Stats Summary Cards */}
+      <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 shadow-sm space-y-3">
+        <div className="flex items-center justify-between">
           <div>
-            <h2 className="text-sm font-black text-white">Quantity / Items Report</h2>
-            <p className="text-[11px] text-slate-400">Containers, quantity, weight, and workflow totals.</p>
+            <h2 className="text-base font-black text-slate-900 dark:text-slate-100">Quantity / Items Summary</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Containers, quantity, weight, and workflow totals.</p>
           </div>
-          <Button type="button" variant="outline" size="sm" className="h-8 border-slate-800 bg-slate-900 text-white hover:bg-slate-800">View Full Report</Button>
+          <Button type="button" variant="outline" size="sm" className="h-8 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 hover:bg-slate-100 font-bold text-xs rounded-xl" onClick={() => exportCsv(rows, title)}>
+            View Full Report
+          </Button>
         </div>
-        <div className="grid gap-2 sm:grid-cols-4">
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <MiniStat label="Sales Bookings" value={totals.orders.toLocaleString()} />
           <MiniStat label="Total Quantity" value={totals.quantity.toLocaleString()} />
           <MiniStat label="Total Containers" value={totals.containers.toLocaleString()} />
@@ -392,56 +443,67 @@ export function SalesModuleWorkspace({
         </div>
       </section>
 
-      <section className="rounded-xl border border-slate-800 bg-slate-950/20 p-0 shadow-sm overflow-hidden">
-        <div className="flex items-center justify-center border-b border-slate-800 px-3 py-3 text-center bg-slate-950/50">
+      {/* Confirmed Sales Bookings Spreadsheet Table */}
+      <section className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-4 py-3 bg-slate-50/50 dark:bg-slate-950">
           <div>
-            <h2 className="text-sm font-black text-white">Confirmed Sales Bookings</h2>
-            <p className="text-[11px] text-slate-400">Spreadsheet report for this sales workflow stage</p>
+            <h2 className="text-base font-black text-slate-900 dark:text-slate-100">{title} — Spreadsheet Register</h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">Live sales workflow records and transaction details</p>
           </div>
+          <span className="px-3 py-1 bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-slate-200 rounded-xl text-xs font-bold font-mono">
+            {rows.length} Records
+          </span>
         </div>
-        {error ? <div className="m-3 rounded-lg border border-rose-900/50 bg-rose-950/20 px-3 py-2 text-xs font-semibold text-rose-400">{error}</div> : null}
-        <div className="overflow-auto">
-          <table className="w-full min-w-[1320px] border-collapse text-xs text-slate-350">
-            <thead className="bg-slate-950 text-[10px] uppercase tracking-wide text-slate-400 border-b border-slate-800">
+
+        {error ? <div className="m-4 rounded-xl border border-rose-300 dark:border-rose-900/50 bg-rose-50 dark:bg-rose-950/20 px-4 py-3 text-xs font-bold text-rose-600 dark:text-rose-400">{error}</div> : null}
+        
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[1320px] text-xs sm:text-sm text-left text-slate-700 dark:text-slate-300">
+            <thead className="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-200 uppercase font-black text-[11px] sm:text-xs border-b border-slate-200 dark:border-slate-800">
               <tr>
                 {["Order ID", "Super S/N", "Cty S/N", "Br. S/N", "Contract & Date", "Branch & Country", "Customer Account", "Sales Account", "Goods & Brand", "Weights & Qty", "Total & Exchange", "Paid Details", "Receivable Balance", "Action"].map((head) => (
-                  <Th key={head} className="px-3 py-3 text-left font-black border-slate-800">{head}</Th>
+                  <Th key={head} className="px-4 py-3.5 text-left font-black">{head}</Th>
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-850">
+            <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
               {loading ? (
-                <tr><td colSpan={14} className="px-3 py-8 text-center text-slate-500">Loading sales records...</td></tr>
+                <tr><td colSpan={14} className="px-4 py-12 text-center text-slate-500 font-medium">Loading sales records...</td></tr>
               ) : rows.length ? rows.map((row) => (
-                <tr key={row.id} className="hover:bg-slate-900/30">
-                  <td className="px-3 py-3 font-mono font-black text-white">{soNumber(row)}</td>
-                  <td className="px-3 py-3 font-mono text-[9px] font-bold text-teal-400">{row.super_admin_serial_number || "-"}</td>
-                  <td className="px-3 py-3 font-mono text-[9px] font-bold text-amber-400">{row.country_transaction_serial_number || "-"}</td>
-                  <td className="px-3 py-3 font-mono text-[9px] font-bold text-sky-400">{row.branch_transaction_serial_number || "-"}</td>
-                  <td className="px-3 py-3"><b>{contractNumber(row)}</b><br /><span className="text-slate-500">{date(row.created_at)}</span></td>
-                  <td className="px-3 py-3"><b>{branch(row)}</b><br /><span className="text-slate-500">{country(row)}</span></td>
-                  <td className="px-3 py-3"><b>{form(row).purchaseAccountName || customer(row)}</b><br /><span className="text-slate-500">{form(row).purchaseAccountNo || "-"}</span></td>
-                  <td className="px-3 py-3"><b>{form(row).salesAccountName || "-"}</b><br /><span className="text-slate-500">{form(row).salesAccountNo || "-"}</span></td>
-                  <td className="px-3 py-3"><b>{product(row)}</b><br /><span className="text-slate-500">{goods(row)[0]?.brand || "-"}</span></td>
-                  <td className="px-3 py-3">Qty: <b>{quantity(row).toLocaleString()}</b><br />Net: <b>{weight(row).toLocaleString()} KG</b></td>
-                  <td className="px-3 py-3"><b>{money(amount(row), currency(row))}</b><br /><span className="text-slate-500">Rate: {Number(row.exchange_rate || form.exchangeRate || 1)}</span></td>
-                  <td className="px-3 py-3"><b>{money(advance(row), currency(row))}</b><br /><span className={cn("inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold", statusClass(status(row)))}>{status(row)}</span></td>
-                  <td className="px-3 py-3 font-black text-cyan-400">{money(remaining(row), currency(row))}</td>
-                  <td className="px-3 py-3">
+                <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
+                  <td className="px-4 py-3.5 font-mono font-bold text-slate-900 dark:text-slate-100">{soNumber(row)}</td>
+                  <td className="px-4 py-3.5 font-mono text-[10px] font-bold text-emerald-600 dark:text-emerald-400">{row.super_admin_serial_number || "-"}</td>
+                  <td className="px-4 py-3.5 font-mono text-[10px] font-bold text-amber-600 dark:text-amber-400">{row.country_transaction_serial_number || "-"}</td>
+                  <td className="px-4 py-3.5 font-mono text-[10px] font-bold text-cyan-600 dark:text-cyan-400">{row.branch_transaction_serial_number || "-"}</td>
+                  <td className="px-4 py-3.5"><b>{contractNumber(row)}</b><br /><span className="text-slate-400 text-[11px]">{date(row.created_at)}</span></td>
+                  <td className="px-4 py-3.5"><b>{branch(row)}</b><br /><span className="text-slate-400 text-[11px]">{country(row)}</span></td>
+                  <td className="px-4 py-3.5"><b>{form(row).purchaseAccountName || customer(row)}</b><br /><span className="text-slate-400 text-[11px]">{form(row).purchaseAccountNo || "-"}</span></td>
+                  <td className="px-4 py-3.5"><b>{form(row).salesAccountName || "-"}</b><br /><span className="text-slate-400 text-[11px]">{form(row).salesAccountNo || "-"}</span></td>
+                  <td className="px-4 py-3.5"><b>{product(row)}</b><br /><span className="text-slate-400 text-[11px]">{goods(row)[0]?.brand || "-"}</span></td>
+                  <td className="px-4 py-3.5">Qty: <b>{quantity(row).toLocaleString()}</b><br />Net: <b>{weight(row).toLocaleString()} KG</b></td>
+                  <td className="px-4 py-3.5 font-mono"><b>{money(amount(row), currency(row))}</b><br /><span className="text-slate-400 text-[11px]">Rate: {Number(row.exchange_rate || form.exchangeRate || 1)}</span></td>
+                  <td className="px-4 py-3.5 font-mono">
+                    <b>{money(advance(row), currency(row))}</b><br />
+                    <span className={cn("inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase mt-1", statusClass(status(row)))}>
+                      {status(row)}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3.5 font-mono font-black text-cyan-600 dark:text-cyan-400">{money(remaining(row), currency(row))}</td>
+                  <td className="px-4 py-3.5">
                     <Button
                       type="button"
                       variant="outline"
                       size="icon"
-                      className="h-8 w-8 border-slate-800 bg-slate-900 text-white hover:bg-slate-800"
+                      className="h-8 w-8 border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-200 hover:bg-slate-100 rounded-xl"
                       title="View & Post Payments"
                       onClick={() => router.push(`/dashboard/sales/sales-order/view?id=${row.id}`)}
                     >
-                      <Eye className="h-3.5 w-3.5" />
+                      <Eye className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
                     </Button>
                   </td>
                 </tr>
               )) : (
-                <tr><td colSpan={14} className="px-3 py-8 text-center text-slate-500">No live sales records found for this stage.</td></tr>
+                <tr><td colSpan={14} className="px-4 py-12 text-center text-slate-500 font-medium">No live sales records found for this stage.</td></tr>
               )}
             </tbody>
           </table>
@@ -453,12 +515,14 @@ export function SalesModuleWorkspace({
 
 function MiniStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-950 p-3 shadow-sm">
-      <div className="flex items-center gap-2">
-        <div className="grid h-8 w-8 place-items-center rounded-lg bg-cyan-600/10 text-cyan-400 border border-cyan-900/30"><PackageCheck className="h-4 w-4" /></div>
+    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-950 p-3.5 shadow-xs">
+      <div className="flex items-center gap-3">
+        <div className="grid h-10 w-10 place-items-center rounded-xl bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-900/30">
+          <PackageCheck className="h-5 w-5" />
+        </div>
         <div>
           <div className="text-[10px] font-black uppercase text-slate-400">{label}</div>
-          <div className="text-sm font-black text-white">{value}</div>
+          <div className="text-base font-black text-slate-900 dark:text-slate-100 font-mono">{value}</div>
         </div>
       </div>
     </div>

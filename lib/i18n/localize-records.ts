@@ -38,10 +38,67 @@ let dictCache: Map<string, DictRow> | null = null;
 let dictLoadedAt = 0;
 const DICT_TTL_MS = 60_000;
 
+// Phrase-substitution index: dictionary terms compiled to whole-word regexes, sorted
+// longest-first so multi-word terms ("General Traders", "Almond Kernel") match before their
+// parts. Rebuilt whenever the dictionary cache changes.
+type PhraseTerm = { re: RegExp; row: DictRow };
+let phraseTermsCache: PhraseTerm[] | null = null;
+let phraseTermsBuiltAt = 0;
+
 /** Call after approving/correcting a term so ERP screens pick it up immediately. */
 export function invalidateSystemDictionaryCache() {
   dictCache = null;
   dictLoadedAt = 0;
+  phraseTermsCache = null;
+  phraseTermsBuiltAt = 0;
+}
+
+function escapeRegExp(s: string) {
+  return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+/** Build (and cache) the longest-first whole-word regex list from the dictionary. */
+function getPhraseTerms(dict: Map<string, DictRow>): PhraseTerm[] {
+  if (phraseTermsCache && phraseTermsBuiltAt === dictLoadedAt) return phraseTermsCache;
+  const terms: Array<{ term: string; row: DictRow }> = [];
+  for (const [key, row] of dict) {
+    const term = (row.english_text || "").trim() || key;
+    if (term && /[a-z]/i.test(term)) terms.push({ term, row }); // only English (Latin) source terms
+  }
+  terms.sort((a, b) => b.term.length - a.term.length);
+  phraseTermsCache = terms.map(({ term, row }) => ({
+    // \b works because terms are ASCII; case-insensitive; only whole words/phrases.
+    re: new RegExp(`\\b${escapeRegExp(term)}\\b`, "gi"),
+    row
+  }));
+  phraseTermsBuiltAt = dictLoadedAt;
+  return phraseTermsCache;
+}
+
+/**
+ * Phrase-level central-dictionary substitution: replace every APPROVED English business term
+ * inside a value with its approved translation for `lang`, longest term first; words with no
+ * approved translation (genuine proper-name parts) are left exactly as-is. Returns the rewritten
+ * value only if at least one approved term was substituted, else null (caller keeps the original).
+ * No guessing — only whole approved terms are ever substituted.
+ */
+function phraseTranslate(dict: Map<string, DictRow>, raw: string, lang: SupportedLanguage): string | null {
+  if (lang === "en") return null; // English selection keeps English source
+  const targetCol = LANG_COL[lang] || "english_text";
+  let result = raw;
+  let changed = false;
+  for (const { re, row } of getPhraseTerms(dict)) {
+    if (!result) break;
+    const target = (row[targetCol as keyof DictRow] as string | null)?.trim();
+    const english = (row.english_text || "").trim();
+    if (!target || target === english) continue; // no genuine translation for this language
+    re.lastIndex = 0;
+    if (!re.test(result)) continue;
+    re.lastIndex = 0;
+    result = result.replace(re, target);
+    changed = true;
+  }
+  return changed && result !== raw ? result : null;
 }
 
 async function loadDictionary(sql: ReturnType<typeof postgres>): Promise<Map<string, DictRow>> {
@@ -106,7 +163,15 @@ export async function localizeRecordNames<T extends { id: string }>(
   records: T[],
   table: string,
   field: keyof T & string,
-  lang: SupportedLanguage
+  lang: SupportedLanguage,
+  options?: {
+    /**
+     * Also substitute approved business TERMS inside multi-word descriptive values
+     * (e.g. "Purchase Account" → "خریداری کھاتہ"), leaving genuine proper-name words as-is.
+     * Off by default so existing callers keep exact-match-only behavior.
+     */
+    phraseFallback?: boolean;
+  }
 ): Promise<T[]> {
   if (!records || records.length === 0) return records;
   const dbUrl = process.env.DATABASE_URL;
@@ -115,7 +180,9 @@ export async function localizeRecordNames<T extends { id: string }>(
   if (ids.length === 0) return records;
 
   const targetCol = LANG_COL[lang] || "english_text";
-  const useDictionary = !PROPER_NAME_TABLES.has(table); // tier-2 only for non-proper-name fields
+  // Exact-match dictionary is disabled for proper-name tables, but phrase-level substitution
+  // (whole approved terms only) is safe there too — it only ever replaces known business terms.
+  const useDictionary = !PROPER_NAME_TABLES.has(table) || Boolean(options?.phraseFallback);
 
   const sql = postgres(dbUrl, { max: 1, prepare: false, idle_timeout: 5, connect_timeout: 8 });
   try {
@@ -148,6 +215,14 @@ export async function localizeRecordNames<T extends { id: string }>(
         if (d) {
           const dictVal = genuine(d[targetCol as keyof DictRow] as string, rawValue, (d.english_text || "").trim());
           if (dictVal) return { ...record, [field]: dictVal };
+        }
+
+        // Tier 2b — phrase-level substitution of approved business terms inside the value,
+        // so no approved English term remains visible in a non-English selection; genuine
+        // proper-name words are left untouched (honest, never guessed).
+        if (options?.phraseFallback) {
+          const phrase = phraseTranslate(dict, rawValue, lang);
+          if (phrase) return { ...record, [field]: phrase };
         }
       }
 

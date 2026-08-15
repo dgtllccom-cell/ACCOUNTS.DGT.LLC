@@ -119,7 +119,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       [{ id: account.id, name: account.name }],
       "enterprise_accounts",
       "name",
-      language
+      language,
+      { phraseFallback: true }
     );
     const localizedName = resolvedAccount?.name ?? account.name;
     const localizedAccount = {
