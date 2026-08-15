@@ -31,6 +31,7 @@ import {
 } from "@/features/locations/components/location-hierarchy-select";
 import { apiGet } from "@/lib/api/client";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
+import { cn } from "@/lib/utils";
 
 function isUuid(value: string) {
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -1052,28 +1053,43 @@ function SuperAdminBranchSetupContent() {
                     <Label>Value</Label>
                     <Input value={contactValue} onChange={(event) => setContactValue(event.target.value)} placeholder="Enter value" />
                   </div>
-                  <Button type="button" onClick={addContact} className="rounded-lg">
-                    <Plus className="h-4 w-4" aria-hidden />
+                  <Button
+                    type="button"
+                    onClick={addContact}
+                    className="h-9 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold shadow-md hover:shadow-lg transition flex items-center justify-center gap-1.5"
+                    title="Add Contact"
+                  >
+                    <Plus className="h-4 w-4 stroke-[2.5]" aria-hidden />
+                    <span>Add</span>
                   </Button>
                 </div>
                 <ChipList empty="No contacts added yet." rows={contacts} onRemove={(id) => setContacts((rows) => rows.filter((row) => row.id !== id))} />
               </div>
             </section>
 
-            <div className="flex flex-wrap justify-end gap-3 border-t pt-5">
+            <div className="flex flex-wrap justify-end gap-3 border-t border-slate-100 dark:border-slate-800 pt-5">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => {
                   resetForm();
                 }}
-                className="rounded-lg"
+                className="h-10 px-5 rounded-lg border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 font-semibold"
               >
                 Reset
               </Button>
-              <Button type="button" onClick={saveBranch} className="rounded-lg">
-                <Save className="h-4 w-4" aria-hidden />
-                {editingBranchId ? "Update" : "Save"}
+              <Button
+                type="button"
+                onClick={saveBranch}
+                className={cn(
+                  "h-10 px-6 rounded-lg text-white font-bold shadow-md hover:shadow-lg transition-all flex items-center gap-2",
+                  editingBranchId
+                    ? "bg-amber-600 hover:bg-amber-700 active:bg-amber-800"
+                    : "bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800"
+                )}
+              >
+                <Save className="h-4 w-4 stroke-[2.5]" aria-hidden />
+                <span>{editingBranchId ? "Update Branch" : "Save Branch"}</span>
               </Button>
             </div>
 

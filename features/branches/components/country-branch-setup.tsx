@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Pencil, Eye } from "lucide-react";
+import { Pencil, Eye, ChevronRight, Check, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -974,6 +974,200 @@ function CountryBranchSetupContent() {
     setCountryBranchSearch("");
     setBranchType("");
     setBranchCode("");
+  function nextSuggestedCode(country: LocationCountry | null, existingCount: number) {
+    const prefix = asIso3(country);
+    const num = String(Math.max(1, existingCount + 1)).padStart(3, "0");
+    return `${prefix}-MAIN-${num}`;
+  }
+
+  async function onCountrySelected(next: LocationHierarchyValue, meta: LocationHierarchyMeta) {
+    setBanner(null);
+    if (editingCountryBranchId && next.countryId === location.countryId) {
+      setLocation(next);
+      setLocationMeta(meta);
+      if (meta.country?.currency_code) {
+        setCurrency(meta.country.currency_code.toUpperCase());
+      }
+      return;
+    }
+    setLocation(next);
+    setLocationMeta(meta);
+
+    setFullAddress("");
+    setBranchType(next.countryId ? "MAIN" : "");
+    setExistingMainBranch(null);
+    setCountryBranches([]);
+    setCountryBranchSearch("");
+    setBranchCode("");
+    setEditingCountryBranchId("");
+
+    const defaultCurrency = meta.country?.currency_code?.toUpperCase() || "";
+    setCurrency(defaultCurrency);
+
+    if (meta.country?.phone_code) {
+      const code = meta.country.phone_code;
+      setContacts((prev) => {
+        if (prev.length === 0) {
+          return [{ type: "Mobile", value: code + " " }];
+        }
+        return prev.map((c) => {
+          if (["Mobile", "Phone", "WhatsApp"].includes(c.type) && !c.value.trim()) {
+            return { ...c, value: code + " " };
+          }
+          return c;
+        });
+      });
+    };
+
+    if (!isUuid(next.countryId)) return;
+
+    const existing = await loadExistingMainBranch(next.countryId);
+    if (existing?.main) {
+      setBranchCode(existing.main.code);
+      setBanner({
+        type: "error",
+        message:
+          `Country Branch Already Exists\nBranch Name: ${existing.main.name}\nBranch Code: ${existing.main.code}\nStatus: ${existing.main.status}`
+      });
+      return;
+    }
+
+    setBranchCode(nextSuggestedCode(meta.country, existing?.list?.length ?? 0));
+  }
+
+  function onLocationChange(next: LocationHierarchyValue, meta: LocationHierarchyMeta) {
+    setLocation(next);
+    setLocationMeta(meta);
+  }
+
+  function addNewTypePrompt() {
+    const value = window.prompt("Enter new type");
+    if (!value) return null;
+    const clean = value.trim();
+    if (!clean) return null;
+    return clean;
+  }
+
+  function updateContact(idx: number, updates: Partial<ContactRow>) {
+    setContacts((current) => current.map((row, i) => (i === idx ? { ...row, ...updates } : row)));
+  }
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBanner(null);
+
+    if (!isUuid(location.countryId)) {
+      setBanner({ type: "error", message: "Please select a valid country from Location Settings." });
+      return;
+    }
+
+    if (!isUuid(location.stateProvinceId) || !isUuid(location.cityId)) {
+      setBanner({ type: "error", message: "Please select State/Province and City from Location Settings." });
+      return;
+    }
+
+    if (!branchCode.trim()) {
+      setBanner({ type: "error", message: "Branch Code is required." });
+      return;
+    }
+
+    if (!branchEmail || !branchEmail.includes("@")) {
+      setBanner({ type: "error", message: "Branch Email (Hostinger Titan Mailbox) is required." });
+      return;
+    }
+
+    if (!permissionTemplate || !permissionGrants.length) {
+      setBanner({ type: "error", message: "Please select a Role Template and at least one permission before saving the Country." });
+      return;
+    }
+
+    const countryName = locationMeta.country?.name || "Country";
+    const branchName = `${countryName} Main Branch`;
+
+    setSaving(true);
+    try {
+      const contactsPayload = contacts
+        .map((row) => ({ type: row.type.trim(), value: row.value.trim() }))
+        .filter((row) => row.type && row.value);
+
+      const email = branchEmail.trim().toLowerCase();
+      const phone = contactsPayload.find((row) => row.type.toLowerCase().includes("phone") || row.type.toLowerCase().includes("mobile"))?.value;
+      const whatsappNumber = contactsPayload.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value;
+
+      const res = await fetch("/api/branch-management/country-branches", {
+        method: editingCountryBranchId ? "PUT" : "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          id: editingCountryBranchId || undefined,
+          countryId: location.countryId,
+          name: branchName,
+          code: branchCode,
+          stateProvinceId: location.stateProvinceId || undefined,
+          districtId: location.districtId || undefined,
+          cityId: location.cityId || undefined,
+          address: fullAddress.trim() || undefined,
+          phone: phone || undefined,
+          email,
+          whatsappNumber: whatsappNumber || undefined,
+          companyId: companyId || undefined,
+          ownerName: ownerName.trim() || undefined,
+          permissionTemplate,
+          permissionGrants,
+          contacts: contactsPayload.length ? contactsPayload : undefined
+        })
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        let message = "Failed to save country branch.";
+        if (json?.error) {
+          if (typeof json.error === "string") {
+            message = json.error;
+          } else if (json.error.message && typeof json.error.message === "string") {
+            message = json.error.message;
+          } else if (json.error.fieldErrors && typeof json.error.fieldErrors === "object") {
+            const fieldMsgs = Object.entries(json.error.fieldErrors)
+              .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`)
+              .join("; ");
+            message = `Validation Error: ${fieldMsgs}`;
+          } else {
+            message = JSON.stringify(json.error);
+          }
+        }
+        if (json?.existingBranch?.id) {
+          setExistingMainBranch(json.existingBranch);
+          setBranchCode(json.existingBranch.code ?? branchCode);
+        }
+        setBanner({ type: "error", message });
+        return;
+      }
+      setBanner({ type: "success", message: `${editingCountryBranchId ? "Updated" : "Saved"}: ${branchName} (${branchCode})` });
+      setEditingCountryBranchId("");
+      await loadExistingMainBranch(location.countryId);
+    } catch (err) {
+      setBanner({ type: "error", message: err instanceof Error ? err.message : "Failed to save country branch." });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function onReset() {
+    setBanner(null);
+    setLocation({ countryId: "", stateProvinceId: "", districtId: "", cityId: "", areaId: "" });
+    setLocationMeta({ country: null, state: null, district: null, city: null, area: null });
+    setCurrency("");
+    setFullAddress("");
+    setCompanyId("");
+    setCompany(null);
+    setOwnerName("");
+    setOwnerPreview(null);
+    setContacts([]);
+    setExistingMainBranch(null);
+    setEditingCountryBranchId("");
+    setCountryBranches([]);
+    setCountryBranchSearch("");
+    setBranchType("");
+    setBranchCode("");
     setPermissionTemplate("country-standard");
     setPermissionGrants(getPermissionKeysForTemplate("country-standard"));
     setActiveStep(1);
@@ -1008,30 +1202,53 @@ function CountryBranchSetupContent() {
             ["9", "Final Approval", "Accept setup or go back"]
           ].map(([no, title, desc]) => (
             <div key={no} className={cn("rounded-xl border px-3 py-2 transition", Number(no) === activeStep ? "border-cyan-500 bg-cyan-50 shadow-sm ring-1 ring-cyan-200 dark:border-cyan-500 dark:bg-cyan-950/40" : "border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50")}>
-              <div className="flex items-center gap-2">
-                <span className={cn("flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold", Number(no) === activeStep ? "bg-cyan-600 text-white" : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200")}>{no}</span>
-                <span className="text-[11px] font-black uppercase tracking-wide text-slate-900 dark:text-slate-100">{title}</span>
+              <div className="flex items-center gap-2 min-w-0">
+                <span className={cn("flex h-6 w-6 shrink-0 aspect-square min-w-[24px] min-h-[24px] items-center justify-center rounded-full text-[11px] font-bold leading-none select-none", Number(no) === activeStep ? "bg-cyan-600 text-white shadow-xs" : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200")}>{no}</span>
+                <span className="text-[11px] font-black uppercase tracking-wide text-slate-900 dark:text-slate-100 truncate">{title}</span>
               </div>
               <p className="mt-1 text-[10px] leading-snug text-slate-500">{desc}</p>
             </div>
           ))}
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
-          <span className="text-xs font-semibold text-slate-500">Step {activeStep} of 9</span>
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" size="sm" disabled={saving || activeStep === 1} onClick={() => setActiveStep((step) => Math.max(1, step - 1))}>Back</Button>
+          <span className="text-xs font-semibold text-slate-600 dark:text-slate-400">Step {activeStep} of 9</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={saving || activeStep === 1}
+              onClick={() => setActiveStep((step) => Math.max(1, step - 1))}
+              className="h-9 px-4 rounded-lg font-semibold border-slate-300 text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+            >
+              <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back
+            </Button>
             {activeStep < 9 ? (
-              <Button type="button" size="sm" onClick={() => setActiveStep((step) => Math.min(9, step + 1))}>Next</Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => setActiveStep((step) => Math.min(9, step + 1))}
+                className="h-9 px-5 rounded-lg bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold shadow-md hover:shadow-lg transition flex items-center gap-1.5"
+              >
+                <span>Next</span>
+                <ChevronRight className="h-4 w-4 stroke-[2.5]" />
+              </Button>
             ) : (
-              <Button type="submit" form="country-branch-wizard-form" size="sm" disabled={saving || Boolean(existingMainBranch && !editingCountryBranchId) || !location.countryId}>{saving ? "Saving..." : editingCountryBranchId ? "Update" : "Accept & Save"}</Button>
+              <Button
+                type="submit"
+                form="country-branch-wizard-form"
+                size="sm"
+                disabled={saving || Boolean(existingMainBranch && !editingCountryBranchId) || !location.countryId}
+                className="h-9 px-5 rounded-lg bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:bg-slate-300 disabled:text-slate-500 text-white font-bold shadow-md hover:shadow-lg transition flex items-center gap-1.5"
+              >
+                <Check className="h-4 w-4 stroke-[2.5]" />
+                <span>{saving ? "Saving..." : editingCountryBranchId ? "Update Branch" : "Accept & Save"}</span>
+              </Button>
             )}
           </div>
         </div>
       </div>
       <div className="flex flex-col gap-6 w-full max-w-7xl mx-auto"> 
-        <Card className="border-slate-200/80 shadow-sm">
-          <CardHeader className="pb-3">
-            <CardTitle>Country Main Branch Setup</CardTitle>
           </CardHeader>
 
           <CardContent>
@@ -1231,7 +1448,11 @@ function CountryBranchSetupContent() {
                   ))}
 
                   <div className="flex flex-wrap gap-2">
-                    <Button type="button" variant="outline" onClick={() => setContacts((current) => [...current, { type: "", value: "" }])}>
+                    <Button
+                      type="button"
+                      onClick={() => setContacts((current) => [...current, { type: "", value: "" }])}
+                      className="bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold px-4 py-2 rounded-lg shadow-sm"
+                    >
                       + Add Contact
                     </Button>
                   </div>

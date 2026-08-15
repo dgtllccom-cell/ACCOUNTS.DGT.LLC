@@ -199,6 +199,7 @@ export function openRoznamchaVoucherPrintReport(input: {
 
     .sheet {
       width: 200mm;
+      max-width: 100%;
       height: 287mm; /* Perfectly contained on 1 single page! */
       background: #ffffff;
       border: 1px solid #cbd5e1;
@@ -208,6 +209,8 @@ export function openRoznamchaVoucherPrintReport(input: {
       flex-direction: column;
       justify-content: space-between;
       position: relative;
+      box-sizing: border-box;
+      overflow: hidden;
     }
 
     /* Half Voucher Card */

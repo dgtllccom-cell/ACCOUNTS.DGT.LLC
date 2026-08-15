@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Pencil, Eye, ArrowLeft, Printer, Download, History } from "lucide-react";
+import { Pencil, Eye, ArrowLeft, Printer, Download, History, ChevronRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -1282,6 +1282,202 @@ function CityBranchSetupContent() {
             <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">
               New Entry
             </span>
+  function updateContact(idx: number, updates: Partial<ContactRow>) {
+    setContacts((current) => current.map((row, i) => (i === idx ? { ...row, ...updates } : row)));
+  }
+
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBanner(null);
+
+    if (!isUuid(location.countryId) || !isUuid(countryBranchId)) {
+      setBanner({ type: "error", message: "Please select a valid Country and Main Branch." });
+      return;
+    }
+
+    if (!isUuid(location.stateProvinceId) || !isUuid(location.cityId) || !locationMeta.city?.name) {
+      setBanner({ type: "error", message: "Please select State/Province and City from Location Settings." });
+      return;
+    }
+
+    if (cityAlreadyExists) {
+      setBanner({
+        type: "error",
+        message: `City Branch Already Exists\nBranch Name: ${activeExistingCityBranch?.name || "-"}\nBranch Code: ${activeExistingCityBranch?.code || "-"}\nStatus: ${activeExistingCityBranch?.status || "-"}`
+      });
+      return;
+    }
+
+    if (!branchName.trim()) {
+      setBanner({ type: "error", message: "Branch Name is required." });
+      return;
+    }
+
+    if (!branchCode.trim()) {
+      setBanner({ type: "error", message: "Branch Code is required." });
+      return;
+    }
+
+    if (!permissionTemplate || !permissionGrants.length) {
+      setBanner({
+        type: "error",
+        message: "Please select a Permissions Template and at least one explicit permission before saving the City Branch."
+      });
+      return;
+    }
+
+    if (parentPermissionGrants?.length && permissionGrants.some((permission) => !parentPermissionGrants.includes(permission))) {
+      setBanner({
+        type: "error",
+        message: "City Branch permissions must be selected from the Country/Main Branch permissions only."
+      });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const contactsPayload = contacts
+        .map((row) => ({ type: row.type.trim(), value: row.value.trim() }))
+        .filter((row) => row.type && row.value);
+
+      const emailContact = contactsPayload.find((row) => row.type.toLowerCase().includes("email"))?.value;
+      const email = emailContact && emailContact.includes("@") ? emailContact : `${branchCode.trim().toLowerCase()}@dgt.llc`;
+      const phone = contactsPayload.find((row) => row.type.toLowerCase().includes("phone") || row.type.toLowerCase().includes("mobile"))?.value;
+      const whatsappNumber = contactsPayload.find((row) => row.type.toLowerCase().includes("whatsapp"))?.value;
+
+      const res = await fetch("/api/branch-management/city-branches", {
+        method: editingCityBranchId ? "PUT" : "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          id: editingCityBranchId || undefined,
+          countryId: location.countryId,
+          countryBranchId,
+          cityName: locationMeta.city.name,
+          stateProvinceId: location.stateProvinceId || undefined,
+          districtId: location.districtId || undefined,
+          cityId: location.cityId || undefined,
+          areaLocationId: location.areaId || undefined,
+          name: branchName,
+          code: branchCode,
+          currencyCode: currency || locationMeta.country?.currency_code || "USD",
+          address: fullAddress.trim() || undefined,
+          phone: phone || undefined,
+          email: (emailPrefix ? `${emailPrefix.trim().toLowerCase()}@dgt.llc` : email) || "",
+          whatsappNumber: whatsappNumber || undefined,
+          companyId: companyId || undefined,
+          ownerName: ownerName.trim() || undefined,
+          permissionTemplate,
+          permissionGrants,
+          contacts: contactsPayload.length ? contactsPayload : undefined,
+          emailPrefix,
+          emailServerSettings: emailPrefix ? {
+            mailServerName: emailServerName,
+            localIp,
+            publicIp,
+            smtpHost,
+            smtpPort: smtpPort ? Number(smtpPort) : null,
+            imapHost,
+            imapPort: imapPort ? Number(imapPort) : null,
+            sslSecure,
+            smtpUser: smtpUser || (emailPrefix ? `${emailPrefix.trim().toLowerCase()}@dgt.llc` : ""),
+            smtpPass: smtpPass || undefined
+          } : undefined,
+          whatsappConfig: whatsappNumber ? {
+            whatsappNumber,
+            wabaId,
+            phoneNumberId,
+            accessToken,
+            isActive: true
+          } : undefined
+        })
+      });
+
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        let message = "Failed to save city branch.";
+        if (json?.error) {
+          if (typeof json.error === "string") {
+            message = json.error;
+          } else if (json.error.message && typeof json.error.message === "string") {
+            message = json.error.message;
+          } else if (json.error.fieldErrors && typeof json.error.fieldErrors === "object") {
+            const fieldMsgs = Object.entries(json.error.fieldErrors)
+              .map(([field, msgs]) => `${field}: ${Array.isArray(msgs) ? msgs.join(", ") : msgs}`)
+              .join("; ");
+            message = `Validation Error: ${fieldMsgs}`;
+          } else {
+            message = JSON.stringify(json.error);
+          }
+        }
+        setBanner({ type: "error", message });
+        return;
+      }
+
+      setBanner({ type: "success", message: `${editingCityBranchId ? "Updated" : "Saved"}: ${branchName} (${branchCode})` });
+      const list = await loadExistingCityBranches(location.countryId, countryBranchId);
+      setEditingCityBranchId("");
+      if (!editingCityBranchId) {
+        setBranchCode(suggestBranchCode(locationMeta, list.length));
+        setBranchName("");
+        setPermissionTemplate("city-standard");
+        setPermissionGrants(parentPermissionGrants?.length ? getPermissionKeysForTemplate("city-standard").filter((p) => parentPermissionGrants.includes(p)) : getPermissionKeysForTemplate("city-standard"));
+        setEmailPrefix("");
+        setWhatsappNumber("");
+        setPhoneNumberId("");
+        setWabaId("");
+        setAccessToken("");
+      }
+    } catch (err) {
+      setBanner({ type: "error", message: err instanceof Error ? err.message : "Failed to save city branch." });
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  function onReset() {
+    setBanner(null);
+    setActiveStep(1);
+    setLocation({ countryId: "", stateProvinceId: "", districtId: "", cityId: "", areaId: "" });
+    setLocationMeta({ country: null, state: null, district: null, city: null, area: null });
+    setCurrency("");
+    setFullAddress("");
+    setCountryBranchId("");
+    setMainBranches([]);
+    setExistingCityBranches([]);
+    setBranchName("");
+    setBranchCode("");
+    setOwnerName("");
+    setOwnerPreview(null);
+    setContacts([]);
+    setPermissionTemplate("city-standard");
+    setPermissionGrants(getPermissionKeysForTemplate("city-standard"));
+    setEmailPrefix("");
+    setWhatsappNumber("");
+    setPhoneNumberId("");
+    setWabaId("");
+    setAccessToken("");
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4 dark:border-slate-800 bg-white dark:bg-slate-950 p-4 rounded-xl shadow-sm">
+        {/* Left Section: Back button & Breadcrumbs */}
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={saving || activeStep === 1}
+            onClick={() => setActiveStep((step) => Math.max(1, step - 1))}
+            className="h-8 px-2.5 text-xs text-slate-600 hover:bg-slate-50 dark:text-slate-300 dark:hover:bg-slate-900/50"
+          >
+            <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back
+          </Button>
+          <div className="h-4 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
+          <div className="flex flex-col">
+            <span className="text-[10px] font-black uppercase tracking-[0.2em] text-indigo-600 dark:text-indigo-400">
+              New Entry
+            </span>
             <span className="text-[10px] font-bold text-slate-500 mt-0.5">
               Step {activeStep} of 9
             </span>
@@ -1342,10 +1538,11 @@ function CityBranchSetupContent() {
             <Button
               type="button"
               size="sm"
-              className="h-8 text-xs font-semibold"
+              className="h-8 px-4 text-xs font-bold bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white shadow-sm transition flex items-center gap-1"
               onClick={() => setActiveStep((step) => Math.min(9, step + 1))}
             >
-              Next
+              <span>Next</span>
+              <ChevronRight className="h-3.5 w-3.5 stroke-[2.5]" />
             </Button>
           ) : (
             <Button
@@ -1353,9 +1550,10 @@ function CityBranchSetupContent() {
               form="city-branch-wizard-form"
               size="sm"
               disabled={saving || !location.countryId || !countryBranchId || cityAlreadyExists}
-              className="h-8 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="h-8 px-4 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 disabled:bg-slate-300 disabled:text-slate-500 text-white shadow-sm transition flex items-center gap-1"
             >
-              {saving ? "Saving..." : editingCityBranchId ? "Update" : "Accept & Save"}
+              <Check className="h-3.5 w-3.5 stroke-[2.5]" />
+              <span>{saving ? "Saving..." : editingCityBranchId ? "Update Branch" : "Accept & Save"}</span>
             </Button>
           )}
 

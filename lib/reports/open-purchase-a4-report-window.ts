@@ -257,6 +257,7 @@ export function openPurchaseA4ReportWindow(input: {
       .wrap { padding: 20px; display: flex; flex-direction: column; gap: 20px; align-items: center; }
       .sheet {
         width: 210mm;
+        max-width: 100%;
         min-height: 297mm;
         padding: 10mm;
         background: #ffffff;
@@ -268,6 +269,7 @@ export function openPurchaseA4ReportWindow(input: {
         gap: 12px;
         position: relative;
         text-align: left;
+        overflow: hidden;
       }
       .border-box {
         border: 1px solid #e2e8f0;

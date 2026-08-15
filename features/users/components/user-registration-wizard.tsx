@@ -33,6 +33,8 @@ import {
   Info,
   ExternalLink,
   Edit,
+  Pencil,
+  RotateCcw,
   XCircle,
   FileSpreadsheet,
   CheckSquare,

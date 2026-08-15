@@ -165,6 +165,8 @@ export function generateReportHtml(input: {
     .btn-success:hover { background: #047857; }
     .btn-amber { background: #d97706; border-color: #d97706; }
     .btn-amber:hover { background: #b45309; }
+    .btn-slate { background: #475569; border-color: #475569; }
+    .btn-slate:hover { background: #334155; }
 
     .zoom-controls {
       display: inline-flex;
@@ -204,10 +206,12 @@ export function generateReportHtml(input: {
     .sheet-scalable-viewport {
       transition: transform 0.2s ease, width 0.2s ease;
       transform-origin: top center;
+      max-width: 100%;
     }
 
     .sheet {
       width: ${orientation === "landscape" ? "287mm" : "200mm"};
+      max-width: 100%;
       min-height: ${orientation === "landscape" ? "200mm" : "287mm"};
       height: auto;
       background: #ffffff;
@@ -219,7 +223,8 @@ export function generateReportHtml(input: {
       flex-direction: column;
       gap: 10px;
       position: relative;
-      overflow: visible;
+      overflow: hidden;
+      box-sizing: border-box;
     }
 
     /* Letterhead Header */
@@ -314,6 +319,7 @@ export function generateReportHtml(input: {
       border: 1px solid #e2e8f0;
       border-radius: 6px;
       padding: 6px;
+      width: 100%;
     }
 
     .filter-pill {
@@ -339,9 +345,11 @@ export function generateReportHtml(input: {
     /* KPI Summary Cards Grid */
     .kpi-grid {
       display: grid;
-      grid-template-columns: repeat(${Math.min(8, Math.max(1, kpis.length))}, 1fr);
+      grid-template-columns: repeat(auto-fit, minmax(105px, 1fr));
       gap: 6px;
       margin-top: 4px;
+      width: 100%;
+      max-width: 100%;
     }
 
     .kpi-card {
@@ -372,36 +380,59 @@ export function generateReportHtml(input: {
       font-variant-numeric: tabular-nums;
     }
 
-    /* Tables */
+    /* Tables & Responsive Wrapper */
+    .report-table-wrapper {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: auto;
+    }
+
     table.data-table {
       width: 100%;
+      max-width: 100%;
       border-collapse: collapse;
-      font-size: 7.5px;
+      font-size: 7px;
+      table-layout: auto;
     }
+
+    /* Density Controls */
+    .report-table-wrapper.density-compact table.data-table { font-size: 6.2px; }
+    .report-table-wrapper.density-compact table.data-table th { padding: 4px 2px; font-size: 6px; }
+    .report-table-wrapper.density-compact table.data-table td { padding: 3.5px 2px; }
+
+    .report-table-wrapper.density-dense table.data-table { font-size: 5.5px; }
+    .report-table-wrapper.density-dense table.data-table th { padding: 3px 1.5px; font-size: 5.5px; }
+    .report-table-wrapper.density-dense table.data-table td { padding: 2px 1.5px; }
+
+    .report-table-wrapper.density-normal table.data-table { font-size: 7.5px; }
+    .report-table-wrapper.density-normal table.data-table th { padding: 6px 4px; font-size: 7px; }
+    .report-table-wrapper.density-normal table.data-table td { padding: 5px 4px; }
 
     table.data-table th {
       background: #0f172a;
       color: #ffffff;
       font-weight: 800;
       text-transform: uppercase;
-      padding: 6px 4px;
+      padding: 5px 3px;
       border: 1px solid #0f172a;
       text-align: center;
-      font-size: 7px;
+      font-size: 6.5px;
       letter-spacing: 0.2px;
+      word-break: break-word;
     }
 
     table.data-table td {
-      padding: 5px 4px;
+      padding: 4px 3px;
       border: 1px solid #cbd5e1;
       vertical-align: middle;
       font-variant-numeric: tabular-nums;
+      word-break: break-word;
     }
 
     table.data-table tr.total-row td {
       background: #f8fafc;
       font-weight: 900;
-      font-size: 8px;
+      font-size: 7.5px;
       border-top: 2px solid #0f172a;
       border-bottom: 2px solid #0f172a;
     }
@@ -409,9 +440,9 @@ export function generateReportHtml(input: {
     /* Status Badges */
     .badge {
       display: inline-block;
-      padding: 2px 6px;
+      padding: 2px 5px;
       border-radius: 4px;
-      font-size: 6.5px;
+      font-size: 6px;
       font-weight: 800;
       text-transform: uppercase;
       white-space: nowrap;
@@ -430,6 +461,7 @@ export function generateReportHtml(input: {
       gap: 10px;
       padding-top: 10px;
       border-top: 1.5px solid #cbd5e1;
+      width: 100%;
     }
 
     .footer-content-grid {
@@ -437,6 +469,7 @@ export function generateReportHtml(input: {
       grid-template-columns: 2fr 3fr 2fr;
       gap: 12px;
       align-items: center;
+      width: 100%;
     }
 
     .footer-box {
@@ -482,7 +515,109 @@ export function generateReportHtml(input: {
       font-weight: 700;
       border-radius: 4px;
       letter-spacing: 0.5px;
+      width: 100%;
     }
+
+    /* Modal for Column Customization */
+    .custom-modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(15, 23, 42, 0.75);
+      backdrop-filter: blur(4px);
+      z-index: 999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .custom-modal-content {
+      background: #0f172a;
+      color: #f8fafc;
+      border: 1px solid #334155;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 680px;
+      max-height: 85vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+      overflow: hidden;
+    }
+
+    .custom-modal-header {
+      padding: 14px 18px;
+      background: #1e293b;
+      border-b: 1px solid #334155;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 800;
+      font-size: 13px;
+    }
+
+    .custom-modal-body {
+      padding: 16px 18px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .modal-actions-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      background: #1e293b;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 11px;
+    }
+
+    .btn-xs {
+      background: #334155;
+      color: #ffffff;
+      border: 1px solid #475569;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 10.5px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .btn-xs:hover { background: #475569; }
+    .btn-amber-xs { background: #d97706; border-color: #d97706; }
+    .btn-amber-xs:hover { background: #b45309; }
+
+    .density-select {
+      background: #0f172a;
+      color: #38bdf8;
+      border: 1px solid #334155;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      outline: none;
+    }
+
+    .checkbox-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 8px;
+    }
+
+    .col-checkbox-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: #1e293b;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #334155;
+      font-size: 11px;
+      cursor: pointer;
+      user-select: none;
+    }
+    .col-checkbox-item:hover { border-color: #38bdf8; }
 
     /* Multi-page & Print Page break handling */
     tr, .kpi-grid, .sheet-footer, .letterhead, .filter-bar {
@@ -504,7 +639,7 @@ export function generateReportHtml(input: {
         width: 100% !important;
         height: auto !important;
       }
-      .no-print-toolbar { display: none !important; }
+      .no-print-toolbar, .custom-modal-overlay { display: none !important; }
       .wrap {
         padding: 0 !important;
         margin: 0 !important;
@@ -526,6 +661,10 @@ export function generateReportHtml(input: {
         padding: 0 !important;
         margin: 0 !important;
         display: block !important;
+        overflow: visible !important;
+      }
+      .report-table-wrapper {
+        overflow-x: visible !important;
       }
       @page {
         size: A4 ${orientation};
@@ -574,6 +713,68 @@ export function generateReportHtml(input: {
       const text = encodeURIComponent('📄 *${escapeHtml(title)}*\nCompany: ${escapeHtml(compName)}\nDate: ${escapeHtml(printedDate)}\nPeriod: ${escapeHtml(reportPeriod)}');
       window.open('https://api.whatsapp.com/send?text=' + text, '_blank');
     }
+
+    function toggleColumnModal() {
+      const modal = document.getElementById('columnModal');
+      if (modal) {
+        modal.style.display = (modal.style.display === 'none' || !modal.style.display) ? 'flex' : 'none';
+      }
+    }
+
+    function initColumnCustomization() {
+      const table = document.querySelector('table.data-table');
+      if (!table) return;
+      const headers = Array.from(table.querySelectorAll('thead th'));
+      const grid = document.getElementById('columnCheckboxesGrid');
+      if (!grid) return;
+      grid.innerHTML = '';
+      headers.forEach((th, idx) => {
+        const text = th.innerText.trim() || ('Col ' + (idx + 1));
+        const label = document.createElement('label');
+        label.className = 'col-checkbox-item';
+        label.innerHTML = '<input type="checkbox" checked data-col-idx="' + idx + '" onchange="toggleColumn(' + idx + ', this.checked)"> <span>' + text + '</span>';
+        grid.appendChild(label);
+      });
+    }
+
+    function toggleColumn(colIdx, show) {
+      const table = document.querySelector('table.data-table');
+      if (!table) return;
+      const rows = Array.from(table.querySelectorAll('tr'));
+      rows.forEach(tr => {
+        const cells = Array.from(tr.children);
+        if (cells[colIdx]) {
+          cells[colIdx].style.display = show ? '' : 'none';
+        }
+      });
+    }
+
+    function selectAllColumns(show) {
+      const checkboxes = document.querySelectorAll('#columnCheckboxesGrid input[type="checkbox"]');
+      checkboxes.forEach(cb => {
+        cb.checked = show;
+        const idx = parseInt(cb.getAttribute('data-col-idx'), 10);
+        toggleColumn(idx, show);
+      });
+    }
+
+    function resetDefaultColumns() {
+      selectAllColumns(true);
+      changeFontDensity('compact');
+      const select = document.getElementById('fontDensitySelect');
+      if (select) select.value = 'compact';
+    }
+
+    function changeFontDensity(mode) {
+      const wrapper = document.querySelector('.report-table-wrapper');
+      if (!wrapper) return;
+      wrapper.classList.remove('density-normal', 'density-compact', 'density-dense');
+      wrapper.classList.add('density-' + mode);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initColumnCustomization();
+    });
   </script>
 </head>
 <body>
@@ -592,12 +793,37 @@ export function generateReportHtml(input: {
         <button class="zoom-btn" onclick="resetZoom()" title="Reset Zoom" style="font-size:10px;">100%</button>
       </div>
 
+      <button class="btn-action btn-slate" onclick="toggleColumnModal()">⚙️ Customize Columns</button>
       <button class="btn-action btn-primary" onclick="window.print()">🖨️ Print Report</button>
       <button class="btn-action btn-amber" onclick="window.print()">📄 Save as PDF</button>
       <button class="btn-action btn-success" onclick="downloadCsv()">📊 Export Excel</button>
       <button class="btn-action" onclick="sendEmail()">✉️ Email</button>
       <button class="btn-action" onclick="sendWhatsApp()">💬 WhatsApp</button>
       <button class="btn-action" onclick="window.close()">❌ Close</button>
+    </div>
+  </div>
+
+  <!-- Interactive Column Customization Modal -->
+  <div id="columnModal" class="custom-modal-overlay" style="display:none;">
+    <div class="custom-modal-content">
+      <div class="custom-modal-header">
+        <span>⚙️ Customize Printable Columns & Font Density</span>
+        <button onclick="toggleColumnModal()" class="btn-xs" style="background:transparent;border:none;font-size:16px;">&times;</button>
+      </div>
+      <div class="custom-modal-body">
+        <div class="modal-actions-bar">
+          <button class="btn-xs" onclick="selectAllColumns(true)">Select All</button>
+          <button class="btn-xs" onclick="selectAllColumns(false)">Deselect All</button>
+          <button class="btn-xs btn-amber-xs" onclick="resetDefaultColumns()">Reset Default</button>
+          <span style="margin-left:auto; font-weight:700;">Font Density:</span>
+          <select id="fontDensitySelect" onchange="changeFontDensity(this.value)" class="density-select">
+            <option value="normal">Standard (7.5px)</option>
+            <option value="compact" selected>Compact Auto-Fit (6.5px)</option>
+            <option value="dense">Dense Fit (5.5px)</option>
+          </select>
+        </div>
+        <div id="columnCheckboxesGrid" class="checkbox-grid"></div>
+      </div>
     </div>
   </div>
 
@@ -644,8 +870,10 @@ export function generateReportHtml(input: {
         </div>
         ` : ""}
 
-        <!-- Main Data Table -->
-        ${mainTableHtml}
+        <!-- Main Data Table Wrapper -->
+        <div class="report-table-wrapper density-compact">
+          ${mainTableHtml}
+        </div>
 
         <!-- KPI Summary Cards Grid -->
         ${kpis.length > 0 ? `
@@ -710,4 +938,3 @@ export function generateReportHtml(input: {
 </body>
 </html>`;
 }
-
