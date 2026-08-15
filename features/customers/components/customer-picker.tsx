@@ -124,7 +124,7 @@ export function CustomerPicker({
         disabled={disabled || loading}
         options={options}
         onValueChange={onValueChange}
-        createLabel="+ New Customer"
+        createLabel="New Customer"
         createButtonPlacement="both"
         onCreateNew={async () => {
           setOpenCreate(true);

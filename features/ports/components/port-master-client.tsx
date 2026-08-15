@@ -464,7 +464,7 @@ export function PortMasterClient({
                   placeholder="Select Country (Optional)"
                   options={countries.map((c) => ({ value: c.id, label: c.name, keywords: c.name }))}
                   onValueChange={(val) => setFormCountryId(val)}
-                  createLabel="+ New Country"
+                  createLabel="New Country"
                   createButtonPlacement="both"
                   onCreateNew={() => setOpenCreateCountryModal(true)}
                 />

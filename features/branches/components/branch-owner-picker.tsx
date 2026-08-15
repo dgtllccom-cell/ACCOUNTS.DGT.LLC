@@ -118,7 +118,7 @@ export function BranchOwnerPicker({
         disabled={disabled || loading}
         options={finalOptions}
         onValueChange={onValueChange}
-        createLabel="+ New Owner"
+        createLabel="New Owner"
         createButtonPlacement={createButtonPlacement}
         onCreateNew={async () => setOpenCreate(true)}
       />

@@ -73,10 +73,10 @@ const locationLabels: Record<string, Record<SupportedLanguage, string>> = {
   selectStateFirst: { en: "Select state first", ur: "پہلے صوبہ منتخب کریں", ar: "اختر الولاية أولاً", fa: "ابتدا استان را انتخاب کنید", ps: "لومړی صوبه وټاکئ" },
   selectCity: { en: "Select city", ur: "شہر منتخب کریں", ar: "اختر المدينة", fa: "انتخاب شهر", ps: "ښار وټاکئ" },
   selectArea: { en: "Select area / locality", ur: "علاقہ منتخب کریں", ar: "اختر المنطقة", fa: "انتخاب منطقه", ps: "سیمه وټاکئ" },
-  newCountry: { en: "+ New Country", ur: "+ نیا ملک", ar: "+ دولة جديدة", fa: "+ کشور جدید", ps: "+ نوی هیواد" },
-  newState: { en: "+ New State", ur: "+ نیا صوبہ", ar: "+ ولاية جديدة", fa: "+ استان جدید", ps: "+ نوې صوبه" },
-  newCity: { en: "+ New City", ur: "+ نیا شہر", ar: "+ مدينة جديدة", fa: "+ شهر جدید", ps: "+ نوی ښار" },
-  newArea: { en: "+ New Area", ur: "+ نیا علاقہ", ar: "+ منطقة جديدة", fa: "+ منطقه جدید", ps: "+ نوې سیمه" },
+  newCountry: { en: "New Country", ur: "نیا ملک", ar: "دولة جديدة", fa: "کشور جدید", ps: "نوی هیواد" },
+  newState: { en: "New State", ur: "نیا صوبہ", ar: "ولاية جديدة", fa: "استان جدید", ps: "نوې صوبه" },
+  newCity: { en: "New City", ur: "نیا شہر", ar: "مدينة جديدة", fa: "شهر جدید", ps: "نوی ښار" },
+  newArea: { en: "New Area", ur: "نیا علاقہ", ar: "منطقة جديدة", fa: "منطقه جدید", ps: "نوې سیمه" },
   manageLocations: { en: "Manage Locations", ur: "مقامات کا انتظام", ar: "إدارة المواقع", fa: "مدیریت موقعیت‌ها", ps: "د ځایونو مدیریت" }
 };
 

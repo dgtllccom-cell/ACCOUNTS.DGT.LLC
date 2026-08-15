@@ -123,7 +123,7 @@ const userWizardTranslations: Record<string, Record<SupportedLanguage, string>> 
   saveUser: { en: "Save & Complete Registration", ur: "محفوظ کریں اور مکمل کریں", ar: "حفظ وإكمال التسجيل", fa: "ذخیره و تکمیل ثبت نام", ps: "خوندي او ثبت بشپړول" },
   savingText: { en: "Saving User Record...", ur: "صارف محفوظ ہو رہا ہے...", ar: "جاري حفظ بيانات المستخدم...", fa: "در حال ذخیره...", ps: "د کارونکي معلومات خوندي کیږي..." },
   printCard: { en: "Print A4 User Card", ur: "A4 یوزر کارڈ پرنٹ کریں", ar: "طباعة بطاقة المستخدم A4", fa: "چاپ کارت کاربر A4", ps: "د A4 د کارونکي کارت چاپول" },
-  addNewUser: { en: "+ New User Registration", ur: "+ نیا صارف رجسٹر کریں", ar: "+ تسجيل مستخدم جديد", fa: "+ ثبت کاربر جدید", ps: "+ نوی کارونکی ثبت کړئ" },
+  addNewUser: { en: "New User Registration", ur: "نیا صارف رجسٹر کریں", ar: "تسجيل مستخدم جديد", fa: "ثبت کاربر جدید", ps: "نوی کارونکی ثبت کړئ" },
   selectEmployee: { en: "Select Registered Employee (Master Profile)", ur: "رجسٹرڈ ایمپلائی منتخب کریں (ماسٹر پروفائل)", ar: "اختر الموظف المسجل (الملف التعريفي الرئيسي)", fa: "انتخاب پرسنل ثبت شده (پروفایل اصلی)", ps: "ثبت شوی کارمند وټاکئ (اصلي پروفایل)" },
   fullName: { en: "User Full Name *", ur: "صارف کا مکمل نام *", ar: "الاسم الكامل للمستخدم *", fa: "نام کامل کاربر *", ps: "د کارونکي بشپړ نوم *" },
   username: { en: "Login Username / Identifier *", ur: "لاگ ان یوزر نام *", ar: "اسم المستخدم للدخول *", fa: "نام کاربری ورود *", ps: "د ننوتلو کارن نوم *" },

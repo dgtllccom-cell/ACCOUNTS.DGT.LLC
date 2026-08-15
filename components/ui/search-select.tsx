@@ -75,6 +75,11 @@ export function SearchSelect({
     return match?.label ?? "";
   }, [uniqueOptions, value]);
 
+  const displayCreateLabel = React.useMemo(() => {
+    if (!createLabel) return "";
+    return createLabel.replace(/^\+\s*/, "");
+  }, [createLabel]);
+
   function setOpenSafe(next: boolean) {
     setOpen(next);
     onOpenChange?.(next);
@@ -212,7 +217,7 @@ export function SearchSelect({
                       className="text-xs font-bold text-primary flex items-center gap-2 py-2"
                     >
                       <span className="text-sm font-bold">+</span>
-                      <span>{createLabel}</span>
+                      <span>{displayCreateLabel}</span>
                     </CommandItem>
                   </CommandGroup>
                 </>
@@ -235,7 +240,7 @@ export function SearchSelect({
             className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline cursor-pointer disabled:opacity-50 transition"
           >
             <span className="text-sm font-black">+</span>
-            <span>{createLabel}</span>
+            <span>{displayCreateLabel}</span>
           </button>
         </div>
       )}

@@ -65,7 +65,7 @@ export function WarehousePicker({
           const found = warehouses.find((w) => w.id === val) || null;
           onSelectRecord?.(found);
         }}
-        createLabel="+ New Warehouse"
+        createLabel="New Warehouse"
         createButtonPlacement="both"
         onCreateNew={async () => setOpenCreate(true)}
         viewTitle="View Warehouse Details"

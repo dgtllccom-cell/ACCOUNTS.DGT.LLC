@@ -209,7 +209,7 @@ function MasterSelectPopover({
               }}
               className="w-full h-8 text-[11px] font-bold text-blue-600 hover:bg-blue-50 rounded-lg flex items-center justify-center gap-1 transition-colors"
             >
-              <Plus className="h-3 w-3" /> {addNewLabel}
+              <Plus className="h-3 w-3" /> {addNewLabel.replace(/^\+\s*/, "")}
             </button>
           </div>
         </div>
@@ -2027,7 +2027,7 @@ export function LocalPurchaseView({
                       onClick={handleAddLineItem}
                       className="w-1/3 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-extrabold flex items-center justify-center gap-1 shadow-sm"
                     >
-                      <Plus className="h-3.5 w-3.5" /> + Add Item to List
+                      <Plus className="h-3.5 w-3.5" /> Add Item to List
                     </Button>
                     <Button
                       type="button"

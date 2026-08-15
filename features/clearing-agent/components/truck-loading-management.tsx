@@ -209,7 +209,7 @@ export function TruckLoadingManagementView({ lang }: { lang: SupportedLanguage }
         <div className="flex flex-wrap items-center gap-2">
           <ReportActions title="Truck Loading Report" rows={filtered} columns={[{ key: "loading_serial", label: "Serial" }, { key: "loading_date", label: "Date" }, { key: "truck_number", label: "Truck" }, { key: "driver_name", label: "Driver" }, { key: "goods_name", label: "Goods" }, { key: "quantity", label: "Qty" }, { key: "destination", label: "Destination" }]} lang={lang} />
           <button onClick={startAdd} className="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-700 px-4 py-2 text-sm font-bold text-white hover:bg-blue-800 shadow-md transition">
-            <Plus className="h-4 w-4" /> + New Loading Entry
+            <Plus className="h-4 w-4" /> New Loading Entry
           </button>
         </div>
       </div>

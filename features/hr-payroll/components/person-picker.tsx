@@ -127,7 +127,7 @@ export function PersonPicker({
           if (found) setViewPerson(found);
         }}
         onEditOption={(personId) => setEditPersonId(personId)}
-        createLabel={t(lang, "hr.pp_add_new_person_master", "+ Add New Person Master")}
+        createLabel={t(lang, "hr.pp_add_new_person_master", "Add New Person Master")}
         createButtonPlacement="both"
         onCreateNew={async () => {
           setOpenCreate(true);

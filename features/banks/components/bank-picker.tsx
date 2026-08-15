@@ -108,7 +108,7 @@ export function BankPicker({
         disabled={disabled || loading}
         options={options}
         onValueChange={onValueChange}
-        createLabel="+ New Bank"
+        createLabel="New Bank"
         createButtonPlacement="both"
         onCreateNew={async () => setOpenCreate(true)}
         viewTitle="View Bank Details"

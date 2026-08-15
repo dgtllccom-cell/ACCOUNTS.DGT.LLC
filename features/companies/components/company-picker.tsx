@@ -129,7 +129,7 @@ export function CompanyPicker({
         disabled={disabled || loading}
         options={options}
         onValueChange={onValueChange}
-        createLabel="+ New Company"
+        createLabel="New Company"
         createButtonPlacement={createButtonPlacement}
         onCreateNew={async () => setOpenCreate(true)}
         viewTitle="View Company & Owner Details"
