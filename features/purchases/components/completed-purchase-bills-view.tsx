@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { printStore } from "@/lib/store/print-store";
 import { Th } from "@/components/ui/translated-th";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 
 type LanguageCode = "en" | "ur" | "ar" | "fa" | "ps";
 
@@ -353,6 +354,36 @@ export function CompletedPurchaseBillsView() {
             <RefreshCw className={`h-3.5 w-3.5 mr-1 text-slate-500 ${loading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
+
+          <JournalPrintButton
+            title="COMPLETED PURCHASE BILLS REGISTER"
+            subtitle="Official A4 ERP Journal Report - Zero Remaining Balance Archive"
+            columns={[
+              { key: "poNo", label: "PO Number", align: "left" },
+              { key: "manualNo", label: "Manual Bill No", align: "left" },
+              { key: "supplier", label: "Supplier Name", align: "left" },
+              { key: "branch", label: "Country & Branch", align: "left" },
+              { key: "loadedQty", label: "Loaded Qty", align: "right" },
+              { key: "purchaseAmountUSD", label: "Purchase ($)", align: "right", format: "currency" },
+              { key: "totalPaidAED", label: "Total Paid (AED)", align: "right", format: "currency" },
+              { key: "completionDate", label: "Completion Date", align: "center" }
+            ]}
+            rows={completedBills.map((row) => {
+              const d = getBillDetails(row);
+              return {
+                poNo: row.purchase_order_no || "-",
+                manualNo: d.manualBillNo || "-",
+                supplier: d.supplierName || "-",
+                branch: `${d.countryName} - ${d.branchName}`,
+                loadedQty: `${d.loadedQty.toLocaleString()} ${d.unitLabel}`,
+                purchaseAmountUSD: d.purchaseAmountFC,
+                totalPaidAED: d.totalPaidLC,
+                completionDate: d.completedAt
+              };
+            })}
+            variant="default"
+            className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold h-8 text-xs gap-1.5 shadow-sm"
+          />
         </div>
       </div>
 

@@ -177,6 +177,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
   // Modal for creating new employee on the fly
   const [showEmployeeModal, setShowEmployeeModal] = useState(false);
+  const [viewEmployeeId, setViewEmployeeId] = useState<string | null>(null);
+  const [editEmployeeId, setEditEmployeeId] = useState<string | null>(null);
 
   // Modal for viewing full saved user profile
   const [showProfileModal, setShowProfileModal] = useState(false);
@@ -1004,6 +1006,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     createLabel={tr("addNewEmployee")}
                     createButtonPlacement="both"
                     onCreateNew={() => setShowEmployeeModal(true)}
+                    onViewOption={(empId) => setViewEmployeeId(empId)}
+                    onEditOption={(empId) => setEditEmployeeId(empId)}
                   />
 
                   {showEmployeeModal ? (
@@ -1023,6 +1027,38 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         onCancel={() => setShowEmployeeModal(false)}
                       />
                     </SimpleModal>
+                  ) : null}
+
+                  {editEmployeeId ? (
+                    <SimpleModal
+                      title="Edit Employee Master Record"
+                      onClose={() => setEditEmployeeId(null)}
+                      className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto"
+                    >
+                      <EmployeeForm
+                        employeeId={editEmployeeId}
+                        onSave={async (savedId) => {
+                          setEditEmployeeId(null);
+                          const freshList = await fetchHrEmployees();
+                          if (savedId && freshList.some((e) => e.id === savedId)) {
+                            setSelectedEmployeeId(savedId);
+                          }
+                        }}
+                        onCancel={() => setEditEmployeeId(null)}
+                      />
+                    </SimpleModal>
+                  ) : null}
+
+                  {viewEmployeeId ? (
+                    <EmployeeDetailModal
+                      employeeId={viewEmployeeId}
+                      employees={hrEmployees}
+                      onClose={() => setViewEmployeeId(null)}
+                      onEdit={(empId) => {
+                        setViewEmployeeId(null);
+                        setEditEmployeeId(empId);
+                      }}
+                    />
                   ) : null}
 
                   {/* Core Identity Fields */}
@@ -1594,4 +1630,200 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
 export function UserRegistrationWizard(props: { userIdProp?: string }) {
   return <UserRegistrationWizardContent {...props} />;
+}
+
+function EmployeeDetailModal({
+  employeeId,
+  employees,
+  onClose,
+  onEdit
+}: {
+  employeeId: string;
+  employees: any[];
+  onClose: () => void;
+  onEdit: (empId: string) => void;
+}) {
+  const emp = employees.find((e) => e.id === employeeId);
+
+  if (!emp) return null;
+
+  const empName = emp.person?.customer_name || emp.name || emp.full_name || "N/A";
+  const code = emp.employee_code || emp.code || "EMP-001";
+  const designation = emp.designation || "Staff";
+  const department = emp.department || "General Office";
+  const status = emp.job_status || emp.jobStatus || "Active";
+  const basicSalary = emp.basic_salary || emp.basicSalary || 0;
+  const currency = emp.salary_currency || emp.salaryCurrency || "USD";
+  const phone = emp.person?.mobile || emp.mobile || "N/A";
+  const email = emp.person?.email || emp.email || "N/A";
+  const address = emp.person?.address || emp.address || "N/A";
+  const joiningDate = emp.joining_date || emp.joiningDate || "N/A";
+
+  const handlePrintCertificate = () => {
+    const printWin = window.open("", "_blank", "width=850,height=900");
+    if (!printWin) return;
+    printWin.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Employee Record Sheet - ${code}</title>
+          <style>
+            body { font-family: system-ui, sans-serif; padding: 40px; color: #1e293b; max-width: 800px; margin: 0 auto; }
+            .header { border-bottom: 3px solid #0284c7; padding-bottom: 20px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center; }
+            .company { font-size: 24px; font-weight: 800; color: #0f172a; }
+            .title { font-size: 14px; text-transform: uppercase; tracking: 2px; color: #0284c7; font-weight: 700; margin-top: 4px; }
+            .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+            .card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; }
+            .card-title { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #64748b; margin-bottom: 12px; border-bottom: 1px solid #e2e8f0; padding-bottom: 6px; }
+            .row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; }
+            .label { color: #64748b; }
+            .val { font-weight: 600; color: #0f172a; }
+            .footer { border-top: 1px solid #e2e8f0; padding-top: 20px; margin-top: 40px; font-size: 11px; color: #94a3b8; text-align: center; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div>
+              <div class="company">DGT ERP SYSTEM</div>
+              <div class="title">OFFICIAL EMPLOYEE MASTER PROFILE</div>
+            </div>
+            <div style="text-align: right;">
+              <div style="font-size: 18px; font-weight: 800; color: #0284c7;">${code}</div>
+              <div style="font-size: 12px; color: #64748b;">Status: <strong>${status}</strong></div>
+            </div>
+          </div>
+
+          <div class="grid">
+            <div class="card">
+              <div class="card-title">Employee Details</div>
+              <div class="row"><span class="label">Full Name:</span><span class="val">${empName}</span></div>
+              <div class="row"><span class="label">Designation:</span><span class="val">${designation}</span></div>
+              <div class="row"><span class="label">Department:</span><span class="val">${department}</span></div>
+              <div class="row"><span class="label">Joining Date:</span><span class="val">${joiningDate}</span></div>
+              <div class="row"><span class="label">Basic Salary:</span><span class="val">${currency} ${Number(basicSalary).toLocaleString()}</span></div>
+            </div>
+
+            <div class="card">
+              <div class="card-title">Contact & Branch Info</div>
+              <div class="row"><span class="label">Mobile Phone:</span><span class="val">${phone}</span></div>
+              <div class="row"><span class="label">Email Address:</span><span class="val">${email}</span></div>
+              <div class="row"><span class="label">Branch:</span><span class="val">${emp.country_branch?.name || emp.city_branch?.name || "Main Office"}</span></div>
+              <div class="row"><span class="label">Country:</span><span class="val">${emp.country?.name || "Global"}</span></div>
+              <div class="row"><span class="label">Address:</span><span class="val">${address}</span></div>
+            </div>
+          </div>
+
+          <div class="footer">
+            Generated on ${new Date().toLocaleString()} | DGT ERP Enterprise Control System
+          </div>
+          <script>window.onload = () => { window.print(); };</script>
+        </body>
+      </html>
+    `);
+    printWin.document.close();
+  };
+
+  return (
+    <SimpleModal
+      title={`Employee Master Report - ${code}`}
+      onClose={onClose}
+      className="max-w-3xl w-[95vw] overflow-hidden"
+    >
+      <div className="space-y-5 p-1">
+        {/* Header Info Banner */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 text-white shadow-md">
+          <div className="flex items-center gap-3">
+            <div className="h-14 w-14 rounded-full bg-blue-600/30 border-2 border-blue-400 flex items-center justify-center text-xl font-bold text-blue-200 uppercase">
+              {empName.slice(0, 2)}
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-lg font-bold text-white">{empName}</h3>
+                <span className="text-xs px-2 py-0.5 rounded-full font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                  {status}
+                </span>
+              </div>
+              <p className="text-xs text-blue-200/90 font-mono mt-0.5">
+                Code: <strong className="text-white">{code}</strong> | Designation: <strong className="text-white">{designation}</strong>
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => onEdit(employeeId)}
+              className="bg-white/10 hover:bg-white/20 border-white/20 text-white text-xs font-semibold gap-1.5"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              <span>Edit Form</span>
+            </Button>
+            <Button
+              size="sm"
+              onClick={handlePrintCertificate}
+              className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold gap-1.5 shadow-md"
+            >
+              <Printer className="h-3.5 w-3.5" />
+              <span>Print Record</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* Detailed Grid Info */}
+        <div className="grid gap-4 sm:grid-cols-2 text-xs">
+          <div className="space-y-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+            <h4 className="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+              <UserCheck className="h-3.5 w-3.5 text-blue-600" />
+              <span>Employment Information</span>
+            </h4>
+            <div className="space-y-2 text-slate-700 dark:text-slate-300">
+              <div className="flex justify-between border-b pb-1">
+                <span className="text-slate-500">Department:</span>
+                <span className="font-semibold">{department}</span>
+              </div>
+              <div className="flex justify-between border-b pb-1">
+                <span className="text-slate-500">Joining Date:</span>
+                <span className="font-semibold">{joiningDate}</span>
+              </div>
+              <div className="flex justify-between border-b pb-1">
+                <span className="text-slate-500">Employment Status:</span>
+                <span className="font-semibold text-emerald-600 dark:text-emerald-400">{status}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Net Basic Salary:</span>
+                <span className="font-bold text-blue-600 dark:text-blue-400">
+                  {currency} {Number(basicSalary).toLocaleString()}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3 p-4 rounded-lg bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800">
+            <h4 className="font-bold text-slate-800 dark:text-slate-200 uppercase tracking-wider text-[11px] flex items-center gap-1.5">
+              <Building2 className="h-3.5 w-3.5 text-blue-600" />
+              <span>Contact & Branch Details</span>
+            </h4>
+            <div className="space-y-2 text-slate-700 dark:text-slate-300">
+              <div className="flex justify-between border-b pb-1">
+                <span className="text-slate-500">Mobile Phone:</span>
+                <span className="font-mono font-semibold">{phone}</span>
+              </div>
+              <div className="flex justify-between border-b pb-1">
+                <span className="text-slate-500">Email Address:</span>
+                <span className="font-semibold text-slate-900 dark:text-slate-100">{email}</span>
+              </div>
+              <div className="flex justify-between border-b pb-1">
+                <span className="text-slate-500">Assigned Branch:</span>
+                <span className="font-semibold">{emp.country_branch?.name || emp.city_branch?.name || "Main Office"}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-slate-500">Address:</span>
+                <span className="font-medium truncate max-w-[180px]">{address}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </SimpleModal>
+  );
 }

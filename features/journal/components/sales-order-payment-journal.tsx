@@ -2,6 +2,7 @@
  
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import { printStore } from "@/lib/store/print-store";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { createPortal } from "react-dom";
 import React, { useEffect, useMemo, useState, type ReactNode } from "react";
 import {

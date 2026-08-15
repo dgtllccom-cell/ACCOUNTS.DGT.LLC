@@ -20,6 +20,7 @@ import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 import { t } from "@/lib/i18n/ui";
 import { BranchScopeDropdown } from "@/features/purchases/components/branch-scope-dropdown";
 import { deriveLocalPurchasePostingState } from "@/lib/services/local-purchase-posting-state";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 
 const CURRENCIES = ["USD", "AED", "PKR", "AFN", "INR", "IRR"];
 const QUANTITY_NAMES = ["Bags", "Cartons", "Boxes", "Crates", "Bales", "Drums", "Pieces", "Custom"];
@@ -2717,9 +2718,39 @@ export function LocalPurchaseView({
               <CardTitle className="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
                 <Coins className="h-4 w-4 text-blue-600" /> {t(lang, "lp.local_purchase_bills_title", "Local Purchase Bills")}
               </CardTitle>
-              <span className="text-[10px] font-mono font-bold text-slate-500">
-                {filteredPurchases.length} {t(lang, "lp.records_label", "Record(s)")}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-mono font-bold text-slate-500">
+                  {filteredPurchases.length} {t(lang, "lp.records_label", "Record(s)")}
+                </span>
+                <JournalPrintButton
+                  title="LOCAL BRANCH PURCHASE REGISTER"
+                  subtitle="Official A4 ERP Journal Print Report - Local Purchase Register"
+                  columns={[
+                    { key: "voucherNo", label: "Voucher No", align: "left" },
+                    { key: "date", label: "Date", align: "left" },
+                    { key: "supplier", label: "Supplier", align: "left" },
+                    { key: "goods", label: "Goods Name", align: "left" },
+                    { key: "qty", label: "Quantity", align: "right" },
+                    { key: "netWeight", label: "Net Weight", align: "right" },
+                    { key: "rate", label: "Rate", align: "right" },
+                    { key: "finalAmount", label: "Final Amount ($)", align: "right", format: "currency" },
+                    { key: "status", label: "Status", align: "center" }
+                  ]}
+                  rows={filteredPurchases.map((p) => ({
+                    voucherNo: p.voucher_no || p.invoice_no || "-",
+                    date: p.purchase_date || p.created_at ? new Date(p.purchase_date || p.created_at).toLocaleDateString("en-GB") : "-",
+                    supplier: p.supplier_name || p.supplier_account_name || "-",
+                    goods: p.goods_name || "-",
+                    qty: `${Number(p.quantity || 0).toLocaleString()} ${p.quantity_unit || "Units"}`,
+                    netWeight: `${Number(p.net_weight || 0).toLocaleString()} kg`,
+                    rate: `$${Number(p.rate || 0).toFixed(2)}`,
+                    finalAmount: Number(p.final_amount || p.total_amount || 0),
+                    status: (p.posting_status || p.status || "DRAFT").toUpperCase()
+                  }))}
+                  variant="default"
+                  className="bg-[#002B66] hover:bg-[#001D44] text-white font-bold h-7 text-xs gap-1 px-3"
+                />
+              </div>
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">

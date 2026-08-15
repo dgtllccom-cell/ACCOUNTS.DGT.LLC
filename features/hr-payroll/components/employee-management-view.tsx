@@ -1,6 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import {
+  MoreVertical,
+  Edit3,
+  CreditCard,
+  FileText,
+  Award,
+  Trash2,
+  Printer
+} from "lucide-react";
 import { apiGet, apiDelete } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { SimpleModal } from "@/components/ui/simple-modal";
@@ -29,6 +38,9 @@ export function EmployeeManagementView() {
   const [branchId, setBranchId] = useState("");
   const [countriesList, setCountriesList] = useState<any[]>([]);
   const [branchesList, setBranchesList] = useState<any[]>([]);
+
+  // Action Menu Dropdown per row
+  const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
 
   // Modals state
   const [showFormModal, setShowFormModal] = useState(false);
@@ -116,15 +128,42 @@ export function EmployeeManagementView() {
             </p>
           </div>
           {activeTab === "master" && (
-            <Button
-              onClick={() => {
-                setSelectedEmployeeId(null);
-                setShowFormModal(true);
-              }}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm px-5 py-3 rounded-2xl shadow-md transition-all flex items-center gap-2"
-            >
-              <span className="text-lg font-black">+</span> {t(lang, "hr.register_new_employee", "Register New Employee")}
-            </Button>
+            <div className="flex items-center gap-3">
+              <JournalPrintButton
+                fetchData={async () => {
+                  const qp = new URLSearchParams();
+                  if (search) qp.set("search", search);
+                  if (category) qp.set("category", category);
+                  if (status) qp.set("status", status);
+                  if (countryId) qp.set("countryId", countryId);
+                  if (branchId) qp.set("branchId", branchId);
+                  qp.set("limit", "1000");
+                  const res = await apiGet<{ employees: any[] }>(`/api/erp/hr-payroll/employees?${qp.toString()}`);
+                  return res.employees || [];
+                }}
+                reportTitle="Employee Master Setup Journal"
+                columns={[
+                  { key: "employee_code", label: "Emp Code" },
+                  { key: (row) => row.person?.customer_name || "-", label: "Employee / Person Name" },
+                  { key: (row) => row.country?.name || "-", label: "Country" },
+                  { key: "category", label: "Category" },
+                  { key: "designation", label: "Designation" },
+                  { key: "joining_date", label: "Joining Date" },
+                  { key: (row) => `${row.net_salary?.toLocaleString() ?? 0} ${row.salary_currency || ""}`, label: "Net Payroll", align: "right" },
+                  { key: "status", label: "Status" },
+                ]}
+                className="h-11 px-5 rounded-2xl font-extrabold text-xs sm:text-sm shadow-md bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700"
+              />
+              <Button
+                onClick={() => {
+                  setSelectedEmployeeId(null);
+                  setShowFormModal(true);
+                }}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm px-6 py-3 rounded-2xl shadow-md transition-all flex items-center gap-2 h-11"
+              >
+                <span className="text-lg font-black">+</span> {t(lang, "hr.register_new_employee", "Register New Employee")}
+              </Button>
+            </div>
           )}
         </div>
         <div className="absolute top-0 right-0 w-80 h-80 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -247,26 +286,26 @@ export function EmployeeManagementView() {
                   { key: (row) => `${row.net_salary?.toLocaleString() ?? 0} ${row.salary_currency || ""}`, label: "Net Payroll", align: "right" },
                   { key: "status", label: "Status" },
                 ]}
-                className="w-full h-10 font-bold"
+                className="w-full h-10 font-extrabold"
               />
             </div>
           </div>
 
-          {/* Master Employee Table — Responsive & Spacious */}
+          {/* Master Employee Table — Spacious & Legible */}
           <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
             <table className="min-w-full text-xs sm:text-sm text-left text-slate-700 dark:text-slate-300">
               <thead className="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-200 uppercase font-black text-[11px] sm:text-xs border-b border-slate-200 dark:border-slate-800">
                 <tr>
-                  <Th className="px-4 sm:px-6 py-4">Emp Code</Th>
-                  <Th className="px-4 sm:px-6 py-4">Employee / Person Name</Th>
-                  <Th className="px-4 sm:px-6 py-4">Assigned Country / Branch</Th>
-                  <Th className="px-4 sm:px-6 py-4">Category</Th>
-                  <Th className="px-4 sm:px-6 py-4">Designation / Department</Th>
-                  <Th className="px-4 sm:px-6 py-4">Joining Date</Th>
-                  <Th className="px-4 sm:px-6 py-4">Net Payroll</Th>
-                  <Th className="px-4 sm:px-6 py-4">Deductions (Adv/Loan)</Th>
-                  <Th className="px-4 sm:px-6 py-4">Status</Th>
-                  <Th className="px-4 sm:px-6 py-4 text-right">Actions</Th>
+                  <Th className="px-5 py-4">Emp Code</Th>
+                  <Th className="px-5 py-4">Employee / Person Name</Th>
+                  <Th className="px-5 py-4">Assigned Country / Branch</Th>
+                  <Th className="px-5 py-4">Category</Th>
+                  <Th className="px-5 py-4">Designation / Department</Th>
+                  <Th className="px-5 py-4">Joining Date</Th>
+                  <Th className="px-5 py-4">Net Payroll</Th>
+                  <Th className="px-5 py-4">Deductions (Adv/Loan)</Th>
+                  <Th className="px-5 py-4">Status</Th>
+                  <Th className="px-5 py-4 text-center">Actions</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
@@ -281,36 +320,36 @@ export function EmployeeManagementView() {
                 ) : (
                   employees.map((emp) => (
                     <tr key={emp.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="px-4 sm:px-6 py-4 font-mono font-bold text-slate-900 dark:text-slate-100">{emp.employee_code}</td>
-                      <td className="px-4 sm:px-6 py-4">
-                        <div className="font-bold text-slate-900 dark:text-slate-100">{emp.person?.customer_name}</div>
-                        <div className="text-[11px] sm:text-xs text-slate-500 font-mono">{emp.person?.mobile || "-"}</div>
+                      <td className="px-5 py-4 font-mono font-bold text-slate-900 dark:text-slate-100 text-sm">{emp.employee_code}</td>
+                      <td className="px-5 py-4">
+                        <div className="font-bold text-slate-900 dark:text-slate-100 text-sm">{emp.person?.customer_name}</div>
+                        <div className="text-xs text-slate-500 font-mono mt-0.5">{emp.person?.mobile || "-"}</div>
                       </td>
-                      <td className="px-4 sm:px-6 py-4">
+                      <td className="px-5 py-4">
                         <div className="font-bold text-slate-900 dark:text-slate-100">{emp.country?.name || "-"}</div>
-                        <div className="text-[11px] sm:text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
+                        <div className="text-xs text-emerald-600 dark:text-emerald-400 font-semibold mt-0.5">
                           {emp.country_branch?.name || emp.city_branch?.name || "-"}
                           {emp.country_branch?.code ? ` (${emp.country_branch.code})` : emp.city_branch?.code ? ` (${emp.city_branch.code})` : ""}
                         </div>
                       </td>
-                      <td className="px-4 sm:px-6 py-4">
-                        <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-lg font-bold text-[10px] sm:text-xs uppercase">
+                      <td className="px-5 py-4">
+                        <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-lg font-bold text-xs uppercase">
                           {emp.category}
                         </span>
                       </td>
-                      <td className="px-4 sm:px-6 py-4">
-                        <div className="font-semibold text-slate-900 dark:text-slate-100">{emp.designation || "-"}</div>
-                        <div className="text-[11px] sm:text-xs text-slate-500">{emp.department || "-"}</div>
+                      <td className="px-5 py-4">
+                        <div className="font-bold text-slate-900 dark:text-slate-100">{emp.designation || "-"}</div>
+                        <div className="text-xs text-slate-500">{emp.department || "-"}</div>
                       </td>
-                      <td className="px-4 sm:px-6 py-4 text-slate-600 dark:text-slate-400 font-medium">{emp.joining_date || "-"}</td>
-                      <td className="px-4 sm:px-6 py-4 font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                      <td className="px-5 py-4 text-slate-600 dark:text-slate-400 font-medium text-xs sm:text-sm">{emp.joining_date || "-"}</td>
+                      <td className="px-5 py-4 font-black text-emerald-600 dark:text-emerald-400 font-mono text-sm">
                         {emp.net_salary?.toLocaleString()} {emp.salary_currency}
                       </td>
-                      <td className="px-4 sm:px-6 py-4 text-red-600 dark:text-red-400 font-semibold font-mono">
+                      <td className="px-5 py-4 text-red-600 dark:text-red-400 font-semibold font-mono text-xs sm:text-sm">
                         -{((emp.advance_deduction || 0) + (emp.loan_deduction || 0))?.toLocaleString()} /mo
                       </td>
-                      <td className="px-4 sm:px-6 py-4">
-                        <span className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase ${
+                      <td className="px-5 py-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-black uppercase ${
                           emp.status === "Active" 
                             ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800" 
                             : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
@@ -318,77 +357,109 @@ export function EmployeeManagementView() {
                           {emp.status}
                         </span>
                       </td>
-                      <td className="px-4 sm:px-6 py-4 text-right">
-                        <div className="flex items-center justify-end flex-wrap gap-1.5">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => {
-                              setSelectedEmployeeId(emp.id);
-                              setShowFormModal(true);
-                            }}
-                            className="h-8 text-xs font-bold px-2.5 rounded-lg"
+                      
+                      {/* Clean 3-Dots Dropdown Menu per Row */}
+                      <td className="px-5 py-4 text-center relative">
+                        <div className="inline-block text-left relative">
+                          <button
+                            type="button"
+                            onClick={() => setOpenActionMenuId(openActionMenuId === emp.id ? null : emp.id)}
+                            className="p-2 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 transition shadow-xs"
+                            title="Actions"
                           >
-                            {t(lang, "common.edit", "Edit")}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedEmployeeForLoan(emp)}
-                            className="h-8 text-xs font-bold px-2.5 rounded-lg"
-                          >
-                            {t(lang, "hr.l_loan_adv", "Loan/Adv")}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => setSelectedEmployeeForHistory(emp)}
-                            className="h-8 text-xs font-bold px-2.5 rounded-lg text-blue-600 dark:text-blue-400"
-                          >
-                            {t(lang, "hr.l_ledger", "Ledger")}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={async () => {
-                              let company: any = {};
-                              try {
-                                const r = await fetch(`/api/erp/branding?countryId=${emp.country_id ?? ""}`);
-                                const j = await r.json();
-                                if (j?.branding) company = { name: j.branding.companyName, logoUrl: j.branding.logoUrl, stampUrl: j.branding.stampUrl, certificateHeader: j.branding.certificateHeader, hrManagerName: j.branding.hrManagerName, address: j.branding.address, country: j.branding.countryName, branch: emp.country_branch_name ?? emp.city_branch_name ?? null };
-                              } catch { /* fall back to default */ }
-                              printEmployeeCertificate({
-                              employeeId: emp.employee_code,
-                              name: emp.person?.customer_name,
-                              photoUrl: emp.person?.photo_url ?? emp.photo_url ?? null,
-                              cnicPassport: emp.person?.cnic ?? emp.person?.passport ?? emp.cnic_passport ?? null,
-                              department: emp.department,
-                              designation: emp.designation,
-                              joiningDate: emp.joining_date,
-                              employmentType: emp.employment_type,
-                              status: emp.status,
-                              nationality: emp.person?.nationality,
-                              address: emp.person?.address,
-                              mobile: emp.person?.mobile,
-                              email: emp.person?.email,
-                              emergencyContact: emp.person?.emergency_contact ?? emp.person?.whatsapp,
-                              salary: emp.salary ?? emp.basic_salary ?? null,
-                              reportingManager: emp.reporting_manager_name ?? emp.reporting_manager_id ?? null,
-                              serials: { superAdmin: emp.super_admin_serial, country: emp.country_serial, branch: emp.branch_serial, entry: emp.entry_serial },
-                              }, company);
-                            }}
-                            className="h-8 text-xs font-bold px-2.5 rounded-lg text-emerald-600 dark:text-emerald-400"
-                          >
-                            {t(lang, "hr.l_certificate", "Certificate")}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDelete(emp.id)}
-                            className="h-8 text-xs font-bold px-2.5 rounded-lg text-red-600 hover:text-red-700 dark:text-red-400"
-                          >
-                            {t(lang, "common.delete", "Delete")}
-                          </Button>
+                            <MoreVertical className="h-4 w-4" />
+                          </button>
+
+                          {openActionMenuId === emp.id ? (
+                            <div className="absolute right-0 z-30 mt-1 w-52 rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-1.5 shadow-2xl text-xs font-bold text-slate-800 dark:text-slate-200">
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenActionMenuId(null);
+                                  setSelectedEmployeeId(emp.id);
+                                  setShowFormModal(true);
+                                }}
+                                className="flex w-full items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                              >
+                                <Edit3 className="h-4 w-4 text-blue-500" />
+                                <span>{t(lang, "common.edit", "Edit Profile")}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenActionMenuId(null);
+                                  setSelectedEmployeeForLoan(emp);
+                                }}
+                                className="flex w-full items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                              >
+                                <CreditCard className="h-4 w-4 text-amber-500" />
+                                <span>{t(lang, "hr.l_loan_adv", "Loan / Advance")}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenActionMenuId(null);
+                                  setSelectedEmployeeForHistory(emp);
+                                }}
+                                className="flex w-full items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                              >
+                                <FileText className="h-4 w-4 text-cyan-500" />
+                                <span>{t(lang, "hr.l_ledger", "Ledger Statement")}</span>
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={async () => {
+                                  setOpenActionMenuId(null);
+                                  let company: any = {};
+                                  try {
+                                    const r = await fetch(`/api/erp/branding?countryId=${emp.country_id ?? ""}`);
+                                    const j = await r.json();
+                                    if (j?.branding) company = { name: j.branding.companyName, logoUrl: j.branding.logoUrl, stampUrl: j.branding.stampUrl, certificateHeader: j.branding.certificateHeader, hrManagerName: j.branding.hrManagerName, address: j.branding.address, country: j.branding.countryName, branch: emp.country_branch_name ?? emp.city_branch_name ?? null };
+                                  } catch { /* fall back */ }
+                                  printEmployeeCertificate({
+                                    employeeId: emp.employee_code,
+                                    name: emp.person?.customer_name,
+                                    photoUrl: emp.person?.photo_url ?? emp.photo_url ?? null,
+                                    cnicPassport: emp.person?.cnic ?? emp.person?.passport ?? emp.cnic_passport ?? null,
+                                    department: emp.department,
+                                    designation: emp.designation,
+                                    joiningDate: emp.joining_date,
+                                    employmentType: emp.employment_type,
+                                    status: emp.status,
+                                    nationality: emp.person?.nationality,
+                                    address: emp.person?.address,
+                                    mobile: emp.person?.mobile,
+                                    email: emp.person?.email,
+                                    emergencyContact: emp.person?.emergency_contact ?? emp.person?.whatsapp,
+                                    salary: emp.salary ?? emp.basic_salary ?? null,
+                                    reportingManager: emp.reporting_manager_name ?? emp.reporting_manager_id ?? null,
+                                    serials: { superAdmin: emp.super_admin_serial, country: emp.country_serial, branch: emp.branch_serial, entry: emp.entry_serial },
+                                  }, company);
+                                }}
+                                className="flex w-full items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800 transition"
+                              >
+                                <Award className="h-4 w-4 text-emerald-500" />
+                                <span>{t(lang, "hr.l_certificate", "Print Certificate")}</span>
+                              </button>
+
+                              <div className="my-1 border-t border-slate-200 dark:border-slate-800" />
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenActionMenuId(null);
+                                  handleDelete(emp.id);
+                                }}
+                                className="flex w-full items-center gap-2.5 px-3 py-2 rounded-xl text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40 transition font-black"
+                              >
+                                <Trash2 className="h-4 w-4 text-red-500" />
+                                <span>{t(lang, "common.delete", "Delete Employee")}</span>
+                              </button>
+                            </div>
+                          ) : null}
                         </div>
                       </td>
                     </tr>

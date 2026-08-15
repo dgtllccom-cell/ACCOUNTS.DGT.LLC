@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
-import { Menu, Search } from "lucide-react";
+import { Menu, Search, X } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { SidebarMenuVisibilityMap, SidebarNode } from "@/lib/navigation/sidebar";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -34,6 +34,7 @@ export function DashboardFrame({
   userName?: string | null;
 }) {
   const router = useRouter();
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const pathname = usePathname();
@@ -41,6 +42,22 @@ export function DashboardFrame({
     return pathname === "/dashboard/purchase/new-purchase-booking-order" ||
            pathname === "/dashboard/purchase/purchase-confirm";
   }, [pathname]);
+
+  useEffect(() => {
+    setDrawerOpen(false);
+    setMobileOpen(false);
+  }, [pathname]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape" && (drawerOpen || mobileOpen)) {
+        setDrawerOpen(false);
+        setMobileOpen(false);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [drawerOpen, mobileOpen]);
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -296,85 +313,64 @@ export function DashboardFrame({
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Premium Desktop Sidebar */}
-      <aside className={cn(
-        "erp-sidebar fixed inset-y-0 left-0 hidden w-72 border-r border-border bg-card lg:flex lg:flex-col transition-all duration-300 shadow-xl z-30 text-card-foreground",
-        sidebarCollapsed && "lg:hidden"
-      )}>
-        <div className="border-b border-border/80 px-6 py-5 flex items-center justify-between gap-2">
-          <Link href="/dashboard" className="block flex-1 min-w-0">
-            <div className="flex items-center gap-3">
-              <img src="/icons/digital-dock-icon.svg" alt="DAMAAN" className="h-8 w-8 shrink-0 object-contain" />
-              <div className="min-w-0 flex-1">
-                <p className="text-base font-black tracking-tight text-foreground leading-tight truncate">DAMAAN BUSINESS GROUP</p>
-                <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 truncate">
-                  Owner: Asmat Abdullah
-                </p>
-              </div>
-            </div>
-          </Link>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => setSidebarCollapsed(true)}
-            className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground lg:flex hidden items-center justify-center rounded-lg"
-          >
-            <Menu className="h-4 w-4" />
-          </Button>
-        </div>
-        <div className="flex-1 overflow-y-auto px-3 py-3 bg-white dark:bg-slate-950">
-          <PremiumSidebarNav nodes={filteredNodes} lang={lang} />
-        </div>
-        <div className="border-t border-border/80 p-3.5 bg-white dark:bg-slate-950">
-          <div className="rounded-xl bg-slate-50 dark:bg-slate-900 p-3 border border-slate-200/80 dark:border-slate-800">
-            <p className="text-[11px] font-bold text-foreground/90 flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              {t(lang, "nav.erp_core_engine", "ERP Core Engine")}
-            </p>
-            <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">
-              {t(lang, "nav.erp_core_engine_subtitle", "Multi-country branches, accounts & exchange matrices are active.")}
-            </p>
-          </div>
-        </div>
-      </aside>
-
-      {/* Mobile Drawer Menu */}
-      {mobileOpen ? (
-        <div className="fixed inset-0 z-50 lg:hidden">
+      {/* Premium Overlay Drawer Navigation */}
+      {(drawerOpen || mobileOpen) && (
+        <div className="fixed inset-0 z-50 flex">
+          {/* Backdrop Overlay with Blur */}
           <button
             type="button"
-            className="absolute inset-0 bg-background/80 backdrop-blur-sm transition-opacity duration-300 animate-in fade-in"
+            className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in cursor-pointer border-none p-0 outline-none"
             aria-label={t(lang, "nav.close_navigation", "Close navigation")}
-            onClick={() => setMobileOpen(false)}
+            onClick={() => {
+              setDrawerOpen(false);
+              setMobileOpen(false);
+            }}
           />
-          <div className="erp-mobile-drawer absolute inset-y-0 left-0 w-72 max-w-[85vw] border-r border-border bg-white dark:bg-slate-950 shadow-2xl flex flex-col animate-in slide-in-from-left duration-300 text-card-foreground">
-            <div className="border-b border-border px-5 py-4 flex items-center justify-between">
-              <Link href="/dashboard" className="block min-w-0 flex-1" onClick={() => setMobileOpen(false)}>
-                <div className="flex items-center gap-2.5">
-                  <img src="/icons/digital-dock-icon.svg" alt="DAMAAN" className="h-7 w-7 shrink-0 object-contain" />
+
+          {/* Slide-in Overlay Drawer Panel */}
+          <aside className="relative z-50 h-full w-72 max-w-[85vw] border-r border-border bg-white dark:bg-slate-950 shadow-2xl flex flex-col animate-in slide-in-from-left duration-250 text-card-foreground">
+            <div className="border-b border-border/80 px-5 py-4 flex items-center justify-between gap-2 bg-muted/20">
+              <Link href="/dashboard" className="block flex-1 min-w-0" onClick={() => { setDrawerOpen(false); setMobileOpen(false); }}>
+                <div className="flex items-center gap-3">
+                  <img src="/icons/digital-dock-icon.svg" alt="DAMAAN" className="h-8 w-8 shrink-0 object-contain" />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-black tracking-tight text-slate-900 dark:text-white leading-tight truncate">DAMAAN BUSINESS GROUP</p>
-                    <p className="text-[9px] font-bold text-emerald-600 dark:text-emerald-400 truncate">Owner: Asmat Abdullah</p>
+                    <p className="text-base font-black tracking-tight text-foreground leading-tight truncate">DAMAAN BUSINESS GROUP</p>
+                    <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 truncate">
+                      Owner: Asmat Abdullah
+                    </p>
                   </div>
                 </div>
               </Link>
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => setMobileOpen(false)}
-                className="h-8 w-8 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-white"
+                onClick={() => { setDrawerOpen(false); setMobileOpen(false); }}
+                className="h-8 w-8 text-muted-foreground hover:bg-muted hover:text-foreground rounded-lg cursor-pointer"
+                aria-label={t(lang, "nav.close_navigation", "Close navigation")}
               >
-                <Menu className="h-4 w-4" />
+                <X className="h-4 w-4" />
               </Button>
             </div>
-            <div className="flex-1 overflow-y-auto p-4">
-              <PremiumSidebarNav nodes={filteredNodes} lang={lang} onNavigate={() => setMobileOpen(false)} />
+            <div className="flex-1 overflow-y-auto px-3 py-3 bg-white dark:bg-slate-950">
+              <PremiumSidebarNav nodes={filteredNodes} lang={lang} onNavigate={() => { setDrawerOpen(false); setMobileOpen(false); }} />
             </div>
-          </div>
+            <div className="border-t border-border/80 p-3.5 bg-white dark:bg-slate-950">
+              <div className="rounded-xl bg-slate-50 dark:bg-slate-900 p-3 border border-slate-200/80 dark:border-slate-800">
+                <p className="text-[11px] font-bold text-foreground/90 flex items-center gap-1.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  {t(lang, "nav.erp_core_engine", "ERP Core Engine")}
+                </p>
+                <p className="mt-0.5 text-[10px] leading-relaxed text-muted-foreground">
+                  {t(lang, "nav.erp_core_engine_subtitle", "Multi-country branches, accounts & exchange matrices are active.")}
+                </p>
+              </div>
+            </div>
+          </aside>
         </div>
-      ) : null}
+      )}
 
-      <div className={cn("transition-all duration-300 min-h-screen flex flex-col", sidebarCollapsed ? "lg:pl-0" : "lg:pl-72")}>
+      {/* Main Content Container - Always 100% Full Width (No Content Compression or Layout Shift) */}
+      <div className="transition-all duration-300 min-h-screen flex flex-col w-full">
         {/* Sticky Premium Layout Header */}
         <header className="erp-topbar sticky top-0 z-40 border-b border-border/80 bg-background/80 backdrop-blur-md">
           <div className={cn("flex items-center gap-2 sm:gap-4 px-3 sm:px-4 lg:px-6 transition-all duration-200 justify-between", isWizardPath ? "h-16" : "h-14")}>
@@ -382,24 +378,12 @@ export function DashboardFrame({
               <Button
                 variant="outline"
                 size="icon"
-                className="lg:hidden h-9 w-9 rounded-lg"
-                onClick={() => setMobileOpen(true)}
+                className="h-9 w-9 rounded-lg border-border hover:bg-accent hover:text-accent-foreground transition-colors cursor-pointer"
+                onClick={() => setDrawerOpen((prev) => !prev)}
                 aria-label={t(lang, "nav.open_navigation", "Open navigation")}
               >
                 <Menu className="h-4 w-4" aria-hidden />
               </Button>
-
-              {sidebarCollapsed && (
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className="hidden lg:flex h-9 w-9 rounded-lg"
-                  onClick={() => setSidebarCollapsed(false)}
-                  aria-label={t(lang, "nav.expand_sidebar", "Expand sidebar")}
-                >
-                  <Menu className="h-4 w-4" aria-hidden />
-                </Button>
-              )}
 
               <h2 className="text-base font-bold text-foreground hidden sm:block">{t(lang, "nav.dashboard", "Dashboard")}</h2>
             </div>
