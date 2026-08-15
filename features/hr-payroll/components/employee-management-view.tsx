@@ -42,6 +42,29 @@ export function EmployeeManagementView() {
   // Action Menu Dropdown per row
   const [openActionMenuId, setOpenActionMenuId] = useState<string | null>(null);
 
+  const journalColumns = [
+    { key: "employee_code", label: "Emp Code" },
+    { key: "person_name", label: "Employee Name" },
+    { key: "mobile", label: "Mobile" },
+    { key: "country_name", label: "Country" },
+    { key: "branch_name", label: "Branch" },
+    { key: "category", label: "Category" },
+    { key: "designation", label: "Designation" },
+    { key: "department", label: "Department" },
+    { key: "joining_date", label: "Joining Date" },
+    { key: "salary_formatted", label: "Net Payroll", align: "right" as const },
+    { key: "status", label: "Status", format: "status" as const },
+  ];
+
+  const formattedEmployees = employees.map((emp) => ({
+    ...emp,
+    person_name: emp.person?.customer_name || "-",
+    mobile: emp.person?.mobile || "-",
+    country_name: emp.country?.name || "-",
+    branch_name: emp.country_branch?.name || emp.city_branch?.name || "-",
+    salary_formatted: `${emp.net_salary?.toLocaleString() ?? 0} ${emp.salary_currency || ""}`,
+  }));
+
   // Modals state
   const [showFormModal, setShowFormModal] = useState(false);
   const [showReport, setShowReport] = useState(false);
@@ -116,7 +139,7 @@ export function EmployeeManagementView() {
   }
 
   return (
-    <div className="w-full max-w-[1600px] mx-auto p-2 sm:p-4 md:p-6 space-y-6 min-h-screen pb-16 font-sans">
+    <div className="w-full max-w-full p-2 sm:p-4 md:p-6 space-y-6 min-h-screen pb-16 font-sans">
       
       {/* Header Banner */}
       <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-white rounded-3xl border border-slate-800 p-5 sm:p-7 shadow-lg">
@@ -130,7 +153,11 @@ export function EmployeeManagementView() {
           {activeTab === "master" && (
             <div className="flex items-center gap-3">
               <JournalPrintButton
-                fetchData={async () => {
+                title="Employee Master Setup Journal"
+                subtitle="Complete Employee Directory & Payroll Master Listing"
+                columns={journalColumns}
+                rows={formattedEmployees as Record<string, unknown>[]}
+                fetchFullData={async () => {
                   const qp = new URLSearchParams();
                   if (search) qp.set("search", search);
                   if (category) qp.set("category", category);
@@ -139,19 +166,15 @@ export function EmployeeManagementView() {
                   if (branchId) qp.set("branchId", branchId);
                   qp.set("limit", "1000");
                   const res = await apiGet<{ employees: any[] }>(`/api/erp/hr-payroll/employees?${qp.toString()}`);
-                  return res.employees || [];
+                  return (res.employees || []).map((emp) => ({
+                    ...emp,
+                    person_name: emp.person?.customer_name || "-",
+                    mobile: emp.person?.mobile || "-",
+                    country_name: emp.country?.name || "-",
+                    branch_name: emp.country_branch?.name || emp.city_branch?.name || "-",
+                    salary_formatted: `${emp.net_salary?.toLocaleString() ?? 0} ${emp.salary_currency || ""}`,
+                  }));
                 }}
-                reportTitle="Employee Master Setup Journal"
-                columns={[
-                  { key: "employee_code", label: "Emp Code" },
-                  { key: (row) => row.person?.customer_name || "-", label: "Employee / Person Name" },
-                  { key: (row) => row.country?.name || "-", label: "Country" },
-                  { key: "category", label: "Category" },
-                  { key: "designation", label: "Designation" },
-                  { key: "joining_date", label: "Joining Date" },
-                  { key: (row) => `${row.net_salary?.toLocaleString() ?? 0} ${row.salary_currency || ""}`, label: "Net Payroll", align: "right" },
-                  { key: "status", label: "Status" },
-                ]}
                 className="h-11 px-5 rounded-2xl font-extrabold text-xs sm:text-sm shadow-md bg-slate-800 hover:bg-slate-700 text-cyan-400 border border-slate-700"
               />
               <Button
@@ -264,7 +287,11 @@ export function EmployeeManagementView() {
 
             <div className="flex items-center gap-2">
               <JournalPrintButton
-                fetchData={async () => {
+                title="Employee Master Setup Journal"
+                subtitle="Complete Employee Directory & Payroll Master Listing"
+                columns={journalColumns}
+                rows={formattedEmployees as Record<string, unknown>[]}
+                fetchFullData={async () => {
                   const qp = new URLSearchParams();
                   if (search) qp.set("search", search);
                   if (category) qp.set("category", category);
@@ -273,19 +300,15 @@ export function EmployeeManagementView() {
                   if (branchId) qp.set("branchId", branchId);
                   qp.set("limit", "1000");
                   const res = await apiGet<{ employees: any[] }>(`/api/erp/hr-payroll/employees?${qp.toString()}`);
-                  return res.employees || [];
+                  return (res.employees || []).map((emp) => ({
+                    ...emp,
+                    person_name: emp.person?.customer_name || "-",
+                    mobile: emp.person?.mobile || "-",
+                    country_name: emp.country?.name || "-",
+                    branch_name: emp.country_branch?.name || emp.city_branch?.name || "-",
+                    salary_formatted: `${emp.net_salary?.toLocaleString() ?? 0} ${emp.salary_currency || ""}`,
+                  }));
                 }}
-                reportTitle="Employee Master Setup Journal"
-                columns={[
-                  { key: "employee_code", label: "Emp Code" },
-                  { key: (row) => row.person?.customer_name || "-", label: "Employee / Person Name" },
-                  { key: (row) => row.country?.name || "-", label: "Country" },
-                  { key: "category", label: "Category" },
-                  { key: "designation", label: "Designation" },
-                  { key: "joining_date", label: "Joining Date" },
-                  { key: (row) => `${row.net_salary?.toLocaleString() ?? 0} ${row.salary_currency || ""}`, label: "Net Payroll", align: "right" },
-                  { key: "status", label: "Status" },
-                ]}
                 className="w-full h-10 font-extrabold"
               />
             </div>
