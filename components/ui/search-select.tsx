@@ -93,13 +93,14 @@ export function SearchSelect({
           <button
             type="button"
             disabled={disabled}
+            title={selectedLabel || placeholder}
             className={cn(
               "flex h-10 w-full items-center justify-between rounded-lg border border-input bg-background px-3 py-2 text-xs shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
               !selectedLabel && "text-muted-foreground",
               triggerClassName
             )}
           >
-            <span className="truncate flex-1 text-left mr-2">
+            <span className="truncate flex-1 text-left mr-2 font-medium" title={selectedLabel || placeholder}>
               {selectedLabel || placeholder}
             </span>
             <div className="flex items-center gap-1 shrink-0">
@@ -127,7 +128,7 @@ export function SearchSelect({
             </div>
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-[var(--radix-popover-trigger-width)] min-w-[240px] p-0" align="start">
+        <PopoverContent className="w-[var(--radix-popover-trigger-width)] min-w-[320px] p-0 rounded-xl overflow-hidden shadow-xl border border-border/80 bg-popover" align="start">
           <Command
             filter={(value, search, keywords) => {
               const extendValue = value + " " + (keywords?.join(" ") ?? "");
@@ -153,8 +154,9 @@ export function SearchSelect({
                       setOpenSafe(false);
                     }}
                     className="flex justify-between items-center text-xs"
+                    title={opt.label}
                   >
-                    <span className="truncate">{opt.label}</span>
+                    <span className="truncate" title={opt.label}>{opt.label}</span>
                     <span className="flex items-center gap-1 shrink-0 ml-2">
                       {value === opt.value && <Check className="h-3.5 w-3.5 text-primary" />}
                       {onViewOption && (
