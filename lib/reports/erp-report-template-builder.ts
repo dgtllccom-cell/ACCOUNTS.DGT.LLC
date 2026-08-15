@@ -94,7 +94,7 @@ export function generateReportHtml(input: {
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>${escapeHtml(title)} - ${escapeHtml(compName)}</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Naskh+Arabic:wght@400;600;700&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
     
     @page {
       size: A4 ${orientation};
@@ -106,7 +106,7 @@ export function generateReportHtml(input: {
     html, body {
       background: #0f172a;
       color: #0f172a;
-      font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      font-family: 'Noto Naskh Arabic', 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
       font-size: 8.5px;
       margin: 0;
       padding: 0;
@@ -267,7 +267,7 @@ export function generateReportHtml(input: {
       font-weight: 900;
       color: #0f172a;
       letter-spacing: 0.5px;
-      line-height: 1;
+      line-height: 1.1;
     }
 
     .brand-tagline {
@@ -302,7 +302,7 @@ export function generateReportHtml(input: {
     }
 
     .meta-col {
-      text-align: right;
+      text-align: ${isRtl ? "left" : "right"};
       font-size: 7.5px;
       color: #475569;
       line-height: 1.45;
@@ -396,13 +396,13 @@ export function generateReportHtml(input: {
     }
 
     /* Density Controls */
-    .report-table-wrapper.density-compact table.data-table { font-size: 6.2px; }
-    .report-table-wrapper.density-compact table.data-table th { padding: 4px 2px; font-size: 6px; }
-    .report-table-wrapper.density-compact table.data-table td { padding: 3.5px 2px; }
+    .report-table-wrapper.density-compact table.data-table { font-size: 6.5px; }
+    .report-table-wrapper.density-compact table.data-table th { padding: 4px 3px; font-size: 6.2px; }
+    .report-table-wrapper.density-compact table.data-table td { padding: 3.5px 3px; }
 
     .report-table-wrapper.density-dense table.data-table { font-size: 5.5px; }
-    .report-table-wrapper.density-dense table.data-table th { padding: 3px 1.5px; font-size: 5.5px; }
-    .report-table-wrapper.density-dense table.data-table td { padding: 2px 1.5px; }
+    .report-table-wrapper.density-dense table.data-table th { padding: 3px 2px; font-size: 5.2px; }
+    .report-table-wrapper.density-dense table.data-table td { padding: 2px 2px; }
 
     .report-table-wrapper.density-normal table.data-table { font-size: 7.5px; }
     .report-table-wrapper.density-normal table.data-table th { padding: 6px 4px; font-size: 7px; }
@@ -692,9 +692,10 @@ export function generateReportHtml(input: {
     function resetZoom() { setZoom(1.0); }
 
     function downloadCsv() {
-      const csvContent = \`${csvData.replace(/`/g, "\\`").replace(/\${/g, "\\${")}\`;
-      if (!csvContent) return alert('No CSV data available');
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const csvRaw = \`${csvData.replace(/`/g, "\\`").replace(/\${/g, "\\${")}\`;
+      if (!csvRaw) return alert('No CSV data available');
+      // Prepend UTF-8 BOM byte order mark (\uFEFF) so Excel opens multilingual text (Urdu, Arabic, Pashto, Farsi) correctly!
+      const blob = new Blob(["\\uFEFF" + csvRaw], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -705,12 +706,12 @@ export function generateReportHtml(input: {
 
     function sendEmail() {
       const subject = encodeURIComponent('${escapeHtml(title)} - ${escapeHtml(compName)}');
-      const body = encodeURIComponent('Please find attached report document for ${escapeHtml(title)} from ${escapeHtml(compName)}.');
+      const body = encodeURIComponent('Please find attached official A4 ERP report for ${escapeHtml(title)} from ${escapeHtml(compName)}.\\nDate: ${escapeHtml(printedDate)}\\nPeriod: ${escapeHtml(reportPeriod)}');
       window.location.href = 'mailto:?subject=' + subject + '&body=' + body;
     }
 
     function sendWhatsApp() {
-      const text = encodeURIComponent('📄 *${escapeHtml(title)}*\nCompany: ${escapeHtml(compName)}\nDate: ${escapeHtml(printedDate)}\nPeriod: ${escapeHtml(reportPeriod)}');
+      const text = encodeURIComponent('📄 *${escapeHtml(title)}*\\nCompany: ${escapeHtml(compName)}\\nDate: ${escapeHtml(printedDate)}\\nPeriod: ${escapeHtml(reportPeriod)}\\nURL: ${escapeHtml(compWebsite)}');
       window.open('https://api.whatsapp.com/send?text=' + text, '_blank');
     }
 
@@ -763,6 +764,8 @@ export function generateReportHtml(input: {
       changeFontDensity('compact');
       const select = document.getElementById('fontDensitySelect');
       if (select) select.value = 'compact';
+      const toolbarSelect = document.getElementById('toolbarFontDensitySelect');
+      if (toolbarSelect) toolbarSelect.value = 'compact';
     }
 
     function changeFontDensity(mode) {
@@ -770,6 +773,10 @@ export function generateReportHtml(input: {
       if (!wrapper) return;
       wrapper.classList.remove('density-normal', 'density-compact', 'density-dense');
       wrapper.classList.add('density-' + mode);
+      const modalSelect = document.getElementById('fontDensitySelect');
+      if (modalSelect) modalSelect.value = mode;
+      const toolbarSelect = document.getElementById('toolbarFontDensitySelect');
+      if (toolbarSelect) toolbarSelect.value = mode;
     }
 
     window.addEventListener('DOMContentLoaded', () => {
@@ -791,6 +798,15 @@ export function generateReportHtml(input: {
         <span class="zoom-val" id="zoomVal">100%</span>
         <button class="zoom-btn" onclick="zoomIn()" title="Zoom In">&plus;</button>
         <button class="zoom-btn" onclick="resetZoom()" title="Reset Zoom" style="font-size:10px;">100%</button>
+      </div>
+
+      <div class="zoom-controls" style="margin-right:8px;">
+        <span style="font-size:10.5px; font-weight:700; color:#94a3b8; margin-right:4px;">Density:</span>
+        <select id="toolbarFontDensitySelect" onchange="changeFontDensity(this.value)" class="density-select">
+          <option value="normal">Standard (7.5px)</option>
+          <option value="compact" selected>Compact (6.5px)</option>
+          <option value="dense">Dense (5.5px)</option>
+        </select>
       </div>
 
       <button class="btn-action btn-slate" onclick="toggleColumnModal()">⚙️ Customize Columns</button>
