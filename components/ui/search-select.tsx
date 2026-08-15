@@ -97,12 +97,12 @@ export function SearchSelect({
             disabled={disabled}
             title={selectedLabel || placeholder}
             className={cn(
-              "flex h-10 w-full items-center justify-between rounded-lg border border-input bg-background px-3 py-2 text-xs shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
+              "group flex h-10 w-full items-center justify-between rounded-lg border border-input bg-background py-2 ps-3 pe-1.5 text-xs shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
               !selectedLabel && "text-muted-foreground",
               triggerClassName
             )}
           >
-            <span className="truncate flex-1 text-left mr-2 font-medium" title={selectedLabel || placeholder}>
+            <span className="truncate flex-1 text-left me-2 font-medium" title={selectedLabel || placeholder}>
               {selectedLabel || placeholder}
             </span>
             <div className="flex items-center gap-1 shrink-0">
@@ -126,11 +126,21 @@ export function SearchSelect({
                   <X className="h-3 w-3" />
                 </span>
               )}
-              {loading ? (
-                <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
-              ) : (
-                <ChevronDown className="h-4 w-4 opacity-50" />
-              )}
+              {/* Explicit dropdown affordance: a bordered caret button so the field reads as a
+                  selectable dropdown (not a read-only input) — consistent across the whole ERP. */}
+              <span
+                aria-hidden
+                className={cn(
+                  "flex h-7 w-7 items-center justify-center rounded-md border border-input bg-muted/60 text-muted-foreground transition-colors",
+                  !disabled && "group-hover:bg-muted"
+                )}
+              >
+                {loading ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </span>
             </div>
           </button>
         </PopoverTrigger>
