@@ -6,7 +6,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
 import { ledgerScopeSchema, supportedLanguageSchema, uuidSchema } from "@/lib/api/erp-validation";
 import { withLocalPg } from "@/lib/db/local-postgres";
-import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { localizeRecordNames, getPhraseTranslator } from "@/lib/i18n/localize-records";
 
 /**
  * Localize the free-form account NAME of a set of report rows through the single ERP
@@ -414,6 +414,24 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
     throw new Error("DATABASE_URL is not configured for local account report fallback.");
   }
   await localizeAccountNames(viaPg.rows, effectiveQuery.language);
+  // Batch 2/3 for the local-PG fallback path: localize the composite Branch/City/Country and
+  // linked Company display strings with the phrase translator (approved place/business terms
+  // translate, proper/unknown words stay). Mirrors the Supabase path below.
+  const tpFallback = await getPhraseTranslator(effectiveQuery.language);
+  // Translate only the human-readable NAME, never a trailing "(CODE)" identifier.
+  const tpHead = (v: string) => {
+    const s = (v ?? "").toString();
+    const i = s.indexOf(" (");
+    return i === -1 ? tpFallback(s) : tpFallback(s.slice(0, i)) + s.slice(i);
+  };
+  for (const r of viaPg.rows) {
+    r.branchName = tpHead(r.branchName);
+    r.mainBranchName = tpHead(r.mainBranchName);
+    r.cityBranchName = tpHead(r.cityBranchName);
+    r.cityName = tpFallback(r.cityName);
+    r.countryName = tpFallback(r.countryName);
+    if (r.companyName && r.companyName !== "-") r.companyName = tpFallback(r.companyName);
+  }
   return viaPg;
 }
 
@@ -844,10 +862,12 @@ export async function GET(request: NextRequest) {
     // approved/dictionary translation exists, and never machine-guesses a proper name.
     await localizeAccountNames(rows, effectiveQuery.language);
 
-    // Same central resolver for linked company names shown on each row.
+    // Batch 2 — linked Company + Customer/Owner names via the central resolver with
+    // phrase-level fallback: approved business terms inside the name (General Traders,
+    // Transport Co., …) translate; genuine person/company proper-name words stay original.
     const compTargets = rows.filter((r) => r.companyId).map((r) => ({ id: r.companyId as string, name: r.companyName }));
     if (compTargets.length) {
-      const localizedCompanies = await localizeRecordNames(compTargets, "companies", "name", effectiveQuery.language);
+      const localizedCompanies = await localizeRecordNames(compTargets, "companies", "name", effectiveQuery.language, { phraseFallback: true });
       const companyById = new Map(localizedCompanies.map((c) => [c.id, c.name] as const));
       for (const r of rows) {
         if (r.companyId) {
@@ -855,6 +875,38 @@ export async function GET(request: NextRequest) {
           if (resolved) r.companyName = resolved;
         }
       }
+    }
+
+    const custTargets = rows
+      .filter((r) => r.customerId && r.customerName && r.customerName !== "-")
+      .map((r) => ({ id: r.customerId as string, customer_name: r.customerName }));
+    if (custTargets.length) {
+      const localizedCustomers = await localizeRecordNames(custTargets, "customers", "customer_name", effectiveQuery.language, { phraseFallback: true });
+      const customerById = new Map(localizedCustomers.map((c) => [c.id, c.customer_name] as const));
+      for (const r of rows) {
+        if (r.customerId) {
+          const resolved = customerById.get(r.customerId);
+          if (resolved) r.customerName = resolved;
+        }
+      }
+    }
+
+    // Batch 3 — Branch / City / Country display labels are composite strings ("Quetta (QTA)",
+    // "Pakistan"), not single record fields, so localize them with the phrase translator:
+    // approved place/business terms translate, codes and unknown proper words stay as-is.
+    const tp = await getPhraseTranslator(effectiveQuery.language);
+    // Translate only the human-readable NAME, never a trailing "(CODE)" identifier.
+    const tpHead = (v: string) => {
+      const s = (v ?? "").toString();
+      const i = s.indexOf(" (");
+      return i === -1 ? tp(s) : tp(s.slice(0, i)) + s.slice(i);
+    };
+    for (const r of rows) {
+      r.branchName = tpHead(r.branchName);
+      r.mainBranchName = tpHead(r.mainBranchName);
+      r.cityBranchName = tpHead(r.cityBranchName);
+      r.cityName = tp(r.cityName);
+      r.countryName = tp(r.countryName);
     }
 
     const q = normalizeSearch(effectiveQuery.q ?? "");

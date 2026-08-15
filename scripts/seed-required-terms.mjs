@@ -65,6 +65,23 @@ const TERMS = {
   "City":            { ur: "شہر",             ps: "ښار",              fa: "شهر",               ar: "مدينة" },
   "House":           { ur: "گھر",             ps: "کور",              fa: "خانه",              ar: "منزل" },
   "and":             { ur: "اور",             ps: "او",               fa: "و",                 ar: "و" },
+  // Batch 3 — countries / cities / branch-scope terms for composite Branch/City/Country labels.
+  "Pakistan":        { ur: "پاکستان",         ps: "پاکستان",          fa: "پاکستان",           ar: "باكستان" },
+  "Afghanistan":     { ur: "افغانستان",       ps: "افغانستان",        fa: "افغانستان",         ar: "أفغانستان" },
+  "United Arab Emirates": { ur: "متحدہ عرب امارات", ps: "متحده عربي امارات", fa: "امارات متحده عربی", ar: "الإمارات العربية المتحدة" },
+  "India":           { ur: "بھارت",           ps: "هند",              fa: "هند",               ar: "الهند" },
+  "Iran":            { ur: "ایران",           ps: "ایران",            fa: "ایران",             ar: "إيران" },
+  "Quetta":          { ur: "کوئٹہ",           ps: "کوټه",             fa: "کویته",             ar: "كويتا" },
+  "Chaman":          { ur: "چمن",             ps: "چمن",              fa: "چمن",               ar: "تشامان" },
+  "Karachi":         { ur: "کراچی",           ps: "کراچۍ",            fa: "کراچی",             ar: "كراتشي" },
+  "Kabul":           { ur: "کابل",            ps: "کابل",             fa: "کابل",              ar: "كابول" },
+  "Peshawar":        { ur: "پشاور",           ps: "پېښور",            fa: "پیشاور",            ar: "بيشاور" },
+  "Lahore":          { ur: "لاہور",           ps: "لاهور",            fa: "لاهور",             ar: "لاهور" },
+  "Dubai":           { ur: "دبئی",            ps: "دبۍ",              fa: "دبی",               ar: "دبي" },
+  "Kandahar":        { ur: "قندھار",          ps: "کندهار",           fa: "قندهار",            ar: "قندهار" },
+  "Workspace":       { ur: "ورک اسپیس",       ps: "کاري ځای",         fa: "فضای کاری",         ar: "مساحة عمل" },
+  "Main Branch":     { ur: "مین برانچ",        ps: "اصلي څانګه",       fa: "شعبه اصلی",         ar: "الفرع الرئيسي" },
+  "City Branch":     { ur: "سٹی برانچ",        ps: "د ښار څانګه",      fa: "شعبه شهر",          ar: "فرع المدينة" },
 };
 
 const sql = postgres(url, { max: 1, prepare: false, connect_timeout: 30 });

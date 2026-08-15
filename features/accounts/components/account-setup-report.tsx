@@ -346,19 +346,19 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
           
           <div className="hidden lg:flex items-center gap-1.5 text-[9px] text-slate-400 font-medium">
             <span className="h-3 w-px bg-slate-200 dark:bg-slate-800" />
-            <span className="text-slate-500 font-extrabold uppercase">Country:</span>
+            <span className="text-slate-500 font-extrabold uppercase">{tr("Country")}:</span>
             <span className="text-slate-800 dark:text-slate-200 font-bold">{reportContext.countryName}</span>
-            
+
             <span className="text-slate-300 dark:text-slate-700">|</span>
-            <span className="text-slate-500 font-extrabold uppercase">Branch:</span>
+            <span className="text-slate-500 font-extrabold uppercase">{tr("Branch")}:</span>
             <span className="text-slate-800 dark:text-slate-200 font-bold truncate max-w-[80px]">{reportContext.branchName}</span>
-            
+
             <span className="text-slate-300 dark:text-slate-700">|</span>
-            <span className="text-slate-500 font-extrabold uppercase">User:</span>
+            <span className="text-slate-500 font-extrabold uppercase">{tr("User")}:</span>
             <span className="text-slate-800 dark:text-slate-200 font-bold">{reportContext.userName}</span>
-            
+
             <span className="text-slate-300 dark:text-slate-700">|</span>
-            <span className="text-slate-500 font-extrabold uppercase">Role:</span>
+            <span className="text-slate-500 font-extrabold uppercase">{tr("Role")}:</span>
             <span className="text-slate-800 dark:text-slate-200 font-bold whitespace-nowrap">{reportContext.userRole}</span>
           </div>
         </div>,
@@ -374,15 +374,15 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
               value={searchField}
               onChange={e => setSearchField(e.target.value)}
             >
-              <option value="all">All</option>
-              <option value="code">No</option>
-              <option value="name">Name</option>
-              <option value="country">Country</option>
-              <option value="branch">Branch</option>
+              <option value="all">{tr("All")}</option>
+              <option value="code">{tr("Account Number")}</option>
+              <option value="name">{tr("Name")}</option>
+              <option value="country">{tr("Country")}</option>
+              <option value="branch">{tr("Branch")}</option>
             </select>
             <input
               type="text"
-              placeholder="Search..."
+              placeholder={tr("Search")}
               className="h-full px-2 text-[10px] font-semibold outline-none bg-transparent w-[90px] focus:w-[130px] transition-all text-slate-900 dark:text-slate-100"
               value={accNo}
               onChange={e => {
@@ -423,7 +423,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
             </button>
             {actionMenuOpen && (
               <div className="asr-action-menu">
-                <div className="asr-action-section-label">Export</div>
+                <div className="asr-action-section-label">{tr("Export")}</div>
                 {[
                   { icon: FileSpreadsheet, label: "Export Excel", color: "text-emerald-600", action: () => exportCSV(filtered) },
                   { icon: FileText, label: "Export CSV", color: "text-blue-600", action: () => exportCSV(filtered) },
@@ -431,11 +431,11 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
                 ].map(({ icon: Icon, label, color, action }) => (
                   <button key={label} type="button" className="asr-action-item" onClick={() => { action(); setActionMenuOpen(false); }}>
                     <Icon className={cn("h-3.5 w-3.5 shrink-0", color)} />
-                    <span>{label}</span>
+                    <span>{tr(label)}</span>
                   </button>
                 ))}
                 <div className="asr-action-divider" />
-                <div className="asr-action-section-label">Share</div>
+                <div className="asr-action-section-label">{tr("Share")}</div>
                 {[
                   { icon: Send, label: "Email Report", color: "text-indigo-600", action: () => {
                     const subject = encodeURIComponent("Account Setup Report");
@@ -449,18 +449,18 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
                 ].map(({ icon: Icon, label, color, action }) => (
                   <button key={label} type="button" className="asr-action-item" onClick={() => { action(); setActionMenuOpen(false); }}>
                     <Icon className={cn("h-3.5 w-3.5 shrink-0", color)} />
-                    <span>{label}</span>
+                    <span>{tr(label)}</span>
                   </button>
                 ))}
                 <div className="asr-action-divider" />
-                <div className="asr-action-section-label">Print</div>
+                <div className="asr-action-section-label">{tr("Print")}</div>
                 {[
                   { icon: Printer, label: "Print Report", action: () => window.print() },
                   { icon: DownloadActionIcon, label: "Download Report", action: () => exportCSV(filtered) },
                 ].map(({ icon: Icon, label, action }) => (
                   <button key={label} type="button" className="asr-action-item" onClick={() => { action(); setActionMenuOpen(false); }}>
                     <Icon className="h-3.5 w-3.5 shrink-0 text-slate-500" />
-                    <span>{label}</span>
+                    <span>{tr(label)}</span>
                   </button>
                 ))}
               </div>
@@ -476,57 +476,57 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
           <div className="asr-filter-grid">
             {/* Account Number */}
             <div className="asr-filter-field">
-              <label className="asr-filter-label">Account Number</label>
+              <label className="asr-filter-label">{tr("Account Number")}</label>
               <div className="relative">
                 <Search className="asr-filter-icon" />
-                <input className="asr-filter-input" placeholder="Search account no..." value={draftAccNo} onChange={e => setDraftAccNo(e.target.value)} />
+                <input className="asr-filter-input" placeholder={tr("Search")} value={draftAccNo} onChange={e => setDraftAccNo(e.target.value)} />
               </div>
             </div>
             {/* Account Name */}
             <div className="asr-filter-field">
-              <label className="asr-filter-label">Account Name</label>
+              <label className="asr-filter-label">{tr("Account Name")}</label>
               <div className="relative">
                 <Search className="asr-filter-icon" />
-                <input className="asr-filter-input" placeholder="Search name..." value={draftName} onChange={e => setDraftName(e.target.value)} />
+                <input className="asr-filter-input" placeholder={tr("Search")} value={draftName} onChange={e => setDraftName(e.target.value)} />
               </div>
             </div>
             {/* Country */}
             <div className="asr-filter-field">
-              <label className="asr-filter-label">Country</label>
+              <label className="asr-filter-label">{tr("Country")}</label>
               <select className="asr-filter-select" value={draftCountry} onChange={e => setDraftCountry(e.target.value)}>
-                <option value="all">All Countries</option>
+                <option value="all">{tr("All Countries")}</option>
                 {uniqueCountries.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
             {/* Branch */}
             <div className="asr-filter-field">
-              <label className="asr-filter-label">Branch</label>
+              <label className="asr-filter-label">{tr("Branch")}</label>
               <select className="asr-filter-select" value={draftBranch} onChange={e => setDraftBranch(e.target.value)}>
-                <option value="all">All Branches</option>
+                <option value="all">{tr("All Branches")}</option>
                 {uniqueBranches.map(b => <option key={b} value={b}>{b}</option>)}
               </select>
             </div>
             {/* Account Type */}
             <div className="asr-filter-field">
-              <label className="asr-filter-label">Account Type</label>
+              <label className="asr-filter-label">{tr("Account Type")}</label>
               <select className="asr-filter-select" value={draftType} onChange={e => setDraftType(e.target.value)}>
-                <option value="all">All Types</option>
-                {uniqueTypes.map(t => <option key={t} value={t}>{t}</option>)}
+                <option value="all">{tr("All Types")}</option>
+                {uniqueTypes.map(t => <option key={t} value={t}>{tv(t)}</option>)}
               </select>
             </div>
             {/* Sub Type */}
             <div className="asr-filter-field">
-              <label className="asr-filter-label">Sub Type</label>
+              <label className="asr-filter-label">{tr("Sub Type")}</label>
               <select className="asr-filter-select" value={draftSub} onChange={e => setDraftSub(e.target.value)}>
-                <option value="all">All Sub Types</option>
-                {uniqueSubs.map(s => <option key={s} value={s}>{s}</option>)}
+                <option value="all">{tr("All Sub Types")}</option>
+                {uniqueSubs.map(s => <option key={s} value={s}>{tv(s)}</option>)}
               </select>
             </div>
           </div>
           <div className="flex items-center gap-2 mt-3">
             <button type="button" className="asr-btn-primary" onClick={applyFilters}>{tr("Apply Filters")}</button>
             <button type="button" className="asr-btn-secondary" onClick={resetFilters}>
-              <X className="h-3.5 w-3.5" /> Reset
+              <X className="h-3.5 w-3.5" /> {tr("Reset")}
             </button>
           </div>
         </div>
@@ -653,7 +653,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
                   <td colSpan={18} className="asr-empty-cell">
                     <div className="flex items-center justify-center gap-2">
                       <Loader2 className="h-4 w-4 animate-spin text-[#1f5eff]" />
-                      <span>Loading accounts report...</span>
+                      <span>{tr("Loading accounts report...")}</span>
                     </div>
                   </td>
                 </tr>
@@ -842,7 +842,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
                             onClick={() => router.push(`/dashboard/accounts/view?accountId=${row.accountId}`)}
                           >
                             <Eye className="h-3.5 w-3.5" />
-                            <span>View</span>
+                            <span>{tr("View")}</span>
                           </button>
                           <button
                             type="button"
@@ -851,7 +851,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
                             onClick={() => router.push(`/dashboard/accounts/setup?accountId=${row.accountId}&mode=edit`)}
                           >
                             <Edit3 className="h-3.5 w-3.5" />
-                            <span>Edit</span>
+                            <span>{tr("Edit")}</span>
                           </button>
                         </div>
                       </td>
@@ -861,7 +861,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
               ) : (
                 <tr>
                   <td colSpan={18} className="asr-empty-cell">
-                    No accounts found matching the selected filters.
+                    {tr("No accounts found matching the selected filters.")}
                   </td>
                 </tr>
               )}

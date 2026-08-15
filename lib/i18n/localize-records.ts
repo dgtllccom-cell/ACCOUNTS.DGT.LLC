@@ -120,6 +120,34 @@ async function loadDictionary(sql: ReturnType<typeof postgres>): Promise<Map<str
   return map;
 }
 
+/**
+ * Load the dictionary once and return a synchronous phrase translator for `lang`. Use for
+ * COMPOSITE display strings that aren't a single record field (e.g. a branch label
+ * "Quetta (QTA)") — it substitutes approved business/place terms and leaves the rest as-is.
+ * Returns an identity function for English or when DATABASE_URL / the dictionary is unavailable.
+ */
+export async function getPhraseTranslator(lang: SupportedLanguage): Promise<(value: string | null | undefined) => string> {
+  const identity = (v: string | null | undefined) => (v ?? "").toString();
+  if (lang === "en") return identity;
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) return identity;
+  let dict = dictCache;
+  if (!dict || Date.now() - dictLoadedAt >= DICT_TTL_MS) {
+    const sql = postgres(dbUrl, { max: 1, prepare: false, idle_timeout: 5, connect_timeout: 8 });
+    try {
+      dict = await loadDictionary(sql);
+    } finally {
+      await sql.end({ timeout: 2 }).catch(() => undefined);
+    }
+  }
+  const d = dict;
+  return (value) => {
+    const raw = (value ?? "").toString().trim();
+    if (!raw) return (value ?? "").toString();
+    return phraseTranslate(d, raw, lang) ?? raw;
+  };
+}
+
 function genuine(target: string | null | undefined, raw: string, english: string): string | null {
   const t = (target || "").trim();
   if (t && t !== raw && t !== english) return t;
