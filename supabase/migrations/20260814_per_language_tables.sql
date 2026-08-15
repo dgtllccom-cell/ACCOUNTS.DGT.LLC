@@ -321,6 +321,7 @@ create trigger record_translations_id instead of delete on public.record_transla
 -- 5. Rewrite upsert_record_translation() to write the 5 tables directly.
 --    (Same signature the app already calls via db.rpc.)
 -- ---------------------------------------------------------------------
+drop function if exists public.upsert_record_translation CASCADE;
 create or replace function public.upsert_record_translation(
   p_record_table text,
   p_record_id uuid,

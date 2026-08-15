@@ -3817,58 +3817,6 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
             {refreshTextMap[currentLanguage]}
           </button>
 
-          {/* Journal Print Official A4 Button */}
-          <JournalPrintButton
-            title={`Sales Order Payment Journal (${modeLabels[activeMode] || activeMode})`}
-            subtitle="Official A4 PDF Sheet Report"
-            columns={[
-              { key: "poNumber", label: "SO Number" },
-              { key: "billNo", label: "Bill / Contract" },
-              { key: "dateStr", label: "Date", format: "date" },
-              { key: "branchName", label: "Branch" },
-              { key: "countryName", label: "Country" },
-              { key: "purchaseFc", label: "Sales Amount (FC)", align: "right", format: "currency" },
-              { key: "advancePct", label: "Invoice %", align: "center", format: "number" },
-              { key: "advanceFc", label: "Invoice Amount (FC)", align: "right", format: "currency" },
-              { key: "remainingFc", label: "Remaining (FC)", align: "right", format: "currency" },
-              { key: "exRate", label: "Exchange Rate", align: "center", format: "number" },
-              { key: "totalLc", label: "Local Amount", align: "right", format: "currency" },
-              { key: "statusText", label: "Status", format: "status" }
-            ]}
-            rows={filtered.map((r) => {
-              const calcs = resolvePurchaseCalculations(r);
-              const form = r.form_data?.form || {};
-              return {
-                poNumber: r.purchase_order_no,
-                billNo: form.billNo || form.invoiceNo || r.purchase_contract_no || "—",
-                dateStr: r.created_at,
-                branchName: rowBranchName(r) || "—",
-                countryName: rowCountryName(r) || "—",
-                purchaseFc: calcs.totalPurchaseFC,
-                advancePct: calcs.advancePercent,
-                advanceFc: calcs.advanceAmountFC,
-                remainingFc: calcs.remainingPurchaseFC,
-                exRate: calcs.exRate,
-                totalLc: calcs.totalPurchaseLC,
-                statusText: r.payment_status || "Pending"
-              };
-            })}
-            filters={[
-              { label: "Payment Mode", value: modeLabels[activeMode] || activeMode },
-              ...(countryFilter ? [{ label: "Country", value: countryFilter }] : []),
-              ...(branchFilter ? [{ label: "Branch", value: branchFilter }] : [])
-            ]}
-            summary={dashboardSummary ? {
-              TotalTransactions: dashboardSummary.totalTransactions,
-              LocalCurrency: dashboardSummary.localCurrency,
-              TotalSalesLC: dashboardSummary.totalPurchaseLC,
-              TotalAdvanceReceivedLC: dashboardSummary.advancePaidLC,
-              RemainingBalanceLC: dashboardSummary.remainingBalanceLC
-            } : undefined}
-            size="sm"
-            className="h-7 border-blue-300 bg-blue-50 text-blue-700 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 font-extrabold text-[10px] shadow-sm"
-          />
-
           {/* Action Menu / Report Actions */}
           <ReportActions rows={filtered} mode={activeMode} />
         </div>,
