@@ -421,50 +421,55 @@ export function PurchaseBookingViewRedesign({
           </aside>
         )}
         <main className="print-area min-w-0 flex-1 px-3 pb-16 pt-4 sm:px-5 lg:px-6">
-          <div className="no-print mb-4 flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h1 className="text-lg font-bold tracking-tight sm:text-xl">New Purchase Booking Order</h1>
-              <p className="text-[12px] text-muted-foreground">Standard ERP layout · responsive · print-ready A4 templates</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <TopButton icon={Save}>Save Draft</TopButton>
-              <TopButton icon={Check} variant="success">Accept</TopButton>
-              <TopButton icon={ArrowRightLeft} variant="primary">Verify</TopButton>
-              <TopButton icon={ArrowRightLeft} variant="dark">Register</TopButton>
-              <TopButton icon={MoreHorizontal}>More</TopButton>
-            </div>
-          </div>
-          <div className="no-print mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-card p-2 shadow-sm">
-            <div className="inline-flex rounded-lg bg-muted p-1">
-              {([
-                { k: "form", label: "Form", icon: ClipboardList },
-                { k: "full", label: "Full Report", icon: FileText },
-                { k: "compact", label: "Compact Order", icon: FileDown },
-              ] as { k: View; label: string; icon: React.ComponentType<{ className?: string }> }[]).map((t) => {
-                const Icon = t.icon;
-                return (
+          <div className="w-full max-w-[95%] xl:max-w-[94%] 2xl:max-w-[92%] mx-auto transition-all">
+            {/* Sticky Top Toolbar with Prominent Action Buttons */}
+            <div className="no-print sticky top-0 z-30 mb-4 rounded-xl border border-border/80 bg-white/95 p-3 shadow-md backdrop-blur-md">
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                {/* Left Title & View Switcher */}
+                <div className="flex flex-wrap items-center gap-3">
+                  <div>
+                    <h1 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-lg">New Purchase Booking Order</h1>
+                    <p className="hidden text-[11px] text-muted-foreground sm:block">Standard ERP layout · Responsive · A4 Print Ready</p>
+                  </div>
+                  <div className="inline-flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
+                    {([
+                      { k: "form", label: "Form View", icon: ClipboardList },
+                      { k: "full", label: "Full Report", icon: FileText },
+                      { k: "compact", label: "Compact Order", icon: FileDown },
+                    ] as { k: View; label: string; icon: React.ComponentType<{ className?: string }> }[]).map((t) => {
+                      const Icon = t.icon;
+                      return (
+                        <button key={t.k} onClick={() => setView(t.k)}
+                          className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1 text-[11.5px] font-bold transition-all ${view === t.k ? "bg-white text-slate-900 shadow-sm dark:bg-slate-900 dark:text-white" : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"}`}>
+                          <Icon className="h-3.5 w-3.5" />{t.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
 
-                  <button key={t.k} onClick={() => setView(t.k)}
-                    className={`inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-[12px] font-medium transition-colors ${view === t.k ? "bg-white text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}>
-                    <Icon className="h-3.5 w-3.5" />{t.label}
-                  </button>
-                );
-              })}
+                {/* Right Prominent Action Buttons */}
+                <div className="flex flex-wrap items-center gap-2">
+                  <TopButton icon={Save} variant="primary" onClick={() => {}}>Save Draft</TopButton>
+                  <TopButton icon={Check} variant="success" onClick={() => {}}>Accept & Verify</TopButton>
+                  <TopButton icon={ArrowRightLeft} variant="dark" onClick={() => {}}>Register Order</TopButton>
+                  <div className="hidden h-5 w-[1px] bg-slate-200 dark:bg-slate-700 md:block" />
+                  <TopButton icon={Eye} variant="ghost" onClick={() => setView(view === "form" ? "full" : "form")}>
+                    {view === "form" ? "Preview Report" : "Form View"}
+                  </TopButton>
+                  <TopButton icon={Printer} variant="dark" onClick={() => handlePrint(view === "compact" ? "compact" : "full")}>Print</TopButton>
+                  <TopButton icon={Download} variant="amber" onClick={() => handlePrint("full")}>PDF</TopButton>
+                </div>
+              </div>
             </div>
-            <div className="flex flex-wrap items-center gap-1.5">
-              <TopButton icon={Eye} onClick={() => setView("full")}>Preview Full</TopButton>
-              <TopButton icon={Eye} onClick={() => setView("compact")}>Preview Compact</TopButton>
-              <TopButton icon={Printer} variant="dark" onClick={() => handlePrint("full")}>Print Full</TopButton>
-              <TopButton icon={Printer} variant="dark" onClick={() => handlePrint("compact")}>Print Compact</TopButton>
-              <TopButton icon={Download} variant="amber" onClick={() => handlePrint("full")}>PDF</TopButton>
-            </div>
+
+            {view === "form" && <FormView {...shared} />}
+            {view === "full" && <FullReport {...shared} />}
+            {view === "compact" && <CompactOrder goods={goods} />}
+            <footer className="no-print mt-6 text-center text-[11px] text-muted-foreground">
+              © 2026 <span className="font-semibold text-foreground">Digital Dock ERP</span> — All Rights Reserved.
+            </footer>
           </div>
-          {view === "form" && <FormView {...shared} />}
-          {view === "full" && <FullReport {...shared} />}
-          {view === "compact" && <CompactOrder goods={goods} />}
-          <footer className="no-print mt-6 text-center text-[11px] text-muted-foreground">
-            © 2026 <span className="font-semibold text-foreground">Digital Dock ERP</span> — All Rights Reserved.
-          </footer>
         </main>
       </div>
     </div>
