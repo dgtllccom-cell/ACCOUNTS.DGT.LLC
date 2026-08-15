@@ -17,6 +17,8 @@ import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { translateValue } from "@/lib/i18n/table-values";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
+import { openGenericErpReport, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
 
 /* Types */
 type AccountRow = {
@@ -317,6 +319,63 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
   const activeFilterCount = Object.values(activeFiltersObj).filter(v => v && v !== "all").length;
 
   const reportSeed = filtered[0] ?? rows[0] ?? null;
+  
+  const reportColumns: GenericReportColumn[] = [
+    { key: "accountCode", label: "Account Number" },
+    { key: "sadCode", label: "Super Admin Account Number" },
+    { key: "countrySerialNumber", label: "Country Serial" },
+    { key: "branchSerialNumber", label: "Branch Serial" },
+    { key: "manualReferenceNumber", label: "Manual Ref No" },
+    { key: "accountName", label: "Customer Name / Account" },
+    { key: "customerName", label: "Owner" },
+    { key: "subType", label: "Account Type" },
+    { key: "accountCategory", label: "Category", format: "status" },
+    { key: "branchName", label: "Branch Name" },
+    { key: "branchCode", label: "Branch Code" },
+    { key: "countryName", label: "Country" },
+    { key: "currency", label: "Currency" },
+  ];
+
+  const reportSummary = {
+    TotalAccounts: filtered.length,
+    TotalCustomers: countryStats.reduce((acc, c) => acc + c.customers, 0),
+    TotalCompanies: countryStats.reduce((acc, c) => acc + c.companies, 0),
+    TotalBanks: countryStats.reduce((acc, c) => acc + c.banks, 0),
+  };
+
+  const reportRows = useMemo(() => {
+    return filtered.map((r) => ({
+      ...r,
+      sadCode: "SAD-" + String(r.accountSerialNumber).padStart(3, "0"),
+    }));
+  }, [filtered]);
+
+  function triggerOfficialReportPreview() {
+    openGenericErpReport({
+      title: "Account Setup Report",
+      subtitle: `Total ${filtered.length} accounts • ${reportContext.countryName} / ${reportContext.branchName}`,
+      lang,
+      columns: reportColumns,
+      rows: reportRows as Record<string, unknown>[],
+      summary: reportSummary,
+      filters: [
+        { label: "Country", value: reportContext.countryName },
+        { label: "Branch", value: reportContext.branchName },
+        { label: "User", value: reportContext.userName },
+        { label: "Role", value: reportContext.userRole },
+        { label: "Category", value: category },
+        { label: "Search", value: accNo.trim() || "All" },
+      ],
+      companyInfo: {
+        country: reportContext.countryName,
+        branch: reportContext.branchName,
+        printedBy: reportContext.userName,
+        reportPeriod: `Generated on ${reportContext.date} ${reportContext.time}`,
+      },
+      orientation: "landscape",
+    });
+  }
+
   const reportContext = {
     countryName: country !== "all" ? country : reportSeed?.countryName ?? "All Countries",
     countryCode: reportSeed?.countryCode || "-",
@@ -411,6 +470,14 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
             <ChevronDown className={cn("h-3 w-3 transition-transform", filtersOpen && "rotate-180")} />
           </button>
 
+          <JournalPrintButton
+            title="Account Setup Report"
+            subtitle={`Total ${filtered.length} accounts • ${reportContext.countryName} / ${reportContext.branchName}`}
+            columns={reportColumns}
+            rows={reportRows as Record<string, unknown>[]}
+            summary={reportSummary}
+            orientation="landscape"
+          />
           {/* Three-dot action menu */}
           <div className="relative" ref={actionRef}>
             <button
@@ -427,7 +494,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
                 {[
                   { icon: FileSpreadsheet, label: "Export Excel", color: "text-emerald-600", action: () => exportCSV(filtered) },
                   { icon: FileText, label: "Export CSV", color: "text-blue-600", action: () => exportCSV(filtered) },
-                  { icon: FileText, label: "Export PDF", color: "text-red-600", action: () => window.print() },
+                  { icon: FileText, label: "Export PDF", color: "text-red-600", action: () => triggerOfficialReportPreview() },
                 ].map(({ icon: Icon, label, color, action }) => (
                   <button key={label} type="button" className="asr-action-item" onClick={() => { action(); setActionMenuOpen(false); }}>
                     <Icon className={cn("h-3.5 w-3.5 shrink-0", color)} />
