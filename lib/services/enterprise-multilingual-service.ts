@@ -4,6 +4,74 @@ import type { ErpSession } from "@/lib/auth/session";
 import { supportedLanguages, type SupportedLanguage } from "@/lib/i18n/languages";
 import { multilingualService } from "@/lib/services/multilingual-service";
 import { buildVerifiedTranslationSet, type VerifiedTranslationMap } from "@/lib/i18n/verified-record-translations";
+import { withLocalPg } from "@/lib/db/local-postgres";
+import { lookupApprovedDictionary } from "@/lib/i18n/localize-records";
+
+const LANG_KEYS: SupportedLanguage[] = ["en", "ur", "ar", "fa", "ps"];
+
+export type UpsertRecordTranslationArgs = {
+  recordTable: string;
+  recordId: string;
+  fieldName: string;
+  originalText: string;
+  originalLanguageCode: string;
+  english: string | null;
+  urdu: string | null;
+  arabic: string | null;
+  persian: string | null;
+  pashto: string | null;
+  languageTexts: Record<string, string | null | undefined>;
+  source: string;
+  status: string;
+  engine: string;
+  actorId: string | null;
+};
+
+/**
+ * Single write path for record_translations. Prefers a DIRECT-Postgres call to
+ * upsert_record_translation() (DATABASE_URL) — the same connection the read resolver uses —
+ * so five-language saving works wherever the app can reach the DB, without depending on a
+ * privileged Supabase service-role key. Falls back to the Supabase admin RPC when
+ * DATABASE_URL is not configured. record_translations is a VIEW (INSTEAD OF triggers), so a
+ * plain upsert/ON CONFLICT is impossible — the RPC is the only correct writer either way.
+ */
+export async function upsertRecordTranslationRpc(
+  args: UpsertRecordTranslationArgs,
+  db?: EnterpriseDbClient
+): Promise<void> {
+  const actorId = args.actorId && /^[0-9a-f-]{36}$/i.test(args.actorId) ? args.actorId : null;
+  // Direct-Postgres first — do NOT construct the Supabase admin client unless we actually
+  // fall through to it (createSupabaseAdminClient throws when only a publishable key exists,
+  // which would otherwise defeat the direct-pg path entirely).
+  const viaPg = await withLocalPg(async (sql) => {
+    await sql`select public.upsert_record_translation(
+      ${args.recordTable}, ${args.recordId}::uuid, ${args.fieldName}, ${args.originalText}, ${args.originalLanguageCode},
+      ${args.english}, ${args.urdu}, ${args.arabic}, ${args.persian}, ${args.pashto}, ${sql.json(args.languageTexts as any)},
+      ${args.source}, ${args.status}, ${args.engine}, ${actorId}::uuid)`;
+    return true;
+  });
+  if (viaPg) return;
+
+  const client = db ?? adminDb();
+  const { error } = await client.rpc("upsert_record_translation", {
+    p_record_table: args.recordTable,
+    p_record_id: args.recordId,
+    p_field_name: args.fieldName,
+    p_original_text: args.originalText,
+    p_original_language_code: args.originalLanguageCode,
+    p_english: args.english,
+    p_urdu: args.urdu,
+    p_arabic: args.arabic,
+    p_persian: args.persian,
+    p_pashto: args.pashto,
+    p_language_texts: args.languageTexts,
+    p_source: args.source,
+    p_translation_status: args.status,
+    p_translated_by_engine: args.engine,
+    p_actor_id: actorId
+  });
+  if (error) throw new Error(error.message);
+}
 
 type TranslationMap = Record<SupportedLanguage, string>;
 
@@ -107,7 +175,7 @@ function columnPayload(translations: TranslationMap, source?: string) {
 
 export async function saveEnterpriseRecordTranslations(
   input: EnterpriseTranslationSaveInput,
-  db: EnterpriseDbClient = adminDb()
+  db?: EnterpriseDbClient
 ) {
   const saved: unknown[] = [];
   const activeFields = input.fields.filter((field) => typeof field.value === "string" && field.value.trim().length > 0);
@@ -121,26 +189,25 @@ export async function saveEnterpriseRecordTranslations(
     // (WHERE deleted_at IS NULL); PostgREST omits the predicate and Postgres raises 42P10.
     // upsert_record_translation() runs the correct ON CONFLICT (...) WHERE deleted_at IS NULL.
     const columns = columnPayload(translations, input.source);
-    const { data, error } = await db.rpc("upsert_record_translation", {
-      p_record_table: input.recordTable,
-      p_record_id: input.recordId,
-      p_field_name: field.fieldName,
-      p_original_text: originalText,
-      p_original_language_code: input.originalLanguage,
-      p_english: translations.en ?? originalText,
-      p_urdu: translations.ur ?? originalText,
-      p_arabic: translations.ar ?? originalText,
-      p_persian: translations.fa ?? originalText,
-      p_pashto: translations.ps ?? originalText,
-      p_language_texts: columns.language_texts,
-      p_source: input.source ?? "auto",
-      p_translation_status: columns.translation_status,
-      p_translated_by_engine: columns.translated_by_engine,
-      p_actor_id: input.source === "manual" ? input.actorId ?? null : null
-    });
-
-    if (error) throw new Error(error.message);
-    saved.push(data);
+    // Shared write path: direct-Postgres first (DATABASE_URL), Supabase admin RPC fallback.
+    await upsertRecordTranslationRpc({
+      recordTable: input.recordTable,
+      recordId: input.recordId,
+      fieldName: field.fieldName,
+      originalText,
+      originalLanguageCode: input.originalLanguage,
+      english: translations.en ?? originalText,
+      urdu: translations.ur ?? originalText,
+      arabic: translations.ar ?? originalText,
+      persian: translations.fa ?? originalText,
+      pashto: translations.ps ?? originalText,
+      languageTexts: columns.language_texts,
+      source: input.source ?? "auto",
+      status: columns.translation_status,
+      engine: columns.translated_by_engine,
+      actorId: input.source === "manual" ? input.actorId ?? null : null
+    }, db);
+    saved.push({ recordId: input.recordId, fieldName: field.fieldName });
   }
 
   return saved;
@@ -148,7 +215,7 @@ export async function saveEnterpriseRecordTranslations(
 
 export async function saveVerifiedEnterpriseRecordTranslations(
   input: Omit<EnterpriseTranslationSaveInput, "fields"> & { fields: VerifiedEnterpriseTranslationField[] },
-  db: EnterpriseDbClient = adminDb()
+  db?: EnterpriseDbClient
 ) {
   const results: Array<{ fieldName: string; status: "complete" | "pending"; missingLanguages: SupportedLanguage[]; translations: VerifiedTranslationMap }> = [];
   for (const field of input.fields.filter((item) => typeof item.value === "string" && item.value.trim())) {
@@ -159,25 +226,37 @@ export async function saveVerifiedEnterpriseRecordTranslations(
       mode: field.mode,
       supplied: field.translations
     });
-    const { error } = await db.rpc("upsert_record_translation", {
-      p_record_table: input.recordTable,
-      p_record_id: input.recordId,
-      p_field_name: field.fieldName,
-      p_original_text: originalText,
-      p_original_language_code: input.originalLanguage,
-      p_english: verified.translations.en ?? null,
-      p_urdu: verified.translations.ur ?? null,
-      p_arabic: verified.translations.ar ?? null,
-      p_persian: verified.translations.fa ?? null,
-      p_pashto: verified.translations.ps ?? null,
-      p_language_texts: verified.translations,
-      p_source: verified.engine === "manual" ? "manual" : input.source ?? "auto",
-      p_translation_status: verified.status,
-      p_translated_by_engine: verified.engine,
-      p_actor_id: verified.engine === "manual" ? input.actorId ?? null : null
-    });
-    if (error) throw new Error(error.message);
-    results.push({ fieldName: field.fieldName, status: verified.status, missingLanguages: verified.missingLanguages, translations: verified.translations });
+
+    // Backfill missing languages from the central approved system_dictionary so write-time
+    // matches read-time exactly: a common business term (Bank, Warehouse, …) is stored as an
+    // approved translation and marked complete, while genuine proper-name gaps stay empty and
+    // are flagged needs_review. Skipped for proper-name tables inside lookupApprovedDictionary.
+    for (const lng of LANG_KEYS) {
+      if (verified.translations[lng]?.trim()) continue;
+      const dictVal = await lookupApprovedDictionary(input.recordTable, originalText, lng);
+      if (dictVal) verified.translations[lng] = dictVal;
+    }
+    const stillMissing = LANG_KEYS.filter((l) => l !== input.originalLanguage && !verified.translations[l]?.trim());
+    const status = stillMissing.length > 0 ? "needs_review" : "complete";
+
+    await upsertRecordTranslationRpc({
+      recordTable: input.recordTable,
+      recordId: input.recordId,
+      fieldName: field.fieldName,
+      originalText,
+      originalLanguageCode: input.originalLanguage,
+      english: verified.translations.en ?? null,
+      urdu: verified.translations.ur ?? null,
+      arabic: verified.translations.ar ?? null,
+      persian: verified.translations.fa ?? null,
+      pashto: verified.translations.ps ?? null,
+      languageTexts: verified.translations,
+      source: verified.engine === "manual" ? "manual" : input.source ?? "auto",
+      status,
+      engine: verified.engine,
+      actorId: verified.engine === "manual" ? input.actorId ?? null : null
+    }, db);
+    results.push({ fieldName: field.fieldName, status: verified.status, missingLanguages: stillMissing, translations: verified.translations });
   }
   return results;
 }

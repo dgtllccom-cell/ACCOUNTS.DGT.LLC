@@ -2,6 +2,8 @@
 
 import { openRoznamchaVoucherPrintReport } from "@/lib/reports/open-roznamcha-voucher-print-report";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
+import type { GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
 import { useEffect, useMemo, useState } from "react";
 import { BookOpen, Download, Eye, FileText, Link2, MoreVertical, Printer, RefreshCcw, Search } from "lucide-react";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
@@ -461,6 +463,36 @@ export function RoznamchaReportView({
               <Printer className="h-4 w-4" aria-hidden />
               <span className="ms-2">{t(lang, "report.print_preview", "Print Preview")}</span>
             </Button>
+
+            <JournalPrintButton
+              title="Roznamcha General Journal Report"
+              subtitle="Complete Daily Cash & Transaction Register"
+              columns={[
+                { key: "voucher_no", label: "Voucher No", align: "center" },
+                { key: "entry_date", label: "Date", align: "center", format: "date" },
+                { key: "countryName", label: "Country", align: "left" },
+                { key: "branchName", label: "Branch", align: "left" },
+                { key: "roznamcha_type", label: "Category", align: "left" },
+                { key: "currency_code", label: "Cur", align: "center" },
+                { key: "debit", label: "Debit", align: "right", format: "currency" },
+                { key: "credit", label: "Credit", align: "right", format: "currency" },
+                { key: "remarks", label: "Description / Narration", align: "left" }
+              ]}
+              rows={filteredEntries.map(e => ({
+                ...e,
+                countryName: entryCountryName(e),
+                branchName: entryBranchName(e),
+                debit: e.lines?.reduce((s, l) => s + (Number(l.debit_amount) || 0), 0) || 0,
+                credit: e.lines?.reduce((s, l) => s + (Number(l.credit_amount) || 0), 0) || 0,
+              }))}
+              summary={{
+                totalEntries: metrics.entries,
+                totalDebit: metrics.debit,
+                totalCredit: metrics.credit,
+                balance: metrics.balance
+              }}
+              orientation="landscape"
+            />
 
             <div id="roznamcha-actions-menu" className="relative">
               <Button type="button" variant="outline" onClick={() => setMenuOpen((v) => !v)}>

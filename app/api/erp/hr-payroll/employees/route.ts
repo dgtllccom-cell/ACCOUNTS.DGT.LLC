@@ -4,6 +4,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { ensureEmployeesTable } from "@/lib/services/ensure-employees-table";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 
 export const dynamic = "force-dynamic";
 
@@ -266,6 +267,18 @@ export async function POST(request: NextRequest) {
 
     if (readBackError) {
       return NextResponse.json({ error: readBackError.message }, { status: 400 });
+    }
+
+    // Register the employee's name in all 5 languages (honest engine; proper name →
+    // needs_review until approved in the Local Translator). Fire-and-forget.
+    if (newEmployeeId && (newEmployee as any)?.full_name) {
+      void syncRecordTranslations({
+        table: "employees",
+        recordId: newEmployeeId as string,
+        record: { full_name: (newEmployee as any).full_name },
+        originalLanguage: session.preferredLanguage ?? "en",
+        actorId: session.userId
+      }).catch(() => {});
     }
 
     return NextResponse.json({ employee: newEmployee });

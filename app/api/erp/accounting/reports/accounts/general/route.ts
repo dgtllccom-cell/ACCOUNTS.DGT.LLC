@@ -6,7 +6,32 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
 import { ledgerScopeSchema, supportedLanguageSchema, uuidSchema } from "@/lib/api/erp-validation";
 import { withLocalPg } from "@/lib/db/local-postgres";
-import { multilingualService } from "@/lib/services/multilingual-service";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
+
+/**
+ * Localize the free-form account NAME of a set of report rows through the single ERP
+ * 3-tier resolver (record-specific approved translation → central system_dictionary →
+ * honest original). Mutates `accountName` in place. Safe no-op when DATABASE_URL is
+ * unset or nothing resolves (keeps the original text).
+ */
+async function localizeAccountNames<T extends { accountId: string; accountName: string }>(
+  rows: T[],
+  language: "en" | "ar" | "ur" | "fa" | "ps"
+): Promise<T[]> {
+  if (!rows.length) return rows;
+  const localized = await localizeRecordNames(
+    rows.map((row) => ({ id: row.accountId, name: row.accountName })),
+    "enterprise_accounts",
+    "name",
+    language
+  );
+  const nameById = new Map(localized.map((row) => [row.id, row.name] as const));
+  for (const row of rows) {
+    const resolved = nameById.get(row.accountId);
+    if (resolved) row.accountName = resolved;
+  }
+  return rows;
+}
 
 const querySchema = z.object({
   q: z.string().trim().max(200).optional(),
@@ -152,39 +177,6 @@ function parseIdPrefix(id: string | null | undefined) {
 
 function latestByDate<T extends { created_at: string }>(rows: T[]) {
   return [...rows].sort((a, b) => b.created_at.localeCompare(a.created_at))[0] ?? null;
-}
-
-type TranslationRow = {
-  record_table: string;
-  record_id: string;
-  field_name: string;
-  original_text: string;
-  original_language_code: string;
-  english_text: string | null;
-  arabic_text: string | null;
-  urdu_text: string | null;
-  persian_text: string | null;
-  pashto_text: string | null;
-};
-
-function translationKey(recordTable: string, recordId: string | null | undefined, fieldName: string) {
-  return `${recordTable}:${recordId ?? ""}:${fieldName}`;
-}
-
-function resolveTranslation(row: TranslationRow | null | undefined, language: "en" | "ar" | "ur" | "fa" | "ps", fallback: string) {
-  if (!row) return fallback;
-  return multilingualService.resolveText(
-    {
-      originalText: row.original_text,
-      originalLanguage: row.original_language_code as "en" | "ar" | "ur" | "fa" | "ps",
-      en: row.english_text ?? undefined,
-      ar: row.arabic_text ?? undefined,
-      ur: row.urdu_text ?? undefined,
-      fa: row.persian_text ?? undefined,
-      ps: row.pashto_text ?? undefined
-    },
-    language
-  ) || fallback;
 }
 
 function isMissingPrivilegedSupabaseKey(error: unknown) {
@@ -420,6 +412,7 @@ async function buildAccountsReportViaLocalPg(session: Awaited<ReturnType<typeof 
   if (!viaPg) {
     throw new Error("DATABASE_URL is not configured for local account report fallback.");
   }
+  await localizeAccountNames(viaPg.rows, effectiveQuery.language);
   return viaPg;
 }
 
@@ -529,19 +522,9 @@ export async function GET(request: NextRequest) {
       return { data: results, error: null };
     }
 
-    const translationRes = await fetchInChunks(accountIds, 150, async (chunk) => {
-      return supabase
-        .from("record_translations")
-        .select("record_table, record_id, field_name, original_text, original_language_code, english_text, arabic_text, urdu_text, persian_text, pashto_text")
-        .eq("record_table", "enterprise_accounts")
-        .in("record_id", chunk)
-        .is("deleted_at", null);
-    });
-    if (translationRes.error) throw new Error(translationRes.error.message);
-    const translationLookup = new Map(
-      ((translationRes.data ?? []) as TranslationRow[]).map((row) => [translationKey(row.record_table, row.record_id, row.field_name), row] as const)
-    );
-
+    // Account/company name localization is handled in one batch after row assembly via the
+    // central resolver (localizeAccountNames / localizeRecordNames) — no per-row translation
+    // prefetch needed here anymore.
     const ledgerRes = await fetchInChunks(accountIds, 150, async (chunk) => {
       return supabase
         .from("ledgers")
@@ -722,26 +705,10 @@ export async function GET(request: NextRequest) {
       const country = account.country_id ? countryLookup.get(account.country_id) ?? null : null;
       const countryBranch = account.country_branch_id ? countryBranchLookup.get(account.country_branch_id) ?? null : null;
       const cityBranch = account.city_branch_id ? cityBranchLookup.get(account.city_branch_id) ?? null : null;
-      const accountName = resolveTranslation(
-        translationLookup.get(translationKey("enterprise_accounts", account.id, "name")),
-        effectiveQuery.language,
-        account.name
-      );
-      const translatedCompanyName = resolveTranslation(
-        translationLookup.get(translationKey("enterprise_accounts", account.id, "company_name")),
-        effectiveQuery.language,
-        ""
-      );
-      const translatedBusinessName = resolveTranslation(
-        translationLookup.get(translationKey("enterprise_accounts", account.id, "business_name")),
-        effectiveQuery.language,
-        ""
-      );
-      const translatedCityName = resolveTranslation(
-        translationLookup.get(translationKey("enterprise_accounts", account.id, "city")),
-        effectiveQuery.language,
-        cityBranch?.city_name ?? "-"
-      );
+      // Raw name; the account name is localized in one batch below through the central
+      // 3-tier resolver (localizeAccountNames). Used here only for the control-account bank label.
+      const accountName = account.name;
+      const translatedCityName = cityBranch?.city_name ?? "-";
 
       const branchType =
         account.scope === "super_admin"
@@ -794,7 +761,9 @@ export async function GET(request: NextRequest) {
       const ownerVal = findContact("owner") || linkedComp?.legal_name || linkedComp?.name || profile?.full_name || "-";
       const warehouseVal = findContact("warehouse") || "-";
       const bankVal = linkedBnk?.bank_name || (account.is_control_account ? accountName : "-");
-      const companyVal = linkedComp?.name || translatedCompanyName || translatedBusinessName || company?.name || profile?.full_name || "-";
+      // Linked company name (raw); localized as a batch below (companies table) via the
+      // central resolver so linked company names follow the same policy as account names.
+      const companyVal = linkedComp?.name || company?.name || profile?.full_name || "-";
 
       return {
         accountId: account.id,
@@ -810,7 +779,9 @@ export async function GET(request: NextRequest) {
         branchSerialNumber: account.branch_serial_number ?? "-",
         manualReferenceNumber: account.manual_reference_number ?? null,
         branchAccountSequence: Number(account.branch_account_sequence ?? 0),
-        accountName,
+        // Raw stored name; localized as a batch below via the 3-tier resolver so the
+        // central system_dictionary tier applies for English selection too.
+        accountName: account.name,
         journalCode: linkedLedger?.code ?? account.code,
         ledgerId: linkedLedger?.id ?? null,
         ledgerName: linkedLedger?.name ?? null,
@@ -866,6 +837,24 @@ export async function GET(request: NextRequest) {
         contacts: contactsList
       };
     });
+
+    // Localize account names through the single 3-tier ERP resolver (record translation →
+    // central system_dictionary → honest original) so English selects English wherever an
+    // approved/dictionary translation exists, and never machine-guesses a proper name.
+    await localizeAccountNames(rows, effectiveQuery.language);
+
+    // Same central resolver for linked company names shown on each row.
+    const compTargets = rows.filter((r) => r.companyId).map((r) => ({ id: r.companyId as string, name: r.companyName }));
+    if (compTargets.length) {
+      const localizedCompanies = await localizeRecordNames(compTargets, "companies", "name", effectiveQuery.language);
+      const companyById = new Map(localizedCompanies.map((c) => [c.id, c.name] as const));
+      for (const r of rows) {
+        if (r.companyId) {
+          const resolved = companyById.get(r.companyId);
+          if (resolved) r.companyName = resolved;
+        }
+      }
+    }
 
     const q = normalizeSearch(effectiveQuery.q ?? "");
     const filtered = q

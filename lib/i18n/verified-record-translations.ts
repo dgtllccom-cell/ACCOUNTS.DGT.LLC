@@ -44,7 +44,11 @@ export async function buildVerifiedTranslationSet(input: {
   const generated = await autoTranslateText(value, input.originalLanguage, mode);
   const dictionary = translateText(value);
   const dictionaryHit = languageCodes.some((language) => language !== input.originalLanguage && clean((dictionary as TranslationMap)[language]) && !sameText(clean((dictionary as TranslationMap)[language]), value));
-  const canUseGenerated = mode === "transliterate" || dictionaryHit;
+  // POLICY: never auto-approve a machine-guessed spelling. Only a genuine dictionary hit
+  // (or a human-supplied `manual` value) may be stored. Proper nouns with no approved
+  // translation stay original and are flagged needs_review — we do NOT transliterate-guess.
+  // (Previously `mode === "transliterate"` allowed generated transliterations through.)
+  const canUseGenerated = dictionaryHit;
   const translations: VerifiedTranslationMap = { [input.originalLanguage]: value };
   let usedManual = false;
   let usedGenerated = false;

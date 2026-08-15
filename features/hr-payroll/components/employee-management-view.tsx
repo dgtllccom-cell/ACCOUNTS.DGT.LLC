@@ -9,7 +9,7 @@ import { AdvanceLoanModal } from "./advance-loan-modal";
 import { EmployeeLedgerPanel } from "./employee-ledger-panel";
 import { PayrollReportsView } from "./payroll-reports-view";
 import { printEmployeeCertificate } from "@/components/ui/employee-certificate-print";
-import { UniversalReportModal } from "@/components/ui/universal-report-modal";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
@@ -103,14 +103,14 @@ export function EmployeeManagementView() {
   }
 
   return (
-    <div className="space-y-6 min-h-screen pb-16">
+    <div className="w-full max-w-[1600px] mx-auto p-2 sm:p-4 md:p-6 space-y-6 min-h-screen pb-16 font-sans">
       
       {/* Header Banner */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 text-white rounded-3xl border border-slate-800 p-6 md:p-8 shadow-md">
+      <div className="relative overflow-hidden bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 text-white rounded-3xl border border-slate-800 p-5 sm:p-7 shadow-lg">
         <div className="relative z-10 flex justify-between items-center flex-wrap gap-4">
           <div>
-            <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white mb-2">{t(lang, "hr.title_master", "Master Setup — Employee Management")}</h2>
-            <p className="text-slate-300 text-xs md:text-sm font-medium max-w-xl">
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-black tracking-tight text-white mb-1.5">{t(lang, "hr.title_master", "Master Setup — Employee Management")}</h2>
+            <p className="text-slate-300 text-xs sm:text-sm font-medium max-w-2xl">
               {t(lang, "hr.subtitle_master", "Register employees, structure categories (Manager, Staff, Employee, Other), define currency allowances, and map accounts with General Ledger (GL) integrations.")}
             </p>
           </div>
@@ -120,7 +120,7 @@ export function EmployeeManagementView() {
                 setSelectedEmployeeId(null);
                 setShowFormModal(true);
               }}
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs md:text-sm px-6 py-3 rounded-2xl shadow-md transition-all flex items-center gap-2"
+              className="bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs sm:text-sm px-5 py-3 rounded-2xl shadow-md transition-all flex items-center gap-2"
             >
               <span className="text-lg font-black">+</span> {t(lang, "hr.register_new_employee", "Register New Employee")}
             </Button>
@@ -130,10 +130,10 @@ export function EmployeeManagementView() {
       </div>
 
       {/* Main Mode Tabs Switcher */}
-      <div className="flex border border-slate-200 dark:border-slate-800 gap-1 p-1 bg-slate-100 dark:bg-slate-950 max-w-md rounded-2xl">
+      <div className="flex border border-slate-200 dark:border-slate-800 gap-1 p-1 bg-slate-100 dark:bg-slate-900 max-w-md rounded-2xl shadow-xs">
         <button
           onClick={() => setActiveTab("master")}
-          className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
+          className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all ${
             activeTab === "master"
               ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200 dark:border-slate-700"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
@@ -143,7 +143,7 @@ export function EmployeeManagementView() {
         </button>
         <button
           onClick={() => setActiveTab("payroll")}
-          className={`flex-1 py-2.5 rounded-xl text-xs font-bold transition-all ${
+          className={`flex-1 py-2.5 rounded-xl text-xs sm:text-sm font-extrabold transition-all ${
             activeTab === "payroll"
               ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 shadow-sm border border-slate-200 dark:border-slate-700"
               : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
@@ -156,23 +156,23 @@ export function EmployeeManagementView() {
       {activeTab === "master" ? (
         <div className="space-y-6">
           
-          {/* Filters Row */}
-          <div className="bg-card p-4 rounded-2xl border border-slate-200 dark:border-slate-800 flex flex-wrap gap-4 items-center shadow-sm">
-            <div className="flex-1 min-w-[200px]">
+          {/* Filters Grid — Responsive Across Mobile, Tablet & Desktop */}
+          <div className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 items-center shadow-sm">
+            <div className="lg:col-span-2">
               <input
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder={t(lang, "hr.search_placeholder", "Search by Employee Code, Person Name, Passport...")}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-slate-900 dark:text-slate-100 placeholder-slate-400 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2.5 text-slate-900 dark:text-slate-100 placeholder-slate-400 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
               />
             </div>
 
-            <div className="w-[160px]">
+            <div>
               <select
                 value={countryId}
                 onChange={(e) => setCountryId(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-slate-900 dark:text-slate-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
               >
                 <option value="">{t(lang, "common.all_countries", "All Countries")}</option>
                 {countriesList.map((c) => (
@@ -181,40 +181,38 @@ export function EmployeeManagementView() {
               </select>
             </div>
 
-            {countryId && (
-              <div className="w-[160px]">
+            <div>
+              {countryId ? (
                 <select
                   value={branchId}
                   onChange={(e) => setBranchId(e.target.value)}
-                  className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-slate-900 dark:text-slate-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
                 >
                   <option value="">{t(lang, "common.all_branches", "All Branches")}</option>
                   {branchesList.map((b) => (
                     <option key={b.id} value={b.id}>{b.name} {b.code ? `(${b.code})` : ""}</option>
                   ))}
                 </select>
-              </div>
-            )}
-            
-            <div className="w-[160px]">
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
-              >
-                <option value="">{t(lang, "common.all_categories", "All Categories")}</option>
-                <option value="Manager">{t(lang, "hr.cat_manager", "Manager")}</option>
-                <option value="Normal Staff">{t(lang, "hr.cat_normal_staff", "Normal Staff")}</option>
-                <option value="Employee">{t(lang, "hr.cat_employee", "Employee")}</option>
-                <option value="Others">{t(lang, "hr.cat_others", "Others")}</option>
-              </select>
+              ) : (
+                <select
+                  value={category}
+                  onChange={(e) => setCategory(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-slate-900 dark:text-slate-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
+                >
+                  <option value="">{t(lang, "common.all_categories", "All Categories")}</option>
+                  <option value="Manager">{t(lang, "hr.cat_manager", "Manager")}</option>
+                  <option value="Normal Staff">{t(lang, "hr.cat_normal_staff", "Normal Staff")}</option>
+                  <option value="Employee">{t(lang, "hr.cat_employee", "Employee")}</option>
+                  <option value="Others">{t(lang, "hr.cat_others", "Others")}</option>
+                </select>
+              )}
             </div>
-
-            <div className="w-[140px]">
+            
+            <div>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value)}
-                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2 text-slate-900 dark:text-slate-100 text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500 font-medium"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3 py-2.5 text-slate-900 dark:text-slate-100 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 font-semibold"
               >
                 <option value="">{t(lang, "common.all_statuses", "All Statuses")}</option>
                 <option value="Active">{t(lang, "common.active", "Active")}</option>
@@ -224,76 +222,94 @@ export function EmployeeManagementView() {
               </select>
             </div>
 
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setShowReport(true)}
-              className="h-8 gap-1.5 rounded-md border-slate-700 bg-slate-900 px-3 text-xs font-bold text-cyan-400 hover:bg-slate-800"
-            >
-              Print / Report
-            </Button>
+            <div className="flex items-center gap-2">
+              <JournalPrintButton
+                fetchData={async () => {
+                  const qp = new URLSearchParams();
+                  if (search) qp.set("search", search);
+                  if (category) qp.set("category", category);
+                  if (status) qp.set("status", status);
+                  if (countryId) qp.set("countryId", countryId);
+                  if (branchId) qp.set("branchId", branchId);
+                  qp.set("limit", "1000");
+                  const res = await apiGet<{ employees: any[] }>(`/api/erp/hr-payroll/employees?${qp.toString()}`);
+                  return res.employees || [];
+                }}
+                reportTitle="Employee Master Setup Journal"
+                columns={[
+                  { key: "employee_code", label: "Emp Code" },
+                  { key: (row) => row.person?.customer_name || "-", label: "Employee / Person Name" },
+                  { key: (row) => row.country?.name || "-", label: "Country" },
+                  { key: "category", label: "Category" },
+                  { key: "designation", label: "Designation" },
+                  { key: "joining_date", label: "Joining Date" },
+                  { key: (row) => `${row.net_salary?.toLocaleString() ?? 0} ${row.salary_currency || ""}`, label: "Net Payroll", align: "right" },
+                  { key: "status", label: "Status" },
+                ]}
+                className="w-full h-10 font-bold"
+              />
+            </div>
           </div>
 
-          {/* Master Employee Table */}
-          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-card shadow-sm">
-            <table className="min-w-full text-xs text-left text-slate-700 dark:text-slate-300">
-              <thead className="bg-slate-100 dark:bg-slate-900 text-slate-700 dark:text-slate-300 uppercase font-bold text-[11px] border-b border-slate-200 dark:border-slate-800">
+          {/* Master Employee Table — Responsive & Spacious */}
+          <div className="overflow-x-auto rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm">
+            <table className="min-w-full text-xs sm:text-sm text-left text-slate-700 dark:text-slate-300">
+              <thead className="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-200 uppercase font-black text-[11px] sm:text-xs border-b border-slate-200 dark:border-slate-800">
                 <tr>
-                  <Th className="px-6 py-3.5">Emp Code</Th>
-                  <Th className="px-6 py-3.5">Employee / Person Name</Th>
-                  <Th className="px-6 py-3.5">Assigned Country / Branch</Th>
-                  <Th className="px-6 py-3.5">Category</Th>
-                  <Th className="px-6 py-3.5">Designation / Department</Th>
-                  <Th className="px-6 py-3.5">Joining Date</Th>
-                  <Th className="px-6 py-3.5">Net Payroll</Th>
-                  <Th className="px-6 py-3.5">Deductions (Adv/Loan)</Th>
-                  <Th className="px-6 py-3.5">Status</Th>
-                  <Th className="px-6 py-3.5 text-right">Actions</Th>
+                  <Th className="px-4 sm:px-6 py-4">Emp Code</Th>
+                  <Th className="px-4 sm:px-6 py-4">Employee / Person Name</Th>
+                  <Th className="px-4 sm:px-6 py-4">Assigned Country / Branch</Th>
+                  <Th className="px-4 sm:px-6 py-4">Category</Th>
+                  <Th className="px-4 sm:px-6 py-4">Designation / Department</Th>
+                  <Th className="px-4 sm:px-6 py-4">Joining Date</Th>
+                  <Th className="px-4 sm:px-6 py-4">Net Payroll</Th>
+                  <Th className="px-4 sm:px-6 py-4">Deductions (Adv/Loan)</Th>
+                  <Th className="px-4 sm:px-6 py-4">Status</Th>
+                  <Th className="px-4 sm:px-6 py-4 text-right">Actions</Th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-200 dark:divide-slate-800">
+              <tbody className="divide-y divide-slate-200 dark:divide-slate-800 font-medium">
                 {loading ? (
                   <tr>
                     <td colSpan={10} className="px-6 py-12 text-center text-slate-500 font-medium">{t(lang, "common.loading", "Loading...")}</td>
                   </tr>
                 ) : employees.length === 0 ? (
                   <tr>
-                    <td colSpan={10} className="px-6 py-12 text-center text-slate-500">{t(lang, "hr.no_employees_cta", "No employees registered yet.")}</td>
+                    <td colSpan={10} className="px-6 py-12 text-center text-slate-500 font-medium">{t(lang, "hr.no_employees_cta", "No employees registered yet.")}</td>
                   </tr>
                 ) : (
                   employees.map((emp) => (
                     <tr key={emp.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors">
-                      <td className="px-6 py-4 font-mono font-bold text-slate-900 dark:text-slate-100">{emp.employee_code}</td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 sm:px-6 py-4 font-mono font-bold text-slate-900 dark:text-slate-100">{emp.employee_code}</td>
+                      <td className="px-4 sm:px-6 py-4">
                         <div className="font-bold text-slate-900 dark:text-slate-100">{emp.person?.customer_name}</div>
-                        <div className="text-[11px] text-slate-500 font-mono">{emp.person?.mobile || "-"}</div>
+                        <div className="text-[11px] sm:text-xs text-slate-500 font-mono">{emp.person?.mobile || "-"}</div>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 sm:px-6 py-4">
                         <div className="font-bold text-slate-900 dark:text-slate-100">{emp.country?.name || "-"}</div>
-                        <div className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                        <div className="text-[11px] sm:text-xs text-emerald-600 dark:text-emerald-400 font-semibold">
                           {emp.country_branch?.name || emp.city_branch?.name || "-"}
                           {emp.country_branch?.code ? ` (${emp.country_branch.code})` : emp.city_branch?.code ? ` (${emp.city_branch.code})` : ""}
                         </div>
                       </td>
-                      <td className="px-6 py-4">
-                        <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded font-semibold text-[10px] uppercase">
+                      <td className="px-4 sm:px-6 py-4">
+                        <span className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 rounded-lg font-bold text-[10px] sm:text-xs uppercase">
                           {emp.category}
                         </span>
                       </td>
-                      <td className="px-6 py-4">
+                      <td className="px-4 sm:px-6 py-4">
                         <div className="font-semibold text-slate-900 dark:text-slate-100">{emp.designation || "-"}</div>
-                        <div className="text-[11px] text-slate-500">{emp.department || "-"}</div>
+                        <div className="text-[11px] sm:text-xs text-slate-500">{emp.department || "-"}</div>
                       </td>
-                      <td className="px-6 py-4 text-slate-600 dark:text-slate-400 font-medium">{emp.joining_date || "-"}</td>
-                      <td className="px-6 py-4 font-black text-emerald-600 dark:text-emerald-400 font-mono">
+                      <td className="px-4 sm:px-6 py-4 text-slate-600 dark:text-slate-400 font-medium">{emp.joining_date || "-"}</td>
+                      <td className="px-4 sm:px-6 py-4 font-black text-emerald-600 dark:text-emerald-400 font-mono">
                         {emp.net_salary?.toLocaleString()} {emp.salary_currency}
                       </td>
-                      <td className="px-6 py-4 text-red-600 dark:text-red-400 font-semibold font-mono">
+                      <td className="px-4 sm:px-6 py-4 text-red-600 dark:text-red-400 font-semibold font-mono">
                         -{((emp.advance_deduction || 0) + (emp.loan_deduction || 0))?.toLocaleString()} /mo
                       </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                      <td className="px-4 sm:px-6 py-4">
+                        <span className={`px-2.5 py-1 rounded-full text-[10px] sm:text-xs font-black uppercase ${
                           emp.status === "Active" 
                             ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800" 
                             : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
@@ -301,76 +317,78 @@ export function EmployeeManagementView() {
                           {emp.status}
                         </span>
                       </td>
-                      <td className="px-6 py-4 text-right space-x-1.5">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => {
-                            setSelectedEmployeeId(emp.id);
-                            setShowFormModal(true);
-                          }}
-                          className="h-7 text-xs px-2.5"
-                        >
-                          {t(lang, "common.edit", "Edit")}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedEmployeeForLoan(emp)}
-                          className="h-7 text-xs px-2.5"
-                        >
-                          {t(lang, "hr.l_loan_adv", "Loan/Adv")}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => setSelectedEmployeeForHistory(emp)}
-                          className="h-7 text-xs px-2.5 text-blue-600 dark:text-blue-400"
-                        >
-                          {t(lang, "hr.l_ledger", "Ledger")}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={async () => {
-                            let company: any = {};
-                            try {
-                              const r = await fetch(`/api/erp/branding?countryId=${emp.country_id ?? ""}`);
-                              const j = await r.json();
-                              if (j?.branding) company = { name: j.branding.companyName, logoUrl: j.branding.logoUrl, stampUrl: j.branding.stampUrl, certificateHeader: j.branding.certificateHeader, hrManagerName: j.branding.hrManagerName, address: j.branding.address, country: j.branding.countryName, branch: emp.country_branch_name ?? emp.city_branch_name ?? null };
-                            } catch { /* fall back to default */ }
-                            printEmployeeCertificate({
-                            employeeId: emp.employee_code,
-                            name: emp.person?.customer_name,
-                            photoUrl: emp.person?.photo_url ?? emp.photo_url ?? null,
-                            cnicPassport: emp.person?.cnic ?? emp.person?.passport ?? emp.cnic_passport ?? null,
-                            department: emp.department,
-                            designation: emp.designation,
-                            joiningDate: emp.joining_date,
-                            employmentType: emp.employment_type,
-                            status: emp.status,
-                            nationality: emp.person?.nationality,
-                            address: emp.person?.address,
-                            mobile: emp.person?.mobile,
-                            email: emp.person?.email,
-                            emergencyContact: emp.person?.emergency_contact ?? emp.person?.whatsapp,
-                            salary: emp.salary ?? emp.basic_salary ?? null,
-                            reportingManager: emp.reporting_manager_name ?? emp.reporting_manager_id ?? null,
-                            serials: { superAdmin: emp.super_admin_serial, country: emp.country_serial, branch: emp.branch_serial, entry: emp.entry_serial },
-                            }, company);
-                          }}
-                          className="h-7 text-xs px-2.5 text-emerald-600 dark:text-emerald-400"
-                        >
-                          {t(lang, "hr.l_certificate", "Certificate")}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDelete(emp.id)}
-                          className="h-7 text-xs px-2.5 text-red-600 hover:text-red-700 dark:text-red-400"
-                        >
-                          {t(lang, "common.delete", "Delete")}
-                        </Button>
+                      <td className="px-4 sm:px-6 py-4 text-right">
+                        <div className="flex items-center justify-end flex-wrap gap-1.5">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedEmployeeId(emp.id);
+                              setShowFormModal(true);
+                            }}
+                            className="h-8 text-xs font-bold px-2.5 rounded-lg"
+                          >
+                            {t(lang, "common.edit", "Edit")}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedEmployeeForLoan(emp)}
+                            className="h-8 text-xs font-bold px-2.5 rounded-lg"
+                          >
+                            {t(lang, "hr.l_loan_adv", "Loan/Adv")}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => setSelectedEmployeeForHistory(emp)}
+                            className="h-8 text-xs font-bold px-2.5 rounded-lg text-blue-600 dark:text-blue-400"
+                          >
+                            {t(lang, "hr.l_ledger", "Ledger")}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={async () => {
+                              let company: any = {};
+                              try {
+                                const r = await fetch(`/api/erp/branding?countryId=${emp.country_id ?? ""}`);
+                                const j = await r.json();
+                                if (j?.branding) company = { name: j.branding.companyName, logoUrl: j.branding.logoUrl, stampUrl: j.branding.stampUrl, certificateHeader: j.branding.certificateHeader, hrManagerName: j.branding.hrManagerName, address: j.branding.address, country: j.branding.countryName, branch: emp.country_branch_name ?? emp.city_branch_name ?? null };
+                              } catch { /* fall back to default */ }
+                              printEmployeeCertificate({
+                              employeeId: emp.employee_code,
+                              name: emp.person?.customer_name,
+                              photoUrl: emp.person?.photo_url ?? emp.photo_url ?? null,
+                              cnicPassport: emp.person?.cnic ?? emp.person?.passport ?? emp.cnic_passport ?? null,
+                              department: emp.department,
+                              designation: emp.designation,
+                              joiningDate: emp.joining_date,
+                              employmentType: emp.employment_type,
+                              status: emp.status,
+                              nationality: emp.person?.nationality,
+                              address: emp.person?.address,
+                              mobile: emp.person?.mobile,
+                              email: emp.person?.email,
+                              emergencyContact: emp.person?.emergency_contact ?? emp.person?.whatsapp,
+                              salary: emp.salary ?? emp.basic_salary ?? null,
+                              reportingManager: emp.reporting_manager_name ?? emp.reporting_manager_id ?? null,
+                              serials: { superAdmin: emp.super_admin_serial, country: emp.country_serial, branch: emp.branch_serial, entry: emp.entry_serial },
+                              }, company);
+                            }}
+                            className="h-8 text-xs font-bold px-2.5 rounded-lg text-emerald-600 dark:text-emerald-400"
+                          >
+                            {t(lang, "hr.l_certificate", "Certificate")}
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDelete(emp.id)}
+                            className="h-8 text-xs font-bold px-2.5 rounded-lg text-red-600 hover:text-red-700 dark:text-red-400"
+                          >
+                            {t(lang, "common.delete", "Delete")}
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))

@@ -2,7 +2,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import type { ErpSession } from "@/lib/auth/session";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { multilingualService } from "@/lib/services/multilingual-service";
+import { lookupApprovedDictionary } from "@/lib/i18n/localize-records";
 
 export type LedgerReportScope = "super_admin" | "country" | "branch";
 
@@ -121,21 +121,29 @@ async function loadTranslations(input: {
     if (data) allData = allData.concat(data);
   }
 
+  // Central policy (single source of truth): record-specific approved translation for the
+  // requested language (strict — never leak another language's string), then the central
+  // approved system_dictionary (skipped for proper-name tables), else leave unset so the
+  // caller keeps the honest original. Replaces the old multilingualService.resolveText path
+  // that ignored the dictionary and could return the wrong language.
+  const langCol: Record<SupportedLanguage, keyof TranslationRow> = {
+    en: "english_text", ur: "urdu_text", ar: "arabic_text", fa: "persian_text", ps: "pashto_text"
+  };
+  const col = langCol[input.language] ?? "english_text";
+
   const map = new Map<string, string>();
   for (const row of (allData ?? []) as TranslationRow[]) {
-    const resolved = multilingualService.resolveText(
-      {
-        originalText: row.original_text,
-        originalLanguage: (row.original_language_code as SupportedLanguage) ?? "en",
-        en: row.english_text ?? undefined,
-        ar: row.arabic_text ?? undefined,
-        ur: row.urdu_text ?? undefined,
-        fa: row.persian_text ?? undefined,
-        ps: row.pashto_text ?? undefined
-      },
-      input.language
-    );
-    map.set(translationKey(row.record_table, row.record_id, row.field_name), resolved);
+    const raw = (row.original_text ?? "").trim();
+    const recVal = ((row[col] as string | null) ?? "").trim();
+    let resolved = recVal && recVal !== raw ? recVal : "";
+    if (!resolved) {
+      const dictVal = await lookupApprovedDictionary(row.record_table, raw, input.language);
+      if (dictVal) resolved = dictVal;
+    }
+    // English can safely fall back to the stored English text; other languages must NOT
+    // inherit a different language's string, so leave unset (caller uses the original).
+    if (!resolved && input.language === "en") resolved = (row.english_text ?? "").trim();
+    if (resolved) map.set(translationKey(row.record_table, row.record_id, row.field_name), resolved);
   }
 
   return map;

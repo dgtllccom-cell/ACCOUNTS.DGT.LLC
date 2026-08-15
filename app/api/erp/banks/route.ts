@@ -3,6 +3,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 
 type BankRow = {
   id: string;
@@ -258,6 +259,17 @@ export async function POST(request: NextRequest) {
       `;
       return mapBank(rows[0] as unknown as BankRow);
     });
+
+    // Register the bank's names in all 5 languages (honest engine; fire-and-forget).
+    if (bank?.id) {
+      void syncRecordTranslations({
+        table: "banks",
+        recordId: bank.id,
+        record: bank as unknown as Record<string, unknown>,
+        originalLanguage: session.preferredLanguage ?? "en",
+        actorId: session.userId
+      }).catch(() => {});
+    }
 
     return apiOk({ bank }, { status: 201 });
   } catch (error) {

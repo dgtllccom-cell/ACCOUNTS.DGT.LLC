@@ -1,10 +1,82 @@
 import { NextRequest } from "next/server";
+import crypto from "node:crypto";
 import { apiCreated, apiOk, handleApiError, apiError } from "@/lib/api/response";
 import { invalidateSystemDictionaryCache } from "@/lib/i18n/localize-records";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { upsertRecordTranslationRpc } from "@/lib/services/enterprise-multilingual-service";
+import { withLocalPg } from "@/lib/db/local-postgres";
 import { z } from "zod";
 import { auditApiAction } from "@/lib/api/audit";
+
+// record_translations is a VIEW over 5 per-language tables (INSTEAD OF triggers). ON CONFLICT
+// is unsupported on such views, so all writes MUST go through the upsert_record_translation
+// RPC (it runs the correct ON CONFLICT ... WHERE deleted_at IS NULL on the base tables).
+// Central-dictionary rows are keyed by a deterministic UUIDv5 with field_name='term' — the
+// SAME scheme scripts/seed-system-dictionary.mjs uses — so editing a seeded term updates that
+// exact row instead of creating a slug/'name' duplicate.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const UUID5_NS = "6ba7b810-9dad-11d1-80b4-00c04fd430c8";
+function uuid5(name: string): string {
+  const nb = Buffer.from(UUID5_NS.replace(/-/g, ""), "hex");
+  const h = crypto.createHash("sha1").update(Buffer.concat([nb, Buffer.from(name)])).digest();
+  const b = Buffer.from(h.subarray(0, 16));
+  b[6] = (b[6] & 0x0f) | 0x50;
+  b[8] = (b[8] & 0x3f) | 0x80;
+  const x = b.toString("hex");
+  return `${x.slice(0, 8)}-${x.slice(8, 12)}-${x.slice(12, 16)}-${x.slice(16, 20)}-${x.slice(20)}`;
+}
+/** Normalize the natural key. Dictionary terms get a stable UUIDv5 + field_name='term'. */
+function normalizeTranslationKey(input: {
+  recordTable: string; recordId: string; fieldName: string; englishText?: string | null; originalText: string;
+}): { recordId: string; fieldName: string } {
+  if (input.recordTable === "system_dictionary") {
+    const term = String(input.englishText || input.originalText || input.recordId).trim().toLowerCase();
+    return { recordId: uuid5(`system_dictionary:${term}`), fieldName: "term" };
+  }
+  // Non-dictionary corrections already carry the real record UUID + field.
+  return { recordId: input.recordId, fieldName: input.fieldName };
+}
+async function saveTranslation(args: {
+  recordTable: string; recordId: string; fieldName: string; originalText: string; originalLanguageCode: string;
+  english: string | null; urdu: string | null; pashto: string | null; persian: string | null; arabic: string | null;
+  source: string; status: string; engine: string; actorId: string | null;
+}) {
+  // Shared write path: direct-Postgres (DATABASE_URL) first, Supabase admin RPC fallback.
+  await upsertRecordTranslationRpc({
+    recordTable: args.recordTable,
+    recordId: args.recordId,
+    fieldName: args.fieldName,
+    originalText: args.originalText,
+    originalLanguageCode: args.originalLanguageCode,
+    english: args.english,
+    urdu: args.urdu,
+    arabic: args.arabic,
+    persian: args.persian,
+    pashto: args.pashto,
+    languageTexts: { en: args.english, ur: args.urdu, ps: args.pashto, fa: args.persian, ar: args.arabic },
+    source: args.source,
+    status: args.status,
+    engine: args.engine,
+    actorId: args.actorId
+  });
+}
+
+/** Read a single translation row back — direct-Postgres first, Supabase admin fallback. */
+async function selectTranslationRow(recordTable: string, recordId: string, fieldName: string) {
+  const viaPg = await withLocalPg(async (sql) => {
+    const rows = await sql`select * from record_translations
+      where record_table = ${recordTable} and record_id = ${recordId}::uuid and field_name = ${fieldName} and deleted_at is null limit 1`;
+    return (rows[0] ?? null) as any;
+  });
+  if (viaPg !== null) return viaPg;
+  try {
+    const admin = createSupabaseAdminClient() as any;
+    const { data } = await admin.from("record_translations").select("*")
+      .eq("record_table", recordTable).eq("record_id", recordId).eq("field_name", fieldName).is("deleted_at", null).maybeSingle();
+    return data ?? null;
+  } catch { return null; }
+}
 
 const translationSaveSchema = z.object({
   id: z.string().uuid().optional(),
@@ -42,29 +114,48 @@ export async function GET(request: NextRequest) {
     const missingOnly = searchParams.get("missingOnly") === "true";
     const limit = Math.min(Number(searchParams.get("limit") || 200), 500);
 
-    const admin = createSupabaseAdminClient() as any;
+    // Prefer direct-Postgres (works without a privileged Supabase key); fall back to admin.
+    const term = q ? q.replace(/[%_]/g, "") : "";
+    const viaPgRows = await withLocalPg(async (sql) => {
+      const like = `%${term}%`;
+      const rows = await sql`
+        select * from record_translations
+        where deleted_at is null
+          ${moduleFilter ? sql`and record_table = ${moduleFilter}` : sql``}
+          ${term ? sql`and (original_text ilike ${like} or field_name ilike ${like} or english_text ilike ${like}
+            or urdu_text ilike ${like} or pashto_text ilike ${like} or persian_text ilike ${like} or arabic_text ilike ${like})` : sql``}
+        order by updated_at desc
+        limit ${limit}`;
+      return rows as any[];
+    });
 
-    let queryBuilder = admin
-      .from("record_translations")
-      .select("*")
-      .is("deleted_at", null)
-      .order("updated_at", { ascending: false });
+    let queryBuilder: any = null;
+    if (viaPgRows === null) {
+      const admin = createSupabaseAdminClient() as any;
+      queryBuilder = admin
+        .from("record_translations")
+        .select("*")
+        .is("deleted_at", null)
+        .order("updated_at", { ascending: false });
 
-    if (moduleFilter) {
-      queryBuilder = queryBuilder.eq("record_table", moduleFilter);
+      if (moduleFilter) {
+        queryBuilder = queryBuilder.eq("record_table", moduleFilter);
+      }
+
+      if (q) {
+        queryBuilder = queryBuilder.or(
+          `original_text.ilike.%${term}%,record_id.ilike.%${term}%,field_name.ilike.%${term}%,english_text.ilike.%${term}%,urdu_text.ilike.%${term}%,pashto_text.ilike.%${term}%,persian_text.ilike.%${term}%,arabic_text.ilike.%${term}%`
+        );
+      }
     }
 
-    if (q) {
-      const term = q.replace(/[%_]/g, "");
-      queryBuilder = queryBuilder.or(
-        `original_text.ilike.%${term}%,record_id.ilike.%${term}%,field_name.ilike.%${term}%,english_text.ilike.%${term}%,urdu_text.ilike.%${term}%,pashto_text.ilike.%${term}%,persian_text.ilike.%${term}%,arabic_text.ilike.%${term}%`
-      );
-    }
-
-    const { data: rows, error } = await queryBuilder.limit(limit);
-
-    if (error) {
-      throw new Error(error.message);
+    let rows: any[];
+    if (viaPgRows !== null) {
+      rows = viaPgRows;
+    } else {
+      const { data, error } = await queryBuilder.limit(limit);
+      if (error) throw new Error(error.message);
+      rows = data ?? [];
     }
 
     let records = rows ?? [];
@@ -80,6 +171,7 @@ export async function GET(request: NextRequest) {
 
         return (
           r.translation_status === "pending" ||
+          r.translation_status === "needs_review" ||
           isFallback ||
           !r.english_text?.trim() ||
           !r.urdu_text?.trim() ||
@@ -131,64 +223,47 @@ export async function POST(request: NextRequest) {
 
     const rawBody = await request.json();
     const body = translationSaveSchema.parse(rawBody);
-    const admin = createSupabaseAdminClient() as any;
 
-    const payload = {
-      record_table: body.recordTable,
-      record_id: body.recordId,
-      field_name: body.fieldName,
-      original_text: body.originalText,
-      original_language_code: body.originalLanguageCode,
-      english_text: body.englishText || body.originalText,
-      urdu_text: body.urduText || "",
-      pashto_text: body.pashtoText || "",
-      persian_text: body.persianText || "",
-      arabic_text: body.arabicText || "",
-      language_texts: {
-        en: body.englishText || body.originalText,
-        ur: body.urduText || "",
-        ps: body.pashtoText || "",
-        fa: body.persianText || "",
-        ar: body.arabicText || ""
-      },
-      translation_status: "complete",
-      translated_by_engine: "local_dictionary",
-      translated_at: new Date().toISOString(),
+    const { recordId, fieldName } = normalizeTranslationKey({
+      recordTable: body.recordTable,
+      recordId: body.recordId,
+      fieldName: body.fieldName,
+      englishText: body.englishText,
+      originalText: body.originalText
+    });
+    const english = body.englishText || body.originalText;
+
+    // Manual translator save is authoritative: store the values verbatim as approved.
+    await saveTranslation({
+      recordTable: body.recordTable,
+      recordId,
+      fieldName,
+      originalText: body.originalText,
+      originalLanguageCode: body.originalLanguageCode,
+      english,
+      urdu: body.urduText || null,
+      pashto: body.pashtoText || null,
+      persian: body.persianText || null,
+      arabic: body.arabicText || null,
       source: "manual",
-      corrected_by: session.userId,
-      corrected_at: new Date().toISOString(),
-      updated_at: new Date().toISOString()
-    };
-
-    let resultData;
-    if (body.id) {
-      const { data, error } = await admin
-        .from("record_translations")
-        .update(payload)
-        .eq("id", body.id)
-        .select("*")
-        .single();
-      if (error) throw new Error(error.message);
-      resultData = data;
-    } else {
-      const { data, error } = await admin
-        .from("record_translations")
-        .upsert(payload, { onConflict: "record_table,record_id,field_name" })
-        .select("*")
-        .single();
-      if (error) throw new Error(error.message);
-      resultData = data;
-    }
-
-    await auditApiAction(request, {
-      action: body.id ? "translation.update.manual" : "translation.create.manual",
-      entityTable: "record_translations",
-      entityId: resultData.id,
-      after: payload
+      status: "complete",
+      engine: "local_dictionary",
+      actorId: session.userId
     });
 
+    const resultData = await selectTranslationRow(body.recordTable, recordId, fieldName);
+
+    try {
+      await auditApiAction(request, {
+        action: body.id ? "translation.update.manual" : "translation.create.manual",
+        entityTable: "record_translations",
+        entityId: resultData?.id ?? recordId,
+        after: { recordTable: body.recordTable, recordId, fieldName, english }
+      });
+    } catch { /* audit is best-effort; never block a translation save */ }
+
     // If a central dictionary term was saved/approved, refresh the ERP-wide dictionary cache now.
-    if (payload.record_table === "system_dictionary") invalidateSystemDictionaryCache();
+    if (body.recordTable === "system_dictionary") invalidateSystemDictionaryCache();
 
     return apiCreated({
       translation: resultData
@@ -211,44 +286,42 @@ export async function PUT(request: NextRequest) {
 
     const rawBody = await request.json();
     const items = translationBatchImportSchema.parse(rawBody);
-    const admin = createSupabaseAdminClient() as any;
 
     let successCount = 0;
 
     for (const item of items) {
-      const payload = {
-        record_table: item.recordTable,
-        record_id: item.recordId,
-        field_name: item.fieldName,
-        original_text: item.originalText,
-        original_language_code: item.originalLanguageCode,
-        english_text: item.englishText || item.originalText,
-        urdu_text: item.urduText || "",
-        pashto_text: item.pashtoText || "",
-        persian_text: item.persianText || "",
-        arabic_text: item.arabicText || "",
-        language_texts: {
-          en: item.englishText || item.originalText,
-          ur: item.urduText || "",
-          ps: item.pashtoText || "",
-          fa: item.persianText || "",
-          ar: item.arabicText || ""
-        },
-        translation_status: "complete",
-        translated_by_engine: "local_dictionary",
-        translated_at: new Date().toISOString(),
-        source: "imported",
-        corrected_by: session.userId,
-        corrected_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      const { error } = await admin
-        .from("record_translations")
-        .upsert(payload, { onConflict: "record_table,record_id,field_name" });
-
-      if (!error) successCount++;
+      try {
+        const { recordId, fieldName } = normalizeTranslationKey({
+          recordTable: item.recordTable,
+          recordId: item.recordId,
+          fieldName: item.fieldName,
+          englishText: item.englishText,
+          originalText: item.originalText
+        });
+        await saveTranslation({
+          recordTable: item.recordTable,
+          recordId,
+          fieldName,
+          originalText: item.originalText,
+          originalLanguageCode: item.originalLanguageCode,
+          english: item.englishText || item.originalText,
+          urdu: item.urduText || null,
+          pashto: item.pashtoText || null,
+          persian: item.persianText || null,
+          arabic: item.arabicText || null,
+          source: "imported",
+          status: "complete",
+          engine: "local_dictionary",
+          actorId: session.userId
+        });
+        successCount++;
+      } catch {
+        // Skip the failed row; report the count so the importer sees partial success.
+      }
     }
+
+    // Imported terms may include central dictionary entries — refresh the ERP-wide cache.
+    invalidateSystemDictionaryCache();
 
     return apiOk({
       imported: successCount,

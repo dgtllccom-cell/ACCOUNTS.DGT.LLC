@@ -73,19 +73,18 @@ export async function GET(request: NextRequest) {
           recordTable: translation.record_table,
           recordId: translation.record_id,
           fieldName: translation.field_name,
+          // Strict per-language pick (central policy — never leak another language's string);
+          // honest fallback to English/original for this inspection view.
           text:
-            multilingualService.resolveText(
-              {
-                originalText: translation.original_text,
-                originalLanguage: translation.original_language_code as SupportedLanguage,
-                en: translation.english_text ?? undefined,
-                ar: translation.arabic_text ?? undefined,
-                ur: translation.urdu_text ?? undefined,
-                fa: translation.persian_text ?? undefined,
-                ps: translation.pashto_text ?? undefined
-              },
-              language
-            )
+            (({
+              en: translation.english_text,
+              ur: translation.urdu_text,
+              ar: translation.arabic_text,
+              fa: translation.persian_text,
+              ps: translation.pashto_text
+            } as Record<SupportedLanguage, string | null>)[language] || "").trim() ||
+            (translation.english_text ?? "").trim() ||
+            translation.original_text
         };
       })
     });

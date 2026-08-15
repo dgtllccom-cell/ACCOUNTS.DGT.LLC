@@ -56,6 +56,8 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { translationPendingLabel } from "@/lib/i18n/purchase-order-translations";
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
+import type { GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
 import { Th } from "@/components/ui/translated-th";
 import { buildPurchaseBookingTransferUrl } from "@/lib/services/purchase-booking-transfer-routing";
 import { translateHeader } from "@/lib/i18n/table-headers";
@@ -584,6 +586,29 @@ function ReportToolbar({
             <RefreshCcw className="mr-2 h-4 w-4" />
             Reset
           </Button>
+          <JournalPrintButton
+            title="Purchase Booking Journal Register"
+            subtitle="Complete Purchase Booking & Order Registry"
+            columns={[
+              { key: "computedCountrySerial", label: "CTY S/N", align: "center" },
+              { key: "computedBranchSerial", label: "BR S/N", align: "center" },
+              { key: "purchaseBookingOrderNumber", label: "Booking No", align: "center" },
+              { key: "purchaseDate", label: "Date", align: "center", format: "date" },
+              { key: "countryName", label: "Country", align: "left" },
+              { key: "branchName", label: "Branch", align: "left" },
+              { key: "purchaseAccountName", label: "Purchase Account", align: "left" },
+              { key: "supplierName", label: "Supplier", align: "left" },
+              { key: "productName", label: "Product", align: "left" },
+              { key: "quantity", label: "Qty", align: "right", format: "number" },
+              { key: "totalWeight", label: "Net Wt", align: "right", format: "number" },
+              { key: "currency", label: "Cur", align: "center" },
+              { key: "purchaseRate", label: "Rate", align: "right", format: "number" },
+              { key: "totalPurchaseAmount", label: "Total Amount", align: "right", format: "currency" },
+              { key: "status", label: "Status", align: "center", format: "status" }
+            ]}
+            rows={rows as unknown as Record<string, unknown>[]}
+            orientation="landscape"
+          />
           <ReportActionsMenu rows={rows} onExport={onExport!} />
         </div>
       </div>

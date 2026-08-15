@@ -5,7 +5,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { requireErpSession } from "@/lib/auth/session";
 import { getRequestLanguage } from "@/lib/i18n/server";
-import { multilingualService } from "@/lib/services/multilingual-service";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { ledgerScopeSchema, optionalUuidSchema, scopeSchema, supportedLanguageSchema } from "@/lib/api/erp-validation";
 
 function isUuid(value: string | null | undefined) {
@@ -36,36 +36,7 @@ const updateSchema = scopeSchema.extend({
 });
 
 type ApiSupabaseClient = Awaited<ReturnType<typeof createApiSupabaseClient>>;
-type TranslationRow = {
-  record_table: string;
-  record_id: string;
-  field_name: string;
-  original_text: string;
-  original_language_code: string;
-  english_text: string | null;
-  arabic_text: string | null;
-  urdu_text: string | null;
-  persian_text: string | null;
-  pashto_text: string | null;
-};
 
-function resolveTranslation(row: TranslationRow | null | undefined, language: "en" | "ar" | "ur" | "fa" | "ps", fallback: string) {
-  if (!row) return fallback;
-  return (
-    multilingualService.resolveText(
-      {
-        originalText: row.original_text,
-        originalLanguage: row.original_language_code as "en" | "ar" | "ur" | "fa" | "ps",
-        en: row.english_text ?? undefined,
-        ar: row.arabic_text ?? undefined,
-        ur: row.urdu_text ?? undefined,
-        fa: row.persian_text ?? undefined,
-        ps: row.pashto_text ?? undefined
-      },
-      language
-    ) || fallback
-  );
-}
 async function loadAccount(supabase: ApiSupabaseClient, id: string) {
   const { data, error } = await supabase
     .from("enterprise_accounts")
@@ -141,18 +112,16 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
 
     if (ledgerError) throw new Error(ledgerError.message);
 
-    const { data: translations, error: translationError } = await supabase
-      .from("record_translations")
-      .select("record_table, record_id, field_name, original_text, original_language_code, english_text, arabic_text, urdu_text, persian_text, pashto_text")
-      .eq("record_table", "enterprise_accounts")
-      .eq("record_id", account.id)
-      .eq("field_name", "name")
-      .is("deleted_at", null)
-      .maybeSingle();
-
-    if (translationError) throw new Error(translationError.message);
-
-    const localizedName = resolveTranslation((translations ?? null) as TranslationRow | null, language, account.name);
+    // Resolve the account name through the single central 3-tier resolver (record-specific
+    // approved translation → central system_dictionary → honest original) — the same policy
+    // every other ERP screen uses. Replaces the old resolveText path that ignored the dictionary.
+    const [resolvedAccount] = await localizeRecordNames(
+      [{ id: account.id, name: account.name }],
+      "enterprise_accounts",
+      "name",
+      language
+    );
+    const localizedName = resolvedAccount?.name ?? account.name;
     const localizedAccount = {
       ...account,
       raw_name: account.name,
@@ -274,9 +243,9 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       const actorLanguage = (session.preferredLanguage || "en") as "en" | "ar" | "ur" | "fa" | "ps";
       supabase.from("ledgers").select("id").eq("enterprise_account_id", id).maybeSingle().then(({ data: ledger }) => {
         import("@/lib/services/enterprise-multilingual-service")
-          .then(({ saveEnterpriseRecordTranslations }) => {
+          .then(({ saveVerifiedEnterpriseRecordTranslations }) => {
             const promises = [
-              saveEnterpriseRecordTranslations({
+              saveVerifiedEnterpriseRecordTranslations({
                 recordTable: "enterprise_accounts",
                 recordId: id,
                 originalLanguage: actorLanguage,
@@ -287,7 +256,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
             ];
             if (ledger?.id) {
               promises.push(
-                saveEnterpriseRecordTranslations({
+                saveVerifiedEnterpriseRecordTranslations({
                   recordTable: "ledgers",
                   recordId: ledger.id,
                   originalLanguage: actorLanguage,
@@ -299,7 +268,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
             }
             return Promise.all(promises);
           })
-          .catch((err) => console.error("Failed to auto-translate updated account names:", err));
+          .catch((err) => console.error("Failed to register updated account name translations:", err));
       });
     }
 

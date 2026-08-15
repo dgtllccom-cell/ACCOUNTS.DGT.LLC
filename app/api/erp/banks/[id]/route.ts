@@ -3,6 +3,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 
 type BankRow = {
   id: string;
@@ -196,6 +197,16 @@ export async function PUT(request: NextRequest, { params }: { params: Promise<{ 
     });
 
     if (!bank) throw new Error("Bank not found");
+
+    // Re-register the bank's names in all 5 languages after edit (honest engine).
+    void syncRecordTranslations({
+      table: "banks",
+      recordId: id,
+      record: bank as unknown as Record<string, unknown>,
+      originalLanguage: session.preferredLanguage ?? "en",
+      actorId: session.userId
+    }).catch(() => {});
+
     return apiOk({ bank });
   } catch (error) {
     return handleApiError(error);

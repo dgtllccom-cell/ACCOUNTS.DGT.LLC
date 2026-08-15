@@ -11,7 +11,7 @@
  * are logged but never block the main record save.
  */
 
-import { saveEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
+import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { TRANSLATABLE_FIELDS as FIELD_REGISTRY } from "@/lib/i18n/translatable-fields";
 
@@ -73,7 +73,9 @@ export async function translateMasterRecord(
       return; // No fields to translate
     }
 
-    await saveEnterpriseRecordTranslations({
+    // Honest writer: stores only genuine dictionary/manual translations and flags
+    // proper-name gaps needs_review — never machine-guesses a spelling.
+    await saveVerifiedEnterpriseRecordTranslations({
       recordTable: tableName,
       recordId,
       originalLanguage,

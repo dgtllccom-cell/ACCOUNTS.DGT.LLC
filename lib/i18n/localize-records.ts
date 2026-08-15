@@ -69,6 +69,39 @@ function genuine(target: string | null | undefined, raw: string, english: string
   return null;
 }
 
+/**
+ * Tier-2 only: resolve a raw value against the central approved system_dictionary in one
+ * language. Returns the genuine approved translation, or null (no guess). Disabled for
+ * PROPER_NAME_TABLES so proper names never inherit a generic term. Shares the same cached
+ * dictionary + `genuine()` filter the full resolver uses, so every screen stays consistent.
+ * Lets services that resolve many mixed (table, field) targets at once (e.g. the ledger
+ * report) apply the central dictionary tier without re-implementing it.
+ */
+export async function lookupApprovedDictionary(
+  table: string,
+  rawValue: string | null | undefined,
+  lang: SupportedLanguage
+): Promise<string | null> {
+  const raw = (rawValue || "").trim();
+  if (!raw || PROPER_NAME_TABLES.has(table)) return null;
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) return null;
+
+  let dict = dictCache;
+  if (!dict || Date.now() - dictLoadedAt >= DICT_TTL_MS) {
+    const sql = postgres(dbUrl, { max: 1, prepare: false, idle_timeout: 5, connect_timeout: 8 });
+    try {
+      dict = await loadDictionary(sql);
+    } finally {
+      await sql.end({ timeout: 2 }).catch(() => undefined);
+    }
+  }
+  const d = dict.get(raw.toLowerCase());
+  if (!d) return null;
+  const targetCol = LANG_COL[lang] || "english_text";
+  return genuine(d[targetCol as keyof DictRow] as string, raw, (d.english_text || "").trim());
+}
+
 export async function localizeRecordNames<T extends { id: string }>(
   records: T[],
   table: string,

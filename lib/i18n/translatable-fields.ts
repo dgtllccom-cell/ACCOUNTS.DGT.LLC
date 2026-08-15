@@ -115,6 +115,9 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "account_title", mode: "translate" },
   ],
   profiles: [{ field: "full_name", mode: "transliterate" }],
+  // Employee full_name is surfaced on the employees row (joined from person master) and read
+  // via localizeRecordNames(record_table='employees'); register it here so write matches read.
+  employees: [{ field: "full_name", mode: "transliterate" }],
 
   // ── Product / inventory master (descriptive → translate) ──
   products: [

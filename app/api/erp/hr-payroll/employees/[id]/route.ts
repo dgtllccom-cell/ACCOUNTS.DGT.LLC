@@ -4,6 +4,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { ensureEmployeesTable } from "@/lib/services/ensure-employees-table";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 
 export const dynamic = "force-dynamic";
 
@@ -66,7 +67,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
 export async function PATCH(request: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   try {
-    await requireErpSession();
+    const session = await requireErpSession();
     let supabase = createSupabaseAdminClient();
     const body = await request.json();
 
@@ -222,6 +223,17 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
       const [resolved] = await localizeRecordNames([updatedEmployee.person as any], "customers", "customer_name", lang);
       const [resolved2] = await localizeRecordNames([resolved], "customers", "company_name", lang);
       updatedEmployee = { ...updatedEmployee, person: resolved2 };
+    }
+
+    // Re-register the employee's name in all 5 languages after edit (honest engine).
+    if ((updatedEmployee as any)?.full_name) {
+      void syncRecordTranslations({
+        table: "employees",
+        recordId: (updatedId || params.id) as string,
+        record: { full_name: (updatedEmployee as any).full_name },
+        originalLanguage: session.preferredLanguage ?? "en",
+        actorId: session.userId
+      }).catch(() => {});
     }
 
     return NextResponse.json({ employee: updatedEmployee });

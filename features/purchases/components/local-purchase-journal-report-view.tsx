@@ -12,6 +12,8 @@ import {
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Th } from "@/components/ui/translated-th";
+import { JournalPrintButton } from "@/components/reports/journal-print-button";
+import type { GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
 
@@ -306,9 +308,51 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
             onClick={() => void loadReports()}
             className="h-9 text-xs font-bold border-slate-200 dark:border-slate-800"
           >
-            <RefreshCw className={`mr-1.5 h-3.5 w-3.5 ${loading ? "animate-spin text-blue-600" : ""}`} />
-            Sync Report
+            <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
+            Refresh
           </Button>
+
+          <JournalPrintButton
+            title="Local Purchase Journal Report"
+            subtitle="Local Branch Purchase & Transfer Registry"
+            columns={[
+              { key: "journal_serial_no", label: "Journal S/N", align: "center" },
+              { key: "bill_no", label: "Bill No", align: "center" },
+              { key: "created_at", label: "Date", align: "center", format: "date" },
+              { key: "countryName", label: "Country", align: "left" },
+              { key: "branchName", label: "Branch", align: "left" },
+              { key: "supplierName", label: "Supplier / Vendor", align: "left" },
+              { key: "goodsName", label: "Goods / Product", align: "left" },
+              { key: "quantityKgs", label: "Qty (Kgs)", align: "right", format: "number" },
+              { key: "netWeight", label: "Net Wt", align: "right", format: "number" },
+              { key: "localCurrency", label: "Cur", align: "center" },
+              { key: "purchaseRate", label: "Rate", align: "right", format: "number" },
+              { key: "finalCost", label: "Final Amount", align: "right", format: "currency" },
+              { key: "status", label: "Status", align: "center", format: "status" }
+            ]}
+            rows={filteredPurchases.map((p, idx) => ({
+              ...p,
+              journal_serial_no: p.journal_serial_no || p.serialNo || p.serial_no || `LP-${String(idx + 1).padStart(5, "0")}`,
+              countryName: p.countryName || p.country_name || session.countryName || "UAE",
+              branchName: p.branchName || p.branch_name || session.branchName || "Main Branch",
+              supplierName: p.supplierName || p.supplier_name || "-",
+              goodsName: p.goodsName || p.goods_name || "-",
+              quantityKgs: p.quantityKgs || p.quantity_kgs || 0,
+              netWeight: p.netWeight || p.net_weight || 0,
+              localCurrency: p.localCurrency || p.local_currency || "AED",
+              purchaseRate: p.purchaseRate || p.purchase_rate || 0,
+              finalCost: p.finalCost || p.final_cost || 0,
+              status: p.status || "Posted"
+            }))}
+            summary={{
+              totalEntries: grandTotalEntries,
+              totalPurchase: grandTotalPurchase,
+              totalTax: grandTotalTax,
+              postedBills: postedBillsCount,
+              acceptedBills: acceptedBillsCount
+            }}
+            orientation="landscape"
+          />
 
           <Button
             size="sm"

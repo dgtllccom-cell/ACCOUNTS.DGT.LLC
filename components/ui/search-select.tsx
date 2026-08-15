@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { Check, ChevronDown, Pencil, Search, X } from "lucide-react";
+import { Check, ChevronDown, Eye, Pencil, Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -32,9 +32,10 @@ export function SearchSelect({
   // every other caller of this shared component keeps working unchanged; pass these to localize.
   searchPlaceholder = "Search...",
   emptyLabel = "No matches found.",
+  viewTitle = "View Details",
   editTitle = "Edit",
-  // Per-option Edit action (e.g. Person Master picker: edit the underlying record directly from
-  // the dropdown). Omit to keep the plain list behavior other callers already rely on.
+  // Per-option View/Edit actions (e.g. Master pickers: view/edit the underlying record directly from the dropdown)
+  onViewOption,
   onEditOption
 }: {
   label?: string;
@@ -52,7 +53,9 @@ export function SearchSelect({
   className?: string;
   searchPlaceholder?: string;
   emptyLabel?: string;
+  viewTitle?: string;
   editTitle?: string;
+  onViewOption?: (value: string) => void;
   onEditOption?: (value: string) => void;
 }) {
   const [open, setOpen] = React.useState(false);
@@ -149,6 +152,28 @@ export function SearchSelect({
                     <span className="truncate">{opt.label}</span>
                     <span className="flex items-center gap-1 shrink-0 ml-2">
                       {value === opt.value && <Check className="h-3.5 w-3.5 text-primary" />}
+                      {onViewOption && (
+                        <span
+                          role="button"
+                          tabIndex={0}
+                          title={viewTitle}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenSafe(false);
+                            onViewOption(opt.value);
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter" || e.key === " ") {
+                              e.stopPropagation();
+                              setOpenSafe(false);
+                              onViewOption(opt.value);
+                            }
+                          }}
+                          className="p-1 rounded hover:bg-blue-100 dark:hover:bg-blue-900/50 text-slate-500 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer transition"
+                        >
+                          <Eye className="h-3 w-3" />
+                        </span>
+                      )}
                       {onEditOption && (
                         <span
                           role="button"

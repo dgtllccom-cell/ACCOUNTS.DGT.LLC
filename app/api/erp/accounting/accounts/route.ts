@@ -678,6 +678,35 @@ export async function POST(request: NextRequest) {
     });
 
     if (localPgResult) {
+      // Register the new account + ledger names in record_translations so they enter the
+      // translation review pipeline. Uses the HONEST verified writer (no machine-guessed
+      // spellings): it records the original text and only stores approved/dictionary
+      // translations, leaving proper-name languages null until a human approves them.
+      // Previously this direct-Postgres path returned here WITHOUT saving any translation,
+      // so accounts created on VPS/local-PG never got a name translation row at all.
+      const actorLanguage = (session.preferredLanguage || "en") as "en" | "ar" | "ur" | "fa" | "ps";
+      import("@/lib/services/enterprise-multilingual-service")
+        .then(({ saveVerifiedEnterpriseRecordTranslations }) => {
+          return Promise.all([
+            saveVerifiedEnterpriseRecordTranslations({
+              recordTable: "enterprise_accounts",
+              recordId: localPgResult.accountId,
+              originalLanguage: actorLanguage,
+              fields: [{ fieldName: "name", value: body.name }],
+              actorId,
+              source: "auto"
+            }),
+            saveVerifiedEnterpriseRecordTranslations({
+              recordTable: "ledgers",
+              recordId: localPgResult.ledgerId,
+              originalLanguage: actorLanguage,
+              fields: [{ fieldName: "name", value: body.name }],
+              actorId,
+              source: "auto"
+            })
+          ]);
+        })
+        .catch((err) => console.error("Failed to register new account name translations (local-pg path):", err));
       return apiCreated(localPgResult);
     }
 
@@ -820,10 +849,13 @@ export async function POST(request: NextRequest) {
     });
 
     const actorLanguage = (session.preferredLanguage || "en") as "en" | "ar" | "ur" | "fa" | "ps";
+    // Honest verified writer (no machine-guessed proper-name spellings): records original
+    // text + only approved/dictionary translations, so English never displays a guessed
+    // transliteration. Kept in sync with the local-pg path above.
     import("@/lib/services/enterprise-multilingual-service")
-      .then(({ saveEnterpriseRecordTranslations }) => {
+      .then(({ saveVerifiedEnterpriseRecordTranslations }) => {
         return Promise.all([
-          saveEnterpriseRecordTranslations({
+          saveVerifiedEnterpriseRecordTranslations({
             recordTable: "enterprise_accounts",
             recordId: accountId,
             originalLanguage: actorLanguage,
@@ -831,7 +863,7 @@ export async function POST(request: NextRequest) {
             actorId,
             source: "auto"
           }),
-          saveEnterpriseRecordTranslations({
+          saveVerifiedEnterpriseRecordTranslations({
             recordTable: "ledgers",
             recordId: ledgerId,
             originalLanguage: actorLanguage,
@@ -841,7 +873,7 @@ export async function POST(request: NextRequest) {
           })
         ]);
       })
-      .catch((err) => console.error("Failed to auto-translate new account names:", err));
+      .catch((err) => console.error("Failed to register new account name translations:", err));
 
     return apiCreated({
       accountId,
