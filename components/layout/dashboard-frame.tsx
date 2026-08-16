@@ -386,6 +386,7 @@ export function DashboardFrame({
               </Button>
 
               <h2 className="text-base font-bold text-foreground hidden sm:block">{t(lang, "nav.dashboard", "Dashboard")}</h2>
+              <div id="erp-page-actions-slot" className="flex items-center gap-2" />
             </div>
 
             {/* Smart Search, Date picker, Bell and Profile controls */}

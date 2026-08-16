@@ -81,7 +81,8 @@ export function UnifiedDetailedLedgerView() {
         ledgerId: ledgerToFetch.split(","),
         fromDate: fDate || fromDate,
         toDate: tDate || toDate,
-        limit: 2000
+        limit: 2000,
+        language: lang
       });
       if (res.found) {
         setHeader(res.header);
@@ -97,21 +98,25 @@ export function UnifiedDetailedLedgerView() {
     }
   };
 
-  // Search ledgers for dropdown
+  // Search ledgers for dropdown & re-resolve upon language switch
   useEffect(() => {
     let active = true;
     const fetchOptions = async () => {
       setSearchingLedgers(true);
       try {
         const scope = isSuperAdmin ? "super_admin" : "country";
-        const res = await listLedgerReportLedgers({ reportScope: scope as any, limit: 100 });
+        const res = await listLedgerReportLedgers({ reportScope: scope as any, limit: 500, language: lang });
         if (active && res?.ledgers) {
-          const grouped = new Map<string, { label: string; ids: string[] }>();
+          const grouped = new Map<string, { label: string; keywords: string; ids: string[] }>();
           for (const row of res.ledgers) {
             const key = row.accountId || row.accountCode || row.ledgerCode;
             if (!grouped.has(key)) {
+              const code = row.accountCode || row.ledgerCode;
+              const name = row.accountName || row.ledgerName;
+              const curr = row.ledgerCurrency;
               grouped.set(key, {
-                label: `${row.accountCode || row.ledgerCode} - ${row.accountName || row.ledgerName} (${row.ledgerCurrency})`,
+                label: `${code} - ${name} (${curr})`,
+                keywords: `${code} ${row.rawAccountCode || ""} ${row.manualReferenceNumber || ""} ${row.customerNumber || ""} ${name}`,
                 ids: []
               });
             }
@@ -119,14 +124,17 @@ export function UnifiedDetailedLedgerView() {
           }
           const options = Array.from(grouped.values()).map(g => ({
             value: g.ids.join(","),
-            label: g.label
+            label: g.label,
+            keywords: g.keywords
           }));
           setLedgerOptions(options);
 
           if (options.length > 0) {
-            const defaultId = options[0].value;
-            setSelectedLedgerId(defaultId);
-            loadStatement(defaultId);
+            const currentSelected = selectedLedgerId && options.some(o => o.value === selectedLedgerId)
+              ? selectedLedgerId
+              : options[0].value;
+            setSelectedLedgerId(currentSelected);
+            loadStatement(currentSelected);
           }
         }
       } catch (e) {
@@ -137,7 +145,9 @@ export function UnifiedDetailedLedgerView() {
     };
     fetchOptions();
     return () => { active = false; };
-  }, [isSuperAdmin]);
+    // Re-resolve dropdown account names when the ERP language changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSuperAdmin, lang]);
 
   const handleApply = () => {
     loadStatement();

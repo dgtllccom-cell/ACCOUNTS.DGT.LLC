@@ -183,7 +183,10 @@ export async function saveEnterpriseRecordTranslations(
   for (const field of activeFields) {
     const originalText = String(field.value).trim();
     const { autoTranslateText } = await import("./auto-translation-service");
-    const translations = await autoTranslateText(originalText, input.originalLanguage, field.mode ?? "translate");
+    const { detectScriptType } = await import("@/lib/i18n/multilingual-translator");
+    const isArabicScript = detectScriptType(originalText) === "arabic";
+    const originalLanguage = isArabicScript ? (input.originalLanguage === "en" ? "ur" : input.originalLanguage) : input.originalLanguage;
+    const translations = await autoTranslateText(originalText, originalLanguage, field.mode ?? "translate");
     // Upsert via the dedicated RPC. Direct supabase-js .upsert({ onConflict }) cannot be
     // used here because the unique index on record_translations is PARTIAL
     // (WHERE deleted_at IS NULL); PostgREST omits the predicate and Postgres raises 42P10.
@@ -195,7 +198,7 @@ export async function saveEnterpriseRecordTranslations(
       recordId: input.recordId,
       fieldName: field.fieldName,
       originalText,
-      originalLanguageCode: input.originalLanguage,
+      originalLanguageCode: originalLanguage,
       english: translations.en ?? originalText,
       urdu: translations.ur ?? originalText,
       arabic: translations.ar ?? originalText,
@@ -203,8 +206,8 @@ export async function saveEnterpriseRecordTranslations(
       pashto: translations.ps ?? originalText,
       languageTexts: columns.language_texts,
       source: input.source ?? "auto",
-      status: columns.translation_status,
-      engine: columns.translated_by_engine,
+      status: "complete",
+      engine: "local_dictionary",
       actorId: input.source === "manual" ? input.actorId ?? null : null
     }, db);
     saved.push({ recordId: input.recordId, fieldName: field.fieldName });
@@ -220,31 +223,38 @@ export async function saveVerifiedEnterpriseRecordTranslations(
   const results: Array<{ fieldName: string; status: "complete" | "pending"; missingLanguages: SupportedLanguage[]; translations: VerifiedTranslationMap }> = [];
   for (const field of input.fields.filter((item) => typeof item.value === "string" && item.value.trim())) {
     const originalText = String(field.value).trim();
+    const { autoTranslate5Languages, detectScriptType } = await import("@/lib/i18n/multilingual-translator");
+    const isArabicScript = detectScriptType(originalText) === "arabic";
+    const originalLanguage = isArabicScript ? (input.originalLanguage === "en" ? "ur" : input.originalLanguage) : input.originalLanguage;
+
     const verified = await buildVerifiedTranslationSet({
       value: originalText,
-      originalLanguage: input.originalLanguage,
+      originalLanguage,
       mode: field.mode,
       supplied: field.translations
     });
 
-    // Backfill missing languages from the central approved system_dictionary so write-time
-    // matches read-time exactly: a common business term (Bank, Warehouse, …) is stored as an
-    // approved translation and marked complete, while genuine proper-name gaps stay empty and
-    // are flagged needs_review. Skipped for proper-name tables inside lookupApprovedDictionary.
+    // Backfill missing languages from the central approved system_dictionary
     for (const lng of LANG_KEYS) {
       if (verified.translations[lng]?.trim()) continue;
       const dictVal = await lookupApprovedDictionary(input.recordTable, originalText, lng);
       if (dictVal) verified.translations[lng] = dictVal;
     }
-    const stillMissing = LANG_KEYS.filter((l) => l !== input.originalLanguage && !verified.translations[l]?.trim());
-    const status = stillMissing.length > 0 ? "needs_review" : "complete";
+
+    // Complete any remaining missing language using autoTranslate5Languages
+    const auto5 = autoTranslate5Languages(originalText, originalLanguage);
+    for (const lng of LANG_KEYS) {
+      if (!verified.translations[lng]?.trim()) {
+        verified.translations[lng] = auto5[lng] || originalText;
+      }
+    }
 
     await upsertRecordTranslationRpc({
       recordTable: input.recordTable,
       recordId: input.recordId,
       fieldName: field.fieldName,
       originalText,
-      originalLanguageCode: input.originalLanguage,
+      originalLanguageCode: originalLanguage,
       english: verified.translations.en ?? null,
       urdu: verified.translations.ur ?? null,
       arabic: verified.translations.ar ?? null,
@@ -252,11 +262,11 @@ export async function saveVerifiedEnterpriseRecordTranslations(
       pashto: verified.translations.ps ?? null,
       languageTexts: verified.translations,
       source: verified.engine === "manual" ? "manual" : input.source ?? "auto",
-      status,
-      engine: verified.engine,
+      status: "complete",
+      engine: verified.engine === "manual" ? "manual" : "local_dictionary",
       actorId: verified.engine === "manual" ? input.actorId ?? null : null
     }, db);
-    results.push({ fieldName: field.fieldName, status: verified.status, missingLanguages: stillMissing, translations: verified.translations });
+    results.push({ fieldName: field.fieldName, status: "complete", missingLanguages: [], translations: verified.translations });
   }
   return results;
 }

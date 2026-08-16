@@ -389,7 +389,8 @@ export function LedgerReportView({
         ledgerId: nextLedgerId,
         fromDate,
         toDate,
-        limit: 5000
+        limit: 5000,
+        language: effectiveLang
       });
       setStatement({
         found: Boolean(res.header),

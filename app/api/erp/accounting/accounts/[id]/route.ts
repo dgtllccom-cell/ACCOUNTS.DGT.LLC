@@ -244,9 +244,9 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       const actorLanguage = (session.preferredLanguage || "en") as "en" | "ar" | "ur" | "fa" | "ps";
       supabase.from("ledgers").select("id").eq("enterprise_account_id", id).maybeSingle().then(({ data: ledger }) => {
         import("@/lib/services/enterprise-multilingual-service")
-          .then(({ saveVerifiedEnterpriseRecordTranslations }) => {
+          .then(({ saveEnterpriseRecordTranslations }) => {
             const promises = [
-              saveVerifiedEnterpriseRecordTranslations({
+              saveEnterpriseRecordTranslations({
                 recordTable: "enterprise_accounts",
                 recordId: id,
                 originalLanguage: actorLanguage,
@@ -257,7 +257,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
             ];
             if (ledger?.id) {
               promises.push(
-                saveVerifiedEnterpriseRecordTranslations({
+                saveEnterpriseRecordTranslations({
                   recordTable: "ledgers",
                   recordId: ledger.id,
                   originalLanguage: actorLanguage,

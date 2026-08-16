@@ -97,6 +97,7 @@ export async function getLedgerStatement(params: {
   fromDate: string;
   toDate: string;
   limit?: number;
+  language?: string;
 }) {
   const qp = new URLSearchParams();
   if (Array.isArray(params.ledgerId)) {
@@ -107,6 +108,7 @@ export async function getLedgerStatement(params: {
   qp.set("fromDate", params.fromDate);
   qp.set("toDate", params.toDate);
   if (params.limit) qp.set("limit", String(params.limit));
+  if (params.language) qp.set("language", params.language);
 
   return apiFetch<{
     found: boolean;
@@ -125,3 +127,4 @@ export async function getLedgerStatement(params: {
     };
   }>(`/api/erp/accounting/reports/ledger/statement?${qp.toString()}`);
 }
+

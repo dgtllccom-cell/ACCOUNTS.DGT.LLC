@@ -93,39 +93,34 @@ async function loadTranslations(input: {
   supabase: any;
   language: SupportedLanguage;
   targets: Array<{ table: string; id: string; field: string }>;
-}) {
-  const ids = unique(input.targets.map((t) => t.id));
-  const tables = unique(input.targets.map((t) => t.table));
-  const fields = unique(input.targets.map((t) => t.field));
+}): Promise<Map<string, string>> {
+  if (input.targets.length === 0) return new Map();
 
-  if (!ids.length || !tables.length || !fields.length) return new Map<string, string>();
+  const validTargets = input.targets.filter((t) => isUuid(t.id));
+  if (validTargets.length === 0) return new Map();
 
   const CHUNK_SIZE = 100;
   let allData: any[] = [];
+  for (let i = 0; i < validTargets.length; i += CHUNK_SIZE) {
+    const chunk = validTargets.slice(i, i + CHUNK_SIZE);
+    const chunkIds = chunk.map((t) => t.id);
+    const chunkTables = Array.from(new Set(chunk.map((t) => t.table)));
+    const chunkFields = Array.from(new Set(chunk.map((t) => t.field)));
 
-  for (let i = 0; i < ids.length; i += CHUNK_SIZE) {
-    const chunkIds = ids.slice(i, i + CHUNK_SIZE);
     const { data, error } = await input.supabase
       .from("record_translations")
       .select(
-        "record_table, record_id, field_name, original_text, original_language_code, english_text, arabic_text, urdu_text, persian_text, pashto_text"
+        "record_table, record_id, field_name, original_text, english_text, urdu_text, arabic_text, persian_text, pashto_text"
       )
-      .in("record_table", tables)
+      .in("record_table", chunkTables)
       .in("record_id", chunkIds)
-      .in("field_name", fields)
-      .is("deleted_at", null)
-      .order("updated_at", { ascending: false })
-      .limit(2000);
+      .in("field_name", chunkFields)
+      .is("deleted_at", null);
 
     if (error) throw new Error(error.message);
     if (data) allData = allData.concat(data);
   }
 
-  // Central policy (single source of truth): record-specific approved translation for the
-  // requested language (strict — never leak another language's string), then the central
-  // approved system_dictionary (skipped for proper-name tables), else leave unset so the
-  // caller keeps the honest original. Replaces the old multilingualService.resolveText path
-  // that ignored the dictionary and could return the wrong language.
   const langCol: Record<SupportedLanguage, keyof TranslationRow> = {
     en: "english_text", ur: "urdu_text", ar: "arabic_text", fa: "persian_text", ps: "pashto_text"
   };
@@ -135,14 +130,30 @@ async function loadTranslations(input: {
   for (const row of (allData ?? []) as TranslationRow[]) {
     const raw = (row.original_text ?? "").trim();
     const recVal = ((row[col] as string | null) ?? "").trim();
-    let resolved = recVal && recVal !== raw ? recVal : "";
+    let resolved = recVal;
+
+    const rawScript = detectScriptType(raw);
+    const resolvedScript = detectScriptType(resolved || raw);
+
+    // If English is selected but the text is in Arabic script, or if a non-English language is selected
+    // but the text is pure English, run the dynamic 5-language auto-translator
+    if (
+      !resolved ||
+      (input.language === "en" && resolvedScript === "arabic") ||
+      (input.language !== "en" && resolvedScript === "latin" && rawScript === "latin")
+    ) {
+      const auto5 = autoTranslate5Languages(raw, rawScript === "arabic" ? "ur" : "en");
+      if (auto5[input.language] && auto5[input.language] !== raw) {
+        resolved = auto5[input.language];
+      }
+    }
+
     if (!resolved) {
       const dictVal = await lookupApprovedDictionary(row.record_table, raw, input.language);
       if (dictVal) resolved = dictVal;
     }
-    // English can safely fall back to the stored English text; other languages must NOT
-    // inherit a different language's string, so leave unset (caller uses the original).
-    if (!resolved && input.language === "en") resolved = (row.english_text ?? "").trim();
+
+    if (!resolved && input.language === "en") resolved = (row.english_text ?? "").trim() || raw;
     if (resolved) map.set(translationKey(row.record_table, row.record_id, row.field_name), resolved);
   }
 

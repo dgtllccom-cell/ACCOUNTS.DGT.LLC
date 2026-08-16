@@ -686,9 +686,9 @@ export async function POST(request: NextRequest) {
       // so accounts created on VPS/local-PG never got a name translation row at all.
       const actorLanguage = (session.preferredLanguage || "en") as "en" | "ar" | "ur" | "fa" | "ps";
       import("@/lib/services/enterprise-multilingual-service")
-        .then(({ saveVerifiedEnterpriseRecordTranslations }) => {
+        .then(({ saveEnterpriseRecordTranslations }) => {
           return Promise.all([
-            saveVerifiedEnterpriseRecordTranslations({
+            saveEnterpriseRecordTranslations({
               recordTable: "enterprise_accounts",
               recordId: localPgResult.accountId,
               originalLanguage: actorLanguage,
@@ -696,7 +696,7 @@ export async function POST(request: NextRequest) {
               actorId,
               source: "auto"
             }),
-            saveVerifiedEnterpriseRecordTranslations({
+            saveEnterpriseRecordTranslations({
               recordTable: "ledgers",
               recordId: localPgResult.ledgerId,
               originalLanguage: actorLanguage,
@@ -849,13 +849,10 @@ export async function POST(request: NextRequest) {
     });
 
     const actorLanguage = (session.preferredLanguage || "en") as "en" | "ar" | "ur" | "fa" | "ps";
-    // Honest verified writer (no machine-guessed proper-name spellings): records original
-    // text + only approved/dictionary translations, so English never displays a guessed
-    // transliteration. Kept in sync with the local-pg path above.
     import("@/lib/services/enterprise-multilingual-service")
-      .then(({ saveVerifiedEnterpriseRecordTranslations }) => {
+      .then(({ saveEnterpriseRecordTranslations }) => {
         return Promise.all([
-          saveVerifiedEnterpriseRecordTranslations({
+          saveEnterpriseRecordTranslations({
             recordTable: "enterprise_accounts",
             recordId: accountId,
             originalLanguage: actorLanguage,
@@ -863,7 +860,7 @@ export async function POST(request: NextRequest) {
             actorId,
             source: "auto"
           }),
-          saveVerifiedEnterpriseRecordTranslations({
+          saveEnterpriseRecordTranslations({
             recordTable: "ledgers",
             recordId: ledgerId,
             originalLanguage: actorLanguage,

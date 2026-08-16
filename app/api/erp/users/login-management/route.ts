@@ -66,27 +66,12 @@ type ProfileRow = {
   created_at: string | null;
   updated_at: string | null;
   deleted_at: string | null;
-  first_name: string | null;
-  middle_name: string | null;
-  last_name: string | null;
-  employee_id: string | null;
-  person_master_id: string | null;
   default_company_id: string | null;
-  photo_url: string | null;
 };
 
 type PermissionSetRow = {
   user_id: string;
   permissions: string[] | null;
-};
-
-type AuthUserRow = {
-  id: string;
-  email: string | null;
-  phone: string | null;
-  created_at: string | null;
-  last_sign_in_at: string | null;
-  raw_user_meta_data: Record<string, string | null | undefined> | null;
 };
 
 type BranchUserDetail = {
@@ -156,22 +141,6 @@ type CountryPayload = {
   totalUsersCount: number;
 };
 
-type SuperAdminBranchRow = {
-  id: string;
-  company_id: string | null;
-  name: string;
-  code: string;
-  currency: string | null;
-  address: string | null;
-  phone: string | null;
-  email: string | null;
-  owner_name: string | null;
-  contacts: unknown;
-  created_at: string | null;
-  updated_at: string | null;
-  companies?: { name?: string | null } | null;
-};
-
 function roleClassification(role: string): string {
   const normalized = String(role || "").toLowerCase();
   if (normalized === "super_admin") return "Super Admin User";
@@ -194,54 +163,45 @@ function normalizeDate(value: string | null | undefined) {
 
 async function loadViaPg() {
   return await withLocalPg(async (sql) => {
-    const [countryRows, branchRows, cityRows, assignmentRows, profileRows, permissionRows, authRows, superAdminBranchRows, ledgerRows, companyRows] = await Promise.all([
-      sql<CountryRow[]>`select id, name, iso2, iso3, currency_code, is_active from countries where deleted_at is null order by name asc`,
-      sql<CountryBranchRow[]>`select id, country_id, name, code, local_currency, status, is_main, address, company_id, owner_name, contacts, created_at, updated_at, deleted_at from country_branches where deleted_at is null order by name asc`,
-      sql<CityBranchRow[]>`select id, country_id, country_branch_id, city_name, name, code, local_currency, status, address, company_id, owner_name, contacts, created_at, updated_at, deleted_at from city_branches where deleted_at is null order by city_name asc`,
-      sql<AssignmentRow[]>`select user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at, updated_at, deleted_at from user_role_assignments where deleted_at is null order by created_at desc`,
-      sql<ProfileRow[]>`select id, full_name, user_code, created_at, updated_at, deleted_at, first_name, middle_name, last_name, employee_id, person_master_id, default_company_id, photo_url from profiles where deleted_at is null`,
-      sql<PermissionSetRow[]>`select user_id, permissions from user_permission_sets where deleted_at is null`,
-      sql<AuthUserRow[]>`select id, email, phone, created_at, last_sign_in_at, raw_user_meta_data from auth.users order by created_at desc`,
-      sql<SuperAdminBranchRow[]>`select id, company_id, name, code, currency, address, phone, email, owner_name, contacts, created_at, updated_at, companies(name) from branches where is_super_admin = true and deleted_at is null order by name asc`,
-      sql<{ city_branch_id: string | null; accounts_count: number }[]>`select city_branch_id, count(*)::int as accounts_count from ledgers where deleted_at is null group by city_branch_id`,
-      sql<{ id: string; name: string }[]>`select id, name from companies where deleted_at is null`
-    ]);
+    const countryRowsRaw = await sql<CountryRow[]>`select id, name, iso2, iso3, currency_code, is_active from countries where deleted_at is null order by name asc`;
+    const branchRowsRaw = await sql<CountryBranchRow[]>`select id, country_id, name, code, local_currency, status, is_main, address, company_id, owner_name, contacts, created_at, updated_at, deleted_at from country_branches where deleted_at is null order by name asc`;
+    const cityRowsRaw = await sql<CityBranchRow[]>`select id, country_id, country_branch_id, city_name, name, code, local_currency, status, address, company_id, owner_name, contacts, created_at, updated_at, deleted_at from city_branches where deleted_at is null order by city_name asc`;
+    const assignmentRowsRaw = await sql<AssignmentRow[]>`select user_id, role, country_id, country_branch_id, city_branch_id, is_active, created_at, updated_at, deleted_at from user_role_assignments where deleted_at is null order by created_at desc`;
+    const profileRowsRaw = await sql<ProfileRow[]>`select id, full_name, user_code, created_at, updated_at, deleted_at, default_company_id from profiles where deleted_at is null`;
+    const permissionRowsRaw = await sql<PermissionSetRow[]>`select user_id, permissions from user_permission_sets where deleted_at is null`;
+
+    const countryRows = countryRowsRaw as CountryRow[];
+    const branchRows = branchRowsRaw as CountryBranchRow[];
+    const cityRows = cityRowsRaw as CityBranchRow[];
+    const assignmentRows = assignmentRowsRaw as AssignmentRow[];
+    const profileRows = profileRowsRaw as ProfileRow[];
+    const permissionRows = permissionRowsRaw as PermissionSetRow[];
 
     const countriesById = new Map(countryRows.map((row) => [row.id, row] as const));
     const countryBranchesById = new Map(branchRows.map((row) => [row.id, row] as const));
     const cityBranchesById = new Map(cityRows.map((row) => [row.id, row] as const));
     const profilesById = new Map(profileRows.map((row) => [row.id, row] as const));
     const permissionsByUser = new Map(permissionRows.map((row) => [row.user_id, Array.isArray(row.permissions) ? row.permissions.filter(Boolean) : []] as const));
-    const authUsersById = new Map(authRows.map((row) => [row.id, row] as const));
-    const ledgerCountByCityBranch = new Map<string, number>();
-    for (const row of ledgerRows) {
-      if (row.city_branch_id) {
-        ledgerCountByCityBranch.set(row.city_branch_id, (ledgerCountByCityBranch.get(row.city_branch_id) ?? 0) + Number(row.accounts_count || 0));
-      }
-    }
-    const companiesById = new Map(companyRows.map((row) => [row.id, row.name] as const));
 
     const buildUserDetail = (assignment: AssignmentRow): BranchUserDetail | null => {
       const profile = profilesById.get(assignment.user_id);
-      const authUser = authUsersById.get(assignment.user_id);
-      if (!profile && !authUser) return null;
+      if (!profile) return null;
 
       const country = assignment.country_id ? countriesById.get(assignment.country_id) : null;
       const mainBranch = assignment.country_branch_id ? countryBranchesById.get(assignment.country_branch_id) : null;
       const cityBranch = assignment.city_branch_id ? cityBranchesById.get(assignment.city_branch_id) : null;
       const fallbackCountry = cityBranch?.country_id ? countriesById.get(cityBranch.country_id) : mainBranch?.country_id ? countriesById.get(mainBranch.country_id) : null;
       const fallbackMainBranch = cityBranch?.country_branch_id ? countryBranchesById.get(cityBranch.country_branch_id) : null;
-      const metadata = authUser?.raw_user_meta_data ?? {};
       const role = assignment.role || "staff_user";
-      const lastLogin = normalizeDate(authUser?.last_sign_in_at || assignment.updated_at || assignment.created_at || profile?.updated_at || profile?.created_at || authUser?.created_at || null);
+      const lastLogin = normalizeDate(assignment.updated_at || assignment.created_at || profile?.updated_at || profile?.created_at || null);
 
       return {
         id: assignment.user_id,
-        name: profile?.full_name || metadata.full_name || authUser?.email || "Unnamed User",
-        loginId: profile?.user_code || metadata.user_code || authUser?.email || assignment.user_id,
-        username: profile?.user_code || metadata.user_code || authUser?.email || assignment.user_id,
-        email: authUser?.email || "",
-        mobile: metadata.phone || metadata.mobile || authUser?.phone || "",
+        name: profile?.full_name || profile?.user_code || "Unnamed User",
+        loginId: profile?.user_code || assignment.user_id,
+        username: profile?.user_code || assignment.user_id,
+        email: "",
+        mobile: "",
         role,
         classification: roleClassification(role),
         mainUser: isMainUserRole(role),
@@ -249,7 +209,7 @@ async function loadViaPg() {
         cityName: cityBranch?.city_name || "-",
         branchName: cityBranch?.name || mainBranch?.name || fallbackMainBranch?.name || "-",
         branchCode: cityBranch?.code || mainBranch?.code || fallbackMainBranch?.code || "-",
-        department: metadata.department || metadata.team || "-",
+        department: assignment.role || "-",
         permissions: permissionsByUser.get(assignment.user_id) ?? [],
         status: assignment.is_active ? "Active" : "Inactive",
         lastLogin
@@ -300,7 +260,7 @@ async function loadViaPg() {
             mainUsersCount: users.filter((u) => u.mainUser).length,
             totalUsersCount: users.length,
             managerName: manager?.name || "-",
-            accountsCount: ledgerCountByCityBranch.get(cityBranch.id) ?? 0,
+            accountsCount: 0,
             address: cityBranch.address,
             ownerName: cityBranch.owner_name,
             contacts: cityBranch.contacts
@@ -318,7 +278,7 @@ async function loadViaPg() {
           currency: mainBranch.local_currency,
           isMain: mainBranch.is_main,
           status: mainBranch.status,
-          companyName: (mainBranch.company_id ? companiesById.get(mainBranch.company_id) : null) || "Global Group",
+          companyName: "Global Group",
           ownerName: mainBranch.owner_name,
           address: mainBranch.address,
           contacts: mainBranch.contacts,
@@ -349,21 +309,6 @@ async function loadViaPg() {
       };
     });
 
-    const superAdminBranches = superAdminBranchRows.map((branch) => ({
-      id: branch.id,
-      name: branch.name,
-      code: branch.code,
-      currency: branch.currency || "USD",
-      address: branch.address,
-      phone: branch.phone,
-      email: branch.email,
-      ownerName: branch.owner_name,
-      contacts: branch.contacts,
-      createdAt: branch.created_at,
-      updatedAt: branch.updated_at,
-      companyName: branch.companies?.name || "Global Group"
-    }));
-
     const totalActiveBranches = branchRows.filter((branch) => branch.status === "active").length + cityRows.filter((branch) => branch.status === "active").length;
     const summary = {
       totalCountries: countries.length,
@@ -372,13 +317,13 @@ async function loadViaPg() {
       totalActiveUsers: allUserDetails.filter((user) => user.status === "Active").length,
       totalActiveBranches,
       totalInactiveBranches: branchRows.length + cityRows.length - totalActiveBranches,
-      totalMainAccounts: branchRows.length,
+      totalMainAccounts: 0,
       users: allUserDetails
     };
 
     return {
       summary,
-      superAdminBranches,
+      superAdminBranches: [],
       countries,
       generatedAt: new Date().toISOString()
     };
@@ -394,7 +339,7 @@ export async function GET() {
 
     const viaPg = await loadViaPg();
     if (viaPg) {
-      return apiOk({ data: viaPg });
+      return apiOk(viaPg);
     }
 
     return apiError("DATABASE_UNAVAILABLE", "Development database connection is not configured.", 503);

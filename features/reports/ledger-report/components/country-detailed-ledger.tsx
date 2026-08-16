@@ -71,7 +71,8 @@ export function CountryDetailedLedgerView() {
         ledgerId: ledgerToFetch.split(","),
         fromDate: fDate || fromDate,
         toDate: tDate || toDate,
-        limit: 2000
+        limit: 2000,
+        language: activeLang
       });
       if (res.found) {
         setHeader(res.header);
@@ -87,20 +88,24 @@ export function CountryDetailedLedgerView() {
     }
   };
 
-  // Search ledgers for dropdown
+  // Search ledgers for dropdown & re-resolve upon language switch
   useEffect(() => {
     let active = true;
     const fetchOptions = async () => {
       setSearchingLedgers(true);
       try {
-        const res = await listLedgerReportLedgers({ reportScope: "country", limit: 100, language: activeLang });
+        const res = await listLedgerReportLedgers({ reportScope: "country", limit: 500, language: activeLang });
         if (active && res?.ledgers) {
-          const grouped = new Map<string, { label: string; ids: string[] }>();
+          const grouped = new Map<string, { label: string; keywords: string; ids: string[] }>();
           for (const row of res.ledgers) {
             const key = row.accountId || row.accountCode || row.ledgerCode;
             if (!grouped.has(key)) {
+              const code = row.accountCode || row.ledgerCode;
+              const name = row.accountName || row.ledgerName;
+              const curr = row.ledgerCurrency;
               grouped.set(key, {
-                label: `${row.accountCode || row.ledgerCode} - ${row.accountName || row.ledgerName} (${row.ledgerCurrency})`,
+                label: `${code} - ${name} (${curr})`,
+                keywords: `${code} ${row.rawAccountCode || ""} ${row.manualReferenceNumber || ""} ${row.customerNumber || ""} ${name}`,
                 ids: []
               });
             }
@@ -108,14 +113,17 @@ export function CountryDetailedLedgerView() {
           }
           const options = Array.from(grouped.values()).map(g => ({
             value: g.ids.join(","),
-            label: g.label
+            label: g.label,
+            keywords: g.keywords
           }));
           setLedgerOptions(options);
 
           if (options.length > 0) {
-            const defaultId = options[0].value;
-            setSelectedLedgerId(defaultId);
-            loadStatement(defaultId);
+            const currentSelected = selectedLedgerId && options.some(o => o.value === selectedLedgerId)
+              ? selectedLedgerId
+              : options[0].value;
+            setSelectedLedgerId(currentSelected);
+            loadStatement(currentSelected);
           }
         }
       } catch (e) {

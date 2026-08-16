@@ -186,6 +186,7 @@ export type UiKey =
   | "nav.user_entry"
   | "nav.user_form"
   | "nav.user_journal_report"
+  | "nav.user_login_management"
   | "nav.accounts"
   | "nav.new_account"
   | "nav.new_account_general_report"
@@ -3432,6 +3433,7 @@ const en: Dict = {
   "nav.user_entry": "User Registration & Employees",
   "nav.user_form": "New User Registration / Employee Form",
   "nav.user_journal_report": "User & Employee Master Report",
+  "nav.user_login_management": "User Login Management",
   "nav.accounts": "Accounts",
   "nav.new_account": "New Account Setup",
   "nav.new_account_general_report": "Account General Report",
@@ -5611,6 +5613,7 @@ const ur: Dict = {
   "nav.user_entry": "یوزر",
   "nav.user_form": "یوزر رجسٹریشن",
   "nav.user_journal_report": "یوزر جرنل رپورٹ",
+  "nav.user_login_management": "یوزر لاگ ان مینجمنٹ",
   "nav.accounts": "اکاؤنٹس",
   "nav.new_account": "نیا اکاؤنٹ سیٹ اپ",
   "nav.new_account_general_report": "اکاؤنٹ جنرل رپورٹ",
@@ -7782,6 +7785,7 @@ const ar: Dict = {
   "nav.user_entry": "المستخدم",
   "nav.user_form": "تسجيل المستخدم",
   "nav.user_journal_report": "تقرير يومية المستخدم",
+  "nav.user_login_management": "إدارة تسجيل دخول المستخدم",
   "nav.accounts": "الحسابات",
   "nav.new_account": "حساب جديد",
   "nav.new_account_general_report": "تقرير الحسابات العامة الجديدة",
@@ -9954,6 +9958,7 @@ const fa: Dict = {
   "nav.user_entry": "کاربر",
   "nav.user_form": "ثبت کاربر",
   "nav.user_journal_report": "گزارش ژورنال کاربر",
+  "nav.user_login_management": "مدیریت ورود کاربر",
   "nav.accounts": "حساب‌ها",
   "nav.new_account": "حساب جدید",
   "nav.new_account_general_report": "گزارش عمومی حساب‌های جدید",
@@ -12123,6 +12128,7 @@ const ps: Dict = {
   "nav.user_entry": "کاروونکی",
   "nav.user_form": "د کاروونکي ثبت",
   "nav.user_journal_report": "د کاروونکي ژورنال راپور",
+  "nav.user_login_management": "د کاروونکي د ننوتلو مدیریت",
   "nav.accounts": "اکاونټونه",
   "nav.new_account": "نوی اکاونټ",
   "nav.new_account_general_report": "د نوي اکاونټ عمومي راپور",

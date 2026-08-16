@@ -1,7 +1,29 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
-import { Globe2, AlertCircle, Loader2, X, Printer, History } from "lucide-react";
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { createPortal } from "react-dom";
+import {
+  Globe2,
+  AlertCircle,
+  Loader2,
+  X,
+  Printer,
+  History,
+  ChevronRight,
+  Search,
+  MoreVertical,
+  RefreshCcw,
+  SlidersHorizontal,
+  ChevronDown,
+  Building2,
+  Users,
+  DollarSign,
+  Receipt,
+  FileSpreadsheet
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import { t, type UiKey } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
@@ -74,7 +96,15 @@ const DEFAULT_FILTERS: ReportFilterValues = {
   reportType: "roznamcha"
 };
 
+function fmtNum(val: number | string | null | undefined): string {
+  const n = Number(val);
+  if (!Number.isFinite(n)) return "0.00";
+  return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
 export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", viewerName, viewerId, workspace = "standard" }: Props) {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const lang = useActiveLanguage() || initialLang;
   const _ = (key: UiKey, fallback?: string) => t(lang, key, fallback);
   const isRTL = ["ar", "ur", "fa", "ps"].includes(lang);
@@ -94,6 +124,17 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
   const [visibleColumnKeys, setVisibleColumnKeys] = useState<string[]>([]);
   const [columnOrder, setColumnOrder] = useState<string[]>([]);
   const [selectedRow, setSelectedRow] = useState<Record<string, any> | null>(null);
+  
+  // Executive summary and filter drawer state
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [showAllCountries, setShowAllCountries] = useState(false);
+  const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+  const [actionsSlot, setActionsSlot] = useState<HTMLElement | null>(null);
+
+  useEffect(() => {
+    setActionsSlot(document.getElementById("erp-page-actions-slot"));
+  }, []);
+
   const reportData = reportResult?.data ?? [];
   const reportSummary = reportResult?.summary ?? {};
   const appliedReportType = reportResult?.reportType ?? filters.reportType;
@@ -103,39 +144,6 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
     lang,
     appliedCurrency !== "all" ? appliedCurrency : "USD"
   );
-
-  // Load metadata on mount
-  useEffect(() => {
-    let cancelled = false;
-    setMetaLoading(true);
-    fetch(`/api/erp/reports/meta?lang=${lang}${workspace === "super-admin" ? "&workspace=super-admin" : ""}`)
-      .then((res) => res.json())
-      .then((json) => {
-        if (cancelled) return;
-        if (json.ok) {
-          setMeta(json.data);
-          setFilters((prev) => ({
-            ...prev,
-            countryId: json.data.scope?.lockedCountryId ?? json.data.countries?.[0]?.id ?? prev.countryId,
-            mainBranchId: json.data.scope?.lockedMainBranchId ?? prev.mainBranchId,
-            branchId: json.data.scope?.lockedBranchId ?? prev.branchId
-          }));
-          // Set initial report type from first available
-          if (json.data.reportTypes?.length) {
-            setFilters((prev) => ({ ...prev, reportType: json.data.reportTypes[0].key }));
-          }
-        } else {
-          setMetaError(json.error?.message || "Failed to load metadata");
-        }
-      })
-      .catch((err) => {
-        if (!cancelled) setMetaError(err.message);
-      })
-      .finally(() => {
-        if (!cancelled) setMetaLoading(false);
-      });
-    return () => { cancelled = true; };
-  }, [workspace, lang]);
 
   const fetchReport = useCallback(async (currentFilters: ReportFilterValues) => {
     setReportLoading(true);
@@ -175,19 +183,56 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
     }
   }, [lang, workspace]);
 
+  // Load metadata on mount
+  useEffect(() => {
+    let cancelled = false;
+    setMetaLoading(true);
+    fetch(`/api/erp/reports/meta?lang=${lang}${workspace === "super-admin" ? "&workspace=super-admin" : ""}`)
+      .then((res) => res.json())
+      .then((json) => {
+        if (cancelled) return;
+        if (json.ok) {
+          setMeta(json.data);
+          const urlType = searchParams.get("type");
+          const targetReportType = urlType || json.data.reportTypes?.[0]?.key || "roznamcha";
+          const initialFilterVals: ReportFilterValues = {
+            ...DEFAULT_FILTERS,
+            reportType: targetReportType,
+            countryId: json.data.scope?.lockedCountryId ?? json.data.countries?.[0]?.id ?? "all",
+            mainBranchId: json.data.scope?.lockedMainBranchId ?? "all",
+            branchId: json.data.scope?.lockedBranchId ?? "all"
+          };
+          setFilters(initialFilterVals);
+          // Auto-fetch initial report
+          void fetchReport(initialFilterVals);
+        } else {
+          setMetaError(json.error?.message || "Failed to load metadata");
+        }
+      })
+      .catch((err) => {
+        if (!cancelled) setMetaError(err.message);
+      })
+      .finally(() => {
+        if (!cancelled) setMetaLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [workspace, lang, searchParams, fetchReport]);
+
   const handleFilterChange = (key: keyof ReportFilterValues, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
   };
 
   const handleReset = () => {
-    setFilters({
+    const nextFilters: ReportFilterValues = {
       ...DEFAULT_FILTERS,
       countryId: meta?.scope.lockedCountryId ?? meta?.countries[0]?.id ?? "all",
       reportType: meta?.reportTypes[0]?.key ?? (workspace === "super-admin" ? "ledger" : "roznamcha")
-    });
+    };
+    setFilters(nextFilters);
     setReportResult(null);
     setAppliedFilters(null);
     setHasLoaded(false);
+    void fetchReport(nextFilters);
   };
 
   const handleApply = () => {
@@ -196,18 +241,13 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
 
   const scope = meta?.scope;
 
-  // Panel title and subtitle
   const panelTitleKey: UiKey = scope?.level === "global"
     ? "report.panel_super_admin"
     : scope?.level === "country"
     ? "report.panel_country"
     : "report.panel_branch";
 
-  const panelSubtitleKey: UiKey = scope?.level === "global"
-    ? "report.panel_subtitle_super"
-    : scope?.level === "country"
-    ? "report.panel_subtitle_country"
-    : "report.panel_subtitle_branch";
+  const panelTitle = _(panelTitleKey);
 
   useEffect(() => {
     setVisibleColumnKeys((current) => {
@@ -224,7 +264,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
       const kept = current.filter((key) => allowed.includes(key));
       return [...kept, ...allowed.filter((key) => !kept.includes(key))];
     });
-  }, [appliedReportType, lang]);
+  }, [appliedReportType, lang, baseColumns]);
 
   useEffect(() => {
     if (!reportResult || typeof window === "undefined") return;
@@ -239,13 +279,14 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
         setColumnOrder([...order, ...baseColumns.map((column) => column.key).filter((key) => !order.includes(key))]);
       }
     } catch {
-      // Ignore invalid local preferences; allowed columns remain server/schema controlled.
+      // Ignore
     }
-  }, [appliedReportType, reportResult, viewerId]);
+  }, [appliedReportType, reportResult, viewerId, baseColumns]);
 
   const orderedColumns = columnOrder.map((key) => baseColumns.find((column) => column.key === key)).filter(Boolean) as typeof baseColumns;
   const visibleColumns = orderedColumns.filter((column) => visibleColumnKeys.includes(column.key));
   const applied = reportResult?.applied ?? {};
+  
   const previewFilters = [
     { label: t(lang, "report.filter_report_type"), value: t(lang, `report.${appliedReportType.replace(/-/g, "_")}` as UiKey, appliedReportType) },
     { label: t(lang, "report.filter_country"), value: applied.country ?? scope?.lockedCountryName ?? "—" },
@@ -260,6 +301,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
     { label: t(lang, "report.generated_by" as UiKey, "Generated by"), value: reportResult?.generatedBy?.name ?? viewerName ?? "—" },
     { label: t(lang, "report.generated_at"), value: reportResult?.generatedAt ? new Date(reportResult.generatedAt).toLocaleString() : "—" }
   ];
+
   const companyInfo = {
     name: "DIGITAL DOCK ERP",
     printedBy: viewerName || "ERP User",
@@ -293,15 +335,26 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
     });
   };
 
-  useEffect(() => {
-    if (!reportResult || typeof window === "undefined") return;
-    window.localStorage.setItem(`erp-report-columns:${viewerId || "anonymous"}:${appliedReportType}`, JSON.stringify({ visible: visibleColumnKeys, order: columnOrder }));
-  }, [visibleColumnKeys, columnOrder, appliedReportType, reportResult, viewerId]);
+  // Executive summary metrics calculation
+  const totalEntriesCount = reportResult?.records || reportData.length || 0;
+  const totalCreditVal = Number(reportSummary?.credit || reportSummary?.totalCredit || reportSummary?.totalIncome || 0);
+  const totalDebitVal = Number(reportSummary?.debit || reportSummary?.totalDebit || reportSummary?.totalExpense || 0);
+  const netBalanceVal = Number(reportSummary?.balance || reportSummary?.netBalance || reportSummary?.totalAmount || (totalCreditVal - totalDebitVal));
+  const clearedCount = Number(reportSummary?.clearedCount || reportSummary?.postedCount || 0);
+  const remainingCount = Math.max(0, totalEntriesCount - clearedCount);
+  const currentCurrencySymbol = appliedCurrency !== "all" ? appliedCurrency : "AED";
+
+  // Active country / branch names for Card 1
+  const selectedCountryName = meta?.countries.find((c) => c.id === filters.countryId)?.name || scope?.lockedCountryName || "United Arab Emirates";
+  const selectedBranchName = meta?.cityBranches.find((b) => b.id === filters.branchId)?.name || meta?.mainBranches.find((b) => b.id === filters.mainBranchId)?.name || scope?.lockedBranchName || "UNITED ARAB EMIRATES MAIN BRANCH";
 
   if (metaLoading) {
     return (
-      <div className="flex h-60 items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-indigo-500" />
+      <div className="flex h-64 w-full items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+          <p className="text-xs font-semibold text-slate-500">Loading Report Engine...</p>
+        </div>
       </div>
     );
   }
@@ -318,174 +371,423 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
     );
   }
 
+  const topActionsContent = (
+    <div className="flex items-center gap-2">
+      <Button type="button" variant="ghost" size="sm" className="gap-2 text-xs font-semibold" onClick={() => router.back()}>
+        <ChevronRight className="h-4 w-4 rotate-180" aria-hidden />
+        Back
+      </Button>
+      <Button
+        type="button"
+        variant={filtersOpen ? "default" : "outline"}
+        size="sm"
+        className="gap-2 text-xs font-semibold"
+        onClick={() => setFiltersOpen((v) => !v)}
+      >
+        <SlidersHorizontal className="h-4 w-4" aria-hidden />
+        {filtersOpen ? "Hide Filters" : "Search / Filters"}
+      </Button>
+      <div className="relative">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="gap-2 text-xs font-semibold"
+          onClick={() => setActionsMenuOpen((v) => !v)}
+        >
+          <MoreVertical className="h-4 w-4" />
+          Actions
+        </Button>
+        {actionsMenuOpen ? (
+          <div
+            className="absolute right-0 top-full z-50 mt-1.5 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95"
+            onMouseLeave={() => setActionsMenuOpen(false)}
+          >
+            <button
+              type="button"
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
+              onClick={() => {
+                setActionsMenuOpen(false);
+                if (appliedFilters) fetchReport(appliedFilters);
+              }}
+            >
+              <RefreshCcw className="h-3.5 w-3.5" />
+              Reload Report
+            </button>
+            <button
+              type="button"
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
+              onClick={() => {
+                setActionsMenuOpen(false);
+                openGenericErpReport({
+                  title: `${panelTitle} — ${t(lang, `report.${appliedReportType.replace(/-/g, "_")}` as UiKey, appliedReportType)}`,
+                  lang,
+                  columns: visibleColumns,
+                  rows: reportData,
+                  summary: reportSummary,
+                  filters: previewFilters,
+                  companyInfo
+                });
+              }}
+            >
+              <Printer className="h-3.5 w-3.5" />
+              Print / PDF Document
+            </button>
+            <button
+              type="button"
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
+              onClick={() => {
+                setActionsMenuOpen(false);
+                const csvRows = [
+                  visibleColumns.map((c) => c.label),
+                  ...reportData.map((r) => visibleColumns.map((c) => String(r[c.key] ?? "")))
+                ];
+                const csvStr = csvRows.map((r) => r.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")).join("\n");
+                const blob = new Blob(["\uFEFF" + csvStr], { type: "text/csv;charset=utf-8;" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = `report_${appliedReportType}_${new Date().toISOString().slice(0, 10)}.csv`;
+                a.click();
+                URL.revokeObjectURL(url);
+              }}
+            >
+              <DownloadActionIcon className="h-3.5 w-3.5" />
+              Excel / CSV Export
+            </button>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+
   return (
-    <div className="space-y-6" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="w-full space-y-4 text-foreground" dir={isRTL ? "rtl" : "ltr"}>
+      {/* Action portal mount */}
+      {actionsSlot && createPortal(topActionsContent, actionsSlot)}
 
-      {/* Panel Header */}
-      <div className={cn(
-        "relative overflow-hidden rounded-3xl p-6 text-white shadow-xl",
-        scope?.level === "global"
-          ? "bg-gradient-to-br from-indigo-600 via-violet-600 to-purple-700"
-          : scope?.level === "country"
-          ? "bg-gradient-to-br from-emerald-600 via-teal-600 to-cyan-700"
-          : "bg-gradient-to-br from-blue-600 via-blue-600 to-indigo-700"
-      )}>
-        {/* Background blobs */}
-        <div className="absolute top-0 right-0 h-40 w-40 rounded-full bg-white/10 -translate-y-1/2 translate-x-1/2 blur-2xl" />
-        <div className="absolute bottom-0 left-0 h-32 w-32 rounded-full bg-white/10 translate-y-1/2 -translate-x-1/2 blur-2xl" />
-
-        <div className="relative flex flex-col sm:flex-row sm:items-center gap-4">
-          <div className={cn(
-            "rounded-2xl p-3 bg-white/20 backdrop-blur-sm w-fit",
-          )}>
-            <Globe2 className="h-7 w-7 text-white" />
-          </div>
-          <div>
-            <h1 className="text-2xl font-black text-white">
-              {_(panelTitleKey)}
+      {/* Header Bar */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              {panelTitle}
             </h1>
-            <p className="text-sm text-white/75 mt-0.5">
-              {_(panelSubtitleKey)}
-            </p>
+            <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 uppercase">
+              {t(lang, `report.${appliedReportType.replace(/-/g, "_")}` as UiKey, appliedReportType)}
+            </span>
           </div>
-          {/* Scope badge */}
-          <div className="sm:ml-auto">
-            <div className="flex items-center gap-2 rounded-xl bg-white/15 backdrop-blur-sm border border-white/20 px-4 py-2">
-              <div className="h-2 w-2 rounded-full bg-emerald-300 animate-pulse" />
-              <span className="text-xs font-black text-white uppercase tracking-wider">
-                {scope?.scopeLabel}
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Generated Date: {reportResult?.generatedAt ? new Date(reportResult.generatedAt).toLocaleString() : new Date().toLocaleString()}
+          </p>
+        </div>
+
+        {/* Fallback top buttons if action slot is not in layout */}
+        {!actionsSlot && topActionsContent}
+      </div>
+
+      {/* 4 Executive KPI Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5">
+        {/* Card 1: Branch & User Details */}
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-blue-50/60 dark:bg-blue-900/15">
+            <div className="bg-blue-600 p-1 rounded-full text-white flex-shrink-0">
+              <Users className="h-3.5 w-3.5" />
+            </div>
+            <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
+              1. BRANCH & USER DETAILS
+            </h4>
+          </div>
+          <div className="p-3.5 flex flex-col gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+            <div className="flex justify-between items-center">
+              <span>COUNTRY:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{selectedCountryName}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>BRANCH NAME:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase truncate max-w-[180px]">{selectedBranchName}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>USER ID:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] font-mono">{viewerId || "1001-000000000000000000"}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>USER NAME:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{viewerName || "SUPER ADMIN"}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>ROLE:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{scope?.level ? scope.level.toUpperCase() : "SUPER ADMIN"}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>DATE & TIME:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}</span>
+            </div>
+            <div className="flex justify-between items-center mt-auto pt-1.5">
+              <span>STATUS:</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">ACTIVE</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 2: Global Financial Summary */}
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/60 dark:bg-emerald-900/15">
+            <div className="bg-emerald-600 p-1 rounded-full text-white flex-shrink-0">
+              <DollarSign className="h-3.5 w-3.5" />
+            </div>
+            <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
+              2. GLOBAL FINANCIAL SUMMARY
+            </h4>
+          </div>
+          <div className="p-3.5 flex flex-col gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+            <div className="flex justify-between items-center">
+              <span>TOTAL GLOBAL ENTRIES:</span>
+              <span className="font-black text-slate-800 dark:text-slate-200">{totalEntriesCount}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>TOTAL CREDIT ({currentCurrencySymbol}):</span>
+              <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono">{fmtNum(totalCreditVal)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-rose-600 dark:text-rose-400">TOTAL DEBIT ({currentCurrencySymbol}):</span>
+              <span className="font-black text-rose-600 dark:text-rose-400 font-mono">{fmtNum(totalDebitVal)}</span>
+            </div>
+            <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
+              <span className="text-slate-700 dark:text-slate-300 font-bold">BALANCE ({currentCurrencySymbol}):</span>
+              <span className="font-black text-blue-600 dark:text-blue-400 font-mono text-sm">{fmtNum(netBalanceVal)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: Bill Entries Summary */}
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-purple-50/60 dark:bg-purple-900/15">
+            <div className="bg-purple-600 p-1 rounded-full text-white flex-shrink-0">
+              <Receipt className="h-3.5 w-3.5" />
+            </div>
+            <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">
+              3. BILL ENTRIES SUMMARY
+            </h4>
+          </div>
+          <div className="p-3.5 flex flex-col gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+            <div className="flex justify-between items-center">
+              <span>TOTAL BILL ENTRIES:</span>
+              <span className="font-black text-slate-800 dark:text-slate-200">{totalEntriesCount}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>CLEARED ENTRIES:</span>
+              <span className="font-black text-emerald-600 dark:text-emerald-400">{clearedCount}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-rose-600">REMAINING ENTRIES:</span>
+              <span className="font-black text-rose-600">{remainingCount}</span>
+            </div>
+            <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+              <span>SYSTEM STATUS:</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">ONLINE & SYNCED</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: All Countries Report Breakdown */}
+        <button
+          type="button"
+          onClick={() => setShowAllCountries(!showAllCountries)}
+          className={cn(
+            "flex flex-col rounded-xl border transition-all duration-200 text-left overflow-hidden h-full group",
+            showAllCountries
+              ? "border-orange-500 bg-orange-50/30 shadow-md dark:border-orange-500/50 dark:bg-orange-950/20"
+              : "border-slate-200 bg-white shadow-sm hover:border-orange-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+          )}
+        >
+          <div className={cn(
+            "flex items-center justify-between px-3.5 py-2.5 border-b w-full transition-colors",
+            showAllCountries
+              ? "border-orange-200 bg-orange-100/50 dark:border-orange-900/50 dark:bg-orange-900/30"
+              : "border-slate-100 bg-orange-50/60 dark:border-slate-800 dark:bg-orange-900/15"
+          )}>
+            <div className="flex items-center gap-2">
+              <div className="bg-orange-600 p-1 rounded-full text-white flex-shrink-0">
+                <Globe2 className="h-3.5 w-3.5" />
+              </div>
+              <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">
+                4. ALL COUNTRIES REPORT
+              </h4>
+            </div>
+            <ChevronDown className={cn("h-4 w-4 text-orange-600 transition-transform duration-200", showAllCountries ? "rotate-180" : "")} />
+          </div>
+          <div className="p-3.5 flex flex-col justify-between h-full w-full">
+            <div className="space-y-1">
+              <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                Active Countries: <span className="font-extrabold text-orange-600">{meta?.countries?.length || 1}</span>
+              </div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                Total Branches: <span className="font-semibold text-slate-700 dark:text-slate-300">{(meta?.mainBranches?.length || 0) + (meta?.cityBranches?.length || 0)}</span>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+              <span className="text-[11px] font-bold text-orange-600 group-hover:underline">
+                {showAllCountries ? "Hide Details" : "Show Details"}
+              </span>
+              <span className="text-[10px] font-bold text-orange-600 bg-orange-100/80 dark:bg-orange-950/60 px-2 py-0.5 rounded">
+                EXPLORE â†’
               </span>
             </div>
           </div>
-        </div>
+        </button>
       </div>
 
-      {/* Filter Bar */}
-      <ReportFilterBar
-        lang={lang}
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onReset={handleReset}
-        onApply={handleApply}
-        countries={meta?.countries ?? []}
-        mainBranches={meta?.mainBranches ?? []}
-        cityBranches={meta?.cityBranches ?? []}
-        users={meta?.users ?? []}
-        projects={meta?.projects ?? []}
-        currencies={meta?.currencies ?? []}
-        reportTypes={meta?.reportTypes ?? []}
-        lockedCountryId={scope?.lockedCountryId}
-        lockedCountryName={scope?.lockedCountryName ?? undefined}
-        lockedBranchId={scope?.lockedBranchId}
-        lockedBranchName={scope?.lockedBranchName ?? scope?.lockedMainBranchName ?? undefined}
-        showCountryFilter
-        showBranchFilter
-        showUserFilter
-        showCurrencyFilter
-        showReportTypeFilter
-      />
+      {/* Expanded All Countries Breakdown Panel */}
+      {showAllCountries ? (
+        <div className="rounded-xl border border-orange-200 bg-orange-50/40 p-4 dark:border-orange-900/50 dark:bg-orange-950/20 animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-xs font-black uppercase tracking-wider text-orange-900 dark:text-orange-300">
+              Country & Branch Breakdown Directory
+            </h3>
+            <span className="text-[11px] text-orange-700 dark:text-orange-400">
+              Click a country to filter instantly
+            </span>
+          </div>
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+            {meta?.countries?.map((c) => (
+              <div
+                key={c.id}
+                onClick={() => {
+                  handleFilterChange("countryId", c.id);
+                  void fetchReport({ ...filters, countryId: c.id });
+                }}
+                className={cn(
+                  "cursor-pointer rounded-xl border p-3 transition-all hover:shadow-md",
+                  filters.countryId === c.id
+                    ? "border-orange-500 bg-orange-100/70 dark:border-orange-400 dark:bg-orange-900/40 font-bold"
+                    : "border-white/80 bg-white/90 dark:border-slate-800 dark:bg-slate-900/80"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-slate-800 dark:text-slate-200">{c.name}</span>
+                  <span className="text-[10px] font-mono text-slate-400">{c.currency_code || "AED"}</span>
+                </div>
+                <div className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
+                  {meta?.mainBranches?.filter((b: any) => b.country_id === c.id).length || 1} Branches Active
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
 
-      {/* Report Content */}
-      {!hasLoaded && !reportLoading && (
-        <div className="flex h-40 items-center justify-center rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/40">
-          <div className="text-center">
-            <Globe2 className="h-8 w-8 text-slate-300 dark:text-slate-700 mx-auto mb-2" />
-            <p className="text-sm font-semibold text-slate-400 dark:text-slate-500">
-              Select filters and click Apply to generate the report
-            </p>
+      {/* Collapsible Filter Bar */}
+      {filtersOpen ? (
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 animate-in fade-in slide-in-from-top-2">
+          <ReportFilterBar
+            lang={lang}
+            filters={filters}
+            onFilterChange={handleFilterChange}
+            onReset={handleReset}
+            onApply={handleApply}
+            countries={meta?.countries ?? []}
+            mainBranches={meta?.mainBranches ?? []}
+            cityBranches={meta?.cityBranches ?? []}
+            users={meta?.users ?? []}
+            projects={meta?.projects ?? []}
+            currencies={meta?.currencies ?? []}
+            reportTypes={meta?.reportTypes ?? []}
+            lockedCountryId={scope?.lockedCountryId}
+            lockedCountryName={scope?.lockedCountryName ?? undefined}
+            lockedBranchId={scope?.lockedBranchId}
+            lockedBranchName={scope?.lockedBranchName ?? scope?.lockedMainBranchName ?? undefined}
+            showCountryFilter
+            showBranchFilter
+            showUserFilter
+            showCurrencyFilter
+            showReportTypeFilter
+          />
+        </div>
+      ) : null}
+
+      {/* Applied report snapshot */}
+      {reportResult && (
+        <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-3 dark:border-indigo-900/60 dark:bg-indigo-950/20">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-[11px] font-black uppercase tracking-wider text-indigo-900 dark:text-indigo-200">
+              {t(lang, "report.applied_filters" as UiKey, "Applied report snapshot")}
+            </h2>
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+              {t(lang, "report.real_data" as UiKey, "Real database data")} · {(reportResult.sourceTables ?? []).join(", ")}
+            </span>
+          </div>
+          <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
+            {previewFilters.slice(0, 6).map((item) => (
+              <div key={item.label} className="rounded-lg border border-white/80 bg-white/80 px-2.5 py-1.5 dark:border-slate-800 dark:bg-slate-900/80">
+                <div className="text-[9px] font-bold uppercase tracking-wide text-slate-400">{item.label}</div>
+                <div className="mt-0.5 truncate text-xs font-bold text-slate-800 dark:text-slate-200">{item.value}</div>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
+      {/* Export Toolbar */}
       {hasLoaded && (
-        <>
-          {reportResult && (
-            <div className="rounded-2xl border border-indigo-100 bg-indigo-50/60 p-4 dark:border-indigo-900/60 dark:bg-indigo-950/20">
-              <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                <h2 className="text-xs font-black uppercase tracking-wider text-indigo-900 dark:text-indigo-200">
-                  {t(lang, "report.applied_filters" as UiKey, "Applied report snapshot")}
-                </h2>
-                <span className="rounded-full bg-emerald-100 px-2.5 py-1 text-[10px] font-black text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-                  {t(lang, "report.real_data" as UiKey, "Real database data")} · {(reportResult.sourceTables ?? []).join(", ")}
-                </span>
-              </div>
-              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                {previewFilters.map((item) => (
-                  <div key={item.label} className="rounded-xl border border-white/80 bg-white/80 px-3 py-2 dark:border-slate-800 dark:bg-slate-900/80">
-                    <div className="text-[9px] font-black uppercase tracking-wide text-slate-400">{item.label}</div>
-                    <div className="mt-0.5 truncate text-xs font-bold text-slate-800 dark:text-slate-200">{item.value}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Export Toolbar */}
-          <ReportExportToolbar
-            lang={lang}
-            reportType={appliedReportType}
-            reportTitle={`${_(panelTitleKey)} — ${t(lang, `report.${appliedReportType.replace(/-/g, "_")}` as UiKey, appliedReportType)}`}
-            data={reportData}
-            summary={reportSummary}
-            scopeLabel={reportResult?.scope?.label ?? scope?.scopeLabel ?? ""}
-            generatedAt={reportResult?.generatedAt}
-            isLoading={reportLoading}
-            onReload={() => appliedFilters && fetchReport(appliedFilters)}
-            currency={appliedCurrency}
-            searchQuery={searchQuery}
-            onSearchQueryChange={setSearchQuery}
-            density={density}
-            onDensityChange={setDensity}
-            columns={orderedColumns}
-            visibleColumnKeys={visibleColumnKeys}
-            onToggleColumn={toggleColumn}
-            onMoveColumn={moveColumn}
-            previewFilters={previewFilters}
-            companyInfo={companyInfo}
-          />
-
-          {/* KPI Cards */}
-          <ReportKpiCards
-            lang={lang}
-            summary={reportSummary}
-            reportType={appliedReportType}
-            currency={appliedCurrency !== "all" ? appliedCurrency : "USD"}
-            isLoading={reportLoading}
-          />
-
-          {/* Error State */}
-          {reportError && !reportLoading && (
-            <div className="rounded-2xl border border-rose-200 bg-rose-50 dark:bg-rose-950/20 dark:border-rose-900 p-5 flex items-center gap-3">
-              <AlertCircle className="h-5 w-5 text-rose-500 flex-shrink-0" />
-              <div>
-                <p className="font-bold text-rose-700 dark:text-rose-400">{_("report.error")}</p>
-                <p className="text-xs text-rose-600 dark:text-rose-500 mt-0.5">{reportError}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Data Table */}
-          <ReportDataTable
-            lang={lang}
-            columns={visibleColumns}
-            rows={reportData}
-            isLoading={reportLoading}
-            hasError={Boolean(reportError)}
-            currency={appliedCurrency !== "all" ? appliedCurrency : "USD"}
-            searchable={false}
-            pageSize={50}
-            stripedRows
-            searchQuery={searchQuery}
-            onSearchQueryChange={setSearchQuery}
-            density={density}
-            onRowClick={setSelectedRow}
-          />
-        </>
+        <ReportExportToolbar
+          lang={lang}
+          reportType={appliedReportType}
+          reportTitle={`${panelTitle} — ${t(lang, `report.${appliedReportType.replace(/-/g, "_")}` as UiKey, appliedReportType)}`}
+          data={reportData}
+          summary={reportSummary}
+          scopeLabel={reportResult?.scope?.label ?? scope?.scopeLabel ?? ""}
+          generatedAt={reportResult?.generatedAt}
+          isLoading={reportLoading}
+          onReload={() => appliedFilters && fetchReport(appliedFilters)}
+          currency={appliedCurrency}
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
+          density={density}
+          onDensityChange={setDensity}
+          columns={orderedColumns}
+          visibleColumnKeys={visibleColumnKeys}
+          onToggleColumn={toggleColumn}
+          onMoveColumn={moveColumn}
+          previewFilters={previewFilters}
+          companyInfo={companyInfo}
+        />
       )}
 
+      {/* Error State */}
+      {reportError && !reportLoading && (
+        <div className="rounded-2xl border border-rose-200 bg-rose-50 dark:bg-rose-950/20 dark:border-rose-900 p-5 flex items-center gap-3">
+          <AlertCircle className="h-5 w-5 text-rose-500 flex-shrink-0" />
+          <div>
+            <p className="font-bold text-rose-700 dark:text-rose-400">{_("report.error")}</p>
+            <p className="text-xs text-rose-600 dark:text-rose-500 mt-0.5">{reportError}</p>
+          </div>
+        </div>
+      )}
+
+      {/* Data Table */}
+      {hasLoaded && (
+        <ReportDataTable
+          lang={lang}
+          columns={visibleColumns}
+          rows={reportData}
+          isLoading={reportLoading}
+          hasError={Boolean(reportError)}
+          currency={appliedCurrency !== "all" ? appliedCurrency : "USD"}
+          searchable={false}
+          pageSize={50}
+          stripedRows
+          searchQuery={searchQuery}
+          onSearchQueryChange={setSearchQuery}
+          density={density}
+          onRowClick={setSelectedRow}
+        />
+      )}
+
+      {/* Record details modal */}
       {selectedRow && reportResult && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedRow(null); }}>
-          <div className="max-h-[90vh] w-full max-w-4xl overflow-auto rounded-3xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-950">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs" onMouseDown={(event) => { if (event.target === event.currentTarget) setSelectedRow(null); }}>
+          <div className="max-h-[90vh] w-full max-w-4xl overflow-auto rounded-2xl border border-slate-200 bg-white shadow-2xl dark:border-slate-800 dark:bg-slate-950 animate-in fade-in zoom-in-95">
             <div className="sticky top-0 z-10 flex items-center gap-3 border-b border-slate-200 bg-white/95 px-5 py-4 backdrop-blur dark:border-slate-800 dark:bg-slate-950/95">
               <div>
                 <h2 className="text-base font-black text-slate-900 dark:text-white">{t(lang, "report.record_details" as UiKey, "Report record details")}</h2>
@@ -493,7 +795,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               </div>
               <button
                 type="button"
-                className="ml-auto flex items-center gap-1.5 rounded-xl bg-indigo-600 px-3 py-2 text-xs font-black text-white hover:bg-indigo-700"
+                className="ml-auto flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2 text-xs font-black text-white hover:bg-blue-700"
                 onClick={() => openGenericErpReport({ title: `${t(lang, "report.record_details" as UiKey, "Record details")} — ${String(selectedRow.reference || selectedRow.id)}`, lang, columns: visibleColumns, rows: [selectedRow], summary: reportSummary, filters: previewFilters, companyInfo })}
               >
                 <Printer className="h-4 w-4" /> {t(lang, "report.print")}
@@ -502,7 +804,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
             </div>
             <div className="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3">
               {Object.entries(selectedRow).filter(([key]) => !["sourceTable"].includes(key)).map(([key, value]) => (
-                <div key={key} className="rounded-2xl border border-slate-200 p-3 dark:border-slate-800">
+                <div key={key} className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
                   <div className="text-[9px] font-black uppercase tracking-wide text-slate-400">{key.replace(/([A-Z])/g, " $1")}</div>
                   <div className="mt-1 break-words text-xs font-semibold text-slate-800 dark:text-slate-200">{value === null || value === undefined || value === "" ? "—" : typeof value === "object" ? JSON.stringify(value) : String(value)}</div>
                 </div>

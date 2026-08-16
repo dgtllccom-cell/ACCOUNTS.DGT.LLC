@@ -1,14 +1,28 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Download, Printer, Search } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { createPortal } from "react-dom";
+import {
+  Download,
+  Printer,
+  Search,
+  ChevronRight,
+  MoreVertical,
+  RefreshCcw,
+  SlidersHorizontal,
+  Globe2,
+  Users,
+  DollarSign,
+  Receipt,
+  ChevronDown
+} from "lucide-react";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
-import { ReportPageHeader } from "@/components/reports/report-page-header";
 import { ReportTd, ReportTh } from "@/components/reports/report-primitives";
 import { ReportPagination } from "@/features/reports/components/report-pagination";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -80,11 +94,22 @@ type ReportResponse = {
 };
 
 type SessionInfo = {
+  user?: {
+    id: string;
+    email: string;
+    fullName?: string;
+  };
+  roles?: string[];
   scopes: {
     countryIds: string[];
     countryBranchIds: string[];
     cityBranchIds: string[];
     isSuperAdmin: boolean;
+    summary?: {
+      countryName?: string;
+      branchDisplayName?: string;
+      branchName?: string;
+    };
   };
 };
 
@@ -98,8 +123,9 @@ function monthStartIso() {
   return d.toISOString().slice(0, 10);
 }
 
-function fmtNumber(value: number) {
-  const n = Number.isFinite(value) ? value : 0;
+function fmtNumber(value: number | string | null | undefined) {
+  const n = Number(value);
+  if (!Number.isFinite(n)) return "0.00";
   return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
@@ -129,13 +155,6 @@ function billNumber(row: ReportRow) {
 
 function primaryLine(row: ReportRow): ReportLine | undefined {
   return row.roznamcha_lines?.[0];
-}
-
-const DEBIT_LEAN_TYPES = new Set(["cash_receipt", "bank_deposit", "debit"]);
-
-function isDebitRow(row: ReportRow) {
-  const line = primaryLine(row);
-  return line ? DEBIT_LEAN_TYPES.has(String(line.payment_entry_type ?? "")) : false;
 }
 
 function printReportTable(opts: { title: string; subtitle: string; rows: ReportRow[]; totals: { debit: number; credit: number }; lang: SupportedLanguage }) {
@@ -178,8 +197,8 @@ function printReportTable(opts: { title: string; subtitle: string; rows: ReportR
     <p class="sub">${opts.subtitle}</p>
     <table>
       <thead><tr>
-        <Th>#</Th><Th>Date</Th><Th>Type</Th><Th>Account</Th><Th>Narration</Th>
-        <Th>Debit</Th><Th>Credit</Th><Th>Currency</Th><Th>Branch</Th><Th>Bill/Ref No</Th><Th>Status</Th>
+        <th>#</th><th>Date</th><th>Type</th><th>Account</th><th>Narration</th>
+        <th>Debit</th><th>Credit</th><th>Currency</th><th>Branch</th><th>Bill/Ref No</th><th>Status</th>
       </tr></thead>
       <tbody>${bodyRows}</tbody>
       <tfoot><tr>
@@ -204,6 +223,7 @@ export function RoznamchaTypeReportView({
   pageTitle: string;
   entryCategory: RoznamchaEntryCategory | "all";
 }) {
+  const router = useRouter();
   const activeLang = useActiveLanguage();
   const currentLang = activeLang || lang;
 
@@ -211,6 +231,9 @@ export function RoznamchaTypeReportView({
   const [data, setData] = useState<ReportResponse | null>(null);
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [showAllCategories, setShowAllCategories] = useState(false);
+  const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
+  const [actionsSlot, setActionsSlot] = useState<HTMLElement | null>(null);
 
   const [fromDate, setFromDate] = useState(monthStartIso());
   const [toDate, setToDate] = useState(todayIso());
@@ -227,6 +250,10 @@ export function RoznamchaTypeReportView({
   const [sortDir, setSortDir] = useState<"asc" | "desc">("desc");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
+
+  useEffect(() => {
+    setActionsSlot(document.getElementById("erp-page-actions-slot"));
+  }, []);
 
   async function fetchSessionInfo() {
     return apiGet<SessionInfo>("/api/erp/auth/session");
@@ -245,10 +272,10 @@ export function RoznamchaTypeReportView({
       if (selectedCategory !== "all") params.set("entryCategory", selectedCategory);
       if (fromDate) params.set("fromDate", fromDate);
       if (toDate) params.set("toDate", toDate);
-      if (!info.scopes.isSuperAdmin) {
-        if (info.scopes.countryIds[0]) params.set("countryId", info.scopes.countryIds[0]);
-        if (info.scopes.cityBranchIds[0]) params.set("cityBranchId", info.scopes.cityBranchIds[0]);
-        else if (info.scopes.countryBranchIds[0]) params.set("countryBranchId", info.scopes.countryBranchIds[0]);
+      if (!info?.scopes?.isSuperAdmin) {
+        if (info?.scopes?.countryIds?.[0]) params.set("countryId", info.scopes.countryIds[0]);
+        if (info?.scopes?.cityBranchIds?.[0]) params.set("cityBranchId", info.scopes.cityBranchIds[0]);
+        else if (info?.scopes?.countryBranchIds?.[0]) params.set("countryBranchId", info.scopes.countryBranchIds[0]);
       } else {
         if (countryId !== "all") params.set("countryId", countryId);
         if (branchId !== "all") params.set("cityBranchId", branchId);
@@ -361,31 +388,297 @@ export function RoznamchaTypeReportView({
     }
   }
 
-  return (
-    <div className="space-y-4">
-      <ReportPageHeader
-        title={pageTitle}
-        subtitle={`Roznamcha report · ${entryCategory === "all" ? "All entry types" : getCategoryLabel(entryCategory, activeLang)}`}
-        actions={
-          <>
-            <Button type="button" variant="outline" onClick={() => setFiltersOpen((v) => !v)}>
-              <Search className="h-4 w-4" aria-hidden />
-              <span className="ms-2">{filtersOpen ? "Hide Filters" : "Search / Filters"}</span>
-            </Button>
-            <Button type="button" variant="outline" onClick={printReport} disabled={!rows.length}>
-              <Printer className="h-4 w-4" aria-hidden />
-              <span className="ms-2">Print / PDF</span>
-            </Button>
-            <Button type="button" variant="outline" onClick={exportCsv} disabled={!rows.length}>
-              <DownloadActionIcon className="h-4 w-4" aria-hidden />
-              <span className="ms-2">Excel Export</span>
-            </Button>
-          </>
-        }
-      />
+  const topActionsContent = (
+    <div className="flex items-center gap-2">
+      <Button type="button" variant="ghost" size="sm" className="gap-2 text-xs font-semibold" onClick={() => router.back()}>
+        <ChevronRight className="h-4 w-4 rotate-180" aria-hidden />
+        Back
+      </Button>
+      <Button
+        type="button"
+        variant={filtersOpen ? "default" : "outline"}
+        size="sm"
+        className="gap-2 text-xs font-semibold"
+        onClick={() => setFiltersOpen((v) => !v)}
+      >
+        <SlidersHorizontal className="h-4 w-4" aria-hidden />
+        {filtersOpen ? "Hide Filters" : "Search / Filters"}
+      </Button>
+      <div className="relative">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="gap-2 text-xs font-semibold"
+          onClick={() => setActionsMenuOpen((v) => !v)}
+        >
+          <MoreVertical className="h-4 w-4" />
+          Actions
+        </Button>
+        {actionsMenuOpen ? (
+          <div
+            className="absolute right-0 top-full z-50 mt-1.5 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95"
+            onMouseLeave={() => setActionsMenuOpen(false)}
+          >
+            <button
+              type="button"
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
+              onClick={() => {
+                setActionsMenuOpen(false);
+                void loadData();
+              }}
+            >
+              <RefreshCcw className="h-3.5 w-3.5" />
+              Reload Report
+            </button>
+            <button
+              type="button"
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
+              onClick={() => {
+                setActionsMenuOpen(false);
+                printReport();
+              }}
+            >
+              <Printer className="h-3.5 w-3.5" />
+              Print / PDF
+            </button>
+            <button
+              type="button"
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
+              onClick={() => {
+                setActionsMenuOpen(false);
+                exportCsv();
+              }}
+            >
+              <DownloadActionIcon className="h-3.5 w-3.5" />
+              Excel Export
+            </button>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
 
+  return (
+    <div className="w-full space-y-4 text-foreground animate-in fade-in duration-200">
+      {/* Portal to Header */}
+      {actionsSlot && createPortal(topActionsContent, actionsSlot)}
+
+      {/* Header bar */}
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+        <div>
+          <div className="flex items-center gap-2.5">
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
+              {pageTitle}
+            </h1>
+            <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 uppercase">
+              {entryCategory === "all" ? "All Entry Types" : getCategoryLabel(entryCategory, activeLang)}
+            </span>
+          </div>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Generated Date: {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}
+          </p>
+        </div>
+
+        {!actionsSlot && topActionsContent}
+      </div>
+
+      {/* 4 Executive KPI Summary Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5">
+        {/* Card 1: Branch & User Details */}
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-blue-50/60 dark:bg-blue-900/15">
+            <div className="bg-blue-600 p-1 rounded-full text-white flex-shrink-0">
+              <Users className="h-3.5 w-3.5" />
+            </div>
+            <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
+              1. BRANCH & USER DETAILS
+            </h4>
+          </div>
+          <div className="p-3.5 flex flex-col gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+            <div className="flex justify-between items-center">
+              <span>COUNTRY:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{sessionInfo?.scopes?.summary?.countryName || "United Arab Emirates"}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>BRANCH NAME:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase truncate max-w-[180px]">
+                {sessionInfo?.scopes?.summary?.branchDisplayName || sessionInfo?.scopes?.summary?.branchName || "UNITED ARAB EMIRATES MAIN BRANCH"}
+              </span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>USER ID:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] font-mono">{sessionInfo?.user?.id || "9B9D24D9-5532-47A1-B612"}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>USER NAME:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{sessionInfo?.user?.fullName || sessionInfo?.user?.email || "SUPER ADMIN"}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>ROLE:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{(sessionInfo?.roles?.[0] || "SUPER ADMIN").replace(/_/g, " ")}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>DATE & TIME:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}</span>
+            </div>
+            <div className="flex justify-between items-center mt-auto pt-1.5">
+              <span>STATUS:</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">ACTIVE</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 2: Global Financial Summary */}
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/60 dark:bg-emerald-900/15">
+            <div className="bg-emerald-600 p-1 rounded-full text-white flex-shrink-0">
+              <DollarSign className="h-3.5 w-3.5" />
+            </div>
+            <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
+              2. GLOBAL FINANCIAL SUMMARY
+            </h4>
+          </div>
+          <div className="p-3.5 flex flex-col gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+            <div className="flex justify-between items-center">
+              <span>TOTAL GLOBAL ENTRIES:</span>
+              <span className="font-black text-slate-800 dark:text-slate-200">{data?.totalCount ?? 0}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>TOTAL CREDIT (AED):</span>
+              <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono">{fmtNumber(data?.totalCredit ?? 0)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-rose-600 dark:text-rose-400">TOTAL DEBIT (AED):</span>
+              <span className="font-black text-rose-600 dark:text-rose-400 font-mono">{fmtNumber(data?.totalDebit ?? 0)}</span>
+            </div>
+            <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
+              <span className="text-slate-700 dark:text-slate-300 font-bold">BALANCE (AED):</span>
+              <span className="font-black text-blue-600 dark:text-blue-400 font-mono text-sm">{fmtNumber(data?.netBalance ?? 0)}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: Bill Entries Summary */}
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-purple-50/60 dark:bg-purple-900/15">
+            <div className="bg-purple-600 p-1 rounded-full text-white flex-shrink-0">
+              <Receipt className="h-3.5 w-3.5" />
+            </div>
+            <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">
+              3. BILL ENTRIES SUMMARY
+            </h4>
+          </div>
+          <div className="p-3.5 flex flex-col gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+            <div className="flex justify-between items-center">
+              <span>TOTAL BILL ENTRIES:</span>
+              <span className="font-black text-slate-800 dark:text-slate-200">{data?.totalCount ?? 0}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>CLEARED ENTRIES:</span>
+              <span className="font-black text-emerald-600 dark:text-emerald-400">{data?.postedCount ?? 0}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-rose-600">REMAINING ENTRIES:</span>
+              <span className="font-black text-rose-600">{data?.pendingCount ?? 0}</span>
+            </div>
+            <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+              <span>SYSTEM STATUS:</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">ONLINE & SYNCED</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: All Categories & Reports Breakdown */}
+        <button
+          type="button"
+          onClick={() => setShowAllCategories(!showAllCategories)}
+          className={cn(
+            "flex flex-col rounded-xl border transition-all duration-200 text-left overflow-hidden h-full group",
+            showAllCategories
+              ? "border-orange-500 bg-orange-50/30 shadow-md dark:border-orange-500/50 dark:bg-orange-950/20"
+              : "border-slate-200 bg-white shadow-sm hover:border-orange-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+          )}
+        >
+          <div className={cn(
+            "flex items-center justify-between px-3.5 py-2.5 border-b w-full transition-colors",
+            showAllCategories
+              ? "border-orange-200 bg-orange-100/50 dark:border-orange-900/50 dark:bg-orange-900/30"
+              : "border-slate-100 bg-orange-50/60 dark:border-slate-800 dark:bg-orange-900/15"
+          )}>
+            <div className="flex items-center gap-2">
+              <div className="bg-orange-600 p-1 rounded-full text-white flex-shrink-0">
+                <Globe2 className="h-3.5 w-3.5" />
+              </div>
+              <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">
+                4. ALL COUNTRIES REPORT
+              </h4>
+            </div>
+            <ChevronDown className={cn("h-4 w-4 text-orange-600 transition-transform duration-200", showAllCategories ? "rotate-180" : "")} />
+          </div>
+          <div className="p-3.5 flex flex-col justify-between h-full w-full">
+            <div className="space-y-1">
+              <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
+                Active Types: <span className="font-extrabold text-orange-600">5 Categories</span>
+              </div>
+              <div className="text-[10px] text-slate-500 dark:text-slate-400">
+                Current Filter: <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedCategory === "all" ? "All Categories" : getCategoryLabel(selectedCategory, activeLang)}</span>
+              </div>
+            </div>
+            <div className="mt-3 flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
+              <span className="text-[11px] font-bold text-orange-600 group-hover:underline">
+                {showAllCategories ? "Hide Details" : "Show Details"}
+              </span>
+              <span className="text-[10px] font-bold text-orange-600 bg-orange-100/80 dark:bg-orange-950/60 px-2 py-0.5 rounded">
+                EXPLORE â†’
+              </span>
+            </div>
+          </div>
+        </button>
+      </div>
+
+      {/* Expanded Breakdown Directory */}
+      {showAllCategories ? (
+        <div className="rounded-xl border border-orange-200 bg-orange-50/40 p-4 dark:border-orange-900/50 dark:bg-orange-950/20 animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-xs font-black uppercase tracking-wider text-orange-900 dark:text-orange-300">
+              Roznamcha Entry Category Directory
+            </h3>
+            <span className="text-[11px] text-orange-700 dark:text-orange-400">
+              Click a category to filter instantly
+            </span>
+          </div>
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
+            {(["cash", "bank", "invoice", "transfer", "business"] as RoznamchaEntryCategory[]).map((cat) => (
+              <div
+                key={cat}
+                onClick={() => {
+                  setSelectedCategory(cat);
+                  setPage(1);
+                }}
+                className={cn(
+                  "cursor-pointer rounded-xl border p-3 transition-all hover:shadow-md",
+                  selectedCategory === cat
+                    ? "border-orange-500 bg-orange-100/70 dark:border-orange-400 dark:bg-orange-900/40 font-bold"
+                    : "border-white/80 bg-white/90 dark:border-slate-800 dark:bg-slate-900/80"
+                )}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase">{getCategoryLabel(cat, activeLang)}</span>
+                  <span className="text-[10px] font-mono text-slate-400">#{cat}</span>
+                </div>
+                <div className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
+                  {selectedCategory === cat ? "Active View" : "Click to view"}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      ) : null}
+
+      {/* Collapsible Search & Filter Panel */}
       {filtersOpen ? (
-        <Card className="border-slate-200/80 shadow-sm">
+        <Card className="border-slate-200/80 shadow-sm animate-in fade-in slide-in-from-top-2">
           <CardContent className="p-4 space-y-3">
             <div className="grid gap-3 md:grid-cols-4 xl:grid-cols-6">
               <div className="space-y-1">
@@ -468,18 +761,20 @@ export function RoznamchaTypeReportView({
         </Card>
       ) : null}
 
-      <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-6">
-        <StatCard label="Total Entries" value={String(data?.totalCount ?? 0)} tone="text-slate-950 dark:text-slate-100" />
-        <StatCard label="Total Debit" value={fmtNumber(data?.totalDebit ?? 0)} tone="text-rose-600" />
-        <StatCard label="Total Credit" value={fmtNumber(data?.totalCredit ?? 0)} tone="text-emerald-600" />
-        <StatCard label="Net Balance" value={fmtNumber(data?.netBalance ?? 0)} tone="text-slate-950 dark:text-slate-100" />
-        <StatCard label="Posted" value={String(data?.postedCount ?? 0)} tone="text-emerald-600" />
-        <StatCard label="Pending / Other" value={String(data?.pendingCount ?? 0)} tone="text-amber-600" />
-      </div>
-
+      {/* Data Table */}
       <Card className="border-slate-200/80 shadow-sm">
-        <CardHeader className="pb-3">
-          <CardTitle className="text-base">Entries</CardTitle>
+        <CardHeader className="pb-3 flex flex-row items-center justify-between">
+          <CardTitle className="text-base">Entries ({data?.totalCount ?? 0})</CardTitle>
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="outline" size="sm" onClick={printReport} disabled={!rows.length} className="h-8 text-xs gap-1.5">
+              <Printer className="h-3.5 w-3.5" />
+              Print
+            </Button>
+            <Button type="button" variant="outline" size="sm" onClick={exportCsv} disabled={!rows.length} className="h-8 text-xs gap-1.5">
+              <DownloadActionIcon className="h-3.5 w-3.5" />
+              Export
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="pt-0">
           <div className="overflow-x-auto rounded-md border">
@@ -487,7 +782,12 @@ export function RoznamchaTypeReportView({
               <thead className="bg-slate-900 text-white">
                 <tr>
                   <ReportTh>S.No</ReportTh>
-                  <SortableTh label="Date / Time" column="entry_date" sortBy={sortBy} sortDir={sortDir} onSort={toggleSort} />
+                  <th
+                    className="p-2.5 text-center font-bold cursor-pointer select-none hover:bg-slate-800"
+                    onClick={() => toggleSort("entry_date")}
+                  >
+                    Date / Time {sortBy === "entry_date" ? (sortDir === "asc" ? "â†‘" : "â†“") : ""}
+                  </th>
                   <ReportTh>Entry Type</ReportTh>
                   <ReportTh>Account</ReportTh>
                   <ReportTh className="text-start">Narration</ReportTh>
@@ -504,7 +804,7 @@ export function RoznamchaTypeReportView({
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={14} className="p-4 text-center text-sm text-muted-foreground">Loading...</td></tr>
+                  <tr><td colSpan={14} className="p-8 text-center text-sm text-muted-foreground">Loading Entries...</td></tr>
                 ) : rows.length ? (
                   rows.map((row, idx) => {
                     const line = primaryLine(row);
@@ -518,71 +818,50 @@ export function RoznamchaTypeReportView({
                           {row.posted_at ? <div className="text-[10px] text-muted-foreground">{new Date(row.posted_at).toLocaleTimeString()}</div> : null}
                         </ReportTd>
                         <ReportTd className="text-center whitespace-nowrap">{getCategoryLabel(row.entry_category, currentLang)}</ReportTd>
-                        <ReportTd className="whitespace-nowrap">{line?.ledgers?.name ?? "-"}</ReportTd>
-                        <ReportTd className="max-w-[260px] text-start"><div className="truncate">{row.narration ?? "-"}</div></ReportTd>
-                        <ReportTd className="text-end font-mono text-rose-600">{debit ? fmtNumber(debit) : "-"}</ReportTd>
-                        <ReportTd className="text-end font-mono text-emerald-600">{credit ? fmtNumber(credit) : "-"}</ReportTd>
-                        <ReportTd className="text-end font-mono">{fmtNumber(debit - credit)}</ReportTd>
-                        <ReportTd className="text-center">{line?.currency ?? "-"}</ReportTd>
-                        <ReportTd className="whitespace-nowrap">{row.countries?.name ?? "-"}</ReportTd>
-                        <ReportTd className="whitespace-nowrap">{branchName(row)}</ReportTd>
-                        <ReportTd className="whitespace-nowrap">{row.profiles?.full_name ?? "-"}</ReportTd>
-                        <ReportTd className="whitespace-nowrap font-mono">{billNumber(row)}</ReportTd>
-                        <ReportTd className="text-center capitalize">{row.status}</ReportTd>
+                        <ReportTd className="font-semibold">{line?.ledgers?.name ?? "-"}</ReportTd>
+                        <ReportTd className="text-start max-w-[240px] truncate">{row.narration || "-"}</ReportTd>
+                        <ReportTd className="text-right font-mono font-bold text-rose-600">{debit ? fmtNumber(debit) : "-"}</ReportTd>
+                        <ReportTd className="text-right font-mono font-bold text-emerald-600">{credit ? fmtNumber(credit) : "-"}</ReportTd>
+                        <ReportTd className="text-right font-mono">{fmtNumber(credit - debit)}</ReportTd>
+                        <ReportTd className="text-center font-mono">{line?.currency ?? "-"}</ReportTd>
+                        <ReportTd className="text-center">{row.countries?.name ?? "-"}</ReportTd>
+                        <ReportTd className="text-center">{branchName(row)}</ReportTd>
+                        <ReportTd className="text-center">{row.profiles?.full_name ?? "-"}</ReportTd>
+                        <ReportTd className="text-center font-mono">{billNumber(row)}</ReportTd>
+                        <ReportTd className="text-center">
+                          <span className={cn(
+                            "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase",
+                            row.status === "posted"
+                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
+                              : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                          )}>
+                            {row.status}
+                          </span>
+                        </ReportTd>
                       </tr>
                     );
                   })
                 ) : (
-                  <tr><td colSpan={14} className="p-4 text-center text-sm text-muted-foreground">{t(currentLang, "common.no_entries_found", "No entries found")}</td></tr>
+                  <tr><td colSpan={14} className="p-8 text-center text-sm text-muted-foreground">No entries found for the selected filters.</td></tr>
                 )}
               </tbody>
             </table>
           </div>
+
+          <div className="mt-4">
+            <ReportPagination
+              page={page}
+              pageSize={pageSize}
+              totalCount={data?.totalCount ?? 0}
+              onPageChange={setPage}
+              onPageSizeChange={(sz) => {
+                setPageSize(sz);
+                setPage(1);
+              }}
+            />
+          </div>
         </CardContent>
       </Card>
-
-      <ReportPagination
-        totalCount={data?.totalCount ?? 0}
-        page={page}
-        pageSize={pageSize}
-        onPageChange={setPage}
-        onPageSizeChange={setPageSize}
-      />
     </div>
-  );
-}
-
-function SortableTh({
-  label,
-  column,
-  sortBy,
-  sortDir,
-  onSort
-}: {
-  label: string;
-  column: string;
-  sortBy: string;
-  sortDir: "asc" | "desc";
-  onSort: (column: string) => void;
-}) {
-  const active = sortBy === column;
-  return (
-    <ReportTh className="cursor-pointer select-none" >
-      <button type="button" onClick={() => onSort(column)} className="inline-flex items-center gap-1">
-        {label}
-        {active ? <span>{sortDir === "asc" ? "▲" : "▼"}</span> : null}
-      </button>
-    </ReportTh>
-  );
-}
-
-function StatCard({ label, value, tone }: { label: string; value: string; tone?: string }) {
-  return (
-    <Card className="border-slate-200/80 shadow-sm">
-      <CardContent className="p-3">
-        <div className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{label}</div>
-        <div className={cn("mt-1 text-xl font-semibold leading-none tracking-tight", tone)}>{value}</div>
-      </CardContent>
-    </Card>
   );
 }

@@ -21,8 +21,8 @@ export default async function SuperAdminReportsPage() {
   const lang = session.preferredLanguage ?? "en";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <div className="mx-auto max-w-screen-2xl px-4 py-8 sm:px-6 lg:px-8">
+    <div className="min-h-screen w-full bg-slate-50/50 dark:bg-background text-foreground animate-in fade-in duration-200">
+      <div className="w-full px-3 sm:px-6 lg:px-8 py-4">
         <ReportPanel
           lang={lang}
           initialScopeLevel="global"

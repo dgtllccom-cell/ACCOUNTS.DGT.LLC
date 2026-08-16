@@ -36,6 +36,7 @@ export type BranchUser = {
   id: string;
   name: string;
   username: string;
+  loginId?: string;
   lastLogin?: string | null;
   temporaryPassword?: string | null;
   mobile?: string;
