@@ -48,6 +48,8 @@ import { openProformaInvoiceWindow } from "@/lib/reports/open-proforma-invoice-w
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
+import { BranchUserSummary, type OrgBreakdownNode } from "@/components/reports/branch-user-summary";
+import { useBranchUserContext } from "@/lib/hooks/use-branch-user-context";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import type { MultilingualText } from "@/lib/i18n/multilingual-translator";
 import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/purchase-order-translations";
@@ -1937,6 +1939,8 @@ export function PurchaseOrderManagementDashboard() {
   const router = useRouter();
   const activeLang = useActiveLanguage();
   const tr = useCallback((label: string) => translateHeader(activeLang, label), [activeLang]);
+  // Universal, session-RBAC-scoped Branch & User context for the reusable summary header.
+  const { context: branchContext, loading: branchContextLoading } = useBranchUserContext();
   const [reports, setReports] = useState<PurchaseReport[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -2318,6 +2322,35 @@ export function PurchaseOrderManagementDashboard() {
 
   const dashboardSummary = useMemo(() => getDashboardSummaryData(filtered, session), [filtered, session]);
 
+  // Adapt the page's computed totals into the reusable BranchUserSummary props (page-specific
+  // metrics + org breakdown), all derived from the already session-scoped `filtered` rows.
+  const summaryMetrics = useMemo(() => {
+    if (!dashboardSummary) return [];
+    const cur = dashboardSummary.localCurrency;
+    const fmt = (n: number) => `${(n || 0).toLocaleString()} ${cur}`;
+    return [
+      { label: "Total Purchase", value: fmt(dashboardSummary.totalPurchaseLC) },
+      { label: "Total Transferred", value: fmt(dashboardSummary.advancePaidLC), tone: "positive" as const },
+      { label: "Remaining Balance", value: fmt(dashboardSummary.remainingBalanceLC), tone: "negative" as const }
+    ];
+  }, [dashboardSummary]);
+  const summaryEntries = useMemo(
+    () => (dashboardSummary ? [{ label: "Total Entries", value: dashboardSummary.totalTransactions }] : []),
+    [dashboardSummary]
+  );
+  const orgBreakdown = useMemo<OrgBreakdownNode[]>(() => {
+    const byCountry = new Map<string, number>();
+    for (const r of filtered) {
+      const c = (r.countryName || "-").toString();
+      byCountry.set(c, (byCountry.get(c) ?? 0) + 1);
+    }
+    return Array.from(byCountry.entries()).map(([name, count]) => ({
+      level: "country" as const,
+      name,
+      metrics: [{ label: "Entries", value: count }]
+    }));
+  }, [filtered]);
+
   const pageHeaderContent = (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-4">
       <div>
@@ -2444,19 +2477,16 @@ export function PurchaseOrderManagementDashboard() {
             </div>
           </div>
 
-          {dashboardSummary && (
-            <DashboardSummaryHeader
-              summary={dashboardSummary}
-              mode="transfer"
-              lang={activeLang}
-              isSuperAdmin={isSuperAdmin}
-              rows={filtered}
-              expandedCountries={expandedCountries}
-              setExpandedCountries={setExpandedCountries}
-              selectedCountryForSummary={selectedCountryForSummary}
-              setSelectedCountryForSummary={setSelectedCountryForSummary}
-            />
-          )}
+          {/* Universal reusable Branch & User summary (session-RBAC-scoped context + page metrics).
+              Replaces the old per-page hardcoded DashboardSummaryHeader. */}
+          <BranchUserSummary
+            moduleTitle="Purchase Order"
+            context={branchContext}
+            loading={branchContextLoading}
+            metrics={summaryMetrics}
+            entries={summaryEntries}
+            breakdown={orgBreakdown}
+          />
         </div>
       )}
 
