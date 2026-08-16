@@ -4,6 +4,9 @@ import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorize, resolveReportScope, enforceScopeFilters } from "@/lib/permissions/middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { withLocalPg } from "@/lib/db/local-postgres";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 
 // ─────────────────────────────────────────────────────────────
 // Supported report types
@@ -39,6 +42,11 @@ const REPORT_TYPES = [
 ] as const;
 
 type ReportType = (typeof REPORT_TYPES)[number];
+
+function isMissingPrivilegedSupabaseKey(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return message.includes("SUPABASE_SECRET_KEY") || message.includes("SUPABASE_SERVICE_ROLE_KEY");
+}
 
 const reportQuerySchema = z.object({
   reportType: z.enum(REPORT_TYPES),
@@ -96,10 +104,99 @@ export async function GET(request: NextRequest) {
       requestedBranchId
     );
 
-    const admin = createSupabaseAdminClient();
     const limit = parsed.limit;
     const fromDate = parsed.fromDate;
     const toDate = parsed.toDate;
+
+    const needsLedgerLocalFallback = parsed.reportType === "ledger";
+    let admin: ReturnType<typeof createSupabaseAdminClient> | null = null;
+    try {
+      admin = createSupabaseAdminClient();
+    } catch (error) {
+      if (!needsLedgerLocalFallback || !isMissingPrivilegedSupabaseKey(error)) {
+        throw error;
+      }
+    }
+
+    if (!admin && needsLedgerLocalFallback) {
+      const lang = normalizeLanguage(parsed.lang, "en");
+      const viaPg = await withLocalPg(async (sql) => {
+        const ledgerRows = await sql`
+          select
+            l.id,
+            b.entry_date,
+            coalesce(l.description, b.narration, b.reference_no, '—') as description,
+            l.debit,
+            l.credit,
+            l.currency,
+            coalesce(l.enterprise_account_id, l.account_id) as account_id,
+            b.country_id,
+            b.country_branch_id,
+            b.city_branch_id,
+            coalesce(ea.name, a.name, l.account_number, '—') as account_name,
+            coalesce(l.account_number, a.code, '—') as account_no,
+            coalesce(ea.account_number, a.code, l.account_number, '—') as account_type
+          from public.ledger_posting_lines l
+          inner join public.ledger_posting_batches b on b.id = l.batch_id and b.deleted_at is null
+          left join public.enterprise_accounts ea on ea.id = l.enterprise_account_id and ea.deleted_at is null
+          left join public.accounts a on a.id = l.account_id and a.deleted_at is null
+          where l.created_at is not null
+            and (${effectiveCountryId ? sql`b.country_id = ${effectiveCountryId}` : sql`true`})
+            and (${effectiveBranchId ? sql`(b.city_branch_id = ${effectiveBranchId} or b.country_branch_id = ${effectiveBranchId})` : sql`true`})
+            and (${fromDate ? sql`b.entry_date >= ${fromDate}` : sql`true`})
+            and (${toDate ? sql`b.entry_date <= ${toDate}` : sql`true`})
+          order by b.entry_date desc, l.created_at desc
+          limit ${limit}
+        `;
+
+        return ledgerRows as any[];
+      });
+
+      const localizedAccounts = await localizeRecordNames(
+        (viaPg ?? []).map((row: any) => ({ id: row.account_id, name: row.account_name ?? row.account_no ?? "—" })),
+        "enterprise_accounts",
+        "name",
+        lang,
+        { phraseFallback: true }
+      );
+      const accountNameById = new Map(localizedAccounts.map((row) => [row.id, row.name] as const));
+
+      const data = (viaPg ?? []).map((r: any) => ({
+        serial: r.id?.slice(0, 8),
+        date: r.entry_date,
+        account: accountNameById.get(r.account_id) || r.account_name || r.account_no || "—",
+        accountNo: r.account_no || "—",
+        description: r.description || "—",
+        debit: Number(r.debit || 0),
+        credit: Number(r.credit || 0),
+        balance: Number(r.credit || 0) - Number(r.debit || 0),
+        currency: r.currency || "PKR",
+        status: "posted"
+      }));
+
+      const totals = data.reduce((acc: any, r: any) => ({
+        totalDebit: (acc.totalDebit || 0) + r.debit,
+        totalCredit: (acc.totalCredit || 0) + r.credit
+      }), { totalDebit: 0, totalCredit: 0 });
+
+      return apiOk({
+        reportType: parsed.reportType,
+        scope: {
+          level: scope.level,
+          label: scope.scopeLabel,
+          enforced: {
+            countryId: effectiveCountryId,
+            branchId: effectiveBranchId
+          }
+        },
+        lang: parsed.lang,
+        currency: parsed.currency ?? "USD",
+        data,
+        summary: { records: data.length, ...totals, netBalance: totals.totalCredit - totals.totalDebit },
+        records: data.length,
+        generatedAt: new Date().toISOString()
+      });
+    }
 
     let data: any[] = [];
     let summary: any = {};

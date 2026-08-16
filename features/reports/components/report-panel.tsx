@@ -15,6 +15,7 @@ import {
   RefreshCcw,
   SlidersHorizontal,
   ChevronDown,
+  ChevronLeft,
   Building2,
   Users,
   DollarSign,
@@ -447,239 +448,229 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
     );
   }
 
-  // Header strip actions content (Directly inside the ErpPageActions banner)
-  const topActionsContent = (
-    <div className="flex items-center gap-1.5">
-      {/* 1. Filter drawer trigger */}
-      <Button
-        type="button"
-        variant={filtersOpen ? "default" : "outline"}
-        size="sm"
-        className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold"
-        onClick={() => setFiltersOpen((v) => !v)}
-      >
-        <SlidersHorizontal className="h-3 w-3" aria-hidden />
-        {filtersOpen ? "Hide Filters" : "Search / Filters"}
-      </Button>
-
-      {/* 2. Live search input directly in header strip */}
-      <div className="relative min-w-[130px] sm:min-w-[170px]">
-        <Search className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder="Filter report..."
-          className="h-7 pl-7 pr-2 text-[11px] rounded-lg"
-        />
-        {searchQuery && (
-          <button
-            type="button"
-            onClick={() => setSearchQuery("")}
-            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          >
-            <X className="h-3 w-3" />
-          </button>
-        )}
-      </div>
-
-      {/* 3. Reload report */}
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold"
-        onClick={() => appliedFilters && fetchReport(appliedFilters)}
-        disabled={reportLoading}
-        title="Reload report data"
-      >
-        <RefreshCcw className={cn("h-3 w-3", reportLoading && "animate-spin")} />
-        <span className="hidden md:inline">Reload</span>
-      </Button>
-
-      {/* 4. Density toggle */}
-      <div className="hidden xl:flex items-center rounded-lg border border-slate-200 bg-slate-100/80 p-0.5 dark:border-slate-800 dark:bg-slate-900">
-        <button
-          type="button"
-          onClick={() => setDensity("comfortable")}
-          className={cn(
-            "rounded-md px-1.5 py-0.5 text-[10px] font-bold transition-colors",
-            density === "comfortable"
-              ? "bg-white text-blue-600 shadow-2xs dark:bg-slate-800 dark:text-blue-400"
-              : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-          )}
-        >
-          Comfortable
-        </button>
-        <button
-          type="button"
-          onClick={() => setDensity("compact")}
-          className={cn(
-            "rounded-md px-1.5 py-0.5 text-[10px] font-bold transition-colors",
-            density === "compact"
-              ? "bg-white text-blue-600 shadow-2xs dark:bg-slate-800 dark:text-blue-400"
-              : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
-          )}
-        >
-          Compact
-        </button>
-      </div>
-
-      {/* 5. Columns toggle */}
-      <div className="relative">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold"
-          onClick={() => setShowColumnsModal((v) => !v)}
-        >
-          <Columns3 className="h-3 w-3" />
-          <span className="hidden sm:inline">Columns</span>
-        </Button>
-        {showColumnsModal && (
-          <div
-            className="absolute right-0 top-full z-50 mt-1.5 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95"
-            onMouseLeave={() => setShowColumnsModal(false)}
-          >
-            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 mb-2">
-              <span className="text-xs font-bold text-slate-900 dark:text-white">Visible Columns</span>
-              <button type="button" onClick={() => setShowColumnsModal(false)} className="text-slate-400 hover:text-slate-600">
-                <X className="h-3.5 w-3.5" />
-              </button>
-            </div>
-            <div className="max-h-60 overflow-y-auto space-y-1 pr-1">
-              {orderedColumns.map((col, idx) => {
-                const isVisible = visibleColumnKeys.includes(col.key);
-                return (
-                  <div key={col.key} className="flex items-center justify-between gap-2 rounded-lg px-2 py-1 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs">
-                    <label className="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
-                      <input
-                        type="checkbox"
-                        checked={isVisible}
-                        onChange={() => toggleColumn(col.key)}
-                        className="rounded border-slate-300 text-blue-600"
-                      />
-                      <span className="truncate text-slate-700 dark:text-slate-300">{col.label}</span>
-                    </label>
-                    <div className="flex items-center gap-0.5">
-                      <button
-                        type="button"
-                        onClick={() => moveColumn(col.key, -1)}
-                        disabled={idx === 0}
-                        className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30"
-                      >
-                        <ArrowUp className="h-3 w-3" />
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => moveColumn(col.key, 1)}
-                        disabled={idx === orderedColumns.length - 1}
-                        className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30"
-                      >
-                        <ArrowDown className="h-3 w-3" />
-                      </button>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* 6. Export Options menu */}
-      <div className="relative">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold bg-blue-50/50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800"
-          onClick={() => setActionsMenuOpen((v) => !v)}
-        >
-          <MoreVertical className="h-3 w-3" />
-          Export
-        </Button>
-        {actionsMenuOpen ? (
-          <div
-            className="absolute right-0 top-full z-50 mt-1.5 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95"
-            onMouseLeave={() => setActionsMenuOpen(false)}
-          >
-            <button
-              type="button"
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
-              onClick={() => {
-                setActionsMenuOpen(false);
-                handlePrintAction();
-              }}
-            >
-              <Printer className="h-3.5 w-3.5 text-blue-600" />
-              Print / PDF Document
-            </button>
-            <button
-              type="button"
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
-              onClick={() => {
-                setActionsMenuOpen(false);
-                handleExcelExport();
-              }}
-            >
-              <Table2 className="h-3.5 w-3.5 text-emerald-600" />
-              Export to Excel (.xls)
-            </button>
-            <button
-              type="button"
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
-              onClick={() => {
-                setActionsMenuOpen(false);
-                handleCsvExport();
-              }}
-            >
-              <DownloadActionIcon className="h-3.5 w-3.5 text-teal-600" />
-              Export to CSV
-            </button>
-            <button
-              type="button"
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
-              onClick={() => {
-                setActionsMenuOpen(false);
-                handleWhatsAppShare();
-              }}
-            >
-              <Share2 className="h-3.5 w-3.5 text-emerald-500" />
-              Share via WhatsApp
-            </button>
-          </div>
-        ) : null}
-      </div>
-    </div>
-  );
-
-  // Title header override in strip
-  const titleSlotContent = (
-    <div className="flex items-center gap-2">
-      <h1 className="truncate text-xs font-black tracking-tight text-slate-900 dark:text-slate-100 sm:text-sm">
-        {panelTitle}
-      </h1>
-      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[9px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 uppercase">
-        {t(lang, `report.${appliedReportType.replace(/-/g, "_")}` as UiKey, appliedReportType)}
-      </span>
-    </div>
-  );
-
   return (
     <div className="w-full space-y-3 text-foreground" dir={isRTL ? "rtl" : "ltr"}>
-      {/* Portals directly into ErpPageActions banner strip */}
-      {actionsSlot && createPortal(topActionsContent, actionsSlot)}
-      {titleSlot && createPortal(titleSlotContent, titleSlot)}
+      {/* Top Standard ERP Report Toolbar Strip (Matches exact UI design) */}
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200/80 bg-white/95 px-3 py-1.5 shadow-xs transition-all dark:border-slate-800 dark:bg-slate-900/90">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Back Button */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => router.back()}
+            className="h-7 gap-1 rounded-lg border-slate-200 bg-slate-50 px-2.5 text-[10px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+          >
+            <ChevronLeft className="h-3 w-3" />
+            Back
+          </Button>
 
-      {/* Fallback bar if ErpPageActions banner is absent */}
-      {!actionsSlot && (
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2.5">
-          {titleSlotContent}
-          {topActionsContent}
+          {/* Filter Drawer Toggle */}
+          <Button
+            type="button"
+            variant={filtersOpen ? "default" : "outline"}
+            size="sm"
+            className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold"
+            onClick={() => setFiltersOpen((v) => !v)}
+          >
+            <SlidersHorizontal className="h-3 w-3" aria-hidden />
+            {filtersOpen ? "Hide Filters" : "Search / Filters"}
+          </Button>
+
+          {/* Live Search Input */}
+          <div className="relative min-w-[140px] sm:min-w-[180px]">
+            <Search className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Filter report..."
+              className="h-7 pl-7 pr-2 text-[11px] rounded-lg"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+
+          {/* Reload Button */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold"
+            onClick={() => appliedFilters && fetchReport(appliedFilters)}
+            disabled={reportLoading}
+            title="Reload report data"
+          >
+            <RefreshCcw className={cn("h-3 w-3", reportLoading && "animate-spin")} />
+            <span className="hidden md:inline">Reload</span>
+          </Button>
+
+          {/* Density Toggle */}
+          <div className="hidden xl:flex items-center rounded-lg border border-slate-200 bg-slate-100/80 p-0.5 dark:border-slate-800 dark:bg-slate-900">
+            <button
+              type="button"
+              onClick={() => setDensity("comfortable")}
+              className={cn(
+                "rounded-md px-1.5 py-0.5 text-[10px] font-bold transition-colors",
+                density === "comfortable"
+                  ? "bg-white text-blue-600 shadow-2xs dark:bg-slate-800 dark:text-blue-400"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              )}
+            >
+              Comfortable
+            </button>
+            <button
+              type="button"
+              onClick={() => setDensity("compact")}
+              className={cn(
+                "rounded-md px-1.5 py-0.5 text-[10px] font-bold transition-colors",
+                density === "compact"
+                  ? "bg-white text-blue-600 shadow-2xs dark:bg-slate-800 dark:text-blue-400"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+              )}
+            >
+              Compact
+            </button>
+          </div>
+
+          {/* Columns Selector */}
+          <div className="relative">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold"
+              onClick={() => setShowColumnsModal((v) => !v)}
+            >
+              <Columns3 className="h-3 w-3" />
+              <span className="hidden sm:inline">Columns</span>
+            </Button>
+            {showColumnsModal && (
+              <div
+                className="absolute left-0 top-full z-50 mt-1.5 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95"
+                onMouseLeave={() => setShowColumnsModal(false)}
+              >
+                <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 mb-2">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">Visible Columns</span>
+                  <button type="button" onClick={() => setShowColumnsModal(false)} className="text-slate-400 hover:text-slate-600">
+                    <X className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <div className="max-h-60 overflow-y-auto space-y-1 pr-1">
+                  {orderedColumns.map((col, idx) => {
+                    const isVisible = visibleColumnKeys.includes(col.key);
+                    return (
+                      <div key={col.key} className="flex items-center justify-between gap-2 rounded-lg px-2 py-1 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs">
+                        <label className="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
+                          <input
+                            type="checkbox"
+                            checked={isVisible}
+                            onChange={() => toggleColumn(col.key)}
+                            className="rounded border-slate-300 text-blue-600"
+                          />
+                          <span className="truncate text-slate-700 dark:text-slate-300">{col.label}</span>
+                        </label>
+                        <div className="flex items-center gap-0.5">
+                          <button
+                            type="button"
+                            onClick={() => moveColumn(col.key, -1)}
+                            disabled={idx === 0}
+                            className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30"
+                          >
+                            <ArrowUp className="h-3 w-3" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moveColumn(col.key, 1)}
+                            disabled={idx === orderedColumns.length - 1}
+                            className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30"
+                          >
+                            <ArrowDown className="h-3 w-3" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
-      )}
+
+        {/* Actions Dropdown */}
+        <div className="flex items-center gap-1.5">
+          <div className="relative">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1 rounded-lg px-2.5 text-[10px] font-bold bg-blue-50/50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800"
+              onClick={() => setActionsMenuOpen((v) => !v)}
+            >
+              <MoreVertical className="h-3 w-3" />
+              Actions
+            </Button>
+            {actionsMenuOpen ? (
+              <div
+                className="absolute right-0 top-full z-50 mt-1.5 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95"
+                onMouseLeave={() => setActionsMenuOpen(false)}
+              >
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
+                  onClick={() => {
+                    setActionsMenuOpen(false);
+                    handlePrintAction();
+                  }}
+                >
+                  <Printer className="h-3.5 w-3.5 text-blue-600" />
+                  Print / PDF Document
+                </button>
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
+                  onClick={() => {
+                    setActionsMenuOpen(false);
+                    handleExcelExport();
+                  }}
+                >
+                  <Table2 className="h-3.5 w-3.5 text-emerald-600" />
+                  Export to Excel (.xls)
+                </button>
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
+                  onClick={() => {
+                    setActionsMenuOpen(false);
+                    handleCsvExport();
+                  }}
+                >
+                  <DownloadActionIcon className="h-3.5 w-3.5 text-teal-600" />
+                  Export to CSV
+                </button>
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
+                  onClick={() => {
+                    setActionsMenuOpen(false);
+                    handleWhatsAppShare();
+                  }}
+                >
+                  <Share2 className="h-3.5 w-3.5 text-emerald-500" />
+                  Share via WhatsApp
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
 
       {/* 4 Executive KPI Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">

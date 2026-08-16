@@ -76,6 +76,11 @@ export function ErpPageActions() {
   const lang = useActiveLanguage();
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
+
+  // Report pages render their own dedicated toolbar strip directly on the page
+  const isReportPage = pathname?.startsWith("/dashboard/reports") || pathname?.startsWith("/dashboard/roznamcha/reports");
+  if (isReportPage) return null;
+
   const title = titleFromPath(pathname || "/dashboard", lang);
 
   useEffect(() => {
