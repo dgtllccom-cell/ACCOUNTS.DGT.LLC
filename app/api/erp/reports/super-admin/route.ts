@@ -30,7 +30,16 @@ const querySchema = z.object({
 type JsonRecord = Record<string, unknown>;
 
 function asObject(value: unknown): JsonRecord | null {
-  return value && typeof value === "object" && !Array.isArray(value) ? value as JsonRecord : null;
+  if (!value) return null;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed as JsonRecord : null;
+    } catch {
+      return null;
+    }
+  }
+  return typeof value === "object" && !Array.isArray(value) ? value as JsonRecord : null;
 }
 
 function projectName(value: unknown): string | null {
@@ -199,7 +208,7 @@ function buildHistoryTimeline(entryRows: Array<any>) {
     });
   }
 
-  ordered.forEach((row, index) => {
+  ordered.slice(1).forEach((row, index) => {
     const beforeData = asObject(row.before_data) ?? null;
     const afterData = asObject(row.after_data) ?? null;
     versions.push({

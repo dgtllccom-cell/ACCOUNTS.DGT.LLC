@@ -49,7 +49,8 @@ export class CustomersService {
       email: input.email ?? null,
       address: input.address ?? null,
       notes: input.notes ?? null,
-      originalLanguageCode: input.originalLanguage
+      originalLanguageCode: input.originalLanguage,
+      actorId: actorId ?? null
     });
 
     await customersRepository.insertContacts(customerId, input.contacts ?? []);
@@ -100,8 +101,7 @@ export class CustomersService {
       email: "email" in input ? input.email ?? null : undefined,
       address: "address" in input ? input.address ?? null : undefined,
       notes: "notes" in input ? input.notes ?? null : undefined,
-      originalLanguageCode: "originalLanguage" in input ? (input.originalLanguage ?? "en") : undefined,
-      isActive: undefined
+      originalLanguageCode: "originalLanguage" in input ? (input.originalLanguage ?? "en") : undefined
     });
     const after = await customersRepository.getById(id);
 

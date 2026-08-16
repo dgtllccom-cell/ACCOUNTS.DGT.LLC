@@ -630,7 +630,7 @@ export function AccountGeneralReportView({
         });
       }
     }
-    return [{ value: "all", label: "All Countries", keywords: "all countries" }, ...map.values()];
+    return [{ value: "all", label: tr("ALL COUNTRIES"), keywords: "all countries" }, ...map.values()];
   }, [rows]);
 
   const branchOptions = useMemo(() => {
@@ -642,7 +642,7 @@ export function AccountGeneralReportView({
         map.set(row.branchCode, option);
       }
     }
-    return [{ value: "all", label: "All Branches", keywords: "all branches" }, ...map.values()];
+    return [{ value: "all", label: tr("ALL BRANCHES"), keywords: "all branches" }, ...map.values()];
   }, [rows, draftCountryName]);
 
   // Sync draft states when active states change
@@ -858,46 +858,46 @@ export function AccountGeneralReportView({
   const dashboardCards = useMemo(() => {
     if (dashboardScope === "branch") {
       return [
-        { label: "Total Accounts", value: visibleSummary.totalAccounts },
-        { label: "Asset Accounts", value: visibleSummary.assetAccounts },
-        { label: "Expense Accounts", value: visibleSummary.expenseAccounts },
-        { label: "Income Accounts", value: visibleSummary.incomeAccounts },
-        { label: "Liability Accounts", value: visibleSummary.liabilityAccounts }
+        { label: tr("TOTAL ACCOUNTS"), value: visibleSummary.totalAccounts },
+        { label: tr("ASSET ACCOUNTS"), value: visibleSummary.assetAccounts },
+        { label: tr("EXPENSE ACCOUNTS"), value: visibleSummary.expenseAccounts },
+        { label: tr("INCOME ACCOUNTS"), value: visibleSummary.incomeAccounts },
+        { label: tr("LIABILITY ACCOUNTS"), value: visibleSummary.liabilityAccounts }
       ];
     }
 
     if (dashboardScope === "country") {
       return [
-        { label: "Total Accounts", value: visibleSummary.totalAccounts },
-        { label: "Total Debit", value: fmtNumber(visibleSummary.debitTotal) },
-        { label: "Total Credit", value: fmtNumber(visibleSummary.creditTotal) },
-        { label: "Net Balance", value: fmtNumber(visibleSummary.totalBalance) },
-        { label: "Active Accounts", value: visibleSummary.activeAccounts }
+        { label: tr("TOTAL ACCOUNTS"), value: visibleSummary.totalAccounts },
+        { label: tr("TOTAL DEBIT"), value: fmtNumber(visibleSummary.debitTotal) },
+        { label: tr("TOTAL CREDIT"), value: fmtNumber(visibleSummary.creditTotal) },
+        { label: tr("NET BALANCE"), value: fmtNumber(visibleSummary.totalBalance) },
+        { label: tr("ACTIVE ACCOUNTS"), value: visibleSummary.activeAccounts }
       ];
     }
 
     return [
-      { label: "Total Accounts", value: visibleSummary.totalAccounts },
-      { label: "Total Countries", value: visibleSummary.totalCountries },
-      { label: "Total Branches", value: visibleSummary.totalBranches },
-      { label: "Total Debit", value: fmtNumber(visibleSummary.debitTotal) },
-      { label: "Total Credit", value: fmtNumber(visibleSummary.creditTotal) },
-      { label: "Total Balance (USD)", value: fmtNumber(visibleSummary.totalBalance) }
+      { label: tr("TOTAL ACCOUNTS"), value: visibleSummary.totalAccounts },
+      { label: tr("TOTAL COUNTRIES"), value: visibleSummary.totalCountries },
+      { label: tr("TOTAL BRANCHES"), value: visibleSummary.totalBranches },
+      { label: tr("TOTAL DEBIT"), value: fmtNumber(visibleSummary.debitTotal) },
+      { label: tr("TOTAL CREDIT"), value: fmtNumber(visibleSummary.creditTotal) },
+      { label: tr("TOTAL BALANCE (USD)"), value: fmtNumber(visibleSummary.totalBalance) }
     ];
   }, [dashboardScope, visibleSummary]);
 
   const chartGroups = useMemo(() => {
     if (dashboardScope === "branch") {
       return [
-        { title: "Accounts by Category", rows: groupCounts(filteredRows, (row) => row.accountCategory) },
-        { title: "Accounts by Currency", rows: groupCounts(filteredRows, (row) => row.currency) },
-        { title: "Accounts by Status", rows: groupCounts(filteredRows, (row) => titleCase(row.status)) },
+        { title: tr("ACCOUNTS BY CATEGORY"), rows: groupCounts(filteredRows, (row) => row.accountCategory) },
+        { title: tr("ACCOUNTS BY CURRENCY"), rows: groupCounts(filteredRows, (row) => row.currency) },
+        { title: tr("ACCOUNTS BY STATUS"), rows: groupCounts(filteredRows, (row) => titleCase(row.status)) },
         {
-          title: "Branch Financial Summary",
+          title: tr("BRANCH FINANCIAL SUMMARY"),
           rows: [
-            { label: "Debit", value: visibleSummary.debitTotal },
-            { label: "Credit", value: visibleSummary.creditTotal },
-            { label: "Balance", value: visibleSummary.totalBalance }
+            { label: tr("DEBIT"), value: visibleSummary.debitTotal },
+            { label: tr("CREDIT"), value: visibleSummary.creditTotal },
+            { label: tr("BALANCE"), value: visibleSummary.totalBalance }
           ],
           formatValue: fmtNumber
         }
@@ -906,29 +906,29 @@ export function AccountGeneralReportView({
 
     if (dashboardScope === "country") {
       return [
-        { title: "Main Branch-wise Summary", rows: groupCounts(filteredRows, (row) => row.mainBranchName ?? row.branchName) },
-        { title: "City Branch-wise Summary", rows: groupCounts(filteredRows, (row) => row.cityBranchName ?? row.cityName) },
+        { title: tr("MAIN BRANCH-WISE SUMMARY"), rows: groupCounts(filteredRows, (row) => row.mainBranchName ?? row.branchName) },
+        { title: tr("CITY BRANCH-WISE SUMMARY"), rows: groupCounts(filteredRows, (row) => row.cityBranchName ?? row.cityName) },
         {
-          title: "Debit / Credit Summary",
+          title: tr("DEBIT / CREDIT SUMMARY"),
           rows: [
-            { label: "Debit", value: visibleSummary.debitTotal },
-            { label: "Credit", value: visibleSummary.creditTotal }
+            { label: tr("DEBIT"), value: visibleSummary.debitTotal },
+            { label: tr("CREDIT"), value: visibleSummary.creditTotal }
           ],
           formatValue: fmtNumber
         },
         {
-          title: "Balance Summary",
-          rows: [{ label: "Net Balance", value: visibleSummary.totalBalance }],
+          title: tr("BALANCE SUMMARY"),
+          rows: [{ label: tr("NET BALANCE"), value: visibleSummary.totalBalance }],
           formatValue: fmtNumber
         }
       ];
     }
 
     return [
-      { title: "Country-wise Summary", rows: groupSums(filteredRows, (row) => row.countryName, (row) => row.currentBalance), formatValue: fmtNumber },
-      { title: "Currency-wise Summary", rows: groupSums(filteredRows, (row) => row.currency, (row) => row.currentBalance), formatValue: fmtNumber },
-      { title: "Accounts by Category", rows: groupCounts(filteredRows, (row) => row.accountCategory) },
-      { title: "Accounts by Status", rows: groupCounts(filteredRows, (row) => titleCase(row.status)) }
+      { title: tr("COUNTRY-WISE SUMMARY"), rows: groupSums(filteredRows, (row) => row.countryName, (row) => row.currentBalance), formatValue: fmtNumber },
+      { title: tr("CURRENCY-WISE SUMMARY"), rows: groupSums(filteredRows, (row) => row.currency, (row) => row.currentBalance), formatValue: fmtNumber },
+      { title: tr("ACCOUNTS BY CATEGORY"), rows: groupCounts(filteredRows, (row) => row.accountCategory) },
+      { title: tr("ACCOUNTS BY STATUS"), rows: groupCounts(filteredRows, (row) => titleCase(row.status)) }
     ];
   }, [dashboardScope, filteredRows, visibleSummary.creditTotal, visibleSummary.debitTotal, visibleSummary.totalBalance]);
 
@@ -974,18 +974,18 @@ export function AccountGeneralReportView({
       title: "Account Register Report",
       subtitle: `Account Master Registry & Search Report - Generated ${new Date().toLocaleString()}`,
       rows: [
-        { label: "Report Scope", value: dashboardScope === "super_admin" ? "SUPER ADMIN" : dashboardScope === "country" ? "COUNTRY SCOPE" : "BRANCH SCOPE" },
-        { label: "Branch Name Details", value: activeBranchName },
-        { label: "Total Accounts", value: `${visibleSummary.totalAccounts.toLocaleString()} (${visibleSummary.activeAccounts} Active)` },
-        { label: "Total Debit (DR)", value: fmtNumber(visibleSummary.debitTotal) },
-        { label: "Total Credit (CR)", value: fmtNumber(visibleSummary.creditTotal) },
-        { label: "Net Balance", value: fmtNumber(visibleSummary.totalBalance) },
-        { label: "Selected Account", value: selectedRow ? `${selectedRow.accountName} (${selectedRow.accountCode})` : "None" },
-        { label: "Company Name", value: selectedRow?.companyName || "-" },
-        { label: "Bank Name", value: selectedRow?.bankName || "-" },
-        { label: "Warehouse Name", value: selectedRow?.warehouseName || "-" },
-        { label: "Owner Name", value: selectedRow?.ownerName || "-" },
-        { label: "Country", value: selectedRow?.countryName || "-" }
+        { label: tr("REPORT SCOPE"), value: dashboardScope === "super_admin" ? "SUPER ADMIN" : dashboardScope === "country" ? tr("COUNTRY SCOPE") : tr("BRANCH SCOPE") },
+        { label: `${tr("BRANCH NAME")} ${tr("DETAILS")}`, value: activeBranchName },
+        { label: tr("TOTAL ACCOUNTS"), value: `${visibleSummary.totalAccounts.toLocaleString()} (${visibleSummary.activeAccounts} ${tr("ACTIVE")})` },
+        { label: `${tr("TOTAL DEBIT")} (DR)`, value: fmtNumber(visibleSummary.debitTotal) },
+        { label: `${tr("TOTAL CREDIT")} (CR)`, value: fmtNumber(visibleSummary.creditTotal) },
+        { label: tr("NET BALANCE"), value: fmtNumber(visibleSummary.totalBalance) },
+        { label: tr("SELECTED ACCOUNT"), value: selectedRow ? `${selectedRow.accountName} (${selectedRow.accountCode})` : "None" },
+        { label: tr("COMPANY NAME"), value: selectedRow?.companyName || "-" },
+        { label: tr("BANK NAME"), value: selectedRow?.bankName || "-" },
+        { label: tr("WAREHOUSE NAME"), value: selectedRow?.warehouseName || "-" },
+        { label: tr("OWNER NAME"), value: selectedRow?.ownerName || "-" },
+        { label: tr("COUNTRY"), value: selectedRow?.countryName || "-" }
       ],
       autoPrint,
       lang
@@ -1244,7 +1244,7 @@ export function AccountGeneralReportView({
                     <div className="text-lg">📊</div>
                     <div>
                       <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-[11px] uppercase tracking-wider">General Report</h3>
-                      <div className="text-[9px] font-bold text-slate-500">{allFilteredRows.length} Total Accounts ({allFilteredRows.filter(row => row.status === "active").length} Active)</div>
+                      <div className="text-[9px] font-bold text-slate-500">{allFilteredRows.length} {tr("TOTAL ACCOUNTS")} ({allFilteredRows.filter(row => row.status === "active").length} {tr("ACTIVE")})</div>
                     </div>
                   </div>
                   <div className="flex flex-col items-end">
@@ -1264,7 +1264,7 @@ export function AccountGeneralReportView({
                       <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-450">{fmtNumber(allFilteredRows.reduce((sum, r) => sum + r.creditTotal, 0))}</span>
                     </div>
                     <div className="flex justify-between items-center text-[11px] pt-1.5 border-t border-dashed border-slate-200 dark:border-slate-750">
-                      <span className="font-bold text-slate-650 dark:text-slate-300 uppercase text-[9px] tracking-wider">Net Balance</span>
+                      <span className="font-bold text-slate-650 dark:text-slate-300 uppercase text-[9px] tracking-wider">{tr("NET BALANCE")}</span>
                       {(() => {
                         const bal = allFilteredRows.reduce((sum, r) => sum + r.currentBalance, 0);
                         return (
@@ -1330,7 +1330,7 @@ export function AccountGeneralReportView({
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-[11px] pt-1.5 border-t border-dashed border-slate-200 dark:border-slate-750">
-                      <span className="font-bold text-slate-650 dark:text-slate-300 uppercase text-[9px] tracking-wider">Net Balance</span>
+                      <span className="font-bold text-slate-650 dark:text-slate-300 uppercase text-[9px] tracking-wider">{tr("NET BALANCE")}</span>
                       {(() => {
                         const bal = userBranchRows.reduce((sum, r) => sum + r.currentBalance, 0);
                         return (
@@ -1405,7 +1405,7 @@ export function AccountGeneralReportView({
                           <span className="font-mono font-extrabold text-emerald-600 dark:text-emerald-450">{fmtNumber(r.creditTotal)} {r.currency}</span>
                         </div>
                         <div className="flex justify-between items-center text-[11px] pt-1.5 border-t border-dashed border-slate-200 dark:border-slate-750">
-                          <span className="font-bold text-slate-650 dark:text-slate-300 uppercase text-[9px] tracking-wider">Net Balance</span>
+                          <span className="font-bold text-slate-650 dark:text-slate-300 uppercase text-[9px] tracking-wider">{tr("NET BALANCE")}</span>
                           <span className={cn("font-mono font-black", r.netBalance < 0 ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-450")}>
                             {fmtNumber(r.netBalance)} {r.currency}
                           </span>
@@ -1448,10 +1448,10 @@ export function AccountGeneralReportView({
             <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <div className="mb-2 flex items-start justify-between gap-2">
                 <div>
-                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Accounts</div>
-                  <div className="text-xs font-black text-blue-700 dark:text-blue-300">SYSTEM WIDE</div>
+                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tr("TOTAL ACCOUNTS")}</div>
+                  <div className="text-xs font-black text-blue-700 dark:text-blue-300">{tr("SYSTEM WIDE")}</div>
                 </div>
-                <span className="rounded-full bg-blue-50 px-2 py-1 text-[10px] font-black text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">{visibleSummary.activeAccounts} Active</span>
+                <span className="rounded-full bg-blue-50 px-2 py-1 text-[10px] font-black text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">{visibleSummary.activeAccounts} {tr("ACTIVE")}</span>
               </div>
               <div className="grid grid-cols-1 gap-2 text-[10px] normal-case">
                 <div className="rounded-lg bg-slate-50 p-2 dark:bg-slate-950/50">
@@ -1464,14 +1464,14 @@ export function AccountGeneralReportView({
             <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <div className="mb-2 flex items-start justify-between gap-2">
                 <div>
-                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Debit</div>
-                  <div className="text-xs font-black text-rose-700 dark:text-rose-300">RECEIVABLES / DR</div>
+                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tr("TOTAL DEBIT")}</div>
+                  <div className="text-xs font-black text-rose-700 dark:text-rose-300">{tr("RECEIVABLES / DR")}</div>
                 </div>
                 <span className="rounded-full bg-rose-50 px-2 py-1 text-[10px] font-black text-rose-700 dark:bg-rose-950/30 dark:text-rose-300">Aggregated</span>
               </div>
               <div className="grid grid-cols-1 gap-2 text-[10px] normal-case">
                 <div className="rounded-lg bg-rose-50 p-2 dark:bg-rose-950/20">
-                  <div className="font-bold uppercase text-rose-600">Debit Total</div>
+                  <div className="font-bold uppercase text-rose-600">{tr("TOTAL DEBIT")}</div>
                   <div className="font-mono text-sm font-black text-rose-700 dark:text-rose-300">{fmtNumber(visibleSummary.debitTotal)}</div>
                 </div>
               </div>
@@ -1480,14 +1480,14 @@ export function AccountGeneralReportView({
             <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <div className="mb-2 flex items-start justify-between gap-2">
                 <div>
-                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Total Credit</div>
-                  <div className="text-xs font-black text-emerald-700 dark:text-emerald-300">PAYABLES / CR</div>
+                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tr("TOTAL CREDIT")}</div>
+                  <div className="text-xs font-black text-emerald-700 dark:text-emerald-300">{tr("PAYABLES / CR")}</div>
                 </div>
                 <span className="rounded-full bg-emerald-50 px-2 py-1 text-[10px] font-black text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">Aggregated</span>
               </div>
               <div className="grid grid-cols-1 gap-2 text-[10px] normal-case">
                 <div className="rounded-lg bg-emerald-50 p-2 dark:bg-rose-950/20">
-                  <div className="font-bold uppercase text-emerald-600">Credit Total</div>
+                  <div className="font-bold uppercase text-emerald-600">{tr("TOTAL CREDIT")}</div>
                   <div className="font-mono text-sm font-black text-emerald-700 dark:text-emerald-300">{fmtNumber(visibleSummary.creditTotal)}</div>
                 </div>
               </div>
@@ -1496,14 +1496,14 @@ export function AccountGeneralReportView({
             <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
               <div className="mb-2 flex items-start justify-between gap-2">
                 <div>
-                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">Net Balance</div>
-                  <div className="text-xs font-black text-blue-700 dark:text-blue-300">OVERALL POSITION</div>
+                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-400">{tr("NET BALANCE")}</div>
+                  <div className="text-xs font-black text-blue-700 dark:text-blue-300">{tr("OVERALL POSITION")}</div>
                 </div>
                 <span className="rounded-full bg-slate-100 px-2 py-1 text-[10px] font-black text-slate-700 dark:bg-slate-800 dark:text-slate-300">Consolidated</span>
               </div>
               <div className="grid grid-cols-1 gap-2 text-[10px] normal-case">
                 <div className={cn("rounded-lg p-2", visibleSummary.totalBalance < 0 ? "bg-rose-50 dark:bg-rose-950/20" : "bg-emerald-50 dark:bg-emerald-950/20")}>
-                  <div className={cn("font-bold uppercase", visibleSummary.totalBalance < 0 ? "text-rose-600" : "text-emerald-600")}>Balance</div>
+                  <div className={cn("font-bold uppercase", visibleSummary.totalBalance < 0 ? "text-rose-600" : "text-emerald-600")}>{tr("BALANCE")}</div>
                   <div className={cn("font-mono text-sm font-black", visibleSummary.totalBalance < 0 ? "text-rose-700 dark:text-rose-300" : "text-emerald-700 dark:text-emerald-300")}>{fmtNumber(visibleSummary.totalBalance)}</div>
                 </div>
               </div>
@@ -1518,13 +1518,13 @@ export function AccountGeneralReportView({
           <div className="rounded border border-slate-200 bg-slate-50/30 p-4 dark:border-slate-800 dark:bg-slate-955 animate-in fade-in duration-200">
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               <label className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Country Scope</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{tr("COUNTRY SCOPE")}</span>
                 <select value={draftCountryName} onChange={(e) => setDraftCountryName(e.target.value)} disabled={!isSuperAdmin && dashboardScope !== "super_admin"} className="h-9 w-full rounded border border-slate-250 bg-white px-3 text-xs focus:border-blue-500 outline-none transition disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-800 dark:bg-slate-950">
                   {countryOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
               </label>
               <label className="space-y-1">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">Branch Scope</span>
+                <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{tr("BRANCH SCOPE")}</span>
                 <select value={draftBranchCode} onChange={(e) => setDraftBranchCode(e.target.value)} className="h-9 w-full rounded border border-slate-250 bg-white px-3 text-xs focus:border-blue-500 outline-none transition disabled:bg-slate-100 disabled:text-slate-500 dark:border-slate-800 dark:bg-slate-950">
                   {branchOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
                 </select>
@@ -1539,18 +1539,18 @@ export function AccountGeneralReportView({
               </label>
               <label className="space-y-1 flex gap-2">
                 <div className="w-1/2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">From Date</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">{tr("DATE FROM")}</span>
                   <input type="date" value={draftFromDate} onChange={(e) => setDraftFromDate(e.target.value)} className="h-9 w-full rounded border border-slate-250 bg-white px-3 text-xs focus:border-blue-500 outline-none transition dark:border-slate-800 dark:bg-slate-950" />
                 </div>
                 <div className="w-1/2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">To Date</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 block mb-1">{tr("DATE TO")}</span>
                   <input type="date" value={draftToDate} onChange={(e) => setDraftToDate(e.target.value)} className="h-9 w-full rounded border border-slate-250 bg-white px-3 text-xs focus:border-blue-500 outline-none transition dark:border-slate-800 dark:bg-slate-950" />
                 </div>
               </label>
             </div>
             <div className="mt-3 flex justify-end gap-2 border-t border-slate-150 pt-3 dark:border-slate-800">
-              <Button size="sm" variant="outline" onClick={resetFilters} className="h-8 text-[10px] font-bold">Reset Filters</Button>
-              <Button size="sm" onClick={applyFilters} className="bg-blue-600 hover:bg-blue-700 text-white h-8 text-[10px] font-bold"><RefreshCw className={cn("mr-1.5 h-3.5 w-3.5", loading && "animate-spin")} />Apply Filters</Button>
+              <Button size="sm" variant="outline" onClick={resetFilters} className="h-8 text-[10px] font-bold">{tr("RESET FILTERS")}</Button>
+              <Button size="sm" onClick={applyFilters} className="bg-blue-600 hover:bg-blue-700 text-white h-8 text-[10px] font-bold"><RefreshCw className={cn("mr-1.5 h-3.5 w-3.5", loading && "animate-spin")} />{tr("APPLY FILTERS")}</Button>
             </div>
           </div>
         ) : null}
@@ -1574,12 +1574,12 @@ export function AccountGeneralReportView({
                 <thead className="sticky top-0 z-10 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
                   <tr>
                     {[
-                      { label: "Master Reference & Account Overview", span: 7, cls: "bg-slate-50 dark:bg-slate-900/40 text-slate-700 dark:text-slate-300 border-t-2 border-t-slate-400" },
-                      { label: "Contact Details", span: 1, cls: "bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-400 border-t-2 border-t-emerald-500" },
-                      { label: "Branch & Location", span: 3, cls: "bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-800 dark:text-indigo-400 border-t-2 border-t-indigo-500" },
-                      { label: "Financial Information", span: 4, cls: "bg-blue-50/50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-400 border-t-2 border-t-blue-500" },
-                      { label: "Start & Status", span: 2, cls: "bg-amber-50/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-400 border-t-2 border-t-amber-500" },
-                      { label: "Actions", span: 1, cls: "bg-slate-100 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-t-2 border-t-slate-300" },
+                      { label: tr("MASTER REFERENCE & ACCOUNT OVERVIEW"), span: 7, cls: "bg-slate-50 dark:bg-slate-900/40 text-slate-700 dark:text-slate-300 border-t-2 border-t-slate-400" },
+                      { label: tr("CONTACT DETAILS"), span: 1, cls: "bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-800 dark:text-emerald-400 border-t-2 border-t-emerald-500" },
+                      { label: tr("BRANCH & LOCATION"), span: 3, cls: "bg-indigo-50/50 dark:bg-indigo-950/20 text-indigo-800 dark:text-indigo-400 border-t-2 border-t-indigo-500" },
+                      { label: tr("FINANCIAL INFORMATION"), span: 4, cls: "bg-blue-50/50 dark:bg-blue-950/20 text-blue-800 dark:text-blue-400 border-t-2 border-t-blue-500" },
+                      { label: tr("START & STATUS"), span: 2, cls: "bg-amber-50/50 dark:bg-amber-950/20 text-amber-800 dark:text-amber-400 border-t-2 border-t-amber-500" },
+                      { label: tr("ACTIONS"), span: 1, cls: "bg-slate-100 dark:bg-slate-800/40 text-slate-600 dark:text-slate-400 border-t-2 border-t-slate-300" },
                     ].map((group) => (
                       <Th
                         key={group.label}
@@ -1599,7 +1599,7 @@ export function AccountGeneralReportView({
                       "STATUS", "ACTIONS"
                     ].map((header, i) => (
                       <Th key={i} className="px-3 py-3 border-r border-slate-100 dark:border-slate-800/50 last:border-r-0 whitespace-nowrap text-center align-middle">
-                        {header}
+                        {tr(header)}
                       </Th>
                     ))}
                   </tr>
@@ -1735,11 +1735,11 @@ export function AccountGeneralReportView({
                           <span className="font-mono font-bold text-[11px] text-slate-700 dark:text-slate-300">{fmtNumber(selectedRow.openingBalance)} {selectedRow.currency}</span>
                         </div>
                         <div className="flex justify-between items-center border-b border-blue-100 dark:border-blue-900/30 pb-1">
-                          <span className="text-rose-600 font-bold uppercase text-[9px]">Total Debit</span>
+                          <span className="text-rose-600 font-bold uppercase text-[9px]">{tr("TOTAL DEBIT")}</span>
                           <span className="font-mono font-bold text-[11px] text-rose-700 dark:text-rose-400">{fmtNumber(selectedRow.debitTotal)} {selectedRow.currency}</span>
                         </div>
                         <div className="flex justify-between items-center border-b border-blue-100 dark:border-blue-900/30 pb-1">
-                          <span className="text-emerald-600 font-bold uppercase text-[9px]">Total Credit</span>
+                          <span className="text-emerald-600 font-bold uppercase text-[9px]">{tr("TOTAL CREDIT")}</span>
                           <span className="font-mono font-bold text-[11px] text-emerald-700 dark:text-emerald-400">{fmtNumber(selectedRow.creditTotal)} {selectedRow.currency}</span>
                         </div>
                         <div className="flex justify-between items-center pt-1">

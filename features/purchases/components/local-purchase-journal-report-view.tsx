@@ -309,7 +309,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
             className="h-9 text-xs font-bold border-slate-200 dark:border-slate-800"
           >
             <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
-            Refresh
+            {th("REFRESH")}
           </Button>
 
           <JournalPrintButton
@@ -479,24 +479,24 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
             <CardContent className="p-4 space-y-3 text-xs">
               <div className="space-y-1.5 font-semibold">
                 <div className="flex justify-between"><span className="text-slate-400">CURRENCY:</span> <span className="font-mono font-black text-slate-800 dark:text-slate-200">{cg.currency}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">TOTAL PURCHASE:</span> <span className="font-mono font-black text-slate-900 dark:text-slate-100">{cg.totalPurchase.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-                <div className="flex justify-between"><span className="text-slate-400">TOTAL TRANSFERRED:</span> <span className="font-mono font-black text-emerald-600">{cg.totalPosted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("TOTAL PURCHASE")}:</span> <span className="font-mono font-black text-slate-900 dark:text-slate-100">{cg.totalPurchase.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+                <div className="flex justify-between"><span className="text-slate-400">{th("TOTAL TRANSFERRED")}:</span> <span className="font-mono font-black text-emerald-600">{cg.totalPosted.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
                 <div className="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-1.5"><span className="text-slate-400">{th("REMAINING BALANCE")}:</span> <span className="font-mono font-bold text-slate-800 dark:text-slate-200">0.00</span></div>
               </div>
 
               {/* Branch Breakdown Section inside Country Card */}
               <div className="border-t border-slate-100 dark:border-slate-800 pt-3 space-y-2">
                 <div className="flex items-center justify-between text-[10px] font-extrabold uppercase text-slate-500">
-                  <span>BRANCH BREAKDOWN</span>
+                  <span>{th("BRANCH BREAKDOWN")}</span>
                   <span className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 px-1.5 py-0.5 rounded text-[8px]">ALL</span>
                 </div>
                 {cg.branches.map(br => (
                   <div key={br.branchName} className="p-2.5 bg-slate-50 dark:bg-slate-800/40 rounded-xl border border-slate-100 dark:border-slate-800/60 space-y-1 text-[11px]">
                     <div className="font-black text-slate-800 dark:text-slate-200 uppercase">{br.branchName}</div>
                     <div className="flex justify-between items-center text-[10px]">
-                      <span className="text-slate-400">TOTAL PURCH:</span>
+                      <span className="text-slate-400">{th("TOTAL PURCH")}:</span>
                       <span className="font-mono font-bold text-red-500">{br.totalPurchase.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                      <span className="text-slate-400 ml-2">PAID ADV:</span>
+                      <span className="text-slate-400 ml-2">{th("PAID ADV")}:</span>
                       <span className="font-mono font-bold text-emerald-600">{br.postedAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
                     <div className="flex justify-between items-center text-[10px] border-t border-slate-200/40 dark:border-slate-700/40 pt-1">
@@ -531,26 +531,26 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
               <thead className="sticky top-0 z-10 bg-slate-900 text-white text-[9px] font-extrabold uppercase tracking-wider border-b border-slate-700">
                 <tr>
                   <Th className="p-2.5 text-center border-r border-slate-700"></Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-center">SUPER S/N</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-center">CTY S/N</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-center">BR S/N</Th>
-                  <Th className="p-2.5 border-r border-slate-700">VOUCHER NO</Th>
-                  <Th className="p-2.5 border-r border-slate-700">DATE</Th>
-                  <Th className="p-2.5 border-r border-slate-700">BRANCH NAME</Th>
-                  <Th className="p-2.5 border-r border-slate-700">COUNTRY</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-center">{th("SUPER S/N")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-center">{th("CTY S/N")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-center">{th("BR S/N")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700">{th("VOUCHER NO")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700">{th("DATE")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700">{th("BRANCH NAME")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700">{th("COUNTRY")}</Th>
                   <Th className="p-2.5 border-r border-slate-700">PURCHASE ACC (DR)</Th>
                   <Th className="p-2.5 border-r border-slate-700">SALES ACC (CR)</Th>
-                  <Th className="p-2.5 border-r border-slate-700">GOODS NAME</Th>
-                  <Th className="p-2.5 border-r border-slate-700">BRAND</Th>
-                  <Th className="p-2.5 border-r border-slate-700">ORIGIN</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-right">QTY</Th>
-                  <Th className="p-2.5 border-r border-slate-700">UNIT</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-right">GROSS WT</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-right">NET WT</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-right">PRICE</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-right font-black">TOTAL COST</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-center">PAY MODE</Th>
-                  <Th className="p-2.5 text-center">ACTIONS</Th>
+                  <Th className="p-2.5 border-r border-slate-700">{th("GOODS NAME")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700">{th("BRAND")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700">{th("ORIGIN")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-right">{th("QTY")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700">{th("UNIT")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-right">{th("GROSS WT")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-right">{th("NET WT")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-right">{th("PRICE")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-right font-black">{th("TOTAL COST")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-center">{th("PAY MODE")}</Th>
+                  <Th className="p-2.5 text-center">{th("ACTIONS")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[10px]">
@@ -558,7 +558,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                   <tr>
                     <td colSpan={19} className="p-8 text-center text-slate-400 font-mono">
                       <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600 mb-2" />
-                      Loading local purchase report records...
+                      {t(lang, "purchase.pmw_loading" as any, "Loading purchase records...")}
                     </td>
                   </tr>
                 ) : countryGroups.length === 0 ? (
@@ -788,7 +788,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                           <div className="rounded-xl border border-slate-200 bg-white p-3">
                             <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">Supplier Details</p>
                             <p className="text-sm font-black text-slate-900">{supplierName}</p>
-                            <p className="mt-1 text-slate-500">Country: United Arab Emirates</p>
+                            <p className="mt-1 text-slate-500">{th("COUNTRY")}: United Arab Emirates</p>
                             <p className="text-slate-500">Invoice Currency: <span className="font-bold text-slate-800">{rowCurrency}</span></p>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white p-3">
@@ -927,7 +927,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                       </div>
                       <div className="text-right text-[10px] space-y-0.5">
                         <span className="text-[9px] font-bold text-slate-400 uppercase block">Shipping & Logistics:</span>
-                        <div className="font-semibold text-slate-700">Mode: <span className="font-bold">{selectedRowForVoucher.shippingMode || selectedRowForVoucher.shipping_mode || "Loading"}</span></div>
+                        <div className="font-semibold text-slate-700">{th("MODE")}: <span className="font-bold">{selectedRowForVoucher.shippingMode || selectedRowForVoucher.shipping_mode || th("LOADING")}</span></div>
                         <div className="font-semibold text-slate-700">Warehouse: <span className="font-bold">{selectedRowForVoucher.warehouseName || selectedRowForVoucher.warehouse_name || "-"}</span></div>
                         <div className="font-semibold text-slate-700">Truck No: <span className="font-bold font-mono text-indigo-600">{selectedRowForVoucher.truckNo || selectedRowForVoucher.truck_no || "-"}</span></div>
                       </div>

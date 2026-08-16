@@ -686,6 +686,241 @@ export async function GET(request: NextRequest) {
         break;
       }
 
+      // ─── CUSTOMER ACCOUNTS ───────────────────────────────────────
+      case "customer-accounts": {
+        let q = admin
+          .from("customers")
+          .select(`id, name, customer_code, contact_person, phone, email, status,
+                   country_id, city_branch_id, created_at, countries(name)`)
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false });
+
+        q = applyStandardFilters(q, { dateField: "created_at" });
+        const { data: rows } = await q.limit(limit);
+
+        data = (rows ?? []).map((r: any) => ({
+          serial: r.customer_code || r.id?.slice(0, 8),
+          date: r.created_at,
+          customer: r.name || "—",
+          contactPerson: r.contact_person || "—",
+          phone: r.phone || "—",
+          email: r.email || "—",
+          country: r.countries?.name || "—",
+          status: r.status || "active"
+        }));
+
+        summary = { records: data.length };
+        break;
+      }
+
+      // ─── CUSTOMER COMPANIES ──────────────────────────────────────
+      case "customer-companies": {
+        let q = admin
+          .from("companies")
+          .select(`id, name, registration_number, tax_number, country_id, is_active, created_at, countries(name)`)
+          .is("deleted_at", null)
+          .order("created_at", { ascending: false });
+
+        q = applyStandardFilters(q, { dateField: "created_at" });
+        const { data: rows } = await q.limit(limit);
+
+        data = (rows ?? []).map((r: any) => ({
+          serial: r.registration_number || r.id?.slice(0, 8),
+          date: r.created_at,
+          company: r.name || "—",
+          regNo: r.registration_number || "—",
+          taxNo: r.tax_number || "—",
+          country: r.countries?.name || "—",
+          status: r.is_active ? "active" : "inactive"
+        }));
+
+        summary = { records: data.length };
+        break;
+      }
+
+      // ─── BRANCH TRANSACTIONS ─────────────────────────────────────
+      case "branch-transactions": {
+        let q = admin
+          .from("roznamcha_entries")
+          .select(`id, journal_no, voucher_no, entry_date, narration, type, status,
+                   country_id, city_branch_id, country_branch_id,
+                   roznamcha_lines(debit, credit, currency)`)
+          .is("deleted_at", null)
+          .order("entry_date", { ascending: false });
+
+        q = applyStandardFilters(q, { dateField: "entry_date" });
+        const { data: rows } = await q.limit(limit);
+
+        data = (rows ?? []).map((r: any) => {
+          const debit = r.roznamcha_lines?.reduce((s: number, l: any) => s + Number(l.debit || 0), 0) ?? 0;
+          const credit = r.roznamcha_lines?.reduce((s: number, l: any) => s + Number(l.credit || 0), 0) ?? 0;
+          return {
+            serial: r.journal_no || r.id?.slice(0, 8),
+            date: r.entry_date,
+            voucherNo: r.voucher_no || "—",
+            type: r.type,
+            narration: r.narration || "—",
+            debit,
+            credit,
+            amount: Math.max(debit, credit),
+            currency: r.roznamcha_lines?.[0]?.currency || "PKR",
+            status: r.status
+          };
+        });
+
+        summary = { records: data.length, totalAmount: data.reduce((s: number, r: any) => s + r.amount, 0) };
+        break;
+      }
+
+      // ─── AUDIT LOGS ──────────────────────────────────────────────
+      case "audit-logs": {
+        let q = admin
+          .from("audit_logs")
+          .select("id, created_at, user_id, action, resource_type, resource_id, ip_address, user_agent")
+          .order("created_at", { ascending: false });
+
+        if (fromDate) q = q.gte("created_at", fromDate);
+        if (toDate) q = q.lte("created_at", toDate);
+        const { data: rows } = await q.limit(limit);
+
+        data = (rows ?? []).map((r: any) => ({
+          serial: r.id?.slice(0, 8),
+          date: r.created_at,
+          userId: r.user_id || "—",
+          action: r.action || "—",
+          resource: r.resource_type || "—",
+          reference: r.resource_id || "—",
+          ip: r.ip_address || "—",
+          status: "logged"
+        }));
+
+        summary = { records: data.length };
+        break;
+      }
+
+      // ─── APPROVAL WORKFLOWS ──────────────────────────────────────
+      case "approval-workflows": {
+        let q = admin
+          .from("approval_requests")
+          .select(`id, entity_type, entity_id, status, requested_by, approved_by, created_at, updated_at`)
+          .order("created_at", { ascending: false });
+
+        if (fromDate) q = q.gte("created_at", fromDate);
+        if (toDate) q = q.lte("created_at", toDate);
+        const { data: rows } = await q.limit(limit);
+
+        data = (rows ?? []).map((r: any) => ({
+          serial: r.id?.slice(0, 8),
+          date: r.created_at,
+          entityType: r.entity_type || "—",
+          entityId: r.entity_id || "—",
+          requestedBy: r.requested_by || "—",
+          approvedBy: r.approved_by || "—",
+          status: r.status || "pending"
+        }));
+
+        summary = { records: data.length };
+        break;
+      }
+
+      // ─── EXPENSES ────────────────────────────────────────────────
+      case "expenses": {
+        let q = admin
+          .from("roznamcha_entries")
+          .select(`id, journal_no, voucher_no, entry_date, narration, status,
+                   country_id, city_branch_id,
+                   roznamcha_lines(debit, credit, currency, description)`)
+          .in("type", ["expense", "payment"])
+          .is("deleted_at", null)
+          .order("entry_date", { ascending: false });
+
+        q = applyStandardFilters(q, { dateField: "entry_date" });
+        const { data: rows } = await q.limit(limit);
+
+        data = (rows ?? []).map((r: any) => {
+          const debit = r.roznamcha_lines?.reduce((s: number, l: any) => s + Number(l.debit || 0), 0) ?? 0;
+          return {
+            serial: r.journal_no || r.id?.slice(0, 8),
+            date: r.entry_date,
+            voucherNo: r.voucher_no || "—",
+            narration: r.narration || r.roznamcha_lines?.[0]?.description || "—",
+            amount: debit,
+            currency: r.roznamcha_lines?.[0]?.currency || "PKR",
+            status: r.status
+          };
+        });
+
+        summary = { records: data.length, totalExpense: data.reduce((s: number, r: any) => s + r.amount, 0) };
+        break;
+      }
+
+      // ─── PURCHASE BOOKING / REGISTER ─────────────────────────────
+      case "purchase-booking":
+      case "purchase-booking-register": {
+        let q = admin
+          .from("purchase_orders")
+          .select(`id, po_number, po_date, status, total_amount, currency, advance_paid,
+                   remaining_amount, country_id, city_branch_id, country_branch_id,
+                   customers(name), countries(name)`)
+          .is("deleted_at", null)
+          .order("po_date", { ascending: false });
+
+        q = applyStandardFilters(q, { dateField: "po_date" });
+        const { data: rows } = await q.limit(limit);
+
+        data = (rows ?? []).map((r: any) => ({
+          serial: r.po_number || r.id?.slice(0, 8),
+          date: r.po_date,
+          party: r.customers?.name || "—",
+          amount: Number(r.total_amount || 0),
+          paid: Number(r.advance_paid || 0),
+          outstanding: Number(r.remaining_amount || 0),
+          currency: r.currency || "USD",
+          status: r.status
+        }));
+
+        summary = {
+          records: data.length,
+          totalAmount: data.reduce((s: number, r: any) => s + r.amount, 0),
+          totalPaid: data.reduce((s: number, r: any) => s + r.paid, 0),
+          totalOutstanding: data.reduce((s: number, r: any) => s + r.outstanding, 0)
+        };
+        break;
+      }
+
+      // ─── DAILY COMPREHENSIVE ─────────────────────────────────────
+      case "daily-comprehensive": {
+        let q = admin
+          .from("roznamcha_entries")
+          .select(`id, journal_no, voucher_no, entry_date, narration, type, status,
+                   country_id, city_branch_id,
+                   roznamcha_lines(debit, credit, currency)`)
+          .is("deleted_at", null)
+          .order("entry_date", { ascending: false });
+
+        q = applyStandardFilters(q, { dateField: "entry_date" });
+        const { data: rows } = await q.limit(limit);
+
+        data = (rows ?? []).map((r: any) => {
+          const debit = r.roznamcha_lines?.reduce((s: number, l: any) => s + Number(l.debit || 0), 0) ?? 0;
+          const credit = r.roznamcha_lines?.reduce((s: number, l: any) => s + Number(l.credit || 0), 0) ?? 0;
+          return {
+            serial: r.journal_no || r.id?.slice(0, 8),
+            date: r.entry_date,
+            type: r.type,
+            narration: r.narration || "—",
+            debit,
+            credit,
+            amount: Math.max(debit, credit),
+            currency: r.roznamcha_lines?.[0]?.currency || "PKR",
+            status: r.status
+          };
+        });
+
+        summary = { records: data.length, total: data.reduce((s: number, r: any) => s + r.amount, 0) };
+        break;
+      }
+
       // ─── FALLBACK ─────────────────────────────────────────────
       default: {
         data = [];

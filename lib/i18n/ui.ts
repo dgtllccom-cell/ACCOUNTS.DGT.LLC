@@ -184,6 +184,7 @@ export type UiKey =
   | "nav.country_branch"
   | "nav.city_branch"
   | "nav.user_entry"
+  | "nav.super_admin_all_users_directory"
   | "nav.user_form"
   | "nav.user_journal_report"
   | "nav.user_login_management"
@@ -988,6 +989,16 @@ export type UiKey =
   | "report.reload"
   | "report.search"
   | "report.search_placeholder"
+  | "report.search_filters"
+  | "report.hide_filters"
+  | "report.filter_report_placeholder"
+  | "report.reload_data"
+  | "report.apply_filters"
+  | "report.compact_mode"
+  | "report.visible_columns"
+  | "report.actions"
+  | "report.print_pdf_document"
+  | "report.density_comfortable"
   // ERP Reports System — Table
   | "report.no_data"
   | "report.reset_columns"
@@ -3446,6 +3457,7 @@ const en: Dict = {
   "nav.country_branch": "Country Branch",
   "nav.city_branch": "City Branch",
   "nav.user_entry": "User Registration & Employees",
+  "nav.super_admin_all_users_directory": "Super Admin / All Users Directory (A4 Handover)",
   "nav.user_form": "New User Registration / Employee Form",
   "nav.user_journal_report": "User & Employee Master Report",
   "nav.user_login_management": "User Login Management",
@@ -4205,6 +4217,16 @@ const en: Dict = {
   "report.reload": "Reload",
   "report.search": "Search",
   "report.search_placeholder": "Search report data...",
+  "report.search_filters": "Search / Filters",
+  "report.hide_filters": "Hide Filters",
+  "report.filter_report_placeholder": "Filter report...",
+  "report.reload_data": "Reload",
+  "report.apply_filters": "Apply Filters",
+  "report.compact_mode": "Compact",
+  "report.visible_columns": "Visible Columns",
+  "report.actions": "Actions",
+  "report.print_pdf_document": "Print / PDF Document",
+  "report.density_comfortable": "Comfortable",
   // ERP Reports System — table
   "report.no_data": "No data found",
   "report.reset_columns": "Reset Columns",
@@ -5626,6 +5648,7 @@ const ur: Dict = {
   "nav.country_branch": "کنٹری برانچ",
   "nav.city_branch": "سٹی برانچ",
   "nav.user_entry": "یوزر",
+  "nav.super_admin_all_users_directory": "سپر ایڈمن / تمام یوزرز ڈائریکٹری (اے 4 پرنٹ)",
   "nav.user_form": "یوزر رجسٹریشن",
   "nav.user_journal_report": "یوزر جرنل رپورٹ",
   "nav.user_login_management": "یوزر لاگ ان مینجمنٹ",
@@ -6153,6 +6176,16 @@ const ur: Dict = {
   "report.reload": "دوبارہ لوڈ کریں",
   "report.search": "تلاش",
   "report.search_placeholder": "رپورٹ دیٹا تلاش کریں...",
+  "report.search_filters": "تلاش / فلٹرز",
+  "report.hide_filters": "فلٹرز چھپائیں",
+  "report.filter_report_placeholder": "رپورٹ فلٹر کریں...",
+  "report.reload_data": "دوبارہ لوڈ",
+  "report.apply_filters": "فلٹرز لاگو کریں",
+  "report.compact_mode": "مختصر",
+  "report.visible_columns": "نمایاں کالم",
+  "report.actions": "کارروائیاں",
+  "report.print_pdf_document": "پرنٹ / پی ڈی ایف دستاویز",
+  "report.density_comfortable": "آرام دہ",
   "report.no_data": "کوئی ڈیٹا نہیں",
   "report.reset_columns": "کالمز ری سیٹ کریں",
   "report.drag_to_reorder": "کالم ترتیب دینے کے لیے گھسیٹیں",
@@ -7798,6 +7831,7 @@ const ar: Dict = {
   "nav.country_branch": "فرع الدولة",
   "nav.city_branch": "فرع المدينة",
   "nav.user_entry": "المستخدم",
+  "nav.super_admin_all_users_directory": "دليل المشرف العام / جميع المستخدمين (طباعة A4)",
   "nav.user_form": "تسجيل المستخدم",
   "nav.user_journal_report": "تقرير يومية المستخدم",
   "nav.user_login_management": "إدارة تسجيل دخول المستخدم",
@@ -8296,6 +8330,16 @@ const ar: Dict = {
   "report.reload": "إعادة تحميل",
   "report.search": "بحث",
   "report.search_placeholder": "بحث في بيانات التقرير...",
+  "report.search_filters": "بحث / عوامل التصفية",
+  "report.hide_filters": "إخفاء عوامل التصفية",
+  "report.filter_report_placeholder": "تصفية التقرير...",
+  "report.reload_data": "إعادة تحميل",
+  "report.apply_filters": "تطبيق عوامل التصفية",
+  "report.compact_mode": "مضغوط",
+  "report.visible_columns": "الأعمدة الظاهرة",
+  "report.actions": "الإجراءات",
+  "report.print_pdf_document": "طباعة / مستند PDF",
+  "report.density_comfortable": "مريح",
   "report.no_data": "لا توجد بيانات",
   "report.reset_columns": "إعادة تعيين الأعمدة",
   "report.drag_to_reorder": "اسحب لإعادة ترتيب العمود",
@@ -9971,6 +10015,7 @@ const fa: Dict = {
   "nav.country_branch": "شعبه کشور",
   "nav.city_branch": "شعبه شهر",
   "nav.user_entry": "کاربر",
+  "nav.super_admin_all_users_directory": "فهرست سوپر ادمین / تمام کاربران (چاپ A4)",
   "nav.user_form": "ثبت کاربر",
   "nav.user_journal_report": "گزارش ژورنال کاربر",
   "nav.user_login_management": "مدیریت ورود کاربر",
@@ -10415,6 +10460,16 @@ const fa: Dict = {
   "report.reload": "بارگذاری مجدد",
   "report.search": "جستجو",
   "report.search_placeholder": "جستجو در داده‌های گزارش...",
+  "report.search_filters": "جستجو / فیلترها",
+  "report.hide_filters": "پنهان کردن فیلترها",
+  "report.filter_report_placeholder": "فیلتر گزارش...",
+  "report.reload_data": "بارگذاری مجدد",
+  "report.apply_filters": "اعمال فیلترها",
+  "report.compact_mode": "فشرده",
+  "report.visible_columns": "ستون‌های قابل مشاهده",
+  "report.actions": "عملیات",
+  "report.print_pdf_document": "چاپ / سند PDF",
+  "report.density_comfortable": "راحت",
   "report.no_data": "داده‌ای یافت نشد",
   "report.reset_columns": "بازنشانی ستون‌ها",
   "report.drag_to_reorder": "برای تغییر ترتیب ستون بکشید",
@@ -12141,6 +12196,7 @@ const ps: Dict = {
   "nav.country_branch": "د هېواد برانچ",
   "nav.city_branch": "د ښار برانچ",
   "nav.user_entry": "کاروونکی",
+  "nav.super_admin_all_users_directory": "د سوپر اډمین / ټولو کاروونکو نوملړ (A4 چاپ)",
   "nav.user_form": "د کاروونکي ثبت",
   "nav.user_journal_report": "د کاروونکي ژورنال راپور",
   "nav.user_login_management": "د کاروونکي د ننوتلو مدیریت",
@@ -12575,6 +12631,16 @@ const ps: Dict = {
   "report.reload": "بیا ډکول",
   "report.search": "لټون",
   "report.search_placeholder": "د راپور ډاټا لټون وکړئ...",
+  "report.search_filters": "لټون / فلټرونه",
+  "report.hide_filters": "فلټرونه پټ کړئ",
+  "report.filter_report_placeholder": "راپور فلټر کړئ...",
+  "report.reload_data": "بیا بارول",
+  "report.apply_filters": "فلټرونه پلي کړئ",
+  "report.compact_mode": "لنډ",
+  "report.visible_columns": "ښکاره کالمونه",
+  "report.actions": "کړنې",
+  "report.print_pdf_document": "چاپ / PDF سند",
+  "report.density_comfortable": "ارام",
   // ERP Reports — table
   "report.no_data": "کوم ډاټا نشته",
   "report.reset_columns": "کالمونه بیا تنظیم کول",

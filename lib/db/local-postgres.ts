@@ -17,12 +17,16 @@ import postgres from "postgres";
 export function getDbUrl(): string {
   if (process.env.DATABASE_URL) return process.env.DATABASE_URL;
   try {
-    for (const file of [".env.local", ".env"]) {
-      const filePath = path.join(process.cwd(), file);
-      if (fs.existsSync(filePath)) {
-        const content = fs.readFileSync(filePath, "utf8");
-        const match = content.match(/^DATABASE_URL\s*=\s*(.+)$/m);
-        if (match) return match[1].trim().replace(/^['"]|['"]$/g, "");
+    const cwd = path.resolve(process.cwd());
+    const roots = [cwd, path.join(cwd, "ACCOUNTS.DGT.LLC"), path.resolve(cwd, "..")];
+    for (const root of roots) {
+      for (const file of [".env.local", ".env"]) {
+        const filePath = path.join(root, file);
+        if (fs.existsSync(filePath)) {
+          const content = fs.readFileSync(filePath, "utf8");
+          const match = content.match(/^DATABASE_URL\s*=\s*(.+)$/m);
+          if (match) return match[1].trim().replace(/^['"]|['"]$/g, "");
+        }
       }
     }
   } catch {

@@ -186,33 +186,38 @@ export class CustomersRepository {
     address?: string | null;
     notes?: string | null;
     originalLanguageCode: string;
+    actorId?: string | null;
   }) {
-    // create_customer is already a SECURITY DEFINER RPC — unaffected by the admin-client key
-    // issue, works as-is.
-    const supabase = createSupabaseAdminClient() as any;
-    const { data, error } = await supabase.rpc("create_customer", {
-      p_country_id: input.countryId,
-      p_state_province_id: input.stateProvinceId ?? null,
-      p_district_id: input.districtId ?? null,
-      p_city_id: input.cityId ?? null,
-      p_area_location_id: input.areaLocationId ?? null,
-      p_customer_name: input.customerName,
-      p_company_name: input.companyName ?? null,
-      p_contact_person: input.contactPerson ?? null,
-      p_mobile: input.mobile ?? null,
-      p_whatsapp: input.whatsapp ?? null,
-      p_email: input.email ?? null,
-      p_address: input.address ?? null,
-      p_notes: input.notes ?? null,
-      p_original_language_code: input.originalLanguageCode
+    const now = new Date().toISOString();
+    const insertRow = {
+      country_id: input.countryId,
+      state_province_id: input.stateProvinceId ?? null,
+      district_id: input.districtId ?? null,
+      city_id: input.cityId ?? null,
+      area_location_id: input.areaLocationId ?? null,
+      customer_name: input.customerName.trim(),
+      company_name: input.companyName ?? null,
+      contact_person: input.contactPerson ?? null,
+      mobile: input.mobile ?? null,
+      whatsapp: input.whatsapp ?? null,
+      email: input.email ?? null,
+      address: input.address ?? null,
+      notes: input.notes ?? null,
+      original_language_code: input.originalLanguageCode,
+      is_active: true,
+      created_by: input.actorId ?? null,
+      created_at: now,
+      updated_at: now
+    };
+
+    const viaPg = await withLocalPg(async (sql) => {
+      const rows = await sql`INSERT INTO public.customers ${sql(insertRow)} RETURNING id`;
+      return (rows[0] as any).id as string;
     });
-    if (error) throw new Error(error.message);
-    // NOTE: translation writes are the caller's (customers-service.ts) responsibility — it
-    // calls translateMasterRecord with the real original language + actor. This repository
-    // previously ALSO fired its own translateMasterRecord call here, hardcoded to "en" and
-    // never awaited (fire-and-forget) — a duplicate, racing write that could overwrite the
-    // correct translation with a wrong English-sourced one depending on which call's RPC
-    // landed last. Removed; there is now exactly one write path.
+    if (!viaPg) {
+      throw new Error("Customer create requires the local development DATABASE_URL connection.");
+    }
+    const data = viaPg;
     try {
       const serials = await allocateFormSerials("customers", { countryId: input.countryId, branchKey: input.cityId ?? null });
       const serialPatch = {
@@ -226,7 +231,7 @@ export class CustomersRepository {
         return true;
       });
       if (!viaPg) {
-        await supabase.from("customers").update(serialPatch).eq("id", data);
+        throw new Error("Customer serial allocation requires the local development DATABASE_URL connection.");
       }
     } catch { /* serial allocation is non-fatal */ }
     return data as string;

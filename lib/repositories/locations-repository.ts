@@ -8,17 +8,16 @@ function getDbUrl(): string {
   try {
     const fs = require("fs");
     const path = require("path");
-    const fileLocal = path.join(process.cwd(), ".env.local");
-    if (fs.existsSync(fileLocal)) {
-      const content = fs.readFileSync(fileLocal, "utf8");
-      const match = content.match(/^DATABASE_URL=(.+)$/m);
-      if (match) return match[1].trim().replace(/^['"]|['"]$/g, "");
-    }
-    const fileEnv = path.join(process.cwd(), ".env");
-    if (fs.existsSync(fileEnv)) {
-      const content = fs.readFileSync(fileEnv, "utf8");
-      const match = content.match(/^DATABASE_URL=(.+)$/m);
-      if (match) return match[1].trim().replace(/^['"]|['"]$/g, "");
+    const cwd = path.resolve(process.cwd());
+    for (const root of [cwd, path.join(cwd, "ACCOUNTS.DGT.LLC"), path.resolve(cwd, "..")]) {
+      for (const file of [".env.local", ".env"]) {
+        const full = path.join(root, file);
+        if (fs.existsSync(full)) {
+          const content = fs.readFileSync(full, "utf8");
+          const match = content.match(/^DATABASE_URL=(.+)$/m);
+          if (match) return match[1].trim().replace(/^['"]|['"]$/g, "");
+        }
+      }
     }
   } catch {}
   return "";

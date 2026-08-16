@@ -1,4 +1,3 @@
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
 
 type JsonRecord = Record<string, unknown>;
@@ -42,7 +41,5 @@ export async function writeRecordChangeHistory(input: {
   });
   if (viaPg) return;
 
-  const admin = createSupabaseAdminClient() as any;
-  const { error } = await admin.from("record_change_history").insert(row);
-  if (error) throw new Error(error.message);
+  throw new Error("Record history write requires a working local DATABASE_URL connection in this development runtime.");
 }

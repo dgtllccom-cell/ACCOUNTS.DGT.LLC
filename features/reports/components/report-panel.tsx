@@ -35,6 +35,7 @@ import { cn } from "@/lib/utils";
 import { ReportFilterBar, type ReportFilterValues, type ReportMetaItem } from "./report-filter-bar";
 import { ReportDataTable, getColumnsForReportType } from "./report-data-table";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { openGenericErpReport, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
 
 type ReportScopeLevel = "global" | "country" | "branch";
@@ -153,6 +154,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
   const searchParams = useSearchParams();
   const lang = useActiveLanguage() || initialLang;
   const _ = (key: UiKey, fallback?: string) => t(lang, key, fallback);
+  const th = (label: string) => translateHeader(lang, label);
   const isRTL = ["ar", "ur", "fa", "ps"].includes(lang);
 
   const [meta, setMeta] = useState<ReportMeta | null>(null);
@@ -238,7 +240,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
     }
   }, [lang, workspace]);
 
-  // Load metadata on mount
+  // Load metadata on mount or language/workspace change
   useEffect(() => {
     let cancelled = false;
     setMetaLoading(true);
@@ -248,8 +250,10 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
         if (cancelled) return;
         if (json.ok) {
           setMeta(json.data);
-          const urlType = searchParams.get("type");
-          const targetReportType = urlType || json.data.reportTypes?.[0]?.key || "roznamcha";
+          const rawUrlType = searchParams.get("type") || searchParams.get("reportType");
+          let targetReportType = rawUrlType || json.data.reportTypes?.[0]?.key || (workspace === "super-admin" ? "ledger" : "roznamcha");
+          if (targetReportType === "exchange-rates") targetReportType = "exchange-rate";
+
           const initialFilterVals: ReportFilterValues = {
             ...DEFAULT_FILTERS,
             reportType: targetReportType,
@@ -270,7 +274,22 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
         if (!cancelled) setMetaLoading(false);
       });
     return () => { cancelled = true; };
-  }, [workspace, lang, searchParams, fetchReport]);
+  }, [workspace, lang]);
+
+  // Sync with URL search params when sidebar links or query params change
+  useEffect(() => {
+    const rawUrlType = searchParams.get("type") || searchParams.get("reportType");
+    if (!rawUrlType) return;
+    let targetType = rawUrlType;
+    if (targetType === "exchange-rates") targetType = "exchange-rate";
+
+    setFilters((prev) => {
+      if (prev.reportType === targetType) return prev;
+      const next = { ...prev, reportType: targetType };
+      void fetchReport(next);
+      return next;
+    });
+  }, [searchParams, fetchReport]);
 
   const handleFilterChange = (key: keyof ReportFilterValues, value: string) => {
     setFilters((prev) => ({ ...prev, [key]: value }));
@@ -468,7 +487,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
             className="h-7 gap-1 rounded-lg border-slate-200 bg-slate-50 px-2.5 text-[10px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
             <ChevronLeft className="h-3 w-3" />
-            Back
+            {_("common.back", "Back")}
           </Button>
 
           {/* Filter Drawer Toggle */}
@@ -480,7 +499,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
             onClick={() => setFiltersOpen((v) => !v)}
           >
             <SlidersHorizontal className="h-3 w-3" aria-hidden />
-            {filtersOpen ? "Hide Filters" : "Search / Filters"}
+            {filtersOpen ? _("report.hide_filters", "Hide Filters") : _("report.search_filters", "Search / Filters")}
           </Button>
 
           {/* Live Search Input */}
@@ -490,7 +509,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Filter report..."
+              placeholder={_("report.filter_report_placeholder", "Filter report...")}
               className="h-7 pl-7 pr-2 text-[11px] rounded-lg"
             />
             {searchQuery && (
@@ -512,10 +531,10 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
             className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold"
             onClick={() => appliedFilters && fetchReport(appliedFilters)}
             disabled={reportLoading}
-            title="Reload report data"
+            title={_("report.reload_data", "Reload report data")}
           >
             <RefreshCcw className={cn("h-3 w-3", reportLoading && "animate-spin")} />
-            <span className="hidden md:inline">Reload</span>
+            <span className="hidden md:inline">{_("common.refresh", "Refresh")}</span>
           </Button>
 
           {/* Density Toggle */}
@@ -530,7 +549,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
                   : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
               )}
             >
-              Comfortable
+              {_("report.density_comfortable", "Comfortable")}
             </button>
             <button
               type="button"
@@ -542,7 +561,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
                   : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
               )}
             >
-              Compact
+              {_("report.compact_mode", "Compact")}
             </button>
           </div>
 
@@ -556,7 +575,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               onClick={() => setShowColumnsModal((v) => !v)}
             >
               <Columns3 className="h-3 w-3" />
-              <span className="hidden sm:inline">Columns</span>
+              <span className="hidden sm:inline">{_("report.manage_columns", "Columns")}</span>
             </Button>
             {showColumnsModal && (
               <div
@@ -564,7 +583,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
                 onMouseLeave={() => setShowColumnsModal(false)}
               >
                 <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 mb-2">
-                  <span className="text-xs font-bold text-slate-900 dark:text-white">Visible Columns</span>
+                  <span className="text-xs font-bold text-slate-900 dark:text-white">{_("report.visible_columns", "Visible Columns")}</span>
                   <button type="button" onClick={() => setShowColumnsModal(false)} className="text-slate-400 hover:text-slate-600">
                     <X className="h-3.5 w-3.5" />
                   </button>
@@ -621,7 +640,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               onClick={() => setActionsMenuOpen((v) => !v)}
             >
               <MoreVertical className="h-3 w-3" />
-              Actions
+              {_("report.actions", "Actions")}
             </Button>
             {actionsMenuOpen ? (
               <div
@@ -637,7 +656,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
                   }}
                 >
                   <Printer className="h-3.5 w-3.5 text-blue-600" />
-                  Print / PDF Document
+                  {_("report.print_pdf_document", "Print / PDF Document")}
                 </button>
                 <button
                   type="button"
@@ -648,7 +667,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
                   }}
                 >
                   <Table2 className="h-3.5 w-3.5 text-emerald-600" />
-                  Export to Excel (.xls)
+                  {_("report.export_excel", "Export to Excel")}
                 </button>
                 <button
                   type="button"
@@ -659,7 +678,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
                   }}
                 >
                   <DownloadActionIcon className="h-3.5 w-3.5 text-teal-600" />
-                  Export to CSV
+                  {_("report.export_csv", "Export to CSV")}
                 </button>
                 <button
                   type="button"
@@ -670,7 +689,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
                   }}
                 >
                   <Share2 className="h-3.5 w-3.5 text-emerald-500" />
-                  Share via WhatsApp
+                  {_("report.share_whatsapp", "Share via WhatsApp")}
                 </button>
               </div>
             ) : null}
@@ -682,45 +701,45 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
         {/* Card 1: Branch & User Details */}
         <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-          <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-blue-50/60 dark:bg-blue-900/15">
-            <div className="bg-blue-600 p-1 rounded-full text-white flex-shrink-0">
-              <Users className="h-3 w-3" />
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-blue-50/60 dark:bg-blue-900/15">
+              <div className="bg-blue-600 p-1 rounded-full text-white flex-shrink-0">
+                <Users className="h-3 w-3" />
+              </div>
+              <h4 className="text-[11px] font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
+              1. {th("BRANCH & USER DETAILS")}
+              </h4>
             </div>
-            <h4 className="text-[11px] font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
-              1. BRANCH & USER DETAILS
-            </h4>
-          </div>
-          <div className="p-3 flex flex-col gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
-            <div className="flex justify-between items-center">
-              <span>COUNTRY:</span>
+            <div className="p-3 flex flex-col gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+              <div className="flex justify-between items-center">
+              <span>{th("COUNTRY")}:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{selectedCountryName}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span>BRANCH NAME:</span>
+              </div>
+              <div className="flex justify-between items-center">
+              <span>{th("BRANCH NAME")}:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase truncate max-w-[180px]">{selectedBranchName}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span>USER ID:</span>
+              </div>
+              <div className="flex justify-between items-center">
+              <span>{th("USER ID")}:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] font-mono">{viewerId || "1001-000000000000000000"}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span>USER NAME:</span>
+              </div>
+              <div className="flex justify-between items-center">
+              <span>{th("USER NAME")}:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{viewerName || "SUPER ADMIN"}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span>ROLE:</span>
+              </div>
+              <div className="flex justify-between items-center">
+              <span>{th("ROLE")}:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{scope?.level ? scope.level.toUpperCase() : "SUPER ADMIN"}</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span>DATE & TIME:</span>
+              </div>
+              <div className="flex justify-between items-center">
+              <span>{th("DATE & TIME")}:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}</span>
-            </div>
-            <div className="flex justify-between items-center mt-auto pt-1">
-              <span>STATUS:</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">ACTIVE</span>
+              </div>
+              <div className="flex justify-between items-center mt-auto pt-1">
+              <span>{th("STATUS")}:</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">{th("ACTIVE")}</span>
+              </div>
             </div>
           </div>
-        </div>
 
         {/* Card 2: Global Financial Summary */}
         <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
@@ -729,24 +748,24 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               <DollarSign className="h-3 w-3" />
             </div>
             <h4 className="text-[11px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
-              2. GLOBAL FINANCIAL SUMMARY
+              2. {th("GLOBAL FINANCIAL SUMMARY")}
             </h4>
           </div>
           <div className="p-3 flex flex-col gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>TOTAL GLOBAL ENTRIES:</span>
+              <span>{th("TOTAL GLOBAL ENTRIES")}:</span>
               <span className="font-black text-slate-800 dark:text-slate-200">{totalEntriesCount}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>TOTAL CREDIT ({currentCurrencySymbol}):</span>
+              <span>{th("TOTAL CREDIT")} ({currentCurrencySymbol}):</span>
               <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono">{fmtNum(totalCreditVal)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-rose-600 dark:text-rose-400">TOTAL DEBIT ({currentCurrencySymbol}):</span>
+              <span className="text-rose-600 dark:text-rose-400">{th("TOTAL DEBIT")} ({currentCurrencySymbol}):</span>
               <span className="font-black text-rose-600 dark:text-rose-400 font-mono">{fmtNum(totalDebitVal)}</span>
             </div>
             <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-slate-700 dark:text-slate-300 font-bold">BALANCE ({currentCurrencySymbol}):</span>
+              <span className="text-slate-700 dark:text-slate-300 font-bold">{th("NET BALANCE")} ({currentCurrencySymbol}):</span>
               <span className="font-black text-blue-600 dark:text-blue-400 font-mono text-sm">{fmtNum(netBalanceVal)}</span>
             </div>
           </div>
@@ -759,25 +778,25 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               <Receipt className="h-3 w-3" />
             </div>
             <h4 className="text-[11px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">
-              3. BILL ENTRIES SUMMARY
+              3. {th("BILL ENTRIES SUMMARY")}
             </h4>
           </div>
           <div className="p-3 flex flex-col gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>TOTAL BILL ENTRIES:</span>
+              <span>{th("TOTAL BILL ENTRIES")}:</span>
               <span className="font-black text-slate-800 dark:text-slate-200">{totalEntriesCount}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>CLEARED ENTRIES:</span>
+              <span>{th("CLEARED ENTRIES")}:</span>
               <span className="font-black text-emerald-600 dark:text-emerald-400">{clearedCount}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-rose-600">REMAINING ENTRIES:</span>
+              <span className="text-rose-600">{th("REMAINING ENTRIES")}:</span>
               <span className="font-black text-rose-600">{remainingCount}</span>
             </div>
             <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[10px]">
-              <span>SYSTEM STATUS:</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">ONLINE & SYNCED</span>
+              <span>{th("SYSTEM STATUS")}:</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">{th("ONLINE & SYNCED")}</span>
             </div>
           </div>
         </div>
@@ -800,19 +819,19 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               : "border-slate-100 bg-orange-50/60 dark:border-slate-800 dark:bg-orange-900/15"
           )}>
             <div className="flex items-center gap-2">
-              <div className="bg-orange-600 p-1 rounded-full text-white flex-shrink-0">
-                <Globe2 className="h-3 w-3" />
-              </div>
-              <h4 className="text-[11px] font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">
-                4. ALL COUNTRIES REPORT
-              </h4>
+            <div className="bg-orange-600 p-1 rounded-full text-white flex-shrink-0">
+              <Globe2 className="h-3 w-3" />
             </div>
+            <h4 className="text-[11px] font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">
+              4. {th("ALL COUNTRIES REPORT")}
+            </h4>
+          </div>
             <ChevronDown className={cn("h-3.5 w-3.5 text-orange-600 transition-transform duration-200", showAllCountries ? "rotate-180" : "")} />
           </div>
           <div className="p-3 flex flex-col justify-between h-full w-full">
             <div className="space-y-1">
               <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                Active Countries: <span className="font-extrabold text-orange-600">{meta?.countries?.length || 1}</span>
+                {th("ACTIVE COUNTRIES")}: <span className="font-extrabold text-orange-600">{meta?.countries?.length || 1}</span>
               </div>
               <div className="text-[10px] text-slate-500 dark:text-slate-400">
                 Total Branches: <span className="font-semibold text-slate-700 dark:text-slate-300">{(meta?.mainBranches?.length || 0) + (meta?.cityBranches?.length || 0)}</span>
@@ -820,10 +839,10 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
             </div>
             <div className="mt-2.5 flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-800">
               <span className="text-[10px] font-bold text-orange-600 group-hover:underline">
-                {showAllCountries ? "Hide Details" : "Show Details"}
+                {showAllCountries ? th("HIDE DETAILS") : th("SHOW DETAILS")}
               </span>
               <span className="text-[9px] font-bold text-orange-600 bg-orange-100/80 dark:bg-orange-950/60 px-1.5 py-0.5 rounded">
-                EXPLORE →
+                {th("EXPLORE")} →
               </span>
             </div>
           </div>
@@ -835,10 +854,10 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
         <div className="rounded-xl border border-orange-200 bg-orange-50/40 p-3.5 dark:border-orange-900/50 dark:bg-orange-950/20 animate-in fade-in slide-in-from-top-2">
           <div className="flex items-center justify-between mb-2.5">
             <h3 className="text-xs font-black uppercase tracking-wider text-orange-900 dark:text-orange-300">
-              Country & Branch Breakdown Directory
+              {th("COUNTRY & BRANCH BREAKDOWN DIRECTORY")}
             </h3>
             <span className="text-[10px] text-orange-700 dark:text-orange-400">
-              Click a country to filter instantly
+              {th("CLICK A COUNTRY TO FILTER INSTANTLY")}
             </span>
           </div>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
@@ -861,7 +880,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
                   <span className="text-[10px] font-mono text-slate-400">{c.currency_code || "AED"}</span>
                 </div>
                 <div className="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">
-                  {meta?.mainBranches?.filter((b: any) => b.country_id === c.id).length || 1} Branches Active
+                  {meta?.mainBranches?.filter((b: any) => b.country_id === c.id).length || 1} {th("BRANCHES ACTIVE")}
                 </div>
               </div>
             ))}
@@ -909,15 +928,15 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               Country: <strong className="text-slate-900 dark:text-white">{previewFilters[1]?.value}</strong>
             </span>
             <span className="text-[10.5px] font-semibold text-slate-600 dark:text-slate-300">
-              Branch: <strong className="text-slate-900 dark:text-white">{applied.branch || applied.mainBranch || "All Branches"}</strong>
+              {th("BRANCH")} : <strong className="text-slate-900 dark:text-white">{applied.branch || applied.mainBranch || th("ALL BRANCHES")}</strong>
             </span>
             <span className="text-[10.5px] font-semibold text-slate-600 dark:text-slate-300">
-              Currency: <strong className="text-slate-900 dark:text-white">{applied.currency ?? "All"}</strong>
+              {th("CURRENCY")} : <strong className="text-slate-900 dark:text-white">{applied.currency ?? _("common.all", "All")}</strong>
             </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[9.5px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-              {reportData.length} records loaded
+              {reportData.length} {th("RECORDS LOADED")}
             </span>
           </div>
         </div>
