@@ -15,7 +15,9 @@ import {
   Users,
   DollarSign,
   Receipt,
-  ChevronDown
+  ChevronDown,
+  X,
+  Table2
 } from "lucide-react";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import { Button } from "@/components/ui/button";
@@ -389,30 +391,76 @@ export function RoznamchaTypeReportView({
   }
 
   const topActionsContent = (
-    <div className="flex items-center gap-2">
-      <Button type="button" variant="ghost" size="sm" className="gap-2 text-xs font-semibold" onClick={() => router.back()}>
+    <div className="flex flex-wrap items-center gap-2">
+      {/* Back button */}
+      <Button type="button" variant="ghost" size="sm" className="h-8 gap-1.5 text-xs font-bold" onClick={() => router.back()}>
         <ChevronRight className="h-4 w-4 rotate-180" aria-hidden />
         Back
       </Button>
+
+      {/* Filter trigger */}
       <Button
         type="button"
         variant={filtersOpen ? "default" : "outline"}
         size="sm"
-        className="gap-2 text-xs font-semibold"
+        className="h-8 gap-1.5 text-xs font-bold"
         onClick={() => setFiltersOpen((v) => !v)}
       >
-        <SlidersHorizontal className="h-4 w-4" aria-hidden />
+        <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
         {filtersOpen ? "Hide Filters" : "Search / Filters"}
       </Button>
+
+      {/* Search query input in header */}
+      <div className="relative min-w-[150px] sm:min-w-[190px]">
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="text"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") applySearch();
+          }}
+          placeholder="Filter entries..."
+          className="h-8 pl-8 pr-2.5 text-xs rounded-lg"
+        />
+        {q && (
+          <button
+            type="button"
+            onClick={() => {
+              setQ("");
+              setPage(1);
+            }}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        )}
+      </div>
+
+      {/* Reload button */}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="h-8 gap-1 text-xs font-semibold px-2.5"
+        onClick={() => void loadData()}
+        disabled={loading}
+        title="Reload data"
+      >
+        <RefreshCcw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
+        <span className="hidden md:inline">Reload</span>
+      </Button>
+
+      {/* Actions dropdown */}
       <div className="relative">
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="gap-2 text-xs font-semibold"
+          className="h-8 gap-1.5 text-xs font-bold px-3 bg-blue-50/50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800"
           onClick={() => setActionsMenuOpen((v) => !v)}
         >
-          <MoreVertical className="h-4 w-4" />
+          <MoreVertical className="h-3.5 w-3.5" />
           Actions
         </Button>
         {actionsMenuOpen ? (
@@ -428,7 +476,7 @@ export function RoznamchaTypeReportView({
                 void loadData();
               }}
             >
-              <RefreshCcw className="h-3.5 w-3.5" />
+              <RefreshCcw className="h-3.5 w-3.5 text-blue-600" />
               Reload Report
             </button>
             <button
@@ -439,7 +487,7 @@ export function RoznamchaTypeReportView({
                 printReport();
               }}
             >
-              <Printer className="h-3.5 w-3.5" />
+              <Printer className="h-3.5 w-3.5 text-blue-600" />
               Print / PDF
             </button>
             <button
@@ -450,8 +498,8 @@ export function RoznamchaTypeReportView({
                 exportCsv();
               }}
             >
-              <DownloadActionIcon className="h-3.5 w-3.5" />
-              Excel Export
+              <DownloadActionIcon className="h-3.5 w-3.5 text-teal-600" />
+              Excel / CSV Export
             </button>
           </div>
         ) : null}
@@ -460,12 +508,12 @@ export function RoznamchaTypeReportView({
   );
 
   return (
-    <div className="w-full space-y-4 text-foreground animate-in fade-in duration-200">
+    <div className="w-full space-y-3.5 text-foreground animate-in fade-in duration-200">
       {/* Portal to Header */}
       {actionsSlot && createPortal(topActionsContent, actionsSlot)}
 
       {/* Header bar */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -630,7 +678,7 @@ export function RoznamchaTypeReportView({
                 {showAllCategories ? "Hide Details" : "Show Details"}
               </span>
               <span className="text-[10px] font-bold text-orange-600 bg-orange-100/80 dark:bg-orange-950/60 px-2 py-0.5 rounded">
-                EXPLORE â†’
+                EXPLORE →
               </span>
             </div>
           </div>
@@ -745,13 +793,6 @@ export function RoznamchaTypeReportView({
                 <Label className="text-[11px] text-muted-foreground">Bill No</Label>
                 <Input className="h-9 text-xs" value={billNo} onChange={(e) => setBillNo(e.target.value)} placeholder="Bill number" />
               </div>
-              <div className="space-y-1 md:col-span-2">
-                <Label className="text-[11px] text-muted-foreground">Search</Label>
-                <div className="relative">
-                  <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input className="h-9 pl-9 text-xs" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Voucher, narration, reference..." />
-                </div>
-              </div>
             </div>
             <div className="flex flex-wrap gap-2">
               <Button type="button" size="sm" onClick={applySearch} disabled={loading}>Apply</Button>
@@ -763,21 +804,16 @@ export function RoznamchaTypeReportView({
 
       {/* Data Table */}
       <Card className="border-slate-200/80 shadow-sm">
-        <CardHeader className="pb-3 flex flex-row items-center justify-between">
-          <CardTitle className="text-base">Entries ({data?.totalCount ?? 0})</CardTitle>
-          <div className="flex items-center gap-2">
-            <Button type="button" variant="outline" size="sm" onClick={printReport} disabled={!rows.length} className="h-8 text-xs gap-1.5">
-              <Printer className="h-3.5 w-3.5" />
-              Print
-            </Button>
-            <Button type="button" variant="outline" size="sm" onClick={exportCsv} disabled={!rows.length} className="h-8 text-xs gap-1.5">
-              <DownloadActionIcon className="h-3.5 w-3.5" />
-              Export
-            </Button>
+        <CardHeader className="py-2.5 px-4 flex flex-row items-center justify-between border-b border-slate-100 dark:border-slate-800">
+          <CardTitle className="text-xs font-bold text-slate-700 dark:text-slate-300">
+            Total Entries: <span className="font-extrabold text-blue-600 dark:text-blue-400">{data?.totalCount ?? 0}</span>
+          </CardTitle>
+          <div className="text-[11px] font-semibold text-slate-500">
+            Showing Page {page} of {Math.ceil((data?.totalCount ?? 0) / pageSize) || 1}
           </div>
         </CardHeader>
-        <CardContent className="pt-0">
-          <div className="overflow-x-auto rounded-md border">
+        <CardContent className="p-0">
+          <div className="overflow-x-auto">
             <table className="w-full min-w-[1200px] border-collapse text-xs">
               <thead className="bg-slate-900 text-white">
                 <tr>
@@ -786,7 +822,7 @@ export function RoznamchaTypeReportView({
                     className="p-2.5 text-center font-bold cursor-pointer select-none hover:bg-slate-800"
                     onClick={() => toggleSort("entry_date")}
                   >
-                    Date / Time {sortBy === "entry_date" ? (sortDir === "asc" ? "â†‘" : "â†“") : ""}
+                    Date / Time {sortBy === "entry_date" ? (sortDir === "asc" ? "↑" : "↓") : ""}
                   </th>
                   <ReportTh>Entry Type</ReportTh>
                   <ReportTh>Account</ReportTh>
@@ -848,7 +884,7 @@ export function RoznamchaTypeReportView({
             </table>
           </div>
 
-          <div className="mt-4">
+          <div className="p-3 border-t border-slate-100 dark:border-slate-800">
             <ReportPagination
               page={page}
               pageSize={pageSize}

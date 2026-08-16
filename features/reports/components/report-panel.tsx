@@ -20,19 +20,26 @@ import {
   Users,
   DollarSign,
   Receipt,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Columns3,
+  Rows3,
+  Share2,
+  FileText,
+  Table2,
+  ArrowUp,
+  ArrowDown,
+  Check
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import { t, type UiKey } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
 import { ReportFilterBar, type ReportFilterValues, type ReportMetaItem } from "./report-filter-bar";
-import { ReportKpiCards } from "./report-kpi-cards";
 import { ReportDataTable, getColumnsForReportType } from "./report-data-table";
-import { ReportExportToolbar } from "./report-export-toolbar";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { openGenericErpReport } from "@/lib/reports/open-generic-erp-report";
+import { openGenericErpReport, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
 
 type ReportScopeLevel = "global" | "country" | "branch";
 
@@ -102,6 +109,49 @@ function fmtNum(val: number | string | null | undefined): string {
   return n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
+function csvCell(value: unknown) {
+  const text = String(value ?? "");
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+function htmlCell(value: unknown) {
+  return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+function exportToCsv(data: Record<string, any>[], columns: GenericReportColumn[], filename: string) {
+  if (!data.length || !columns.length) return;
+  const headers = columns.map((column) => csvCell(column.label)).join(",");
+  const rows = data.map((r) =>
+    columns.map((column) => r[column.key])
+      .map(csvCell)
+      .join(",")
+  );
+  const csv = [headers, ...rows].join("\n");
+  const blob = new Blob(["\uFEFF" + csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportToExcel(data: Record<string, any>[], columns: GenericReportColumn[], filename: string) {
+  if (!data.length || !columns.length) return;
+  const headerRow = columns.map((column) => `<th>${htmlCell(column.label)}</th>`).join("");
+  const bodyRows = data
+    .map((row) => `<tr>${columns.map((column) => `<td>${htmlCell(row[column.key])}</td>`).join("")}</tr>`)
+    .join("");
+  const html = `<!doctype html><html><head><meta charset="utf-8" /></head><body><table><thead><tr>${headerRow}</tr></thead><tbody>${bodyRows}</tbody></table></body></html>`;
+  const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", viewerName, viewerId, workspace = "standard" }: Props) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -128,6 +178,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
   // Executive summary and filter drawer state
   const [filtersOpen, setFiltersOpen] = useState(false);
   const [showAllCountries, setShowAllCountries] = useState(false);
+  const [showColumnsModal, setShowColumnsModal] = useState(false);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
   const [actionsSlot, setActionsSlot] = useState<HTMLElement | null>(null);
 
@@ -203,7 +254,6 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
             branchId: json.data.scope?.lockedBranchId ?? "all"
           };
           setFilters(initialFilterVals);
-          // Auto-fetch initial report
           void fetchReport(initialFilterVals);
         } else {
           setMetaError(json.error?.message || "Failed to load metadata");
@@ -348,6 +398,35 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
   const selectedCountryName = meta?.countries.find((c) => c.id === filters.countryId)?.name || scope?.lockedCountryName || "United Arab Emirates";
   const selectedBranchName = meta?.cityBranches.find((b) => b.id === filters.branchId)?.name || meta?.mainBranches.find((b) => b.id === filters.mainBranchId)?.name || scope?.lockedBranchName || "UNITED ARAB EMIRATES MAIN BRANCH";
 
+  const filename = `${appliedReportType}-${new Date().toISOString().slice(0, 10)}`;
+
+  const handlePrintAction = () => {
+    openGenericErpReport({
+      title: `${panelTitle} — ${t(lang, `report.${appliedReportType.replace(/-/g, "_")}` as UiKey, appliedReportType)}`,
+      lang,
+      columns: visibleColumns,
+      rows: reportData,
+      summary: reportSummary,
+      filters: previewFilters,
+      companyInfo
+    });
+  };
+
+  const handleCsvExport = () => {
+    exportToCsv(reportData, visibleColumns, `${filename}.csv`);
+  };
+
+  const handleExcelExport = () => {
+    exportToExcel(reportData, visibleColumns, `${filename}.xls`);
+  };
+
+  const handleWhatsAppShare = () => {
+    const text = encodeURIComponent(
+      `*${panelTitle} — ${appliedReportType}*\n📊 Scope: ${reportResult?.scope?.label ?? scope?.scopeLabel ?? ""}\n📅 Generated: ${reportResult?.generatedAt ? new Date(reportResult.generatedAt).toLocaleString() : new Date().toLocaleString()}\n💡 Total Records: ${reportData.length}`
+    );
+    window.open(`https://wa.me/?text=${text}`, "_blank");
+  };
+
   if (metaLoading) {
     return (
       <div className="flex h-64 w-full items-center justify-center">
@@ -371,36 +450,168 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
     );
   }
 
+  // Top header button bar (Unified Back, Search, Filter, Density, Columns, and Export Actions)
   const topActionsContent = (
-    <div className="flex items-center gap-2">
-      <Button type="button" variant="ghost" size="sm" className="gap-2 text-xs font-semibold" onClick={() => router.back()}>
+    <div className="flex flex-wrap items-center gap-2">
+      {/* 1. Back button */}
+      <Button type="button" variant="ghost" size="sm" className="h-8 gap-1.5 text-xs font-bold" onClick={() => router.back()}>
         <ChevronRight className="h-4 w-4 rotate-180" aria-hidden />
         Back
       </Button>
+
+      {/* 2. Filter drawer trigger */}
       <Button
         type="button"
         variant={filtersOpen ? "default" : "outline"}
         size="sm"
-        className="gap-2 text-xs font-semibold"
+        className="h-8 gap-1.5 text-xs font-bold"
         onClick={() => setFiltersOpen((v) => !v)}
       >
-        <SlidersHorizontal className="h-4 w-4" aria-hidden />
+        <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
         {filtersOpen ? "Hide Filters" : "Search / Filters"}
       </Button>
+
+      {/* 3. Live search input directly in header */}
+      <div className="relative min-w-[150px] sm:min-w-[190px]">
+        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+        <Input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Filter report..."
+          className="h-8 pl-8 pr-2.5 text-xs rounded-lg"
+        />
+        {searchQuery && (
+          <button
+            type="button"
+            onClick={() => setSearchQuery("")}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+          >
+            <X className="h-3 w-3" />
+          </button>
+        )}
+      </div>
+
+      {/* 4. Reload report */}
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="h-8 gap-1 text-xs font-semibold px-2.5"
+        onClick={() => appliedFilters && fetchReport(appliedFilters)}
+        disabled={reportLoading}
+        title="Reload report data"
+      >
+        <RefreshCcw className={cn("h-3.5 w-3.5", reportLoading && "animate-spin")} />
+        <span className="hidden md:inline">Reload</span>
+      </Button>
+
+      {/* 5. Density toggle */}
+      <div className="hidden lg:flex items-center rounded-lg border border-slate-200 bg-slate-100/80 p-0.5 dark:border-slate-800 dark:bg-slate-900">
+        <button
+          type="button"
+          onClick={() => setDensity("comfortable")}
+          className={cn(
+            "rounded-md px-2 py-0.5 text-[11px] font-bold transition-colors",
+            density === "comfortable"
+              ? "bg-white text-blue-600 shadow-xs dark:bg-slate-800 dark:text-blue-400"
+              : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+          )}
+        >
+          Comfortable
+        </button>
+        <button
+          type="button"
+          onClick={() => setDensity("compact")}
+          className={cn(
+            "rounded-md px-2 py-0.5 text-[11px] font-bold transition-colors",
+            density === "compact"
+              ? "bg-white text-blue-600 shadow-xs dark:bg-slate-800 dark:text-blue-400"
+              : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white"
+          )}
+        >
+          Compact
+        </button>
+      </div>
+
+      {/* 6. Columns toggle */}
       <div className="relative">
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="gap-2 text-xs font-semibold"
+          className="h-8 gap-1.5 text-xs font-semibold px-2.5"
+          onClick={() => setShowColumnsModal((v) => !v)}
+        >
+          <Columns3 className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">Columns</span>
+        </Button>
+        {showColumnsModal && (
+          <div
+            className="absolute right-0 top-full z-50 mt-1.5 w-64 rounded-xl border border-slate-200 bg-white p-3 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95"
+            onMouseLeave={() => setShowColumnsModal(false)}
+          >
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 mb-2">
+              <span className="text-xs font-bold text-slate-900 dark:text-white">Visible Columns</span>
+              <button type="button" onClick={() => setShowColumnsModal(false)} className="text-slate-400 hover:text-slate-600">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+            <div className="max-h-60 overflow-y-auto space-y-1 pr-1">
+              {orderedColumns.map((col, idx) => {
+                const isVisible = visibleColumnKeys.includes(col.key);
+                return (
+                  <div key={col.key} className="flex items-center justify-between gap-2 rounded-lg px-2 py-1 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs">
+                    <label className="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
+                      <input
+                        type="checkbox"
+                        checked={isVisible}
+                        onChange={() => toggleColumn(col.key)}
+                        className="rounded border-slate-300 text-blue-600"
+                      />
+                      <span className="truncate text-slate-700 dark:text-slate-300">{col.label}</span>
+                    </label>
+                    <div className="flex items-center gap-0.5">
+                      <button
+                        type="button"
+                        onClick={() => moveColumn(col.key, -1)}
+                        disabled={idx === 0}
+                        className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30"
+                      >
+                        <ArrowUp className="h-3 w-3" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => moveColumn(col.key, 1)}
+                        disabled={idx === orderedColumns.length - 1}
+                        className="p-1 text-slate-400 hover:text-slate-700 disabled:opacity-30"
+                      >
+                        <ArrowDown className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* 7. Unified Actions dropdown */}
+      <div className="relative">
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 gap-1.5 text-xs font-bold px-3 bg-blue-50/50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800"
           onClick={() => setActionsMenuOpen((v) => !v)}
         >
-          <MoreVertical className="h-4 w-4" />
+          <MoreVertical className="h-3.5 w-3.5" />
           Actions
         </Button>
         {actionsMenuOpen ? (
           <div
-            className="absolute right-0 top-full z-50 mt-1.5 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95"
+            className="absolute right-0 top-full z-50 mt-1.5 w-56 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95"
             onMouseLeave={() => setActionsMenuOpen(false)}
           >
             <button
@@ -408,29 +619,10 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
               onClick={() => {
                 setActionsMenuOpen(false);
-                if (appliedFilters) fetchReport(appliedFilters);
+                handlePrintAction();
               }}
             >
-              <RefreshCcw className="h-3.5 w-3.5" />
-              Reload Report
-            </button>
-            <button
-              type="button"
-              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
-              onClick={() => {
-                setActionsMenuOpen(false);
-                openGenericErpReport({
-                  title: `${panelTitle} — ${t(lang, `report.${appliedReportType.replace(/-/g, "_")}` as UiKey, appliedReportType)}`,
-                  lang,
-                  columns: visibleColumns,
-                  rows: reportData,
-                  summary: reportSummary,
-                  filters: previewFilters,
-                  companyInfo
-                });
-              }}
-            >
-              <Printer className="h-3.5 w-3.5" />
+              <Printer className="h-3.5 w-3.5 text-blue-600" />
               Print / PDF Document
             </button>
             <button
@@ -438,22 +630,33 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
               onClick={() => {
                 setActionsMenuOpen(false);
-                const csvRows = [
-                  visibleColumns.map((c) => c.label),
-                  ...reportData.map((r) => visibleColumns.map((c) => String(r[c.key] ?? "")))
-                ];
-                const csvStr = csvRows.map((r) => r.map((cell) => `"${cell.replace(/"/g, '""')}"`).join(",")).join("\n");
-                const blob = new Blob(["\uFEFF" + csvStr], { type: "text/csv;charset=utf-8;" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `report_${appliedReportType}_${new Date().toISOString().slice(0, 10)}.csv`;
-                a.click();
-                URL.revokeObjectURL(url);
+                handleExcelExport();
               }}
             >
-              <DownloadActionIcon className="h-3.5 w-3.5" />
-              Excel / CSV Export
+              <Table2 className="h-3.5 w-3.5 text-emerald-600" />
+              Export to Excel (.xls)
+            </button>
+            <button
+              type="button"
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
+              onClick={() => {
+                setActionsMenuOpen(false);
+                handleCsvExport();
+              }}
+            >
+              <DownloadActionIcon className="h-3.5 w-3.5 text-teal-600" />
+              Export to CSV
+            </button>
+            <button
+              type="button"
+              className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
+              onClick={() => {
+                setActionsMenuOpen(false);
+                handleWhatsAppShare();
+              }}
+            >
+              <Share2 className="h-3.5 w-3.5 text-emerald-500" />
+              Share via WhatsApp
             </button>
           </div>
         ) : null}
@@ -462,12 +665,12 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
   );
 
   return (
-    <div className="w-full space-y-4 text-foreground" dir={isRTL ? "rtl" : "ltr"}>
+    <div className="w-full space-y-3.5 text-foreground" dir={isRTL ? "rtl" : "ltr"}>
       {/* Action portal mount */}
       {actionsSlot && createPortal(topActionsContent, actionsSlot)}
 
-      {/* Header Bar */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
+      {/* Header Bar with title, scope badge, and actions */}
+      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
         <div>
           <div className="flex items-center gap-2.5">
             <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
@@ -631,7 +834,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
                 {showAllCountries ? "Hide Details" : "Show Details"}
               </span>
               <span className="text-[10px] font-bold text-orange-600 bg-orange-100/80 dark:bg-orange-950/60 px-2 py-0.5 rounded">
-                EXPLORE â†’
+                EXPLORE →
               </span>
             </div>
           </div>
@@ -706,52 +909,29 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
         </div>
       ) : null}
 
-      {/* Applied report snapshot */}
+      {/* Applied report snapshot pill bar */}
       {reportResult && (
-        <div className="rounded-xl border border-indigo-100 bg-indigo-50/60 p-3 dark:border-indigo-900/60 dark:bg-indigo-950/20">
-          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-            <h2 className="text-[11px] font-black uppercase tracking-wider text-indigo-900 dark:text-indigo-200">
-              {t(lang, "report.applied_filters" as UiKey, "Applied report snapshot")}
-            </h2>
-            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
-              {t(lang, "report.real_data" as UiKey, "Real database data")} · {(reportResult.sourceTables ?? []).join(", ")}
+        <div className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-900/50 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-md bg-blue-100 px-2 py-0.5 text-[10px] font-black text-blue-700 dark:bg-blue-950 dark:text-blue-300 uppercase">
+              {reportResult?.scope?.label ?? "GLOBAL"}
+            </span>
+            <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+              Country: <strong className="text-slate-900 dark:text-white">{previewFilters[1]?.value}</strong>
+            </span>
+            <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+              Branch: <strong className="text-slate-900 dark:text-white">{applied.branch || applied.mainBranch || "All Branches"}</strong>
+            </span>
+            <span className="text-[11px] font-semibold text-slate-600 dark:text-slate-300">
+              Currency: <strong className="text-slate-900 dark:text-white">{applied.currency ?? "All"}</strong>
             </span>
           </div>
-          <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
-            {previewFilters.slice(0, 6).map((item) => (
-              <div key={item.label} className="rounded-lg border border-white/80 bg-white/80 px-2.5 py-1.5 dark:border-slate-800 dark:bg-slate-900/80">
-                <div className="text-[9px] font-bold uppercase tracking-wide text-slate-400">{item.label}</div>
-                <div className="mt-0.5 truncate text-xs font-bold text-slate-800 dark:text-slate-200">{item.value}</div>
-              </div>
-            ))}
+          <div className="flex items-center gap-2">
+            <span className="rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300">
+              {reportData.length} records loaded
+            </span>
           </div>
         </div>
-      )}
-
-      {/* Export Toolbar */}
-      {hasLoaded && (
-        <ReportExportToolbar
-          lang={lang}
-          reportType={appliedReportType}
-          reportTitle={`${panelTitle} — ${t(lang, `report.${appliedReportType.replace(/-/g, "_")}` as UiKey, appliedReportType)}`}
-          data={reportData}
-          summary={reportSummary}
-          scopeLabel={reportResult?.scope?.label ?? scope?.scopeLabel ?? ""}
-          generatedAt={reportResult?.generatedAt}
-          isLoading={reportLoading}
-          onReload={() => appliedFilters && fetchReport(appliedFilters)}
-          currency={appliedCurrency}
-          searchQuery={searchQuery}
-          onSearchQueryChange={setSearchQuery}
-          density={density}
-          onDensityChange={setDensity}
-          columns={orderedColumns}
-          visibleColumnKeys={visibleColumnKeys}
-          onToggleColumn={toggleColumn}
-          onMoveColumn={moveColumn}
-          previewFilters={previewFilters}
-          companyInfo={companyInfo}
-        />
       )}
 
       {/* Error State */}
@@ -765,7 +945,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
         </div>
       )}
 
-      {/* Data Table */}
+      {/* Data Table directly below */}
       {hasLoaded && (
         <ReportDataTable
           lang={lang}
