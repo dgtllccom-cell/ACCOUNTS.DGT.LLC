@@ -265,10 +265,12 @@ export async function GET(request: NextRequest) {
       credit: number;
       usdDebit: number;
       usdCredit: number;
+      firstActivityAt: string | null;
       lastActivityAt: string | null;
       lastReferenceNo: string | null;
       lastSource: "ledger" | "roznamcha" | null;
       lastDescription: string | null;
+      firstEntryDate: string | null;
       lastEntryDate: string | null;
     };
 
@@ -281,10 +283,12 @@ export async function GET(request: NextRequest) {
           credit: 0,
           usdDebit: 0,
           usdCredit: 0,
+          firstActivityAt: null,
           lastActivityAt: null,
           lastReferenceNo: null,
           lastSource: null,
           lastDescription: null,
+          firstEntryDate: null,
           lastEntryDate: null
         });
       }
@@ -313,12 +317,18 @@ export async function GET(request: NextRequest) {
 
       const header = row.ledger_posting_batches ?? {};
       const activityAt = String(header.created_at ?? row.created_at ?? header.entry_date ?? "");
-      if (!entry.lastActivityAt || activityAt > entry.lastActivityAt) {
+      const entryDate = header.entry_date ?? null;
+
+      if (!entry.firstActivityAt || (activityAt && activityAt < entry.firstActivityAt)) {
+        entry.firstActivityAt = activityAt;
+        entry.firstEntryDate = entryDate;
+      }
+      if (!entry.lastActivityAt || (activityAt && activityAt > entry.lastActivityAt)) {
         entry.lastActivityAt = activityAt;
         entry.lastReferenceNo = header.reference_no ?? null;
         entry.lastSource = "ledger";
         entry.lastDescription = row.description ?? null;
-        entry.lastEntryDate = header.entry_date ?? null;
+        entry.lastEntryDate = entryDate;
       }
     }
 
@@ -335,17 +345,23 @@ export async function GET(request: NextRequest) {
 
       const header = row.roznamcha_entries ?? {};
       const activityAt = String(header.created_at ?? row.created_at ?? header.entry_date ?? "");
-      if (!entry.lastActivityAt || activityAt > entry.lastActivityAt) {
+      const entryDate = header.entry_date ?? null;
+
+      if (!entry.firstActivityAt || (activityAt && activityAt < entry.firstActivityAt)) {
+        entry.firstActivityAt = activityAt;
+        entry.firstEntryDate = entryDate;
+      }
+      if (!entry.lastActivityAt || (activityAt && activityAt > entry.lastActivityAt)) {
         entry.lastActivityAt = activityAt;
         entry.lastReferenceNo = header.voucher_no ?? null;
         entry.lastSource = "roznamcha";
         entry.lastDescription = row.description ?? null;
-        entry.lastEntryDate = header.entry_date ?? null;
+        entry.lastEntryDate = entryDate;
       }
     }
 
     const rowsWithTotals = rows.map((row) => {
-      const totals = agg.get(row.ledgerId) ?? { entries: 0, debit: 0, credit: 0, usdDebit: 0, usdCredit: 0, lastActivityAt: null, lastReferenceNo: null, lastSource: null, lastDescription: null, lastEntryDate: null };
+      const totals = agg.get(row.ledgerId) ?? { entries: 0, debit: 0, credit: 0, usdDebit: 0, usdCredit: 0, firstActivityAt: null, lastActivityAt: null, lastReferenceNo: null, lastSource: null, lastDescription: null, firstEntryDate: null, lastEntryDate: null };
       const balance = balanceMap.get(row.ledgerId);
       const branch = row.cityBranchName || row.countryBranchName || row.countryName || "-";
       
@@ -373,10 +389,12 @@ export async function GET(request: NextRequest) {
         usdCredit: totals.usdCredit,
         usdBalance,
         balanceDate: balance?.balanceDate ?? null,
+        firstActivityAt: totals.firstActivityAt,
         lastActivityAt: totals.lastActivityAt,
         lastReferenceNo: totals.lastReferenceNo,
         lastSource: totals.lastSource,
         lastDescription: totals.lastDescription,
+        firstEntryDate: totals.firstEntryDate,
         lastEntryDate: totals.lastEntryDate
       };
     });
@@ -400,6 +418,10 @@ export async function GET(request: NextRequest) {
         existing.usdCredit = (existing.usdCredit || 0) + (r.usdCredit || 0);
         existing.usdBalance = (existing.usdBalance || 0) + (r.usdBalance || 0);
         
+        if (r.firstActivityAt && (!existing.firstActivityAt || r.firstActivityAt < existing.firstActivityAt)) {
+          existing.firstActivityAt = r.firstActivityAt;
+          existing.firstEntryDate = r.firstEntryDate;
+        }
         if (r.lastActivityAt && (!existing.lastActivityAt || r.lastActivityAt > existing.lastActivityAt)) {
           existing.lastActivityAt = r.lastActivityAt;
           existing.lastReferenceNo = r.lastReferenceNo;

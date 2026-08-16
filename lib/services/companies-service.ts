@@ -1,6 +1,7 @@
 import { companiesRepository, type CompanyContact, type CompanyRegistration } from "@/lib/repositories/companies-repository";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
 
 export type CompanyInput = {
   name: string;
@@ -75,6 +76,17 @@ export class CompaniesService {
       input.originalLanguage,
       actorId ?? null
     );
+
+    const current = await companiesRepository.getById(companyId);
+    await writeRecordChangeHistory({
+      recordTable: "companies",
+      recordId: companyId,
+      action: "create",
+      actorId: actorId ?? null,
+      countryId: current?.country_id ?? input.countryId ?? null,
+      beforeData: null,
+      afterData: current ?? null
+    });
     return companyId;
   }
 
@@ -83,7 +95,19 @@ export class CompaniesService {
     input: Partial<CompanyInput> & { originalLanguage?: SupportedLanguage },
     actorId?: string | null
   ) {
+    const before = await companiesRepository.getById(id);
     await companiesRepository.update(id, input);
+    const after = await companiesRepository.getById(id);
+
+    await writeRecordChangeHistory({
+      recordTable: "companies",
+      recordId: id,
+      action: "update",
+      actorId: actorId ?? null,
+      countryId: after?.country_id ?? before?.country_id ?? null,
+      beforeData: before ?? null,
+      afterData: after ?? null
+    });
 
     if (input.name || input.legalName || input.ownerName || input.businessType || input.address || input.originalLanguage) {
       const company = await companiesRepository.getById(id);
@@ -108,7 +132,16 @@ export class CompaniesService {
   }
 
   async softDelete(id: string) {
+    const before = await companiesRepository.getById(id);
     await companiesRepository.softDelete(id);
+    await writeRecordChangeHistory({
+      recordTable: "companies",
+      recordId: id,
+      action: "delete",
+      countryId: before?.country_id ?? null,
+      beforeData: before ?? null,
+      afterData: { deleted_at: new Date().toISOString() }
+    });
   }
 }
 

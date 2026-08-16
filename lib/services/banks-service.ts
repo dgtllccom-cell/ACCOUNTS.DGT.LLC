@@ -1,5 +1,6 @@
 import { banksRepository } from "@/lib/repositories/banks-repository";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
 
 export type BankInput = {
   bankType: string;
@@ -37,15 +38,50 @@ export class BanksService {
   }
 
   async create(input: BankInput, actorId?: string | null) {
-    return await banksRepository.create(input, actorId ?? null);
+    const bankId = await banksRepository.create(input, actorId ?? null);
+    const current = await banksRepository.getById(bankId);
+    await writeRecordChangeHistory({
+      recordTable: "banks",
+      recordId: bankId,
+      action: "create",
+      actorId: actorId ?? null,
+      countryId: current?.country_id ?? input.countryId ?? null,
+      cityBranchId: current?.city_id ?? input.cityId ?? null,
+      beforeData: null,
+      afterData: current ?? null
+    });
+    return bankId;
   }
 
   async update(id: string, input: Partial<BankInput>, actorId?: string | null) {
-    return await banksRepository.update(id, input, actorId ?? null);
+    const before = await banksRepository.getById(id);
+    await banksRepository.update(id, input, actorId ?? null);
+    const after = await banksRepository.getById(id);
+    await writeRecordChangeHistory({
+      recordTable: "banks",
+      recordId: id,
+      action: "update",
+      actorId: actorId ?? null,
+      countryId: after?.country_id ?? before?.country_id ?? null,
+      cityBranchId: after?.city_id ?? before?.city_id ?? null,
+      beforeData: before ?? null,
+      afterData: after ?? null
+    });
   }
 
   async softDelete(id: string) {
-    return await banksRepository.softDelete(id);
+    const before = await banksRepository.getById(id);
+    await banksRepository.softDelete(id);
+    await writeRecordChangeHistory({
+      recordTable: "banks",
+      recordId: id,
+      action: "delete",
+      actorId: null,
+      countryId: before?.country_id ?? null,
+      cityBranchId: before?.city_id ?? null,
+      beforeData: before ?? null,
+      afterData: { deleted_at: new Date().toISOString() }
+    });
   }
 }
 

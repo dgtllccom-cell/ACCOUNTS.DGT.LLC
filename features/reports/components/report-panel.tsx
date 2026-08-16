@@ -188,6 +188,12 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
   const reportSummary = reportResult?.summary ?? {};
   const appliedReportType = reportResult?.reportType ?? filters.reportType;
   const appliedCurrency = reportResult?.applied?.currency ?? filters.currency;
+  const isEditHistoryReport = appliedReportType === "edit-history";
+  const selectedHistoryKey = String(selectedRow?.historyRecordId || selectedRow?.id || "");
+  const selectedHistoryEntries = selectedRow && reportResult
+    ? ((selectedRow.historyEntries ?? reportResult.history?.[selectedHistoryKey] ?? []) as any[])
+    : [];
+  const renderAuditValue = (value: unknown) => (value === null || value === undefined || value === "" ? "—" : typeof value === "object" ? JSON.stringify(value) : String(value));
   const baseColumns = getColumnsForReportType(
     appliedReportType,
     lang,
@@ -966,21 +972,50 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               <button type="button" aria-label="Close" onClick={() => setSelectedRow(null)} className="rounded-xl border border-slate-200 p-2 text-slate-500 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-900"><X className="h-4 w-4" /></button>
             </div>
             <div className="grid gap-3 p-5 sm:grid-cols-2 lg:grid-cols-3">
-              {Object.entries(selectedRow).filter(([key]) => !["sourceTable"].includes(key)).map(([key, value]) => (
+              {Object.entries(selectedRow).filter(([key]) => !["sourceTable", "historyEntries", "currentVersion", "originalVersion"].includes(key)).map(([key, value]) => (
                 <div key={key} className="rounded-xl border border-slate-200 p-3 dark:border-slate-800">
                   <div className="text-[9px] font-black uppercase tracking-wide text-slate-400">{key.replace(/([A-Z])/g, " $1")}</div>
-                  <div className="mt-1 break-words text-xs font-semibold text-slate-800 dark:text-slate-200">{value === null || value === undefined || value === "" ? "—" : typeof value === "object" ? JSON.stringify(value) : String(value)}</div>
+                  <div className="mt-1 break-words text-xs font-semibold text-slate-800 dark:text-slate-200">{renderAuditValue(value)}</div>
                 </div>
               ))}
             </div>
             <div className="border-t border-slate-200 p-5 dark:border-slate-800">
-              <h3 className="mb-3 flex items-center gap-2 text-sm font-black text-slate-900 dark:text-white"><History className="h-4 w-4" /> {t(lang, "report.activity_history" as UiKey, "Activity and edit history")}</h3>
-              {(reportResult.history?.[String(selectedRow.historyRecordId || selectedRow.id)] ?? []).length ? (
-                <div className="space-y-2">
-                  {(reportResult.history?.[String(selectedRow.historyRecordId || selectedRow.id)] ?? []).map((entry: any) => (
-                    <div key={entry.id} className="rounded-xl bg-slate-50 p-3 text-xs dark:bg-slate-900">
-                      <div className="font-bold text-slate-800 dark:text-slate-200">{entry.action} · {new Date(entry.created_at).toLocaleString()} · {entry.actor_id || "—"}</div>
-                      <div className="mt-1 text-slate-500">{(entry.changedFields ?? []).join(", ") || t(lang, "report.no_field_changes" as UiKey, "No field-level changes recorded")}</div>
+              <h3 className="mb-3 flex items-center gap-2 text-sm font-black text-slate-900 dark:text-white">
+                <History className="h-4 w-4" />
+                {isEditHistoryReport ? t(lang, "report.edit_history" as UiKey, "Edit History") : t(lang, "report.activity_history" as UiKey, "Activity and edit history")}
+              </h3>
+              {selectedHistoryEntries.length ? (
+                <div className="space-y-3">
+                  {selectedHistoryEntries.map((entry: any) => (
+                    <div key={entry.id} className="rounded-2xl border border-slate-200 bg-slate-50/70 p-4 text-xs dark:border-slate-800 dark:bg-slate-900/60">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="rounded-full bg-indigo-600 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-white">{entry.versionLabel || entry.action || "Version"}</span>
+                        <span className="text-[10px] font-semibold text-slate-500">{new Date(entry.created_at).toLocaleString()}</span>
+                      </div>
+                      <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        <div><div className="text-[9px] font-black uppercase tracking-wide text-slate-400">Who changed it</div><div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">{renderAuditValue(entry.user)}</div></div>
+                        <div><div className="text-[9px] font-black uppercase tracking-wide text-slate-400">Login/User ID</div><div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">{renderAuditValue(entry.loginUserId || entry.actor_id)}</div></div>
+                        <div><div className="text-[9px] font-black uppercase tracking-wide text-slate-400">Role</div><div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">{renderAuditValue(entry.role)}</div></div>
+                        <div><div className="text-[9px] font-black uppercase tracking-wide text-slate-400">Country / Branch</div><div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">{renderAuditValue(entry.country)}</div></div>
+                        <div><div className="text-[9px] font-black uppercase tracking-wide text-slate-400">Main / City Branch</div><div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">{`${renderAuditValue(entry.mainBranch)} / ${renderAuditValue(entry.cityBranch)}`}</div></div>
+                        <div><div className="text-[9px] font-black uppercase tracking-wide text-slate-400">Reason</div><div className="mt-1 font-semibold text-slate-800 dark:text-slate-200">{renderAuditValue(entry.reason)}</div></div>
+                      </div>
+                      <div className="mt-3 overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-950">
+                        <div className="grid grid-cols-[1fr_1fr_1fr] bg-slate-100 px-3 py-2 text-[9px] font-black uppercase tracking-wider text-slate-500 dark:bg-slate-900 dark:text-slate-400">
+                          <span>Field</span>
+                          <span>Before</span>
+                          <span>After</span>
+                        </div>
+                        <div className="divide-y divide-slate-100 dark:divide-slate-800">
+                          {(entry.fields?.length ? entry.fields : (entry.changedFields ?? []).map((field: string) => ({ field, before: null, after: null }))).map((fieldRow: any) => (
+                            <div key={`${entry.id}-${fieldRow.field}`} className="grid grid-cols-[1fr_1fr_1fr] gap-2 px-3 py-2 text-[11px]">
+                              <div className="font-bold text-slate-700 dark:text-slate-200">{renderAuditValue(fieldRow.field)}</div>
+                              <div className="break-words text-slate-500">{renderAuditValue(fieldRow.before)}</div>
+                              <div className="break-words text-slate-800 dark:text-slate-100">{renderAuditValue(fieldRow.after)}</div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   ))}
                 </div>

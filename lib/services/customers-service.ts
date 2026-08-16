@@ -1,6 +1,7 @@
 import { customersRepository } from "@/lib/repositories/customers-repository";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
 
 export type CustomerInput = {
   countryId: string;
@@ -65,6 +66,18 @@ export class CustomersService {
       input.originalLanguage,
       actorId ?? null
     );
+
+    const current = await customersRepository.getById(customerId);
+    await writeRecordChangeHistory({
+      recordTable: "customers",
+      recordId: customerId,
+      action: "create",
+      actorId: actorId ?? null,
+      countryId: current?.country_id ?? input.countryId,
+      cityBranchId: current?.city_id ?? input.cityId ?? null,
+      beforeData: null,
+      afterData: current ?? null
+    });
     return customerId;
   }
 
@@ -73,6 +86,7 @@ export class CustomersService {
     input: Partial<CustomerInput> & { originalLanguage?: SupportedLanguage },
     actorId?: string | null
   ) {
+    const before = await customersRepository.getById(id);
     await customersRepository.update(id, {
       stateProvinceId: "stateProvinceId" in input ? input.stateProvinceId ?? null : undefined,
       districtId: "districtId" in input ? input.districtId ?? null : undefined,
@@ -88,6 +102,18 @@ export class CustomersService {
       notes: "notes" in input ? input.notes ?? null : undefined,
       originalLanguageCode: "originalLanguage" in input ? (input.originalLanguage ?? "en") : undefined,
       isActive: undefined
+    });
+    const after = await customersRepository.getById(id);
+
+    await writeRecordChangeHistory({
+      recordTable: "customers",
+      recordId: id,
+      action: "update",
+      actorId: actorId ?? null,
+      countryId: after?.country_id ?? before?.country_id ?? null,
+      cityBranchId: after?.city_id ?? before?.city_id ?? null,
+      beforeData: before ?? null,
+      afterData: after ?? null
     });
 
     if (
@@ -115,7 +141,18 @@ export class CustomersService {
   }
 
   async softDelete(id: string) {
+    const before = await customersRepository.getById(id);
     await customersRepository.softDelete(id);
+    await writeRecordChangeHistory({
+      recordTable: "customers",
+      recordId: id,
+      action: "delete",
+      actorId: null,
+      countryId: before?.country_id ?? null,
+      cityBranchId: before?.city_id ?? null,
+      beforeData: before ?? null,
+      afterData: { deleted_at: new Date().toISOString() }
+    });
   }
 }
 

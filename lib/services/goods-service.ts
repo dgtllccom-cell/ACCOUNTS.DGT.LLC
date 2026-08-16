@@ -1,6 +1,7 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { goodsRepository } from "@/lib/repositories/goods-repository";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
+import { writeRecordChangeHistory } from "@/lib/api/record-change-history";
 
 export type GoodsMasterInput = {
   chsCode: string;
@@ -45,6 +46,17 @@ export class GoodsService {
 
     await this.upsertMasterTranslations(goodsId, input.goodsName, input.originalLanguage, actorId ?? null);
 
+    const current = await goodsRepository.getById(goodsId);
+    await writeRecordChangeHistory({
+      recordTable: "goods",
+      recordId: goodsId,
+      action: "create",
+      actorId: actorId ?? null,
+      countryId: current?.origin_country_id ?? input.originCountryId ?? null,
+      beforeData: null,
+      afterData: current ?? null
+    });
+
     if (input.initialVariation) {
       await this.createVariation(
         {
@@ -77,11 +89,23 @@ export class GoodsService {
       }
     }
 
+    const before = await goodsRepository.getById(id);
     await goodsRepository.update(id, {
       chsCode: input.chsCode,
       goodsName: input.goodsName,
       originCountryId: input.originCountryId,
       isActive: input.isActive
+    });
+    const after = await goodsRepository.getById(id);
+
+    await writeRecordChangeHistory({
+      recordTable: "goods",
+      recordId: id,
+      action: "update",
+      actorId: actorId ?? null,
+      countryId: after?.origin_country_id ?? before?.origin_country_id ?? null,
+      beforeData: before ?? null,
+      afterData: after ?? null
     });
 
     if (input.goodsName) {
@@ -95,7 +119,16 @@ export class GoodsService {
   }
 
   async softDelete(id: string) {
+    const before = await goodsRepository.getById(id);
     await goodsRepository.softDelete(id);
+    await writeRecordChangeHistory({
+      recordTable: "goods",
+      recordId: id,
+      action: "delete",
+      beforeData: before ?? null,
+      afterData: { deleted_at: new Date().toISOString() },
+      countryId: before?.origin_country_id ?? null
+    });
   }
 
   // --- Variation Service Actions ---
@@ -110,6 +143,17 @@ export class GoodsService {
 
     // Translate size and brand if needed
     await this.upsertVariationTranslations(variationId, input.size, input.brand, actorId ?? null);
+    const current = await goodsRepository.getById(input.goodsId);
+    const variation = current?.variations?.find((item: any) => item.id === variationId) ?? null;
+    await writeRecordChangeHistory({
+      recordTable: "goods_variations",
+      recordId: variationId,
+      action: "create",
+      actorId: actorId ?? null,
+      countryId: current?.origin_country_id ?? null,
+      beforeData: null,
+      afterData: variation ?? { goods_id: input.goodsId, size: input.size, brand: input.brand }
+    });
     return variationId;
   }
 
@@ -123,7 +167,21 @@ export class GoodsService {
     },
     actorId?: string | null
   ) {
+    const beforeGoods = await goodsRepository.getById(input.goodsId);
+    const before = beforeGoods?.variations?.find((item: any) => item.id === id) ?? null;
     await goodsRepository.updateVariation(id, input);
+    const afterGoods = await goodsRepository.getById(input.goodsId);
+    const after = afterGoods?.variations?.find((item: any) => item.id === id) ?? null;
+
+    await writeRecordChangeHistory({
+      recordTable: "goods_variations",
+      recordId: id,
+      action: "update",
+      actorId: actorId ?? null,
+      countryId: afterGoods?.origin_country_id ?? beforeGoods?.origin_country_id ?? null,
+      beforeData: before ?? null,
+      afterData: after ?? null
+    });
 
     if (input.size || input.brand) {
       await this.upsertVariationTranslations(id, input.size || "", input.brand || "", actorId ?? null);
@@ -132,6 +190,13 @@ export class GoodsService {
 
   async softDeleteVariation(id: string) {
     await goodsRepository.softDeleteVariation(id);
+    await writeRecordChangeHistory({
+      recordTable: "goods_variations",
+      recordId: id,
+      action: "delete",
+      beforeData: null,
+      afterData: { deleted_at: new Date().toISOString() }
+    });
   }
 
   // --- Helper Methods ---

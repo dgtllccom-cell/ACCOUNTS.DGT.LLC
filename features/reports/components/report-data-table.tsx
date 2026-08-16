@@ -16,6 +16,7 @@ type Column = {
   format?: "date" | "currency" | "number" | "status" | "text";
   currency?: string;
   width?: string;
+  render?: (row: Record<string, any>, lang: SupportedLanguage, openRow?: (row: Record<string, any>) => void) => React.ReactNode;
 };
 
 type Props = {
@@ -287,7 +288,7 @@ export function ReportDataTable({
                         col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left"
                       )}
                     >
-                      {formatCell(row[col.key], col.format, col.currency ?? currency)}
+                      {col.render ? col.render(row, lang, onRowClick) : formatCell(row[col.key], col.format, col.currency ?? currency)}
                     </td>
                   ))}
                 </tr>
@@ -516,6 +517,35 @@ export function getColumnsForReportType(reportType: string, lang: SupportedLangu
         { key: "container", label: "Container" },
         { key: "country", label: _("report.col_country") },
         { key: "status", label: _("report.col_status"), format: "status", align: "center" }
+      ];
+
+    case "edit-history":
+      return [
+        { key: "module", label: _("report.col_module" as UiKey, "Module"), sortable: true },
+        { key: "reference", label: _("report.col_entry_reference" as UiKey, "Entry No. / Reference"), sortable: true },
+        { key: "country", label: _("report.col_country") },
+        { key: "mainBranch", label: _("report.col_main_branch" as UiKey, "Main Branch") },
+        { key: "cityBranch", label: _("report.col_city_branch" as UiKey, "City Branch") },
+        { key: "user", label: _("report.col_user") },
+        { key: "editCount", label: _("report.col_edit_count" as UiKey, "Edit Count"), format: "number", align: "right", sortable: true },
+        { key: "lastEdited", label: _("report.col_last_edited" as UiKey, "Last Edited"), format: "date", sortable: true },
+        {
+          key: "history",
+          label: _("report.col_history" as UiKey, "History [+]"),
+          align: "center",
+          render: (row, _lang, openRow) => (
+            <button
+              type="button"
+              className="inline-flex items-center justify-center rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-[10px] font-black uppercase tracking-wider text-indigo-700 hover:bg-indigo-100 dark:border-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-300"
+              onClick={(event) => {
+                event.stopPropagation();
+                openRow?.(row);
+              }}
+            >
+              History +{String(row.editCount ?? 0)}
+            </button>
+          )
+        }
       ];
 
     case "exchange-rate":

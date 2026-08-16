@@ -28,6 +28,7 @@ const superAdminReportTypes = [
   { key: "sales", icon: "bar-chart" },
   { key: "purchase", icon: "shopping-bag" },
   { key: "user-activity", icon: "users" },
+  { key: "edit-history", icon: "history" },
   { key: "employee", icon: "badge" },
   { key: "branch", icon: "building" },
   { key: "project", icon: "folder" }

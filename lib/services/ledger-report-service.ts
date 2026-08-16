@@ -21,8 +21,11 @@ export type LedgerLookupRow = {
   countryName: string | null;
   countryBranchId: string | null;
   countryBranchName: string | null;
+  countryBranchCode?: string | null;
   cityBranchId: string | null;
   cityBranchName: string | null;
+  cityBranchCode?: string | null;
+  branchCode?: string | null;
   accountId: string | null;
   accountCode: string | null;
   rawAccountCode?: string | null;
@@ -386,8 +389,11 @@ export class LedgerReportService {
         countryName: country?.name ?? null,
         countryBranchId: row.country_branch_id,
         countryBranchName: countryBranch?.name ?? null,
+        countryBranchCode: countryBranch?.code ?? null,
         cityBranchId: row.city_branch_id,
         cityBranchName: cityBranch?.name ?? null,
+        cityBranchCode: cityBranch?.code ?? null,
+        branchCode: cityBranch?.code ?? countryBranch?.code ?? null,
         accountId: row.enterprise_account_id ?? row.account_id,
         accountCode: enterpriseAccount?.account_number ?? account?.code ?? null,
         rawAccountCode: account?.code ?? null,

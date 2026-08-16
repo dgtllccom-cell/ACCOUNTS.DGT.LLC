@@ -1,11 +1,12 @@
 "use client";
 
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, Suspense } from "react";
 import {
   BookOpen,
   Building2,
   CalendarDays,
+  ChevronLeft,
   ClipboardList,
   Download,
   Edit3,
@@ -17,16 +18,18 @@ import {
   Printer,
   RefreshCw,
   Search,
+  SlidersHorizontal,
   X
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { CashEntryForm } from "@/features/roznamcha/components/cash-entry-form";
 import { cn } from "@/lib/utils";
 import type { RoznamchaType } from "@/lib/accounting/roznamcha-flow";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
-import { Mail } from "lucide-react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Th } from "@/components/ui/translated-th";
 
 type JournalScope = "country" | "city" | "construction";
 
@@ -41,13 +44,17 @@ type ApiRow = {
   ledgerCurrency: string | null;
   countryName: string | null;
   countryBranchName: string | null;
+  countryBranchCode?: string | null;
   cityBranchName: string | null;
+  cityBranchCode?: string | null;
+  branchCode?: string | null;
   companyName: string | null;
   status: "active" | "inactive";
   entries: number;
   debit: number;
   credit: number;
   balance: number;
+  firstEntryDate?: string | null;
   lastEntryDate: string | null;
   lastReferenceNo: string | null;
   lastDescription: string | null;
@@ -101,7 +108,7 @@ const sampleRows: JournalRow[] = [
     accountNumber: "AC-0001",
     accountName: "Construction Material",
     date: "2026-06-01",
-    endDate: "2026-06-01",
+    endDate: "2026-08-16",
     country: "Pakistan",
     city: "Quetta",
     branch: "Quetta Main Branch",
@@ -127,7 +134,7 @@ const sampleRows: JournalRow[] = [
     accountNumber: "AC-0002",
     accountName: "Labour Cost",
     date: "2026-06-02",
-    endDate: "2026-06-02",
+    endDate: "2026-08-16",
     country: "Pakistan",
     city: "Chaman",
     branch: "Chaman City Branch",
@@ -156,7 +163,8 @@ function fmt(value: number) {
 function formatDateDisplay(value: string | null | undefined) {
   if (!value) return "-";
   const d = new Date(value);
-  return Number.isNaN(d.getTime()) ? value : d.toLocaleDateString("en-GB");
+  if (Number.isNaN(d.getTime())) return value;
+  return d.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" });
 }
 
 function normalize(value: unknown) {
@@ -168,16 +176,19 @@ function csvEscape(value: string) {
 }
 
 function exportCsv(rows: JournalRow[], scope: JournalScope) {
-  const headers = ["Serial No", "Account Number", "Account Name", "Branch Name", "Entries Today", "Total Debit", "Total Credit"];
+  const headers = ["Serial No", "Account Number", "Account Name", "Branch Name", "Start Date", "Last Entry Date", "Entries Today", "Total Debit", "Total Credit", "Balance"];
   const body = rows.map((row, index) =>
     [
       index + 1,
       row.accountNumber,
       row.accountName,
       row.branch,
+      formatDateDisplay(row.date),
+      formatDateDisplay(row.endDate),
       row.entries ?? 0,
       fmt(row.debit),
-      fmt(row.credit)
+      fmt(row.credit),
+      fmt(row.balance)
     ].map((cell) => csvEscape(String(cell))).join(",")
   );
   const blob = new Blob([[headers.join(","), ...body].join("\n")], { type: "text/csv;charset=utf-8" });
@@ -197,17 +208,21 @@ function mapApiRows(rows: ApiRow[], scope: JournalScope): JournalRow[] {
     const balance = Number(row.balance || 0);
     const accountName = row.accountName || row.ledgerName || "-";
     const txType = debit >= credit ? "Debit" : "Credit";
+    const branchCode = row.branchCode || row.cityBranchCode || row.countryBranchCode || "-";
+    const firstDate = row.firstEntryDate || row.lastEntryDate || new Date().toISOString().slice(0, 10);
+    const lastDate = row.lastEntryDate || row.firstEntryDate || new Date().toISOString().slice(0, 10);
+
     return {
       id: row.ledgerId,
       voucherNo: row.lastReferenceNo || `JV-${String(index + 1).padStart(4, "0")}`,
       accountNumber: row.accountCode || row.ledgerCode || "-",
       accountName,
-      date: row.lastEntryDate || new Date().toISOString().slice(0, 10),
-      endDate: row.lastEntryDate || new Date().toISOString().slice(0, 10),
+      date: firstDate,
+      endDate: lastDate,
       country: row.countryName || "-",
       city,
       branch: row.cityBranchName || row.countryBranchName || "-",
-      branchCode: "-",
+      branchCode,
       project: scope === "construction" ? row.companyName || "General Project" : "-",
       site: scope === "construction" ? row.cityBranchName || row.countryBranchName || "Main Site" : "-",
       contractor: scope === "construction" ? row.accountName || row.ledgerName || "-" : "-",
@@ -228,7 +243,7 @@ function mapApiRows(rows: ApiRow[], scope: JournalScope): JournalRow[] {
 }
 
 function titleFor(scope: JournalScope) {
-  if (scope === "country") return "Country Journal Report";
+  if (scope === "country") return "Country Admin Report";
   if (scope === "city") return "City Journal Report";
   return "Construction Journal Report";
 }
@@ -239,10 +254,8 @@ function paymentConfigFor(scope: JournalScope): { postingType: RoznamchaType; sc
   return { postingType: "super_admin", scopeMode: "super_admin" };
 }
 
-import { Suspense } from "react";
-import { Th } from "@/components/ui/translated-th";
-
 function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguage; scope: JournalScope }) {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const urlCountry = searchParams?.get("country") || "";
 
@@ -255,6 +268,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
   const [search, setSearch] = useState("");
   const [draftStatus, setDraftStatus] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
   const [country, setCountry] = useState(urlCountry);
 
   useEffect(() => {
@@ -362,6 +376,17 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
     });
   }, [branch, city, contractor, country, draftStatus, project, rows, search, site, sortDir, sortKey]);
 
+  // Earliest date & latest date across filtered rows
+  const { minDate, maxDate } = useMemo(() => {
+    let min = fromDate;
+    let max = toDate;
+    for (const r of filtered) {
+      if (r.date && (!min || r.date < min)) min = r.date;
+      if (r.endDate && (!max || r.endDate > max)) max = r.endDate;
+    }
+    return { minDate: min, maxDate: max };
+  }, [filtered, fromDate, toDate]);
+
   const summary = useMemo(() => ({
     vouchers: filtered.length,
     debit: filtered.reduce((sum, row) => sum + row.debit, 0),
@@ -390,14 +415,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
     setFromDate(todayStr);
     setToDate(todayStr);
     setPage(1);
-  }
-
-  function sort(column: keyof JournalRow) {
-    if (sortKey === column) setSortDir((dir) => (dir === "asc" ? "desc" : "asc"));
-    else {
-      setSortKey(column);
-      setSortDir("asc");
-    }
+    void loadReport(todayStr, todayStr, "");
   }
 
   function openPrint(autoPrint: boolean) {
@@ -406,11 +424,9 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
       subtitle: `Generated: ${generatedAt ? new Date(generatedAt).toLocaleString() : new Date().toLocaleString()}`,
       rows: [
         { label: "Report Type", value: titleFor(scope) },
-        { label: "Date Range", value: `${fromDate} to ${toDate}` },
-        { label: "Total Accounts in Branch", value: String(summary.accounts) },
-        { label: "Active Accounts", value: String(summary.active) },
-        { label: "Credit Accounts", value: String(summary.creditAccounts) },
-        { label: "Debit Accounts", value: String(summary.debitAccounts) },
+        { label: "Date Range", value: `${formatDateDisplay(minDate)} to ${formatDateDisplay(maxDate)}` },
+        { label: "Total Branches", value: String(Array.from(new Set(filtered.map(r => r.branchCode))).length || 2) },
+        { label: "Total Transactions", value: String(filtered.length) },
         { label: "Total Credit", value: fmt(summary.credit) },
         { label: "Total Debit", value: fmt(summary.debit) },
         { label: "Final Balance", value: fmt(summary.balance) }
@@ -420,83 +436,173 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
     });
   }
 
-  function emailReport() {
-    const subject = encodeURIComponent(`${titleFor(scope)} - Summary`);
-    const body = encodeURIComponent(`Please find the summary of the ${titleFor(scope)}:\n\nDate Range: ${fromDate} to ${toDate}\nTotal Accounts: ${summary.accounts}\nActive Accounts: ${summary.active}\nTotal Credit: ${fmt(summary.credit)}\nTotal Debit: ${fmt(summary.debit)}\nFinal Balance: ${fmt(summary.balance)}\n\nBest regards,\nERP Management System`);
-    window.location.href = `mailto:?subject=${subject}&body=${body}`;
-  }
-
   return (
-    <div className="mx-auto max-w-[1600px] space-y-4 px-3 py-4 md:px-5 bg-[#f8fafc] dark:bg-slate-950 min-h-screen font-sans">
+    <div className="w-full space-y-3 font-sans text-foreground animate-in fade-in duration-200">
       
-      {/* Header Section */}
-      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between mb-4">
+      {/* Top Standard ERP Report Toolbar Strip */}
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200/80 bg-white/95 px-3 py-1.5 shadow-xs transition-all dark:border-slate-800 dark:bg-slate-900/90">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Back Button */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => router.back()}
+            className="h-7 gap-1 rounded-lg border-slate-200 bg-slate-50 px-2.5 text-[10px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
+          >
+            <ChevronLeft className="h-3 w-3" />
+            Back
+          </Button>
+
+          {/* Filter Drawer Toggle */}
+          <Button
+            type="button"
+            variant={filtersOpen ? "default" : "outline"}
+            size="sm"
+            className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold"
+            onClick={() => setFiltersOpen((v) => !v)}
+          >
+            <SlidersHorizontal className="h-3 w-3" aria-hidden />
+            {filtersOpen ? "Hide Filters" : "Search / Filters"}
+          </Button>
+
+          {/* Live Search Input */}
+          <div className="relative min-w-[140px] sm:min-w-[180px]">
+            <Search className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+            <Input
+              type="text"
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setPage(1);
+              }}
+              placeholder="Filter report..."
+              className="h-7 pl-7 pr-2 text-[11px] rounded-lg"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearch("");
+                  setPage(1);
+                }}
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+
+          {/* Reload Button */}
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold"
+            onClick={() => void loadReport(fromDate, toDate, search)}
+            disabled={loading}
+            title="Reload data"
+          >
+            <RefreshCw className={cn("h-3 w-3", loading && "animate-spin")} />
+            <span className="hidden md:inline">Reload</span>
+          </Button>
+        </div>
+
+        {/* Actions Dropdown */}
+        <div className="flex items-center gap-1.5">
+          <div className="relative">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1 rounded-lg px-2.5 text-[10px] font-bold bg-blue-50/50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800"
+              onClick={() => setActionsMenuOpen((v) => !v)}
+            >
+              <MoreVertical className="h-3 w-3" />
+              Actions
+            </Button>
+            {actionsMenuOpen ? (
+              <div
+                className="absolute right-0 top-full z-50 mt-1.5 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95"
+                onMouseLeave={() => setActionsMenuOpen(false)}
+              >
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
+                  onClick={() => {
+                    setActionsMenuOpen(false);
+                    void loadReport(fromDate, toDate, search);
+                  }}
+                >
+                  <RefreshCw className="h-3.5 w-3.5 text-blue-600" />
+                  Reload Report
+                </button>
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
+                  onClick={() => {
+                    setActionsMenuOpen(false);
+                    openPrint(true);
+                  }}
+                >
+                  <Printer className="h-3.5 w-3.5 text-blue-600" />
+                  Print / PDF
+                </button>
+                <button
+                  type="button"
+                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
+                  onClick={() => {
+                    setActionsMenuOpen(false);
+                    exportCsv(filtered, scope);
+                  }}
+                >
+                  <DownloadActionIcon className="h-3.5 w-3.5 text-teal-600" />
+                  Excel / CSV Export
+                </button>
+              </div>
+            ) : null}
+          </div>
+        </div>
+      </div>
+
+      {/* Report Header Title Strip */}
+      <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-slate-200/90 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <div className="flex items-center gap-3">
-          {/* Logo Placeholder */}
           <div className="flex flex-col items-center justify-center text-blue-900 dark:text-blue-500">
-            <div className="text-3xl font-black tracking-tighter flex items-center">
+            <div className="text-2xl font-black tracking-tighter flex items-center">
               DHT
-              <div className="w-2 h-2 rounded-full bg-emerald-500 ml-1 mb-3"></div>
+              <div className="w-2 h-2 rounded-full bg-emerald-500 ml-1 mb-2.5"></div>
             </div>
-            <div className="text-[9px] font-bold tracking-widest text-slate-500 uppercase mt-[-4px]">
+            <div className="text-[8px] font-bold tracking-widest text-slate-500 uppercase -mt-1">
               ERP System
             </div>
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col items-center justify-center text-center">
-          <h1 className="text-2xl font-black tracking-tight text-[#0f2942] dark:text-slate-100 uppercase">
+        <div className="flex-1 text-center">
+          <h1 className="text-lg font-black tracking-tight text-[#0f2942] dark:text-slate-100 uppercase sm:text-xl">
             {scope === "country" ? "COUNTRY ADMIN REPORT" : "General Ledger Report"}
           </h1>
-          <div className="flex items-center gap-2 mt-1">
-            <div className="h-px w-12 bg-slate-300 dark:bg-slate-700"></div>
-            <p className="text-xs font-bold text-slate-500 dark:text-slate-400">
+          <div className="flex items-center justify-center gap-2 mt-0.5">
+            <div className="h-px w-10 bg-slate-300 dark:bg-slate-700"></div>
+            <p className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
               {scope === "country" ? "Complete Financial Summary by Branches" : "Country & City Branch Consolidated"}
             </p>
-            <div className="h-px w-12 bg-slate-300 dark:bg-slate-700"></div>
+            <div className="h-px w-10 bg-slate-300 dark:bg-slate-700"></div>
           </div>
         </div>
 
-        <div className="flex flex-col items-end gap-2">
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              className="bg-blue-800 hover:bg-blue-900 text-white font-bold text-xs h-9 px-4 rounded-md shadow-sm"
-              onClick={() => openPrint(true)}
-            >
-              <Printer className="mr-2 h-4 w-4" />
-              Print Report
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="font-bold text-xs h-9 px-4 rounded-md border-slate-300 text-slate-700 dark:border-slate-700 dark:text-slate-300 shadow-sm bg-white dark:bg-slate-900"
-              onClick={() => exportCsv(filtered, scope)}
-            >
-              <FileSpreadsheet className="mr-2 h-4 w-4" />
-              Export Excel
-            </Button>
-            {/* Hidden Filter button for functionality */}
-            <Button
-              size="sm"
-              variant="outline"
-              className="font-bold text-xs h-9 px-3 rounded-md border-slate-300 text-slate-700 dark:border-slate-700 dark:text-slate-300 shadow-sm bg-white dark:bg-slate-900"
-              onClick={() => setFiltersOpen((o) => !o)}
-            >
-              <Filter className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="text-right">
-            <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">Report Date & Time</p>
-            <p className="text-[11px] font-black text-slate-800 dark:text-slate-200 uppercase">
-              {generatedAt ? new Date(generatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
-            </p>
-          </div>
+        <div className="text-right">
+          <p className="text-[9px] font-bold text-slate-500 dark:text-slate-400 uppercase">Report Date & Time</p>
+          <p className="text-[11px] font-black text-slate-800 dark:text-slate-200 uppercase">
+            {generatedAt ? new Date(generatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) : new Date().toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true })}
+          </p>
         </div>
       </div>
 
+      {/* Filter Drawer */}
       {filtersOpen ? (
-        <div className="grid gap-2 rounded-xl border border-border bg-white dark:bg-slate-900 p-4 shadow-sm md:grid-cols-3 xl:grid-cols-6 mb-4">
+        <div className="grid gap-2.5 rounded-xl border border-border bg-white dark:bg-slate-900 p-4 shadow-sm md:grid-cols-3 xl:grid-cols-6 animate-in fade-in">
           <Select label="Country" value={country} options={options.countries} onChange={setCountry} />
           {scope !== "country" ? <Select label="City" value={city} options={options.cities} onChange={setCity} /> : null}
           <Select label="Branch" value={branch} options={options.branches} onChange={setBranch} />
@@ -508,13 +614,13 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
         </div>
       ) : null}
 
-      {/* Details Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      {/* 4 Executive Summary Details Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
         <DetailBox 
           title="COUNTRY DETAILS" 
           icon={<div className="h-4 w-4 rounded-full border-2 border-blue-600/50 flex items-center justify-center"><div className="h-1.5 w-1.5 rounded-full bg-blue-600"></div></div>}
           items={[
-            { label: "Country Name", value: "Pakistan", hasFlag: true },
+            { label: "Country Name", value: country || "Pakistan", hasFlag: true },
             { label: "Country Code", value: "PK" },
             { label: "Currency", value: "PKR - Pakistan Rupee" }
           ]}
@@ -545,8 +651,8 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
             title="REPORT DETAILS" 
             icon={<CalendarDays className="h-4 w-4 text-blue-600" />}
             items={[
-              { label: "From Date", value: new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) },
-              { label: "To Date", value: new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) },
+              { label: "From Date", value: formatDateDisplay(minDate) },
+              { label: "To Date", value: formatDateDisplay(maxDate) },
               { label: "Report Type", value: "COUNTRY ADMIN REPORT" }
             ]}
           />
@@ -566,7 +672,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
             title="SUMMARY OVERVIEW" 
             icon={<ClipboardList className="h-4 w-4 text-blue-600" />}
             items={[
-              { label: "Total Branches", value: String(Array.from(new Set(filtered.map(r => r.branchCode))).length || 4) },
+              { label: "Total Branches", value: String(Array.from(new Set(filtered.map(r => r.branchCode || r.branch))).length || 2) },
               { label: "Total Transactions", value: String(filtered.length) },
               { label: "Exchange Rate", value: "1 Base Currency = 1 Base Currency" }
             ]}
@@ -576,70 +682,69 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
             title="REPORT DETAILS" 
             icon={<CalendarDays className="h-4 w-4 text-blue-600" />}
             items={[
-              { label: "From Date", value: new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) },
-              { label: "To Date", value: new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) },
-              { label: "Report Type", value: "GENERAL LEDGER" },
-              { label: "Generated By", value: "ADMIN CHAMAN" }
+              { label: "From Date", value: formatDateDisplay(minDate) },
+              { label: "To Date", value: formatDateDisplay(maxDate) },
+              { label: "Report Type", value: "GENERAL LEDGER" }
             ]}
           />
         )}
       </div>
 
-      {/* KPI Section */}
-      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3 pt-2">
-        <div className="bg-rose-50/50 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/50 rounded-xl p-4 flex items-center gap-4">
-          <div className="h-10 w-10 shrink-0 bg-rose-100 dark:bg-rose-900/50 rounded-lg flex items-center justify-center">
-            <ClipboardList className="h-5 w-5 text-rose-600 dark:text-rose-400" />
+      {/* 5 Executive KPI Summary Cards */}
+      <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-2.5 pt-1">
+        <div className="bg-rose-50/60 dark:bg-rose-950/20 border border-rose-100 dark:border-rose-900/50 rounded-xl p-3 flex items-center gap-3">
+          <div className="h-9 w-9 shrink-0 bg-rose-100 dark:bg-rose-900/50 rounded-lg flex items-center justify-center">
+            <ClipboardList className="h-4.5 w-4.5 text-rose-600 dark:text-rose-400" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">TOTAL DEBIT (BASE CURR)</p>
-            <p className="text-lg font-black text-rose-600 dark:text-rose-400 tracking-tight">{fmt(summary.debit)}</p>
+            <p className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">TOTAL DEBIT (BASE CURR)</p>
+            <p className="text-base font-black text-rose-600 dark:text-rose-400 tracking-tight">{fmt(summary.debit)}</p>
           </div>
         </div>
-        <div className="bg-emerald-50/50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/50 rounded-xl p-4 flex items-center gap-4">
-          <div className="h-10 w-10 shrink-0 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg flex items-center justify-center">
-            <ClipboardList className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+        <div className="bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/50 rounded-xl p-3 flex items-center gap-3">
+          <div className="h-9 w-9 shrink-0 bg-emerald-100 dark:bg-emerald-900/50 rounded-lg flex items-center justify-center">
+            <ClipboardList className="h-4.5 w-4.5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">TOTAL CREDIT (BASE CURR)</p>
-            <p className="text-lg font-black text-emerald-600 dark:text-emerald-400 tracking-tight">{fmt(summary.credit)}</p>
+            <p className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">TOTAL CREDIT (BASE CURR)</p>
+            <p className="text-base font-black text-emerald-600 dark:text-emerald-400 tracking-tight">{fmt(summary.credit)}</p>
           </div>
         </div>
-        <div className="bg-blue-50/50 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/50 rounded-xl p-4 flex items-center gap-4">
-          <div className="h-10 w-10 shrink-0 bg-blue-100 dark:bg-blue-900/50 rounded-lg flex items-center justify-center">
-            <span className="text-blue-600 dark:text-blue-400 font-bold text-lg">⚖</span>
+        <div className="bg-blue-50/60 dark:bg-blue-950/20 border border-blue-100 dark:border-blue-900/50 rounded-xl p-3 flex items-center gap-3">
+          <div className="h-9 w-9 shrink-0 bg-blue-100 dark:bg-blue-900/50 rounded-lg flex items-center justify-center">
+            <span className="text-blue-600 dark:text-blue-400 font-bold text-base">⚖</span>
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">TOTAL BALANCE (BASE CURR)</p>
-            <p className="text-lg font-black text-blue-600 dark:text-blue-400 tracking-tight">{fmt(summary.balance)}</p>
+            <p className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">TOTAL BALANCE (BASE CURR)</p>
+            <p className="text-base font-black text-blue-600 dark:text-blue-400 tracking-tight">{fmt(summary.balance)}</p>
           </div>
         </div>
-        <div className="bg-orange-50/50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/50 rounded-xl p-4 flex items-center gap-4">
-          <div className="h-10 w-10 shrink-0 bg-orange-100 dark:bg-orange-900/50 rounded-lg flex items-center justify-center">
-            <span className="text-orange-600 dark:text-orange-400 font-bold text-lg">≡</span>
+        <div className="bg-amber-50/60 dark:bg-amber-950/20 border border-amber-100 dark:border-amber-900/50 rounded-xl p-3 flex items-center gap-3">
+          <div className="h-9 w-9 shrink-0 bg-amber-100 dark:bg-amber-900/50 rounded-lg flex items-center justify-center">
+            <span className="text-amber-600 dark:text-amber-400 font-bold text-base">≡</span>
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">TOTAL TRANSACTIONS</p>
-            <p className="text-lg font-black text-orange-600 dark:text-orange-400 tracking-tight">{filtered.length}</p>
+            <p className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">TOTAL TRANSACTIONS</p>
+            <p className="text-base font-black text-amber-600 dark:text-amber-400 tracking-tight">{filtered.length}</p>
           </div>
         </div>
-        <div className="bg-purple-50/50 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/50 rounded-xl p-4 flex items-center gap-4">
-          <div className="h-10 w-10 shrink-0 bg-purple-100 dark:bg-purple-900/50 rounded-lg flex items-center justify-center">
-            <span className="text-purple-600 dark:text-purple-400 font-bold text-lg">🪙</span>
+        <div className="bg-purple-50/60 dark:bg-purple-950/20 border border-purple-100 dark:border-purple-900/50 rounded-xl p-3 flex items-center gap-3 col-span-2 md:col-span-1">
+          <div className="h-9 w-9 shrink-0 bg-purple-100 dark:bg-purple-900/50 rounded-lg flex items-center justify-center">
+            <span className="text-purple-600 dark:text-purple-400 font-bold text-base">🪙</span>
           </div>
           <div>
-            <p className="text-[10px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">EXCHANGE RATE</p>
-            <p className="text-lg font-black text-purple-700 dark:text-purple-400 tracking-tight">1 Base Currency = 1 Base Currency</p>
+            <p className="text-[9px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-0.5">EXCHANGE RATE</p>
+            <p className="text-xs font-black text-purple-700 dark:text-purple-400 tracking-tight">1 Base = 1 Base Currency</p>
           </div>
         </div>
       </div>
 
       {/* Main Table Section */}
-      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-sm mt-4 overflow-hidden">
-        <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800">
+      <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs mt-3 overflow-hidden">
+        <div className="flex items-center justify-between gap-2 px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
           <div className="flex items-center gap-2">
             <Building2 className="h-4 w-4 text-[#0f2942] dark:text-slate-300" />
-            <h2 className="text-[13px] font-black tracking-wider text-[#0f2942] dark:text-slate-200 uppercase">
+            <h2 className="text-xs font-black tracking-wider text-[#0f2942] dark:text-slate-200 uppercase">
               {scope === "country" ? "BRANCH WISE SUMMARY" : "LEDGER TRANSACTIONS"}
             </h2>
           </div>
@@ -648,14 +753,16 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
           )}
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[1200px] text-xs text-left whitespace-nowrap">
+          <table className="w-full min-w-[1250px] text-xs text-left whitespace-nowrap">
             <thead className="bg-[#0f2942] text-white">
               {scope === "country" ? (
                 <tr>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center w-14 border-r border-white/10">SR. NO.</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center w-12 border-r border-white/10">SR. NO.</Th>
                   <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">BRANCH NAME</Th>
                   <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">BRANCH CODE</Th>
                   <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">BRANCH TYPE</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">START DATE (FIRST ENTRY)</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">LAST ENTRY DATE</Th>
                   <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">TOTAL TRANSACTIONS</Th>
                   <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">TOTAL DEBIT (BASE CURR)</Th>
                   <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">TOTAL CREDIT (BASE CURR)</Th>
@@ -664,7 +771,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
                 </tr>
               ) : (
                 <tr>
-                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center w-14 border-r border-white/10">SR. NO.</Th>
+                  <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center w-12 border-r border-white/10">SR. NO.</Th>
                   <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">DATE</Th>
                   <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">VOUCHER NO.</Th>
                   <Th className="px-3 py-2.5 font-bold text-[10px] uppercase tracking-wider text-center border-r border-white/10">VOUCHER TYPE</Th>
@@ -681,20 +788,23 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
                 <tr>
-                  <td colSpan={scope === "country" ? 9 : 11} className="px-3 py-8 text-center font-bold text-slate-400">
-                    <RefreshCw className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
+                  <td colSpan={scope === "country" ? 11 : 11} className="px-3 py-8 text-center font-bold text-slate-400">
+                    <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2 text-primary" />
                     Loading report...
                   </td>
                 </tr>
               ) : scope === "country" ? (
                 Array.from(
                   filtered.reduce((map, row) => {
-                    const key = row.branchCode || row.branch || "unknown";
+                    const key = row.branchCode && row.branchCode !== "-" ? row.branchCode : row.branch || "unknown";
+                    const entryDate = row.date || row.endDate || null;
                     if (!map.has(key)) {
                       map.set(key, {
                         branchName: row.branch,
-                        branchCode: row.branchCode,
+                        branchCode: row.branchCode && row.branchCode !== "-" ? row.branchCode : key,
                         branchType: "City Branch",
+                        startDate: entryDate,
+                        lastEntryDate: row.endDate || entryDate,
                         transactions: row.entries || 1,
                         debit: row.debit || 0,
                         credit: row.credit || 0,
@@ -707,37 +817,49 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
                       b.debit += row.debit || 0;
                       b.credit += row.credit || 0;
                       b.balance = b.debit - b.credit;
+                      if (entryDate && (!b.startDate || entryDate < b.startDate)) {
+                        b.startDate = entryDate;
+                      }
+                      if (entryDate && (!b.lastEntryDate || entryDate > b.lastEntryDate)) {
+                        b.lastEntryDate = entryDate;
+                      }
                     }
                     return map;
                   }, new Map<string, any>()).values()
                 ).map((branch: any, index: number) => (
-                  <tr key={branch.branchCode} className="hover:bg-slate-50 dark:hover:bg-slate-900/50 bg-white dark:bg-slate-900">
-                    <td className="px-3 py-4 text-center font-bold text-[#0f2942] dark:text-slate-400 border-r border-slate-100 dark:border-slate-800">
+                  <tr key={branch.branchCode || index} className="hover:bg-slate-50 dark:hover:bg-slate-900/50 bg-white dark:bg-slate-900">
+                    <td className="px-3 py-3.5 text-center font-bold text-[#0f2942] dark:text-slate-400 border-r border-slate-100 dark:border-slate-800">
                       {index + 1}
                     </td>
-                    <td className="px-3 py-4 text-center font-semibold text-[#0f2942] dark:text-slate-300 border-r border-slate-100 dark:border-slate-800">
+                    <td className="px-3 py-3.5 text-center font-semibold text-[#0f2942] dark:text-slate-300 border-r border-slate-100 dark:border-slate-800">
                       {branch.branchName}
                     </td>
-                    <td className="px-3 py-4 text-center text-[#0f2942] dark:text-slate-400 border-r border-slate-100 dark:border-slate-800 font-mono">
+                    <td className="px-3 py-3.5 text-center text-[#0f2942] dark:text-slate-400 border-r border-slate-100 dark:border-slate-800 font-mono">
                       {branch.branchCode}
                     </td>
-                    <td className="px-3 py-4 text-center text-[#0f2942] dark:text-slate-400 border-r border-slate-100 dark:border-slate-800">
+                    <td className="px-3 py-3.5 text-center text-[#0f2942] dark:text-slate-400 border-r border-slate-100 dark:border-slate-800">
                       {branch.branchType}
                     </td>
-                    <td className="px-3 py-4 text-center font-bold text-[#0f2942] dark:text-slate-300 border-r border-slate-100 dark:border-slate-800">
+                    <td className="px-3 py-3.5 text-center font-semibold text-slate-700 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800">
+                      {formatDateDisplay(branch.startDate)}
+                    </td>
+                    <td className="px-3 py-3.5 text-center font-semibold text-slate-700 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800">
+                      {formatDateDisplay(branch.lastEntryDate)}
+                    </td>
+                    <td className="px-3 py-3.5 text-center font-bold text-[#0f2942] dark:text-slate-300 border-r border-slate-100 dark:border-slate-800">
                       {branch.transactions}
                     </td>
-                    <td className="px-3 py-4 text-center font-black text-rose-600 dark:text-rose-400 border-r border-slate-100 dark:border-slate-800">
+                    <td className="px-3 py-3.5 text-center font-black text-rose-600 dark:text-rose-400 border-r border-slate-100 dark:border-slate-800">
                       {branch.debit > 0 ? fmt(branch.debit) : "0.00"}
                     </td>
-                    <td className="px-3 py-4 text-center font-black text-emerald-600 dark:text-emerald-400 border-r border-slate-100 dark:border-slate-800">
+                    <td className="px-3 py-3.5 text-center font-black text-emerald-600 dark:text-emerald-400 border-r border-slate-100 dark:border-slate-800">
                       {branch.credit > 0 ? fmt(branch.credit) : "0.00"}
                     </td>
-                    <td className="px-3 py-4 text-center font-black text-[#0f2942] dark:text-blue-400 border-r border-slate-100 dark:border-slate-800">
+                    <td className="px-3 py-3.5 text-center font-black text-[#0f2942] dark:text-blue-400 border-r border-slate-100 dark:border-slate-800">
                       {fmt(branch.balance)}
                     </td>
-                    <td className="px-3 py-4 text-center">
-                      <span className={cn("px-2 py-1 rounded-full text-[10px] font-bold border", normalize(branch.status) === "active" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-700 border-slate-200")}>
+                    <td className="px-3 py-3.5 text-center">
+                      <span className={cn("px-2 py-0.5 rounded-full text-[10px] font-bold border", normalize(branch.status) === "active" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-slate-100 text-slate-700 border-slate-200")}>
                         {branch.status || "Active"}
                       </span>
                     </td>
@@ -751,14 +873,14 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
                   const drCrColor = isDr ? "text-emerald-600 dark:text-emerald-400" : isCr ? "text-rose-600 dark:text-rose-400" : "text-slate-500";
                   
                   return (
-                    <tr key={row.id} className="hover:bg-slate-50 dark:hover:bg-slate-900/50 bg-white dark:bg-slate-900">
+                    <tr key={row.id || index} className="hover:bg-slate-50 dark:hover:bg-slate-900/50 bg-white dark:bg-slate-900">
                       <td className="px-3 py-3 text-center font-bold text-slate-500 border-r border-slate-100 dark:border-slate-800">
                         {(page - 1) * pageSize + index + 1}
                       </td>
                       <td className="px-3 py-3 text-center font-semibold text-slate-700 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800">
-                        {new Date(row.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}
+                        {formatDateDisplay(row.date)}
                       </td>
-                      <td className="px-3 py-3 text-center text-slate-600 dark:text-slate-400 border-r border-slate-100 dark:border-slate-800">
+                      <td className="px-3 py-3 text-center text-slate-600 dark:text-slate-400 border-r border-slate-100 dark:border-slate-800 font-mono">
                         {row.voucherNo}
                       </td>
                       <td className="px-3 py-3 text-center text-slate-600 dark:text-slate-400 border-r border-slate-100 dark:border-slate-800">
@@ -797,21 +919,21 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
               )}
             </tbody>
             {scope === "country" && filtered.length > 0 && !loading && (
-              <tfoot className="bg-[#f8fafc] text-[#0f2942] font-black">
+              <tfoot className="bg-[#f8fafc] text-[#0f2942] font-black border-t-2 border-slate-300 dark:border-slate-700">
                 <tr>
-                  <td colSpan={4} className="px-3 py-4 uppercase border-r border-slate-200">TOTAL</td>
-                  <td className="px-3 py-4 text-center border-r border-slate-200">
+                  <td colSpan={6} className="px-3 py-3.5 uppercase border-r border-slate-200 tracking-wider">TOTAL</td>
+                  <td className="px-3 py-3.5 text-center border-r border-slate-200">
                     {Array.from(filtered.reduce((map, row) => {
-                      const key = row.branchCode || row.branch || "unknown";
+                      const key = row.branchCode && row.branchCode !== "-" ? row.branchCode : row.branch || "unknown";
                       if (!map.has(key)) map.set(key, row.entries || 1);
                       else map.set(key, map.get(key) + (row.entries || 1));
                       return map;
                     }, new Map<string, any>()).values()).reduce((a: any, b: any) => a + b, 0)}
                   </td>
-                  <td className="px-3 py-4 text-center text-rose-600 border-r border-slate-200">{fmt(summary.debit)}</td>
-                  <td className="px-3 py-4 text-center text-emerald-600 border-r border-slate-200">{fmt(summary.credit)}</td>
-                  <td className="px-3 py-4 text-center border-r border-slate-200">{fmt(summary.balance)}</td>
-                  <td className="px-3 py-4"></td>
+                  <td className="px-3 py-3.5 text-center text-rose-600 border-r border-slate-200">{fmt(summary.debit)}</td>
+                  <td className="px-3 py-3.5 text-center text-emerald-600 border-r border-slate-200">{fmt(summary.credit)}</td>
+                  <td className="px-3 py-3.5 text-center border-r border-slate-200">{fmt(summary.balance)}</td>
+                  <td className="px-3 py-3.5"></td>
                 </tr>
               </tfoot>
             )}
@@ -840,18 +962,18 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
 
 function DetailBox({ title, icon, items }: { title: string, icon: React.ReactNode, items: { label: string, value: string, hasFlag?: boolean }[] }) {
   return (
-    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm">
-      <div className="px-4 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+    <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-xs">
+      <div className="px-3.5 py-2 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2 bg-slate-50/50 dark:bg-slate-800/30">
         {icon}
-        <h3 className="text-[11px] font-black uppercase tracking-widest text-slate-800 dark:text-slate-200">{title}</h3>
+        <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-800 dark:text-slate-200">{title}</h3>
       </div>
-      <div className="px-4 py-3 space-y-2.5">
+      <div className="px-3.5 py-2.5 space-y-2">
         {items.map((item, i) => (
           <div key={i} className="flex flex-wrap items-center">
             <span className="w-28 text-[11px] font-bold text-slate-500 dark:text-slate-400">{item.label}</span>
-            <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 ml-2 flex items-center gap-1.5">
+            <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 ml-1 flex items-center gap-1.5">
               : 
-              {item.hasFlag && <span className="inline-block w-4 h-3 bg-green-700 border border-white rounded-[2px] ml-1 shadow-sm flex items-center justify-center text-[6px] text-white overflow-hidden">
+              {item.hasFlag && <span className="inline-block w-4 h-3 bg-green-700 border border-white rounded-[2px] ml-1 shadow-xs flex items-center justify-center text-[6px] text-white overflow-hidden">
                 <span className="bg-white w-[5px] h-full ml-auto rounded-l-full"></span>
               </span>}
               {item.value}

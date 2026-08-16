@@ -78,7 +78,7 @@ export function ErpPageActions() {
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   // Report pages render their own dedicated toolbar strip directly on the page
-  const isReportPage = pathname?.startsWith("/dashboard/reports") || pathname?.startsWith("/dashboard/roznamcha/reports");
+  const isReportPage = pathname?.startsWith("/dashboard/reports") || pathname?.startsWith("/dashboard/roznamcha/reports") || pathname?.startsWith("/dashboard/ledger");
   if (isReportPage) return null;
 
   const title = titleFromPath(pathname || "/dashboard", lang);
