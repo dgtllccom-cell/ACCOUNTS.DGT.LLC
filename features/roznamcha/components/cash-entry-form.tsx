@@ -1872,9 +1872,8 @@ export function CashEntryForm({
     [cityBranches]
   );
 
-  const branchCurrency = selectedMainBranch?.local_currency || selectedCountry?.currency_code || "USD";
-  const isLocalCurrency = !currency || currency.toUpperCase() === branchCurrency.toUpperCase();
-  const targetAccountCurrency = selectedCounterLedger?.ledgerCurrency || branchCurrency;
+  // (branchCurrency / isLocalCurrency / targetAccountCurrency are already declared earlier in this
+  //  component near the top; the duplicate re-declarations that were here caused a build failure.)
 
   const actionButtons = (
     <div id="erp-page-actions-portal-content" className="flex items-center gap-2">
