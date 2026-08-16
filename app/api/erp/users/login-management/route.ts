@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import postgres from "postgres";
 import { apiError, apiOk } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { withLocalPg } from "@/lib/db/local-postgres";

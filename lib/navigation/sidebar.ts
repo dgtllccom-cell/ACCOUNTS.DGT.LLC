@@ -1392,6 +1392,12 @@ export const sidebarTree: SidebarNode[] = [
             roles: ["super_admin"]
           },
           {
+            key: "settings-user-login-management",
+            labelKey: "nav.user_login_management",
+            href: "/dashboard/users" as Route,
+            roles: ["super_admin"]
+          },
+          {
             key: "settings-form-settings",
             labelKey: "nav.form_settings",
             iconKey: "palette",

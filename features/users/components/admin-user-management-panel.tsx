@@ -12,7 +12,6 @@ import {
   Eye,
   ShieldCheck,
   RefreshCw,
-  FileText,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
@@ -31,7 +30,6 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { RolePermissionMatrix } from "./role-permission-matrix";
 import { UserLiveReportPanel } from "./user-live-report-panel";
-import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
 import { Th } from "@/components/ui/translated-th";
 
 export type BranchUser = {
@@ -418,12 +416,12 @@ export function AdminUserManagementPanel() {
               accountRegNo={`REG-${selectedReportUser.id.substring(0, 5)}`}
               role={selectedReportUser.role}
               userCode={selectedReportUser.id.substring(0, 8)}
-              rawPassword={selectedReportUser.temporaryPassword || "admin123"}
               status={selectedReportUser.status || "Active"}
               selectedCountryName={selectedReportUser.countryName || "Pakistan"}
               selectedBranchName={selectedReportUser.branchName || "Main Branch"}
               selectedBranchCode={selectedReportUser.branchCode || "PK-MAIN-001"}
               selectedCityName={selectedReportUser.cityName || "Main City"}
+              lastActivityDate={selectedReportUser.lastLogin || undefined}
               onBack={() => setSelectedReportUser(null)}
             />
           </div>
@@ -625,15 +623,18 @@ export function AdminUserManagementPanel() {
                   <Th className="px-4 py-3">Full Name / Login Email</Th>
                   <Th className="px-4 py-3">Role Classification</Th>
                   <Th className="px-4 py-3">Branch Code</Th>
-                  <Th className="px-4 py-3">Temp Credential</Th>
+                  <Th className="px-4 py-3">Login ID</Th>
                   <Th className="px-4 py-3">Status</Th>
+                  <Th className="px-4 py-3">Country</Th>
+                  <Th className="px-4 py-3">City</Th>
+                  <Th className="px-4 py-3">Last Login</Th>
                   <Th className="px-4 py-3 text-right">Actions</Th>
                 </tr>
               </thead>
               <tbody>
                 {filteredUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-12 text-center text-slate-400">
+                    <td colSpan={10} className="px-4 py-12 text-center text-slate-400">
                       No matching users found for your search criteria.
                     </td>
                   </tr>
@@ -724,7 +725,10 @@ export function AdminUserManagementPanel() {
                                   <Th className="px-4 py-2">Full Name / Email</Th>
                                   <Th className="px-4 py-2">Role</Th>
                                   <Th className="px-4 py-2">Branch Code</Th>
-                                  <Th className="px-4 py-2">Password</Th>
+                                  <Th className="px-4 py-2">Login ID</Th>
+                                  <Th className="px-4 py-2">Country</Th>
+                                  <Th className="px-4 py-2">City</Th>
+                                  <Th className="px-4 py-2">Last Login</Th>
                                   <Th className="px-4 py-2">Status</Th>
                                   <Th className="px-4 py-2 text-right">Actions</Th>
                                 </tr>
@@ -806,7 +810,10 @@ export function AdminUserManagementPanel() {
                                             <Th className="px-4 py-2.5">Full Name / Email</Th>
                                             <Th className="px-4 py-2.5">Role</Th>
                                             <Th className="px-4 py-2.5">Branch Code</Th>
-                                            <Th className="px-4 py-2.5">Password</Th>
+                                            <Th className="px-4 py-2.5">Login ID</Th>
+                                            <Th className="px-4 py-2.5">Country</Th>
+                                            <Th className="px-4 py-2.5">City</Th>
+                                            <Th className="px-4 py-2.5">Last Login</Th>
                                             <Th className="px-4 py-2.5">Status</Th>
                                             <Th className="px-4 py-2.5 text-right">Actions</Th>
                                           </tr>
@@ -864,17 +871,20 @@ export function AdminUserManagementPanel() {
                                           {cityBranch.users && cityBranch.users.length > 0 ? (
                                             <div className="overflow-x-auto rounded-md border bg-white dark:bg-slate-900">
                                               <table className="w-full text-left text-sm">
-                                                <thead className="border-b bg-slate-50 dark:bg-slate-800/40 text-xs uppercase font-semibold text-slate-500">
-                                                  <tr>
-                                                    <Th className="px-4 py-2">User Code</Th>
-                                                    <Th className="px-4 py-2">Full Name / Email</Th>
-                                                    <Th className="px-4 py-2">Role</Th>
-                                                    <Th className="px-4 py-2">Branch Code</Th>
-                                                    <Th className="px-4 py-2">Password</Th>
-                                                    <Th className="px-4 py-2">Status</Th>
-                                                    <Th className="px-4 py-2 text-right">Actions</Th>
-                                                  </tr>
-                                                </thead>
+                                                  <thead className="border-b bg-slate-50 dark:bg-slate-800/40 text-xs uppercase font-semibold text-slate-500">
+                                                    <tr>
+                                                      <Th className="px-4 py-2">User Code</Th>
+                                                      <Th className="px-4 py-2">Full Name / Email</Th>
+                                                      <Th className="px-4 py-2">Role</Th>
+                                                      <Th className="px-4 py-2">Branch Code</Th>
+                                                      <Th className="px-4 py-2">Login ID</Th>
+                                                      <Th className="px-4 py-2">Country</Th>
+                                                      <Th className="px-4 py-2">City</Th>
+                                                      <Th className="px-4 py-2">Last Login</Th>
+                                                      <Th className="px-4 py-2">Status</Th>
+                                                      <Th className="px-4 py-2 text-right">Actions</Th>
+                                                    </tr>
+                                                  </thead>
                                                 <tbody>
                                                   {cityBranch.users.map((u) =>
                                                     renderUserTableRow(u, cityBranch.code, country.name)

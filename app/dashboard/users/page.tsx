@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import type { Route } from "next";
 import { redirect } from "next/navigation";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { dashboardByRole } from "@/lib/permissions/enterprise-roles";
@@ -15,7 +16,7 @@ export default async function UsersPage() {
   if (!session.isSuperAdmin) {
     const role = session.roles?.[0];
     const target = role ? dashboardByRole[role] : "/dashboard";
-    redirect((target || "/dashboard") as any);
+    redirect((target || "/dashboard") as Route);
   }
 
   return <AdminUserManagementPanel />;

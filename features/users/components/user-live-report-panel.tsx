@@ -8,8 +8,6 @@ import {
   Mail,
   MessageCircle,
   ArrowLeft,
-  Eye,
-  EyeOff,
   User,
   Shield,
   Building2,
@@ -32,7 +30,6 @@ type UserLiveReportPanelProps = {
   accountRegNo: string;
   role: string;
   userCode: string;
-  rawPassword?: string | null;
   status?: string;
 
   // Scopes context
@@ -76,7 +73,6 @@ export function UserLiveReportPanel({
   accountRegNo,
   role,
   userCode,
-  rawPassword = "admin123",
   status = "Active",
   selectedCountryName = "Pakistan",
   selectedCountryCode = "PK",
@@ -96,7 +92,6 @@ export function UserLiveReportPanel({
   onWhatsApp,
   hideHeader = false
 }: UserLiveReportPanelProps) {
-  const [showPassword, setShowPassword] = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
   // Close dropdown on outside click
@@ -256,7 +251,6 @@ export function UserLiveReportPanel({
       permissions: selectedPermissions,
       lastActivity: lastActivityDate || new Date().toISOString(),
       lastActivityAction,
-      rawPassword,
       activityCounts: {
         logins: activityCounts.logins ?? 0,
         transactions: activityCounts.transactions ?? 0,
@@ -268,7 +262,7 @@ export function UserLiveReportPanel({
         edits: activityCounts.edits ?? 0
       }
     };
-  }, [displayRegNo, displayUserCode, fullName, displayCountry, displayBranch, displayBranchCode, displayBranchType, role, registrationDate, activeStatus, selectedPermissions, lastActivityDate, lastActivityAction, rawPassword, activityCounts]);
+  }, [displayRegNo, displayUserCode, fullName, displayCountry, displayBranch, displayBranchCode, displayBranchType, role, registrationDate, activeStatus, selectedPermissions, lastActivityDate, lastActivityAction, activityCounts]);
 
   const handlePrintTrigger = (autoPrint = true) => {
     openUserA4ReportWindow({
@@ -391,14 +385,14 @@ export function UserLiveReportPanel({
               <DetailRow label="Status" value={<span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100 text-[10px] font-black uppercase tracking-wider">{activeStatus}</span>} />
               <DetailRow label="Registered Date" value={displayRegDate} />
               <DetailRow label="Last Login" value={displayLastLogin} />
-              <DetailRow label="Raw Password" value={
-                <div className="flex items-center justify-between gap-2 bg-slate-50 border border-slate-100 rounded px-2.5 py-1 text-slate-700 font-semibold select-all font-mono">
-                  <span>{showPassword ? (rawPassword || "admin123") : "••••••••"}</span>
-                  <button type="button" className="text-slate-400 hover:text-slate-700" onClick={() => setShowPassword(!showPassword)}>
-                    {showPassword ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                  </button>
-                </div>
-              } />
+              <DetailRow
+                label="Password Security"
+                value={
+                  <span className="inline-flex items-center gap-1.5 rounded border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-700">
+                    Reset via Super Admin action only
+                  </span>
+                }
+              />
             </div>
           </div>
 
