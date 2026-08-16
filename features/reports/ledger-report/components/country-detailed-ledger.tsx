@@ -9,6 +9,7 @@ import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-se
 import { getLedgerStatement, listLedgerReportLedgers, type LedgerLookupRow, type LedgerStatementLine } from "@/features/reports/ledger-report/ledger-report-api";
 import { Loader2 } from "lucide-react";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 type SessionInfo = {
   user: { id: string; email: string | null; fullName: string | null };
@@ -20,6 +21,10 @@ function fmt(n: number) {
 }
 
 export function CountryDetailedLedgerView() {
+  // Respect the ERP language selector: account names in the dropdown + statement must resolve
+  // through the central per-language resolver for the CURRENTLY selected language, and re-fetch
+  // when the user switches EN/UR/PS/FA/AR (no stale-language display).
+  const activeLang = useActiveLanguage();
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
   const [portalNode, setPortalNode] = useState<HTMLElement | null>(null);
 
@@ -88,7 +93,7 @@ export function CountryDetailedLedgerView() {
     const fetchOptions = async () => {
       setSearchingLedgers(true);
       try {
-        const res = await listLedgerReportLedgers({ reportScope: "country", limit: 100 });
+        const res = await listLedgerReportLedgers({ reportScope: "country", limit: 100, language: activeLang });
         if (active && res?.ledgers) {
           const grouped = new Map<string, { label: string; ids: string[] }>();
           for (const row of res.ledgers) {
@@ -121,7 +126,9 @@ export function CountryDetailedLedgerView() {
     };
     fetchOptions();
     return () => { active = false; };
-  }, []);
+    // Re-resolve dropdown account names when the ERP language changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeLang]);
 
   const handleApply = () => {
     loadStatement();

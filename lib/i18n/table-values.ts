@@ -112,10 +112,12 @@ export const VALUE_TRANSLATIONS: Record<string, Row> = {
   "ASSET": { ur: "اثاثہ", ar: "أصل", fa: "دارایی", ps: "شتمنه" },
   "LIABILITY": { ur: "واجبات", ar: "التزام", fa: "بدهی", ps: "پور" },
   "EQUITY": { ur: "سرمایہ", ar: "حقوق الملكية", fa: "حقوق صاحبان سهام", ps: "پانګه" },
-  "CREDIT": { ur: "کریڈٹ", ar: "دائن", fa: "بستانکار", ps: "کریډیټ" },
-  "DEBIT": { ur: "ڈیبٹ", ar: "مدين", fa: "بدهکار", ps: "ډیبیټ" },
-  "DR": { ur: "ڈیبٹ", ar: "مدين", fa: "بدهکار", ps: "ډیبیټ" },
-  "CR": { ur: "کریڈٹ", ar: "دائن", fa: "بستانکار", ps: "کریډیټ" },
+  // Required accounting terminology: UR/PS use بنام (Debit) / جمع (Credit); AR/FA keep the
+  // established accounting terms (مدين/دائن, بدهکار/بستانکار). Not transliterations.
+  "CREDIT": { ur: "جمع", ar: "دائن", fa: "بستانکار", ps: "جمع" },
+  "DEBIT": { ur: "بنام", ar: "مدين", fa: "بدهکار", ps: "بنام" },
+  "DR": { ur: "بنام", ar: "مدين", fa: "بدهکار", ps: "بنام" },
+  "CR": { ur: "جمع", ar: "دائن", fa: "بستانکار", ps: "جمع" },
   "ACTIVE": { ur: "فعال", ar: "نشط", fa: "فعال", ps: "فعال" },
   "INACTIVE": { ur: "غیر فعال", ar: "غير نشط", fa: "غیرفعال", ps: "غیرفعال" },
   "RECEIVABLE": { ur: "قابل وصول", ar: "مستحق القبض", fa: "دریافتنی", ps: "د ترلاسه وړ" },
