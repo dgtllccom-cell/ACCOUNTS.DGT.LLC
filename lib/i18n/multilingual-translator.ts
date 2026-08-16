@@ -1,5 +1,5 @@
-import type { SupportedLanguage } from "@/lib/i18n/languages";
-import { transliterateProperNoun, transliterateToLatin } from "@/lib/i18n/transliteration";
+import type { SupportedLanguage } from "./languages";
+import { transliterateProperNoun, transliterateToLatin } from "./transliteration";
 
 export interface MultilingualText {
   en: string;
