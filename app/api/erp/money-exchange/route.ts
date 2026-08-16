@@ -118,15 +118,37 @@ export async function POST(req: NextRequest) {
   }
 }
 
+import { withLocalPg } from "@/lib/db/local-postgres";
+
 export async function GET(req: Request) {
   try {
     const session = await getCurrentErpSession();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const supabase = createSupabaseAdminClient() as any;
     const { searchParams } = new URL(req.url);
     const limit = Number(searchParams.get("limit") || 100);
     const branchId = searchParams.get("branchId");
+
+    const viaPg = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select
+          m.*,
+          case when cp.id is not null then jsonb_build_object('full_name', cp.full_name) else null end as profiles
+        from public.money_exchange_entries m
+        left join public.profiles cp on cp.id = m.created_by
+        where m.deleted_at is null
+          and (${branchId ? sql`m.branch_id = ${branchId}` : sql`true`})
+        order by m.created_at desc
+        limit ${limit}
+      `;
+      return rows;
+    });
+
+    if (viaPg !== undefined) {
+      return NextResponse.json({ entries: viaPg });
+    }
+
+    const supabase = createSupabaseAdminClient() as any;
 
     let query = supabase
       .from("money_exchange_entries")

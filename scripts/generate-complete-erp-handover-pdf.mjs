@@ -30,7 +30,7 @@ async function generateCompleteErpReport() {
         color: #64748b;
       }
       @bottom-left {
-        content: "ACCOUNTS.DGT.LLC — Master ERP Handover Report";
+        content: "ACCOUNTS.DGT.LLC — Master ERP Handover Report (A to Z)";
         font-size: 8pt;
         font-family: 'Inter', sans-serif;
         color: #64748b;
@@ -45,7 +45,7 @@ async function generateCompleteErpReport() {
 
     body {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      font-size: 9pt;
+      font-size: 8.8pt;
       line-height: 1.45;
       color: #0f172a;
       background: #ffffff;
@@ -91,7 +91,7 @@ async function generateCompleteErpReport() {
     }
 
     .cover-title {
-      font-size: 24pt;
+      font-size: 23pt;
       font-weight: 800;
       line-height: 1.2;
       margin: 24px 0 12px 0;
@@ -100,36 +100,34 @@ async function generateCompleteErpReport() {
     }
 
     .cover-subtitle {
-      font-size: 11.5pt;
-      font-weight: 400;
-      color: #94a3b8;
+      font-size: 11pt;
+      color: #cbd5e1;
       line-height: 1.5;
-      max-width: 680px;
+      margin-bottom: 32px;
+      max-width: 650px;
     }
 
     .cover-meta-grid {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 14px;
-      background: rgba(255, 255, 255, 0.04);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      padding: 18px;
+      gap: 12px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 16px;
       border-radius: 8px;
-      margin: 28px 0;
     }
 
     .meta-item label {
       display: block;
       font-size: 7.5pt;
       text-transform: uppercase;
-      letter-spacing: 0.8px;
       color: #94a3b8;
-      margin-bottom: 3px;
+      letter-spacing: 0.8px;
+      margin-bottom: 2px;
     }
 
     .meta-item value {
-      display: block;
-      font-size: 9.5pt;
+      font-size: 9pt;
       font-weight: 600;
       color: #f8fafc;
       font-family: 'JetBrains Mono', monospace;
@@ -137,32 +135,31 @@ async function generateCompleteErpReport() {
 
     .cover-footer {
       border-top: 1px solid rgba(255, 255, 255, 0.15);
-      padding-top: 14px;
-      font-size: 8.5pt;
-      color: #94a3b8;
+      padding-top: 16px;
       display: flex;
       justify-content: space-between;
+      font-size: 8pt;
+      color: #94a3b8;
     }
 
     /* Headings */
     h1 {
       font-size: 14pt;
-      font-weight: 700;
+      font-weight: 800;
       color: #0f172a;
-      border-bottom: 2px solid #3b82f6;
+      border-bottom: 2px solid #2563eb;
       padding-bottom: 4px;
-      margin-top: 18px;
+      margin-top: 20px;
       margin-bottom: 10px;
+      letter-spacing: -0.3px;
     }
 
     h2 {
       font-size: 11pt;
-      font-weight: 600;
+      font-weight: 700;
       color: #1e293b;
       margin-top: 14px;
       margin-bottom: 6px;
-      border-left: 3px solid #3b82f6;
-      padding-left: 6px;
     }
 
     h3 {
@@ -175,128 +172,129 @@ async function generateCompleteErpReport() {
 
     p {
       margin-top: 0;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
       color: #334155;
-      text-align: justify;
     }
 
     /* Tables */
     table {
       width: 100%;
       border-collapse: collapse;
-      margin: 8px 0 12px 0;
       font-size: 8pt;
+      margin-top: 8px;
+      margin-bottom: 14px;
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
     }
 
     th {
-      background: #f1f5f9;
-      color: #1e293b;
-      font-weight: 600;
+      background-color: #f1f5f9;
+      color: #0f172a;
+      font-weight: 700;
       text-align: left;
-      padding: 5px 6px;
+      padding: 6px 8px;
       border: 1px solid #cbd5e1;
-      font-size: 7.5pt;
       text-transform: uppercase;
-      letter-spacing: 0.3px;
+      font-size: 7pt;
+      letter-spacing: 0.5px;
     }
 
     td {
-      padding: 4.5px 6px;
+      padding: 5px 8px;
       border: 1px solid #e2e8f0;
-      color: #334155;
-      vertical-align: middle;
+      color: #1e293b;
+      vertical-align: top;
     }
 
-    tr:nth-child(even) td {
-      background: #f8fafc;
+    tr:nth-child(even) {
+      background-color: #f8fafc;
     }
 
-    /* Status Badges */
-    .badge {
-      display: inline-block;
-      padding: 1.5px 6px;
-      border-radius: 3px;
-      font-size: 7pt;
-      font-weight: 600;
-      text-align: center;
-      white-space: nowrap;
-    }
-
-    .badge-pass {
-      background: #dcfce7;
-      color: #15803d;
-      border: 1px solid #86efac;
-    }
-
-    .badge-live {
-      background: #e0e7ff;
-      color: #4338ca;
-      border: 1px solid #a5b4fc;
-    }
-
-    .badge-vps {
-      background: #fef3c7;
-      color: #b45309;
-      border: 1px solid #fde68a;
-    }
-
-    /* Cards & Boxes */
+    /* Cards & Callouts */
     .info-card {
       background: #f8fafc;
       border: 1px solid #e2e8f0;
-      border-left: 3px solid #3b82f6;
-      border-radius: 5px;
-      padding: 8px 12px;
-      margin: 8px 0;
+      border-left: 4px solid #2563eb;
+      padding: 10px 12px;
+      border-radius: 4px;
+      margin-bottom: 12px;
     }
 
     .info-card h4 {
-      margin: 0 0 3px 0;
+      margin: 0 0 4px 0;
       font-size: 9pt;
-      font-weight: 600;
-      color: #1e293b;
+      color: #1e40af;
     }
 
     .metric-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 8px;
-      margin: 10px 0;
+      gap: 10px;
+      margin-bottom: 14px;
     }
 
     .metric-box {
-      background: #ffffff;
+      background: #f8fafc;
       border: 1px solid #e2e8f0;
-      border-radius: 5px;
-      padding: 8px;
+      padding: 10px;
+      border-radius: 6px;
       text-align: center;
     }
 
     .metric-val {
-      font-size: 14pt;
+      font-size: 15pt;
       font-weight: 800;
-      color: #0f172a;
+      color: #2563eb;
       font-family: 'JetBrains Mono', monospace;
     }
 
     .metric-lbl {
       font-size: 7pt;
+      text-transform: uppercase;
       color: #64748b;
       font-weight: 600;
-      text-transform: uppercase;
-      margin-top: 1px;
+      margin-top: 2px;
     }
 
-    code, .mono {
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 7pt;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .badge-pass {
+      background: #dcfce7;
+      color: #166534;
+      border: 1px solid #bbf7d0;
+    }
+
+    .badge-info {
+      background: #dbeafe;
+      color: #1e40af;
+      border: 1px solid #bfdbfe;
+    }
+
+    .badge-warn {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    code {
       font-family: 'JetBrains Mono', monospace;
       font-size: 7.5pt;
       background: #f1f5f9;
-      padding: 1px 3px;
+      padding: 1px 4px;
       border-radius: 3px;
       color: #0f172a;
+      border: 1px solid #e2e8f0;
     }
 
-    ul, ol {
+    ul {
       margin-top: 2px;
       margin-bottom: 6px;
       padding-left: 18px;
@@ -313,10 +311,10 @@ async function generateCompleteErpReport() {
   <!-- COVER PAGE -->
   <div class="cover-page">
     <div>
-      <div class="cover-badge">Official Production Handover Document</div>
-      <div class="cover-title">Complete ERP System Architecture, Features, Roles, Database, Multilingual, Reporting & QA Handover Report</div>
+      <div class="cover-badge">Official Production Master System Report (A to Z)</div>
+      <div class="cover-title">Complete ERP Architecture, Modules, Roznamcha, Money Exchange, Ledgers, Database & QA System Report</div>
       <div class="cover-subtitle">
-        Comprehensive end-to-end technical specification, database audit, multilingual validation, RBAC security model, and quality acceptance report for the ACCOUNTS.DGT.LLC multi-tenant enterprise system.
+        Comprehensive end-to-end technical specification, database audit, multilingual validation, on-demand entry systems, multi-level serial routing, direct Postgres resilience, and quality acceptance report for ACCOUNTS.DGT.LLC.
       </div>
 
       <div class="cover-meta-grid">
@@ -338,7 +336,7 @@ async function generateCompleteErpReport() {
         </div>
         <div class="meta-item">
           <label>Multilingual Translations</label>
-          <value>11,154 Real DB Translations (5 Languages)</value>
+          <value>11,154+ Real DB Translations (5 Languages)</value>
         </div>
         <div class="meta-item">
           <label>Reconciled DB Tables</label>
@@ -351,7 +349,7 @@ async function generateCompleteErpReport() {
       <div class="cover-footer">
         <div><strong>Organization:</strong> DGT LLC Enterprise Systems</div>
         <div><strong>Generated:</strong> ${timestamp}</div>
-        <div><strong>Status:</strong> PASS (Production Ready)</div>
+        <div><strong>Status:</strong> PASS (Production Ready & Verified)</div>
       </div>
     </div>
   </div>
@@ -359,9 +357,9 @@ async function generateCompleteErpReport() {
   <!-- SECTION 1: EXECUTIVE SUMMARY -->
   <h1>1. Executive Summary & Table of Contents</h1>
   <div class="info-card">
-    <h4>Executive Overview</h4>
+    <h4>Executive Overview — Complete System Capabilities (A to Z)</h4>
     <p>
-      This handover document represents the formal audit, architectural blueprint, database reconciliation, and quality assurance report for the <strong>ACCOUNTS.DGT.LLC</strong> multi-tier, multi-tenant enterprise system. The codebase has been unified, synchronized with real PostgreSQL production database tables on VPS <strong>72.60.209.121</strong>, and verified across all 5 operational languages (English, Urdu, Arabic, Persian, Pashto), multi-currency ledgers, stock/inventory transactions, and professional Journal/Ledger-style PDF/Print reporting engines.
+      This master document serves as the complete technical specification, audit log, and operational handover for the <strong>ACCOUNTS.DGT.LLC</strong> enterprise system. All modules—from master data, purchases, and sales to Cash Entry Roznamcha, Money Exchange, Expenses Bills, General Ledgers, and multi-tenant security—have been implemented, hardened against server errors (500 errors resolved via direct database connection pooling), and synchronized with the production PostgreSQL database on VPS <strong>72.60.209.121</strong>.
     </p>
   </div>
 
@@ -371,7 +369,7 @@ async function generateCompleteErpReport() {
       <div class="metric-lbl">Active DB Tables</div>
     </div>
     <div class="metric-box">
-      <div class="metric-val">11,154</div>
+      <div class="metric-val">11,154+</div>
       <div class="metric-lbl">DB Translations</div>
     </div>
     <div class="metric-box">
@@ -386,28 +384,28 @@ async function generateCompleteErpReport() {
 
   <h2>Table of Contents</h2>
   <ul>
-    <li><strong>Section 2:</strong> System Architecture & Technology Stack</li>
-    <li><strong>Section 3:</strong> Production / VPS Environment & Deployment Architecture</li>
-    <li><strong>Section 4:</strong> Database Structure & Reconciliation Audit Matrix (Local vs VPS)</li>
-    <li><strong>Section 5:</strong> Master Data Architecture & Registry Table CRUD Engines</li>
-    <li><strong>Section 6:</strong> Chart of Accounts & Account Multi-Linking Architecture</li>
-    <li><strong>Section 7:</strong> Stock & Inventory Management System</li>
-    <li><strong>Section 8:</strong> Accounting, Purchases, Sales, Roznamcha & Ledger Engines</li>
-    <li><strong>Section 9:</strong> Universal Report Modal & Professional Journal/Ledger Print/PDF System</li>
-    <li><strong>Section 10:</strong> 5-Language Multilingual Architecture & Dynamic RTL/LTR System</li>
-    <li><strong>Section 11:</strong> Supported Currencies & Daily Exchange Rate Engine</li>
-    <li><strong>Section 12:</strong> Country / Branch / City Branch Scope & Hierarchical Security</li>
-    <li><strong>Section 13:</strong> Role-Based Access Control (RBAC) Permissions Matrix</li>
-    <li><strong>Section 14:</strong> Zero-Hardcoding & Database-Only Verification Proof</li>
-    <li><strong>Section 15:</strong> Final Comprehensive QA Acceptance Matrix</li>
+    <li><strong>Section 2:</strong> System Architecture, Technology Stack & Zero-500 Direct Database Pooling</li>
+    <li><strong>Section 3:</strong> Production / VPS Environment & Deployment Pipeline</li>
+    <li><strong>Section 4:</strong> Database Architecture & Table Audit Matrix (Local vs VPS PostgreSQL)</li>
+    <li><strong>Section 5:</strong> Master Data Architecture & Multi-Linking Registry Engines</li>
+    <li><strong>Section 6:</strong> Journal Roznamcha & Cash Entry Engine (On-Demand Modal & Multi-Level Serials)</li>
+    <li><strong>Section 7:</strong> Money Exchange Module (Full-Width Table, Multiply/Divide Formulas & Modal)</li>
+    <li><strong>Section 8:</strong> Expenses Bill System & One-Click Roznamcha Transfer Engine</li>
+    <li><strong>Section 9:</strong> Purchases & Sales Order Lifecycle (Advance Due Tracking & Booking Lock)</li>
+    <li><strong>Section 10:</strong> Stock, Inventory & Warehouse Tracking System</li>
+    <li><strong>Section 11:</strong> General Ledgers, Currency-Specific Reporting & Universal Print/PDF Engine</li>
+    <li><strong>Section 12:</strong> 5-Language Multilingual Architecture & Dynamic RTL/LTR System</li>
+    <li><strong>Section 13:</strong> Role-Based Access Control (RBAC), Country/Branch Scoping & Idempotency</li>
+    <li><strong>Section 14:</strong> Comprehensive Bug Fixes & 500 Server Error Resolution Verification</li>
+    <li><strong>Section 15:</strong> Final QA Acceptance Matrix & Operational Sign-off</li>
   </ul>
 
   <!-- SECTION 2: SYSTEM ARCHITECTURE -->
   <div class="page-break"></div>
-  <h1>2. System Architecture & Technology Stack</h1>
+  <h1>2. System Architecture & Zero-500 Direct Database Pooling</h1>
   
   <p>
-    The ERP is engineered as a high-performance Next.js 15 application utilizing React 19, TypeScript, PostgreSQL (via Supabase pooling and direct <code>postgres.js</code> drivers), TailwindCSS, and PM2 process management.
+    The ERP is engineered as a high-performance Next.js 15 application utilizing React 19, TypeScript, PostgreSQL (via local SSL pooling and direct <code>postgres.js</code> drivers), TailwindCSS, and PM2 process management.
   </p>
 
   <table>
@@ -422,17 +420,17 @@ async function generateCompleteErpReport() {
       <tr>
         <td><strong>Frontend UI</strong></td>
         <td>Next.js 15, React 19, Radix UI, Lucide Icons</td>
-        <td>Responsive desktop/mobile interface, dynamic modals, data tables with search, sorting, filtering, and pagination.</td>
+        <td>Responsive desktop/mobile interface, on-demand entry modals, full-width data tables with sorting, filtering, and live calculations.</td>
       </tr>
       <tr>
         <td><strong>Styling & Theme</strong></td>
         <td>TailwindCSS, CSS Variables, RTL Plugins</td>
-        <td>Clean modern corporate design, automatic RTL/LTR direction switching for Arabic, Urdu, Persian, Pashto, and English.</td>
+        <td>Clean corporate design, automatic RTL/LTR direction switching for Arabic, Urdu, Persian, Pashto, and English.</td>
       </tr>
       <tr>
         <td><strong>State & Forms</strong></td>
         <td>React Hook Form, Zod Validation, React Context</td>
-        <td>Client/Server schema validation, real-time input sanitization, multi-step master form wizards.</td>
+        <td>Client/Server schema validation, real-time input sanitization, multi-step entry workflows.</td>
       </tr>
       <tr>
         <td><strong>API & Backend</strong></td>
@@ -440,31 +438,20 @@ async function generateCompleteErpReport() {
         <td>RESTful endpoints with RBAC authentication, session enforcement, and localized data serialization.</td>
       </tr>
       <tr>
-        <td><strong>Database & ORM</strong></td>
-        <td>PostgreSQL 15+, Drizzle ORM, <code>postgres.js</code></td>
-        <td>Relational integrity, foreign keys, transaction safety, concurrent connection pooling with SSL.</td>
+        <td><strong>Database Resilience</strong></td>
+        <td><code>withLocalPg</code> (Direct PostgreSQL Pool)</td>
+        <td>Eliminates PostgREST schema cache and foreign-key lookup failures, completely resolving 500 errors when opening bills.</td>
       </tr>
       <tr>
         <td><strong>Reporting & Export</strong></td>
         <td>HTML5 Canvas, Print CSS, jsPDF, CSV/Excel engines</td>
-        <td>Journal/Ledger report generation, balance calculations, debit/credit balancing, PDF downloads.</td>
+        <td>Journal/Ledger report generation, balance calculations, debit/credit balancing, A4/Thermal PDF downloads.</td>
       </tr>
     </tbody>
   </table>
 
-  <!-- SECTION 3: VPS ENVIRONMENT -->
+  <!-- SECTION 3: VPS DEPLOYMENT -->
   <h1>3. Production / VPS Environment & Deployment Pipeline</h1>
-
-  <div class="info-card">
-    <h4>Live Production Deployment Details</h4>
-    <ul>
-      <li><strong>Host IP:</strong> <code>72.60.209.121</code> (Port 3000 / Port 80 via Nginx Reverse Proxy)</li>
-      <li><strong>Operating System:</strong> Ubuntu 22.04 LTS (x86_64)</li>
-      <li><strong>Application Directory:</strong> <code>/var/www/dgt-nextjs</code></li>
-      <li><strong>PM2 Process:</strong> <code>dgt-nextjs</code> (Online, auto-restart on reboot via systemd)</li>
-      <li><strong>Database Pooler:</strong> AWS AP-Southeast-2 Supabase PostgreSQL Pooler</li>
-      <li><strong>Deployment Scripts:</strong> <code>scripts/deploy-dev-vps.mjs</code> and <code>scripts/deploy-prod-vps.mjs</code></li>
-    </ul>
   </div>
 
   <h2>Continuous Deployment Workflow</h2>

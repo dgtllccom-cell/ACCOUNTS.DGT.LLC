@@ -170,34 +170,74 @@ export async function POST(req: NextRequest) {
   }
 }
 
+import { withLocalPg } from "@/lib/db/local-postgres";
+
 export async function GET(req: Request) {
   try {
     const session = await getCurrentErpSession();
     if (!session) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const supabase = createSupabaseAdminClient() as any;
     const { searchParams } = new URL(req.url);
     const limit = Number(searchParams.get("limit") || 50);
 
-    const { data, error } = await supabase
+    // Try direct PostgreSQL first for resilience and performance
+    const viaPg = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select
+          b.*,
+          case when cp.id is not null then jsonb_build_object('full_name', cp.full_name) else null end as profiles,
+          case when cb.id is not null then jsonb_build_object(
+            'name', cb.name,
+            'country_id', cb.country_id,
+            'countries', case when c.id is not null then jsonb_build_object('name', c.name, 'currency_code', c.currency_code) else null end
+          ) else null end as city_branches,
+          coalesce(
+            (select jsonb_agg(l order by l.row_serial asc) from public.expenses_bill_lines l where l.bill_id = b.id),
+            '[]'::jsonb
+          ) as expenses_bill_lines
+        from public.expenses_bills b
+        left join public.profiles cp on cp.id = b.created_by
+        left join public.city_branches cb on cb.id = b.branch_id
+        left join public.countries c on c.id = cb.country_id
+        where b.deleted_at is null
+        order by b.created_at desc
+        limit ${limit}
+      `;
+      return rows;
+    });
+
+    if (viaPg !== undefined) {
+      return NextResponse.json({ bills: viaPg });
+    }
+
+    const supabase = createSupabaseAdminClient() as any;
+
+    const { data: bills, error: billsError } = await supabase
       .from("expenses_bills")
-      .select(`
-        *,
-        expenses_bill_lines(*),
-        profiles!expenses_bills_created_by_fkey(full_name),
-        city_branches!expenses_bills_branch_id_fkey(
-          name,
-          country_id,
-          countries(name, currency_code)
-        )
-      `)
+      .select("*")
       .is("deleted_at", null)
       .order("created_at", { ascending: false })
       .limit(limit);
 
-    if (error) throw new Error(error.message);
+    if (billsError) throw new Error(billsError.message);
 
-    return NextResponse.json({ bills: data });
+    const billIds = (bills || []).map((b: any) => b.id);
+    let allLines: any[] = [];
+    if (billIds.length > 0) {
+      const { data: linesData } = await supabase
+        .from("expenses_bill_lines")
+        .select("*")
+        .in("bill_id", billIds)
+        .order("row_serial", { ascending: true });
+      allLines = linesData || [];
+    }
+
+    const billsWithLines = (bills || []).map((b: any) => ({
+      ...b,
+      expenses_bill_lines: allLines.filter((l: any) => l.bill_id === b.id)
+    }));
+
+    return NextResponse.json({ bills: billsWithLines });
   } catch (err: any) {
     console.error("Expenses GET Error:", err);
     return NextResponse.json({ error: err.message || "Failed to fetch expenses bills" }, { status: 500 });

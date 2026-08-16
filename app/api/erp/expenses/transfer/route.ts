@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { postRoznamchaWithErpSession } from "@/app/api/erp/roznamcha/route";
+import { withLocalPg } from "@/lib/db/local-postgres";
 import { z } from "zod";
 
 const transferPayloadSchema = z.object({
@@ -18,15 +19,53 @@ export async function POST(req: Request) {
     const body = await req.json();
     const parsed = transferPayloadSchema.parse(body);
 
-    const supabase = createSupabaseAdminClient() as any;
+    let bill: any = null;
+    const viaPg = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select
+          b.*,
+          cb.country_id,
+          cb.country_branch_id,
+          cb.id as city_branch_id,
+          c.currency_code,
+          coalesce(
+            (select jsonb_agg(l order by l.row_serial asc) from public.expenses_bill_lines l where l.bill_id = b.id),
+            '[]'::jsonb
+          ) as expenses_bill_lines
+        from public.expenses_bills b
+        left join public.city_branches cb on cb.id = b.branch_id
+        left join public.countries c on c.id = cb.country_id
+        where b.id = ${parsed.billId} and b.deleted_at is null
+        limit 1
+      `;
+      if (rows && rows.length > 0) {
+        const r = rows[0];
+        return {
+          ...r,
+          city_branches: {
+            country_id: r.country_id,
+            country_branch_id: r.country_branch_id,
+            id: r.city_branch_id,
+            countries: { currency_code: r.currency_code }
+          }
+        };
+      }
+      return null;
+    });
 
-    const { data: bill, error: billError } = await supabase
-      .from("expenses_bills")
-      .select("*, city_branches(country_id, country_branch_id, id, countries(currency_code)), expenses_bill_lines(*)")
-      .eq("id", parsed.billId)
-      .single();
+    if (viaPg !== undefined) {
+      bill = viaPg;
+    } else {
+      const supabase = createSupabaseAdminClient() as any;
+      const { data: billData, error: billError } = await supabase
+        .from("expenses_bills")
+        .select("*, expenses_bill_lines(*)")
+        .eq("id", parsed.billId)
+        .single();
+      if (billError) throw new Error("Failed to fetch bill: " + billError.message);
+      bill = billData;
+    }
 
-    if (billError) throw new Error("Failed to fetch bill: " + billError.message);
     if (!bill) throw new Error("Bill not found");
     if (bill.transferred_to_roznamcha) throw new Error("Bill is already transferred");
 

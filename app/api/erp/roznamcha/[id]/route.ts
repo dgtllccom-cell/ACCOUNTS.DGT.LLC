@@ -49,21 +49,119 @@ type RoznamchaLine = {
   ledgers?: { id: string; code: string; name: string } | null;
 };
 
+import { withLocalPg } from "@/lib/db/local-postgres";
+
 export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
     const params = await context.params;
     const id = uuidSchema.parse(params.id);
 
+    // Try direct PostgreSQL first for maximum performance and schema resilience
+    const viaPg = await withLocalPg(async (sql) => {
+      const headerRows = await sql`
+        select
+          e.id, e.type, e.entry_category, e.country_id, e.country_branch_id, e.city_branch_id,
+          e.journal_no, e.voucher_no, e.entry_date, e.payment_method_id, e.reference_no,
+          e.narration, e.status, e.created_by, e.approved_by, e.approved_at, e.posted_at,
+          e.created_at, e.updated_at, e.source_module, e.source_transaction_type,
+          e.source_transaction_id, e.source_reference_no,
+          case when c.id is not null then jsonb_build_object('name', c.name, 'currency_code', c.currency_code) else null end as countries,
+          case when cb.id is not null then jsonb_build_object('name', cb.name, 'code', cb.code) else null end as country_branches,
+          case when cib.id is not null then jsonb_build_object('name', cib.name, 'code', cib.code) else null end as city_branches,
+          case when cp.id is not null then jsonb_build_object('full_name', cp.full_name) else null end as profiles,
+          case when ap.id is not null then jsonb_build_object('full_name', ap.full_name) else null end as approver_profile
+        from public.roznamcha_entries e
+        left join public.countries c on c.id = e.country_id
+        left join public.country_branches cb on cb.id = e.country_branch_id
+        left join public.city_branches cib on cib.id = e.city_branch_id
+        left join public.profiles cp on cp.id = e.created_by
+        left join public.profiles ap on ap.id = e.approved_by
+        where e.id = ${id} and e.deleted_at is null
+        limit 1
+      `;
+
+      if (!headerRows || headerRows.length === 0) {
+        return null;
+      }
+
+      const header = headerRows[0];
+
+      const lineRows = await sql`
+        select
+          l.id, l.payment_entry_type, l.account_id, l.enterprise_account_id,
+          l.account_number, l.manual_reference_number, l.customer_number,
+          l.country_serial_number, l.branch_serial_number, l.ledger_id,
+          l.description, l.debit, l.credit, l.currency, l.usd_rate, l.usd_amount,
+          case when led.id is not null then jsonb_build_object('id', led.id, 'code', led.code, 'name', led.name) else null end as ledgers,
+          case when acc.id is not null then jsonb_build_object('id', acc.id, 'code', acc.code, 'name', acc.name) else null end as accounts
+        from public.roznamcha_lines l
+        left join public.ledgers led on led.id = l.ledger_id
+        left join public.accounts acc on acc.id = l.account_id
+        where l.roznamcha_entry_id = ${id}
+        order by l.id asc
+      `;
+
+      const translationRows = await sql`
+        select field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text
+        from public.record_translations
+        where record_table = 'roznamcha_entries' and record_id = ${id} and deleted_at is null
+      `;
+
+      const translations = Object.fromEntries(
+        (translationRows || []).map((r: any) => [
+          r.field_name,
+          { en: r.english_text, ur: r.urdu_text, ar: r.arabic_text, fa: r.persian_text, ps: r.pashto_text }
+        ])
+      );
+
+      return { header, lines: lineRows, translations };
+    });
+
+    if (viaPg !== undefined) {
+      if (!viaPg) {
+        return apiOk({
+          found: false,
+          id,
+          header: null,
+          lines: [],
+          totals: { debit: 0, credit: 0, lines: 0 }
+        });
+      }
+
+      authorizeApiScope(session, {
+        resource: "roznamcha",
+        action: "read",
+        countryId: (viaPg.header.country_id as string | null) ?? null,
+        countryBranchId: (viaPg.header.country_branch_id as string | null) ?? null,
+        cityBranchId: (viaPg.header.city_branch_id as string | null) ?? null
+      });
+
+      const totals = (viaPg.lines as any[]).reduce(
+        (acc, row) => {
+          acc.lines += 1;
+          acc.debit += Number(row.debit || 0);
+          acc.credit += Number(row.credit || 0);
+          return acc;
+        },
+        { lines: 0, debit: 0, credit: 0 }
+      );
+
+      return apiOk({
+        found: true,
+        id,
+        header: { ...viaPg.header, translations: viaPg.translations },
+        lines: viaPg.lines,
+        totals
+      });
+    }
+
+    // Fallback: Supabase Client
     const supabase = createSupabaseAdminClient() as any;
 
     const { data: header, error: headerError } = await supabase
       .from("roznamcha_entries")
-      .select(
-        // Disambiguate profiles embedding (created_by vs approved_by) by pinning to the FK.
-        // We keep the `profiles` key in the response for backward compatibility with the UI types.
-        "id, type, country_id, countries(name,currency_code), country_branch_id, country_branches(name,code), city_branch_id, city_branches(name,code), journal_no, voucher_no, entry_date, payment_method_id, payment_methods(name,code), reference_no, narration, status, created_by, profiles!roznamcha_entries_created_by_fkey(full_name), approved_by, approver_profile:profiles!roznamcha_entries_approved_by_fkey(full_name), approved_at, posted_at, created_at, updated_at, source_module, source_transaction_type, source_transaction_id, source_reference_no"
-      )
+      .select("id, type, entry_category, country_id, country_branch_id, city_branch_id, journal_no, voucher_no, entry_date, payment_method_id, reference_no, narration, status, created_by, approved_by, approved_at, posted_at, created_at, updated_at, source_module, source_transaction_type, source_transaction_id, source_reference_no")
       .eq("id", id)
       .is("deleted_at", null)
       .maybeSingle();
@@ -90,22 +188,33 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
 
     const { data: lines, error: linesError } = await supabase
       .from("roznamcha_lines")
-      .select(
-        "id, payment_entry_type, account_id, enterprise_account_id, account_number, manual_reference_number, customer_number, country_serial_number, branch_serial_number, ledger_id, description, debit, credit, currency, usd_rate, usd_amount, accounts(id,code,name), ledgers(id,code,name)"
-      )
+      .select("id, payment_entry_type, account_id, enterprise_account_id, account_number, manual_reference_number, customer_number, country_serial_number, branch_serial_number, ledger_id, description, debit, credit, currency, usd_rate, usd_amount")
       .eq("roznamcha_entry_id", id)
       .order("id", { ascending: true });
 
     if (linesError) throw new Error(linesError.message);
 
     const safeLines = (lines ?? []) as RoznamchaLine[];
-    const { data: translationRows, error: translationError } = await supabase.from("record_translations")
+    const { data: translationRows } = await supabase
+      .from("record_translations")
       .select("field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text")
-      .eq("record_table", "roznamcha_entries").eq("record_id", id).is("deleted_at", null);
-    if (translationError) throw new Error(translationError.message);
-    const translations = Object.fromEntries((translationRows || []).map((row: any) => [row.field_name, {
-      en: row.english_text, ur: row.urdu_text, ar: row.arabic_text, fa: row.persian_text, ps: row.pashto_text
-    }]));
+      .eq("record_table", "roznamcha_entries")
+      .eq("record_id", id)
+      .is("deleted_at", null);
+
+    const translations = Object.fromEntries(
+      (translationRows || []).map((row: any) => [
+        row.field_name,
+        {
+          en: row.english_text,
+          ur: row.urdu_text,
+          ar: row.arabic_text,
+          fa: row.persian_text,
+          ps: row.pashto_text
+        }
+      ])
+    );
+
     const totals = safeLines.reduce(
       (acc, row) => {
         acc.lines += 1;
