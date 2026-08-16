@@ -73,7 +73,6 @@ function normalizeOrder(row: any) {
   const workflow = data.workflow ?? {};
   const quantity = goods.reduce((sum: number, item: any) => sum + Number(item.qtyNo ?? item.quantity ?? 0), 0);
   const totalWeight = goods.reduce((sum: number, item: any) => sum + Number(item.netWeight ?? item.grossWeight ?? 0), 0);
-  const totalAmount = goods.reduce((sum: number, item: any) => sum + Number(item.totalAmount ?? 0), 0) || Number(totals.grandPrimaryFinal ?? row.order_total ?? 0);
   const systemBillNumber = row.purchase_order_no ?? form.purchaseOrderNo ?? "-";
   const manualBillNumber =
     form.manualBillNumber ??
@@ -106,6 +105,14 @@ function normalizeOrder(row: any) {
   const purchCur = String(purchCurRaw || baseCurrency).split(" ")[0].toUpperCase();
   const finalCurRaw = row.payment_currency ?? form.secondaryCurrency?.split(" ")[0] ?? form.baseCurrency ?? baseCurrency;
   const finalCur = String(finalCurRaw || baseCurrency).split(" ")[0].toUpperCase();
+  const normalizeStatusText = (...values: Array<unknown>) => {
+    for (const value of values) {
+      const text = String(value ?? "").trim();
+      if (!text || text === "-" || text.toLowerCase() === "n/a" || text.toLowerCase() === "na") continue;
+      return text;
+    }
+    return "-";
+  };
 
   const extractedBranchCode = typeof form.branchName === "string" ? (form.branchName.match(/\(([^)]+)\)$/)?.[1] || null) : null;
   const extractedCountryCode = typeof form.countryName === "string" ? (form.countryName.match(/\(([^)]+)\)$/)?.[1] || null) : null;
@@ -155,13 +162,13 @@ function normalizeOrder(row: any) {
         currency: purchCur,
         finalCurrency: finalCur,
         exchange_rate: Number(row.exchange_rate ?? form.exchangeRate ?? 1),
-        status: workflow.lifecycleStatus ?? purchaseBooking.loadingStatus ?? row.payment_status ?? form.salesStatus ?? "Draft",
+        status: normalizeStatusText(workflow.lifecycleStatus, purchaseBooking.loadingStatus, row.payment_status, form.salesStatus, "Draft"),
         currentStep: workflow.currentStepName ?? "Booking Purchase Order",
         nextStep: workflow.nextStepName ?? "Booking Confirm",
-        bookingStatus: workflow.bookingStatus ?? form.salesStatus ?? "Draft",
+        bookingStatus: normalizeStatusText(workflow.bookingStatus, form.salesStatus, "Draft"),
         confirmationStatus: workflow.confirmationStatus ?? (purchaseBooking.totalContainersBooked ? "Booking Confirmed" : "Awaiting Containers"),
-        journalStatus: workflow.journalStatus ?? row.ledger_posting_status ?? "Draft",
-        paymentStatus: workflow.paymentStatus ?? row.payment_status ?? form.paymentType ?? "-",
+        journalStatus: normalizeStatusText(workflow.journalStatus, row.ledger_posting_status, "Draft"),
+        paymentStatus: normalizeStatusText(workflow.paymentStatus, row.payment_status, form.paymentType, "pending"),
         containerStatus: workflow.containerStatus ?? purchaseBooking.loadingStatus ?? "Draft",
         inventoryStatus: workflow.inventoryStatus ?? "Inventory Pending",
         deliveryStatus: workflow.deliveryStatus ?? workflow.finalDeliveryStatus ?? "Pending",
@@ -323,6 +330,7 @@ function normalizeOrder(row: any) {
       }
 
       let data: any = viaPgData;
+      let dataAlreadyNormalized = false;
       let error: any = null;
       if (!viaPgData && requestQuery) {
         const res = await withTimeout<any>(requestQuery.limit(query.limit), "purchase booking journal report");
@@ -378,6 +386,7 @@ function normalizeOrder(row: any) {
           });
         }
         data = localReports;
+        dataAlreadyNormalized = true;
       }
       if (error) {
         return apiOk({
@@ -395,7 +404,7 @@ function normalizeOrder(row: any) {
       }
 
       const seenPo = new Set<string>();
-      let reports = (data ?? []).map(normalizeOrder).filter((report: any) => {
+      let reports = (dataAlreadyNormalized ? (data ?? []) : (data ?? []).map(normalizeOrder)).filter((report: any) => {
         const poNo = report.purchaseBookingOrderNumber || report.systemBillNumber || report.id;
         if (poNo && poNo !== "-" && poNo !== "PO-0000" && seenPo.has(poNo)) return false;
         if (poNo && poNo !== "-" && poNo !== "PO-0000") seenPo.add(poNo);
@@ -411,7 +420,7 @@ function normalizeOrder(row: any) {
       }
 
       // Fetch latest USD rates
-      let usdRates: Record<string, number> = {};
+      const usdRates: Record<string, number> = {};
       let lastExchangeRateUpdate = null;
       try {
         const ratesData = supabase
@@ -437,7 +446,6 @@ function normalizeOrder(row: any) {
       }
 
       // --- Compute live status breakdown ---
-      const nowMs = Date.now();
       const firstDayOfMonth = new Date();
       firstDayOfMonth.setDate(1);
       firstDayOfMonth.setHours(0, 0, 0, 0);

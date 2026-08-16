@@ -18,6 +18,7 @@ import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterpr
 import { purchaseOrderTranslationFields } from "@/lib/i18n/purchase-order-translations";
 import { revalidatePath } from "next/cache";
 import { canEditTransferredPurchaseBooking } from "@/lib/services/purchase-booking-transfer-routing";
+import { getDbUrl, withLocalPg } from "@/lib/db/local-postgres";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -28,17 +29,51 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
 
-    const supabase = await createApiSupabaseClient();
-    const row = await requireSupabaseData(
-      supabase
-        .from("purchase_orders")
-        .select(
-          "id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id, supplier_company_id, companies(name), currency_code, exchange_rate, order_total, advance_paid, remaining_paid, credit_amount, remaining_due, payment_status, ledger_posting_status, form_data, created_at, updated_at"
-        )
-        .eq("id", params.id)
-        .is("deleted_at", null)
-        .maybeSingle()
-    );
+    const row = getDbUrl()
+      ? await withLocalPg(async (sql) => {
+          const rows = await sql`
+            select
+              po.id,
+              po.purchase_order_no,
+              po.purchase_contract_no,
+              po.country_id,
+              po.country_branch_id,
+              po.city_branch_id,
+              po.supplier_company_id,
+              to_jsonb(comp.*) as companies,
+              po.currency_code,
+              po.exchange_rate,
+              po.order_total,
+              po.advance_paid,
+              po.remaining_paid,
+              po.credit_amount,
+              po.remaining_due,
+              po.payment_status,
+              po.ledger_posting_status,
+              po.form_data,
+              po.created_at,
+              po.updated_at
+            from purchase_orders po
+            left join companies comp on comp.id = po.supplier_company_id
+            where po.id = ${params.id}::uuid
+              and po.deleted_at is null
+            limit 1
+          `;
+          return rows[0] ?? null;
+        })
+      : await requireSupabaseData(
+          (async () => {
+            const supabase = await createApiSupabaseClient();
+            return supabase
+              .from("purchase_orders")
+              .select(
+                "id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id, supplier_company_id, companies(name), currency_code, exchange_rate, order_total, advance_paid, remaining_paid, credit_amount, remaining_due, payment_status, ledger_posting_status, form_data, created_at, updated_at"
+              )
+              .eq("id", params.id)
+              .is("deleted_at", null)
+              .maybeSingle();
+          })()
+        );
 
     authorizeApiScope(session, {
       resource: "purchases",
@@ -48,13 +83,26 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       cityBranchId: (row as any)?.city_branch_id ?? null
     });
 
-    const adminSupabase = createSupabaseAdminClient() as any;
-    const { data: translationRows } = await adminSupabase
-      .from("record_translations")
-      .select("field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text, translation_status, original_language_code")
-      .eq("record_table", "purchase_orders")
-      .eq("record_id", params.id)
-      .is("deleted_at", null);
+    const translationRows = getDbUrl()
+      ? await withLocalPg(async (sql) => {
+          return await sql`
+            select field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text, translation_status, original_language_code
+            from record_translations
+            where record_table = 'purchase_orders'
+              and record_id = ${params.id}::uuid
+              and deleted_at is null
+          `;
+        })
+      : await (async () => {
+          const adminSupabase = createSupabaseAdminClient() as any;
+          const { data } = await adminSupabase
+            .from("record_translations")
+            .select("field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text, translation_status, original_language_code")
+            .eq("record_table", "purchase_orders")
+            .eq("record_id", params.id)
+            .is("deleted_at", null);
+          return data || [];
+        })();
     const translations = Object.fromEntries((translationRows || []).map((translation: any) => [
       translation.field_name,
       {
@@ -66,7 +114,15 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       }
     ]));
 
-    return apiOk({ order: { ...(row as any), translations } });
+    const normalizedRow = row && typeof row === "object" ? {
+      ...(row as any),
+      form_data: typeof (row as any).form_data === "string"
+        ? (() => { try { return JSON.parse((row as any).form_data); } catch { return (row as any).form_data; } })()
+        : (row as any).form_data,
+      companies: (row as any).companies ?? null
+    } : row;
+
+    return apiOk({ order: { ...(normalizedRow as any), translations } });
   } catch (error) {
     return handleApiError(error);
   }

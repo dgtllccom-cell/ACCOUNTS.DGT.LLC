@@ -6,8 +6,8 @@ import type { Route } from "next";
 import {
   Anchor, Building2, Landmark, Mail, MapPin, Settings, SlidersHorizontal,
   Warehouse, Globe, Globe2, Search, Filter, ShieldCheck, Database, RefreshCcw,
-  Sparkles, Layers, Activity, CheckCircle2, ChevronRight, Download, Plus, ArrowUpRight,
-  LayoutDashboard
+  Sparkles, Layers, Activity, ChevronRight, Plus, ArrowUpRight,
+  LayoutDashboard, Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,7 +40,23 @@ const settingsItems = [
     badge: "Financial"
   },
   {
-    title: "Customer Warehouse",
+    title: "Customer Management",
+    description: "Manage customer / owner master records used across sales, receipts, accounts, and reports.",
+    href: "/dashboard/settings/customers" as Route,
+    icon: Users,
+    category: "Master Data",
+    badge: "CRM"
+  },
+  {
+    title: "Employee Management",
+    description: "Manage employee master records used by HR, payroll, branch assignments, and permissions.",
+    href: "/dashboard/settings/employees" as Route,
+    icon: Users,
+    category: "Master Data",
+    badge: "HR"
+  },
+  {
+    title: "Warehouse Master Form",
     description: "Register warehouses or storage facilities connected with the company.",
     href: "/dashboard/settings/warehouse" as Route,
     icon: Warehouse,

@@ -2570,6 +2570,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
   const [attachmentFile, setAttachmentFile] = useState<File | null>(null);
   const [pageSize, setPageSize] = useState(10);
   const [pageIndex, setPageIndex] = useState(0);
+  const [isDoubleEntryExpanded, setIsDoubleEntryExpanded] = useState<boolean>(false);
   // Container state moved below 'selected' declaration to prevent ReferenceError
 
   // Local cache for Bank/Method quick add
@@ -4626,7 +4627,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
               const supplierHeader = form.salesAccountName || form.supplierName || form.salesCompanyName || "-";
               const companyHeader = form.purchaseCompanyName || form.salesCompanyName || form.companyName || "-";
               const branchHeader = rowBranchName(selected) || form.branchName || "-";
-              const statusHeader = selected.payment_status || selected.status || "Pending";
+              const statusHeader = selected.payment_status || selected.status || "Posted";
               const goodsHeader = goods.map((g: any) => g.goodsName || g.productName || g.name).filter(Boolean).join(", ") || form.goodsName || "-";
               const grossWeightHeader = goods.reduce((sum: number, g: any) => sum + Number(g.grossWeight || g.gross_weight || 0), 0);
               const netWeightHeader = goods.reduce((sum: number, g: any) => sum + Number(g.netWeight || g.net_weight || 0), 0);
@@ -4636,235 +4637,6 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
               const paidAdvanceBC = Number(selected.advance_paid || 0);
               const remainingAdvanceBC = Math.max(0, requiredAdvanceBC - paidAdvanceBC);
 
-              const detailCells = [
-                ["PO Number", selected.purchase_order_no || "-"],
-                ["Contract", selected.purchase_contract_no || form.contractNo || "-"],
-                ["Supplier", supplierHeader],
-                ["Company", companyHeader],
-                ["Branch", branchHeader],
-                ["Currency", `${poCurrencyHeader} / ${baseCurrency}`],
-                ["Exchange Rate", `1 ${poCurrencyHeader} = ${Number(exRateHeader || 1).toFixed(4)} ${baseCurrency}`],
-                ["Status", statusHeader]
-              ];
-
-              const summaryCells = activeMode === "advance" ? [
-                ["Invoice Amount", money(purchaseTotalHeader, poCurrencyHeader), money(purchaseTotalHeader * exRateHeader, baseCurrency), "text-slate-900 dark:text-slate-100"],
-                ["Required Advance", money(requiredAdvanceBC, poCurrencyHeader), `Percent: ${advancePercent}%`, "text-indigo-700 dark:text-indigo-300"],
-                ["Remaining Advance", money(remainingAdvanceBC, poCurrencyHeader), `${poCurrencyHeader} Balance`, "text-rose-700 dark:text-rose-300"],
-                ["Final Converted Advance", money(remainingAdvanceBC * exRateHeader, baseCurrency), `${poCurrencyHeader} converted to ${baseCurrency}`, "text-emerald-700 dark:text-emerald-300"]
-              ] : [
-                ["Invoice Amount", money(purchaseTotalHeader, poCurrencyHeader), money(purchaseTotalHeader * exRateHeader, baseCurrency), "text-slate-900 dark:text-slate-100"],
-                ["Advance / Paid", money(advanceHeader, poCurrencyHeader), money(advanceHeader * exRateHeader, baseCurrency), "text-emerald-700 dark:text-emerald-300"],
-                ["Remaining Balance", money(remainingHeader, poCurrencyHeader), money(remainingHeader * exRateHeader, baseCurrency), "text-rose-700 dark:text-rose-300"],
-                ["Final Balance", money(remainingHeader * exRateHeader, baseCurrency), `${poCurrencyHeader} converted to ${baseCurrency}`, "text-blue-700 dark:text-blue-300"]
-              ];
-
-              if (!isPoDetailsExpanded) {
-                return (
-                  <section className="rounded-xl border border-emerald-500/30 bg-emerald-50/40 dark:bg-emerald-950/20 shadow-sm transition-all">
-                    <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-2.5">
-                      <div className="flex flex-wrap items-center gap-4">
-                        <div>
-                          <div className="text-[9px] font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400">PO Summary</div>
-                          <div className="text-base font-black text-slate-900 dark:text-slate-50">{selected.purchase_order_no}</div>
-                        </div>
-                        <div className="h-6 w-px bg-emerald-200 dark:bg-emerald-900 hidden sm:block" />
-                        <div className="text-xs">
-                          <span className="text-[9px] text-slate-400 uppercase font-bold block">Supplier</span>
-                          <span className="font-extrabold text-slate-800 dark:text-slate-200">{supplierHeader}</span>
-                        </div>
-                        <div className="h-6 w-px bg-emerald-200 dark:bg-emerald-900 hidden md:block" />
-                        <div className="text-xs">
-                          <span className="text-[9px] text-slate-400 uppercase font-bold block">Invoice Total</span>
-                          <span className="font-mono font-black text-slate-900 dark:text-slate-100">{money(purchaseTotalHeader, poCurrencyHeader)}</span>
-                        </div>
-                        <div className="h-6 w-px bg-emerald-200 dark:bg-emerald-900 hidden md:block" />
-                        <div className="text-xs">
-                          <span className="text-[9px] text-slate-400 uppercase font-bold block">{activeMode === "advance" ? "Remaining Advance" : "Remaining Balance"}</span>
-                          <span className="font-mono font-black text-rose-600 dark:text-rose-400">{money(activeMode === "advance" ? remainingAdvanceBC : remainingHeader, poCurrencyHeader)}</span>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-[10px] font-black uppercase text-blue-700 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-300">{poCurrencyHeader} / {baseCurrency}</span>
-                        <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[10px] font-black uppercase text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-300">{statusHeader}</span>
-                        <button
-                          type="button"
-                          onClick={() => setIsPoDetailsExpanded(true)}
-                          className="flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white px-3 py-1.5 text-xs font-black uppercase tracking-wider shadow-sm transition-all"
-                        >
-                          <Plus className="h-4 w-4 stroke-[3]" />
-                          <span>Expand Details</span>
-                        </button>
-                      </div>
-                    </div>
-                  </section>
-                );
-              }
-
-              return (
-                <section className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950 transition-all">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-slate-50/80 px-4 py-3 dark:border-slate-800 dark:bg-slate-900/60">
-                    <div>
-                      <div className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-300">Purchase Order Details</div>
-                      <div className="mt-1 text-lg font-black text-slate-900 dark:text-slate-50">{selected.purchase_order_no}</div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-wider">
-                      <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-1 text-blue-700 dark:border-blue-900 dark:bg-blue-950/30 dark:text-blue-300">{poCurrencyHeader} / {baseCurrency}</span>
-                      <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-emerald-700 dark:border-emerald-900 dark:bg-emerald-950/30 dark:text-emerald-300">{statusHeader}</span>
-                      <button
-                        type="button"
-                        onClick={() => setIsPoDetailsExpanded(false)}
-                        className="flex items-center gap-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white px-3 py-1.5 text-xs font-black uppercase tracking-wider shadow-sm transition-all ml-2"
-                      >
-                        <Minus className="h-4 w-4 stroke-[3]" />
-                        <span>Collapse Details</span>
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-3 p-4 xl:grid-cols-4">
-                    {summaryCells.map(([label, value, sub, tone]) => (
-                      <div key={label} className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/40">
-                        <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">{label}</div>
-                        <div className={`mt-1 font-mono text-[13px] font-black ${tone}`}>{value}</div>
-                        <div className="mt-1 font-mono text-[10px] font-semibold text-slate-500">{sub}</div>
-                      </div>
-                    ))}
-                  </div>
-
-                  <div className="grid gap-3 border-t border-slate-100 p-4 text-xs dark:border-slate-800 lg:grid-cols-4">
-                    {detailCells.map(([label, value]) => (
-                      <div key={label} className="min-w-0">
-                        <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400">{label}</span>
-                        <span className="block truncate font-extrabold text-slate-850 dark:text-slate-200" title={String(value)}>{value}</span>
-                      </div>
-                    ))}
-                    <div className="lg:col-span-2">
-                      <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400">Goods</span>
-                      <span className="block truncate font-extrabold text-slate-850 dark:text-slate-200" title={goodsHeader}>{goodsHeader}</span>
-                    </div>
-                    <div>
-                      <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400">Weights</span>
-                      <span className="block font-mono font-extrabold text-slate-850 dark:text-slate-200">G: {grossWeightHeader.toLocaleString()} KG / N: {netWeightHeader.toLocaleString()} KG</span>
-                    </div>
-                    <div>
-                      <span className="block text-[9px] font-black uppercase tracking-wider text-slate-400">Payment Status</span>
-                      <span className="block font-extrabold text-slate-850 dark:text-slate-200">Total Paid {money(advanceHeader, poCurrencyHeader)}</span>
-                    </div>
-                  </div>
-                </section>
-              );
-            })()}
-            {/* Purchase & Container Loading Context Details Card */}
-            {(() => {
-              const form = selected.form_data?.form || {};
-              const goods = selected.form_data?.goodsEntries || [];
-              const goodsName = goods.map((g: any) => g.goodsName || g.name).filter(Boolean).join(", ") || form.goodsName || "-";
-
-              const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
-              const isUrlLoading = searchParams.get("fromLoading") === "true";
-              const fromLoading = isUrlLoading || Boolean(selectedLoadingRecord);
-
-              const cLoadedQty = selectedLoadingRecord
-                ? String(selectedLoadingRecord.report_payload?.loadedQuantity || selectedLoadingRecord.loadedQuantity || 0)
-                : (searchParams.get("loadedQty") || "0");
-              const cGrossWeight = selectedLoadingRecord
-                ? String(selectedLoadingRecord.report_payload?.grossWeight || 0)
-                : (searchParams.get("grossWeight") || "0");
-              const cNetWeight = selectedLoadingRecord
-                ? String(selectedLoadingRecord.report_payload?.netWeight || 0)
-                : (searchParams.get("netWeight") || "0");
-              const cPriceRate = selectedLoadingRecord
-                ? String(selectedLoadingRecord.report_payload?.priceRateC1 || 0)
-                : (searchParams.get("priceRate") || "0");
-
-              return (
-                <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-4 dark:bg-slate-900/50 dark:border-slate-800 shadow-sm space-y-4">
-                  <div>
-                    <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mb-3">
-                      Purchase Order & Loading Specifications
-                    </div>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-                      <div>
-                        <span className="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">Seller (Supplier)</span>
-                        <span className="font-extrabold text-slate-855 dark:text-slate-200">
-                          {form.salesAccountName || form.supplierName || "-"}
-                        </span>
-                        <span className="block text-[9px] font-mono text-slate-500 font-bold mt-0.5">
-                          {form.salesAccountNumber || "-"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">Purchaser (Purchase A/C)</span>
-                        <span className="font-extrabold text-slate-855 dark:text-slate-200">
-                          {form.purchaseAccountName || "-"}
-                        </span>
-                        <span className="block text-[9px] font-mono text-slate-500 font-bold mt-0.5">
-                          {form.purchaseAccountNumber || "-"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">Goods & Brand</span>
-                        <span className="font-extrabold text-slate-855 dark:text-slate-200 block truncate max-w-[200px]" title={goodsName}>
-                          {goodsName}
-                        </span>
-                        <span className="block text-[9px] font-semibold text-slate-500 mt-0.5">
-                          Brand: {goods.map((g: any) => g.brand || "").filter(Boolean).join(", ") || "-"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">Quantity & Loading Status</span>
-                        <span className="font-extrabold text-slate-855 dark:text-slate-200 block">
-                          PO: {form.quantity || 0} {form.quantityUnit || "BAGS"}
-                        </span>
-                        <span className="block text-[9px] font-semibold text-slate-500 mt-0.5">
-                          Loaded: <span className="font-bold text-blue-600 dark:text-blue-400">{selected.form_data?.workflow?.loadedQuantity || 0}</span> / Balance: <span className="font-bold text-rose-600">{selected.form_data?.workflow?.remainingQuantity || 0}</span>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {fromLoading && (
-                    <div className="border-t border-dashed border-slate-200 dark:border-slate-850 pt-3">
-                      <div className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 mb-2 flex justify-between items-center">
-                        <span>Transferred Container Specifications</span>
-                        {/* Change Container option if direct select flow */}
-                        {!isUrlLoading && selectedLoadingRecord && (
-                          <button
-                            type="button"
-                            onClick={() => setSelectedLoadingRecord(null)}
-                            className="text-[9px] font-bold text-rose-500 hover:text-rose-700 hover:underline transition uppercase tracking-wider"
-                          >
-                            Change Container
-                          </button>
-                        )}
-                      </div>
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs bg-blue-50/20 border border-blue-100/50 p-3 rounded-lg dark:bg-blue-950/10 dark:border-blue-900/20">
-                        <div>
-                          <span className="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">Container Load Qty</span>
-                          <span className="font-black text-slate-900 dark:text-slate-100">{cLoadedQty || "0"} {form.quantityUnit || "BAGS"}</span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">Gross Weight</span>
-                          <span className="font-extrabold text-slate-855 dark:text-slate-200">{Number(cGrossWeight || 0).toLocaleString()} KGs</span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">Net Weight</span>
-                          <span className="font-extrabold text-slate-855 dark:text-slate-200">{Number(cNetWeight || 0).toLocaleString()} KGs</span>
-                        </div>
-                        <div>
-                          <span className="text-[10px] font-semibold text-slate-400 block uppercase tracking-wider">Purchase Price Rate</span>
-                          <span className="font-mono font-bold text-slate-855 dark:text-slate-200">{Number(cPriceRate || 0).toFixed(4)} USD</span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
-
-            {/* Comprehensive Payment Summary Dashboard */}
-            {(() => {
               const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
               const isUrlLoading = searchParams.get("fromLoading") === "true";
               const fromLoading = isUrlLoading || Boolean(selectedLoadingRecord);
@@ -4885,25 +4657,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                 ? selectedLoadingRecord.id
                 : (searchParams.get("loadingRecordId") || "");
 
-              const form = (selected as any).form_data?.form || {};
-              const goods = (selected as any).form_data?.goodsEntries || [];
-              const totalPrice = goods.length
-                ? goods.reduce((sum: number, g: any) => sum + Number(g.totalAmount || 0), 0)
-                : Number(form.totalAmount || 0);
-              const poOrderTotal = Number(selected.order_total || totalPrice || 0);
-              const totalPOQuantity = Number(
-                selected.form_data?.totals?.totalQuantity ||
-                goods.reduce((acc: number, item: any) => acc + Number(item.qtyNo || item.quantity || 0), 0) ||
-                form.quantity ||
-                1
-              );
-              const advancePercent = Number(form.advancePercent || 0);
-
-              // Resolve price type: is it weight-based?
               const firstGood = goods[0] || {};
               const isPerKg = firstGood.priceType === "P/KGs" || String(firstGood.priceType || "").toLowerCase().includes("kg");
 
-              // Purchase Amount for this loading only
               const explicitLoadingPurchaseAmount = Number(
                 searchParams.get("purchaseAmount") ||
                 searchParams.get("loadedPurchaseAmount") ||
@@ -4913,1419 +4669,1036 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
               );
               const loadingPurchaseAmount = fromLoading
                 ? (explicitLoadingPurchaseAmount > 0 ? explicitLoadingPurchaseAmount : (isPerKg ? cNetWeight * cPriceRate : cLoadedQty * cPriceRate))
-                : poOrderTotal;
+                : purchaseTotalHeader;
 
               const exRate = Number(selected.exchange_rate || form.exchangeRate || 1) || 1;
+              const poAdvancePaidForStatement = normalizeAdvanceToPurchaseCurrency(paidAdvanceBC, purchaseTotalHeader, exRate);
+              const statementPurchaseForeign = fromLoading ? loadingPurchaseAmount : purchaseTotalHeader;
+              const statementPurchaseLocal = statementPurchaseForeign * exRate;
 
-              // Total Purchase Amount metric: loadingPurchaseAmount
-              // Required Advance allocated to this loading
-              const loadingRequiredAdvance = (loadingPurchaseAmount * advancePercent) / 100;
+              // Build payment history list
+              let displayPayments: any[] = [];
+              if (fromLoading && cLoadingRecordId) {
+                const totalPOQuantity = Number(
+                  selected.form_data?.totals?.totalQuantity ||
+                  goods.reduce((acc: number, item: any) => acc + Number(item.qtyNo || item.quantity || 0), 0) ||
+                  form.quantity ||
+                  1
+                );
+                const loadingAdvancePaid = Math.min(loadingPurchaseAmount, totalPOQuantity > 0 ? (cLoadedQty / totalPOQuantity) * poAdvancePaidForStatement : poAdvancePaidForStatement);
+                const poAdvancePayment = selectedOrderPayments.find((p: any) => p.kind === "advance");
+                const advanceSynthetic = {
+                  id: "synthetic-advance-payment",
+                  kind: "advance",
+                  entry_date: poAdvancePayment?.entry_date || selected.created_at,
+                  created_at: poAdvancePayment?.created_at || selected.created_at,
+                  amount: loadingAdvancePaid,
+                  currency_code: poCurrencyHeader,
+                  exchange_rate: exRate,
+                  payment_method: poAdvancePayment?.payment_method || "Advance deducted",
+                  created_by_name: poAdvancePayment?.created_by_name || "System Allocation",
+                  typeDetails: poAdvancePayment?.typeDetails || { method: "Advance deducted" },
+                  narration: `Advance deduction allocated for ${cLoadedQty.toLocaleString()} units`,
+                  reference_no: poAdvancePayment?.reference_no || "-"
+                };
+                const loadingRemainingPayments = selectedOrderPayments.filter((p: any) => {
+                  const payKind = p.kind || "";
+                  if (payKind !== "remaining") return false;
+                  const payRecordId = p.typeDetails?.loadingRecordId || p.typeDetails?.loading_record_id || "";
+                  return payRecordId === cLoadingRecordId;
+                });
+                displayPayments = [advanceSynthetic, ...loadingRemainingPayments];
+              } else {
+                displayPayments = [...selectedOrderPayments];
+              }
 
-              // Advance already paid for this loading: normalize local stored advance, then allocate only this loaded bill share.
-              const rawPOAdvancePaid = Number(selected.advance_paid || form.advanceAmount || 0);
-              const poAdvancePaid = normalizeAdvanceToPurchaseCurrency(rawPOAdvancePaid, poOrderTotal, exRate);
-              const loadingAdvancePaid = fromLoading
-                ? Math.min(loadingPurchaseAmount, totalPOQuantity > 0 ? (cLoadedQty / totalPOQuantity) * poAdvancePaid : poAdvancePaid)
-                : poAdvancePaid;
+              const chronological = displayPayments.sort((a: any, b: any) =>
+                new Date(a.entry_date || a.created_at).getTime() - new Date(b.entry_date || b.created_at).getTime()
+              );
+              let runningTotalUSD = 0;
+              let runningTotalAED = 0;
+              const historyWithBalance = chronological.map((p: any, idx: number) => {
+                const isPayLocal = p.currency_code?.toUpperCase() === baseCurrency.toUpperCase();
+                const amtUSD = isPayLocal
+                  ? Number(p.amount || 0) / Number(p.exchange_rate || exRate || 1)
+                  : Number(p.amount || 0);
+                const amtAED = isPayLocal
+                  ? Number(p.amount || 0)
+                  : Number(p.amount || 0) * Number(p.exchange_rate || exRate || 1);
 
-              // Remaining Advance for this loading
-              const loadingRemainingAdvance = Math.max(0, loadingRequiredAdvance - loadingAdvancePaid);
+                runningTotalUSD += amtUSD;
+                runningTotalAED += amtAED;
 
-              // Final Purchase Amount
-              const finalPurchaseAmount = loadingPurchaseAmount;
+                const showRemainUSD = Math.max(0, statementPurchaseForeign - runningTotalUSD);
+                const showRemainAED = Math.max(0, statementPurchaseLocal - runningTotalAED);
+                const remainingIndex = p.kind === "remaining"
+                  ? chronological.slice(0, idx + 1).filter((x: any) => x.kind === "remaining").length
+                  : 0;
+                const paymentTypeLabel = p.kind === "advance"
+                  ? "Advance Payment"
+                  : p.kind === "remaining"
+                    ? `Remaining Payment - ${remainingIndex}`
+                    : p.kind || "Payment";
 
-              // Total Remaining Amount (which is Final Purchase Amount - Advance deducted/allocated)
-              const totalRemainingAmount = Math.max(0, finalPurchaseAmount - loadingAdvancePaid);
-
-              // Total Remaining Paid (specifically for this loading)
-              const remainingPaymentsForThisLoading = selectedOrderPayments.filter((p: any) => {
-                const payKind = p.kind || "";
-                if (payKind !== "remaining") return false;
-                if (!fromLoading) return true; // if not from loading, sum all remaining payments
-                const payRecordId = p.typeDetails?.loadingRecordId || p.typeDetails?.loading_record_id || "";
-                return payRecordId === cLoadingRecordId;
+                return {
+                  ...p,
+                  paymentNo: idx + 1,
+                  paymentTypeLabel,
+                  amtUSD,
+                  amtAED,
+                  runningTotalUSD,
+                  runningTotalAED,
+                  showRemainUSD,
+                  showRemainAED
+                };
               });
-              const totalRemainingPaid = remainingPaymentsForThisLoading.reduce((sum: number, p: any) => sum + Number(p.amount || 0), 0);
 
-              // Outstanding Balance (Final Currency Balance remaining)
-              const outstandingBalance = Math.max(0, finalPurchaseAmount - loadingAdvancePaid - totalRemainingPaid);
+              const latestHistory = historyWithBalance[historyWithBalance.length - 1];
+              const statPreviousDueFC = statementPurchaseForeign;
+              const statPreviousDueLC = statementPurchaseLocal;
+              const statCurrentPayFC = Number(latestHistory?.amtUSD || (amount > 0 ? (showCalcPanel && calcAmount ? Number(calcAmount) : amount / exRate) : statementPurchaseForeign));
+              const statCurrentPayLC = Number(latestHistory?.amtAED || (amount > 0 ? amount : statementPurchaseLocal));
+              const statRemainingFC = Number(latestHistory?.showRemainUSD ?? Math.max(0, statPreviousDueFC - statCurrentPayFC));
+              const statRemainingLC = Number(latestHistory?.showRemainAED ?? Math.max(0, statPreviousDueLC - statCurrentPayLC));
+              const statTotalPaidFC = historyWithBalance.reduce((sum, p) => sum + p.amtUSD, 0) || statCurrentPayFC;
+              const statTotalPaidLC = historyWithBalance.reduce((sum, p) => sum + p.amtAED, 0) || statCurrentPayLC;
+              const statTotalPaidPct = statPreviousDueFC > 0 ? Math.min(100, (statTotalPaidFC / statPreviousDueFC) * 100).toFixed(2) : "100.00";
+              const statCurrentPayPct = statPreviousDueFC > 0 ? Math.min(100, (statCurrentPayFC / statPreviousDueFC) * 100).toFixed(2) : "100.00";
 
-              const totalPaidSoFar = loadingAdvancePaid + totalRemainingPaid;
-              const paidPercent = finalPurchaseAmount > 0 ? Math.min(100, (totalPaidSoFar / finalPurchaseAmount) * 100) : 0;
-              const advancePaidPercent = loadingRequiredAdvance > 0 ? Math.min(100, (loadingAdvancePaid / loadingRequiredAdvance) * 100) : 0;
+              const activePaymentAmountUSD = amount > 0
+                ? (showCalcPanel && calcAmount ? Number(calcAmount) : amount / Number(exchangeRate || exRate || 1))
+                : (latestHistory?.amtUSD || statementPurchaseForeign);
+              const activePaymentAmountLocal = amount > 0
+                ? amount
+                : (latestHistory?.amtAED || statementPurchaseLocal);
 
-              const poCurrency = (selected as any).form_data?.form?.currencyType || (selected as any).form_data?.form?.currency || selected.currency_code || "USD";
-              const isAdvComplete = loadingRemainingAdvance <= 0.01;
-              const isFullyPaid = outstandingBalance <= 0.01;
+              const paymentMethodDisplay = typeDetails.method || typeDetails.bankName || paymentType?.toUpperCase() || "Bank";
 
               return (
-                <div className="rounded-xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm overflow-hidden">
-                  {/* Header Bar */}
-                  <div className="flex items-center justify-between px-5 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white">
-                    <div className="flex items-center gap-3">
-                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15 font-extrabold text-xs shadow-sm">PO</span>
+                <div className="space-y-4">
+                  {/* TOP HEADER SUMMARY BAR (Matches Screenshot 1 Header) */}
+                  <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950 flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex flex-wrap items-center gap-6">
                       <div>
-                        <div className="text-[9px] font-bold uppercase tracking-widest opacity-80">
-                          {fromLoading ? "Active Container Loading Selection" : "Active Bill Selection"}
-                        </div>
-                        <div className="font-extrabold text-base flex items-center gap-2">
-                          {selected.purchase_order_no}
-                          {selected.purchase_contract_no && (
-                            <span className="text-[9px] font-bold bg-white/20 px-1.5 py-0.5 rounded font-mono tracking-wide">
-                              Contract: {selected.purchase_contract_no}
-                            </span>
-                          )}
+                        <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">PAYMENT ENTRY NO.</div>
+                        <div className="flex items-center gap-2 mt-0.5">
+                          <span className="font-mono text-sm font-black text-slate-900 dark:text-slate-100">{selected.purchase_order_no}</span>
+                          <span className="rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-[9px] font-black uppercase text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">Active</span>
                         </div>
                       </div>
+                      <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
+                      <div>
+                        <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">ENTRY DATE</div>
+                        <div className="font-semibold text-xs text-slate-800 dark:text-slate-200 mt-0.5">{date(selected.created_at)}</div>
+                      </div>
+                      <div className="h-8 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block" />
+                      <div>
+                        <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">TOTAL AMOUNT</div>
+                        <div className="font-mono text-sm font-black text-rose-600 dark:text-rose-400 mt-0.5">{money(statementPurchaseForeign, poCurrencyHeader)}</div>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2 text-[10px] font-bold">
-                      {activeMode === "advance" && (
-                        <Button
-                          type="button"
-                          onClick={() => router.push(`/dashboard/purchase/purchase-loading-records?purchaseOrderNo=${encodeURIComponent(selected.purchase_order_no)}`)}
-                          className="h-7 px-3 bg-white text-blue-700 hover:bg-blue-50 font-black text-[10px] uppercase tracking-wider rounded-lg shadow-sm flex items-center gap-1.5 transition"
-                        >
-                          <Ship className="h-3.5 w-3.5 text-blue-600" />
-                          {currentLanguage === "en" ? "Proceed to Loading Records ➔" : "لوڈنگ ریکارڈز پر جائیں ➔"}
-                        </Button>
-                      )}
-                      {isFullyPaid ? (
-                        <span className="inline-flex items-center gap-1 bg-emerald-500 text-white px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider">
-                          <CheckCircle className="h-3 w-3" /> Fully Paid
-                        </span>
-                      ) : isAdvComplete ? (
-                        <span className="inline-flex items-center gap-1 bg-amber-400 text-amber-900 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider">
-                          <CheckCircle className="h-3 w-3" /> Advance Done
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 bg-white/20 px-2.5 py-1 rounded-full text-[9px] font-black uppercase tracking-wider animate-pulse">
-                          Advance Pending
-                        </span>
-                      )}
+
+                    <div className="flex items-center gap-2">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setViewingRow(selected)}
+                        className="h-8 text-xs font-bold text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-200"
+                      >
+                        VIEW PO
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleOpenA4PDF(selected, true)}
+                        className="h-8 text-xs font-bold text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-emerald-200"
+                      >
+                        PRINT ENTRY
+                      </Button>
+                      <Button
+                        type="button"
+                        size="sm"
+                        onClick={() => setIsPoDetailsExpanded(!isPoDetailsExpanded)}
+                        className="h-8 text-xs font-bold bg-emerald-700 hover:bg-emerald-800 text-white shadow-sm flex items-center gap-1.5"
+                      >
+                        {isPoDetailsExpanded ? <Minus className="h-3.5 w-3.5 stroke-[3]" /> : <Plus className="h-3.5 w-3.5 stroke-[3]" />}
+                        {isPoDetailsExpanded ? "COLLAPSE DETAILS" : "EXPAND DETAILS"}
+                      </Button>
                     </div>
                   </div>
 
-                  {/* Overall Progress Bar */}
-                  <div className="px-5 pt-3 pb-1">
-                    <div className="flex items-center justify-between text-[9px] font-bold text-slate-500 mb-1.5">
-                      <span>{fromLoading ? "Loading Payment Progress" : "Payment Progress"}</span>
-                      <span className="font-mono">{paidPercent.toFixed(1)}% paid</span>
+                  {/* Collapsible PO Full Specifications Details */}
+                  {isPoDetailsExpanded && (
+                    <section className="rounded-2xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950 p-4 transition-all space-y-4">
+                      <div className="grid gap-3 xl:grid-cols-4">
+                        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/40">
+                          <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">Invoice Amount</div>
+                          <div className="mt-1 font-mono text-[13px] font-black text-slate-900 dark:text-slate-100">{money(purchaseTotalHeader, poCurrencyHeader)}</div>
+                          <div className="mt-1 font-mono text-[10px] font-semibold text-slate-500">{money(purchaseTotalHeader * exRateHeader, baseCurrency)}</div>
+                        </div>
+                        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/40">
+                          <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">Required Advance</div>
+                          <div className="mt-1 font-mono text-[13px] font-black text-indigo-700 dark:text-indigo-300">{money(requiredAdvanceBC, poCurrencyHeader)}</div>
+                          <div className="mt-1 font-mono text-[10px] font-semibold text-slate-500">Percent: {advancePercent}%</div>
+                        </div>
+                        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/40">
+                          <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">Advance Paid</div>
+                          <div className="mt-1 font-mono text-[13px] font-black text-emerald-700 dark:text-emerald-300">{money(advanceHeader, poCurrencyHeader)}</div>
+                          <div className="mt-1 font-mono text-[10px] font-semibold text-slate-500">{money(advanceHeader * exRateHeader, baseCurrency)}</div>
+                        </div>
+                        <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/40">
+                          <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">Remaining Balance</div>
+                          <div className="mt-1 font-mono text-[13px] font-black text-rose-700 dark:text-rose-300">{money(remainingHeader, poCurrencyHeader)}</div>
+                          <div className="mt-1 font-mono text-[10px] font-semibold text-slate-500">{money(remainingHeader * exRateHeader, baseCurrency)}</div>
+                        </div>
+                      </div>
+
+                      <div className="grid gap-3 border-t border-slate-100 pt-3 text-xs dark:border-slate-800 lg:grid-cols-4">
+                        <div><span className="block text-[9px] font-black uppercase text-slate-400">PO Number</span><span className="font-extrabold">{selected.purchase_order_no}</span></div>
+                        <div><span className="block text-[9px] font-black uppercase text-slate-400">Contract</span><span className="font-extrabold">{selected.purchase_contract_no || form.contractNo || "-"}</span></div>
+                        <div><span className="block text-[9px] font-black uppercase text-slate-400">Branch</span><span className="font-extrabold">{branchHeader}</span></div>
+                        <div><span className="block text-[9px] font-black uppercase text-slate-400">Currency & Rate</span><span className="font-mono font-extrabold">1 {poCurrencyHeader} = {Number(exRateHeader).toFixed(4)} {baseCurrency}</span></div>
+                        <div className="lg:col-span-2"><span className="block text-[9px] font-black uppercase text-slate-400">Goods</span><span className="font-extrabold truncate block">{goodsHeader}</span></div>
+                        <div><span className="block text-[9px] font-black uppercase text-slate-400">Gross Weight</span><span className="font-mono font-extrabold">{grossWeightHeader.toLocaleString()} KG</span></div>
+                        <div><span className="block text-[9px] font-black uppercase text-slate-400">Net Weight</span><span className="font-mono font-extrabold">{netWeightHeader.toLocaleString()} KG</span></div>
+                      </div>
+                    </section>
+                  )}
+
+                  {/* PAYMENT RECEIVER / VENDOR & PAYMENT METHOD CARD (Matches Screenshot 1) */}
+                  <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900/40">
+                    <div className="text-[9px] font-black uppercase tracking-wider text-slate-400 mb-2.5">
+                      PAYMENT RECEIVER / VENDOR & PAYMENT METHOD
                     </div>
-                    <div className="h-2 w-full rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-700"
-                        style={{
-                          width: `${paidPercent}%`,
-                          background: isFullyPaid ? "#10b981" : "linear-gradient(90deg, #3b82f6, #6366f1)"
-                        }}
-                      />
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
+                      <div>
+                        <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Name</span>
+                        <span className="font-extrabold text-slate-900 dark:text-slate-100">{supplierHeader}</span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Payment Method (A/C, etc.)</span>
+                        <span className="font-extrabold text-slate-800 dark:text-slate-200">{paymentMethodDisplay}</span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Remarks / In Brief</span>
+                        <span className="font-semibold text-slate-700 dark:text-slate-300 truncate block" title={remarks || "Payment for Purchase"}>{remarks || "Payment for Purchase"}</span>
+                      </div>
+                      <div>
+                        <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">PO / BILL NO.</span>
+                        <div className="font-mono font-black text-slate-900 dark:text-slate-100">{selected.purchase_order_no}</div>
+                        <div className="text-[9px] text-blue-600 dark:text-blue-400 font-semibold">Against Bill / Invoice</div>
+                      </div>
                     </div>
-                    {loadingRequiredAdvance > 0 && (
-                      <div className="flex items-center justify-between text-[8px] font-semibold text-slate-400 mt-1">
-                        <span>Advance Progress: {advancePaidPercent.toFixed(1)}%</span>
-                        <span className="font-mono">{money(loadingAdvancePaid, poCurrency)} / {money(loadingRequiredAdvance, poCurrency)}</span>
+                  </div>
+
+                  {/* BLUE SECTION HEADER BANNER (Matches Screenshot 1) */}
+                  <div className="rounded-xl border border-blue-500/30 bg-gradient-to-r from-blue-600 to-indigo-600 p-3 text-white shadow-sm flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-3">
+                      <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15 font-extrabold text-xs shadow-sm">
+                        <Landmark className="h-4 w-4 text-white" />
+                      </span>
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono text-sm font-black">{selected.purchase_order_no}</span>
+                          <span className="rounded-full bg-white/20 px-2 py-0.5 text-[9px] font-black uppercase tracking-wider">Payment Entry</span>
+                        </div>
+                        <div className="flex items-center gap-3 text-[10px] text-blue-100 mt-0.5">
+                          <span>Payment Purpose: <strong className="text-white font-bold">{activeMode === "advance" ? "Purchase Advance" : "Purchase Payment"}</strong></span>
+                          <span>•</span>
+                          <span>Total Amount: <strong className="text-white font-mono font-bold">{money(statementPurchaseForeign, poCurrencyHeader)}</strong></span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      <span className="rounded-full bg-emerald-500 text-white px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider shadow-sm">
+                        {statusHeader}
+                      </span>
+                      <button
+                        type="button"
+                        className="rounded-lg border border-white/30 bg-white/10 px-2.5 py-1 text-[10px] font-bold text-white hover:bg-white/20 transition"
+                      >
+                        Charges (0)
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* 1. PAYMENT ENTRY HISTORY (ALL TRANSACTIONS) Section (Matches Screenshot 1) */}
+                  <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60">
+                      <h3 className="text-xs font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                        1. PAYMENT ENTRY HISTORY (ALL TRANSACTIONS)
+                      </h3>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => window.open(`/dashboard/reports/ledger-report?accountCode=${encodeURIComponent(doubleEntry.debitCode)}`, "_blank")}
+                          className="h-7 px-2.5 text-[10px] font-bold text-blue-600 hover:bg-blue-50 border-blue-200"
+                        >
+                          Ledger Report
+                        </Button>
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsPoDetailsExpanded(!isPoDetailsExpanded)}
+                          className="h-7 px-2.5 text-[10px] font-bold text-emerald-600 hover:bg-emerald-50 border-emerald-200"
+                        >
+                          Summary
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* 4 Stats Summary Boxes */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-3 bg-slate-50/40 border-b border-slate-100 dark:border-slate-800 dark:bg-slate-900/20">
+                      {/* Box 1: PREVIOUS BALANCE / DUE (DR) */}
+                      <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                        <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                          <span>PREVIOUS BALANCE / DUE</span>
+                          <span className="rounded bg-blue-100 text-blue-700 px-1 py-0.2 text-[8px] font-black dark:bg-blue-950 dark:text-blue-300">DR</span>
+                        </div>
+                        <div className="space-y-0.5 text-[10px] font-semibold">
+                          <div className="flex justify-between"><span className="text-slate-400">Local:</span><span className="font-mono font-bold text-slate-800 dark:text-slate-100">{money(statPreviousDueLC, baseCurrency)}</span></div>
+                          <div className="flex justify-between"><span className="text-slate-400">Equivalent ({poCurrencyHeader}):</span><span className="font-mono font-bold text-slate-700 dark:text-slate-300">{money(statPreviousDueFC, poCurrencyHeader)}</span></div>
+                          <div className="flex justify-between"><span className="text-slate-400">Unpaid:</span><span className="font-mono font-bold text-rose-600 dark:text-rose-400">{money(statPreviousDueFC, poCurrencyHeader)}</span></div>
+                          <div className="text-[8px] text-slate-400 text-right pt-0.5">As of: {date(selected.created_at)}</div>
+                        </div>
+                      </div>
+
+                      {/* Box 2: TOTAL PAYMENT (CURRENT ENTRY) (CR) */}
+                      <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                        <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                          <span>TOTAL PAYMENT (CURRENT ENTRY)</span>
+                          <span className="rounded bg-emerald-100 text-emerald-700 px-1 py-0.2 text-[8px] font-black dark:bg-emerald-950 dark:text-emerald-300">CR</span>
+                        </div>
+                        <div className="space-y-0.5 text-[10px] font-semibold">
+                          <div className="flex justify-between"><span className="text-slate-400">Local:</span><span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{money(statCurrentPayLC, baseCurrency)}</span></div>
+                          <div className="flex justify-between"><span className="text-slate-400">Equivalent ({poCurrencyHeader}):</span><span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{money(statCurrentPayFC, poCurrencyHeader)}</span></div>
+                          <div className="flex justify-between"><span className="text-slate-400">Unpaid:</span><span className="font-mono font-bold text-slate-700 dark:text-slate-300">{money(statCurrentPayFC, poCurrencyHeader)}</span></div>
+                          <div className="text-[8px] text-slate-400 text-right pt-0.5">As of: {date(paymentDate || selected.created_at)}</div>
+                        </div>
+                      </div>
+
+                      {/* Box 3: OVERALL BALANCE (DR) */}
+                      <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                        <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                          <span>OVERALL BALANCE</span>
+                          <span className="rounded bg-blue-100 text-blue-700 px-1 py-0.2 text-[8px] font-black dark:bg-blue-950 dark:text-blue-300">DR</span>
+                        </div>
+                        <div className="space-y-0.5 text-[10px] font-semibold">
+                          <div className="flex justify-between"><span className="text-slate-400">Local:</span><span className="font-mono font-bold text-slate-800 dark:text-slate-100">{money(statRemainingLC, baseCurrency)}</span></div>
+                          <div className="flex justify-between"><span className="text-slate-400">Equivalent ({poCurrencyHeader}):</span><span className="font-mono font-bold text-slate-700 dark:text-slate-300">{money(statRemainingFC, poCurrencyHeader)}</span></div>
+                          <div className="flex justify-between"><span className="text-slate-400">Unpaid:</span><span className="font-mono font-bold text-rose-600 dark:text-rose-400">{money(statRemainingFC, poCurrencyHeader)}</span></div>
+                          <div className="text-[8px] text-slate-400 text-right pt-0.5">As of: {date(paymentDate || selected.created_at)}</div>
+                        </div>
+                      </div>
+
+                      {/* Box 4: PAYMENT HISTORY COUNT */}
+                      <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                        <div className="flex items-center justify-between text-[9px] font-black uppercase tracking-wider text-slate-500 mb-1">
+                          <span>PAYMENT HISTORY COUNT</span>
+                          <span className="font-mono text-xs font-black text-slate-900 dark:text-slate-100">{historyWithBalance.length}</span>
+                        </div>
+                        <div className="space-y-0.5 text-[10px] font-semibold">
+                          <div className="flex justify-between"><span className="text-slate-400">Total Payments:</span><span className="font-mono font-bold text-slate-800 dark:text-slate-200">{money(statTotalPaidFC, poCurrencyHeader)} ({statTotalPaidPct}%)</span></div>
+                          <div className="flex justify-between"><span className="text-slate-400">This Payment:</span><span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{money(statCurrentPayFC, poCurrencyHeader)} ({statCurrentPayPct}%)</span></div>
+                          <div className="text-[8px] text-slate-400 text-right pt-0.5">As of: {date(paymentDate || selected.created_at)}</div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Payment History Table */}
+                    <div className="max-h-[360px] overflow-auto">
+                      <table className="w-full min-w-[1200px] text-left text-xs border-collapse">
+                        <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 text-[9px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                          <tr>
+                            <Th className="px-3 py-2 text-center w-10">#</Th>
+                            <Th className="px-3 py-2">PAYMENT DATE</Th>
+                            <Th className="px-3 py-2">PAYMENT NO.</Th>
+                            <Th className="px-3 py-2">PAYMENT METHOD</Th>
+                            <Th className="px-3 py-2">PAID BY / FROM</Th>
+                            <Th className="px-3 py-2 text-right">EXCHANGE RATE</Th>
+                            <Th className="px-3 py-2 text-right">LOCAL AMOUNT</Th>
+                            <Th className="px-3 py-2 text-right">EQUIVALENT ({poCurrencyHeader})</Th>
+                            <Th className="px-3 py-2 text-right">DISCOUNT</Th>
+                            <Th className="px-3 py-2 text-right">PAYMENT AMOUNT ({poCurrencyHeader})</Th>
+                            <Th className="px-3 py-2 text-center">STATUS</Th>
+                            <Th className="px-3 py-2 text-center w-14">ACTION</Th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                          {historyWithBalance.length === 0 ? (
+                            <tr>
+                              <td colSpan={12} className="px-4 py-6 text-center text-xs text-slate-400 italic">
+                                No previous payment records found. Record a new payment entry below.
+                              </td>
+                            </tr>
+                          ) : (
+                            historyWithBalance.map((payment: any) => {
+                              const drLedger = ledgers.find((l) => ledgerId(l) === payment.debit_ledger_id);
+                              const crLedger = ledgers.find((l) => ledgerId(l) === payment.credit_ledger_id);
+                              const re = payment.roznamcha_entries || {};
+                              const method = payment.typeDetails?.method || payment.payment_method || payment.typeDetails?.bankName || payment.bank_name || "Bank Transfer";
+                              const sourceName = crLedger ? ledgerName(crLedger) : payment.typeDetails?.bankName || "Bank Account";
+                              const sourceCode = crLedger ? ledgerCode(crLedger) : (payment.typeDetails?.refNo ? `A/C: ${payment.typeDetails.refNo}` : "-");
+
+                              return (
+                                <tr key={payment.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-900/30 text-xs transition">
+                                  <td className="px-3 py-2.5 text-center font-bold text-slate-600 dark:text-slate-400">{payment.paymentNo}</td>
+                                  <td className="px-3 py-2.5 whitespace-nowrap text-slate-700 dark:text-slate-300 font-semibold">
+                                    {date(payment.entry_date || payment.created_at)}
+                                  </td>
+                                  <td className="px-3 py-2.5 font-mono font-bold text-slate-900 dark:text-slate-100">
+                                    {re.super_admin_serial_number || payment.super_admin_serial_number || payment.reference_no || `AE-${String(payment.paymentNo).padStart(3, '0')}-0001`}
+                                  </td>
+                                  <td className="px-3 py-2.5">
+                                    <span className="rounded-md bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300">
+                                      {method}
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2.5">
+                                    <div className="font-bold text-slate-800 dark:text-slate-200">{sourceName}</div>
+                                    <div className="font-mono text-[9px] text-slate-400">{sourceCode}</div>
+                                  </td>
+                                  <td className="px-3 py-2.5 text-right font-mono font-semibold text-slate-700 dark:text-slate-300">
+                                    {Number(payment.exchange_rate || exRate || 1).toFixed(4)}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-right font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
+                                    {money(payment.amtAED, baseCurrency)}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
+                                    {money(payment.amtUSD, poCurrencyHeader)}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-right font-mono font-bold text-rose-500">
+                                    0.00 {poCurrencyHeader}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-right font-mono font-black text-blue-600 dark:text-blue-400">
+                                    {money(payment.amtUSD, poCurrencyHeader)}
+                                  </td>
+                                  <td className="px-3 py-2.5 text-center">
+                                    <span className="rounded-full bg-emerald-100 text-emerald-700 px-2 py-0.5 text-[9px] font-black uppercase dark:bg-emerald-950 dark:text-emerald-300">
+                                      Posted
+                                    </span>
+                                  </td>
+                                  <td className="px-3 py-2.5 text-center">
+                                    <NestedRowActions payment={payment} row={selected} ledgers={ledgers} localCurrency={baseCurrency} />
+                                  </td>
+                                </tr>
+                              );
+                            })
+                          )}
+                        </tbody>
+                        <tfoot>
+                          <tr className="bg-slate-100 dark:bg-slate-900 border-t-2 border-slate-300 dark:border-slate-700 text-xs font-black text-slate-800 dark:text-slate-200">
+                            <td colSpan={6} className="px-3 py-2 uppercase tracking-wide text-center">TOTALS</td>
+                            <td className="px-3 py-2 text-right font-mono text-emerald-700 dark:text-emerald-400 font-black">
+                              {money(historyWithBalance.reduce((sum, p) => sum + p.amtAED, 0) || statCurrentPayLC, baseCurrency)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-black">
+                              {money(historyWithBalance.reduce((sum, p) => sum + p.amtUSD, 0) || statCurrentPayFC, poCurrencyHeader)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-bold text-rose-600">
+                              0.00 {poCurrencyHeader}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono text-blue-700 dark:text-blue-400 font-black">
+                              {money(historyWithBalance.reduce((sum, p) => sum + p.amtUSD, 0) || statCurrentPayFC, poCurrencyHeader)}
+                            </td>
+                            <td colSpan={2} />
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* 2. ACCOUNTING ENTRIES (DOUBLE ENTRY) Section (Matches Screenshot 1) */}
+                  <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60">
+                      <div className="flex items-center gap-2">
+                        <h3 className="text-xs font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                          2. ACCOUNTING ENTRIES (DOUBLE ENTRY)
+                        </h3>
+                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-black text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300">
+                          BALANCED
+                        </span>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setIsDoubleEntryExpanded(!isDoubleEntryExpanded)}
+                          className="flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700 hover:bg-blue-100 transition dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300"
+                        >
+                          <Plus className="h-3 w-3" />
+                          <span>Add Entry</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsDoubleEntryExpanded(!isDoubleEntryExpanded)}
+                          className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-600 text-white hover:bg-blue-700 transition"
+                          title={isDoubleEntryExpanded ? "Collapse Entry Form" : "Expand Entry Form"}
+                        >
+                          {isDoubleEntryExpanded ? <Minus className="h-3.5 w-3.5 stroke-[3]" /> : <Plus className="h-3.5 w-3.5 stroke-[3]" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Double Entry Table */}
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-xs border-collapse">
+                        <thead className="bg-slate-50 dark:bg-slate-900 text-[9px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
+                          <tr>
+                            <Th className="px-3 py-2 text-center w-10">#</Th>
+                            <Th className="px-3 py-2 w-16">DR / CR</Th>
+                            <Th className="px-3 py-2">ACCOUNT NAME</Th>
+                            <Th className="px-3 py-2 font-mono">ACCOUNT NO.</Th>
+                            <Th className="px-3 py-2">DETAILS</Th>
+                            <Th className="px-3 py-2 text-right">EXCHANGE RATE</Th>
+                            <Th className="px-3 py-2 text-right">LOCAL AMOUNT</Th>
+                            <Th className="px-3 py-2 text-right">EQUIVALENT ({poCurrencyHeader})</Th>
+                            <Th className="px-3 py-2 text-center">FINAL CURRENCY</Th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                          {/* Row 1: DR (Supplier / Trade Payable) */}
+                          <tr className="bg-blue-50/20 hover:bg-blue-50/50 dark:bg-blue-950/10 transition">
+                            <td className="px-3 py-2 text-center font-bold text-slate-600">1</td>
+                            <td className="px-3 py-2">
+                              <span className="inline-flex rounded bg-blue-600 px-1.5 py-0.5 text-[9px] font-black text-white">DR</span>
+                            </td>
+                            <td className="px-3 py-2">
+                              <div className="font-bold text-slate-900 dark:text-slate-100">{doubleEntry.debitName}</div>
+                              <div className="text-[9px] text-slate-400 font-semibold">Trade Payable</div>
+                            </td>
+                            <td className="px-3 py-2 font-mono text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                              {doubleEntry.debitCode}
+                            </td>
+                            <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
+                              Payment for Purchase - {selected.purchase_order_no}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-bold text-slate-700 dark:text-slate-300">
+                              {Number(exchangeRate || exRate || 1).toFixed(4)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
+                              {money(activePaymentAmountLocal, baseCurrency)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
+                              {money(activePaymentAmountUSD, poCurrencyHeader)}
+                            </td>
+                            <td className="px-3 py-2 text-center font-mono font-bold text-slate-600">
+                              {baseCurrency}
+                            </td>
+                          </tr>
+
+                          {/* Row 2: CR (Bank / Payment Source) */}
+                          <tr className="bg-rose-50/20 hover:bg-rose-50/50 dark:bg-rose-950/10 transition">
+                            <td className="px-3 py-2 text-center font-bold text-slate-600">2</td>
+                            <td className="px-3 py-2">
+                              <span className="inline-flex rounded bg-rose-600 px-1.5 py-0.5 text-[9px] font-black text-white">CR</span>
+                            </td>
+                            <td className="px-3 py-2">
+                              <div className="font-bold text-slate-900 dark:text-slate-100">{doubleEntry.creditName}</div>
+                              <div className="text-[9px] text-slate-400 font-semibold">{selectedPaymentSource ? "Bank/Cash Account" : "Payment Source"}</div>
+                            </td>
+                            <td className="px-3 py-2 font-mono text-[10px] font-bold text-slate-700 dark:text-slate-300">
+                              {doubleEntry.creditCode}
+                            </td>
+                            <td className="px-3 py-2 text-slate-600 dark:text-slate-300">
+                              Bank Payment - {selected.purchase_order_no}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-bold text-slate-700 dark:text-slate-300">
+                              {Number(exchangeRate || exRate || 1).toFixed(4)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-extrabold text-emerald-600 dark:text-emerald-400">
+                              {money(activePaymentAmountLocal, baseCurrency)}
+                            </td>
+                            <td className="px-3 py-2 text-right font-mono font-bold text-slate-800 dark:text-slate-200">
+                              {money(activePaymentAmountUSD, poCurrencyHeader)}
+                            </td>
+                            <td className="px-3 py-2 text-center font-mono font-bold text-slate-600">
+                              {baseCurrency}
+                            </td>
+                          </tr>
+                        </tbody>
+                        <tfoot>
+                          <tr className="bg-slate-100 dark:bg-slate-900 border-t-2 border-slate-300 dark:border-slate-700 text-xs font-black text-slate-800 dark:text-slate-200">
+                            <td colSpan={6} className="px-3 py-2 uppercase tracking-wide text-center">TOTAL</td>
+                            <td className="px-3 py-2 text-right font-mono text-emerald-700 dark:text-emerald-400 font-black">{money(activePaymentAmountLocal, baseCurrency)}</td>
+                            <td className="px-3 py-2 text-right font-mono font-black">{money(activePaymentAmountUSD, poCurrencyHeader)}</td>
+                            <td className="px-3 py-2 text-center font-mono">{baseCurrency}</td>
+                          </tr>
+                        </tfoot>
+                      </table>
+                    </div>
+
+                    {/* EXPANDABLE PAYMENT ENTRY FORM (Expands when clicked + / [+] button) */}
+                    {isDoubleEntryExpanded && (
+                      <div className="border-t-2 border-dashed border-blue-200 bg-slate-50/70 p-4 dark:border-blue-900/50 dark:bg-slate-900/40 space-y-4 animate-in fade-in duration-200">
+                        <div className="flex items-center justify-between border-b border-slate-200 pb-2 dark:border-slate-800">
+                          <span className="text-xs font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                            Post New Payment Voucher / Roznamcha Settlement
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setIsDoubleEntryExpanded(false)}
+                            className="text-[10px] font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300"
+                          >
+                            ✕ Close Form
+                          </button>
+                        </div>
+
+                        {isSuperAdmin && (
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <FieldBlock label={currentLanguage === "en" ? "Country (Super Admin)" : "ملک (سپر ایڈمن)"} required={false}>
+                              <SearchableSelect
+                                value={saCountryId}
+                                onChange={(val) => {
+                                  setSaCountryId(val);
+                                  setSaBranchId("");
+                                  setPaymentSourceLedgerId("");
+                                }}
+                                options={[
+                                  { label: currentLanguage === "en" ? "-- All Countries --" : "-- تمام ممالک --", value: "" },
+                                  ...saCountries.map(c => ({ label: tData(c.name, currentLanguage), value: c.id }))
+                                ]}
+                                placeholder={currentLanguage === "en" ? "-- All Countries --" : "-- تمام ممالک --"}
+                                className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100"
+                              />
+                            </FieldBlock>
+                            <FieldBlock label={currentLanguage === "en" ? "Branch (Super Admin)" : "برانچ (سپر ایڈمن)"} required={false}>
+                              <SearchableSelect
+                                value={saBranchId}
+                                onChange={(val) => {
+                                  setSaBranchId(val);
+                                  setPaymentSourceLedgerId("");
+                                }}
+                                options={[
+                                  { label: currentLanguage === "en" ? "-- All Branches --" : "-- تمام برانچز --", value: "" },
+                                  ...saBranches.filter(b => b.country_id === saCountryId || b.country_id === undefined).map(b => ({ label: tData(b.name, currentLanguage), value: b.id }))
+                                ]}
+                                placeholder={currentLanguage === "en" ? "-- All Branches --" : "-- تمام برانچز --"}
+                                disabled={!saCountryId}
+                                className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100"
+                              />
+                            </FieldBlock>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <FieldBlock label={t("payment_source_account", currentLanguage)} required>
+                            <SearchSelect
+                              label=""
+                              value={paymentSourceLedgerId}
+                              placeholder={currentLanguage === "en" ? "Search Payment Source Account..." : "ادائیگی کا سورس اکاؤنٹ تلاش کریں..."}
+                              options={ledgerOptions}
+                              disabled={loading}
+                              onValueChange={(val) => {
+                                setPaymentSourceLedgerId(val);
+                                const led = ledgers.find((l) => ledgerId(l) === val);
+                                if (led) {
+                                  const name = ledgerName(led).toLowerCase();
+                                  const code = ledgerCode(led).toLowerCase();
+                                  if (name.includes("cash") || code.includes("cash")) {
+                                    setPaymentType("cash");
+                                    setRoznamchaType("Cash Book No.");
+                                  } else if (name.includes("bank") || code.includes("bank")) {
+                                    setPaymentType("bank");
+                                    setRoznamchaType("Roznamcha Book No.");
+                                  }
+                                }
+                              }}
+                            />
+                            {selectedSourceLedger && (
+                              <div className="mt-1 text-[10px] font-semibold text-slate-500 flex justify-between">
+                                <span>{currentLanguage === "en" ? "Balance: " : "بیلنس: "}{sourceBalanceText}</span>
+                                <span>{currentLanguage === "en" ? "Currency: " : "کرنسی: "}{selectedSourceLedger.currency || baseCurrency}</span>
+                              </div>
+                            )}
+                          </FieldBlock>
+
+                          <FieldBlock label={t("roznamcha_type_label", currentLanguage)} required>
+                            <SearchableSelect
+                              value={roznamchaType}
+                              onChange={(val) => {
+                                setRoznamchaType(val);
+                                if (val === "Cash Book No.") {
+                                  setPaymentType("cash");
+                                  const cashLed = ledgers.find((l) => ledgerName(l).toLowerCase().includes("cash") || ledgerCode(l).toLowerCase().includes("cash"));
+                                  if (cashLed) setPaymentSourceLedgerId(ledgerId(cashLed) || "");
+                                } else if (val === "Roznamcha Book No.") {
+                                  setPaymentType("bank");
+                                  const bankLed = ledgers.find((l) => ledgerName(l).toLowerCase().includes("bank") || ledgerCode(l).toLowerCase().includes("bank"));
+                                  if (bankLed) setPaymentSourceLedgerId(ledgerId(bankLed) || "");
+                                }
+                              }}
+                              options={[
+                                { label: currentLanguage === "en" ? "Cash Book No." : "کیش بک نمبر", value: "Cash Book No." },
+                                { label: currentLanguage === "en" ? "Roznamcha Book No." : "روزنامچہ بک نمبر", value: "Roznamcha Book No." },
+                                { label: currentLanguage === "en" ? "Receipt No." : "رسید نمبر", value: "Receipt No." }
+                              ]}
+                              placeholder={currentLanguage === "en" ? "Select Type" : "قسم منتخب کریں"}
+                              className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100"
+                            />
+                          </FieldBlock>
+
+                          <FieldBlock label={t("roznamcha_number_label", currentLanguage)} required>
+                            <Input
+                              className="h-9 text-xs font-semibold w-full"
+                              value={roznamchaNumber}
+                              onChange={(e) => setRoznamchaNumber(e.target.value)}
+                              placeholder="e.g. 000123"
+                            />
+                          </FieldBlock>
+
+                          <FieldBlock label={t("payment_date_label", currentLanguage)} required>
+                            <Input
+                              className="h-9 text-xs font-semibold w-full"
+                              type="date"
+                              value={paymentDate}
+                              onChange={(e) => setPaymentDate(e.target.value)}
+                            />
+                          </FieldBlock>
+                        </div>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <FieldBlock label={t("roznamcha_category_label", currentLanguage)} required>
+                            <SearchableSelect
+                              value={paymentType}
+                              onChange={(val) => {
+                                const value = val as any;
+                                setPaymentType(value);
+                                setTypeDetails({});
+                                setAttachmentFile(null);
+                                setFinalPayment("");
+                                if (value === "cash") {
+                                  setRoznamchaType("Cash Book No.");
+                                  const cashLed = ledgers.find((l) => ledgerName(l).toLowerCase().includes("cash") || ledgerCode(l).toLowerCase().includes("cash"));
+                                  if (cashLed) setPaymentSourceLedgerId(ledgerId(cashLed) || "");
+                                } else if (value === "bank") {
+                                  setRoznamchaType("Roznamcha Book No.");
+                                  const bankLed = ledgers.find((l) => ledgerName(l).toLowerCase().includes("bank") || ledgerCode(l).toLowerCase().includes("bank"));
+                                  if (bankLed) setPaymentSourceLedgerId(ledgerId(bankLed) || "");
+                                }
+                              }}
+                              options={[
+                                { label: currentLanguage === "en" ? "Select Category" : "زمرہ منتخب کریں", value: "" },
+                                { label: currentLanguage === "en" ? "Cash Roznamcha" : "کیش روزنامچہ", value: "cash" },
+                                { label: currentLanguage === "en" ? "Bank Roznamcha" : "بینک روزنامچہ", value: "bank" },
+                                { label: currentLanguage === "en" ? "Business Roznamcha" : "بزنس روزنامچہ", value: "business" },
+                                { label: currentLanguage === "en" ? "Invoice Journal" : "انکوائس جرنل", value: "invoice" },
+                                { label: currentLanguage === "en" ? "Transfer" : "منتقلی", value: "transfer" }
+                              ]}
+                              placeholder={currentLanguage === "en" ? "Select Category" : "زمرہ منتخب کریں"}
+                              className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100"
+                            />
+                          </FieldBlock>
+
+                          <FieldBlock label={t("currency_label", currentLanguage)} required>
+                            <SearchableSelect
+                              value={currency}
+                              onChange={(val) => setCurrency(val)}
+                              options={[
+                                { label: "USD", value: "USD" },
+                                { label: "AED", value: "AED" },
+                                { label: "PKR", value: "PKR" },
+                                { label: "INR", value: "INR" },
+                                { label: "AFN", value: "AFN" },
+                                { label: "IRR", value: "IRR" }
+                              ]}
+                              placeholder={currentLanguage === "en" ? "Select Currency" : "کرنسی منتخب کریں"}
+                              className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100"
+                            />
+                          </FieldBlock>
+                        </div>
+
+                        {/* Dynamic Type Panel */}
+                        {paymentType && (
+                          <div className="rounded-lg border bg-slate-50/50 p-3 dark:bg-slate-900/20">
+                            <div className="mb-2 text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                              {paymentType === "cash" && (currentLanguage === "en" ? "Cash Details" : "کیش کی تفصیلات")}
+                              {paymentType === "bank" && (currentLanguage === "en" ? "Bank Details" : "بینک کی تفصیلات")}
+                              {paymentType === "business" && (currentLanguage === "en" ? "Business Details" : "بزنس کی تفصیلات")}
+                              {paymentType === "invoice" && (currentLanguage === "en" ? "Invoice Details" : "انکوائس کی تفصیلات")}
+                              {paymentType === "transfer" && (currentLanguage === "en" ? "Transfer Details" : "منتقلی کی تفصیلات")}
+                            </div>
+                            
+                            {paymentType === "cash" && (
+                              <div className="grid gap-3 md:grid-cols-2">
+                                <FieldBlock label={t("receiver_sender_name", currentLanguage)}>
+                                  <Input className="h-9 text-xs font-semibold" value={typeDetails.receiverSenderName || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, receiverSenderName: e.target.value }))} placeholder={currentLanguage === "en" ? "Receiver or sender name" : "وصول کنندہ یا بھیجنے والے کا نام"} />
+                                </FieldBlock>
+                                <FieldBlock label={t("mobile_number", currentLanguage)}>
+                                  <Input className="h-9 text-xs font-semibold" value={typeDetails.mobileNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, mobileNumber: e.target.value }))} placeholder="03xxxxxxxxx" />
+                                </FieldBlock>
+                                <FieldBlock label={t("whatsapp_number", currentLanguage)}>
+                                  <Input className="h-9 text-xs font-semibold" value={typeDetails.whatsappNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, whatsappNumber: e.target.value }))} placeholder="03xxxxxxxxx" />
+                                </FieldBlock>
+                                <FieldBlock label={t("id_card_copy_upload", currentLanguage)}>
+                                  <div className="flex items-center gap-2">
+                                    <Label className="cursor-pointer flex w-max items-center justify-center h-8 px-3 rounded-full bg-slate-100 hover:bg-slate-200 border text-slate-500 shadow-sm transition gap-1.5 text-[10px] font-semibold">
+                                      <Paperclip className="h-3 w-3" />
+                                      <span>{currentLanguage === "en" ? "Attach" : "منسلک کریں"}</span>
+                                      <Input
+                                        type="file"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0] ?? null;
+                                          setAttachmentFile(file);
+                                          setTypeDetails((p) => ({ ...p, idCardCopyName: file?.name || "" }));
+                                        }}
+                                      />
+                                    </Label>
+                                    {typeDetails.idCardCopyName && <span className="text-[10px] font-mono text-slate-500 bg-slate-50 px-2 py-1.5 rounded border truncate max-w-[200px]">{typeDetails.idCardCopyName}</span>}
+                                  </div>
+                                </FieldBlock>
+                              </div>
+                            )}
+
+                            {paymentType === "bank" && (
+                              <div className="space-y-3">
+                                <div className="space-y-1 relative z-[46]">
+                                  <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                    {currentLanguage === "en" ? "Bank Name" : "بینک کا نام"}
+                                  </span>
+                                  <SearchableSelect
+                                    value={typeDetails.bankName || ""}
+                                    onChange={(val) => {
+                                      if (val === "__ADD_NEW__") {
+                                        openAddOption("bank");
+                                      } else {
+                                        setTypeDetails((prev) => ({ ...prev, bankName: val }));
+                                      }
+                                    }}
+                                    options={[
+                                      { label: currentLanguage === "en" ? "Select Bank" : "بینک منتخب کریں", value: "" },
+                                      ...(selected ? getCountryBankList(rowCountryName(selected)) : getCountryBankList(session?.countryName || "")).map((bank) => ({ label: bank, value: bank })),
+                                      ...savedBanks.map((bank) => ({ label: bank.name, value: bank.name }))
+                                    ]}
+                                    placeholder={currentLanguage === "en" ? "Select Bank" : "بینک منتخب کریں"}
+                                    addOptionLabel={currentLanguage === "en" ? "New Bank" : "نیا بینک"}
+                                    className="text-xs font-semibold text-slate-800 dark:text-slate-100"
+                                  />
+                                </div>
+
+                                <div className="space-y-1 relative z-[46]">
+                                  <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                    {currentLanguage === "en" ? "Payment Method" : "ادائیگی کا طریقہ"}
+                                  </span>
+                                  <SearchableSelect
+                                    value={typeDetails.method || ""}
+                                    onChange={(val) => {
+                                      if (val === "__ADD_NEW__") {
+                                        openAddOption("method");
+                                      } else {
+                                        setTypeDetails((prev) => ({ ...prev, method: val }));
+                                      }
+                                    }}
+                                    options={[
+                                      { label: currentLanguage === "en" ? "Select Method" : "طریقہ منتخب کریں", value: "" },
+                                      ...["Cheque", "Mobile Transfer", "Online Transfer", "Bank Transfer"].map((method) => ({ label: method, value: method })),
+                                      ...savedMethods.map((method) => ({ label: method, value: method }))
+                                    ]}
+                                    placeholder={currentLanguage === "en" ? "Select Method" : "طریقہ منتخب کریں"}
+                                    addOptionLabel={currentLanguage === "en" ? "New Method" : "نیا طریقہ"}
+                                    className="text-xs font-semibold text-slate-800 dark:text-slate-100"
+                                  />
+                                </div>
+
+                                <div className="grid gap-3 grid-cols-2">
+                                  <FieldBlock label={currentLanguage === "en" ? "Reference No." : "حوالہ نمبر"}>
+                                    <Input
+                                      className="h-9 text-xs font-semibold w-full"
+                                      value={typeDetails.refNo || ""}
+                                      onChange={(e) => setTypeDetails((prev) => ({ ...prev, refNo: e.target.value }))}
+                                      placeholder={currentLanguage === "en" ? "Cheque/Mobile transaction number" : "چیک یا ٹرانزیکشن نمبر"}
+                                    />
+                                  </FieldBlock>
+                                  <FieldBlock label={t("payment_date_label", currentLanguage)} required>
+                                    <Input
+                                      className="h-9 text-xs font-semibold w-full"
+                                      type="date"
+                                      required
+                                      value={typeDetails.payDate || paymentDate}
+                                      onChange={(e) => setTypeDetails((prev) => ({ ...prev, payDate: e.target.value }))}
+                                    />
+                                  </FieldBlock>
+                                </div>
+
+                                <FieldBlock label={currentLanguage === "en" ? "Attachment Upload" : "فائل منسلک اپ لوڈ"}>
+                                  <div className="flex items-center gap-2">
+                                    <Label className="cursor-pointer flex w-max items-center justify-center h-8 px-3 rounded-full bg-slate-100 hover:bg-slate-200 border text-slate-500 shadow-sm transition gap-1.5 text-[10px] font-semibold">
+                                      <Paperclip className="h-3 w-3" />
+                                      <span>{currentLanguage === "en" ? "Attach" : "منسلک کریں"}</span>
+                                      <Input
+                                        type="file"
+                                        className="hidden"
+                                        onChange={(e) => {
+                                          const file = e.target.files?.[0] ?? null;
+                                          setAttachmentFile(file);
+                                          setTypeDetails((p) => ({ ...p, bankAttachmentName: file?.name || "" }));
+                                        }}
+                                      />
+                                    </Label>
+                                    {typeDetails.bankAttachmentName && <span className="text-[10px] font-mono text-slate-500 bg-slate-50 px-2 py-1.5 rounded border truncate max-w-[150px]">{typeDetails.bankAttachmentName}</span>}
+                                  </div>
+                                </FieldBlock>
+                              </div>
+                            )}
+
+                            {(paymentType === "business" || paymentType === "invoice") && (
+                              <div className="grid gap-3 md:grid-cols-2">
+                                <FieldBlock label={currentLanguage === "en" ? "Invoice Number" : "انوائس نمبر"}>
+                                  <Input className="h-9 text-xs font-semibold" value={typeDetails.invoiceNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, invoiceNumber: e.target.value }))} placeholder="Invoice number" />
+                                </FieldBlock>
+                                <FieldBlock label={currentLanguage === "en" ? "Purchase Information" : "خریداری کی معلومات"}>
+                                  <Input className="h-9 text-xs font-semibold" value={typeDetails.purchaseInfo || typeDetails.businessName || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, purchaseInfo: e.target.value, businessName: e.target.value }))} placeholder="Purchase information" />
+                                </FieldBlock>
+                              </div>
+                            )}
+
+                            {paymentType === "transfer" && (
+                              <div className="grid gap-3 md:grid-cols-2">
+                                <FieldBlock label={currentLanguage === "en" ? "From" : "سے"}>
+                                  <Input className="h-9 text-xs font-semibold" value={typeDetails.from || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, from: e.target.value }))} placeholder="From account" />
+                                </FieldBlock>
+                                <FieldBlock label={currentLanguage === "en" ? "To" : "کو"}>
+                                  <Input className="h-9 text-xs font-semibold" value={typeDetails.to || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, to: e.target.value }))} placeholder="To account" />
+                                </FieldBlock>
+                                <FieldBlock label={currentLanguage === "en" ? "Reference" : "حوالہ"} className="md:col-span-2">
+                                  <Input className="h-9 text-xs font-semibold" value={typeDetails.ref || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, ref: e.target.value }))} placeholder="Reference" />
+                                </FieldBlock>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Currency Rate / Calculations */}
+                        {currency && showCalcPanel && (
+                          <div className="rounded-lg border bg-slate-50/50 p-3 dark:bg-slate-900/20">
+                            <div className="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                              {t("transaction_conversion_details", currentLanguage)} ({selected?.currency_code || "USD"} ➔ {baseCurrency})
+                            </div>
+                            <div className="grid gap-3 md:grid-cols-3">
+                              <FieldBlock label={`${t("purchase_currency_amount", currentLanguage)} (${selected?.currency_code || "USD"})`} required>
+                                <Input className="h-9 text-xs font-semibold" value={calcAmount} onChange={(e) => setCalcAmount(e.target.value)} type="number" step="0.0001" min="0" placeholder="e.g. 100" />
+                              </FieldBlock>
+                              <FieldBlock label={t("exchange_rate_label", currentLanguage)} required>
+                                <Input className="h-9 text-xs font-semibold" value={exchangeRate} onChange={(e) => setExchangeRate(e.target.value)} type="number" step="0.0001" min="0" disabled={selected?.currency_code === baseCurrency && currency === baseCurrency} />
+                              </FieldBlock>
+                              <FieldBlock label={t("operation_label", currentLanguage)}>
+                                <select
+                                  className="h-9 w-full rounded-md border border-input bg-background px-2 text-xs font-semibold outline-none"
+                                  value={calcOp}
+                                  onChange={(e) => setCalcOp(e.target.value as any)}
+                                >
+                                  <option value="mul">{currentLanguage === "en" ? "Multiply (*)" : "ضرب کریں (*)"}</option>
+                                  <option value="div">{currentLanguage === "en" ? "Divide (/)" : "تقسیم کریں (/)"}</option>
+                                </select>
+                              </FieldBlock>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="grid gap-4 md:grid-cols-2">
+                          <FieldBlock label={`${t("final_local_amount", currentLanguage)} (${baseCurrency})`} required>
+                            <div className="relative">
+                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">
+                                {baseCurrency}
+                              </span>
+                              <Input
+                                className="h-9 pl-12 text-right text-xs font-black font-mono"
+                                value={showCalcPanel && calcFinal !== null ? calcFinal.toFixed(2) : finalPayment}
+                                onChange={(e) => setFinalPayment(e.target.value)}
+                                placeholder="0.00"
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                disabled={showCalcPanel && calcFinal !== null}
+                              />
+                            </div>
+                          </FieldBlock>
+
+                          <div className="space-y-1">
+                            <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                              {t("transaction_entry_preview", currentLanguage)}
+                            </span>
+                            <div className="h-9 flex items-center px-3 rounded-lg border border-indigo-400/40 bg-indigo-500/10 text-indigo-600 font-bold text-xs uppercase truncate">
+                              {currentLanguage === "en"
+                                ? `🔵 Balanced entry — Dr: ${doubleEntry.debitCode} / Cr: ${doubleEntry.creditCode}`
+                                : `🔵 متوازن انٹری — ڈیبٹ: ${doubleEntry.debitCode} / کریڈٹ: ${doubleEntry.creditCode}`}
+                            </div>
+                          </div>
+                        </div>
+
+                        <FieldBlock label={t("comments_label", currentLanguage)}>
+                          <textarea
+                            rows={3}
+                            className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-semibold ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                            value={remarks}
+                            onChange={(e) => setRemarks(e.target.value)}
+                            placeholder={currentLanguage === "en" ? "Manually add additional descriptions, comments, explanations, or transaction notes..." : "تفصیلات، کمنٹس، وضاحت، یا ٹرانزیکشن نوٹس شامل کریں..."}
+                          />
+                        </FieldBlock>
+
+                        {/* Submit Action Button */}
+                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-3 border-t border-slate-200 dark:border-slate-800">
+                          <div className="text-xs space-y-0.5 text-slate-500">
+                            <div>
+                              <span className="font-bold text-slate-800 dark:text-slate-200">{currentLanguage === "en" ? "Posting: " : "پوسٹنگ: "}</span>
+                              <span className="font-bold text-indigo-600">DR</span> {doubleEntry.debitName} ({doubleEntry.debitCode}) / <span className="font-bold text-rose-600">CR</span> {doubleEntry.creditName} ({doubleEntry.creditCode})
+                            </div>
+                            <div><span className="font-bold text-slate-800 dark:text-slate-200">{currentLanguage === "en" ? "Amount: " : "رقم: "}</span>{amount ? money(amount, baseCurrency) : "—"}</div>
+                          </div>
+
+                          <Button
+                            type="button"
+                            onClick={handleProcessPayment}
+                            disabled={processingPayment || !amount || !canSave}
+                            className="h-10 px-6 font-bold text-xs uppercase shadow-md transition bg-indigo-600 hover:bg-indigo-700 text-white"
+                          >
+                            {processingPayment ? (currentLanguage === "en" ? "Processing..." : "پروسیسنگ ہو رہی ہے...") : (
+                              currentLanguage === "en" ? `Post ${activeMode === "advance" ? "Advance" : activeMode === "credit" ? "Credit" : "Remaining"} Payment` : `${activeMode === "advance" ? "ایڈوانس" : activeMode === "credit" ? "کریڈٹ" : "باقی"} ادائیگی پوسٹ کریں`
+                            )}
+                          </Button>
+                        </div>
+
+                        {/* Feedback messages */}
+                        {paymentSuccess && (
+                          <div className="flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/8 p-4 text-sm text-emerald-700 animate-in fade-in duration-300">
+                            <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" />
+                            <div>
+                              <div className="font-bold mb-0.5">{currentLanguage === "en" ? "Payment Posted Successfully" : "ادائیگی کامیابی سے پوسٹ ہو گئی"}</div>
+                              <div className="text-xs">{paymentSuccess}</div>
+                            </div>
+                          </div>
+                        )}
+                        {paymentError && (
+                          <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
+                            ❌ {paymentError}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
 
-                  {/* Multi-Currency Endorsement & Payment Summary Panels */}
-                  <div className="hidden">
-                    {/* Box 2: Purchase & Endorsement Summary (Transaction Currency) */}
-                    <div className="bg-white border border-slate-200/80 rounded-xl p-4 dark:bg-slate-950 dark:border-slate-800 shadow-sm space-y-3">
-                      <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800/80 pb-2">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
-                          2. Purchase & Endorsement Summary ({poCurrency})
-                        </span>
-                        <span className="text-[10px] font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded uppercase font-mono">{poCurrency}</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3 text-xs">
-                        <div className="bg-slate-50/60 border border-slate-100 p-2.5 rounded-lg dark:bg-slate-900/50 dark:border-slate-900 shadow-inner">
-                          <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Total Purchase Amount</span>
-                          <span className="font-extrabold text-slate-800 dark:text-slate-200 font-mono text-sm">{money(loadingPurchaseAmount, poCurrency)}</span>
-                        </div>
-                        <div className="bg-slate-50/60 border border-slate-100 p-2.5 rounded-lg dark:bg-slate-900/50 dark:border-slate-900 shadow-inner">
-                          <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Endorsement Percentage</span>
-                          <span className="font-extrabold text-slate-800 dark:text-slate-200 font-mono text-sm">{advancePercent.toFixed(2)}%</span>
-                        </div>
-                        <div className="bg-slate-50/60 border border-slate-100 p-2.5 rounded-lg dark:bg-slate-900/50 dark:border-slate-900 shadow-inner">
-                          <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Endorsement Amount</span>
-                          <span className="font-extrabold text-slate-800 dark:text-slate-200 font-mono text-sm">{money(loadingRequiredAdvance, poCurrency)}</span>
-                        </div>
-                        <div className="bg-slate-50/60 border border-slate-100 p-2.5 rounded-lg dark:bg-slate-900/50 dark:border-slate-900 shadow-inner">
-                          <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Remaining Amount</span>
-                          <span className="font-extrabold text-slate-800 dark:text-slate-200 font-mono text-sm">{money(loadingPurchaseAmount - loadingRequiredAdvance, poCurrency)}</span>
-                        </div>
-                      </div>
+                  {/* 3. NARRATION / REMARKS Section (Matches Screenshot 1) */}
+                  <div className="rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950 p-3.5">
+                    <div className="text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300 mb-1.5">
+                      3. NARRATION / REMARKS
                     </div>
-
-                    {/* Box 3: Final Payment Summary (Final Currency) */}
-                    <div className="bg-white border border-slate-200/80 rounded-xl p-4 dark:bg-slate-950 dark:border-slate-800 shadow-sm space-y-3">
-                      <div className="flex justify-between items-center border-b border-slate-100 dark:border-slate-800/80 pb-2">
-                        <span className="text-[10px] font-black uppercase tracking-wider text-slate-500">
-                          3. Final Payment Summary ({baseCurrency})
-                        </span>
-                        <span className="text-[10px] font-bold bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded uppercase font-mono">{baseCurrency}</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-3 text-xs">
-                        <div className="bg-slate-50/60 border border-slate-100 p-2.5 rounded-lg dark:bg-slate-900/50 dark:border-slate-900 shadow-inner">
-                          <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Total Final Amount</span>
-                          <span className="font-extrabold text-slate-855 dark:text-slate-200 font-mono text-sm">{money(loadingPurchaseAmount * exRate, baseCurrency)}</span>
-                        </div>
-                        <div className="bg-slate-50/60 border border-slate-100 p-2.5 rounded-lg dark:bg-slate-900/50 dark:border-slate-900 shadow-inner">
-                          <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Advance Amount</span>
-                          <span className="font-extrabold text-slate-855 dark:text-slate-200 font-mono text-sm">{money(loadingRequiredAdvance * exRate, baseCurrency)}</span>
-                        </div>
-                        <div className="bg-slate-50/60 border border-slate-100 p-2.5 rounded-lg dark:bg-slate-900/50 dark:border-slate-900 shadow-inner">
-                          <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Remaining Amount</span>
-                          <span className="font-extrabold text-slate-855 dark:text-slate-200 font-mono text-sm">{money((loadingPurchaseAmount - loadingRequiredAdvance) * exRate, baseCurrency)}</span>
-                        </div>
-                        <div className="bg-slate-50/60 border border-slate-100 p-2.5 rounded-lg dark:bg-slate-900/50 dark:border-slate-900 shadow-inner">
-                          <span className="text-[9px] font-semibold text-slate-400 block uppercase tracking-wider">Exchange Rate</span>
-                          <span className="font-bold text-[10.5px] text-slate-700 dark:text-slate-350 block truncate font-mono mt-0.5" title={`1 ${poCurrency} = ${Number(exRate).toFixed(4)} ${baseCurrency}`}>
-                            1 {poCurrency} = {Number(exRate).toFixed(4)} {baseCurrency}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Exchange Rate & Recorded Payments Pill Footer */}
-                  <div className="flex items-center justify-between px-5 py-2.5 border-t border-slate-100 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/20">
-                    <div className="text-[9px] font-semibold text-slate-500">
-                      Exchange Rate: <span className="font-mono font-black text-slate-700 dark:text-slate-300">1 {poCurrency} = {Number(exRate).toFixed(2)} {baseCurrency}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center gap-1 text-[9px] font-bold bg-blue-50 dark:bg-blue-950/30 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-900">
-                        {remainingPaymentsForThisLoading.length} Payment{remainingPaymentsForThisLoading.length !== 1 ? 's' : ''} Recorded
-                      </span>
+                    <div className="text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-50 dark:bg-slate-900/50 p-2.5 rounded-lg border border-slate-100 dark:border-slate-800">
+                      {remarks.trim() || `Payment for Purchase Order No. ${selected.purchase_order_no} against ${supplierHeader}.`}
                     </div>
                   </div>
                 </div>
               );
             })()}
-
-            {activeMode === "remaining" && !selectedLoadingRecord ? (
-              <div className="bg-amber-50/40 border border-amber-200 rounded-xl p-6 dark:bg-amber-955/5 dark:border-amber-900/30 text-center space-y-4 max-w-3xl mx-auto my-6 animate-in fade-in slide-in-from-bottom-3 duration-300">
-                <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-600">
-                  <Truck className="h-6 w-6" />
-                </div>
-                <div className="space-y-1">
-                  <h3 className="text-sm font-black text-amber-800 dark:text-amber-400">{t("select_loaded_container", currentLanguage)}</h3>
-                  <p className="text-xs text-slate-500 max-w-md mx-auto">
-                    {t("select_container_instruction", currentLanguage)}
-                  </p>
-                </div>
-                {loadingLoadingRecords ? (
-                  <div className="text-xs text-amber-700 italic flex items-center justify-center gap-1.5 py-8">
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-amber-600 border-t-transparent" />
-                    {t("loading_container_records", currentLanguage)}
-                  </div>
-                ) : loadingRecords.length > 0 ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 max-h-[350px] overflow-y-auto p-1">
-                    {loadingRecords.map((lr) => {
-                      const poRow = selected || {};
-                      const finance = calcLoadingFinance(lr, poRow, poRow.form_data?.form || {});
-                      
-                      const loadedQty = lr.report_payload?.loadedQuantity || lr.loadedQuantity || 0;
-                      const poAdvanceAmt = Number(poRow.advance_paid || poRow.form_data?.form?.advanceAmount || 0);
-                      const goods = poRow.form_data?.goodsEntries || [];
-                      const totalPOQuantity = Number(
-                        poRow.form_data?.totals?.totalQuantity ||
-                        goods.reduce((acc: number, item: any) => acc + Number(item.qtyNo || item.quantity || 0), 0) ||
-                        poRow.form_data?.form?.quantity ||
-                        1
-                      );
-                      const loadedAdvanceUSD = totalPOQuantity > 0 ? (loadedQty / totalPOQuantity) * poAdvanceAmt : poAdvanceAmt;
-                      const loadedRemainingUSD = Math.max(0, finance.amountUSD - loadedAdvanceUSD);
-                      
-                      return (
-                        <button
-                          key={lr.id}
-                          type="button"
-                          onClick={() => handleSelectLoadingRecord(lr)}
-                          className="flex flex-col text-left p-4 rounded-xl border border-slate-200 bg-white hover:border-blue-500 hover:shadow-md hover:scale-[1.01] active:scale-[0.99] transition text-xs space-y-2 dark:bg-slate-900 dark:border-slate-800 shadow-sm"
-                        >
-                          <div className="flex justify-between items-center w-full">
-                            <span className="font-extrabold text-slate-800 dark:text-slate-200 flex items-center gap-1">
-                              Container #{lr.loading_record_no || lr.report_payload?.containerNumber || "-"}
-                            </span>
-                            <span className="text-[10px] font-black uppercase text-blue-600 bg-blue-50 dark:bg-blue-950/30 dark:text-blue-400 px-2 py-0.5 rounded-full">
-                              {loadedQty.toLocaleString()} Bags
-                            </span>
-                          </div>
-                          <div className="grid grid-cols-2 gap-2 text-[10px] text-slate-400 w-full">
-                            <div>Net Wt: <span className="font-semibold text-slate-700 dark:text-slate-300">{finance.netWeight.toLocaleString()} KGs</span></div>
-                            <div>Gross Wt: <span className="font-semibold text-slate-700 dark:text-slate-300">{finance.grossWeight.toLocaleString()} KGs</span></div>
-                            <div className="col-span-2 border-t border-slate-100 dark:border-slate-800/85 pt-1.5 mt-1 flex justify-between items-center w-full">
-                              <span>Remaining Bal:</span>
-                              <span className="font-black text-xs text-emerald-600">{money(loadedRemainingUSD, lr.currency || "USD")}</span>
-                            </div>
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-xs text-slate-400 italic py-8 bg-slate-50 dark:bg-slate-900/10 rounded-xl border border-dashed border-slate-200 dark:border-slate-800">
-                    No loaded containers found for this purchase order.
-                    <div className="text-[10px] text-slate-400 mt-1 font-normal">Please make sure the containers are added and loaded in the Loading module first.</div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
-              <div className="xl:col-span-12 space-y-4">
-                {/* Payment Entry History */}
-                {(() => {
-                  const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
-                  const isUrlLoading = searchParams.get("fromLoading") === "true";
-                  const fromLoading = isUrlLoading || Boolean(selectedLoadingRecord);
-
-                  const cLoadedQty = selectedLoadingRecord
-                    ? Number(selectedLoadingRecord.report_payload?.loadedQuantity || selectedLoadingRecord.loadedQuantity || 0)
-                    : Number(searchParams.get("loadedQty") || 0);
-                  const cGrossWeight = selectedLoadingRecord
-                    ? Number(selectedLoadingRecord.report_payload?.grossWeight || 0)
-                    : Number(searchParams.get("grossWeight") || 0);
-                  const cNetWeight = selectedLoadingRecord
-                    ? Number(selectedLoadingRecord.report_payload?.netWeight || 0)
-                    : Number(searchParams.get("netWeight") || 0);
-                  const cPriceRate = selectedLoadingRecord
-                    ? Number(selectedLoadingRecord.report_payload?.priceRateC1 || 0)
-                    : Number(searchParams.get("priceRate") || 0);
-                  const cLoadingRecordId = selectedLoadingRecord
-                    ? selectedLoadingRecord.id
-                    : (searchParams.get("loadingRecordId") || "");
-
-                  const form = (selected as any).form_data?.form || {};
-                  const goods = (selected as any).form_data?.goodsEntries || [];
-                  const totalPurchaseBC = Number(selected.order_total || 0) ||
-                    (goods.length ? goods.reduce((s: number, g: any) => s + Number(g.totalAmount || 0), 0) : Number(form.totalAmount || 0));
-                  const totalPOQuantity = Number(
-                    selected.form_data?.totals?.totalQuantity ||
-                    goods.reduce((acc: number, item: any) => acc + Number(item.qtyNo || item.quantity || 0), 0) ||
-                    form.quantity ||
-                    1
-                  );
-                  const advancePercent = Number(form.advancePercent || 0);
-                  const poCurrency = (selected as any).form_data?.form?.currencyType || (selected as any).form_data?.form?.currency || selected.currency_code || "USD";
-                  const exRate = selected.exchange_rate || 1;
-
-                  // Resolve pricing mode
-                  const firstGood = goods[0] || {};
-                  const isPerKg = firstGood.priceType === "P/KGs" || String(firstGood.priceType || "").toLowerCase().includes("kg");
-
-                  // Determine active totals based on loading record vs PO total
-                  const explicitLoadingPurchaseAmount = Number(
-                    searchParams.get("purchaseAmount") ||
-                    searchParams.get("loadedPurchaseAmount") ||
-                    selectedLoadingRecord?.report_payload?.totalPurchase ||
-                    selectedLoadingRecord?.report_payload?.purchaseAmount ||
-                    0
-                  );
-                  const loadingPurchaseAmount = fromLoading
-                    ? (explicitLoadingPurchaseAmount > 0 ? explicitLoadingPurchaseAmount : (isPerKg ? cNetWeight * cPriceRate : cLoadedQty * cPriceRate))
-                    : totalPurchaseBC;
-
-                  const loadingRequiredAdvance = (loadingPurchaseAmount * advancePercent) / 100;
-                  const rawPOAdvancePaid = Number(selected.advance_paid || form.advanceAmount || 0);
-                  const poAdvancePaidForStatement = normalizeAdvanceToPurchaseCurrency(rawPOAdvancePaid, totalPurchaseBC, Number(exRate || 1));
-                  const statementPurchaseForeign = fromLoading ? loadingPurchaseAmount : totalPurchaseBC;
-                  const statementPurchaseLocal = statementPurchaseForeign * Number(exRate || 1);
-
-                  // Build history array
-                  let displayPayments: any[] = [];
-                  
-                  if (fromLoading && cLoadingRecordId) {
-                    // 1. Synthetic pro-rated advance deduction row
-                    const loadingAdvancePaid = Math.min(loadingPurchaseAmount, totalPOQuantity > 0 ? (cLoadedQty / totalPOQuantity) * poAdvancePaidForStatement : poAdvancePaidForStatement);
-                    
-                    const poAdvancePayment = selectedOrderPayments.find((p: any) => p.kind === "advance");
-                    const advanceSynthetic = {
-                      id: "synthetic-advance-payment",
-                      kind: "advance",
-                      entry_date: poAdvancePayment?.entry_date || selected.created_at,
-                      created_at: poAdvancePayment?.created_at || selected.created_at,
-                      amount: loadingAdvancePaid,
-                      currency_code: poCurrency,
-                      exchange_rate: exRate,
-                      payment_method: poAdvancePayment?.payment_method || "Advance deducted",
-                      created_by_name: poAdvancePayment?.created_by_name || "System Allocation",
-                      typeDetails: poAdvancePayment?.typeDetails || { method: "Advance deducted" },
-                      narration: `Advance deduction allocated for ${cLoadedQty.toLocaleString()} units`,
-                      reference_no: poAdvancePayment?.reference_no || "-"
-                    };
-                    
-                    const loadingRemainingPayments = selectedOrderPayments.filter((p: any) => {
-                      const payKind = p.kind || "";
-                      if (payKind !== "remaining") return false;
-                      const payRecordId = p.typeDetails?.loadingRecordId || p.typeDetails?.loading_record_id || "";
-                      return payRecordId === cLoadingRecordId;
-                    });
-                    
-                    displayPayments = [advanceSynthetic, ...loadingRemainingPayments];
-                  } else {
-                    displayPayments = [...selectedOrderPayments];
-                  }
-
-                  if (displayPayments.length === 0) return null;
-
-                  // Compute chronological running balances
-                  const chronological = displayPayments.sort((a: any, b: any) =>
-                    new Date(a.entry_date || a.created_at).getTime() - new Date(b.entry_date || b.created_at).getTime()
-                  );
-                  let runningTotalUSD = 0;
-                  let runningTotalAED = 0;
-                  const historyWithBalance = chronological.map((p: any, idx: number) => {
-                    const isPayLocal = p.currency_code?.toUpperCase() === baseCurrency.toUpperCase();
-                    
-                    // Amount in USD (Transaction Currency)
-                    const amtUSD = isPayLocal
-                      ? Number(p.amount || 0) / Number(p.exchange_rate || exRate || 1)
-                      : Number(p.amount || 0);
-
-                    // Amount in AED (Final Currency)
-                    const amtAED = isPayLocal
-                      ? Number(p.amount || 0)
-                      : Number(p.amount || 0) * Number(p.exchange_rate || exRate || 1);
-
-                    runningTotalUSD += amtUSD;
-                    runningTotalAED += amtAED;
-
-                    const showRemainUSD = Math.max(0, statementPurchaseForeign - runningTotalUSD);
-
-                    const showRemainAED = Math.max(0, statementPurchaseLocal - runningTotalAED);
-
-                    const remainingIndex = p.kind === "remaining"
-                      ? chronological.slice(0, idx + 1).filter((x: any) => x.kind === "remaining").length
-                      : 0;
-
-                    const paymentTypeLabel = p.kind === "advance"
-                      ? "Advance Payment"
-                      : p.kind === "remaining"
-                        ? `Remaining Payment - ${remainingIndex}`
-                        : p.kind || "Payment";
-
-                    return {
-                      ...p,
-                      paymentNo: idx + 1,
-                      paymentTypeLabel,
-                      amtUSD,
-                      amtAED,
-                      runningTotalUSD,
-                      runningTotalAED,
-                      showRemainUSD,
-                      showRemainAED
-                    };
-                  });
-
-
-                  const latestHistory = historyWithBalance[historyWithBalance.length - 1];
-                  const totalReceivedPurchaseCurrency = Number(latestHistory?.runningTotalUSD || 0);
-                  const totalReceivedLocalCurrency = Number(latestHistory?.runningTotalAED || 0);
-                  const remainingPurchaseCurrency = Number(latestHistory?.showRemainUSD ?? statementPurchaseForeign);
-                  const remainingLocalCurrency = Number(latestHistory?.showRemainAED ?? statementPurchaseLocal);
-                  const goodsQuantity = goods.reduce((sum: number, item: any) => sum + Number(item.qtyNo || item.quantity || item.qty || 0), 0);
-                  const goodsGrossWeight = goods.reduce((sum: number, item: any) => sum + Number(item.grossWeight || item.gross_weight || 0), 0);
-                  const goodsNetWeight = goods.reduce((sum: number, item: any) => sum + Number(item.netWeight || item.net_weight || 0), 0);
-                  const goodsNames = goods.map((item: any) => item.goodsName || item.productName || item.name).filter(Boolean).join(", ") || firstGood.goodsName || firstGood.productName || "-";
-                  const selectedPaymentSource = selectedSourceLedger;
-                  const purchaseAccountPanel = {
-                    title: "Purchase Account (DR)",
-                    code: selectedForm.purchaseAccountNo || form.purchaseAccountNo || "-",
-                    manual: selectedForm.purchaseManualRef || selectedForm.purchaseManualReference || form.purchaseManualRef || form.purchaseManualReference || "-",
-                    name: selectedForm.purchaseAccountName || form.purchaseAccountName || "Purchase Account",
-                    company: selectedForm.purchaseCompanyName || form.purchaseCompanyName || form.purchaseAccountCompany || "-",
-                    branch: selectedForm.purchaseAccountBranch || form.purchaseAccountBranch || rowBranchName(selected) || "-",
-                    currency: selectedForm.purchaseAccountCurrency || form.purchaseAccountCurrency || poCurrency
-                  };
-                  const salesAccountPanel = {
-                    title: "Sales / Supplier Account (CR)",
-                    code: selectedForm.salesAccountNo || form.salesAccountNo || "-",
-                    manual: selectedForm.salesManualRef || selectedForm.salesManualReference || form.salesManualRef || form.salesManualReference || "-",
-                    name: selectedForm.salesAccountName || form.salesAccountName || "Sales Account",
-                    company: selectedForm.salesCompanyName || form.salesCompanyName || form.salesAccountCompany || "-",
-                    branch: selectedForm.salesAccountBranch || form.salesAccountBranch || rowBranchName(selected) || "-",
-                    currency: selectedForm.salesAccountCurrency || form.salesAccountCurrency || poCurrency
-                  };
-
-                  return (
-                    <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 shadow-sm overflow-hidden">
-                      {/* Header */}
-                      <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-slate-50/80 dark:bg-slate-900/60">
-                        <div className="flex items-center gap-2">
-                          <Landmark className="h-4 w-4 text-blue-500" />
-                          <h3 className="text-[11px] font-black tracking-wider uppercase text-slate-800 dark:text-slate-200">
-                            {fromLoading ? "2. Payment Entry History (Container Wise)" : "2. Payment Entry History (All Transactions)"}
-                          </h3>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-[9px] font-bold bg-blue-100 dark:bg-blue-950/50 text-blue-700 dark:text-blue-300 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-900">
-                            {historyWithBalance.length} Entry/Entries
-                          </span>
-                          {historyWithBalance[historyWithBalance.length - 1]?.showRemainUSD <= 0.01 && (
-                            <span className="text-[9px] font-black bg-emerald-500 text-white px-2 py-0.5 rounded-full uppercase tracking-wide">Fully Paid</span>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Account, goods and currency audit summary */}
-                      <div className="space-y-3 border-b border-slate-100 bg-slate-50/40 p-3 dark:border-slate-800 dark:bg-slate-900/20">
-                        <div className="grid gap-3 lg:grid-cols-4">
-                          {[purchaseAccountPanel, salesAccountPanel].map((panel) => (
-                            <div key={panel.title} className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                              <div className="mb-2 flex items-center justify-between gap-2">
-                                <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">{panel.title}</span>
-                                <span className="rounded-full bg-blue-50 px-2 py-0.5 font-mono text-[9px] font-black text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">{panel.currency}</span>
-                              </div>
-                              <div className="space-y-1 text-[10px]">
-                                <div className="flex justify-between gap-2"><span className="text-slate-400">Account</span><span className="text-right font-black text-slate-800 dark:text-slate-100">{panel.name}</span></div>
-                                <div className="flex justify-between gap-2"><span className="text-slate-400">Code</span><span className="font-mono font-bold text-slate-700 dark:text-slate-200">{panel.code}</span></div>
-                                <div className="flex justify-between gap-2"><span className="text-slate-400">Manual</span><span className="font-mono font-bold text-slate-700 dark:text-slate-200">{panel.manual}</span></div>
-                                <div className="flex justify-between gap-2"><span className="text-slate-400">Company</span><span className="text-right font-semibold text-slate-700 dark:text-slate-200">{panel.company}</span></div>
-                                <div className="flex justify-between gap-2"><span className="text-slate-400">Branch</span><span className="text-right font-semibold text-slate-700 dark:text-slate-200">{panel.branch}</span></div>
-                              </div>
-                            </div>
-                          ))}
-
-                          <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                            <div className="mb-2 text-[9px] font-black uppercase tracking-wider text-slate-500">Goods & Loading</div>
-                            <div className="space-y-1 text-[10px]">
-                              <div className="flex justify-between gap-2"><span className="text-slate-400">Goods</span><span className="text-right font-black text-slate-800 dark:text-slate-100">{goodsNames}</span></div>
-                              <div className="flex justify-between gap-2"><span className="text-slate-400">Brand</span><span className="font-semibold text-slate-700 dark:text-slate-200">{firstGood.brand || "-"}</span></div>
-                              <div className="flex justify-between gap-2"><span className="text-slate-400">Quantity</span><span className="font-mono font-bold">{(fromLoading ? cLoadedQty : goodsQuantity).toLocaleString()}</span></div>
-                              <div className="flex justify-between gap-2"><span className="text-slate-400">Gross WT</span><span className="font-mono font-bold">{(fromLoading ? cGrossWeight : goodsGrossWeight).toLocaleString()} KG</span></div>
-                              <div className="flex justify-between gap-2"><span className="text-slate-400">Net WT</span><span className="font-mono font-bold">{(fromLoading ? cNetWeight : goodsNetWeight).toLocaleString()} KG</span></div>
-                            </div>
-                          </div>
-
-                          <div className="rounded-xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                            <div className="mb-2 text-[9px] font-black uppercase tracking-wider text-slate-500">Payment Source / CR</div>
-                            <div className="space-y-1 text-[10px]">
-                              <div className="flex justify-between gap-2"><span className="text-slate-400">Account</span><span className="text-right font-black text-slate-800 dark:text-slate-100">{selectedPaymentSource ? ledgerName(selectedPaymentSource) : "-"}</span></div>
-                              <div className="flex justify-between gap-2"><span className="text-slate-400">Code</span><span className="font-mono font-bold text-slate-700 dark:text-slate-200">{selectedPaymentSource ? ledgerCode(selectedPaymentSource) : "-"}</span></div>
-                              <div className="flex justify-between gap-2"><span className="text-slate-400">Currency</span><span className="font-mono font-bold text-slate-700 dark:text-slate-200">{selectedPaymentSource ? ledgerCurrency(selectedPaymentSource) : baseCurrency}</span></div>
-                              <div className="flex justify-between gap-2"><span className="text-slate-400">Balance</span><span className="font-mono font-bold text-emerald-700 dark:text-emerald-400">{sourceBalanceText}</span></div>
-                              <div className="flex justify-between gap-2"><span className="text-slate-400">Posting</span><span className="font-semibold text-slate-700 dark:text-slate-200">DR Party / CR Source</span></div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Running Ledger Table */}
-                      <div className="max-h-[420px] overflow-auto">
-                        <table className="w-full min-w-[1320px] text-left text-xs border-collapse">
-                          <thead className="sticky top-0 z-10 bg-slate-50 dark:bg-slate-900 text-[9px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
-                            <tr>
-                              <Th className="px-3 py-2 text-center w-10">#</Th>
-                              <Th className="px-3 py-2">General Serial / Date</Th>
-                              <Th className="px-3 py-2">Reference / User</Th>
-                              <Th className="px-3 py-2">Debit & Credit Ledger Accounts</Th>
-                              <Th className="px-3 py-2 text-right">Advance Required ({poCurrency})</Th>
-                              <Th className="px-3 py-2 text-right">Received ({poCurrency})</Th>
-                              <Th className="px-3 py-2 text-right">Balance ({poCurrency})</Th>
-                              <Th className="px-3 py-2 text-right">Exchange Rate</Th>
-                              <Th className="px-3 py-2 text-right">Advance Required ({baseCurrency})</Th>
-                              <Th className="px-3 py-2 text-right">Received ({baseCurrency})</Th>
-                              <Th className="px-3 py-2 text-right">Balance ({baseCurrency})</Th>
-                              <Th className="px-3 py-2 text-right">Total Received</Th>
-                              <Th className="px-3 py-2 text-center w-12">Actions</Th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {historyWithBalance.map((payment: any) => {
-                              const drLedger = ledgers.find((l) => ledgerId(l) === payment.debit_ledger_id);
-                              const crLedger = ledgers.find((l) => ledgerId(l) === payment.credit_ledger_id);
-                              const re = payment.roznamcha_entries || {};
-                              const method = payment.typeDetails?.method || payment.payment_method || payment.typeDetails?.bankName || payment.bank_name || "-";
-                              const userName = payment.created_by_name || payment.audit?.userName || payment.typeDetails?.receiverSenderName || re.created_by_name || "Admin";
-                              const journalSerial = re.super_admin_serial_number || payment.super_admin_serial_number || "Pending";
-                              const countrySerial = re.country_transaction_serial_number || payment.country_transaction_serial_number || "-";
-                              const branchSerial = re.branch_transaction_serial_number || payment.branch_transaction_serial_number || "-";
-                              const debitSerialBase = String(re.debit_serial_number || payment.debit_serial_number || journalSerial || "Pending");
-                              const creditSerialBase = String(re.credit_serial_number || payment.credit_serial_number || journalSerial || "Pending");
-                              const debitSerial = debitSerialBase.endsWith("-DR") ? debitSerialBase : debitSerialBase + "-DR";
-                              const creditSerial = creditSerialBase.endsWith("-CR") ? creditSerialBase : creditSerialBase + "-CR";
-                              const drLabel = drLedger ? ledgerName(drLedger) : "-";
-                              const crLabel = crLedger ? ledgerName(crLedger) : "-";
-                              const isCompleted = payment.showRemainUSD <= 0.01;
-
-                              return (
-                                <tr
-                                  key={payment.id}
-                                  className={"border-b border-slate-100 dark:border-slate-800/60 text-xs transition " + (isCompleted ? "bg-emerald-50/20 dark:bg-emerald-950/5" : "hover:bg-slate-50/50 dark:hover:bg-slate-900/30")}
-                                >
-                                  <td className="px-3 py-2 text-center font-bold text-slate-700 dark:text-slate-300">{payment.paymentNo}</td>
-                                  <td className="px-3 py-2 whitespace-nowrap text-slate-600 dark:text-slate-400 font-semibold">
-                                    <div className="font-mono text-[10px] font-black text-slate-800 dark:text-slate-200">{journalSerial}</div>
-                                    <div className="text-[9px]">Country: {countrySerial}</div>
-                                    <div className="text-[9px]">Branch: {branchSerial}</div>
-                                    <div className="text-[9px] mt-1">{date(payment.entry_date || payment.created_at)}</div>
-                                  </td>
-                                  <td className="px-3 py-2 font-bold text-slate-700 dark:text-slate-300">
-                                    <div className="font-mono text-[9px] text-slate-500 dark:text-slate-400">Ref: {payment.reference_no || payment.roznamcha_number || payment.voucher_no || "-"}</div>
-                                    <div className="flex items-center gap-1 mt-1"><User className="h-3 w-3 text-slate-400" />{userName}</div>
-                                    <div className="text-[10px] mt-1">{payment.paymentTypeLabel}</div>
-                                    <div className="text-[8px] font-normal text-slate-400">Via {method}</div>
-                                  </td>
-                                  <td className="px-3 py-2 text-[10px] text-slate-600 dark:text-slate-300 min-w-[210px]">
-                                    <div className="rounded-lg border border-blue-100 dark:border-blue-900 bg-blue-50/70 dark:bg-blue-950/20 px-2 py-1">
-                                      <div className="inline-flex items-center rounded-full bg-blue-600 px-2 py-0.5 font-mono text-[8px] font-black text-white shadow-sm">DR Serial: {debitSerial}</div>
-                                      <div className="font-bold text-blue-700 dark:text-blue-400">DR: {drLabel}</div>
-                                    </div>
-                                    <div className="mt-1 rounded-lg border border-rose-100 dark:border-rose-900 bg-rose-50/70 dark:bg-rose-950/20 px-2 py-1">
-                                      <div className="inline-flex items-center rounded-full bg-rose-600 px-2 py-0.5 font-mono text-[8px] font-black text-white shadow-sm">CR Serial: {creditSerial}</div>
-                                      <div className="font-bold text-rose-700 dark:text-rose-400">CR: {crLabel}</div>
-                                    </div>
-                                  </td>
-                                  <td className="px-3 py-2 text-right font-mono font-extrabold text-slate-800 dark:text-slate-200">{money(statementPurchaseForeign, poCurrency)}</td>
-                                  <td className="px-3 py-2 text-right font-mono font-extrabold text-emerald-700 dark:text-emerald-400">{money(payment.amtUSD, poCurrency)}</td>
-                                  <td className="px-3 py-2 text-right font-mono font-extrabold text-rose-600 dark:text-rose-400">{money(payment.showRemainUSD, poCurrency)}</td>
-                                  <td className="px-3 py-2 text-right font-mono font-extrabold text-slate-700 dark:text-slate-300">{Number(payment.exchange_rate || exRate || 1).toLocaleString(undefined, { maximumFractionDigits: 6 })}</td>
-                                  <td className="px-3 py-2 text-right font-mono font-extrabold text-slate-800 dark:text-slate-200">{money(statementPurchaseLocal, baseCurrency)}</td>
-                                  <td className="px-3 py-2 text-right font-mono font-extrabold text-emerald-700 dark:text-emerald-400">{money(payment.amtAED, baseCurrency)}</td>
-                                  <td className="px-3 py-2 text-right font-mono font-extrabold text-rose-600 dark:text-rose-400">{money(payment.showRemainAED, baseCurrency)}</td>
-                                  <td className="px-3 py-2 text-right font-mono font-extrabold text-blue-600 dark:text-blue-400">
-                                    <div>{money(payment.runningTotalUSD, poCurrency)}</div>
-                                    <div className="text-[9px] text-blue-500">{money(payment.runningTotalAED, baseCurrency)}</div>
-                                  </td>
-                                  <td className="px-3 py-2 text-center">
-                                    <NestedRowActions payment={payment} row={selected} ledgers={ledgers} localCurrency={baseCurrency} />
-                                  </td>
-                                </tr>
-                              );
-                            })}
-                          </tbody>
-                          <tfoot>
-                            <tr className="bg-slate-100 dark:bg-slate-900 border-t-2 border-slate-300 dark:border-slate-700 text-xs font-black text-slate-700 dark:text-slate-300">
-                              <td colSpan={5} className="px-3 py-2 uppercase tracking-wide text-center">Totals</td>
-                              <td className="px-3 py-2 text-right font-mono text-emerald-700 dark:text-emerald-400 font-black">{money(historyWithBalance.reduce((sum: number, p: any) => sum + p.amtUSD, 0), poCurrency)}</td>
-                              <td className="px-3 py-2 text-right font-mono text-rose-600 dark:text-rose-400 font-black">{money(historyWithBalance[historyWithBalance.length - 1]?.showRemainUSD || 0, poCurrency)}</td>
-                              <td />
-                              <td />
-                              <td className="px-3 py-2 text-right font-mono text-emerald-700 dark:text-emerald-400 font-black">{money(historyWithBalance.reduce((sum: number, p: any) => sum + p.amtAED, 0), baseCurrency)}</td>
-                              <td className="px-3 py-2 text-right font-mono text-rose-600 dark:text-rose-400 font-black">{money(historyWithBalance[historyWithBalance.length - 1]?.showRemainAED || 0, baseCurrency)}</td>
-                              <td className="px-3 py-2 text-right font-mono text-blue-700 dark:text-blue-400 font-black">{money(historyWithBalance[historyWithBalance.length - 1]?.runningTotalUSD || 0, poCurrency)}</td>
-                              <td />
-                            </tr>
-                          </tfoot>
-                        </table>
-                      </div>
-                      <div className="grid gap-3 border-t border-slate-100 bg-slate-50/60 p-3 dark:border-slate-800 dark:bg-slate-900/20 lg:grid-cols-2">
-                        <div className="rounded-xl border border-blue-200 bg-white shadow-sm dark:border-blue-900/60 dark:bg-slate-950">
-                          <div className="flex items-center justify-between border-b border-blue-100 px-3 py-2 dark:border-blue-900/60">
-                            <div>
-                              <div className="text-[11px] font-black uppercase tracking-[0.14em] text-blue-700 dark:text-blue-300">Debit Entries</div>
-                              <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Purchase side ledger postings</div>
-                            </div>
-                            <span className="rounded-full bg-blue-600 px-2 py-1 text-[10px] font-black text-white">DR</span>
-                          </div>
-                          <div className="max-h-[220px] overflow-auto">
-                            <table className="w-full min-w-[620px] text-[10px]">
-                              <thead className="sticky top-0 bg-blue-50 text-left uppercase tracking-[0.08em] text-blue-800 dark:bg-blue-950/40 dark:text-blue-200">
-                                <tr>
-                                  <Th className="px-3 py-2">Serial / Date</Th>
-                                  <Th className="px-3 py-2">Debit Account</Th>
-                                  <Th className="px-3 py-2 text-right">Amount ({poCurrency})</Th>
-                                  <Th className="px-3 py-2 text-right">Amount ({baseCurrency})</Th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                {historyWithBalance.map((payment: any) => {
-                                  const drLedger = ledgers.find((l) => ledgerId(l) === payment.debit_ledger_id);
-                                  const entry = payment.roznamcha_entries || {};
-                                  const rawSerial = String(entry.debit_serial_number || payment.debit_serial_number || entry.super_admin_serial_number || payment.super_admin_serial_number || "Pending");
-                                  const serial = rawSerial.endsWith("-DR") ? rawSerial : `${rawSerial}-DR`;
-                                  return (
-                                    <tr key={`debit-entry-${payment.id}`} className="hover:bg-blue-50/60 dark:hover:bg-blue-950/20">
-                                      <td className="px-3 py-2 font-mono text-slate-600 dark:text-slate-300">
-                                        <div className="font-black text-blue-700 dark:text-blue-300">{serial}</div>
-                                        <div className="text-[9px]">{date(payment.payment_date || payment.created_at)}</div>
-                                      </td>
-                                      <td className="px-3 py-2">
-                                        <div className="font-black text-slate-800 dark:text-slate-100">{ledgerName(drLedger)}</div>
-                                        <div className="font-mono text-[9px] text-slate-500">{ledgerCode(drLedger) || payment.debit_ledger_id || "-"}</div>
-                                      </td>
-                                      <td className="px-3 py-2 text-right font-mono font-black text-blue-700 dark:text-blue-300">{money(payment.amtUSD, poCurrency)}</td>
-                                      <td className="px-3 py-2 text-right font-mono font-black text-blue-700 dark:text-blue-300">{money(payment.amtAED, baseCurrency)}</td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                        <div className="rounded-xl border border-rose-200 bg-white shadow-sm dark:border-rose-900/60 dark:bg-slate-950">
-                          <div className="flex items-center justify-between border-b border-rose-100 px-3 py-2 dark:border-rose-900/60">
-                            <div>
-                              <div className="text-[11px] font-black uppercase tracking-[0.14em] text-rose-700 dark:text-rose-300">Credit Entries</div>
-                              <div className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">Payment source ledger postings</div>
-                            </div>
-                            <span className="rounded-full bg-rose-600 px-2 py-1 text-[10px] font-black text-white">CR</span>
-                          </div>
-                          <div className="max-h-[220px] overflow-auto">
-                            <table className="w-full min-w-[620px] text-[10px]">
-                              <thead className="sticky top-0 bg-rose-50 text-left uppercase tracking-[0.08em] text-rose-800 dark:bg-rose-950/40 dark:text-rose-200">
-                                <tr>
-                                  <Th className="px-3 py-2">Serial / Date</Th>
-                                  <Th className="px-3 py-2">Credit Account</Th>
-                                  <Th className="px-3 py-2 text-right">Amount ({poCurrency})</Th>
-                                  <Th className="px-3 py-2 text-right">Amount ({baseCurrency})</Th>
-                                </tr>
-                              </thead>
-                              <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                                {historyWithBalance.map((payment: any) => {
-                                  const crLedger = ledgers.find((l) => ledgerId(l) === payment.credit_ledger_id);
-                                  const entry = payment.roznamcha_entries || {};
-                                  const rawSerial = String(entry.credit_serial_number || payment.credit_serial_number || entry.super_admin_serial_number || payment.super_admin_serial_number || "Pending");
-                                  const serial = rawSerial.endsWith("-CR") ? rawSerial : `${rawSerial}-CR`;
-                                  return (
-                                    <tr key={`credit-entry-${payment.id}`} className="hover:bg-rose-50/60 dark:hover:bg-rose-950/20">
-                                      <td className="px-3 py-2 font-mono text-slate-600 dark:text-slate-300">
-                                        <div className="font-black text-rose-700 dark:text-rose-300">{serial}</div>
-                                        <div className="text-[9px]">{date(payment.payment_date || payment.created_at)}</div>
-                                      </td>
-                                      <td className="px-3 py-2">
-                                        <div className="font-black text-slate-800 dark:text-slate-100">{ledgerName(crLedger)}</div>
-                                        <div className="font-mono text-[9px] text-slate-500">{ledgerCode(crLedger) || payment.credit_ledger_id || "-"}</div>
-                                      </td>
-                                      <td className="px-3 py-2 text-right font-mono font-black text-rose-700 dark:text-rose-300">{money(payment.amtUSD, poCurrency)}</td>
-                                      <td className="px-3 py-2 text-right font-mono font-black text-rose-700 dark:text-rose-300">{money(payment.amtAED, baseCurrency)}</td>
-                                    </tr>
-                                  );
-                                })}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-
-              {/* Payment Entry Form */}
-              <div className="xl:col-span-7 space-y-4">
-                {/* Payment Input Form */}
-                {isSuperAdmin && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <FieldBlock label={currentLanguage === "en" ? "Country (Super Admin)" : "ملک (سپر ایڈمن)"} required={false}>
-                      <SearchableSelect
-                        value={saCountryId}
-                        onChange={(val) => {
-                          setSaCountryId(val);
-                          setSaBranchId("");
-                          setPaymentSourceLedgerId("");
-                        }}
-                        options={[
-                          { label: currentLanguage === "en" ? "-- All Countries --" : "-- تمام ممالک --", value: "" },
-                          ...saCountries.map(c => ({ label: tData(c.name, currentLanguage), value: c.id }))
-                        ]}
-                        placeholder={currentLanguage === "en" ? "-- All Countries --" : "-- تمام ممالک --"}
-                        className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100"
-                      />
-                    </FieldBlock>
-                    <FieldBlock label={currentLanguage === "en" ? "Branch (Super Admin)" : "برانچ (سپر ایڈمن)"} required={false}>
-                      <SearchableSelect
-                        value={saBranchId}
-                        onChange={(val) => {
-                          setSaBranchId(val);
-                          setPaymentSourceLedgerId("");
-                        }}
-                        options={[
-                          { label: currentLanguage === "en" ? "-- All Branches --" : "-- تمام برانچز --", value: "" },
-                          ...saBranches.filter(b => b.country_id === saCountryId || b.country_id === undefined).map(b => ({ label: tData(b.name, currentLanguage), value: b.id }))
-                        ]}
-                        placeholder={currentLanguage === "en" ? "-- All Branches --" : "-- تمام برانچز --"}
-                        disabled={!saCountryId}
-                        className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100"
-                      />
-                    </FieldBlock>
-                  </div>
-                )}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FieldBlock label={t("payment_source_account", currentLanguage)} required>
-                    <SearchSelect
-                      label=""
-                      value={paymentSourceLedgerId}
-                      placeholder={currentLanguage === "en" ? "Search Payment Source Account..." : "ادائیگی کا سورس اکاؤنٹ تلاش کریں..."}
-                      options={ledgerOptions}
-                      disabled={loading}
-                      onValueChange={(val) => {
-                        setPaymentSourceLedgerId(val);
-                        // Sync account -> Category & Type
-                        const led = ledgers.find((l) => ledgerId(l) === val);
-                        if (led) {
-                          const name = ledgerName(led).toLowerCase();
-                          const code = ledgerCode(led).toLowerCase();
-                          if (name.includes("cash") || code.includes("cash")) {
-                            setPaymentType("cash");
-                            setRoznamchaType("Cash Book No.");
-                          } else if (name.includes("bank") || code.includes("bank")) {
-                            setPaymentType("bank");
-                            setRoznamchaType("Roznamcha Book No.");
-                          }
-                        }
-                      }}
-                    />
-                    {selectedSourceLedger && (
-                      <div className="mt-1 text-[10px] font-semibold text-slate-500 flex justify-between">
-                        <span>{currentLanguage === "en" ? "Balance: " : "بیلنس: "}{sourceBalanceText}</span>
-                        <span>{currentLanguage === "en" ? "Currency: " : "کرنسی: "}{selectedSourceLedger.currency || baseCurrency}</span>
-                      </div>
-                    )}
-                  </FieldBlock>
-
-                  <FieldBlock label={t("roznamcha_type_label", currentLanguage)} required>
-                    <SearchableSelect
-                      value={roznamchaType}
-                      onChange={(val) => {
-                        setRoznamchaType(val);
-                        if (val === "Cash Book No.") {
-                          setPaymentType("cash");
-                          const cashLed = ledgers.find((l) => ledgerName(l).toLowerCase().includes("cash") || ledgerCode(l).toLowerCase().includes("cash"));
-                          if (cashLed) setPaymentSourceLedgerId(ledgerId(cashLed) || "");
-                        } else if (val === "Roznamcha Book No.") {
-                          setPaymentType("bank");
-                          const bankLed = ledgers.find((l) => ledgerName(l).toLowerCase().includes("bank") || ledgerCode(l).toLowerCase().includes("bank"));
-                          if (bankLed) setPaymentSourceLedgerId(ledgerId(bankLed) || "");
-                        }
-                      }}
-                      options={[
-                        { label: currentLanguage === "en" ? "Cash Book No." : "کیش بک نمبر", value: "Cash Book No." },
-                        { label: currentLanguage === "en" ? "Roznamcha Book No." : "روزنامچہ بک نمبر", value: "Roznamcha Book No." },
-                        { label: currentLanguage === "en" ? "Receipt No." : "رسید نمبر", value: "Receipt No." }
-                      ]}
-                      placeholder={currentLanguage === "en" ? "Select Type" : "قسم منتخب کریں"}
-                      className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100"
-                    />
-                  </FieldBlock>
-
-                  <FieldBlock label={t("roznamcha_number_label", currentLanguage)} required>
-                    <Input
-                      className="h-9 text-xs font-semibold w-full"
-                      value={roznamchaNumber}
-                      onChange={(e) => setRoznamchaNumber(e.target.value)}
-                      placeholder="e.g. 000123"
-                    />
-                  </FieldBlock>
-
-                  <FieldBlock label={t("payment_date_label", currentLanguage)} required>
-                    <Input
-                      className="h-9 text-xs font-semibold w-full"
-                      type="date"
-                      value={paymentDate}
-                      onChange={(e) => setPaymentDate(e.target.value)}
-                    />
-                  </FieldBlock>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <FieldBlock label={t("roznamcha_category_label", currentLanguage)} required>
-                    <SearchableSelect
-                      value={paymentType}
-                      onChange={(val) => {
-                        const value = val as any;
-                        setPaymentType(value);
-                        setTypeDetails({});
-                        setAttachmentFile(null);
-                        setFinalPayment("");
-
-                        // Sync Category -> Type and Source Account
-                        if (value === "cash") {
-                          setRoznamchaType("Cash Book No.");
-                          const cashLed = ledgers.find((l) => ledgerName(l).toLowerCase().includes("cash") || ledgerCode(l).toLowerCase().includes("cash"));
-                          if (cashLed) setPaymentSourceLedgerId(ledgerId(cashLed) || "");
-                        } else if (value === "bank") {
-                          setRoznamchaType("Roznamcha Book No.");
-                          const bankLed = ledgers.find((l) => ledgerName(l).toLowerCase().includes("bank") || ledgerCode(l).toLowerCase().includes("bank"));
-                          if (bankLed) setPaymentSourceLedgerId(ledgerId(bankLed) || "");
-                        }
-                      }}
-                      options={[
-                        { label: currentLanguage === "en" ? "Select Category" : "زمرہ منتخب کریں", value: "" },
-                        { label: currentLanguage === "en" ? "Cash Roznamcha" : "کیش روزنامچہ", value: "cash" },
-                        { label: currentLanguage === "en" ? "Bank Roznamcha" : "بینک روزنامچہ", value: "bank" },
-                        { label: currentLanguage === "en" ? "Business Roznamcha" : "بزنس روزنامچہ", value: "business" },
-                        { label: currentLanguage === "en" ? "Invoice Journal" : "انکوائس جرنل", value: "invoice" },
-                        { label: currentLanguage === "en" ? "Transfer" : "منتقلی", value: "transfer" }
-                      ]}
-                      placeholder={currentLanguage === "en" ? "Select Category" : "زمرہ منتخب کریں"}
-                      className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100"
-                    />
-                  </FieldBlock>
-
-                  <FieldBlock label={t("currency_label", currentLanguage)} required>
-                    <SearchableSelect
-                      value={currency}
-                      onChange={(val) => setCurrency(val)}
-                      options={[
-                        { label: "USD", value: "USD" },
-                        { label: "AED", value: "AED" },
-                        { label: "PKR", value: "PKR" },
-                        { label: "INR", value: "INR" },
-                        { label: "AFN", value: "AFN" },
-                        { label: "IRR", value: "IRR" }
-                      ]}
-                      placeholder={currentLanguage === "en" ? "Select Currency" : "کرنسی منتخب کریں"}
-                      className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100"
-                    />
-                  </FieldBlock>
-                </div>
-
-                {/* Dynamic Type Panel */}
-                {paymentType && (
-                  <div className="rounded-lg border bg-slate-50/50 p-3 dark:bg-slate-900/20">
-                    <div className="mb-2 text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
-                      {paymentType === "cash" && (currentLanguage === "en" ? "Cash Details" : "کیش کی تفصیلات")}
-                      {paymentType === "bank" && (currentLanguage === "en" ? "Bank Details" : "بینک کی تفصیلات")}
-                      {paymentType === "business" && (currentLanguage === "en" ? "Business Details" : "بزنس کی تفصیلات")}
-                      {paymentType === "invoice" && (currentLanguage === "en" ? "Invoice Details" : "انکوائس کی تفصیلات")}
-                      {paymentType === "transfer" && (currentLanguage === "en" ? "Transfer Details" : "منتقلی کی تفصیلات")}
-                    </div>
-                    
-                    {paymentType === "cash" && (
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <FieldBlock label={t("receiver_sender_name", currentLanguage)}>
-                          <Input className="h-9 text-xs font-semibold" value={typeDetails.receiverSenderName || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, receiverSenderName: e.target.value }))} placeholder={currentLanguage === "en" ? "Receiver or sender name" : "وصول کنندہ یا بھیجنے والے کا نام"} />
-                        </FieldBlock>
-                        <FieldBlock label={t("mobile_number", currentLanguage)}>
-                          <Input className="h-9 text-xs font-semibold" value={typeDetails.mobileNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, mobileNumber: e.target.value }))} placeholder="03xxxxxxxxx" />
-                        </FieldBlock>
-                        <FieldBlock label={t("whatsapp_number", currentLanguage)}>
-                          <Input className="h-9 text-xs font-semibold" value={typeDetails.whatsappNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, whatsappNumber: e.target.value }))} placeholder="03xxxxxxxxx" />
-                        </FieldBlock>
-                        <FieldBlock label={t("id_card_copy_upload", currentLanguage)}>
-                          <div className="flex items-center gap-2">
-                            <Label className="cursor-pointer flex w-max items-center justify-center h-8 px-3 rounded-full bg-slate-100 hover:bg-slate-200 border text-slate-500 shadow-sm transition gap-1.5 text-[10px] font-semibold">
-                              <Paperclip className="h-3 w-3" />
-                              <span>{currentLanguage === "en" ? "Attach" : "منسلک کریں"}</span>
-                              <Input
-                                type="file"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0] ?? null;
-                                  setAttachmentFile(file);
-                                  setTypeDetails((p) => ({ ...p, idCardCopyName: file?.name || "" }));
-                                }}
-                              />
-                            </Label>
-                            {typeDetails.idCardCopyName && <span className="text-[10px] font-mono text-slate-500 bg-slate-50 px-2 py-1.5 rounded border truncate max-w-[200px]">{typeDetails.idCardCopyName}</span>}
-                          </div>
-                        </FieldBlock>
-                      </div>
-                    )}
-
-                    {paymentType === "bank" && (
-                      <div className="space-y-3">
-                        <div className="space-y-1 relative z-[46]">
-                          <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                            {currentLanguage === "en" ? "Bank Name" : "بینک کا نام"}
-                          </span>
-                          <SearchableSelect
-                            value={typeDetails.bankName || ""}
-                            onChange={(val) => {
-                              if (val === "__ADD_NEW__") {
-                                openAddOption("bank");
-                              } else {
-                                setTypeDetails((prev) => ({ ...prev, bankName: val }));
-                              }
-                            }}
-                            options={[
-                              { label: currentLanguage === "en" ? "Select Bank" : "بینک منتخب کریں", value: "" },
-                              ...(selected ? getCountryBankList(rowCountryName(selected)) : getCountryBankList(session?.countryName || "")).map((bank) => ({ label: bank, value: bank })),
-                              ...savedBanks.map((bank) => ({ label: bank.name, value: bank.name }))
-                            ]}
-                            placeholder={currentLanguage === "en" ? "Select Bank" : "بینک منتخب کریں"}
-                            addOptionLabel={currentLanguage === "en" ? "New Bank" : "نیا بینک"}
-                            className="text-xs font-semibold text-slate-800 dark:text-slate-100"
-                          />
-                        </div>
-
-                        <div className="space-y-1 relative z-[46]">
-                          <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                            {currentLanguage === "en" ? "Payment Method" : "ادائیگی کا طریقہ"}
-                          </span>
-                          <SearchableSelect
-                            value={typeDetails.method || ""}
-                            onChange={(val) => {
-                              if (val === "__ADD_NEW__") {
-                                openAddOption("method");
-                              } else {
-                                setTypeDetails((prev) => ({ ...prev, method: val }));
-                              }
-                            }}
-                            options={[
-                              { label: currentLanguage === "en" ? "Select Method" : "طریقہ منتخب کریں", value: "" },
-                              ...["Cheque", "Mobile Transfer", "Online Transfer", "Bank Transfer"].map((method) => ({ label: method, value: method })),
-                              ...savedMethods.map((method) => ({ label: method, value: method }))
-                            ]}
-                            placeholder={currentLanguage === "en" ? "Select Method" : "طریقہ منتخب کریں"}
-                            addOptionLabel={currentLanguage === "en" ? "New Method" : "نیا طریقہ"}
-                            className="text-xs font-semibold text-slate-800 dark:text-slate-100"
-                          />
-                        </div>
-
-                        <div className="grid gap-3 grid-cols-2">
-                          <FieldBlock label={currentLanguage === "en" ? "Reference No." : "حوالہ نمبر"}>
-                            <Input
-                              className="h-9 text-xs font-semibold w-full"
-                              value={typeDetails.refNo || ""}
-                              onChange={(e) => setTypeDetails((prev) => ({ ...prev, refNo: e.target.value }))}
-                              placeholder={currentLanguage === "en" ? "Cheque/Mobile transaction number" : "چیک یا ٹرانزیکشن نمبر"}
-                            />
-                          </FieldBlock>
-                          <FieldBlock label={t("payment_date_label", currentLanguage)} required>
-                            <Input
-                              className="h-9 text-xs font-semibold w-full"
-                              type="date"
-                              required
-                              value={typeDetails.payDate || paymentDate}
-                              onChange={(e) => setTypeDetails((prev) => ({ ...prev, payDate: e.target.value }))}
-                            />
-                          </FieldBlock>
-                        </div>
-
-                        <FieldBlock label={currentLanguage === "en" ? "Attachment Upload" : "فائل منسلک اپ لوڈ"}>
-                          <div className="flex items-center gap-2">
-                            <Label className="cursor-pointer flex w-max items-center justify-center h-8 px-3 rounded-full bg-slate-100 hover:bg-slate-200 border text-slate-500 shadow-sm transition gap-1.5 text-[10px] font-semibold">
-                              <Paperclip className="h-3 w-3" />
-                              <span>{currentLanguage === "en" ? "Attach" : "منسلک کریں"}</span>
-                              <Input
-                                type="file"
-                                className="hidden"
-                                onChange={(e) => {
-                                  const file = e.target.files?.[0] ?? null;
-                                  setAttachmentFile(file);
-                                  setTypeDetails((p) => ({ ...p, bankAttachmentName: file?.name || "" }));
-                                }}
-                              />
-                            </Label>
-                            {typeDetails.bankAttachmentName && <span className="text-[10px] font-mono text-slate-500 bg-slate-50 px-2 py-1.5 rounded border truncate max-w-[150px]">{typeDetails.bankAttachmentName}</span>}
-                          </div>
-                        </FieldBlock>
-                      </div>
-                    )}
-
-                    {(paymentType === "business" || paymentType === "invoice") && (
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <FieldBlock label={currentLanguage === "en" ? "Invoice Number" : "انوائس نمبر"}>
-                          <Input className="h-9 text-xs font-semibold" value={typeDetails.invoiceNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, invoiceNumber: e.target.value }))} placeholder="Invoice number" />
-                        </FieldBlock>
-                        <FieldBlock label={currentLanguage === "en" ? "Purchase Information" : "خریداری کی معلومات"}>
-                          <Input className="h-9 text-xs font-semibold" value={typeDetails.purchaseInfo || typeDetails.businessName || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, purchaseInfo: e.target.value, businessName: e.target.value }))} placeholder="Purchase information" />
-                        </FieldBlock>
-                      </div>
-                    )}
-
-                    {paymentType === "transfer" && (
-                      <div className="grid gap-3 md:grid-cols-2">
-                        <FieldBlock label={currentLanguage === "en" ? "From" : "سے"}>
-                          <Input className="h-9 text-xs font-semibold" value={typeDetails.from || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, from: e.target.value }))} placeholder="From account" />
-                        </FieldBlock>
-                        <FieldBlock label={currentLanguage === "en" ? "To" : "کو"}>
-                          <Input className="h-9 text-xs font-semibold" value={typeDetails.to || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, to: e.target.value }))} placeholder="To account" />
-                        </FieldBlock>
-                        <FieldBlock label={currentLanguage === "en" ? "Reference" : "حوالہ"} className="md:col-span-2">
-                          <Input className="h-9 text-xs font-semibold" value={typeDetails.ref || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, ref: e.target.value }))} placeholder="Reference" />
-                        </FieldBlock>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {/* Currency Rate / Calculations */}
-                {currency && showCalcPanel && (
-                  <div className="rounded-lg border bg-slate-50/50 p-3 dark:bg-slate-900/20">
-                    <div className="mb-2 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                      {t("transaction_conversion_details", currentLanguage)} ({selected?.currency_code || "USD"} ➔ {baseCurrency})
-                    </div>
-                    <div className="grid gap-3 md:grid-cols-3">
-                      <FieldBlock label={`${t("purchase_currency_amount", currentLanguage)} (${selected?.currency_code || "USD"})`} required>
-                        <Input className="h-9 text-xs font-semibold" value={calcAmount} onChange={(e) => setCalcAmount(e.target.value)} type="number" step="0.0001" min="0" placeholder="e.g. 100" />
-                      </FieldBlock>
-                      <FieldBlock label={t("exchange_rate_label", currentLanguage)} required>
-                        <Input className="h-9 text-xs font-semibold" value={exchangeRate} onChange={(e) => setExchangeRate(e.target.value)} type="number" step="0.0001" min="0" disabled={selected?.currency_code === baseCurrency && currency === baseCurrency} />
-                      </FieldBlock>
-                      <FieldBlock label={t("operation_label", currentLanguage)}>
-                        <select
-                          className="h-9 w-full rounded-md border border-input bg-background px-2 text-xs font-semibold outline-none"
-                          value={calcOp}
-                          onChange={(e) => setCalcOp(e.target.value as any)}
-                        >
-                          <option value="mul">{currentLanguage === "en" ? "Multiply (*)" : "ضرب کریں (*)"}</option>
-                          <option value="div">{currentLanguage === "en" ? "Divide (/)" : "تقسیم کریں (/)"}</option>
-                        </select>
-                      </FieldBlock>
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid gap-4 md:grid-cols-2">
-                  <FieldBlock label={`${t("final_local_amount", currentLanguage)} (${baseCurrency})`} required>
-                    <div className="relative">
-                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">
-                        {baseCurrency}
-                      </span>
-                      <Input
-                        className="h-9 pl-12 text-right text-xs font-black font-mono"
-                        value={showCalcPanel && calcFinal !== null ? calcFinal.toFixed(2) : finalPayment}
-                        onChange={(e) => setFinalPayment(e.target.value)}
-                        placeholder="0.00"
-                        type="number"
-                        step="0.01"
-                        min="0"
-                        disabled={showCalcPanel && calcFinal !== null}
-                      />
-                    </div>
-                    {suggestedAdvance > 0 && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const rate = Number(exchangeRate || 1);
-                          setFinalPayment((suggestedAdvance * rate).toFixed(2));
-                          setCalcAmount(suggestedAdvance.toFixed(2));
-                        }}
-                        className="text-[10px] text-primary font-semibold hover:underline mt-1 block"
-                      >
-                        {t("use_suggested", currentLanguage)}: {money(suggestedAdvance, currency)} / {money(suggestedAdvance * Number(exchangeRate || 1), baseCurrency)}
-                      </button>
-                    )}
-                  </FieldBlock>
-
-                  <div className="space-y-1">
-                    <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      {t("transaction_entry_preview", currentLanguage)}
-                    </span>
-                    <div className="h-9 flex items-center px-3 rounded-lg border border-indigo-400/40 bg-indigo-500/10 text-indigo-600 font-bold text-xs uppercase truncate">
-                      {currentLanguage === "en"
-                        ? `🔵 Balanced entry — Dr: ${doubleEntry.debitCode} / Cr: ${doubleEntry.creditCode}`
-                        : `🔵 متوازن انٹری — ڈیبٹ: ${doubleEntry.debitCode} / کریڈٹ: ${doubleEntry.creditCode}`}
-                    </div>
-                  </div>
-                </div>
-
-                <FieldBlock label={t("comments_label", currentLanguage)}>
-                  <textarea
-                    rows={3}
-                    className="flex w-full rounded-md border border-input bg-background px-3 py-2 text-xs font-semibold ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                    value={remarks}
-                    onChange={(e) => setRemarks(e.target.value)}
-                    placeholder={currentLanguage === "en" ? "Manually add additional descriptions, comments, explanations, or transaction notes..." : "تفصیلات، کمنٹس، وضاحت، یا ٹرانزیکشن نوٹس شامل کریں..."}
-                  />
-                </FieldBlock>
-
-                {activeMode === "remaining" && !fromLoading && selected && (
-                  <div className="rounded-xl border border-amber-200 bg-amber-50/80 p-3 text-xs text-amber-900 flex items-center justify-between gap-3 dark:border-amber-900/50 dark:bg-amber-950/30 dark:text-amber-200 mb-3">
-                    <div className="flex items-center gap-2">
-                      <Info className="h-4 w-4 shrink-0 text-amber-600" />
-                      <div>
-                        <span className="font-bold">{currentLanguage === "en" ? "Standard ERP Process: " : "معیاری ERP کا طریقہ: "}</span>
-                        <span>{currentLanguage === "en" ? "1. Advance Journal ➔ 2. Purchase Loading Records ➔ 3. Remaining Journal" : "1. ایڈوانس جرنل ➔ 2. پرچیز لوڈنگ ریکارڈز ➔ 3. ریمیننگ بل جرنل"}</span>
-                      </div>
-                    </div>
-                    <Button
-                      type="button"
-                      size="sm"
-                      variant="outline"
-                      onClick={() => router.push(`/dashboard/purchase/purchase-loading-records?purchaseOrderNo=${encodeURIComponent(selected.purchase_order_no)}`)}
-                      className="h-7 px-2.5 text-[10px] font-bold uppercase tracking-wider bg-white hover:bg-amber-100 dark:bg-amber-950 border-amber-300 shrink-0"
-                    >
-                      <Ship className="h-3 w-3 mr-1" />
-                      {currentLanguage === "en" ? "Open Loading Records ➔" : "لوڈنگ ریکارڈز پر جائیں ➔"}
-                    </Button>
-                  </div>
-                )}
-
-                {/* Summary & Action */}
-                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-2 border-t border-border">
-                  <div className="text-xs space-y-0.5 text-muted-foreground">
-                    <div>
-                      <span className="font-bold text-foreground">{currentLanguage === "en" ? "Posting: " : "پوسٹنگ: "}</span>
-                      <><span className="font-bold text-indigo-600">DR</span> {doubleEntry.debitName} ({doubleEntry.debitCode}) / <span className="font-bold text-violet-600">CR</span> {doubleEntry.creditName} ({doubleEntry.creditCode})</>
-                    </div>
-                    <div><span className="font-bold text-foreground">{currentLanguage === "en" ? "Amount: " : "رقم: "}</span>{amount ? money(amount, baseCurrency) : "—"}</div>
-                    {selected && (
-                      <div className="mt-1">
-                        {(() => {
-                          const form = selected.form_data?.form || {};
-                          const totalPrice = (selected as any).form_data?.goodsEntries?.length
-                            ? (selected as any).form_data.goodsEntries.reduce((sum: number, g: any) => sum + Number(g.totalAmount || 0), 0)
-                            : Number(form.totalAmount || 0);
-                          const advancePercent = Number(form.advancePercent || 0);
-                          const requiredAdvanceBC = (totalPrice * advancePercent) / 100;
-                          const paidAdvanceBC = Number(selected.advance_paid || 0);
-                          const remainingAdvanceBC = Math.max(0, requiredAdvanceBC - paidAdvanceBC);
-                          const remainingDue = Number(selected.remaining_due || 0);
-
-                          if (activeMode === "advance") {
-                            const displayAdvance = remainingAdvanceBC > 0 ? remainingAdvanceBC : remainingDue;
-                            return (
-                              <div className="flex flex-col gap-1">
-                                <div>
-                                  <span className="font-bold text-foreground">
-                                    {currentLanguage === "en"
-                                      ? (remainingAdvanceBC > 0 ? "Remaining Advance to Pay: " : "Remaining Balance for Advance/Endorsement: ")
-                                      : (remainingAdvanceBC > 0 ? "باقی ایڈوانس ادائیگی: " : "باقی بل رقم (ایڈوانس/انڈورسمنٹ): ")}
-                                  </span>
-                                  <span className="font-extrabold text-rose-600">
-                                    {money(displayAdvance, selected.currency_code ?? "USD")} ({money(displayAdvance * (selected.exchange_rate || 1), baseCurrency)})
-                                  </span>
-                                </div>
-                                <div className="text-[10px]">
-                                  <span className="font-bold text-muted-foreground">{currentLanguage === "en" ? "Total Remaining Bill: " : "کل بقایا بل: "}</span>
-                                  <span className="font-bold text-slate-500">
-                                    {money(remainingDue, selected.currency_code ?? "USD")} ({money(remainingDue * (selected.exchange_rate || 1), baseCurrency)})
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          } else {
-                            return (
-                              <div>
-                                <span className="font-bold text-foreground">{currentLanguage === "en" ? "Remaining Bill Balance (Baqaya): " : "باقی بل بقایا: "}</span>
-                                <span className="font-extrabold text-rose-600">
-                                  {money(remainingDue, selected.currency_code ?? "USD")} ({money(remainingDue * (selected.exchange_rate || 1), baseCurrency)})
-                                </span>
-                              </div>
-                            );
-                          }
-                        })()}
-                      </div>
-                    )}
-                  </div>
-
-                  <Button
-                    type="button"
-                    onClick={handleProcessPayment}
-                    disabled={processingPayment || !amount || !canSave}
-                    className="h-10 px-6 font-bold text-xs uppercase shadow-md transition bg-indigo-600 hover:bg-indigo-700 text-white"
-                  >
-                    {processingPayment ? (currentLanguage === "en" ? "Processing..." : "پروسیسنگ ہو رہی ہے...") : (
-                      currentLanguage === "en" ? `Post ${activeMode === "advance" ? "Advance" : activeMode === "credit" ? "Credit" : "Remaining"} Payment` : `${activeMode === "advance" ? "ایڈوانس" : activeMode === "credit" ? "کریڈٹ" : "باقی"} ادائیگی پوسٹ کریں`
-                    )}
-                  </Button>
-                </div>
-
-                {/* Feedback messages */}
-                {paymentSuccess && (
-                  <div className="flex items-start gap-3 rounded-xl border border-emerald-500/30 bg-emerald-500/8 p-4 text-sm text-emerald-700 animate-in fade-in duration-300">
-                    <CheckCircle2 className="h-5 w-5 shrink-0 mt-0.5" />
-                    <div>
-                      <div className="font-bold mb-0.5">{currentLanguage === "en" ? "Payment Posted Successfully" : "ادائیگی کامیابی سے پوسٹ ہو گئی"}</div>
-                      <div className="text-xs">{paymentSuccess}</div>
-                    </div>
-                  </div>
-                )}
-                {paymentError && (
-                  <div className="rounded-xl border border-destructive/30 bg-destructive/10 p-4 text-sm text-destructive">
-                    ❌ {paymentError}
-                  </div>
-                )}
-              </div>
-
-              {/* Double-entry Preview, Ledger Posting, and supporting notes */}
-              <div className="xl:col-span-5 space-y-4">
-                {/* Unified Professional Payment Summary Context Card */}
-                <div className="rounded-xl border border-blue-200 bg-blue-50/70 p-4 shadow-sm dark:border-blue-900/60 dark:bg-blue-950/20">
-                  <div className="mb-3 flex items-center justify-between border-b border-blue-200/70 pb-2 dark:border-blue-900/60">
-                    <span className="text-[11px] font-black uppercase tracking-wider text-blue-800 dark:text-blue-300">
-                      {currentLanguage === "en" ? "Professional Payment Summary" : "پیمنٹ کی پیشہ ورانہ تفصیلات"}
-                    </span>
-                    <span className="rounded-full bg-white px-2.5 py-0.5 text-[9px] font-black uppercase tracking-wider text-blue-700 shadow-sm dark:bg-blue-950 dark:text-blue-200">
-                      {selected.payment_status ? t(selected.payment_status, currentLanguage) : t("Pending", currentLanguage)}
-                    </span>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-2 text-[11px]">
-                    {/* 1. Original Purchase Amount */}
-                    <div className="rounded-lg bg-white/80 p-2 dark:bg-slate-950/50">
-                      <div className="text-[9px] font-bold uppercase tracking-wide text-slate-500">
-                        {t("original_purchase_amount", currentLanguage)}
-                      </div>
-                      <div className="font-mono text-xs font-black text-slate-900 dark:text-slate-100">
-                        {money(loadingPurchaseAmount, poCurrency)}
-                      </div>
-                    </div>
-                    {/* 2. Purchase Currency */}
-                    <div className="rounded-lg bg-white/80 p-2 dark:bg-slate-950/50">
-                      <div className="text-[9px] font-bold uppercase tracking-wide text-slate-500">
-                        {t("purchase_currency", currentLanguage)}
-                      </div>
-                      <div className="font-mono text-xs font-black text-slate-900 dark:text-slate-100">
-                        {poCurrency}
-                      </div>
-                    </div>
-                    {/* 3. Exchange Rate */}
-                    <div className="rounded-lg bg-white/80 p-2 dark:bg-slate-950/50">
-                      <div className="text-[9px] font-bold uppercase tracking-wide text-slate-500">
-                        {t("exchange_rate_label", currentLanguage)}
-                      </div>
-                      <div className="font-mono text-[10px] font-black text-slate-900 dark:text-slate-100">
-                        1 {poCurrency} = {Number(exchangeRate || 1).toFixed(4)} {baseCurrency}
-                      </div>
-                    </div>
-                    {/* 4. Final Converted Amount */}
-                    <div className="rounded-lg bg-white/80 p-2 dark:bg-slate-950/50">
-                      <div className="text-[9px] font-bold uppercase tracking-wide text-slate-500">
-                        {t("final_converted_amount", currentLanguage)}
-                      </div>
-                      <div className="font-mono text-xs font-black text-slate-900 dark:text-slate-100">
-                        {money(loadingPurchaseAmount * Number(exchangeRate || 1), baseCurrency)}
-                      </div>
-                    </div>
-                    {/* 5. Total Advance Required */}
-                    <div className="rounded-lg bg-white/80 p-2 dark:bg-slate-950/50">
-                      <div className="text-[9px] font-bold uppercase tracking-wide text-slate-500">
-                        {t("total_advance_required", currentLanguage)}
-                      </div>
-                      <div className="font-mono text-xs font-black text-blue-700 dark:text-blue-300">
-                        {money(loadingRequiredAdvance, poCurrency)}
-                      </div>
-                    </div>
-                    {/* 6. Total Paid */}
-                    <div className="rounded-lg bg-white/80 p-2 dark:bg-slate-950/50">
-                      <div className="text-[9px] font-bold uppercase tracking-wide text-slate-500">
-                        {t("total_paid", currentLanguage)}
-                      </div>
-                      <div className="font-mono text-xs font-black text-emerald-700 dark:text-emerald-300">
-                        {money(totalPaidSoFar, poCurrency)}
-                      </div>
-                    </div>
-                    {/* 7. Outstanding Amount */}
-                    <div className="rounded-lg bg-white/80 p-2 dark:bg-slate-950/50">
-                      <div className="text-[9px] font-bold uppercase tracking-wide text-slate-500">
-                        {t("outstanding_amount", currentLanguage)}
-                      </div>
-                      <div className="font-mono text-xs font-black text-rose-700 dark:text-rose-300">
-                        {money(outstandingBalance, poCurrency)}
-                      </div>
-                    </div>
-                    {/* 8. Remaining Balance */}
-                    <div className="rounded-lg bg-white/80 p-2 dark:bg-slate-950/50">
-                      <div className="text-[9px] font-bold uppercase tracking-wide text-slate-500">
-                        {t("remaining_balance_label", currentLanguage)}
-                      </div>
-                      <div className="font-mono text-xs font-black text-rose-700 dark:text-rose-300">
-                        {money(outstandingBalance * Number(exchangeRate || 1), baseCurrency)}
-                      </div>
-                    </div>
-                    {/* 9. Final Debit Amount */}
-                    <div className="rounded-lg bg-white/80 p-2 dark:bg-slate-950/50 ring-1 ring-inset ring-indigo-400/20">
-                      <div className="text-[9px] font-bold uppercase tracking-wide text-indigo-600">
-                        {t("final_debit_amount", currentLanguage)}
-                      </div>
-                      <div className="font-mono text-xs font-black text-indigo-700 dark:text-indigo-300">
-                        {money(showCalcPanel && calcFinal !== null ? calcFinal : Number(finalPayment || 0), baseCurrency)}
-                      </div>
-                    </div>
-                    {/* 10. Final Credit Amount */}
-                    <div className="rounded-lg bg-white/80 p-2 dark:bg-slate-950/50 ring-1 ring-inset ring-purple-400/20">
-                      <div className="text-[9px] font-bold uppercase tracking-wide text-purple-600">
-                        {t("final_credit_amount", currentLanguage)}
-                      </div>
-                      <div className="font-mono text-xs font-black text-purple-700 dark:text-purple-300">
-                        {money(showCalcPanel && calcFinal !== null ? calcFinal : Number(finalPayment || 0), baseCurrency)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="text-[10px] font-black uppercase tracking-wider text-slate-500 mt-4 block">
-                  {t("double_entry_posting_preview", currentLanguage)}
-                </div>
-                <div className="overflow-x-auto rounded-xl border border-border bg-white dark:bg-slate-950">
-                  <table className="w-full text-xs border-collapse">
-                    <thead>
-                      <tr className="bg-muted/60 border-b border-border text-[10px] uppercase font-black tracking-wider text-muted-foreground">
-                        <Th className="px-3 py-2.5 text-left w-16">DR / CR</Th>
-                        <Th className="px-3 py-2.5 text-left">{currentLanguage === "en" ? "Account" : "اکاؤنٹ"}</Th>
-                        <Th className="px-3 py-2.5 text-right">{currentLanguage === "en" ? "Amount" : "رقم"} ({poCurrency})</Th>
-                        <Th className="px-3 py-2.5 text-right">{currentLanguage === "en" ? "Amount" : "رقم"} ({baseCurrency})</Th>
-                        <Th className="px-2 py-2.5 text-center">✓</Th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(() => {
-                        const previewUsd = showCalcPanel 
-                          ? (currency === baseCurrency ? amount : Number(calcAmount || 0)) 
-                          : (amount / Number(exchangeRate || 1));
-                        const previewAed = amount;
-
-                        return (
-                          <>
-                            <tr className="border-b border-border bg-indigo-500/5 ring-1 ring-inset ring-indigo-400/20">
-                              <td className="px-3 py-3 font-black text-xs text-indigo-600">DR</td>
-                              <td className="px-3 py-3">
-                                <div className="font-bold text-foreground line-clamp-1">{doubleEntry.debitName}</div>
-                                <div className="text-[9px] text-muted-foreground font-mono">
-                                  {doubleEntry.debitCode} {doubleEntry.debitBranch && doubleEntry.debitBranch !== "-" && `| ${currentLanguage === "en" ? "Branch" : "برانچ"}: ${doubleEntry.debitBranch}`}
-                                </div>
-                              </td>
-                              <td className="px-3 py-3 text-right font-mono font-bold text-indigo-600 whitespace-nowrap">
-                                {previewUsd > 0 ? money(previewUsd, poCurrency) : "—"}
-                              </td>
-                              <td className="px-3 py-3 text-right font-mono font-bold text-indigo-600 whitespace-nowrap">
-                                {previewAed > 0 ? money(previewAed, baseCurrency) : "—"}
-                              </td>
-                              <td className="px-2 py-3 text-center">
-                                <input
-                                  type="radio"
-                                  checked
-                                  readOnly
-                                  className="h-3.5 w-3.5 accent-indigo-600"
-                                />
-                              </td>
-                            </tr>
-                            <tr className="bg-violet-500/5 ring-1 ring-inset ring-violet-400/20">
-                              <td className="px-3 py-3 font-black text-xs text-violet-600">CR</td>
-                              <td className="px-3 py-3">
-                                <div className="font-bold text-foreground line-clamp-1">{doubleEntry.creditName}</div>
-                                <div className="text-[9px] text-muted-foreground font-mono">
-                                  {doubleEntry.creditCode} {doubleEntry.creditBranch && doubleEntry.creditBranch !== "-" && `| ${currentLanguage === "en" ? "Branch" : "برانچ"}: ${doubleEntry.creditBranch}`}
-                                </div>
-                              </td>
-                              <td className="px-3 py-3 text-right font-mono font-bold text-violet-600 whitespace-nowrap">
-                                {previewUsd > 0 ? money(previewUsd, poCurrency) : "—"}
-                              </td>
-                              <td className="px-3 py-3 text-right font-mono font-bold text-violet-600 whitespace-nowrap">
-                                {previewAed > 0 ? money(previewAed, baseCurrency) : "—"}
-                              </td>
-                              <td className="px-2 py-3 text-center">
-                                <input
-                                  type="radio"
-                                  checked
-                                  readOnly
-                                  className="h-3.5 w-3.5 accent-violet-600"
-                                />
-                              </td>
-                            </tr>
-                          </>
-                        );
-                      })()}
-                    </tbody>
-                  </table>
-                </div>
-
-                <div className="rounded-xl border border-slate-100 bg-slate-50/50 p-4 text-[11px] text-muted-foreground dark:border-slate-800 dark:bg-slate-900/30 leading-relaxed space-y-2">
-                  <div className="font-bold text-slate-700 dark:text-slate-300">
-                    {t("double_entry_posting_guide", currentLanguage)}
-                  </div>
-                  <p>
-                    {t("every_transaction_balances", currentLanguage)}
-                  </p>
-                  <ul className="list-disc pl-4 space-y-1">
-                    <li>{t("debit_records_updated", currentLanguage)}</li>
-                    <li>{t("credit_records_deduct", currentLanguage)}</li>
-                    <li>{t("exchange_conversion_calculates", currentLanguage).replace("{baseCurrency}", baseCurrency)}</li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      </SimpleModal>
-    )}
+          </div>
+        </SimpleModal>
+      )}
 
 
       {addOptionOpen ? (

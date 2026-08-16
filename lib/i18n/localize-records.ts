@@ -202,6 +202,7 @@ export async function localizeRecordNames<T extends { id: string }>(
   }
 ): Promise<T[]> {
   if (!records || records.length === 0) return records;
+  if (lang === "en" && !options?.phraseFallback) return records;
   const dbUrl = process.env.DATABASE_URL;
   if (!dbUrl) return records;
   const ids = records.map((r) => r.id).filter(Boolean);

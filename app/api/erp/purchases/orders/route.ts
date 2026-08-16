@@ -231,8 +231,6 @@ export async function GET(request: NextRequest) {
       cityBranchId: query.cityBranchId ?? null
     });
 
-    const supabase = await createApiSupabaseClient();
-
     // purchase_orders has scoped RLS and this app's Supabase client is not guaranteed to
     // carry a real service-role key that bypasses RLS on its own — reads through it silently
     // return an empty array (RLS filters rows, it doesn't error on SELECT) rather than the
@@ -269,6 +267,7 @@ export async function GET(request: NextRequest) {
     if (viaPgRows) {
       rawRows = viaPgRows;
     } else {
+      const supabase = await createApiSupabaseClient();
       let q = supabase
         .from("purchase_orders")
         .select(`
@@ -331,11 +330,17 @@ export async function GET(request: NextRequest) {
       }
     }
     const seenPo = new Set<string>();
-    const mappedRows = (rawRows ?? []).map((row: any) => ({
-      ...row,
-      countryName: row.countries?.name || null,
-      branchName: row.country_branches?.name || null
-    }));
+    const mappedRows = (rawRows ?? []).map((row: any) => {
+      const formData = typeof row.form_data === "string"
+        ? (() => { try { return JSON.parse(row.form_data); } catch { return row.form_data; } })()
+        : row.form_data;
+      return {
+        ...row,
+        form_data: formData,
+        countryName: row.countries?.name || null,
+        branchName: row.country_branches?.name || null
+      };
+    });
     const rows = mappedRows.filter((row: any) => {
       const poNo = String(row.purchase_order_no || "").trim().toUpperCase();
       if (!poNo) return true;

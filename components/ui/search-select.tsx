@@ -144,8 +144,12 @@ export function SearchSelect({
             </div>
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-[var(--radix-popover-trigger-width)] min-w-[320px] p-0 rounded-xl overflow-hidden shadow-xl border border-border/80 bg-popover" align="start">
+        <PopoverContent
+          className="w-[var(--radix-popover-trigger-width)] min-w-[320px] p-0 rounded-xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 !bg-opacity-100 isolate z-[999999]"
+          align="start"
+        >
           <Command
+            className="bg-white dark:bg-slate-950"
             filter={(value, search, keywords) => {
               const extendValue = value + " " + (keywords?.join(" ") ?? "");
               if (extendValue.toLowerCase().includes(search.toLowerCase())) return 1;
@@ -155,10 +159,11 @@ export function SearchSelect({
             <CommandInput
               placeholder={searchPlaceholder}
               onValueChange={onSearchValueChange}
+              className="bg-slate-50 dark:bg-slate-900"
             />
-            <CommandList>
+            <CommandList className="bg-white dark:bg-slate-950 max-h-[300px] overflow-y-auto">
               <CommandEmpty>{emptyLabel}</CommandEmpty>
-              <CommandGroup>
+              <CommandGroup className="bg-white dark:bg-slate-950">
                 {uniqueOptions.map((opt) => (
                   <CommandItem
                     key={opt.value}

@@ -8,8 +8,21 @@ function money(value: unknown) {
   return Number.isFinite(numeric) ? numeric : 0;
 }
 
+function normalizeJsonObject(value: unknown) {
+  if (value && typeof value === "object" && !Array.isArray(value)) return value as Record<string, any>;
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) return parsed as Record<string, any>;
+    } catch {
+      return {};
+    }
+  }
+  return {};
+}
+
 function buildPurchaseGoodsAuditRemark(orderRow: any, fallbackReference?: string | null) {
-  const data = orderRow.form_data ?? {};
+  const data = normalizeJsonObject(orderRow.form_data);
   const form = data.form ?? {};
   const totals = data.totals ?? {};
   const billNo = String(form.manualBillNumber || form.manual_bill_number || form.billNo || form.purchaseContractNo || orderRow.purchase_contract_no || orderRow.purchase_order_no || fallbackReference || "Purchase Bill").trim();
@@ -81,7 +94,7 @@ export async function transferPurchaseBookingViaLocalPg(input: {
       const orderRow = orders[0];
       if (!orderRow) throw new Error(`Purchase order '${orderId}' was not found.`);
 
-      const formData = orderRow.form_data || {};
+      const formData = normalizeJsonObject(orderRow.form_data);
       const form = formData.form || {};
       const workflow = formData.workflow || {};
       const systemBillNumber = String(orderRow.purchase_order_no || form.purchaseOrderNo || "").trim();
@@ -203,6 +216,7 @@ export async function transferPurchaseBookingViaLocalPg(input: {
         from roznamcha_lines
         where roznamcha_entry_id = ${roznamchaEntryId}::uuid
       `;
+      const exRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
       assertDistinctBookingLedgers(debitAccountObj.id, creditAccountObj.id, "Business Roznamcha");
       assertBalancedPostedLines({
         label: "Business Roznamcha",

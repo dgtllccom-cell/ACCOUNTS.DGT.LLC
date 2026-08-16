@@ -1,4 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import postgres from "postgres";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
@@ -279,7 +280,6 @@ export class LocationsRepository {
   }
 
   async listCountries(input?: { query?: string | null; limit?: number }) {
-    const supabase = createSupabaseAdminClient() as any;
     const limit = Math.min(Math.max(input?.limit ?? 200, 1), 500);
     const q = (input?.query ?? "").trim();
     const localDbUrl = getDbUrl();
@@ -295,6 +295,7 @@ export class LocationsRepository {
       }
     }
 
+    const supabase = await createServerSupabaseClient();
     let query = supabase
       .from("countries")
       .select("id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number")

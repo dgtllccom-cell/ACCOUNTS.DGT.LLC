@@ -178,6 +178,7 @@ export function LocationHierarchySelect({
     [areas, value.areaId]
   );
 
+  // 1. Fetch countries on mount
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -194,13 +195,13 @@ export function LocationHierarchySelect({
     };
   }, []);
 
+  // 2. Fetch states when country changes
   useEffect(() => {
     let cancelled = false;
-    setStates([]);
-    setDistricts([]);
-    setCities([]);
-    setAreas([]);
-    if (!value.countryId) return;
+    if (!value.countryId || !showState) {
+      setStates([]);
+      return;
+    }
 
     (async () => {
       setLoadingStates(true);
@@ -215,14 +216,15 @@ export function LocationHierarchySelect({
     return () => {
       cancelled = true;
     };
-  }, [value.countryId]);
+  }, [value.countryId, showState]);
 
+  // 3. Fetch districts when country or state changes
   useEffect(() => {
     let cancelled = false;
-    setDistricts([]);
-    setCities([]);
-    setAreas([]);
-    if (!value.countryId && !value.stateProvinceId) return;
+    if (!showDistrict || (!value.countryId && !value.stateProvinceId)) {
+      setDistricts([]);
+      return;
+    }
 
     (async () => {
       setLoadingDistricts(true);
@@ -240,13 +242,15 @@ export function LocationHierarchySelect({
     return () => {
       cancelled = true;
     };
-  }, [value.countryId, value.stateProvinceId]);
+  }, [value.countryId, value.stateProvinceId, showDistrict]);
 
+  // 4. Fetch cities when country, state, or district changes
   useEffect(() => {
     let cancelled = false;
-    setCities([]);
-    setAreas([]);
-    if (!value.countryId) return;
+    if (!showCity || !value.countryId) {
+      setCities([]);
+      return;
+    }
 
     (async () => {
       setLoadingCities(true);
@@ -265,13 +269,15 @@ export function LocationHierarchySelect({
     return () => {
       cancelled = true;
     };
-  }, [value.countryId, value.stateProvinceId, value.districtId]);
+  }, [value.countryId, value.stateProvinceId, value.districtId, showCity]);
 
+  // 5. Fetch areas when city changes
   useEffect(() => {
     let cancelled = false;
-    setAreas([]);
-    if (!showArea) return;
-    if (!value.cityId) return;
+    if (!showArea || !value.cityId) {
+      setAreas([]);
+      return;
+    }
 
     (async () => {
       setLoadingAreas(true);
@@ -368,7 +374,7 @@ export function LocationHierarchySelect({
             <SearchSelect
               label={loc("state")}
               value={value.stateProvinceId}
-              placeholder={value.countryId ? loc("selectState") : loc("selectCountryFirst")}
+              placeholder={loadingStates ? "Loading states..." : value.countryId ? loc("selectState") : loc("selectCountryFirst")}
               disabled={disabled || !value.countryId || loadingStates}
               loading={loadingStates}
               options={toOptions(states)}
@@ -392,7 +398,7 @@ export function LocationHierarchySelect({
             <SearchSelect
               label={loc("district")}
               value={value.districtId}
-              placeholder={value.stateProvinceId || value.countryId ? loc("district") : loc("selectCountryFirst")}
+              placeholder={loadingDistricts ? "Loading districts..." : value.stateProvinceId || value.countryId ? loc("district") : loc("selectCountryFirst")}
               disabled={disabled || (!value.countryId && !value.stateProvinceId) || loadingDistricts}
               loading={loadingDistricts}
               options={toOptions(districts)}
@@ -428,7 +434,7 @@ export function LocationHierarchySelect({
             <SearchSelect
               label={loc("city")}
               value={value.cityId}
-              placeholder={value.countryId ? loc("selectCity") : loc("selectCountryFirst")}
+              placeholder={loadingCities ? "Loading cities..." : value.countryId ? loc("selectCity") : loc("selectCountryFirst")}
               disabled={disabled || !value.countryId || loadingCities}
               loading={loadingCities}
               options={toOptions(cities)}
@@ -462,7 +468,7 @@ export function LocationHierarchySelect({
               <SearchSelect
                 label={loc("area")}
                 value={value.areaId ?? ""}
-                placeholder={value.cityId ? loc("selectArea") : loc("selectCity")}
+                placeholder={loadingAreas ? "Loading areas..." : value.cityId ? loc("selectArea") : "Select city first"}
                 disabled={disabled || !value.cityId || loadingAreas}
                 loading={loadingAreas}
                 options={toOptions(areas)}

@@ -3,7 +3,7 @@
 import type { FormEvent } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "next/navigation";
-import { Pencil, Eye, ArrowLeft, Printer, Download, History } from "lucide-react";
+import { Pencil, Eye, ArrowLeft, ArrowRight, Printer, Download, History } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -1360,10 +1360,10 @@ function CityBranchSetupContent() {
             <Button
               type="button"
               size="sm"
-              className="h-8 text-xs font-semibold"
+              className="h-8 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-md hover:shadow-lg border-0"
               onClick={() => setActiveStep((step) => Math.min(9, step + 1))}
             >
-              Next
+              Next <ArrowRight className="ml-1 h-3.5 w-3.5" />
             </Button>
           ) : (
             <Button
@@ -1371,7 +1371,7 @@ function CityBranchSetupContent() {
               form="city-branch-wizard-form"
               size="sm"
               disabled={saving || !location.countryId || !countryBranchId || cityAlreadyExists}
-              className="h-8 text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white"
+              className="h-8 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-md hover:shadow-lg border-0 disabled:bg-slate-300 disabled:text-slate-500"
             >
               {saving ? "Saving..." : editingCityBranchId ? "Update" : "Accept & Save"}
             </Button>
@@ -2200,15 +2200,15 @@ function CityBranchSetupContent() {
                   Cancel
                 </Button>
                 <div className="flex flex-wrap gap-2">
-                  <Button type="button" variant="outline" disabled={saving || activeStep === 1} onClick={() => setActiveStep((step) => Math.max(1, step - 1))}>
-                    Back
+                  <Button type="button" variant="outline" disabled={saving || activeStep === 1} onClick={() => setActiveStep((step) => Math.max(1, step - 1))} className="border-slate-300 bg-white text-slate-700 hover:bg-slate-100 dark:border-slate-600 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700 disabled:bg-slate-100 disabled:text-slate-400">
+                    <ArrowLeft className="mr-1.5 h-3.5 w-3.5" /> Back
                   </Button>
                   {activeStep < 9 ? (
-                    <Button type="button" onClick={() => setActiveStep((step) => Math.min(9, step + 1))}>
-                      Next
+                    <Button type="button" onClick={() => setActiveStep((step) => Math.min(9, step + 1))} className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold shadow-md hover:shadow-lg border-0">
+                      Next <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                     </Button>
                   ) : (
-                    <Button type="submit" disabled={saving || !location.countryId || !countryBranchId || cityAlreadyExists}>
+                    <Button type="submit" disabled={saving || !location.countryId || !countryBranchId || cityAlreadyExists} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md hover:shadow-lg border-0 disabled:bg-slate-300 disabled:text-slate-500">
                       {saving ? "Saving..." : editingCityBranchId ? "Update" : "Save"}
                     </Button>
                   )}

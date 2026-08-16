@@ -30229,3 +30229,2166 @@ Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for p
     at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
     at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
 2026-08-16T10:06:39.540Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-16T10:58:11.879Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at LocationsRepository.listCountries (webpack-internal:///(rsc)/./lib/repositories/locations-repository.ts:153:104)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/locations/countries/route.ts:21:119)
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:59:14)
+    at AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38775)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:48915
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:184:36
+    at NoopContextManager.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NoopTracer.startActiveSpan (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18093)
+    at ProxyTracer.startActiveSpan (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18854)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:153:103
+    at NoopContextManager.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NextTracerImpl.trace (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:153:28)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:48760
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46097
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46054
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46008)
+
+[2026-08-16T10:58:11.884Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at LocationsRepository.listCountries (webpack-internal:///(rsc)/./lib/repositories/locations-repository.ts:153:104)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/locations/countries/route.ts:21:119)
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:59:14)
+    at AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38775)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:48915
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:184:36
+    at NoopContextManager.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NoopTracer.startActiveSpan (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18093)
+    at ProxyTracer.startActiveSpan (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18854)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:153:103
+    at NoopContextManager.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NextTracerImpl.trace (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:153:28)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:48760
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46097
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46054
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46008)
+2026-08-16T10:58:11.888Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+2026-08-16T10:58:11.900Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-16T10:58:17.006Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at LocationsRepository.listCountries (webpack-internal:///(rsc)/./lib/repositories/locations-repository.ts:153:104)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/locations/countries/route.ts:21:119)
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:59:14)
+    at AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38775)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:48915
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:184:36
+    at NoopContextManager.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NoopTracer.startActiveSpan (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18093)
+    at ProxyTracer.startActiveSpan (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18854)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:153:103
+    at NoopContextManager.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NextTracerImpl.trace (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:153:28)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:48760
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46097
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46054
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46008)
+2026-08-16T10:58:17.008Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-16T11:03:47.772Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at LocationsRepository.listCountries (webpack-internal:///(rsc)/./lib/repositories/locations-repository.ts:153:104)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/locations/countries/route.ts:21:119)
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:59:14)
+    at AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38775)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:48915
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:184:36
+    at NoopContextManager.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NoopTracer.startActiveSpan (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18093)
+    at ProxyTracer.startActiveSpan (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18854)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:153:103
+    at NoopContextManager.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NextTracerImpl.trace (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:153:28)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:48760
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46097
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46054
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46008)
+2026-08-16T11:03:47.778Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-16T11:09:26.893Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at ReadyForQuery (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:582:38)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+2026-08-16T11:09:26.895Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:26.998Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at ReadyForQuery (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:582:38)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+2026-08-16T11:09:26.999Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:27.013Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at ReadyForQuery (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:582:38)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+2026-08-16T11:09:27.014Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:27.052Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at ReadyForQuery (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:582:38)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+2026-08-16T11:09:27.053Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:27.061Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at ReadyForQuery (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:582:38)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+2026-08-16T11:09:27.062Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:27.116Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at ReadyForQuery (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:582:38)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+2026-08-16T11:09:27.116Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:27.391Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:27.392Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:27.539Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:27.541Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:27.619Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:09:27.621Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:27.627Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:27.628Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:27.846Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:27.847Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:27.968Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:27.969Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:28.083Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:28.084Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:28.186Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:28.187Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:28.211Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:28.212Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:28.357Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:09:28.358Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:28.365Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:28.365Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:28.526Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:28.527Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:28.533Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:28.534Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:28.639Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:28.641Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:28.921Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:28.923Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:29.030Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:29.030Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:29.144Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:29.145Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:29.152Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:29.152Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:29.278Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:29.279Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:29.303Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at ReadyForQuery (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:582:38)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+2026-08-16T11:09:29.304Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:29.482Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:29.482Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:29.584Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:29.584Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:29.765Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:29.766Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:29.787Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:29.789Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:29.906Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:29.907Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:30.009Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:30.010Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:30.147Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:30.148Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:30.335Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:30.336Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:30.440Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:30.441Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:30.613Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:09:30.614Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:30.618Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:30.618Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:30.773Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:09:30.774Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:30.778Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:30.780Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:30.949Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:09:30.950Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:30.957Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:30.957Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:31.142Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:31.143Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:31.167Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:31.168Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:31.317Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:09:31.317Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:31.325Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:31.326Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:31.578Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:31.579Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:31.768Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:31.769Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:31.932Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:09:31.933Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:31.938Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:31.941Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:32.050Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:32.050Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:32.242Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:32.243Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:32.460Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:32.461Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:32.567Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:32.568Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:32.715Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:09:32.715Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:32.721Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:32.722Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:32.854Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:09:32.856Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:32.861Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:32.862Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:33.035Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:09:33.035Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:33.042Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:33.043Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:33.193Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:33.193Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:33.200Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:33.200Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:33.320Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:09:33.323Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:33.328Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:33.329Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:33.536Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:33.536Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:33.634Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:33.635Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:33.786Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:09:33.788Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:33.793Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:33.794Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:34.069Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:09:34.069Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:34.077Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:34.078Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:34.224Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:34.225Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:34.353Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:34.354Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:34.634Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:09:34.635Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:34.641Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:34.643Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:34.761Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:34.762Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:34.768Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:34.769Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:34.889Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:34.890Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:35.085Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:35.086Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:35.273Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:09:35.274Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:35.277Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:35.278Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:35.337Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:35.338Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:35.347Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:35.348Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:35.498Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:35.498Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:35.776Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:35.777Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:35.934Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:35.934Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:35.944Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:35.945Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:36.109Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:09:36.110Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:36.116Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:36.117Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:36.496Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:36.497Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:36.622Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:36.624Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:36.751Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:09:36.752Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:36.760Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:36.760Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:37.010Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:09:37.011Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:37.018Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at process.processTimers (node:internal/timers:538:9)
+2026-08-16T11:09:37.023Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:37.191Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:37.192Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:37.267Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:37.268Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:37.428Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:09:37.429Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:37.433Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:37.434Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:37.550Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:37.550Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:37.558Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:09:37.559Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:09:37.563Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:09:37.563Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:29.434Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at ReadyForQuery (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:582:38)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+2026-08-16T11:15:29.459Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:29.522Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at ReadyForQuery (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:582:38)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+2026-08-16T11:15:29.527Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:29.836Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at ReadyForQuery (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:582:38)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+2026-08-16T11:15:29.838Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:29.960Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at ReadyForQuery (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:582:38)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+2026-08-16T11:15:29.961Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:29.995Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at ReadyForQuery (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:582:38)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+2026-08-16T11:15:30.004Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:30.011Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at ReadyForQuery (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:582:38)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at TLSSocket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at TLSSocket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TLSWrap.callbackTrampoline (node:internal/async_hooks:130:17)
+2026-08-16T11:15:30.012Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:33.153Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:33.174Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:34.088Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:15:34.090Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:34.259Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:15:34.260Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:34.289Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:15:34.290Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:34.307Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:34.307Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:34.341Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:34.343Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:35.942Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:35.942Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:36.482Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:15:36.482Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:36.487Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:15:36.586Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:36.595Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:15:36.597Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:36.603Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:15:36.605Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:36.613Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:36.615Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:37.551Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:37.552Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:37.690Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:15:37.694Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:37.700Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:15:37.700Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:37.709Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:37.710Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:37.717Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:15:37.718Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:37.726Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:37.728Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:38.120Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:38.121Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:38.395Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:15:38.395Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:38.407Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:15:38.408Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:38.421Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:15:38.422Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:38.426Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:38.428Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:38.512Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:38.513Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:38.956Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:38.957Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:39.254Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:15:39.255Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:39.262Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:39.263Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:39.287Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:39.289Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:39.331Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:39.332Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:39.483Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:39.484Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:40.292Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:40.293Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:40.594Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:40.595Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:40.791Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:15:40.792Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:40.800Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:15:40.801Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:40.805Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:40.806Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:41.405Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:41.407Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:42.034Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at process.processTimers (node:internal/timers:538:9)
+2026-08-16T11:15:42.035Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:42.230Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:42.231Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:42.542Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:15:42.543Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:42.553Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:15:42.554Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:42.559Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:42.560Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:42.683Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:42.684Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:42.971Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+2026-08-16T11:15:42.972Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:42.975Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:42.975Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:44.671Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:44.672Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:46.397Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:46.406Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:48.825Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:48.825Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:49.817Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:49.817Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}
+
+[2026-08-16T11:15:50.808Z] Error: UNDEFINED_VALUE: Undefined values are not allowed
+Error: UNDEFINED_VALUE: Undefined values are not allowed
+    at handleValue (webpack-internal:///(rsc)/./node_modules/postgres/src/types.js:111:60)
+    at eval (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:92)
+    at Array.forEach (<anonymous>)
+    at build (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:245:25)
+    at Object.execute (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:187:7)
+    at go (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:343:14)
+    at Query.handler (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:332:14)
+    at Query.handle (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:145:65)
+2026-08-16T11:15:50.811Z - SERVER_ERROR - UNDEFINED_VALUE: Undefined values are not allowed - {}

@@ -1282,12 +1282,18 @@ export const sidebarTree: SidebarNode[] = [
           {
             key: "mgmt-location-workspace",
             labelKey: "nav.location_form",
-            href: "/dashboard/settings/locations" as any,
+            href: "/dashboard/settings/locations" as Route,
           },
           {
             key: "mgmt-company",
             labelKey: "nav.company_form",
             href: "/dashboard/settings/company" as Route
+          },
+          {
+            key: "mgmt-customers",
+            labelKey: "nav.customers_form",
+            href: "/dashboard/settings/customers" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
           },
           {
             key: "mgmt-employees",
