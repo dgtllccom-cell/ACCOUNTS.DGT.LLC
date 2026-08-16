@@ -162,8 +162,12 @@ export function SearchSelect({
                 {uniqueOptions.map((opt) => (
                   <CommandItem
                     key={opt.value}
-                    value={opt.label} // CommandItem filters on its string value
-                    keywords={[opt.keywords ?? "", opt.value]}
+                    // Coerce to strings: cmdk runs `keywords.map(s => s.trim())` and trims the
+                    // item value, so a null/undefined value or label (real DB rows can have them)
+                    // would throw "Cannot read properties of undefined (reading 'trim')" and crash
+                    // the whole page. Normalizing here keeps one safe shared dropdown ERP-wide.
+                    value={opt.label ?? String(opt.value ?? "")} // CommandItem filters on its string value
+                    keywords={[opt.keywords ?? "", String(opt.value ?? "")]}
                     disabled={opt.disabled}
                     onSelect={() => {
                       onValueChange(opt.value);

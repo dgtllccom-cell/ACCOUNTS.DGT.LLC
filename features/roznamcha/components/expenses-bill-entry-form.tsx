@@ -443,15 +443,19 @@ export function ExpensesBillEntryForm({
     return ledgers
       .filter(l => {
         // Must match branch if ledger has branch
-        if (l.city_branch_id) return l.city_branch_id === branchId;
+        if (l.cityBranchId) return l.cityBranchId === branchId;
         // Must match country if ledger has country
-        if (l.country_id) return l.country_id === countryId;
+        if (l.countryId) return l.countryId === countryId;
         return true;
       })
+      // listLedgerReportLedgers returns camelCase LedgerLookupRow (ledgerId/ledgerName/…),
+      // not id/name — using the wrong keys left value=undefined, which crashed the dropdown
+      // (cmdk trims keywords) and showed "undefined" labels ("accounts not loading").
       .map(l => ({
-        label: `${l.name} - ${l.currency || ""}`,
-        value: l.id
-      }));
+        label: `${l.ledgerName ?? ""} - ${l.ledgerCurrency || ""}`,
+        value: l.ledgerId
+      }))
+      .filter(o => o.value);
   }, [ledgers, transferBill]);
 
   const handleTransfer = async () => {
@@ -817,14 +821,17 @@ export function ExpensesBillEntryForm({
   const formFilteredLedgers = useMemo(() => {
     return ledgers
       .filter(l => {
-        if (l.city_branch_id) return l.city_branch_id === branch;
-        if (l.country_id) return l.country_id === selectedCountry;
+        if (l.cityBranchId) return l.cityBranchId === branch;
+        if (l.countryId) return l.countryId === selectedCountry;
         return true;
       })
+      // camelCase LedgerLookupRow fields (ledgerId/ledgerName/ledgerCurrency); the old id/name
+      // keys were always undefined, producing undefined option values that crashed cmdk.
       .map(l => ({
-        label: `${l.name} - ${l.currency || ""}`,
-        value: l.id
-      }));
+        label: `${l.ledgerName ?? ""} - ${l.ledgerCurrency || ""}`,
+        value: l.ledgerId
+      }))
+      .filter(o => o.value);
   }, [ledgers, selectedCountry, branch]);
 
   return (
