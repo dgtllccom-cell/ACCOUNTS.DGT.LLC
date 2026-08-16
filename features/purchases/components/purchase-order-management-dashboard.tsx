@@ -2830,6 +2830,8 @@ export function PurchaseOrderManagementDashboard() {
                         <td className="px-2 py-2" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-center gap-1">
                             {(!isPosted || isSuperAdmin || isCountryAdmin) && (
+                              <button
+                                type="button"
                                 onClick={() => {
                                   router.push(`/dashboard/purchase/new-purchase-booking-order?id=${encodeURIComponent(row.id)}&purchaseOrderNo=${encodeURIComponent(row.purchaseBookingOrderNumber || "")}`);
                                 }}

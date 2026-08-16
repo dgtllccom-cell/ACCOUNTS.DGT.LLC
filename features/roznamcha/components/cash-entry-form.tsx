@@ -50,6 +50,7 @@ import { cn } from "@/lib/utils";
 import { BankPicker } from "@/features/banks/components/bank-picker";
 import { getBankById } from "@/features/banks/bank-api";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
+import { RoznamchaReportsDropdown } from "@/features/roznamcha/components/roznamcha-reports-dropdown";
 import { Th } from "@/components/ui/translated-th";
 import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/verified-record-translations";
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
@@ -1877,6 +1878,7 @@ export function CashEntryForm({
 
   const actionButtons = (
     <div id="erp-page-actions-portal-content" className="flex items-center gap-2">
+      <RoznamchaReportsDropdown lang={lang} />
       <Button
         type="button"
         size="sm"
@@ -2024,23 +2026,6 @@ export function CashEntryForm({
       return { value: row.ledgerId, label, keywords };
     });
   }, [ledgers]);
-  const actionButtons = (
-    <div id="erp-page-actions-portal-content" className="flex items-center gap-1.5">
-      <Button
-        type="button"
-        size="sm"
-        className="h-8 gap-1.5 rounded-lg px-3 text-[11px] font-bold bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
-        onClick={() => {
-          if (typeof window !== "undefined") {
-            window.location.href = "/dashboard/roznamcha/cash-entry";
-          }
-        }}
-      >
-        <Plus className="h-3.5 w-3.5" />
-        {t(lang, "common.new", "New")}
-      </Button>
-    </div>
-  );
 
   return (
     <div className="mx-auto w-full bg-[#f8fbff] dark:bg-slate-950/40 text-slate-950 dark:text-slate-50 min-h-screen">
@@ -2422,19 +2407,27 @@ export function CashEntryForm({
 
 
 
-        {/* Main Workspace layout */}
-        {showPaymentWorkReport ? (
-        <div className="grid gap-4 lg:grid-cols-[1.4fr_0.8fr]">
-          {/* Left Column: Payment Entry Form */}
-          <div className="space-y-4">
+        {/* On-Demand Payment Entry Modal / Drawer */}
+        {showPaymentWorkReport && (
+          <SimpleModal
+            title={editEntryId ? t(lang, "roz.edit_payment_entry", "Edit Payment Entry") : t(lang, "roz.payment_work_entry", "Payment Work Entry")}
+            onClose={() => {
+              setShowPaymentWorkReport(false);
+              setEditEntryId(null);
+            }}
+            className="max-w-5xl max-h-[90vh] overflow-y-auto"
+          >
+            <div className="grid gap-4 lg:grid-cols-[1.4fr_0.8fr] p-2">
+              {/* Left Column: Payment Entry Form */}
+              <div className="space-y-4">
 
-            {/* Payment Entry Card */}
-            <Card className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-              <div className="border-b border-slate-200 bg-gradient-to-r from-blue-50 to-white px-4 py-2 dark:border-slate-800 dark:from-slate-900 dark:to-slate-950">
-                <h3 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300">
-                  📋 {t(lang, "roz.payment_work_entry", "Payment Work Entry")}
-                </h3>
-              </div>
+                {/* Payment Entry Card */}
+                <Card className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                  <div className="border-b border-slate-200 bg-gradient-to-r from-blue-50 to-white px-4 py-2 dark:border-slate-800 dark:from-slate-900 dark:to-slate-950">
+                    <h3 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300">
+                      📋 {t(lang, "roz.payment_work_entry", "Payment Work Entry")}
+                    </h3>
+                  </div>
               <CardContent className="p-4 space-y-4">
                 {/* Row 1: Search Account & Daily Payment Date */}
                 <div className="grid gap-4 grid-cols-2">
@@ -2815,39 +2808,12 @@ export function CashEntryForm({
                           className="h-10 px-4 rounded-lg font-bold gap-2 text-xs"
                         >
                           <RefreshCw className="h-4 w-4" />
-                          {t(lang, "form.reset")}
+                          {t(lang, "form.reset", "Reset")}
                         </Button>
                         <Button
                           type="button"
                           disabled={!canSave || saving}
-                                >
-                                  <option value="">Select Bank</option>
-                                  {savedBanks.map((b) => (
-                                    <option key={b.name} value={b.name}>{b.name}</option>
-                                  ))}
-                                  <option value="__new_bank__" className="text-blue-600 font-bold">+ Add New Bank</option>
-                                </select>
-                              </div>
-                              <FieldBlock label="Account Number">
-                                <Input className="h-8 text-xs font-mono" value={typeDetails.bankAccount || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, bankAccount: e.target.value }))} placeholder="Account No" />
-                              </FieldBlock>
-                              <FieldBlock label="Cheque No / Ref">
-                                <Input className="h-8 text-xs font-mono" value={typeDetails.transferReferenceNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, transferReferenceNumber: e.target.value }))} placeholder="Ref / Cheque" />
-                              </FieldBlock>
-                              <FieldBlock label="Receipt Attachment">
-                                <div className="flex items-center gap-2">
-                                  <Label className="cursor-pointer flex w-max items-center justify-center h-8 px-3 rounded-full bg-slate-100 hover:bg-slate-200 border text-slate-500 shadow-sm transition gap-1.5 text-[10px] font-semibold">
-                                    <Paperclip className="h-3 w-3" />
-                                    <span>Attach</span>
-                                    <Input
-                                      type="file"
-                                      className="hidden"
-                                      onChange={(e) => {
-                                        const file = e.target.files?.[0] ?? null;
-                                        setAttachmentFile(file);
-                                        setTypeDetails((p) => ({ ...p, bankAttachmentName: file?.name || "" }));
-                                      }}
-                          className="h-9 px-6 text-xs font-black bg-blue-600 hover:bg-blue-700 text-white shadow-md"
+                          className="h-10 px-6 text-xs font-black bg-blue-600 hover:bg-blue-700 text-white shadow-md rounded-lg"
                           onClick={save}
                         >
                           <Save className={cn("h-4 w-4 mr-1.5", saving && "animate-spin")} />
@@ -2855,72 +2821,197 @@ export function CashEntryForm({
                         </Button>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
-              {/* Right Column: Live Report Preview & Position Summary */}
-              <div className="space-y-4">
-                <Card className="overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-                  <div className="border-b border-blue-200 bg-gradient-to-r from-blue-50 to-white px-4 py-2 dark:from-slate-900 dark:to-slate-950">
-                    <CardTitle className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300">
-                      <span>📄 Professional Live Payment Report</span>
-                    </CardTitle>
-                  </div>
-                  <CardContent className="p-3 space-y-3">
-                    <ReportBox
-                      rows={[
-                        ["Amount", finalPayment ? `${fmtAmount(Number(finalPayment))} ${branchCurrency}` : "-"],
-                        ["Payment Type", paymentType ? `${paymentType.charAt(0).toUpperCase() + paymentType.slice(1)}` : "-"]
-                      ].filter(Boolean) as Array<[string, string]>}
-                    />
-                    {paymentMode && (
-                      <ReportBox
-                        title="Ledger Entry Impact"
-                        rows={[
-                          ["Transaction Type", paymentMode === "DEBIT" ? "Debit (Received)" : "Credit (Paid)"],
-                          ["Balance Effect", paymentMode === "DEBIT" ? "Add to account" : "Reduce account"]
-                        ]}
-                      />
-                    )}
-                  </CardContent>
-                </Card>
+          {/* Right Column: Live Report Preview & Position Summary */}
+          <div className="space-y-4">
+            <Card className="overflow-hidden rounded-xl border border-blue-100 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+              <div className="border-b border-blue-200 bg-gradient-to-r from-blue-50 to-white px-4 py-2 dark:from-slate-900 dark:to-slate-950">
+                <CardTitle className="flex items-center justify-between text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300">
+                  <span>📄 Professional Live Payment Report</span>
+                </CardTitle>
               </div>
-            </div>
-          </SimpleModal>
-                                {/* Global Serial (Super Admin Only) */}
-                                {userRoleLevel === "super_admin" && (
-                                  <div className="flex items-center justify-between rounded bg-blue-50/80 px-2 py-0.5 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50">
-                                    <span className="font-bold text-[9px] uppercase tracking-wider text-blue-700 dark:text-blue-400">GLOBAL:</span>
-                                    <span className="font-extrabold text-blue-900 dark:text-blue-200">{globalSerial}</span>
-                                  </div>
-                                )}
-                                {/* Country Serial (Country Admin & Super Admin) */}
-                                {(userRoleLevel === "super_admin" || userRoleLevel === "country") && (
-                                  <div className="flex items-center justify-between rounded bg-indigo-50/80 px-2 py-0.5 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50">
-                                    <span className="font-bold text-[9px] uppercase tracking-wider text-indigo-700 dark:text-indigo-400">CTRY:</span>
-                                    <span className="font-extrabold text-indigo-900 dark:text-indigo-200">{countrySerial}</span>
-                                  </div>
-                                )}
-                                {/* Branch Serial (Branch, Country & Super Admin) */}
-                                {(userRoleLevel === "super_admin" || userRoleLevel === "country" || userRoleLevel === "branch") && (
-                                  <div className="flex items-center justify-between rounded bg-slate-100/80 px-2 py-0.5 dark:bg-slate-850 border border-slate-200 dark:border-slate-800">
-                                    <span className="font-bold text-[9px] uppercase tracking-wider text-slate-600 dark:text-slate-400">BRN:</span>
-                                    <span className="font-extrabold text-slate-800 dark:text-slate-200">{branchSerial}</span>
-                                  </div>
-                                )}
-                                {/* Entry Serial (DR / CR) - Visible to ALL levels */}
-                                <div className={cn(
-                                  "flex items-center justify-between rounded px-2 py-0.5 border",
-                                  isDebit 
-                                    ? "bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-950/40 dark:border-rose-900/50 dark:text-rose-300"
-                                    : "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-900/50 dark:text-emerald-300"
-                                )}>
-                                  <span className="font-black text-[9px] uppercase tracking-wider">{isDebit ? "DR SERIAL:" : "CR SERIAL:"}</span>
-                                  <span className="font-black font-mono">{entrySerial}</span>
-                                </div>
+              <CardContent className="p-3 space-y-3">
+                <ReportBox
+                  rows={[
+                    ["Amount", finalPayment ? `${fmtAmount(Number(finalPayment))} ${branchCurrency}` : "-"],
+                    ["Payment Type", paymentType ? `${paymentType.charAt(0).toUpperCase() + paymentType.slice(1)}` : "-"]
+                  ].filter(Boolean) as Array<[string, string]>}
+                />
+                {paymentMode && (
+                  <ReportBox
+                    title="Ledger Entry Impact"
+                    rows={[
+                      ["Transaction Type", paymentMode === "DEBIT" ? "Debit (Received)" : "Credit (Paid)"],
+                      ["Balance Effect", paymentMode === "DEBIT" ? "Add to account" : "Reduce account"]
+                    ]}
+                  />
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+      </SimpleModal>
+    )}
+
+    {/* Recent Cash Entries Table Card */}
+    <Card className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+      <div className="border-b border-slate-200 bg-gradient-to-r from-blue-50 to-white px-4 py-3 dark:border-slate-800 dark:from-slate-900 dark:to-slate-950 flex items-center justify-between">
+        <div className="flex items-center gap-6">
+          <h3 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300">
+            📋 {t(lang, "roz.journal_roznamcha_entry_table", "JOURNAL ROZNAMCHA — ENTRY TABLE")}
+          </h3>
+          <div className="flex items-center gap-3 text-[10px] font-semibold text-slate-600 dark:text-slate-400">
+            <span className="bg-white border border-slate-200 shadow-sm dark:bg-slate-900 dark:border-slate-800 px-2.5 py-1 rounded flex gap-1 items-center">
+              {t(lang, "roz.total_entries_colon", "Total Entries:")} <span className="font-bold text-slate-900 dark:text-slate-100">{recentEntriesSummary.count}</span>
+            </span>
+            <span className="bg-emerald-50 border border-emerald-100 text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-900 dark:text-emerald-300 px-2.5 py-1 rounded flex gap-1 items-center">
+              {t(lang, "roz.total_cr", "Total CR:")} <span className="font-bold">{fmtAmount(recentEntriesSummary.totalCredit)}</span>
+            </span>
+            <span className="bg-rose-50 border border-rose-100 text-rose-700 dark:bg-rose-950/40 dark:border-rose-900 dark:text-rose-300 px-2.5 py-1 rounded flex gap-1 items-center">
+              {t(lang, "roz.total_dr", "Total DR:")} <span className="font-bold">{fmtAmount(recentEntriesSummary.totalDebit)}</span>
+            </span>
+            <span className="bg-blue-50 border border-blue-100 text-blue-700 dark:bg-blue-950/40 dark:border-blue-900 dark:text-blue-300 px-2.5 py-1 rounded flex gap-1 items-center">
+              {t(lang, "roz.balance_colon", "Balance:")} <span className="font-bold">{fmtAmount(recentEntriesSummary.balance)}</span> <span className="text-[9px] uppercase">{recentEntriesSummary.balanceType}</span>
+            </span>
+          </div>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            type="button"
+            variant="default"
+            size="sm"
+            className="h-8 px-3.5 text-xs font-black bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+            onClick={() => {
+              resetPaymentDraft();
+              setEditEntryId(null);
+              setShowPaymentWorkReport(true);
+            }}
+          >
+            + {t(lang, "roz.new_entry", "New Entry")}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-8 px-3 text-xs font-bold"
+            onClick={fetchRecentEntries}
+            disabled={loadingEntries}
+          >
+            <RefreshCw className={cn("h-3.5 w-3.5 mr-1", loadingEntries ? "animate-spin" : "")} />
+            {t(lang, "common.refresh", "Refresh")}
+          </Button>
+        </div>
+      </div>
+      <CardContent className="p-0">
+        <div className="overflow-x-auto">
+          <table className="w-full min-w-[700px] border-collapse border border-slate-200 dark:border-slate-800 text-xs">
+            <thead className="bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-300">
+              <tr className="text-left">
+                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "تاریخ اور ہسٹری" : lang === "ps" ? "نیټه او تاریخچه" : lang === "ar" ? "التاريخ والتأريخ" : lang === "fa" ? "تاریخ و سوابق" : "Date & History"}</Th>
+                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "سیریلز اور واؤچرز" : lang === "ps" ? "سیریلونه او واوچرونه" : lang === "ar" ? "الأرقام التسلسلية والسندات" : lang === "fa" ? "سریال‌ها و اسناد" : "Serials & Vouchers"}</Th>
+                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "روزنامچہ کیٹگری" : lang === "ps" ? "د روزنامچې برخه" : lang === "ar" ? "فئة روزنامجة" : lang === "fa" ? "دسته‌بندی روزنامچه" : "Roznamcha Category"}</Th>
+                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "اکاؤنٹ تفصیلات" : lang === "ps" ? "د حساب تفصیلات" : lang === "ar" ? "تفاصيل الحساب" : lang === "fa" ? "جزئیات حساب" : "Account Details"}</Th>
+                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "نمبرز" : lang === "ps" ? "شمېرې" : lang === "ar" ? "الأرقام" : lang === "fa" ? "شماره‌ها" : "Numbers"}</Th>
+                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "تفصیلات" : lang === "ps" ? "تفصیلات" : lang === "ar" ? "التفاصيل" : lang === "fa" ? "جزئیات" : "Details"}</Th>
+                <Th className="p-3 font-bold text-center border border-slate-200 dark:border-slate-800">{lang === "ur" ? "کریڈٹ / ڈیبٹ" : lang === "ps" ? "کریډیټ / ډیبیټ" : lang === "ar" ? "دائن / مدين" : lang === "fa" ? "بستانکار / بدهکار" : "Credit/Debit"}</Th>
+                <Th className="p-3 font-bold text-right border border-slate-200 dark:border-slate-800">{lang === "ur" ? "ڈیبٹ (وصولی)" : lang === "ps" ? "ډیبیټ" : lang === "ar" ? "مدين" : lang === "fa" ? "بدهکار" : "Debit"}</Th>
+                <Th className="p-3 font-bold text-right border border-slate-200 dark:border-slate-800">{lang === "ur" ? "کریڈٹ (ادائیگی)" : lang === "ps" ? "کریډیټ" : lang === "ar" ? "دائن" : lang === "fa" ? "بستانکار" : "Credit"}</Th>
+                <Th className="p-3 font-bold text-center border border-slate-200 dark:border-slate-800">{lang === "ur" ? "کارروائی" : lang === "ps" ? "کړنې" : lang === "ar" ? "الإجراءات" : lang === "fa" ? "عملیات" : "Actions"}</Th>
+              </tr>
+            </thead>
+            <tbody>
+              {loadingEntries ? (
+                <tr>
+                  <td colSpan={10} className="p-8 text-center text-slate-400 font-medium italic border border-slate-200 dark:border-slate-800">
+                    {lang === "ur" ? "لوڈ ہو رہا ہے..." : lang === "ps" ? "بارول کیږي..." : lang === "ar" ? "جار التحميل..." : lang === "fa" ? "در حال بارگذاری..." : "Loading entries..."}
+                  </td>
+                </tr>
+              ) : recentEntries.length === 0 ? (
+                <tr>
+                  <td colSpan={10} className="p-8 text-center text-slate-400 font-medium italic border border-slate-200 dark:border-slate-800">
+                    {lang === "ur" ? "کوئی اندراج موجود نہیں ہے۔" : lang === "ps" ? "هیڅ اندراج شتون نلري." : lang === "ar" ? "لا توجد إدخالات." : lang === "fa" ? "هیچ ورودی ثبت نشده است." : "No entries recorded yet."}
+                  </td>
+                </tr>
+              ) : (
+                recentEntries.flatMap((row) => {
+                  return (row.roznamcha_lines || []).map((line: any, idx: number) => {
+                    const isDebit = Number(line.debit || 0) > 0;
+                    const isCredit = Number(line.credit || 0) > 0;
+                    const amountVal = isDebit ? Number(line.debit) : Number(line.credit);
+                    
+                    const type = line.payment_entry_type || row.type || "";
+                    const sign = isDebit ? "+" : isCredit ? "-" : "";
+                    const amountStr = `${sign}${fmtAmount(amountVal)} ${line.currency || ""}`;
+                    
+                    const debitText = lang === "ur" ? "ڈیبٹ (وصولی)" : lang === "ps" ? "ډیبیټ (ترلاسه شوی)" : lang === "ar" ? "مدين (مستلم)" : lang === "fa" ? "بدهکار (دریافتی)" : "Debit";
+                    const creditText = lang === "ur" ? "کریڈٹ (ادائیگی)" : lang === "ps" ? "کریډیټ (تادیه شوی)" : lang === "ar" ? "دائن (مدفوع)" : lang === "fa" ? "بستانکار (پرداختی)" : "Credit";
+
+                    const typeBadge = isDebit ? (
+                      <span className="rounded bg-rose-50 px-2.5 py-0.5 font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
+                        {debitText}
+                      </span>
+                    ) : isCredit ? (
+                      <span className="rounded bg-emerald-50 px-2.5 py-0.5 font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
+                        {creditText}
+                      </span>
+                    ) : (
+                      <span className="rounded bg-slate-50 px-2.5 py-0.5 font-bold text-slate-600 dark:bg-slate-900/40 dark:text-slate-400">
+                        {type || "-"}
+                      </span>
+                    );
+
+                    const globalSerial = row.super_admin_serial_number || `ERP-${row.id?.slice(0, 6)?.toUpperCase()}`;
+                    const countrySerial = row.country_transaction_serial_number || row.journal_no || "-";
+                    const branchSerial = row.branch_transaction_serial_number || row.voucher_no || "-";
+                    const entrySerial = line.entry_serial_number || (isDebit ? `DR-${row.id?.slice(0, 6)?.toUpperCase()}` : `CR-${row.id?.slice(0, 6)?.toUpperCase()}`);
+
+                    return (
+                      <tr key={`${row.id}-${line.id || idx}`} className="hover:bg-slate-50/50 dark:hover:bg-slate-900/50">
+                        <td className="p-3 border border-slate-200 dark:border-slate-800 align-top">
+                          <div className="font-semibold text-slate-900 dark:text-slate-100">{new Date(row.created_at).toLocaleString()}</div>
+                          <div className="text-[10px] text-muted-foreground mt-1">Creator: {row.profiles?.full_name || row.created_by || "System"}</div>
+                          <div className="text-[10px] text-muted-foreground">Location: {row.countries?.name || "-"} | {row.city_branches?.name || row.country_branches?.name || "-"}</div>
+                        </td>
+                        <td className="p-3 font-mono text-[10.5px] border border-slate-200 dark:border-slate-800 align-top">
+                          <div className="flex flex-col gap-1.5">
+                            {/* Global Serial (Super Admin Only) */}
+                            {userRoleLevel === "super_admin" && (
+                              <div className="flex items-center justify-between rounded bg-blue-50/80 px-2 py-0.5 dark:bg-blue-950/40 border border-blue-100 dark:border-blue-900/50">
+                                <span className="font-bold text-[9px] uppercase tracking-wider text-blue-700 dark:text-blue-400">GLOBAL:</span>
+                                <span className="font-extrabold text-blue-900 dark:text-blue-200">{globalSerial}</span>
                               </div>
-                            </td>
+                            )}
+                            {/* Country Serial (Country Admin & Super Admin) */}
+                            {(userRoleLevel === "super_admin" || userRoleLevel === "country") && (
+                              <div className="flex items-center justify-between rounded bg-indigo-50/80 px-2 py-0.5 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50">
+                                <span className="font-bold text-[9px] uppercase tracking-wider text-indigo-700 dark:text-indigo-400">CTRY:</span>
+                                <span className="font-extrabold text-indigo-900 dark:text-indigo-200">{countrySerial}</span>
+                              </div>
+                            )}
+                            {/* Branch Serial (Branch, Country & Super Admin) */}
+                            {(userRoleLevel === "super_admin" || userRoleLevel === "country" || userRoleLevel === "branch") && (
+                              <div className="flex items-center justify-between rounded bg-slate-100/80 px-2 py-0.5 dark:bg-slate-850 border border-slate-200 dark:border-slate-800">
+                                <span className="font-bold text-[9px] uppercase tracking-wider text-slate-600 dark:text-slate-400">BRN:</span>
+                                <span className="font-extrabold text-slate-800 dark:text-slate-200">{branchSerial}</span>
+                              </div>
+                            )}
+                            {/* Entry Serial (DR / CR) - Visible to ALL levels */}
+                            <div className={cn(
+                              "flex items-center justify-between rounded px-2 py-0.5 border",
+                              isDebit 
+                                ? "bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-950/40 dark:border-rose-900/50 dark:text-rose-300"
+                                : "bg-emerald-50 border-emerald-200 text-emerald-800 dark:bg-emerald-950/40 dark:border-emerald-900/50 dark:text-emerald-300"
+                            )}>
+                              <span className="font-black text-[9px] uppercase tracking-wider">{isDebit ? "DR SERIAL:" : "CR SERIAL:"}</span>
+                              <span className="font-black font-mono">{entrySerial}</span>
+                            </div>
+                          </div>
+                        </td>
                           <td className="p-3 border border-slate-200 dark:border-slate-800 align-top">
                             <span className="inline-flex items-center rounded-md bg-purple-50 px-2 py-1 text-[11px] font-bold text-purple-700 ring-1 ring-inset ring-purple-700/10 dark:bg-purple-400/10 dark:text-purple-400 dark:ring-purple-400/30">
                               {getRoznamchaCategoryLabel(row)}
