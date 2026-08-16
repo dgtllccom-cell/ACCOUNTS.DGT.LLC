@@ -97,6 +97,10 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "branding_report_header", mode: "translate" },
     { field: "branding_report_footer", mode: "translate" },
   ],
+  company_registration_types: [
+    { field: "name", mode: "translate" },
+    { field: "description", mode: "translate" },
+  ],
   city_branches: [
     { field: "name", mode: "transliterate" },
     { field: "city_name", mode: "transliterate" },
@@ -117,7 +121,12 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
   profiles: [{ field: "full_name", mode: "transliterate" }],
   // Employee full_name is surfaced on the employees row (joined from person master) and read
   // via localizeRecordNames(record_table='employees'); register it here so write matches read.
-  employees: [{ field: "full_name", mode: "transliterate" }],
+  employees: [
+    { field: "full_name", mode: "transliterate" },
+    { field: "category", mode: "translate" },
+    { field: "department", mode: "translate" },
+    { field: "designation", mode: "translate" },
+  ],
 
   // ── Product / inventory master (descriptive → translate) ──
   products: [
@@ -174,6 +183,7 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "description", mode: "translate" },
   ],
   erp_report_templates: [{ field: "report_title", mode: "translate" }],
+  saved_reports: [{ field: "name", mode: "translate" }],
 
   // ── Logistics / shipping (party & vessel names → transliterate; goods → translate) ──
   shipping_line_records: [
@@ -185,6 +195,10 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "vessel_name", mode: "transliterate" },
   ],
   shipment_documents: [{ field: "document_type", mode: "translate" }],
+  document_types: [
+    { field: "name", mode: "translate" },
+    { field: "description", mode: "translate" },
+  ],
   purchase_loading_records: [{ field: "carrier_name", mode: "transliterate" }],
   purchase_order_items: [
     { field: "goods_name", mode: "translate" },
@@ -276,7 +290,10 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
   //    remarks / memo). Enrolled as original-fallback (status "pending") — never
   //    machine-mangled; a human/engine translates later. Runtime source of truth is the
   //    DB table `translation_field_registry` (migrations 20260808 + 20260809). ──
-  roznamcha_entries: [{ field: "narration", mode: "translate" }],
+  roznamcha_entries: [
+    { field: "narration", mode: "translate" },
+    { field: "entry_category", mode: "translate" },
+  ],
   roznamcha_lines: [{ field: "description", mode: "translate" }],
   journal_entries: [{ field: "memo", mode: "translate" }],
   journal_lines: [{ field: "description", mode: "translate" }],

@@ -4,10 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createPortal } from "react-dom";
 import {
-  Download,
   Printer,
   Search,
-  ChevronRight,
   MoreVertical,
   RefreshCcw,
   SlidersHorizontal,
@@ -16,8 +14,7 @@ import {
   DollarSign,
   Receipt,
   ChevronDown,
-  X,
-  Table2
+  X
 } from "lucide-react";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import { Button } from "@/components/ui/button";
@@ -236,6 +233,7 @@ export function RoznamchaTypeReportView({
   const [showAllCategories, setShowAllCategories] = useState(false);
   const [actionsMenuOpen, setActionsMenuOpen] = useState(false);
   const [actionsSlot, setActionsSlot] = useState<HTMLElement | null>(null);
+  const [titleSlot, setTitleSlot] = useState<HTMLElement | null>(null);
 
   const [fromDate, setFromDate] = useState(monthStartIso());
   const [toDate, setToDate] = useState(todayIso());
@@ -255,6 +253,7 @@ export function RoznamchaTypeReportView({
 
   useEffect(() => {
     setActionsSlot(document.getElementById("erp-page-actions-slot"));
+    setTitleSlot(document.getElementById("erp-page-title-slot"));
   }, []);
 
   async function fetchSessionInfo() {
@@ -390,29 +389,24 @@ export function RoznamchaTypeReportView({
     }
   }
 
+  // Header strip actions content (Inside ErpPageActions banner)
   const topActionsContent = (
-    <div className="flex flex-wrap items-center gap-2">
-      {/* Back button */}
-      <Button type="button" variant="ghost" size="sm" className="h-8 gap-1.5 text-xs font-bold" onClick={() => router.back()}>
-        <ChevronRight className="h-4 w-4 rotate-180" aria-hidden />
-        Back
-      </Button>
-
-      {/* Filter trigger */}
+    <div className="flex items-center gap-1.5">
+      {/* 1. Filter trigger */}
       <Button
         type="button"
         variant={filtersOpen ? "default" : "outline"}
         size="sm"
-        className="h-8 gap-1.5 text-xs font-bold"
+        className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold"
         onClick={() => setFiltersOpen((v) => !v)}
       >
-        <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden />
+        <SlidersHorizontal className="h-3 w-3" aria-hidden />
         {filtersOpen ? "Hide Filters" : "Search / Filters"}
       </Button>
 
-      {/* Search query input in header */}
-      <div className="relative min-w-[150px] sm:min-w-[190px]">
-        <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+      {/* 2. Search query input in header strip */}
+      <div className="relative min-w-[130px] sm:min-w-[170px]">
+        <Search className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="text"
           value={q}
@@ -421,7 +415,7 @@ export function RoznamchaTypeReportView({
             if (e.key === "Enter") applySearch();
           }}
           placeholder="Filter entries..."
-          className="h-8 pl-8 pr-2.5 text-xs rounded-lg"
+          className="h-7 pl-7 pr-2 text-[11px] rounded-lg"
         />
         {q && (
           <button
@@ -430,38 +424,38 @@ export function RoznamchaTypeReportView({
               setQ("");
               setPage(1);
             }}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
           >
             <X className="h-3 w-3" />
           </button>
         )}
       </div>
 
-      {/* Reload button */}
+      {/* 3. Reload button */}
       <Button
         type="button"
         variant="outline"
         size="sm"
-        className="h-8 gap-1 text-xs font-semibold px-2.5"
+        className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold"
         onClick={() => void loadData()}
         disabled={loading}
         title="Reload data"
       >
-        <RefreshCcw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
+        <RefreshCcw className={cn("h-3 w-3", loading && "animate-spin")} />
         <span className="hidden md:inline">Reload</span>
       </Button>
 
-      {/* Actions dropdown */}
+      {/* 4. Export / Actions dropdown */}
       <div className="relative">
         <Button
           type="button"
           variant="outline"
           size="sm"
-          className="h-8 gap-1.5 text-xs font-bold px-3 bg-blue-50/50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800"
+          className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold bg-blue-50/50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800"
           onClick={() => setActionsMenuOpen((v) => !v)}
         >
-          <MoreVertical className="h-3.5 w-3.5" />
-          Actions
+          <MoreVertical className="h-3 w-3" />
+          Export
         </Button>
         {actionsMenuOpen ? (
           <div
@@ -507,43 +501,45 @@ export function RoznamchaTypeReportView({
     </div>
   );
 
+  // Title header override in strip
+  const titleSlotContent = (
+    <div className="flex items-center gap-2">
+      <h1 className="truncate text-xs font-black tracking-tight text-slate-900 dark:text-slate-100 sm:text-sm">
+        {pageTitle}
+      </h1>
+      <span className="rounded-full bg-blue-100 px-2 py-0.5 text-[9px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 uppercase">
+        {entryCategory === "all" ? "All Types" : getCategoryLabel(entryCategory, activeLang)}
+      </span>
+    </div>
+  );
+
   return (
-    <div className="w-full space-y-3.5 text-foreground animate-in fade-in duration-200">
-      {/* Portal to Header */}
+    <div className="w-full space-y-3 text-foreground animate-in fade-in duration-200">
+      {/* Portals directly into ErpPageActions banner strip */}
       {actionsSlot && createPortal(topActionsContent, actionsSlot)}
+      {titleSlot && createPortal(titleSlotContent, titleSlot)}
 
-      {/* Header bar */}
-      <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <h1 className="text-xl sm:text-2xl font-black text-slate-900 dark:text-white tracking-tight">
-              {pageTitle}
-            </h1>
-            <span className="rounded-full bg-blue-100 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-950 dark:text-blue-300 uppercase">
-              {entryCategory === "all" ? "All Entry Types" : getCategoryLabel(entryCategory, activeLang)}
-            </span>
-          </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Generated Date: {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}
-          </p>
+      {/* Fallback bar if ErpPageActions banner is absent */}
+      {!actionsSlot && (
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-200 dark:border-slate-800 pb-2.5">
+          {titleSlotContent}
+          {topActionsContent}
         </div>
-
-        {!actionsSlot && topActionsContent}
-      </div>
+      )}
 
       {/* 4 Executive KPI Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3.5">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
         {/* Card 1: Branch & User Details */}
-        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-          <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-blue-50/60 dark:bg-blue-900/15">
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-blue-50/60 dark:bg-blue-900/15">
             <div className="bg-blue-600 p-1 rounded-full text-white flex-shrink-0">
-              <Users className="h-3.5 w-3.5" />
+              <Users className="h-3 w-3" />
             </div>
-            <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
+            <h4 className="text-[11px] font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
               1. BRANCH & USER DETAILS
             </h4>
           </div>
-          <div className="p-3.5 flex flex-col gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+          <div className="p-3 flex flex-col gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
               <span>COUNTRY:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{sessionInfo?.scopes?.summary?.countryName || "United Arab Emirates"}</span>
@@ -570,7 +566,7 @@ export function RoznamchaTypeReportView({
               <span>DATE & TIME:</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}</span>
             </div>
-            <div className="flex justify-between items-center mt-auto pt-1.5">
+            <div className="flex justify-between items-center mt-auto pt-1">
               <span>STATUS:</span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">ACTIVE</span>
             </div>
@@ -578,16 +574,16 @@ export function RoznamchaTypeReportView({
         </div>
 
         {/* Card 2: Global Financial Summary */}
-        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-          <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/60 dark:bg-emerald-900/15">
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/60 dark:bg-emerald-900/15">
             <div className="bg-emerald-600 p-1 rounded-full text-white flex-shrink-0">
-              <DollarSign className="h-3.5 w-3.5" />
+              <DollarSign className="h-3 w-3" />
             </div>
-            <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
+            <h4 className="text-[11px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
               2. GLOBAL FINANCIAL SUMMARY
             </h4>
           </div>
-          <div className="p-3.5 flex flex-col gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+          <div className="p-3 flex flex-col gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
               <span>TOTAL GLOBAL ENTRIES:</span>
               <span className="font-black text-slate-800 dark:text-slate-200">{data?.totalCount ?? 0}</span>
@@ -600,7 +596,7 @@ export function RoznamchaTypeReportView({
               <span className="text-rose-600 dark:text-rose-400">TOTAL DEBIT (AED):</span>
               <span className="font-black text-rose-600 dark:text-rose-400 font-mono">{fmtNumber(data?.totalDebit ?? 0)}</span>
             </div>
-            <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800">
               <span className="text-slate-700 dark:text-slate-300 font-bold">BALANCE (AED):</span>
               <span className="font-black text-blue-600 dark:text-blue-400 font-mono text-sm">{fmtNumber(data?.netBalance ?? 0)}</span>
             </div>
@@ -608,16 +604,16 @@ export function RoznamchaTypeReportView({
         </div>
 
         {/* Card 3: Bill Entries Summary */}
-        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
-          <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-slate-100 dark:border-slate-800 bg-purple-50/60 dark:bg-purple-900/15">
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-purple-50/60 dark:bg-purple-900/15">
             <div className="bg-purple-600 p-1 rounded-full text-white flex-shrink-0">
-              <Receipt className="h-3.5 w-3.5" />
+              <Receipt className="h-3 w-3" />
             </div>
-            <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">
+            <h4 className="text-[11px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">
               3. BILL ENTRIES SUMMARY
             </h4>
           </div>
-          <div className="p-3.5 flex flex-col gap-1.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+          <div className="p-3 flex flex-col gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
               <span>TOTAL BILL ENTRIES:</span>
               <span className="font-black text-slate-800 dark:text-slate-200">{data?.totalCount ?? 0}</span>
@@ -630,14 +626,14 @@ export function RoznamchaTypeReportView({
               <span className="text-rose-600">REMAINING ENTRIES:</span>
               <span className="font-black text-rose-600">{data?.pendingCount ?? 0}</span>
             </div>
-            <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px]">
+            <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[10px]">
               <span>SYSTEM STATUS:</span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400">ONLINE & SYNCED</span>
             </div>
           </div>
         </div>
 
-        {/* Card 4: All Categories & Reports Breakdown */}
+        {/* Card 4: All Categories Breakdown */}
         <button
           type="button"
           onClick={() => setShowAllCategories(!showAllCategories)}
@@ -645,26 +641,26 @@ export function RoznamchaTypeReportView({
             "flex flex-col rounded-xl border transition-all duration-200 text-left overflow-hidden h-full group",
             showAllCategories
               ? "border-orange-500 bg-orange-50/30 shadow-md dark:border-orange-500/50 dark:bg-orange-950/20"
-              : "border-slate-200 bg-white shadow-sm hover:border-orange-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+              : "border-slate-200 bg-white shadow-xs hover:border-orange-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
           )}
         >
           <div className={cn(
-            "flex items-center justify-between px-3.5 py-2.5 border-b w-full transition-colors",
+            "flex items-center justify-between px-3 py-2 border-b w-full transition-colors",
             showAllCategories
               ? "border-orange-200 bg-orange-100/50 dark:border-orange-900/50 dark:bg-orange-900/30"
               : "border-slate-100 bg-orange-50/60 dark:border-slate-800 dark:bg-orange-900/15"
           )}>
             <div className="flex items-center gap-2">
               <div className="bg-orange-600 p-1 rounded-full text-white flex-shrink-0">
-                <Globe2 className="h-3.5 w-3.5" />
+                <Globe2 className="h-3 w-3" />
               </div>
-              <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">
+              <h4 className="text-[11px] font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">
                 4. ALL COUNTRIES REPORT
               </h4>
             </div>
-            <ChevronDown className={cn("h-4 w-4 text-orange-600 transition-transform duration-200", showAllCategories ? "rotate-180" : "")} />
+            <ChevronDown className={cn("h-3.5 w-3.5 text-orange-600 transition-transform duration-200", showAllCategories ? "rotate-180" : "")} />
           </div>
-          <div className="p-3.5 flex flex-col justify-between h-full w-full">
+          <div className="p-3 flex flex-col justify-between h-full w-full">
             <div className="space-y-1">
               <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
                 Active Types: <span className="font-extrabold text-orange-600">5 Categories</span>
@@ -673,11 +669,11 @@ export function RoznamchaTypeReportView({
                 Current Filter: <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedCategory === "all" ? "All Categories" : getCategoryLabel(selectedCategory, activeLang)}</span>
               </div>
             </div>
-            <div className="mt-3 flex items-center justify-between pt-2 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-[11px] font-bold text-orange-600 group-hover:underline">
+            <div className="mt-2.5 flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-800">
+              <span className="text-[10px] font-bold text-orange-600 group-hover:underline">
                 {showAllCategories ? "Hide Details" : "Show Details"}
               </span>
-              <span className="text-[10px] font-bold text-orange-600 bg-orange-100/80 dark:bg-orange-950/60 px-2 py-0.5 rounded">
+              <span className="text-[9px] font-bold text-orange-600 bg-orange-100/80 dark:bg-orange-950/60 px-1.5 py-0.5 rounded">
                 EXPLORE →
               </span>
             </div>
@@ -687,16 +683,16 @@ export function RoznamchaTypeReportView({
 
       {/* Expanded Breakdown Directory */}
       {showAllCategories ? (
-        <div className="rounded-xl border border-orange-200 bg-orange-50/40 p-4 dark:border-orange-900/50 dark:bg-orange-950/20 animate-in fade-in slide-in-from-top-2">
-          <div className="flex items-center justify-between mb-3">
+        <div className="rounded-xl border border-orange-200 bg-orange-50/40 p-3.5 dark:border-orange-900/50 dark:bg-orange-950/20 animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-center justify-between mb-2.5">
             <h3 className="text-xs font-black uppercase tracking-wider text-orange-900 dark:text-orange-300">
               Roznamcha Entry Category Directory
             </h3>
-            <span className="text-[11px] text-orange-700 dark:text-orange-400">
+            <span className="text-[10px] text-orange-700 dark:text-orange-400">
               Click a category to filter instantly
             </span>
           </div>
-          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-5">
+          <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
             {(["cash", "bank", "invoice", "transfer", "business"] as RoznamchaEntryCategory[]).map((cat) => (
               <div
                 key={cat}
@@ -705,7 +701,7 @@ export function RoznamchaTypeReportView({
                   setPage(1);
                 }}
                 className={cn(
-                  "cursor-pointer rounded-xl border p-3 transition-all hover:shadow-md",
+                  "cursor-pointer rounded-xl border p-2.5 transition-all hover:shadow-md",
                   selectedCategory === cat
                     ? "border-orange-500 bg-orange-100/70 dark:border-orange-400 dark:bg-orange-900/40 font-bold"
                     : "border-white/80 bg-white/90 dark:border-slate-800 dark:bg-slate-900/80"
@@ -715,7 +711,7 @@ export function RoznamchaTypeReportView({
                   <span className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase">{getCategoryLabel(cat, activeLang)}</span>
                   <span className="text-[10px] font-mono text-slate-400">#{cat}</span>
                 </div>
-                <div className="mt-1 text-[10px] text-slate-500 dark:text-slate-400">
+                <div className="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">
                   {selectedCategory === cat ? "Active View" : "Click to view"}
                 </div>
               </div>
@@ -726,22 +722,22 @@ export function RoznamchaTypeReportView({
 
       {/* Collapsible Search & Filter Panel */}
       {filtersOpen ? (
-        <Card className="border-slate-200/80 shadow-sm animate-in fade-in slide-in-from-top-2">
-          <CardContent className="p-4 space-y-3">
+        <Card className="border-slate-200/80 shadow-xs animate-in fade-in slide-in-from-top-2">
+          <CardContent className="p-3.5 space-y-3">
             <div className="grid gap-3 md:grid-cols-4 xl:grid-cols-6">
               <div className="space-y-1">
-                <Label className="text-[11px] text-muted-foreground">From Date</Label>
-                <Input className="h-9 text-xs" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
+                <Label className="text-[10px] text-muted-foreground">From Date</Label>
+                <Input className="h-8 text-xs" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
               </div>
               <div className="space-y-1">
-                <Label className="text-[11px] text-muted-foreground">To Date</Label>
-                <Input className="h-9 text-xs" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
+                <Label className="text-[10px] text-muted-foreground">To Date</Label>
+                <Input className="h-8 text-xs" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
               </div>
               {entryCategory === "all" ? (
                 <div className="space-y-1">
-                  <Label className="text-[11px] text-muted-foreground">Entry Type</Label>
+                  <Label className="text-[10px] text-muted-foreground">Entry Type</Label>
                   <select
-                    className="h-9 w-full rounded-md border border-input bg-background px-2 text-xs"
+                    className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value as RoznamchaEntryCategory | "all")}
                   >
@@ -753,9 +749,9 @@ export function RoznamchaTypeReportView({
                 </div>
               ) : null}
               <div className="space-y-1">
-                <Label className="text-[11px] text-muted-foreground">Debit / Credit</Label>
+                <Label className="text-[10px] text-muted-foreground">Debit / Credit</Label>
                 <select
-                  className="h-9 w-full rounded-md border border-input bg-background px-2 text-xs"
+                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
                   value={debitCredit}
                   onChange={(e) => setDebitCredit(e.target.value)}
                 >
@@ -772,9 +768,9 @@ export function RoznamchaTypeReportView({
                 onValueChange={setCurrency}
               />
               <div className="space-y-1">
-                <Label className="text-[11px] text-muted-foreground">Status</Label>
+                <Label className="text-[10px] text-muted-foreground">Status</Label>
                 <select
-                  className="h-9 w-full rounded-md border border-input bg-background px-2 text-xs"
+                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
                 >
@@ -786,29 +782,29 @@ export function RoznamchaTypeReportView({
                 </select>
               </div>
               <div className="space-y-1">
-                <Label className="text-[11px] text-muted-foreground">Reference No</Label>
-                <Input className="h-9 text-xs" value={referenceNo} onChange={(e) => setReferenceNo(e.target.value)} placeholder="Reference number" />
+                <Label className="text-[10px] text-muted-foreground">Reference No</Label>
+                <Input className="h-8 text-xs" value={referenceNo} onChange={(e) => setReferenceNo(e.target.value)} placeholder="Reference number" />
               </div>
               <div className="space-y-1">
-                <Label className="text-[11px] text-muted-foreground">Bill No</Label>
-                <Input className="h-9 text-xs" value={billNo} onChange={(e) => setBillNo(e.target.value)} placeholder="Bill number" />
+                <Label className="text-[10px] text-muted-foreground">Bill No</Label>
+                <Input className="h-8 text-xs" value={billNo} onChange={(e) => setBillNo(e.target.value)} placeholder="Bill number" />
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button type="button" size="sm" onClick={applySearch} disabled={loading}>Apply</Button>
-              <Button type="button" size="sm" variant="secondary" onClick={resetFilters} disabled={loading}>Reset</Button>
+              <Button type="button" size="sm" className="h-7 text-xs" onClick={applySearch} disabled={loading}>Apply</Button>
+              <Button type="button" size="sm" variant="secondary" className="h-7 text-xs" onClick={resetFilters} disabled={loading}>Reset</Button>
             </div>
           </CardContent>
         </Card>
       ) : null}
 
       {/* Data Table */}
-      <Card className="border-slate-200/80 shadow-sm">
-        <CardHeader className="py-2.5 px-4 flex flex-row items-center justify-between border-b border-slate-100 dark:border-slate-800">
+      <Card className="border-slate-200/80 shadow-xs">
+        <CardHeader className="py-2 px-3 flex flex-row items-center justify-between border-b border-slate-100 dark:border-slate-800">
           <CardTitle className="text-xs font-bold text-slate-700 dark:text-slate-300">
             Total Entries: <span className="font-extrabold text-blue-600 dark:text-blue-400">{data?.totalCount ?? 0}</span>
           </CardTitle>
-          <div className="text-[11px] font-semibold text-slate-500">
+          <div className="text-[10.5px] font-semibold text-slate-500">
             Showing Page {page} of {Math.ceil((data?.totalCount ?? 0) / pageSize) || 1}
           </div>
         </CardHeader>
@@ -884,7 +880,7 @@ export function RoznamchaTypeReportView({
             </table>
           </div>
 
-          <div className="p-3 border-t border-slate-100 dark:border-slate-800">
+          <div className="p-2.5 border-t border-slate-100 dark:border-slate-800">
             <ReportPagination
               page={page}
               pageSize={pageSize}

@@ -4,6 +4,9 @@ import { ledgerPostingSchema } from "@/lib/api/erp-validation";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { authorizeApiScope, getScopeFromSearchParams } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
+import { withLocalPg } from "@/lib/db/local-postgres";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { ledgerService } from "@/lib/services/ledger-service";
 
 export async function GET(request: NextRequest) {
@@ -17,43 +20,59 @@ export async function GET(request: NextRequest) {
       ...scope
     });
 
-    const supabase = await createApiSupabaseClient();
-    let query = supabase
-      .from("ledgers")
-      .select(`
-        id, scope, country_id, country_branch_id, city_branch_id, account_id, code, name, currency, opening_balance, current_balance, debit_total, credit_total, is_active, created_at, updated_at,
-        enterprise_accounts(account_number, contacts),
-        countries(name),
-        city_branches(name)
-      `)
-      .is("deleted_at", null)
-      .order("code", { ascending: true });
+    const viaPg = await withLocalPg(async (sql) => {
+      let query = sql`
+        select id, scope, country_id, country_branch_id, city_branch_id, account_id, code, name, currency,
+               opening_balance, current_balance, debit_total, credit_total, is_active, created_at, updated_at
+        from public.ledgers
+        where deleted_at is null
+      `;
 
-    // Enforce ledger security boundaries based on user scope
-    if (!session.isSuperAdmin) {
-      if (session.cityBranchIds.length > 0) {
-        query = query.in("city_branch_id", session.cityBranchIds);
-      } else if (session.countryBranchIds.length > 0) {
-        query = query.in("country_branch_id", session.countryBranchIds);
-      } else if (session.countryIds.length > 0) {
-        query = query.in("country_id", session.countryIds);
+      if (!session.isSuperAdmin) {
+        const cityIds = session.cityBranchIds ?? [];
+        const countryBranchIds = session.countryBranchIds ?? [];
+        const countryIds = session.countryIds ?? [];
+        if (cityIds.length === 0 && countryBranchIds.length === 0 && countryIds.length === 0) {
+          return [] as any[];
+        }
+        query = await sql`
+          select id, scope, country_id, country_branch_id, city_branch_id, account_id, code, name, currency,
+                 opening_balance, current_balance, debit_total, credit_total, is_active, created_at, updated_at
+          from public.ledgers
+          where deleted_at is null
+            and (city_branch_id = any(${cityIds}) or country_branch_id = any(${countryBranchIds}) or country_id = any(${countryIds}))
+            and (${scope.countryId ? sql`country_id = ${scope.countryId}` : sql`true`})
+            and (${scope.countryBranchId ? sql`country_branch_id = ${scope.countryBranchId}` : sql`true`})
+            and (${scope.cityBranchId ? sql`city_branch_id = ${scope.cityBranchId}` : sql`true`})
+          order by code asc
+          limit 100
+        `;
       } else {
-        query = query.eq("id", "00000000-0000-0000-0000-000000000000");
+        query = await sql`
+          select id, scope, country_id, country_branch_id, city_branch_id, account_id, code, name, currency,
+                 opening_balance, current_balance, debit_total, credit_total, is_active, created_at, updated_at
+          from public.ledgers
+          where deleted_at is null
+            and (${scope.countryId ? sql`country_id = ${scope.countryId}` : sql`true`})
+            and (${scope.countryBranchId ? sql`country_branch_id = ${scope.countryBranchId}` : sql`true`})
+            and (${scope.cityBranchId ? sql`city_branch_id = ${scope.cityBranchId}` : sql`true`})
+          order by code asc
+          limit 100
+        `;
       }
+
+      return query as any[];
+    });
+
+    if (!viaPg) {
+      return apiOk({ ledgers: [], limit: 100 });
     }
 
-    if (scope.countryId) query = query.eq("country_id", scope.countryId);
-    if (scope.countryBranchId) query = query.eq("country_branch_id", scope.countryBranchId);
-    if (scope.cityBranchId) query = query.eq("city_branch_id", scope.cityBranchId);
-
-    const { data, error } = await query.limit(100);
-
-    if (error) {
-      throw new Error(error.message);
-    }
+    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
+    const resolvedData = await localizeRecordNames(viaPg as any[], "ledgers", "name", lang);
 
     return apiOk({
-      ledgers: data ?? [],
+      ledgers: resolvedData,
       limit: 100
     });
   } catch (error) {
