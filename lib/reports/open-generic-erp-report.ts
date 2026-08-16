@@ -40,7 +40,7 @@ function formatCellValue(value: unknown, column: GenericReportColumn, lang: stri
 
   const str = String(value);
   // Check if string needs translation via dictionary
-  return translateHeader(str, lang);
+  return translateHeader(lang, str);
 }
 
 function renderCell(value: unknown, column: GenericReportColumn, row: Record<string, unknown>, lang: string): string {
@@ -69,7 +69,7 @@ function renderCell(value: unknown, column: GenericReportColumn, row: Record<str
 }
 
 function buildCsv(columns: GenericReportColumn[], rows: Record<string, unknown>[], lang: string) {
-  const headers = columns.map((column) => `"${translateHeader(column.label, lang).replace(/"/g, '""')}"`).join(",");
+  const headers = columns.map((column) => `"${translateHeader(lang, column.label).replace(/"/g, '""')}"`).join(",");
   const lines = rows.map((row) =>
     columns
       .map((column) => `"${formatCellValue(row[column.key], column, lang).replace(/"/g, '""')}"`)
@@ -87,7 +87,7 @@ function buildKpis(summary: Record<string, unknown>, lang: string, currency?: st
         .replace(/([A-Z])/g, " $1")
         .replace(/_/g, " ")
         .replace(/^./, (letter) => letter.toUpperCase());
-      const label = translateHeader(rawLabel, lang);
+      const label = translateHeader(lang, rawLabel);
       const color: ERPKpiCard["color"][] = ["blue", "green", "amber", "slate", "red", "blue", "green", "amber"];
       return {
         label,
@@ -96,7 +96,7 @@ function buildKpis(summary: Record<string, unknown>, lang: string, currency?: st
             ? key.toLowerCase().includes("amount") || key.toLowerCase().includes("debit") || key.toLowerCase().includes("credit") || key.toLowerCase().includes("balance") || key.toLowerCase().includes("price")
               ? formatMoney(value, currency)
               : formatNumber(value)
-            : translateHeader(String(value), lang),
+            : translateHeader(lang, String(value)),
         color: color[index] ?? "slate",
       };
     });
@@ -133,11 +133,11 @@ export function openGenericErpReport(input: {
     legendHtml,
   } = input;
 
-  const translatedTitle = translateHeader(title, lang);
-  const translatedSubtitle = subtitle ? translateHeader(subtitle, lang) : undefined;
+  const translatedTitle = translateHeader(lang, title);
+  const translatedSubtitle = subtitle ? translateHeader(lang, subtitle) : undefined;
   const translatedFilters = filters.map(f => ({
-    label: translateHeader(f.label, lang),
-    value: translateHeader(f.value, lang)
+    label: translateHeader(lang, f.label),
+    value: translateHeader(lang, f.value)
   }));
 
   const tableHtml = `
@@ -145,7 +145,7 @@ export function openGenericErpReport(input: {
     <table class="data-table">
       <thead>
         <tr>
-          ${columns.map((column) => `<th>${escapeHtml(translateHeader(column.label, lang))}</th>`).join("")}
+          ${columns.map((column) => `<th>${escapeHtml(translateHeader(lang, column.label))}</th>`).join("")}
         </tr>
       </thead>
       <tbody>
@@ -159,7 +159,7 @@ export function openGenericErpReport(input: {
               </tr>`
                 )
                 .join("")
-            : `<tr><td colspan="${Math.max(columns.length, 1)}" style="text-align:center;padding:18px;">${escapeHtml(translateHeader("No records found", lang))}</td></tr>`
+            : `<tr><td colspan="${Math.max(columns.length, 1)}" style="text-align:center;padding:18px;">${escapeHtml(translateHeader(lang, "No records found"))}</td></tr>`
         }
         ${
           totalsRow
@@ -172,7 +172,7 @@ export function openGenericErpReport(input: {
                       return `<td><span style="display:block;text-align:${align};">${escapeHtml(formatCellValue(val, column, lang))}</span></td>`;
                     }
                     if (idx === 0) {
-                      return `<td><strong>${escapeHtml(translateHeader("TOTAL", lang))}</strong></td>`;
+                      return `<td><strong>${escapeHtml(translateHeader(lang, "TOTAL"))}</strong></td>`;
                     }
                     return `<td></td>`;
                   })

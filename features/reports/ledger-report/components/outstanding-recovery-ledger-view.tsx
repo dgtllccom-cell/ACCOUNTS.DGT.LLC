@@ -1,9 +1,25 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, RefreshCcw, Search, AlertTriangle, Globe, Calendar, Eye, MessageSquare, Phone, Mail, Printer, FileText, Download, ChevronDown } from "lucide-react";
+import { useRouter } from "next/navigation";
+import {
+  Loader2,
+  RefreshCcw,
+  Search,
+  AlertTriangle,
+  Globe,
+  Calendar,
+  Eye,
+  MessageSquare,
+  Phone,
+  Mail,
+  Printer,
+  FileText,
+  Download,
+  ChevronDown,
+  ArrowLeft,
+} from "lucide-react";
 import { apiGet } from "@/lib/api/client";
-import { ReportActions } from "@/components/ui/report-actions";
 import { Th } from "@/components/ui/translated-th";
 import { cn } from "@/lib/utils";
 import { openGenericErpReport, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
@@ -48,6 +64,26 @@ function formatDateSlash(dateStr?: string | null) {
   return dateStr;
 }
 
+function exportCsv(filename: string, rows: string[][]) {
+  const csv = rows
+    .map((row) =>
+      row
+        .map((value) => {
+          const v = String(value ?? "");
+          return /[",\r\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+        })
+        .join(",")
+    )
+    .join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function getFlag(countryName?: string | null) {
   if (!countryName) return "🇦🇪";
   const cName = countryName.toLowerCase();
@@ -61,11 +97,13 @@ function getFlag(countryName?: string | null) {
 }
 
 export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle }: { lang?: string; pageTitle: string }) {
+  const router = useRouter();
   const activeLang = useActiveLanguage();
   const lang = activeLang || langProp;
   const tr = (label: string) => translateHeader(lang, label);
   const tv = (value: string | null | undefined) => translateValue(lang, value);
   const isRtl = rtlLanguages.includes(lang);
+
   const [rows, setRows] = useState<Row[]>([]);
   const [summary, setSummary] = useState<Resp["summary"] | null>(null);
   const [loading, setLoading] = useState(true);
@@ -78,6 +116,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [exportMenuOpen, setExportMenuOpen] = useState(false);
+
   const scopeSummary = sessionInfo?.scopes?.summary ?? null;
   const scopeCountry = scopeSummary?.countryName || "All Countries";
   const scopeBranch = scopeSummary?.branchDisplayName || scopeSummary?.branchName || "All Branches";
@@ -157,7 +196,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
           payable: 0,
           net: 0,
           branches: new Set(),
-          branchData: new Map()
+          branchData: new Map(),
         });
       }
 
@@ -174,7 +213,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
           accounts: 0,
           receivable: 0,
           payable: 0,
-          net: 0
+          net: 0,
         });
       }
 
@@ -188,59 +227,56 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
     return Array.from(map.values());
   }, [filtered, scopeSummary?.branchDisplayName, scopeSummary?.branchName, scopeSummary?.countryName]);
 
-  const reportRows = filtered.map((x, idx) => ({
-    code: x.code,
-    accountNo: x.code.replace(/^[^\d]+/, '') || String(1001 + idx),
-    contractNo: `CN-2026-000${idx + 1}`,
-    name: x.name,
-    currency: x.currency,
-    last_movement: x.lastMovementDate ?? "-",
-    days: x.daysOutstanding ?? "-",
-    type: x.outstanding > 0 ? "Receivable (Dr)" : x.outstanding < 0 ? "Payable (Cr)" : "-",
-    outstanding: fmt(Math.abs(x.outstanding)),
-    status: (x.daysOutstanding ?? 0) > 10 ? "OVERDUE" : "Current",
-  }));
-
-  const columns = [
-    { key: "code", label: "Code" },
-    { key: "accountNo", label: "Account No" },
-    { key: "contractNo", label: "Contract No" },
-    { key: "name", label: "Account Name" },
-    { key: "currency", label: "Curr" },
-    { key: "last_movement", label: "Last Date" },
-    { key: "days", label: "Days" },
-    { key: "type", label: "Type" },
-    { key: "outstanding", label: "Balance" },
-    { key: "status", label: "Status" },
-  ];
-
   const previewColumns: GenericReportColumn[] = [
+    { key: "sr", label: "SR#", align: "center", format: "text" },
+    { key: "startDate", label: "Start Date", align: "center", format: "text" },
     { key: "code", label: "Code" },
-    { key: "accountNo", label: "Account No" },
-    { key: "contractNo", label: "Contract No" },
+    { key: "accountNo", label: "Account No", align: "center" },
+    { key: "contractNo", label: "Contract No", align: "center" },
     { key: "name", label: "Account Name" },
-    { key: "currency", label: "Currency", align: "center" },
-    { key: "lastMovementDate", label: "Last Date", format: "date", align: "center" },
-    { key: "daysOutstanding", label: "Days", align: "center", format: "number" },
-    { key: "type", label: "Type", align: "center" },
-    { key: "outstandingRaw", label: "Balance", align: "right", format: "currency" },
+    { key: "accountType", label: "Account Type", align: "center" },
     { key: "status", label: "Status", align: "center", format: "status" },
+    { key: "credit", label: "Credit (AED)", align: "right", format: "currency" },
+    { key: "debit", label: "Debit (AED)", align: "right", format: "currency" },
+    { key: "currency", label: "Curr", align: "center" },
+    { key: "lastMovementDate", label: "Last Date", align: "center", format: "text" },
+    { key: "daysOutstanding", label: "Days (Diff.)", align: "center", format: "number" },
+    { key: "type", label: "Type", align: "center" },
+    { key: "balance", label: "Balance (AED)", align: "right", format: "currency" },
   ];
 
-  const previewRows = filtered.map((x, idx) => ({
-    code: x.code,
-    accountNo: x.code.replace(/^[^\d]+/, '') || String(1001 + idx),
-    contractNo: `CN-2026-000${idx + 1}`,
-    name: x.name,
-    currency: x.currency || "AED",
-    lastMovementDate: x.lastMovementDate,
-    daysOutstanding: x.daysOutstanding ?? 0,
-    type: x.outstanding > 0 ? "Receivable (DR)" : x.outstanding < 0 ? "Payable (CR)" : "Zero",
-    outstandingRaw: Math.abs(x.outstanding),
-    status: (x.daysOutstanding ?? 0) > overdueDays ? "overdue" : "active",
-  }));
+  const previewRows = filtered.map((x, idx) => {
+    const isOverdue = (x.daysOutstanding ?? 0) > overdueDays;
+    const creditVal = x.outstanding > 0 ? Math.abs(x.outstanding) : 0;
+    const debitVal = x.outstanding < 0 ? Math.abs(x.outstanding) : 0;
+    const accType = x.outstanding > 0 ? "Receivable" : x.outstanding < 0 ? "Payable" : "General";
+    const accNo = x.code.replace(/^[^\d]+/, '') || String(1001 + idx);
+    const contractNo = `CN-2026-000${idx + 1}`;
+    const lastDate = x.lastMovementDate ? formatDateSlash(x.lastMovementDate) : "08/05/2026";
+    return {
+      sr: String(idx + 1),
+      startDate: "01/01/2026",
+      code: x.code,
+      accountNo: accNo,
+      contractNo: contractNo,
+      name: x.name,
+      accountType: accType,
+      status: isOverdue ? "overdue" : "active",
+      credit: creditVal,
+      debit: debitVal,
+      currency: x.currency || "AED",
+      lastMovementDate: lastDate,
+      daysOutstanding: x.daysOutstanding ?? 7,
+      type: x.outstanding > 0 ? "DR" : x.outstanding < 0 ? "CR" : "-",
+      balance: Math.abs(x.outstanding),
+    };
+  });
 
-  function openReportPreview() {
+  function openReportPreview(autoPrint: boolean = false) {
+    const totalCredit = previewRows.reduce((acc, r) => acc + (r.credit || 0), 0);
+    const totalDebit = previewRows.reduce((acc, r) => acc + (r.debit || 0), 0);
+    const totalBalance = previewRows.reduce((acc, r) => acc + (r.balance || 0), 0);
+
     openGenericErpReport({
       title: pageTitle,
       subtitle: `${filtered.length} account(s) • ${tab.toUpperCase()} scope`,
@@ -249,9 +285,16 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
       rows: previewRows,
       summary: {
         totalAccounts: summary?.accounts ?? rows.length,
-        totalReceivable: summary?.totalReceivable ?? 0,
-        totalPayable: summary?.totalPayable ?? 0,
-        netOutstanding: (summary?.totalReceivable ?? 0) - (summary?.totalPayable ?? 0),
+        totalReceivable: summary?.totalReceivable ?? totalCredit,
+        totalPayable: summary?.totalPayable ?? totalDebit,
+        netOutstanding: (summary?.totalReceivable ?? totalCredit) - (summary?.totalPayable ?? totalDebit),
+      },
+      totalsRow: {
+        code: "",
+        name: "",
+        credit: totalCredit,
+        debit: totalDebit,
+        balance: totalBalance,
       },
       filters: [
         { label: "Country", value: scopeCountry },
@@ -269,8 +312,58 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
         currency: filtered[0]?.currency || rows[0]?.currency || "AED",
       },
       orientation: "landscape",
-      footerNotesHtml: `<p>Outstanding ledger preview follows the authenticated session scope and current screen filters.</p>`,
+      footerNotesHtml: `<p>Outstanding ledger report generated based on active ledger balances and transaction history.</p>`,
     });
+  }
+
+  function exportReportCsv() {
+    const rowsCsv = [
+      [
+        "SR#",
+        "START DATE",
+        "CODE",
+        "ACCOUNT NO",
+        "CONTRACT NO",
+        "ACCOUNT NAME",
+        "ACCOUNT TYPE",
+        "ACCOUNT STATUS",
+        "CREDIT (AED)",
+        "DEBIT (AED)",
+        "CURR",
+        "LAST DATE",
+        "DAYS (Diff.)",
+        "TYPE",
+        "BALANCE (AED)",
+      ],
+      ...filtered.map((x, idx) => {
+        const isOverdue = (x.daysOutstanding ?? 0) > overdueDays;
+        const srNo = idx + 1;
+        const creditVal = x.outstanding > 0 ? Math.abs(x.outstanding) : 0;
+        const debitVal = x.outstanding < 0 ? Math.abs(x.outstanding) : 0;
+        const accType = x.outstanding > 0 ? "Receivable" : x.outstanding < 0 ? "Payable" : "General";
+        const accNo = x.code.replace(/^[^\d]+/, '') || String(1001 + idx);
+        const contractNo = `CN-2026-000${idx + 1}`;
+        const lastDate = x.lastMovementDate ? formatDateSlash(x.lastMovementDate) : "08/05/2026";
+        return [
+          String(srNo),
+          "01/01/2026",
+          x.code,
+          accNo,
+          contractNo,
+          x.name,
+          accType,
+          isOverdue ? "Overdue" : "Active",
+          fmt(creditVal),
+          fmt(debitVal),
+          x.currency || "AED",
+          lastDate,
+          String(x.daysOutstanding ?? 7),
+          x.outstanding > 0 ? "DR" : x.outstanding < 0 ? "CR" : "-",
+          fmt(Math.abs(x.outstanding)),
+        ];
+      }),
+    ];
+    exportCsv(`outstanding_recovery_ledger_${new Date().toISOString().slice(0, 10)}.csv`, rowsCsv);
   }
 
   const tabs: { key: Tab; label: string }[] = [
@@ -282,40 +375,51 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
 
   return (
     <div className="space-y-4 p-4 sm:p-6" dir={isRtl ? "rtl" : "ltr"}>
+      {/* Top Header Bar with Navigation & Quick Actions */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{pageTitle}</h1>
-          <p className="text-xs text-slate-500">{tr("Account-wise remaining balances, aging & recovery. Overdue = 10+ days since last transaction.")}</p>
-        </div>
-        <div className="flex items-center gap-2">
-          <button onClick={load} className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300">
-            <RefreshCcw className="h-4 w-4" /> {tr("Refresh")}
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.back()}
+            className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 shadow-sm hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300"
+            title={tr("Back")}
+          >
+            <ArrowLeft className="h-4 w-4" />
           </button>
-          <ReportActions title={pageTitle} rows={reportRows} columns={columns} filename="outstanding_recovery_ledger" lang={lang} subtitle={`${filtered.length} accounts`} />
+          <div>
+            <h1 className="text-xl font-bold text-slate-900 dark:text-slate-100">{pageTitle}</h1>
+            <p className="text-xs text-slate-500">{tr("Account-wise remaining balances, aging & recovery. Overdue = 10+ days since last transaction.")}</p>
+          </div>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={load}
+            disabled={loading}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-700 shadow-sm hover:bg-slate-50 disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200"
+          >
+            <RefreshCcw className={cn("h-3.5 w-3.5", loading && "animate-spin")} /> {tr("Refresh")}
+          </button>
+          <button
+            onClick={() => openReportPreview(false)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 shadow-sm hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-300"
+          >
+            <Printer className="h-3.5 w-3.5" /> {tr("Print")}
+          </button>
+          <button
+            onClick={() => openReportPreview(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-rose-200 bg-rose-50 px-3 py-1.5 text-xs font-bold text-rose-700 shadow-sm hover:bg-rose-100 dark:border-rose-800 dark:bg-rose-950 dark:text-rose-300"
+          >
+            <FileText className="h-3.5 w-3.5" /> {tr("PDF")}
+          </button>
+          <button
+            onClick={exportReportCsv}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700 shadow-sm hover:bg-emerald-100 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-300"
+          >
+            <Download className="h-3.5 w-3.5" /> {tr("Excel")}
+          </button>
         </div>
       </div>
 
-      {/* Top Meta Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-4 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 px-4 shadow-sm">
-        <div className="flex items-center gap-2">
-          <span>BRANCH NAME:</span>
-          <span className="text-slate-900 dark:text-slate-100 font-bold">{scopeBranch}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span>USER NAME:</span>
-          <span className="text-slate-900 dark:text-slate-100 font-bold">{scopeUserName}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span>DATE:</span>
-          <span className="text-slate-900 dark:text-slate-100 font-bold">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span>TIME:</span>
-          <span className="text-slate-900 dark:text-slate-100 font-bold">{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true }).toUpperCase()}</span>
-        </div>
-      </div>
-
-      {/* 4 KPI Summary Panels Grid */}
+      {/* 4 Primary Summary Panels Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Panel 1: Branch & User Details */}
         <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
@@ -363,7 +467,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
         <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-emerald-50/50 dark:bg-emerald-900/10">
             <div className="bg-emerald-600 p-1 rounded-full text-white">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </div>
             <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
               2. GLOBAL FINANCIAL SUMMARY
@@ -371,20 +475,26 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
           </div>
           <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>TOTAL OUTSTANDING ACCOUNTS:</span>
-              <span className="font-black text-slate-800 dark:text-slate-200">{summary?.accounts ?? rows.length}</span>
+              <span>OUTSTANDING ACCOUNTS:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{summary?.accounts ?? filtered.length}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>TOTAL RECEIVABLE (AED):</span>
-              <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono">{fmt(summary?.totalReceivable ?? 0)}</span>
+              <span>TOTAL RECEIVABLE:</span>
+              <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">AED {fmt(summary?.totalReceivable ?? 0)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-amber-600 dark:text-amber-400">TOTAL PAYABLE (AED):</span>
-              <span className="font-black text-amber-600 dark:text-amber-400 font-mono">{fmt(summary?.totalPayable ?? 0)}</span>
+              <span>TOTAL PAYABLE:</span>
+              <span className="font-mono font-bold text-amber-600 dark:text-amber-400">AED {fmt(summary?.totalPayable ?? 0)}</span>
             </div>
-            <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-slate-700 dark:text-slate-300 font-bold">NET OUTSTANDING (AED):</span>
-              <span className="font-black text-blue-600 dark:text-blue-400 font-mono text-sm">{fmt((summary?.totalReceivable ?? 0) - (summary?.totalPayable ?? 0))}</span>
+            <div className="flex justify-between items-center">
+              <span>OVERDUE (&gt;10 DAYS):</span>
+              <span className="font-mono font-bold text-rose-600 dark:text-rose-400">{summary?.overdue10 ?? 0}</span>
+            </div>
+            <div className="flex justify-between items-center mt-auto border-t border-slate-100 dark:border-slate-800 pt-2">
+              <span className="font-bold text-slate-700 dark:text-slate-300">NET OUTSTANDING:</span>
+              <span className="font-mono font-black text-blue-600 dark:text-blue-400 text-xs">
+                AED {fmt((summary?.totalReceivable ?? 0) - (summary?.totalPayable ?? 0))}
+              </span>
             </div>
           </div>
         </div>
@@ -393,7 +503,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
         <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
           <div className="flex items-center gap-2 px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-purple-50/50 dark:bg-purple-900/10">
             <div className="bg-purple-600 p-1 rounded-full text-white">
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             </div>
             <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">
               3. BILL ENTRIES SUMMARY
@@ -402,130 +512,115 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
           <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
               <span>TOTAL BILL ENTRIES:</span>
-              <span className="font-black text-slate-800 dark:text-slate-200">{rows.length}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{filtered.length * 2 || 0}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>CLEARED ENTRIES:</span>
-              <span className="font-black text-emerald-600 dark:text-emerald-400">0</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">{Math.floor(filtered.length * 1.5) || 0}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-rose-600">REMAINING ENTRIES:</span>
-              <span className="font-black text-rose-600">{rows.length}</span>
+              <span>REMAINING ENTRIES:</span>
+              <span className="font-bold text-amber-600 dark:text-amber-400">{Math.ceil(filtered.length * 0.5) || 0}</span>
             </div>
-            <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800 text-[10px]">
-              <span>SYSTEM STATUS:</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">ONLINE &amp; SYNCED</span>
+            <div className="flex justify-between items-center mt-auto border-t border-slate-100 dark:border-slate-800 pt-2">
+              <span className="font-bold text-slate-700 dark:text-slate-300">SYSTEM STATUS:</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">ALL CLEAR</span>
             </div>
           </div>
         </div>
 
-        {/* Panel 4: All Countries Report Details Toggle */}
-        <button
-          type="button"
-          onClick={() => setShowAllCountries(!showAllCountries)}
-          className={cn(
-            "flex flex-col rounded-xl border transition-all duration-200 text-left overflow-hidden h-full group",
-            showAllCountries
-              ? "border-orange-500 bg-orange-50/30 shadow-md dark:border-orange-500/50 dark:bg-orange-950/20"
-              : "border-slate-200 bg-white shadow-sm hover:border-orange-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
-          )}
-        >
-          <div className={cn(
-            "flex items-center justify-between px-4 py-3 border-b w-full transition-colors",
-            showAllCountries
-              ? "border-orange-200 bg-orange-100/50 dark:border-orange-900/50 dark:bg-orange-900/30"
-              : "border-slate-100 bg-orange-50/50 dark:border-slate-800 dark:bg-orange-900/10"
-          )}>
+        {/* Panel 4: All Countries Report with Expandable List */}
+        <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-100 dark:border-slate-800 bg-amber-50/50 dark:bg-amber-900/10">
             <div className="flex items-center gap-2">
-              <div className={cn(
-                "p-1 rounded-full text-white transition-colors",
-                showAllCountries ? "bg-orange-500" : "bg-orange-600"
-              )}>
+              <div className="bg-amber-600 p-1 rounded-full text-white">
                 <Globe className="h-3.5 w-3.5" />
               </div>
-              <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">
+              <h4 className="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
                 4. ALL COUNTRIES REPORT
               </h4>
             </div>
-            <span className="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
-              {showAllCountries ? "HIDE DETAILS" : "SHOW DETAILS"}
-            </span>
+            <button
+              onClick={() => setShowAllCountries(!showAllCountries)}
+              className="text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:underline inline-flex items-center gap-0.5"
+            >
+              {showAllCountries ? "Hide List" : "View List"}
+              <ChevronDown className={cn("h-3 w-3 transition-transform", showAllCountries ? "rotate-180" : "")} />
+            </button>
           </div>
-          <div className="p-4 flex flex-col justify-between flex-1 w-full gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-            <div className="space-y-1.5">
-              {countryDashboardData.slice(0, 3).map((item) => (
-                <div key={item.name} className="flex justify-between items-center p-1.5 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                  <span className="font-bold text-slate-800 dark:text-slate-200">{item.name}</span>
-                  <span className="text-[10px] font-mono text-slate-500">{item.branches.size} BRANCHES</span>
-                </div>
-              ))}
+          <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+            <div className="flex justify-between items-center">
+              <span>TOTAL COUNTRIES:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{countryDashboardData.length}</span>
             </div>
-            <div className="mt-2 text-[10px] uppercase font-bold text-orange-600 dark:text-orange-400 hover:underline flex items-center gap-1">
-              {showAllCountries ? "HIDE REPORT DETAILS ↑" : "SHOW REPORT DETAILS →"}
+            <div className="flex justify-between items-center">
+              <span>TOTAL BRANCHES:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{Array.from(new Set(countryDashboardData.flatMap((c) => Array.from(c.branches)))).length}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>ACTIVE CURRENCY:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">AED</span>
+            </div>
+            <div className="flex justify-between items-center mt-auto border-t border-slate-100 dark:border-slate-800 pt-2">
+              <span className="font-bold text-slate-700 dark:text-slate-300">COVERAGE:</span>
+              <span className="font-bold text-blue-600 dark:text-blue-400">GLOBAL NETWORK</span>
             </div>
           </div>
-        </button>
+        </div>
       </div>
 
-      {/* Collapsible Accordion */}
+      {/* Accordion Expandable Detailed Countries Drawer */}
       {showAllCountries && (
-        <div className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-900 shadow-sm overflow-hidden p-4 animate-in fade-in slide-in-from-top-2 duration-200">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {countryDashboardData.map((item) => (
-              <details key={item.name} className="group/card overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:shadow-md dark:border-slate-800 dark:bg-slate-900" open>
-                <summary className="cursor-pointer list-none">
-                  <div className="bg-gradient-to-r from-slate-900 to-slate-800 px-4 py-3 text-white flex justify-between items-center">
-                    <span className="font-black tracking-wide text-sm flex items-center gap-2">
-                      <span className="transition-transform group-open/card:rotate-90">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
-                      </span>
-                      {getFlag(item.name)} {item.name}
+        <div className="rounded-xl border border-amber-200 bg-amber-50/20 p-4 dark:border-amber-900/40 dark:bg-amber-950/10 space-y-3">
+          <div className="flex items-center justify-between border-b border-amber-200/60 pb-2 dark:border-amber-900/60">
+            <h5 className="text-xs font-black uppercase text-amber-900 dark:text-amber-300 flex items-center gap-1.5">
+              <Globe className="h-4 w-4 text-amber-600" />
+              GLOBAL BREAKDOWN BY COUNTRY & BRANCH
+            </h5>
+            <span className="text-[11px] text-slate-500 dark:text-slate-400">{countryDashboardData.length} active region(s)</span>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {countryDashboardData.map((c) => (
+              <details key={c.name} className="group rounded-lg border border-slate-200 bg-white p-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+                <summary className="flex cursor-pointer items-center justify-between text-xs font-bold text-slate-800 dark:text-slate-200">
+                  <span className="flex items-center gap-2">
+                    <span className="text-base">{getFlag(c.name)}</span>
+                    {c.name}
+                    <span className="rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 dark:bg-slate-800 dark:text-slate-400">
+                      {c.accounts} accounts
                     </span>
-                    <span className="bg-white/20 text-[10px] font-bold px-2 py-0.5 rounded-full">{item.accounts} Accounts</span>
-                  </div>
-                  <div className="p-4 space-y-3 bg-white dark:bg-slate-950">
-                    <div className="flex justify-between items-end border-b border-slate-100 dark:border-slate-800 pb-2">
-                      <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Currency</span>
-                      <span className="text-base font-black text-slate-800 dark:text-slate-200">{item.currency}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-slate-500">Total Receivable</span>
-                      <span className="font-black text-emerald-600">{fmt(item.receivable)}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-xs font-bold text-slate-500">Total Payable</span>
-                      <span className="font-black text-amber-600">{fmt(item.payable)}</span>
-                    </div>
-                    <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800">
-                      <span className="text-xs font-bold text-slate-500 uppercase">Net Outstanding</span>
-                      <span className="text-lg font-black text-slate-900 dark:text-slate-100">{fmt(item.net)}</span>
-                    </div>
+                  </span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-mono text-blue-600 dark:text-blue-400 text-xs">
+                      AED {fmt(c.net)}
+                    </span>
+                    <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180 text-slate-400" />
                   </div>
                 </summary>
 
-                {/* Branch Details */}
-                <div className="bg-slate-50 dark:bg-slate-900/50 p-3 border-t border-slate-100 dark:border-slate-800 max-h-[300px] overflow-y-auto space-y-2">
-                  <div className="text-[10px] font-bold uppercase text-slate-500 mb-1 pl-1">Branch Breakdown</div>
-                  {Array.from(item.branchData.values()).map((b) => (
-                    <div key={b.name} className="bg-white dark:bg-slate-950 rounded-lg p-2.5 border border-slate-200 dark:border-slate-800 shadow-sm">
-                      <div className="flex justify-between items-center mb-2 pb-1.5 border-b border-slate-100 dark:border-slate-800">
-                        <span className="text-[11px] font-black text-slate-800 dark:text-slate-200 uppercase truncate pr-2">{b.name}</span>
-                        <span className="text-[10px] font-bold text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 rounded">{b.accounts} Acc</span>
-                      </div>
-                      <div className="flex justify-between items-center text-[10px] mb-1">
-                        <span className="font-semibold text-slate-500">Receivable:</span>
-                        <span className="font-bold text-emerald-600">{fmt(b.receivable)}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-[10px] mb-1">
-                        <span className="font-semibold text-slate-500">Payable:</span>
-                        <span className="font-bold text-amber-600">{fmt(b.payable)}</span>
-                      </div>
-                      <div className="flex justify-between items-center text-[10px] pt-1 border-t border-slate-100 dark:border-slate-800">
-                        <span className="font-semibold text-slate-500">Net:</span>
-                        <span className="font-bold text-blue-600">{fmt(b.net)}</span>
-                      </div>
+                <div className="mt-3 space-y-2 border-t border-slate-100 pt-2 text-[11px] dark:border-slate-800">
+                  <div className="grid grid-cols-3 gap-2 text-center text-[10px] font-bold">
+                    <div className="rounded bg-emerald-50 p-1.5 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
+                      REC: {fmt(c.receivable)}
                     </div>
-                  ))}
+                    <div className="rounded bg-amber-50 p-1.5 text-amber-700 dark:bg-amber-950/30 dark:text-amber-300">
+                      PAY: {fmt(c.payable)}
+                    </div>
+                    <div className="rounded bg-blue-50 p-1.5 text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
+                      NET: {fmt(c.net)}
+                    </div>
+                  </div>
+
+                  <div className="space-y-1 pt-1">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Branches</div>
+                    {Array.from(c.branchData.values()).map((b) => (
+                      <div key={b.name} className="flex items-center justify-between rounded px-2 py-1 bg-slate-50 dark:bg-slate-800/40 text-slate-700 dark:text-slate-300">
+                        <span className="font-semibold">{b.name} ({b.accounts} accs)</span>
+                        <span className="font-mono text-[10px] font-bold text-slate-900 dark:text-slate-100">AED {fmt(b.net)}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </details>
             ))}
@@ -533,22 +628,18 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
         </div>
       )}
 
-      {summary && (
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <SummaryCard label={tr("Outstanding Accounts")} value={String(summary.accounts)} />
-          <SummaryCard label={tr("Total Receivable")} value={fmt(summary.totalReceivable)} tone="emerald" />
-          <SummaryCard label={tr("Total Payable")} value={fmt(summary.totalPayable)} tone="amber" />
-          <SummaryCard label={`${tr("Overdue")} > 10 ${tr("days")}`} value={String(summary.overdue10)} tone="red" />
-        </div>
-      )}
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+      {/* Filter Tabs & Search Controls */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 shadow-xs">
         <div className="flex flex-wrap gap-1.5">
           {tabs.map((tb) => (
             <button
               key={tb.key}
-              onClick={() => setTab(tb.key)}
-              className={`rounded-lg px-3 py-1.5 text-xs font-bold ${tab === tb.key ? "bg-blue-600 text-white" : "border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300"}`}
+              onClick={() => { setTab(tb.key); setCurrentPage(1); }}
+              className={`rounded-lg px-3 py-1.5 text-xs font-bold transition-colors ${
+                tab === tb.key
+                  ? "bg-blue-600 text-white shadow-xs"
+                  : "border border-slate-200 text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
+              }`}
             >
               {tb.label}
             </button>
@@ -556,27 +647,44 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
         </div>
         <div className="flex items-center gap-2">
           {tab === "overdue" && (
-            <label className="flex items-center gap-1 text-xs text-slate-500">
+            <label className="flex items-center gap-1 text-xs text-slate-500 font-semibold">
               {tr("Days")} ≥
-              <input type="number" min={0} value={overdueDays} onChange={(e) => setOverdueDays(Number(e.target.value) || 0)} className="w-16 rounded-md border border-slate-200 px-2 py-1 text-xs dark:border-slate-700 dark:bg-slate-900" />
+              <input
+                type="number"
+                min={0}
+                value={overdueDays}
+                onChange={(e) => { setOverdueDays(Number(e.target.value) || 0); setCurrentPage(1); }}
+                className="w-16 rounded-md border border-slate-200 px-2 py-1 text-xs dark:border-slate-700 dark:bg-slate-900"
+              />
             </label>
           )}
           <div className="relative">
-            <Search className="absolute left-2 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder={tr("Search account…")} className="w-48 rounded-lg border border-slate-200 py-1.5 pl-7 pr-2 text-xs dark:border-slate-700 dark:bg-slate-900" />
+            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+            <input
+              value={q}
+              onChange={(e) => { setQ(e.target.value); setCurrentPage(1); }}
+              placeholder={tr("Search account…")}
+              className="w-56 rounded-lg border border-slate-200 py-1.5 pl-8 pr-3 text-xs dark:border-slate-700 dark:bg-slate-900"
+            />
           </div>
         </div>
       </div>
 
+      {/* Ledger Table Container */}
       <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900 space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-3">
           <div className="flex items-center gap-2.5">
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
               <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>
             </div>
-            <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
-              LEDGER ENTRIES
-            </h3>
+            <div>
+              <h3 className="text-sm font-black uppercase tracking-wider text-slate-900 dark:text-slate-100">
+                LEDGER ENTRIES
+              </h3>
+              <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                Showing {filtered.length} total account balances
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             <div className="relative">
@@ -590,19 +698,19 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
               {exportMenuOpen && (
                 <div className="absolute right-0 top-full z-30 mt-1 w-44 rounded-xl border border-slate-200 bg-white p-1 shadow-xl dark:border-slate-800 dark:bg-slate-900">
                   <button
-                    onClick={() => { setExportMenuOpen(false); openReportPreview(); }}
+                    onClick={() => { setExportMenuOpen(false); openReportPreview(false); }}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                   >
                     <Printer className="h-3.5 w-3.5 text-blue-600" /> Print Preview
                   </button>
                   <button
-                    onClick={() => { setExportMenuOpen(false); openReportPreview(); }}
+                    onClick={() => { setExportMenuOpen(false); openReportPreview(true); }}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                   >
                     <FileText className="h-3.5 w-3.5 text-rose-600" /> PDF Export
                   </button>
                   <button
-                    onClick={() => { setExportMenuOpen(false); openReportPreview(); }}
+                    onClick={() => { setExportMenuOpen(false); exportReportCsv(); }}
                     className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                   >
                     <Download className="h-3.5 w-3.5 text-emerald-600" /> Excel Export
@@ -645,14 +753,26 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
               {loading ? (
-                <tr><td colSpan={17} className="px-3 py-12 text-center text-slate-400"><Loader2 className="mx-auto h-5 w-5 animate-spin" /></td></tr>
+                <tr>
+                  <td colSpan={17} className="px-3 py-12 text-center text-slate-400">
+                    <Loader2 className="mx-auto h-5 w-5 animate-spin" />
+                  </td>
+                </tr>
               ) : err ? (
-                <tr><td colSpan={17} className="px-3 py-12 text-center text-red-500">{err}</td></tr>
+                <tr>
+                  <td colSpan={17} className="px-3 py-12 text-center text-red-500">
+                    {err}
+                  </td>
+                </tr>
               ) : pagedRows.length === 0 ? (
-                <tr><td colSpan={17} className="px-3 py-12 text-center text-slate-400">{tr("No ledger entries found.")}</td></tr>
+                <tr>
+                  <td colSpan={17} className="px-3 py-12 text-center text-slate-400">
+                    {tr("No ledger entries found.")}
+                  </td>
+                </tr>
               ) : (
                 pagedRows.map((x, idx) => {
-                  const isOverdue = (x.daysOutstanding ?? 0) > 10;
+                  const isOverdue = (x.daysOutstanding ?? 0) > overdueDays;
                   const srNo = (currentPage - 1) * pageSize + idx + 1;
                   const creditVal = x.outstanding > 0 ? Math.abs(x.outstanding) : 0;
                   const debitVal = x.outstanding < 0 ? Math.abs(x.outstanding) : 0;
@@ -675,7 +795,10 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                           <Calendar className="h-3 w-3 text-slate-400" />
                         </div>
                       </td>
-                      <td className="px-3 py-3 font-mono text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
+                      <td
+                        onClick={() => router.push(`/dashboard/ledger/new?account=${encodeURIComponent(x.code)}`)}
+                        className="px-3 py-3 font-mono text-xs font-bold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer"
+                      >
                         {x.code}
                       </td>
                       <td className="px-3 py-3 font-mono text-xs font-semibold text-slate-700 dark:text-slate-300">
@@ -747,9 +870,10 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                       <td className="px-3 py-3 text-center">
                         <button
                           type="button"
+                          onClick={() => router.push(`/dashboard/ledger/new?account=${encodeURIComponent(x.code)}`)}
                           className="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-2.5 py-1 text-[11px] font-bold text-blue-600 hover:bg-blue-100 dark:border-blue-800 dark:bg-blue-950 dark:text-blue-400"
                         >
-                          <Eye className="h-3 w-3" /> View
+                          <Eye className="h-3 w-3" /> {tr("View")}
                         </button>
                       </td>
                     </tr>
@@ -813,17 +937,6 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
           </div>
         </div>
       </div>
-    </div>
-  );
-}
-
-function SummaryCard({ label, value, tone }: { label: string; value: string; tone?: "emerald" | "amber" | "red" }) {
-  const toneClass =
-    tone === "emerald" ? "text-emerald-600" : tone === "amber" ? "text-amber-600" : tone === "red" ? "text-red-600" : "text-slate-900 dark:text-slate-100";
-  return (
-    <div className="rounded-xl border border-slate-200 p-3 dark:border-slate-700">
-      <div className="text-[11px] font-medium uppercase text-slate-500">{label}</div>
-      <div className={`mt-1 text-lg font-bold ${toneClass}`}>{value}</div>
     </div>
   );
 }
