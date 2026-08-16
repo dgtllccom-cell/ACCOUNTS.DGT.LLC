@@ -105,10 +105,29 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function(regs) { regs.forEach(function(r) { r.unregister(); }); }).catch(function() {});
           }
+          // NOTE: this runs inside a dangerouslySetInnerHTML template literal, where a JS
+          // template literal strips "\/" down to "/". A regex literal here (e.g.
+          // /_next\/static\/chunks\/.../) therefore gets its escapes removed, the first bare
+          // "/" ends the literal early, and the leftover text becomes bogus regex flags -> an
+          // "Invalid regular expression flags" SyntaxError that kills this whole inline script.
+          // Extract the route with plain string ops (no backslashes) so it can never recur.
           var targetRoute = null;
           try {
-            var match = str.match(/_next\/static\/chunks\/app(\/[^.\\?]+?)(?:\\/page|\\/layout|\\/route|-[a-f0-9]+|\\.js)/i);
-            if (match && match[1]) targetRoute = match[1];
+            var marker = '/_next/static/chunks/app';
+            var mi = str.indexOf(marker);
+            if (mi !== -1) {
+              var rest = str.slice(mi + marker.length);
+              var cut = rest.length;
+              for (var ci = 0; ci < rest.length; ci++) {
+                var ch = rest.charAt(ci);
+                if (ch === '?' || ch === '"' || ch === "'" || ch === ' ' || ch === ')' || ch === ':') { cut = ci; break; }
+              }
+              var seg = rest.slice(0, cut);
+              if (seg.length > 3 && seg.slice(-3) === '.js') seg = seg.slice(0, -3);
+              var dash = seg.lastIndexOf('-');
+              if (dash > 0) seg = seg.slice(0, dash);
+              if (seg && seg.charAt(0) === '/') targetRoute = seg;
+            }
           } catch(e) {}
           var dest = targetRoute || window.location.pathname;
           var countKey = 'erp_auto_chunk_cnt';
