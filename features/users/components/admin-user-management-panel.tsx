@@ -10,9 +10,7 @@ import {
   Search,
   Plus,
   Eye,
-  EyeOff,
   ShieldCheck,
-  Key,
   RefreshCw,
   FileText,
   CheckCircle2,
@@ -27,7 +25,6 @@ import {
   Layers,
   Building,
   Check,
-  Copy
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -41,6 +38,7 @@ export type BranchUser = {
   id: string;
   name: string;
   username: string;
+  lastLogin?: string | null;
   temporaryPassword?: string | null;
   mobile?: string;
   email?: string;
@@ -105,8 +103,6 @@ export function AdminUserManagementPanel() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCountryFilter, setSelectedCountryFilter] = useState<string>("all");
   const [selectedBranchFilter, setSelectedBranchFilter] = useState<string>("all");
-  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
-  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   // Accordion toggle states
   const [expandedCountries, setExpandedCountries] = useState<Record<string, boolean>>({});
@@ -118,7 +114,7 @@ export function AdminUserManagementPanel() {
   const fetchHierarchyData = async () => {
     try {
       setRefreshing(true);
-      const res = await fetch("/api/branch-management/general-report", { cache: "no-store" });
+      const res = await fetch("/api/erp/users/login-management", { cache: "no-store" });
       if (res.ok) {
         const json = await res.json();
         if (json.data) {
@@ -151,16 +147,6 @@ export function AdminUserManagementPanel() {
   useEffect(() => {
     fetchHierarchyData();
   }, []);
-
-  const togglePasswordVisibility = (userId: string) => {
-    setShowPasswords((prev) => ({ ...prev, [userId]: !prev[userId] }));
-  };
-
-  const copyToClipboard = (text: string, id: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedId(id);
-    setTimeout(() => setCopiedId(null), 2000);
-  };
 
   const toggleCountryExpand = (countryId: string) => {
     setExpandedCountries((prev) => ({ ...prev, [countryId]: !prev[countryId] }));
@@ -245,6 +231,46 @@ export function AdminUserManagementPanel() {
     };
   }, [countries, allUsersFlattened]);
 
+  const formatLastLogin = (value?: string | null) => {
+    if (!value) return "-";
+    const date = new Date(value);
+    return Number.isNaN(date.getTime()) ? "-" : date.toLocaleString();
+  };
+
+  const isUserActive = (u: BranchUser) => String(u.status || "").toLowerCase() === "active";
+
+  const triggerUserPatch = async (userId: string, payload: Record<string, unknown>, successLabel: string) => {
+    const response = await fetch("/api/erp/users", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ userId, ...payload })
+    });
+
+    if (!response.ok) {
+      const body = await response.json().catch(() => null);
+      throw new Error(body?.error?.message || body?.message || "Failed to update user.");
+    }
+
+    await fetchHierarchyData();
+    return successLabel;
+  };
+
+  const resetUserPassword = async (user: BranchUser) => {
+    const temporaryPassword = `DEV-${crypto.getRandomValues(new Uint32Array(1))[0].toString(16).toUpperCase()}!Aa1`;
+    const ok = window.confirm(`Generate and apply a new temporary password for ${user.name}?`);
+    if (!ok) return;
+    await triggerUserPatch(user.id, { password: temporaryPassword }, `Temporary password set for ${user.username}: ${temporaryPassword}`);
+    window.alert(`Temporary password set once for ${user.username}:\n${temporaryPassword}`);
+  };
+
+  const toggleUserStatus = async (user: BranchUser) => {
+    const nextStatus = !isUserActive(user);
+    const actionLabel = nextStatus ? "activate" : "disable";
+    const ok = window.confirm(`Do you want to ${actionLabel} ${user.name}?`);
+    if (!ok) return;
+    await triggerUserPatch(user.id, { isActive: nextStatus }, `User ${actionLabel}d.`);
+  };
+
   // Filtered users for "All Users" view
   const filteredUsers = useMemo(() => {
     return allUsersFlattened.filter((u) => {
@@ -267,7 +293,6 @@ export function AdminUserManagementPanel() {
   }, [allUsersFlattened, searchQuery, selectedCountryFilter, selectedBranchFilter]);
 
   const renderUserTableRow = (u: BranchUser, branchCodeStr: string, countryNameStr: string) => {
-    const isShowingPass = showPasswords[u.id];
     const userRoleLabel = u.classification || u.role;
 
     return (
@@ -310,19 +335,7 @@ export function AdminUserManagementPanel() {
         </td>
 
         <td className="px-4 py-3">
-          <div className="flex items-center gap-2">
-            <div className="font-mono text-xs text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-900 px-2 py-1 rounded border min-w-[100px] flex items-center justify-between">
-              <span>{isShowingPass ? u.temporaryPassword || "admin123" : "••••••••"}</span>
-              <button
-                type="button"
-                onClick={() => togglePasswordVisibility(u.id)}
-                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 ml-1"
-                title={isShowingPass ? "Hide Password" : "Show Password"}
-              >
-                {isShowingPass ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-              </button>
-            </div>
-          </div>
+          <span className="font-mono text-xs font-semibold text-slate-700 dark:text-slate-300">{u.loginId || u.username}</span>
         </td>
 
         <td className="px-4 py-3">
@@ -330,6 +343,18 @@ export function AdminUserManagementPanel() {
             <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
             {u.status || "Active"}
           </span>
+        </td>
+
+        <td className="px-4 py-3 text-xs text-slate-600 dark:text-slate-400">
+          {countryNameStr}
+        </td>
+
+        <td className="px-4 py-3 text-xs text-slate-600 dark:text-slate-400">
+          {u.cityName || "-"}
+        </td>
+
+        <td className="px-4 py-3 text-xs text-slate-600 dark:text-slate-400">
+          {formatLastLogin(u.lastLogin)}
         </td>
 
         <td className="px-4 py-3 text-right">
@@ -354,42 +379,25 @@ export function AdminUserManagementPanel() {
               size="sm"
               variant="outline"
               className="h-8 px-2.5 text-xs gap-1 hover:bg-slate-100 dark:hover:bg-slate-800"
-              onClick={() => {
-                openUserA4ReportWindow({
-                  userId: u.id,
-                  userCode: u.id.substring(0, 8),
-                  fullName: u.name,
-                  countryName: countryNameStr,
-                  branchName: u.branchName || "Main Branch",
-                  branchCode: branchCodeStr,
-                  branchType: u.classification || "Branch",
-                  role: u.role,
-                  registrationDate: new Date().toISOString(),
-                  status: u.status || "Active",
-                  permissions: u.permissions || [],
-                  lastActivity: new Date().toISOString(),
-                  lastActivityAction: "auth.login.success",
-                  rawPassword: u.temporaryPassword || "admin123",
-                  activityCounts: {
-                    logins: 5,
-                    transactions: 0,
-                    roznamcha: 0,
-                    purchases: 0,
-                    payments: 0,
-                    accounts: 0,
-                    approvals: 0,
-                    edits: 0
-                  }
-                });
-              }}
+              onClick={() => resetUserPassword(u)}
             >
-              <FileText className="h-3.5 w-3.5 text-slate-500" />
-              <span>A4 Report</span>
+              <ShieldCheck className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+              <span>Reset Password</span>
+            </Button>
+
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 px-2.5 text-xs gap-1 hover:bg-slate-100 dark:hover:bg-slate-800"
+              onClick={() => toggleUserStatus(u)}
+            >
+              <ShieldCheck className="h-3.5 w-3.5 text-slate-500" />
+              <span>{isUserActive(u) ? "Disable" : "Activate"}</span>
             </Button>
 
             <Link href={`/dashboard/users/edit/${u.id}`}>
               <Button size="sm" variant="ghost" className="h-8 px-2 text-xs">
-                Edit
+                Edit Scope
               </Button>
             </Link>
           </div>
@@ -430,10 +438,10 @@ export function AdminUserManagementPanel() {
             <span>Admin Control Panel</span>
           </div>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-            User Management & Branch Code Directory
+            User Login Management & Branch Scope Directory
           </h1>
           <p className="text-sm text-slate-500 dark:text-slate-400">
-            Country Main Branches, City Branch Codes, User Logins & Hierarchical Access Table
+            Country Main Branches, City Branch Codes, Login IDs & Hierarchical Access Table
           </p>
         </div>
 

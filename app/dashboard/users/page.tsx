@@ -1,12 +1,22 @@
+import type { Metadata } from "next";
+import { redirect } from "next/navigation";
+import { getCurrentErpSession } from "@/lib/auth/session";
+import { dashboardByRole } from "@/lib/permissions/enterprise-roles";
 import { AdminUserManagementPanel } from "@/features/users/components/admin-user-management-panel";
 
-export default function UsersPage() {
-  return <AdminUserManagementPanel />;
-}
+export const metadata: Metadata = {
+  title: "User Login Management | Super Admin",
+  description: "Super Admin only login-management page for branch-scoped ERP users."
+};
 
-export function generateMetadata() {
-  return {
-    title: "Users & Branch Code Directory | Admin Control Panel",
-    description: "Hierarchical user management organized by Country Main Branches, City Branch Codes, and Admin Role Access.",
-  };
+export default async function UsersPage() {
+  const session = await getCurrentErpSession();
+  if (!session) redirect("/auth/login");
+  if (!session.isSuperAdmin) {
+    const role = session.roles?.[0];
+    const target = role ? dashboardByRole[role] : "/dashboard";
+    redirect((target || "/dashboard") as any);
+  }
+
+  return <AdminUserManagementPanel />;
 }
