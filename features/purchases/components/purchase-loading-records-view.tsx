@@ -1698,10 +1698,10 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                 <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-900">
                   <div>
                     <h3 className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-100">Current Bill Loading Report</h3>
-                    <p className="mt-1 text-[10px] font-semibold text-slate-500">Bill quantity, loaded balance, payment conversion and remaining amount.</p>
+                    <p className="mt-1 text-[10px] font-semibold text-slate-500">Consolidated bill quantity, loaded progress, payment conversion and remaining balance.</p>
                   </div>
                   <span className="rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-blue-700 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300">
-                    {visibleLoadingRows.length || 1} Bill Row
+                    1 Bill Summary
                   </span>
                 </div>
                 <div className="overflow-x-auto">
@@ -1726,48 +1726,80 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                      {(visibleLoadingRows.length ? visibleLoadingRows : [record]).map((h, i) => {
-                        const rows = visibleLoadingRows.length ? visibleLoadingRows : [record];
-                        const finance = calcLoadingFinance(h, poRow, form);
-                        const loadedQty = Number(h.report_payload?.loadedQuantity || h.report_payload?.loadingQuantity || h.loadedQuantity || currentLoadingQuantity || 0);
-                        const cumulativeLoadedUpToThisRow = rows.slice(0, i + 1).reduce((sum, item) => {
-                          return sum + Number(item.report_payload?.loadedQuantity || item.report_payload?.loadingQuantity || item.loadedQuantity || 0);
-                        }, 0);
-                        const remainingQty = Math.max(0, totalQuantity - cumulativeLoadedUpToThisRow);
-                        const advanceLocal = getAdvanceAppliedLocal(finance, loadedQty);
-                        const balanceLocal = Math.max(0, (finance.amountPKR || 0) - advanceLocal);
-                        const gName = h.report_payload?.goodsName || h.report_payload?.item || form.goodsName || form.itemName || "-";
-                        const brandName = h.report_payload?.brand || form.brand || "";
-                        const sizeName = h.report_payload?.sizeSpec || form.size || "";
-                        const route = [h.report_payload?.loadingPort || loadingPort, h.report_payload?.receivingPort || receivingPort].filter(Boolean).join(" to ") || "-";
+                      {(() => {
+                        const exRate = Number(exchangeRatePKR || form.exchangeRate || (poData as any).exchange_rate || 1);
+                        const effectiveRate = Number(goods?.[0]?.coursePrice || form.coursePrice || (totalQuantity > 0 ? contractPurchaseAmount / totalQuantity : 0));
+                        
+                        const effectiveLoadedQty = totalLoadedQuantity;
+                        const proRataRatio = totalQuantity > 0 ? (effectiveLoadedQty / totalQuantity) : (effectiveLoadedQty > 0 ? 1 : 0);
+                        
+                        const billPurchaseFC = effectiveLoadedQty > 0
+                          ? (proRataRatio * contractPurchaseAmount)
+                          : contractPurchaseAmount;
+                        const billFinalLC = billPurchaseFC * exRate;
+                        
+                        const rawPoAdvance = Number(poRow.advance_paid || form.advanceAmount || 0);
+                        const advanceInFC = normalizeAdvanceToPurchaseCurrency(rawPoAdvance, contractPurchaseAmount, exRate);
+                        const appliedAdvanceLC = effectiveLoadedQty > 0
+                          ? Math.min(proRataRatio * advanceInFC * exRate, billFinalLC)
+                          : Math.min(advanceInFC * exRate, billFinalLC);
+                        const billBalanceLC = Math.max(0, billFinalLC - appliedAdvanceLC);
+
+                        const gName = goods?.[0]?.goodsName || goods?.[0]?.item || form.goodsName || form.itemName || "-";
+                        const brandName = goods?.[0]?.brand || form.brand || "";
+                        const sizeName = goods?.[0]?.size || form.size || "";
+                        const route = [loadingPort !== "-" ? loadingPort : form.loadingPort, receivingPort !== "-" ? receivingPort : form.receivedPort].filter(Boolean).join(" to ") || "-";
+                        const displayLoadDate = form.loadingDate || loadingDate || "-";
+                        const displayRecDate = form.receivedDate || form.arrivalDate || receivingDate || "Pending";
+
                         return (
-                          <tr key={h.id || record.id || i} className="bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/60">
-                            <td className="px-4 py-3 font-mono font-bold text-slate-500">{String(i + 1).padStart(2, "0")}</td>
+                          <tr className="bg-white hover:bg-slate-50 dark:bg-slate-900 dark:hover:bg-slate-800/60 font-semibold">
+                            <td className="px-4 py-3 font-mono font-bold text-slate-500">01</td>
                             <td className="px-4 py-3">
                               <div className="font-black text-slate-800 dark:text-slate-100">{gName}</div>
                               <div className="mt-1 text-[10px] font-semibold text-slate-500">{[brandName, sizeName].filter(Boolean).join(" / ") || "-"}</div>
                             </td>
                             <td className="px-4 py-3 text-right font-mono font-black text-slate-700 dark:text-slate-200">{totalQuantity.toLocaleString()} {unitLabel}</td>
-                            <td className="px-4 py-3 text-right font-mono font-black text-emerald-600">{loadedQty.toLocaleString()} {unitLabel}</td>
-                            <td className="px-4 py-3 text-right font-mono font-black text-rose-600">{remainingQty.toLocaleString()} {unitLabel}</td>
-                            <td className="px-4 py-3 text-right font-mono font-semibold text-slate-600 dark:text-slate-300">{finance.netWeight.toLocaleString()} kg</td>
-                            <td className="px-4 py-3 text-right font-mono font-semibold text-slate-600 dark:text-slate-300">{finance.grossWeight.toLocaleString()} kg</td>
-                            <td className="px-4 py-3 text-right font-mono font-semibold text-slate-700 dark:text-slate-200">{finance.priceRate ? finance.priceRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 }) : "-"} {finance.currency}</td>
-                            <td className="px-4 py-3 text-right font-mono font-black text-slate-800 dark:text-slate-100">{finance.amountUSD.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {finance.currency}</td>
-                            <td className="px-4 py-3 text-right font-mono font-semibold text-blue-700 dark:text-blue-300">{finance.exRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</td>
-                            <td className="px-4 py-3 text-right font-mono font-black text-blue-700 dark:text-blue-300">{finance.amountPKR.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {localCurrency}</td>
-                            <td className="px-4 py-3 text-right font-mono font-black text-emerald-600">{advanceLocal > 0 ? advanceLocal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "-"} {advanceLocal > 0 ? localCurrency : ""}</td>
-                            <td className="px-4 py-3 text-right font-mono font-black text-rose-600">{balanceLocal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {localCurrency}</td>
+                            <td className="px-4 py-3 text-right font-mono font-black text-emerald-600">{effectiveLoadedQty.toLocaleString()} {unitLabel}</td>
+                            <td className="px-4 py-3 text-right font-mono font-black text-rose-600">{remainingToLoadQuantity.toLocaleString()} {unitLabel}</td>
+                            <td className="px-4 py-3 text-right font-mono text-slate-600 dark:text-slate-300">{contractNetWeight.toLocaleString()} kg</td>
+                            <td className="px-4 py-3 text-right font-mono text-slate-600 dark:text-slate-300">{contractGrossWeight.toLocaleString()} kg</td>
+                            <td className="px-4 py-3 text-right font-mono text-slate-700 dark:text-slate-200">
+                              {effectiveRate > 0 ? `${effectiveRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })} ${contractPurchaseCurrency}` : "-"}
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono font-black text-slate-800 dark:text-slate-100">
+                              {billPurchaseFC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {contractPurchaseCurrency}
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono font-semibold text-blue-700 dark:text-blue-300">{exRate.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}</td>
+                            <td className="px-4 py-3 text-right font-mono font-black text-blue-700 dark:text-blue-300">
+                              {billFinalLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {localCurrency}
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono font-black text-emerald-600">
+                              {appliedAdvanceLC > 0 ? `${appliedAdvanceLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${localCurrency}` : "-"}
+                            </td>
+                            <td className="px-4 py-3 text-right font-mono font-black text-rose-600">
+                              {billBalanceLC.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {localCurrency}
+                            </td>
                             <td className="px-4 py-3">
                               <div className="font-semibold text-slate-700 dark:text-slate-200">{route}</div>
-                              <div className="mt-1 text-[10px] font-semibold text-slate-500">{h.report_payload?.loadingDate || loadingDate} &rarr; {h.report_payload?.receivingDate || receivingDate || "Pending"}</div>
+                              <div className="mt-1 text-[10px] font-semibold text-slate-500">{displayLoadDate} &rarr; {displayRecDate}</div>
                             </td>
                             <td className="px-4 py-3 text-center">
-                              <button type="button" onClick={() => handleEditHistory(h)} className="rounded-md border border-slate-200 px-2 py-1 text-[10px] font-bold text-slate-600 hover:border-blue-300 hover:text-blue-700 dark:border-slate-700 dark:text-slate-300">Edit</button>
+                              {billBalanceLC > 0 ? (
+                                <button
+                                  type="button"
+                                  onClick={() => handleInitiateTransfer(record)}
+                                  className="rounded-md bg-blue-600 px-2.5 py-1 text-[10px] font-black uppercase text-white hover:bg-blue-700 shadow-sm transition active:scale-95 flex items-center gap-1 mx-auto"
+                                >
+                                  <Link2 className="h-3 w-3" /> Transfer
+                                </button>
+                              ) : (
+                                <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700">Settled</span>
+                              )}
                             </td>
                           </tr>
                         );
-                      })}
+                      })()}
                     </tbody>
                   </table>
                 </div>

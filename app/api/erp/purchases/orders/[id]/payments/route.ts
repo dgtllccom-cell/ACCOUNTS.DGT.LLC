@@ -371,13 +371,15 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         .eq("roznamcha_entry_id", paymentRecord.roznamcha_entry_id)
     ) as any[];
 
+    const exRate = Number(body.exchangeRate || (orderRow as any)?.exchange_rate || 1) || 1;
     assertDistinctBookingLedgers(body.debitLedgerId, body.creditLedgerId, "Purchase payment");
     assertBalancedPostedLines({
       label: "Purchase payment",
       lines: journalLines,
       expectedDebitLedgerId: body.debitLedgerId,
       expectedCreditLedgerId: body.creditLedgerId,
-      expectedAmount: Number(body.amount)
+      expectedAmount: Number(body.amount),
+      expectedExchangeRate: exRate
     });
     assertPostedRoznamchaTrace({
       label: "Purchase payment",

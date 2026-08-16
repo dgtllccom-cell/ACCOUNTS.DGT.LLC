@@ -484,15 +484,9 @@ function LightStatusBadge({ status }) {
 export function PurchaseOrderWizard({ session }) {
   const router = useRouter();
   const lang = useActiveLanguage();
-  const trUi = useCallback((label) => {
-    if (lang === "en") return label;
-    const translated = translateHeader(lang, label);
-    return translated === label ? translationPendingLabel(lang) : translated;
-  }, [lang]);
   const searchParams = useSearchParams();
   const [activeTab, setActiveTab] = useState("booking"); // "booking" | "goods" | "others" | "reports"
   const [isMounted, setIsMounted] = useState(false);
-
   const [isFormOpen, setIsFormOpen] = useState(false);
 
   useEffect(() => {
@@ -504,8 +498,10 @@ export function PurchaseOrderWizard({ session }) {
       }
     }
   }, []);
+
   const [reportSaved, setReportSaved] = useState(false);
   const [isTransferred, setIsTransferred] = useState(false);
+  const [isBookingTransferred, setIsBookingTransferred] = useState(false);
   const [transferredData, setTransferredData] = useState(null);
   const [viewDropdownOpen, setViewDropdownOpen] = useState(false);
   const [verifyDropdownOpen, setVerifyDropdownOpen] = useState(false);
@@ -527,11 +523,13 @@ export function PurchaseOrderWizard({ session }) {
   const [goodsEntries, setGoodsEntries] = useState([]);
   const [editingRemarksType, setEditingRemarksType] = useState(null);
   const [tempRemarksText, setTempRemarksText] = useState("");
-  const [reportType, setReportType] = useState("branch"); // "branch" | "totaling" | "payment"
+  const trUi = useCallback((label) => {
+    if (lang === "en") return label;
+    const translated = translateHeader(lang, label);
+    return translated === label ? translationPendingLabel(lang) : translated;
+  }, [lang]);
   const [previewRemarks, setPreviewRemarks] = useState(false);
   const [branchPinOpen, setBranchPinOpen] = useState(false);
-
-  // Dynamic Reports System
   const [reportsList, setReportsList] = useState([]);
   const [selectedReportId, setSelectedReportId] = useState("");
   const [isNewReportModalOpen, setIsNewReportModalOpen] = useState(false);
@@ -1430,6 +1428,16 @@ export function PurchaseOrderWizard({ session }) {
         filtered = [];
       }
     }
+  const availableBrands = useMemo(() => {
+    const variations = selectedDbGood?.variations || selectedDbGood?.goods_variations || [];
+    let filtered = variations;
+    if (form.origin) {
+      const originCountry = transitCountryOptions.find(c => c.name === form.origin);
+      const originCountryId = originCountry?.id || null;
+      if (selectedDbGood?.origin_country_id && selectedDbGood.origin_country_id !== originCountryId) {
+        filtered = [];
+      }
+    }
     if (form.size) {
       filtered = filtered.filter(v => (v.size || "").trim().toLowerCase() === (form.size || "").trim().toLowerCase());
     }
@@ -1475,9 +1483,6 @@ export function PurchaseOrderWizard({ session }) {
 
         if (cancelled) return;
 
-        if (poData?.form_data?.totals) {
-          // You might set reportTotals here if there's a state for it, but usually it's derived.
-        }
         if (poData?.form_data?.reports) {
           setReportsList(Array.isArray(poData.form_data.reports) ? poData.form_data.reports : []);
         }
@@ -1490,12 +1495,13 @@ export function PurchaseOrderWizard({ session }) {
             || roles.includes("admin")
             || roles.includes("country_admin")
           );
-          const isPostedBooking = ["posted", "transferred"].includes(String(poData.ledger_posting_status || poData.ledgerPostingStatus || "").toLowerCase());
+          const rawFormData = poData.form_data || {};
+          const isPostedBooking = ["posted", "transferred"].includes(String(poData.ledger_posting_status || poData.ledgerPostingStatus || "").toLowerCase()) || Boolean(poData.roznamcha_entry_id || rawFormData.form?.roznamchaEntryId);
+          setIsBookingTransferred(isPostedBooking);
           if (isPostedBooking && !canEditTransferred) {
             setIsFormOpen(false);
             throw new Error(trUi("Transferred bookings can only be edited by an Admin or Country Admin."));
           }
-          const rawFormData = poData.form_data || {};
           const loadedForm = rawFormData.form || {};
           const loadedGoods = rawFormData.goodsEntries || [];
 
@@ -1515,19 +1521,12 @@ export function PurchaseOrderWizard({ session }) {
             countryId: mergedCountryId,
             countryBranchId: mergedCountryBranchId,
             cityBranchId: mergedCityBranchId,
-            // Retain PO/Contract identification numbers
             purchaseOrderNo: poNumber,
             purchaseContractNo: contractNumber,
-            // 5-language business-data record computed server-side on save (see
-            // saveEnterpriseRecordTranslations calls in the orders API routes) — a sibling of
-            // `form` inside form_data, not part of the saved form itself. Read by localizeBiz()
-            // so Complete Summary / Voucher / Print show the stored translation for the active
-            // language instead of always the raw English/entry-language text.
             translations: rawFormData.translations || prev.translations || null,
           }));
           setScopeConfirmed(true);
 
-          // Sync search display labels from the loaded account names
           if (loadedForm.purchaseAccountName || loadedForm.purchaseAccountNo) {
             setPurchaseSearch(loadedForm.purchaseAccountName || loadedForm.purchaseAccountNo || "");
           }
@@ -1539,11 +1538,10 @@ export function PurchaseOrderWizard({ session }) {
             setGoodsEntries(loadedGoods);
           }
 
-          // When loading for edit, always show the editable form (not the transfer success screen)
           setIsTransferred(false);
+          setIsBookingTransferred(isPostedBooking);
           setTransferredData(null);
 
-          // Render the editing wizard directly at Step 1 (booking) for editing
           setActiveTab("booking");
           setSaveMessage("Purchase order loaded successfully.");
         } else {
@@ -1566,9 +1564,6 @@ export function PurchaseOrderWizard({ session }) {
     searchParams.get("id"),
     searchParams.get("purchaseOrderId"),
     !!activeSession,
-    // Re-fetch on language switch so goods_name/brand/unit translations resolve for the
-    // newly-selected language without requiring a page reload (see resolveGoodsEntriesLanguage
-    // in app/api/erp/purchases/orders/[id]/route.ts).
     lang
   ]);
 
@@ -1624,7 +1619,6 @@ export function PurchaseOrderWizard({ session }) {
   useEffect(() => {
     let cancelled = false;
     const countryId = form.countryId;
-    const countryBranchId = form.countryBranchId;
     if (!countryId) {
       setCityBranches([]);
       return;
@@ -2401,6 +2395,201 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
           journalStatus: ledgerPostingStatus === "Posted" ? "Posted" : "Pending",
           paymentStatus: ledgerPostingStatus === "Posted" ? "Advance Posted" : "Pending",
           containerStatus: "Pending",
+Size: ${row.size}
+Origin: ${row.origin}
+Qty: ${row.qtyNo} ${row.qtyName}
+Price: ${row.coursePrice} ${row.currencyType}
+Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
+  };
+
+  const handleCreatePort = async (portName, countryName, transportType, side) => {
+    const targetCountryName = (countryName || "").trim();
+    const country = transitCountryOptions.find(c => c.name?.toLowerCase() === targetCountryName.toLowerCase())
+      || allCountries.find(c => c.name?.toLowerCase() === targetCountryName.toLowerCase())
+      || countries.find(c => c.name?.toLowerCase() === targetCountryName.toLowerCase());
+    const countryId = country?.id || null;
+
+    setSavingOrder(true);
+    setSaveMessage(`Creating ${transportType} port "${portName}"...`);
+    try {
+      const endpoint = side === "loading" ? "/api/erp/ports/loading" : "/api/erp/ports/received";
+      const response = await fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          portName,
+          countryId,
+          portCode: null,
+          transportType,
+          isActive: true
+        })
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok || !payload.ok) {
+        throw new Error(payload?.error?.message || payload?.error || "Failed to create port.");
+      }
+
+      // Re-fetch port list
+      const [loadRes, recRes] = await Promise.all([
+        fetch("/api/erp/ports/loading?all=true&limit=500").then(r => r.json()).catch(() => ({})),
+        fetch("/api/erp/ports/received?all=true&limit=500").then(r => r.json()).catch(() => ({}))
+      ]);
+
+      const loadPorts = loadRes?.data?.ports || loadRes?.ports;
+      const recPorts = recRes?.data?.ports || recRes?.ports;
+      if (loadPorts) setDbLoadingPorts(loadPorts);
+      if (recPorts) setDbReceivedPorts(recPorts);
+
+      // Set the newly created port value in form across all fields
+      if (side === "loading") {
+        setValue("loadingPort", portName);
+        setValue("loadingLocation", portName);
+        setValue("loadingBorder", portName);
+        setValue("airportName", portName);
+        if (targetCountryName) {
+          setValue("loadingCountry", targetCountryName);
+          setValue("originCountry", targetCountryName);
+          setValue("origin", targetCountryName);
+        }
+      } else {
+        setValue("receivedPort", portName);
+        setValue("receivedBorder", portName);
+        setValue("receivedPortName", portName);
+        setValue("receivingPort", portName);
+        setValue("destinationPort", portName);
+        if (targetCountryName) {
+          setValue("receivedCountry", targetCountryName);
+          setValue("receivingCountry", targetCountryName);
+          setValue("destinationCountry", targetCountryName);
+        }
+      }
+
+      setSaveMessage(`Port "${portName}" created successfully.`);
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Error creating port.");
+    } finally {
+      setSavingOrder(false);
+    }
+  };
+
+  const buildPurchaseOrderPayload = (ledgerPostingStatus = "Pending", customOrderNo = null) => {
+    const usdRate = Number(form.exchangeRate || 1);
+    const cleanUuid = (val) => (val && typeof val === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val.trim()) ? val.trim() : null);
+
+    let allEntries = [...goodsEntries];
+    const pendingGoodsName = (form.goodsName || "").trim();
+    if (pendingGoodsName) {
+      const calculated = calculateItemTotals(form);
+      const pendingLot = {
+        allotName: form.allotName || `ALT-${Math.floor(1000 + Math.random() * 9000)}`,
+        goodsName: form.goodsName,
+        size: form.size || "-",
+        brand: form.brand || "-",
+        origin: form.origin || "-",
+        hsCode: form.hsCode || "-",
+        qtyName: form.qtyName || "BAGS",
+        qtyNo: Number(form.qtyNo || 0),
+        qtyKgs: Number(form.qtyKgs || 0),
+        grossWeight: calculated.grossWeight,
+        emptyKgs: Number(form.emptyKgs || 0),
+        netWeight: calculated.netWeight,
+        priceType: form.priceType || "P/KGs",
+        divideType: form.divideType || "D/KGs",
+        divideWeight: Number(form.divideWeight || 1),
+        coursePrice: Number(form.coursePrice || 0),
+        currencyType: form.currencyType || "USD",
+        purchaseCurrency: form.purchaseCurrency || form.currencyType || "USD",
+        exchangeRate: Number(form.exchangeRate || 1),
+        totalAmount: form.manualTotalAmount !== undefined && form.manualTotalAmount !== "" ? Number(form.manualTotalAmount) : calculated.totalAmount,
+        op: form.operator || "*",
+        finalAmount: form.manualFinalAmount !== undefined && form.manualFinalAmount !== "" ? Number(form.manualFinalAmount) : calculated.finalAmount
+      };
+
+      const isAlreadyAdded = allEntries.some(
+        (e) =>
+          e.allotName === pendingLot.allotName &&
+          e.goodsName === pendingLot.goodsName &&
+          e.qtyNo === pendingLot.qtyNo &&
+          e.coursePrice === pendingLot.coursePrice
+      );
+      if (!isAlreadyAdded) {
+        allEntries.push(pendingLot);
+      }
+    }
+
+    const calculatedTotals = {
+      totalGross: allEntries.reduce((sum, item) => sum + Number(item.grossWeight || 0), 0),
+      totalNet: allEntries.reduce((sum, item) => sum + Number(item.netWeight || 0), 0),
+      grandFinal: allEntries.reduce((sum, item) => sum + Number(item.finalAmount || 0), 0),
+      grandPrimaryFinal: allEntries.reduce((sum, item) => sum + Number(item.totalAmount || 0), 0),
+      totalQty: allEntries.reduce((sum, item) => sum + Number(item.qtyNo || 0), 0),
+      totalDeductions: allEntries.reduce((sum, item) => sum + Number((item.qtyNo * item.emptyKgs) || 0), 0)
+    };
+
+    const finalOrderTotal = calculatedTotals.grandFinal || calculatedTotals.grandPrimaryFinal || reportTotals.grandFinal || reportTotals.grandPrimaryFinal;
+    const finalPrimaryTotal = calculatedTotals.grandPrimaryFinal || calculatedTotals.grandFinal || reportTotals.grandPrimaryFinal || reportTotals.grandFinal;
+
+    return {
+      originalLanguage: ["en", "ur", "ar", "fa", "ps"].includes(document.documentElement.lang)
+        ? document.documentElement.lang
+        : "en",
+      countryId: cleanUuid(form.countryId),
+      countryBranchId: cleanUuid(form.countryBranchId),
+      cityBranchId: cleanUuid(form.cityBranchId),
+      supplierCompanyId: cleanUuid(form.purchaseCompanyId),
+      purchaseOrderNo: customOrderNo || form.purchaseOrderNo,
+      purchaseContractNo: form.purchaseContractNo || form.purchaseOrderNo,
+      currencyCode: form.currencyType || "USD",
+      paymentCurrencyCode: form.secondaryCurrency?.split(" ")[0] || "PKR",
+      exchangeRate: usdRate,
+      orderTotal: finalOrderTotal,
+      totalGoodsOriginal: finalPrimaryTotal,
+      totalGoodsLocal: finalOrderTotal,
+      totalGoodsUsd: finalPrimaryTotal,
+      items: allEntries.map(g => {
+        const rateOrig = Number(g.coursePrice || 0);
+        const rateLoc = rateOrig * usdRate;
+        const totOrig = Number(g.totalAmount || 0);
+        const totLoc = Number(g.finalAmount || totOrig * usdRate);
+        return {
+          goodsName: g.goodsName,
+          hsCode: g.hsCode,
+          size: g.size,
+          brand: g.brand,
+          origin: g.origin,
+          quantity: g.qtyNo,
+          unitName: g.qtyName,
+          unitWeight: g.divideWeight,
+          grossWeight: g.grossWeight,
+          netWeight: g.netWeight,
+          rateOriginal: rateOrig,
+          rateLocal: rateLoc,
+          rateUsd: rateOrig,
+          totalOriginal: totOrig,
+          totalLocal: totLoc,
+          totalUsd: totOrig
+        };
+      }),
+      paymentStatus: ledgerPostingStatus === "Posted" ? "partial" : "pending",
+      ledgerPostingStatus,
+      // Source language the user actually typed this booking in — drives the local
+      // dictionary/transliterator engine (autoTranslate5Languages) so the other 4
+      // language columns are derived FROM the entered language, not always assumed English.
+      originalLanguage: lang,
+      formData: {
+        form,
+        totals: calculatedTotals,
+        goodsEntries: allEntries,
+        reports: reportsList,
+        workflow: {
+          currentStep: ledgerPostingStatus === "Posted" ? "Journal Entry & Payment" : "Booking Purchase Order",
+          nextStep: ledgerPostingStatus === "Posted" ? "Payment & Documents" : "Booking Confirm",
+          bookingStatus: "Saved",
+          confirmationStatus: ledgerPostingStatus === "Posted" ? "Confirmed" : "Pending",
+          journalStatus: ledgerPostingStatus === "Posted" ? "Posted" : "Pending",
+          paymentStatus: ledgerPostingStatus === "Posted" ? "Advance Posted" : "Pending",
+          containerStatus: "Pending",
           inventoryStatus: "Pending",
           deliveryStatus: "Pending",
           savedAt: new Date().toISOString(),
@@ -2408,6 +2597,24 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
         savedAt: new Date().toISOString()
       }
     };
+  };
+
+  const handleReset = () => {
+    const randomSuffix = Math.floor(1000 + Math.random() * 9000);
+    setSavedOrderId("");
+    setSavedOrderNo("");
+    setIsTransferred(false);
+    setIsBookingTransferred(false);
+    setTransferredData(null);
+    setGoodsEntries([]);
+    setForm({
+      ...DEFAULT_FORM,
+      purchaseOrderNo: `PO-2026-${randomSuffix}`,
+      salesOrderNo: `SO-2026-${randomSuffix}`,
+      purchaseContractNo: `PC-2026-${randomSuffix}`,
+      billNo: `BILL-${randomSuffix}`,
+    });
+    setActiveTab("booking");
   };
 
   const isSubmittingRef = React.useRef(false);
@@ -2462,7 +2669,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
   };
 
   const handleTransfer = async () => {
-    if (isTransferred) {
+    if (isTransferred || isBookingTransferred) {
       alert(trUi("This booking has already been transferred."));
       return;
     }
@@ -2485,6 +2692,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       }
       const returnedOrderId = payload.data?.purchaseOrderId || savedOrderId || payload.data?.id;
       const returnedOrderNo = payload.data?.purchaseOrderNo || savedOrderNo || form.purchaseOrderNo;
+      let transferDestination = buildPurchaseBookingTransferUrl(form.paymentType, returnedOrderNo);
       
       // Now call the transfer API to actually post to Roznamcha
       if (returnedOrderId) {
@@ -2505,6 +2713,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       setSaveMessage(`Transferred Purchase Order ${returnedOrderNo} to Journal / Payment and ledger posting.`);
       setTransferredData(payload.data || { purchaseOrderNo: returnedOrderNo });
       setIsTransferred(true);
+      setIsBookingTransferred(true);
       setRegisterRefreshKey((key) => key + 1);
       
       // Redirect to Purchase Transfer Payment screen directly after successful transfer
@@ -2519,7 +2728,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
   };
 
   const handleTransferEmpty = async () => {
-    if (isTransferred) {
+    if (isTransferred || isBookingTransferred) {
       alert(trUi("This booking has already been transferred."));
       return;
     }
@@ -2563,6 +2772,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
       setSaveMessage(`Transferred Purchase Order ${returnedOrderNo}.`);
       setTransferredData(payload.data || { purchaseOrderNo: returnedOrderNo });
       setIsTransferred(true);
+      setIsBookingTransferred(true);
       setRegisterRefreshKey((key) => key + 1);
       
       // Redirect to Purchase Transfer Payment screen (Empty form, no pre-fill)
@@ -2581,7 +2791,6 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
     if (!window.confirm("Are you sure you want to permanently delete this booking? All associated ledger transfers will be reverted.")) {
       return;
     }
-
     setSavingOrder(true);
     setSaveMessage("Deleting booking and reverting transfers...");
     try {
@@ -3713,29 +3922,38 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                 </Button>
               )}
 
-              {savedOrderId && !isTransferred && (
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    onClick={() => setTransferConfirmModal(true)}
-                    disabled={savingOrder}
-                    className="h-10 text-[11px] font-black tracking-wider uppercase px-8 bg-blue-600 hover:bg-blue-700 text-white shadow-[0_4px_14px_0_rgb(37,99,235,0.39)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)] hover:-translate-y-0.5 transition-all duration-200"
-                  >
-                    <CheckCircle2 className="h-4 w-4"/> {t(lang, "purchase.transfer_to_payment_caps", "TRANSFER TO PAYMENT")}
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      if (window.confirm(t(lang, "purchase.confirm_transfer_empty_prompt", "Transfer to Payment Module and go to empty form?"))) {
-                        handleTransferEmpty();
-                      }
-                    }}
-                    disabled={savingOrder}
-                    className="h-10 text-[11px] font-black tracking-wider uppercase px-8 bg-indigo-600 hover:bg-indigo-700 text-white shadow-[0_4px_14px_0_rgb(79,70,229,0.39)] hover:shadow-[0_6px_20px_rgba(79,70,229,0.23)] hover:-translate-y-0.5 transition-all duration-200"
-                  >
-                    <CheckCircle2 className="h-4 w-4"/> {t(lang, "purchase.transfer_to_payment_empty_caps", "TRANSFER TO PAYMENT (EMPTY FORM)")}
-                  </Button>
-                </div>
+              {savedOrderId && (
+                (isTransferred || isBookingTransferred) ? (
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 h-10 px-6 rounded-xl bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900 text-[11px] font-black uppercase tracking-wider shadow-sm border border-slate-800 dark:border-slate-200">
+                      <CheckCircle2 className="h-4 w-4 text-emerald-400 dark:text-emerald-600" />
+                      {t(lang, "purchase.status_transferred", "Transferred")}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      onClick={() => setTransferConfirmModal(true)}
+                      disabled={savingOrder}
+                      className="h-10 text-[11px] font-black tracking-wider uppercase px-8 bg-blue-600 hover:bg-blue-700 text-white shadow-[0_4px_14px_0_rgb(37,99,235,0.39)] hover:shadow-[0_6px_20px_rgba(37,99,235,0.23)] hover:-translate-y-0.5 transition-all duration-200"
+                    >
+                      <CheckCircle2 className="h-4 w-4"/> {t(lang, "purchase.transfer_to_payment_caps", "TRANSFER TO PAYMENT")}
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        if (window.confirm(t(lang, "purchase.confirm_transfer_empty_prompt", "Transfer to Payment Module and go to empty form?"))) {
+                          handleTransferEmpty();
+                        }
+                      }}
+                      disabled={savingOrder}
+                      className="h-10 text-[11px] font-black tracking-wider uppercase px-8 bg-indigo-600 hover:bg-indigo-700 text-white shadow-[0_4px_14px_0_rgb(79,70,229,0.39)] hover:shadow-[0_6px_20px_rgba(79,70,229,0.23)] hover:-translate-y-0.5 transition-all duration-200"
+                    >
+                      <CheckCircle2 className="h-4 w-4"/> {t(lang, "purchase.transfer_to_payment_empty_caps", "TRANSFER TO PAYMENT (EMPTY FORM)")}
+                    </Button>
+                  </div>
+                )
               )}
             </>,
             document.getElementById("erp-page-actions-slot")

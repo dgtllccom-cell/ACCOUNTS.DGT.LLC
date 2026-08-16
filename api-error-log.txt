@@ -28554,3 +28554,185 @@ Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for p
     at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
     at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
 2026-08-15T17:24:54.273Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-16T05:51:15.219Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at LocationsRepository.listCountries (webpack-internal:///(rsc)/./lib/repositories/locations-repository.ts:153:104)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/locations/countries/route.ts:21:119)
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:59:14)
+    at AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38775)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:48915
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:184:36
+    at NoopContextManager.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NoopTracer.startActiveSpan (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18093)
+    at ProxyTracer.startActiveSpan (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18854)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:153:103
+    at NoopContextManager.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NextTracerImpl.trace (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:153:28)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:48760
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46097
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46054
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46008)
+
+[2026-08-16T05:51:15.222Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at LocationsRepository.listCountries (webpack-internal:///(rsc)/./lib/repositories/locations-repository.ts:153:104)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/locations/countries/route.ts:21:119)
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:59:14)
+    at AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38775)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:48915
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:184:36
+    at NoopContextManager.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NoopTracer.startActiveSpan (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18093)
+    at ProxyTracer.startActiveSpan (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18854)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:153:103
+    at NoopContextManager.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NextTracerImpl.trace (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:153:28)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:48760
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46097
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46054
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46008)
+2026-08-16T05:51:15.234Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+2026-08-16T05:51:15.243Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-16T05:51:33.744Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at LocationsRepository.listCountries (webpack-internal:///(rsc)/./lib/repositories/locations-repository.ts:153:104)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/locations/countries/route.ts:21:119)
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:59:14)
+    at AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38775)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:48915
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:184:36
+    at NoopContextManager.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NoopTracer.startActiveSpan (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18093)
+    at ProxyTracer.startActiveSpan (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18854)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:153:103
+    at NoopContextManager.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NextTracerImpl.trace (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:153:28)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:48760
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46097
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46054
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46008)
+2026-08-16T05:51:33.748Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-16T05:51:54.862Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at LocationsRepository.listCountries (webpack-internal:///(rsc)/./lib/repositories/locations-repository.ts:153:104)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/locations/countries/route.ts:21:119)
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:59:14)
+    at AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38775)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:48915
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:184:36
+    at NoopContextManager.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NoopTracer.startActiveSpan (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18093)
+    at ProxyTracer.startActiveSpan (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18854)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:153:103
+    at NoopContextManager.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NextTracerImpl.trace (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:153:28)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:48760
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46097
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46054
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46008)
+2026-08-16T05:51:54.866Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-16T05:55:14.249Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at LocationsRepository.listCountries (webpack-internal:///(rsc)/./lib/repositories/locations-repository.ts:153:104)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/locations/countries/route.ts:21:119)
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:59:14)
+    at AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38775)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:48915
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:184:36
+    at NoopContextManager.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NoopTracer.startActiveSpan (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18093)
+    at ProxyTracer.startActiveSpan (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18854)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:153:103
+    at NoopContextManager.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NextTracerImpl.trace (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:153:28)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:48760
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46097
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46054
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46008)
+2026-08-16T05:55:14.259Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-16T05:56:05.236Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at LocationsRepository.listCountries (webpack-internal:///(rsc)/./lib/repositories/locations-repository.ts:153:104)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/locations/countries/route.ts:21:119)
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:59:14)
+    at AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38775)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:48915
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:184:36
+    at NoopContextManager.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NoopTracer.startActiveSpan (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18093)
+    at ProxyTracer.startActiveSpan (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:18854)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:153:103
+    at NoopContextManager.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:7062)
+    at ContextAPI.with (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\@opentelemetry\api\index.js:1:518)
+    at NextTracerImpl.trace (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\trace\tracer.js:153:28)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:48760
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46097
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46054
+    at AsyncLocalStorage.run (node:internal/async_local_storage/async_context_frame:63:14)
+    at AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:46008)
+2026-08-16T05:56:05.239Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-16T06:12:08.014Z] TypeError: supabase.from(...).select(...).ilike is not a function
+TypeError: supabase.from(...).select(...).ilike is not a function
+    at nextEnterpriseAccountCode (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:154:6)
+    at Module.POST (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:388:17)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:70:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+
+[2026-08-16T06:12:08.138Z] TypeError: supabase.from(...).select(...).ilike is not a function
+TypeError: supabase.from(...).select(...).ilike is not a function
+    at nextEnterpriseAccountCode (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:154:6)
+    at Module.POST (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:388:17)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:97:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+
+[2026-08-16T06:12:08.158Z] Error: The user ID does not exist in the referenced users table. Account update requires a valid user reference.
+Error: The user ID does not exist in the referenced users table. Account update requires a valid user reference.
+    at Module.PATCH (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\[id]\route.ts:159:13)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:121:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+
+[2026-08-16T06:12:08.242Z] Error: The user ID does not exist in the referenced users table. Account deletion requires a valid user reference.
+Error: The user ID does not exist in the referenced users table. Account deletion requires a valid user reference.
+    at Module.DELETE (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\[id]\route.ts:301:13)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:211:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20

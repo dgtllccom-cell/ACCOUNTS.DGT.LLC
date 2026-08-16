@@ -2597,6 +2597,7 @@ export function PurchaseOrderManagementDashboard() {
                   }, 0);
 
                   const defaultCurrency = group.rows[0]?.currency || "USD";
+                  const localCurrencyLabel = group.rows[0]?.finalCurrency || group.rows[0]?.form_data?.form?.secondaryCurrency?.split(" ")?.[0] || defaultCurrency;
 
                   return (
                     <Fragment key={`group-${countryName}`}>
@@ -2643,8 +2644,8 @@ export function PurchaseOrderManagementDashboard() {
                   const invoiceNo = row.form_data?.form?.billNo || row.form_data?.form?.invoiceNo || row.form_data?.form?.purchaseContractNo || row.purchaseContractNo || "-";
                   const rawDate = row.bookingDate || row.purchaseDate || row.createdAt;
                   const bookingDateVal = rawDate ? new Date(rawDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : "-";
-                   const branchName = localizedReportValue(row, "branchName", activeLang, row.branchName || "-");
-                   const countryName = localizedReportValue(row, "countryName", activeLang, row.countryName || "-");
+                  const branchName = localizedReportValue(row, "branchName", activeLang, row.branchName || "-");
+                  const countryName = localizedReportValue(row, "countryName", activeLang, row.countryName || "-");
                   const userName = row.audit?.userName || "-";
 
                   // Product
@@ -2659,12 +2660,12 @@ export function PurchaseOrderManagementDashboard() {
                     return originVal;
                   };
 
-                   const goodsName = localizedReportValue(
-                     row,
-                     "productName",
-                     activeLang,
-                     goods.map((g: any) => g.goodsName).filter(Boolean).join(", ") || row.productName || "-"
-                   );
+                  const goodsName = localizedReportValue(
+                    row,
+                    "productName",
+                    activeLang,
+                    goods.map((g: any) => g.goodsName).filter(Boolean).join(", ") || row.productName || "-"
+                  );
                   const brand = goods.map((g: any) => g.brand || g.size || "").filter(Boolean).join(", ") || "-";
                   const origin = goods.map((g: any) => getOriginText(g, row)).filter(Boolean).join(", ") || row.countryName || "-";
                   const totalQty = goods.length > 0 ? goods.reduce((s: number, g: any) => s + Number(g.qtyNo || 0), 0) : Number(row.quantity || 0);
@@ -2726,7 +2727,8 @@ export function PurchaseOrderManagementDashboard() {
                     || (row as any).journalStatus === "Posted"
                     || (row as any).journalStatus?.toLowerCase() === "posted"
                     || row.form_data?.workflow?.journalStatus === "Posted"
-                    || row.form_data?.workflow?.journalStatus?.toLowerCase() === "posted";
+                    || row.form_data?.workflow?.journalStatus?.toLowerCase() === "posted"
+                    || Boolean(row.roznamcha_entry_id || row.form_data?.form?.roznamchaEntryId);
                   const rawPayStatus = String(row.paymentStatus || "").toUpperCase();
                   const rawInvStatus = row.confirmationStatus || row.form_data?.workflow?.confirmationStatus || row.status || "Open";
                   const rawLoadStatus = row.containerStatus || row.form_data?.workflow?.containerStatus || "Pending";
@@ -2828,8 +2830,6 @@ export function PurchaseOrderManagementDashboard() {
                         <td className="px-2 py-2" onClick={(e) => e.stopPropagation()}>
                           <div className="flex items-center justify-center gap-1">
                             {(!isPosted || isSuperAdmin || isCountryAdmin) && (
-                              <button
-                                type="button"
                                 onClick={() => {
                                   router.push(`/dashboard/purchase/new-purchase-booking-order?id=${encodeURIComponent(row.id)}&purchaseOrderNo=${encodeURIComponent(row.purchaseBookingOrderNumber || "")}`);
                                 }}

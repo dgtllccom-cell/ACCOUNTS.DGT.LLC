@@ -320,7 +320,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       lines: postedLines,
       expectedDebitLedgerId: debitAccountObj.id,
       expectedCreditLedgerId: creditAccountObj.id,
-      expectedAmount: totalPurchaseAmount
+      expectedAmount: totalPurchaseAmount,
+      expectedExchangeRate: exRate
     });
     assertPostedRoznamchaTrace({
       label: "Business Roznamcha",

@@ -184,18 +184,44 @@ async function resolveUsdAmount(admin: any, input: {
   };
 }
 
-async function generateTransactionSerials(admin: any, body: ReturnType<typeof roznamchaPostingSchema.parse>) {
-  // Wrap entire serial generation in try/catch — serial failures must never block a posting
+async function nextEntitySerial(
+  admin: any,
+  scopeType: "global" | "country" | "branch" | "main_branch" | "city_branch" | "module_roznamcha" | "module_purchase" | "module_loading" | "module_payment",
+  scopeKey: string,
+  entityType: string,
+  prefix: string
+) {
+  if (!scopeKey || typeof scopeKey !== "string") {
+    const ts = Date.now().toString(36).toUpperCase();
+    return `${prefix}-FALLBACK-${ts}`;
+  }
   try {
-    const superAdminSerialNumber = await nextTransactionSerial(admin, "global", "global", "SA");
+    const { data, error } = await admin.rpc("next_entity_serial", {
+      p_scope_type: scopeType,
+      p_scope_key: scopeKey,
+      p_entity_type: entityType,
+      p_prefix: prefix
+    });
+    if (error) {
+      console.warn(`[serial] RPC next_entity_serial failed (${scopeType}/${scopeKey}/${entityType}): ${error.message}`);
+      const ts = Date.now().toString(36).toUpperCase();
+      return `${prefix}-${ts}`;
+    }
+    return String(data);
+  } catch (err: any) {
+    console.warn(`[serial] nextEntitySerial threw (${scopeType}/${scopeKey}/${entityType}):`, err?.message);
+    const ts = Date.now().toString(36).toUpperCase();
+    return `${prefix}-${ts}`;
+  }
+}
+
+async function generateTransactionSerials(admin: any, body: ReturnType<typeof roznamchaPostingSchema.parse>) {
+  try {
+    const superAdminSerialNumber = await nextEntitySerial(admin, "global", "global", "roznamcha", "ERP");
 
     let countryPrefix = "CNT";
     if (body.countryId) {
-      const { data: country } = await admin
-        .from("countries")
-        .select("iso2, iso3, name")
-        .eq("id", body.countryId)
-        .maybeSingle();
+      const { data: country } = await admin.from("countries").select("iso2, iso3, name").eq("id", body.countryId).maybeSingle();
       countryPrefix = cleanSerialPrefix(country?.iso2 || country?.iso3 || country?.name, "CNT");
     }
 
@@ -211,33 +237,35 @@ async function generateTransactionSerials(admin: any, body: ReturnType<typeof ro
       cityBranchPrefix = cleanSerialPrefix(branch?.code || branch?.name, "CB");
     }
 
-    // Entry Serial specifically for Roznamcha
-    const entrySerialPrefix = (body as any).roznamchaBookType === "bank" ? "BNK" : "ROZ";
+    // Independent DR and CR serial counters
+    const debitSerialNumber = await nextEntitySerial(admin, "global", "ENTRY", "roznamcha_debit", "DR");
+    const creditSerialNumber = await nextEntitySerial(admin, "global", "ENTRY", "roznamcha_credit", "CR");
 
     // Only generate country serial if countryId is a non-empty string
     const countryTransactionSerialNumber =
       body.countryId && typeof body.countryId === "string"
-        ? await nextTransactionSerial(admin, "country", body.countryId, countryPrefix)
+        ? await nextEntitySerial(admin, "country", body.countryId, "roznamcha", countryPrefix)
         : null;
 
     // Only generate branch serial if at least one branch ID is a non-empty string
     const branchScopeKey = body.cityBranchId || body.countryBranchId;
     const branchTransactionSerialNumber =
       branchScopeKey && typeof branchScopeKey === "string"
-        ? await nextTransactionSerial(admin, "branch", branchScopeKey, body.cityBranchId ? cityBranchPrefix : mainBranchPrefix)
+        ? await nextEntitySerial(admin, "branch", branchScopeKey, "roznamcha", body.cityBranchId ? cityBranchPrefix : mainBranchPrefix)
         : null;
 
     const mainBranchTransactionSerialNumber =
       body.countryBranchId && typeof body.countryBranchId === "string"
-        ? await nextTransactionSerial(admin, "main_branch", body.countryBranchId, mainBranchPrefix)
+        ? await nextEntitySerial(admin, "main_branch", body.countryBranchId, "roznamcha", mainBranchPrefix)
         : null;
 
     const cityBranchTransactionSerialNumber =
       body.cityBranchId && typeof body.cityBranchId === "string"
-        ? await nextTransactionSerial(admin, "city_branch", body.cityBranchId, cityBranchPrefix)
+        ? await nextEntitySerial(admin, "city_branch", body.cityBranchId, "roznamcha", cityBranchPrefix)
         : null;
 
-    const entrySerialNumber = await nextTransactionSerial(admin, "module_roznamcha", "global", entrySerialPrefix);
+    const hasDebit = body.lines.some(l => toNumber(l.debit) > 0);
+    const entrySerialNumber = hasDebit ? debitSerialNumber : creditSerialNumber;
 
     return {
       superAdminSerialNumber,
@@ -245,19 +273,22 @@ async function generateTransactionSerials(admin: any, body: ReturnType<typeof ro
       branchTransactionSerialNumber,
       mainBranchTransactionSerialNumber,
       cityBranchTransactionSerialNumber,
-      entrySerialNumber
+      entrySerialNumber,
+      debitSerialNumber,
+      creditSerialNumber
     };
   } catch (err: any) {
-    // If serial generation fails entirely, log and return fallback serials so posting is not blocked
     console.warn("[serial] generateTransactionSerials failed, using fallback serials:", err?.message);
     const ts = Date.now().toString(36).toUpperCase();
     return {
-      superAdminSerialNumber: `SA-${ts}`,
+      superAdminSerialNumber: `ERP-${ts}`,
       countryTransactionSerialNumber: body.countryId ? `CNT-${ts}` : null,
       branchTransactionSerialNumber: (body.cityBranchId || body.countryBranchId) ? `BR-${ts}` : null,
       mainBranchTransactionSerialNumber: body.countryBranchId ? `MB-${ts}` : null,
       cityBranchTransactionSerialNumber: body.cityBranchId ? `CB-${ts}` : null,
-      entrySerialNumber: `ROZ-${ts}`
+      entrySerialNumber: `DR-${ts}`,
+      debitSerialNumber: `DR-${ts}`,
+      creditSerialNumber: `CR-${ts}`
     };
   }
 }
@@ -344,9 +375,37 @@ async function nextTransactionSerialPg(
   }
 }
 
+async function nextEntitySerialPg(
+  sql: any,
+  scopeType: "global" | "country" | "branch" | "main_branch" | "city_branch" | "module_roznamcha" | "module_purchase" | "module_loading" | "module_payment",
+  scopeKey: string,
+  entityType: string,
+  prefix: string
+) {
+  if (!scopeKey || typeof scopeKey !== "string") {
+    const ts = Date.now().toString(36).toUpperCase();
+    return `${prefix}-FALLBACK-${ts}`;
+  }
+  try {
+    const rows = await sql`
+      select public.next_entity_serial(
+        p_scope_type := ${scopeType},
+        p_scope_key := ${scopeKey},
+        p_entity_type := ${entityType},
+        p_prefix := ${prefix}
+      ) as serial
+    `;
+    return String(rows[0]?.serial);
+  } catch (err: any) {
+    console.warn(`[serial][pg] next_entity_serial failed (${scopeType}/${scopeKey}/${entityType}):`, err?.message);
+    const ts = Date.now().toString(36).toUpperCase();
+    return `${prefix}-${ts}`;
+  }
+}
+
 async function generateTransactionSerialsPg(sql: any, body: ReturnType<typeof roznamchaPostingSchema.parse>) {
   try {
-    const superAdminSerialNumber = await nextTransactionSerialPg(sql, "global", "global", "SA");
+    const superAdminSerialNumber = await nextEntitySerialPg(sql, "global", "global", "roznamcha", "ERP");
 
     let countryPrefix = "CNT";
     if (body.countryId) {
@@ -366,30 +425,33 @@ async function generateTransactionSerialsPg(sql: any, body: ReturnType<typeof ro
       cityBranchPrefix = cleanSerialPrefix(rows[0]?.code || rows[0]?.name, "CB");
     }
 
-    const entrySerialPrefix = (body as any).roznamchaBookType === "bank" ? "BNK" : "ROZ";
+    // Independent DR and CR serial counters
+    const debitSerialNumber = await nextEntitySerialPg(sql, "global", "ENTRY", "roznamcha_debit", "DR");
+    const creditSerialNumber = await nextEntitySerialPg(sql, "global", "ENTRY", "roznamcha_credit", "CR");
 
     const countryTransactionSerialNumber =
       body.countryId && typeof body.countryId === "string"
-        ? await nextTransactionSerialPg(sql, "country", body.countryId, countryPrefix)
+        ? await nextEntitySerialPg(sql, "country", body.countryId, "roznamcha", countryPrefix)
         : null;
 
     const branchScopeKey = body.cityBranchId || body.countryBranchId;
     const branchTransactionSerialNumber =
       branchScopeKey && typeof branchScopeKey === "string"
-        ? await nextTransactionSerialPg(sql, "branch", branchScopeKey, body.cityBranchId ? cityBranchPrefix : mainBranchPrefix)
+        ? await nextEntitySerialPg(sql, "branch", branchScopeKey, "roznamcha", body.cityBranchId ? cityBranchPrefix : mainBranchPrefix)
         : null;
 
     const mainBranchTransactionSerialNumber =
       body.countryBranchId && typeof body.countryBranchId === "string"
-        ? await nextTransactionSerialPg(sql, "main_branch", body.countryBranchId, mainBranchPrefix)
+        ? await nextEntitySerialPg(sql, "main_branch", body.countryBranchId, "roznamcha", mainBranchPrefix)
         : null;
 
     const cityBranchTransactionSerialNumber =
       body.cityBranchId && typeof body.cityBranchId === "string"
-        ? await nextTransactionSerialPg(sql, "city_branch", body.cityBranchId, cityBranchPrefix)
+        ? await nextEntitySerialPg(sql, "city_branch", body.cityBranchId, "roznamcha", cityBranchPrefix)
         : null;
 
-    const entrySerialNumber = await nextTransactionSerialPg(sql, "module_roznamcha", "global", entrySerialPrefix);
+    const hasDebit = body.lines.some(l => toNumber(l.debit) > 0);
+    const entrySerialNumber = hasDebit ? debitSerialNumber : creditSerialNumber;
 
     return {
       superAdminSerialNumber,
@@ -397,18 +459,22 @@ async function generateTransactionSerialsPg(sql: any, body: ReturnType<typeof ro
       branchTransactionSerialNumber,
       mainBranchTransactionSerialNumber,
       cityBranchTransactionSerialNumber,
-      entrySerialNumber
+      entrySerialNumber,
+      debitSerialNumber,
+      creditSerialNumber
     };
   } catch (err: any) {
     console.warn("[serial][pg] generateTransactionSerials failed, using fallback serials:", err?.message);
     const ts = Date.now().toString(36).toUpperCase();
     return {
-      superAdminSerialNumber: `SA-${ts}`,
+      superAdminSerialNumber: `ERP-${ts}`,
       countryTransactionSerialNumber: body.countryId ? `CNT-${ts}` : null,
       branchTransactionSerialNumber: (body.cityBranchId || body.countryBranchId) ? `BR-${ts}` : null,
       mainBranchTransactionSerialNumber: body.countryBranchId ? `MB-${ts}` : null,
       cityBranchTransactionSerialNumber: body.cityBranchId ? `CB-${ts}` : null,
-      entrySerialNumber: `ROZ-${ts}`
+      entrySerialNumber: `DR-${ts}`,
+      debitSerialNumber: `DR-${ts}`,
+      creditSerialNumber: `CR-${ts}`
     };
   }
 }
@@ -616,6 +682,8 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
       isDebit: debit > 0
     });
 
+    const lineEntrySerial = debit > 0 ? (transactionSerials.debitSerialNumber || transactionSerials.entrySerialNumber) : (transactionSerials.creditSerialNumber || transactionSerials.entrySerialNumber);
+
     await sql`
       insert into public.roznamcha_lines (
         roznamcha_entry_id, payment_entry_type, account_id, enterprise_account_id, ledger_id,
@@ -627,7 +695,7 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
         ${entryId}, ${line.paymentEntryType}, ${line.accountId ?? null}, ${enterpriseAccountId}, ${ledgerId},
         ${line.description ?? null}, ${debit}, ${credit}, ${line.currency}, ${conversion.usdRate}, ${conversion.usdAmount},
         ${transactionSerials.superAdminSerialNumber}, ${transactionSerials.countryTransactionSerialNumber}, ${transactionSerials.branchTransactionSerialNumber},
-        ${transactionSerials.mainBranchTransactionSerialNumber}, ${transactionSerials.cityBranchTransactionSerialNumber}, ${transactionSerials.entrySerialNumber},
+        ${transactionSerials.mainBranchTransactionSerialNumber}, ${transactionSerials.cityBranchTransactionSerialNumber}, ${lineEntrySerial},
         ${traceability.account_number}, ${traceability.manual_reference_number}, ${traceability.customer_number},
         ${traceability.country_serial_number}, ${traceability.branch_serial_number}
       )
@@ -1034,7 +1102,10 @@ export async function GET(request: NextRequest) {
         ? await sql`
             select
               rl.id, rl.roznamcha_entry_id, rl.payment_entry_type, rl.debit, rl.credit, rl.currency, rl.ledger_id,
-              rl.account_number, rl.manual_reference_number, rl.customer_number, rl.usd_rate, rl.usd_amount,
+              rl.description, rl.account_number, rl.manual_reference_number, rl.customer_number,
+              rl.super_admin_serial_number, rl.country_transaction_serial_number, rl.branch_transaction_serial_number,
+              rl.entry_serial_number, rl.country_serial_number, rl.branch_serial_number,
+              rl.usd_rate, rl.usd_amount,
               case when l.id is not null then jsonb_build_object(
                 'name', l.name,
                 'city_branches', case when lcb.id is not null then jsonb_build_object('name', lcb.name) else null end,
@@ -1070,7 +1141,7 @@ export async function GET(request: NextRequest) {
       .select(
         // Disambiguate profiles embedding (created_by vs approved_by) by pinning to the FK.
         // We keep the `profiles` key in the response for backward compatibility with the UI types.
-        "id, type, country_id, countries(name,currency_code), country_branch_id, country_branches(name,code), city_branch_id, city_branches(name,code), journal_no, voucher_no, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, main_branch_transaction_serial, city_branch_transaction_serial, entry_serial_number, entry_date, payment_method_id, payment_methods(name,code), reference_no, narration, status, created_by, profiles!roznamcha_entries_created_by_fkey(full_name), approved_by, approver_profile:profiles!roznamcha_entries_approved_by_fkey(full_name), approved_at, posted_at, created_at, updated_at, source_module, source_transaction_type, source_transaction_id, source_reference_no, roznamcha_lines(id, payment_entry_type, description, debit, credit, currency, ledger_id, ledgers(name, city_branches(name), country_branches(name)), account_number, manual_reference_number, customer_number, usd_rate, usd_amount)"
+        "id, type, country_id, countries(name,currency_code), country_branch_id, country_branches(name,code), city_branch_id, city_branches(name,code), journal_no, voucher_no, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, main_branch_transaction_serial, city_branch_transaction_serial, entry_serial_number, entry_date, payment_method_id, payment_methods(name,code), reference_no, narration, status, created_by, profiles!roznamcha_entries_created_by_fkey(full_name), approved_by, approver_profile:profiles!roznamcha_entries_approved_by_fkey(full_name), approved_at, posted_at, created_at, updated_at, source_module, source_transaction_type, source_transaction_id, source_reference_no, roznamcha_lines(id, payment_entry_type, description, debit, credit, currency, ledger_id, ledgers(name, city_branches(name), country_branches(name)), account_number, manual_reference_number, customer_number, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, entry_serial_number, country_serial_number, branch_serial_number, usd_rate, usd_amount)"
       )
       .is("deleted_at", null)
       .order("entry_date", { ascending: false });

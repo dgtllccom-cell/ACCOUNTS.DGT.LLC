@@ -250,13 +250,15 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         .eq("roznamcha_entry_id", paymentRecord.roznamcha_entry_id)
     ) as any[];
 
+    const exRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
     assertDistinctBookingLedgers(debitLedgerId, creditLedgerId, "Sales booking");
     assertBalancedPostedLines({
       label: "Sales booking",
       lines: postedLines,
       expectedDebitLedgerId: debitLedgerId,
       expectedCreditLedgerId: creditLedgerId,
-      expectedAmount: totalSalesAmount
+      expectedAmount: totalSalesAmount,
+      expectedExchangeRate: exRate
     });
 
     const journalRecord = await requireSupabaseData(

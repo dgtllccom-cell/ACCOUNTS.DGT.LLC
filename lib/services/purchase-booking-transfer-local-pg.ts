@@ -209,7 +209,8 @@ export async function transferPurchaseBookingViaLocalPg(input: {
         lines: postedLines,
         expectedDebitLedgerId: debitAccountObj.id,
         expectedCreditLedgerId: creditAccountObj.id,
-        expectedAmount: totalPurchaseAmount
+        expectedAmount: totalPurchaseAmount,
+        expectedExchangeRate: exRate
       });
 
       const journalRecordRows = await tx`

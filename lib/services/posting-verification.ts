@@ -36,6 +36,8 @@ export function assertBalancedPostedLines(params: {
   expectedDebitLedgerId: string;
   expectedCreditLedgerId: string;
   expectedAmount: number;
+  expectedExchangeRate?: number;
+  expectedBaseAmount?: number;
 }) {
   const lines = Array.isArray(params.lines) ? params.lines : [];
   if (lines.length !== 2) {
@@ -52,8 +54,20 @@ export function assertBalancedPostedLines(params: {
   const debitTotal = lines.reduce((sum, line) => sum + asMoney(line.debit), 0);
   const creditTotal = lines.reduce((sum, line) => sum + asMoney(line.credit), 0);
   const expectedAmount = asMoney(params.expectedAmount);
+  const exRate = Number(params.expectedExchangeRate || 1) || 1;
+  const expectedBaseAmount = params.expectedBaseAmount !== undefined
+    ? asMoney(params.expectedBaseAmount)
+    : asMoney(expectedAmount * exRate);
 
-  if (debitTotal !== creditTotal || debitTotal !== expectedAmount) {
+  if (debitTotal <= 0 || debitTotal !== creditTotal) {
+    throw new Error(`${params.label} posting verification failed: debit and credit totals must balance to each other.`);
+  }
+
+  const matchesExpected =
+    Math.abs(debitTotal - expectedAmount) < 0.01 ||
+    Math.abs(debitTotal - expectedBaseAmount) < 0.01;
+
+  if (!matchesExpected) {
     throw new Error(`${params.label} posting verification failed: debit and credit totals must balance to the posted amount.`);
   }
 }
