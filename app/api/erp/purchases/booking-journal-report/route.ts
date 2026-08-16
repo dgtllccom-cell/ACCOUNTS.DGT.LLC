@@ -224,14 +224,13 @@ function normalizeOrder(row: any) {
       const effectiveScope = getEffectiveScope(session, query);
 
       // purchase_orders has scoped RLS and this app's Supabase client is not guaranteed to
-      // carry a real service-role key that bypasses RLS on its own - reads through it
-      // silently return an empty array. Try a direct Postgres read first (same proven bypass
-      // as app/api/erp/purchases/orders/route.ts), covering the common case (no free-text
-      // search, no explicit date range); when it succeeds, feed its rows into the SAME
-      // downstream dedup/filter/summary logic below instead of duplicating it, only skipping
-      // the Supabase-client fetch. Falls back to the existing path otherwise.
+      // carry a real service-role key that bypasses RLS on its own - reads through it can
+      // silently return an empty array. Prefer a direct Postgres read first (same proven
+      // bypass as app/api/erp/purchases/orders/route.ts) whenever DATABASE_URL is present,
+      // then feed those rows into the SAME downstream dedup/filter/summary logic below
+      // instead of duplicating it. Falls back to the existing path otherwise.
       let viaPgData: any[] | null = null;
-      if (!query.purchaseOrderNo && !query.q && !query.dateFrom && !query.dateTo) {
+      if (process.env.DATABASE_URL) {
         viaPgData = await withLocalPg(async (sql) => {
           const rows = await sql`
             SELECT po.id, po.purchase_order_no, po.purchase_contract_no, po.country_id, po.country_branch_id,
@@ -259,16 +258,24 @@ function normalizeOrder(row: any) {
         });
       }
 
-      const supabase = createSupabaseAdminClient() as any;
+      const supabase = (() => {
+        try {
+          return createSupabaseAdminClient() as any;
+        } catch {
+          return null;
+        }
+      })();
       let requestQuery = supabase
-        .from("purchase_orders")
-        .select(
-          "id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id, supplier_company_id, companies(name), purchase_currency, payment_currency, currency_code, exchange_rate, order_total, payment_status, ledger_posting_status, is_edited_since_transfer, form_data, created_at, countries(name, iso2), country_branches(name, code), city_branches(name, code, city_name), advance_paid, remaining_paid, credit_amount, remaining_due, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number"
-        )
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false });
+        ? supabase
+            .from("purchase_orders")
+            .select(
+              "id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id, supplier_company_id, companies(name), purchase_currency, payment_currency, currency_code, exchange_rate, order_total, payment_status, ledger_posting_status, is_edited_since_transfer, form_data, created_at, countries(name, iso2), country_branches(name, code), city_branches(name, code, city_name), advance_paid, remaining_paid, credit_amount, remaining_due, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number"
+            )
+            .is("deleted_at", null)
+            .order("created_at", { ascending: false })
+        : null;
 
-      if (query.purchaseOrderNo || query.q) {
+      if (requestQuery && (query.purchaseOrderNo || query.q)) {
         const rawTerm = query.purchaseOrderNo || query.q || "";
         const term = rawTerm.trim().replace(/[%_]/g, "");
         requestQuery = requestQuery.or(
@@ -287,8 +294,8 @@ function normalizeOrder(row: any) {
           `form_data->form->>salesAccountName.ilike.%${term}%`
         );
       }
-      if (query.dateFrom) requestQuery = requestQuery.gte("created_at", `${query.dateFrom}T00:00:00.000Z`);
-      if (query.dateTo) {
+      if (requestQuery && query.dateFrom) requestQuery = requestQuery.gte("created_at", `${query.dateFrom}T00:00:00.000Z`);
+      if (requestQuery && query.dateTo) {
         // Add a 24 hour buffer to the toDate to account for potential timezone differences
         // between the client generating the date and the Supabase database's local time.
         const toDateObj = new Date(query.dateTo);
@@ -298,26 +305,26 @@ function normalizeOrder(row: any) {
       }
 
       // Enforce strict scope isolation: city branch first, then main branch, then country.
-      if (query.cityBranchId) {
+      if (requestQuery && query.cityBranchId) {
         requestQuery = requestQuery.eq("city_branch_id", query.cityBranchId);
-      } else if (!session.isSuperAdmin && session.cityBranchIds.length) {
+      } else if (requestQuery && !session.isSuperAdmin && session.cityBranchIds.length) {
         requestQuery = requestQuery.or(`city_branch_id.in.(${session.cityBranchIds.join(",")}),city_branch_id.is.null`);
         if (session.countryIds.length) {
           requestQuery = requestQuery.in("country_id", session.countryIds);
         }
-      } else if (query.countryBranchId) {
+      } else if (requestQuery && query.countryBranchId) {
         requestQuery = requestQuery.eq("country_branch_id", query.countryBranchId);
-      } else if (!session.isSuperAdmin && session.countryBranchIds.length) {
+      } else if (requestQuery && !session.isSuperAdmin && session.countryBranchIds.length) {
         requestQuery = requestQuery.in("country_branch_id", session.countryBranchIds);
-      } else if (query.countryId) {
+      } else if (requestQuery && query.countryId) {
         requestQuery = requestQuery.eq("country_id", query.countryId);
-      } else if (!session.isSuperAdmin) {
+      } else if (requestQuery && !session.isSuperAdmin) {
         requestQuery = requestQuery.in("country_id", session.countryIds.length ? session.countryIds : ["00000000-0000-0000-0000-000000000000"]);
       }
 
       let data: any = viaPgData;
       let error: any = null;
-      if (!viaPgData) {
+      if (!viaPgData && requestQuery) {
         const res = await withTimeout<any>(requestQuery.limit(query.limit), "purchase booking journal report");
         data = res.data;
         error = res.error;
@@ -330,6 +337,47 @@ function normalizeOrder(row: any) {
             error = retryRes.error;
           }
         }
+      }
+      if (viaPgData) {
+        let localReports = viaPgData.map(normalizeOrder);
+        if (query.purchaseOrderNo || query.q) {
+          const rawTerm = query.purchaseOrderNo || query.q || "";
+          const term = rawTerm.trim().toLowerCase();
+          localReports = localReports.filter((report: any) =>
+            [
+              report.purchaseOrderNo,
+              report.systemBillNumber,
+              report.manualBillNumber,
+              report.billNumber,
+              report.referenceNo,
+              report.purchaseAccountNumber,
+              report.salesAccountNumber,
+              report.supplierName,
+              report.buyerName,
+              report.productName,
+              report.goodsDescription
+            ]
+              .filter(Boolean)
+              .some((value) => String(value).toLowerCase().includes(term))
+          );
+        }
+        if (query.dateFrom) {
+          const from = new Date(`${query.dateFrom}T00:00:00.000Z`).getTime();
+          localReports = localReports.filter((report: any) => {
+            const created = new Date(report.createdAt || report.bookingDate || 0).getTime();
+            return created >= from;
+          });
+        }
+        if (query.dateTo) {
+          const to = new Date(query.dateTo);
+          to.setDate(to.getDate() + 2);
+          const toMs = to.getTime();
+          localReports = localReports.filter((report: any) => {
+            const created = new Date(report.createdAt || report.bookingDate || 0).getTime();
+            return created <= toMs;
+          });
+        }
+        data = localReports;
       }
       if (error) {
         return apiOk({
@@ -366,10 +414,16 @@ function normalizeOrder(row: any) {
       let usdRates: Record<string, number> = {};
       let lastExchangeRateUpdate = null;
       try {
-        const { data: ratesData } = await supabase
-          .from("daily_usd_rates")
-          .select("currency_code, exchange_rate, updated_at")
-          .order("updated_at", { ascending: false });
+        const ratesData = supabase
+          ? (await supabase
+              .from("daily_usd_rates")
+              .select("currency_code, exchange_rate, updated_at")
+              .order("updated_at", { ascending: false })).data
+          : await withLocalPg(async (sql) => sql`
+              select currency_code, exchange_rate, updated_at
+              from public.daily_usd_rates
+              order by updated_at desc
+            `);
         if (ratesData && ratesData.length > 0) {
           lastExchangeRateUpdate = ratesData[0].updated_at;
           ratesData.forEach((row: any) => {
@@ -458,12 +512,20 @@ function normalizeOrder(row: any) {
       const orderIds = reports.map((r: any) => r.id).filter(Boolean);
       if (orderIds.length > 0) {
         try {
-          const { data: recTrans } = await supabase
-            .from("record_translations")
-            .select("record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text, language_texts, translation_status, original_language_code")
-            .in("record_id", orderIds)
-            .eq("record_table", "purchase_orders")
-            .is("deleted_at", null);
+          const recTrans = supabase
+            ? (await supabase
+                .from("record_translations")
+                .select("record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text, language_texts, translation_status, original_language_code")
+                .in("record_id", orderIds)
+                .eq("record_table", "purchase_orders")
+                .is("deleted_at", null)).data
+            : await withLocalPg(async (sql) => sql`
+                select record_id, field_name, english_text, urdu_text, arabic_text, persian_text, pashto_text, language_texts, translation_status, original_language_code
+                from public.record_translations
+                where record_table = 'purchase_orders'
+                  and deleted_at is null
+                  and record_id = any(${orderIds})
+              `);
 
           if (recTrans && recTrans.length > 0) {
             const transMapByOrder: Record<string, Record<string, any>> = {};
