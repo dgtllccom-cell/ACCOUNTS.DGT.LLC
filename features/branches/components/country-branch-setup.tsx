@@ -786,64 +786,61 @@ function CountryBranchSetupContent() {
     return `${prefix}-MAIN-${num}`;
   }
 
-  async function onCountrySelected(next: LocationHierarchyValue, meta: LocationHierarchyMeta) {
-    setBanner(null);
-    if (editingCountryBranchId && next.countryId === location.countryId) {
-      setLocation(next);
-      setLocationMeta(meta);
-      if (meta.country?.currency_code) {
-        setCurrency(meta.country.currency_code.toUpperCase());
-      }
-      return;
-    }
+  async function onLocationChange(next: LocationHierarchyValue, meta: LocationHierarchyMeta) {
+    const isCountryChanged = next.countryId !== location.countryId;
     setLocation(next);
     setLocationMeta(meta);
 
-    setFullAddress("");
-    setBranchType(next.countryId ? "MAIN" : "");
-    setExistingMainBranch(null);
-    setCountryBranches([]);
-    setCountryBranchSearch("");
-    setBranchCode("");
-    setEditingCountryBranchId("");
-
-    const defaultCurrency = meta.country?.currency_code?.toUpperCase() || "";
-    setCurrency(defaultCurrency);
-
-    if (meta.country?.phone_code) {
-      const code = meta.country.phone_code;
-      setContacts((prev) => {
-        if (prev.length === 0) {
-          return [{ type: "Mobile", value: code + " " }];
+    if (isCountryChanged) {
+      setBanner(null);
+      if (editingCountryBranchId && next.countryId === location.countryId) {
+        if (meta.country?.currency_code) {
+          setCurrency(meta.country.currency_code.toUpperCase());
         }
-        return prev.map((c) => {
-          if (["Mobile", "Phone", "WhatsApp"].includes(c.type) && !c.value.trim()) {
-            return { ...c, value: code + " " };
+        return;
+      }
+
+      setFullAddress("");
+      setBranchType(next.countryId ? "MAIN" : "");
+      setExistingMainBranch(null);
+      setCountryBranches([]);
+      setCountryBranchSearch("");
+      setBranchCode("");
+      setEditingCountryBranchId("");
+
+      const defaultCurrency = meta.country?.currency_code?.toUpperCase() || "";
+      setCurrency(defaultCurrency);
+
+      if (meta.country?.phone_code) {
+        const code = meta.country.phone_code;
+        setContacts((prev) => {
+          if (prev.length === 0) {
+            return [{ type: "Mobile", value: code + " " }];
           }
-          return c;
+          return prev.map((c) => {
+            if (["Mobile", "Phone", "WhatsApp"].includes(c.type) && !c.value.trim()) {
+              return { ...c, value: code + " " };
+            }
+            return c;
+          });
         });
-      });
-    };
+      }
 
-    if (!isUuid(next.countryId)) return;
+      if (!isUuid(next.countryId)) return;
 
-    const existing = await loadExistingMainBranch(next.countryId);
-    if (existing?.main) {
-      setBranchCode(existing.main.code);
-      setBanner({
-        type: "error",
-        message:
-          `Country Branch Already Exists\nBranch Name: ${existing.main.name}\nBranch Code: ${existing.main.code}\nStatus: ${existing.main.status}`
-      });
-      return;
+      const existing = await loadExistingMainBranch(next.countryId);
+      if (existing?.main) {
+        setBranchCode(existing.main.code);
+        setBanner({
+          type: "error",
+          message:
+            `Country Branch Already Exists\nBranch Name: ${existing.main.name}\nBranch Code: ${existing.main.code}\nStatus: ${existing.main.status}`
+        });
+        return;
+      }
+
+      setBranchCode(nextSuggestedCode(meta.country, existing?.list?.length ?? 0));
     }
-
-    setBranchCode(nextSuggestedCode(meta.country, existing?.list?.length ?? 0));
-  }
-
-  function onLocationChange(next: LocationHierarchyValue, meta: LocationHierarchyMeta) {
-    setLocation(next);
-    setLocationMeta(meta);
   }
 
   function addNewTypePrompt() {
@@ -1068,23 +1065,39 @@ function CountryBranchSetupContent() {
               <section hidden={activeStep !== 1} className="order-1 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
                 <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">1</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 1 - Country & Currency</h2>
+                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 1 - Branch Information & Location</h2>
                 </div>
-                <div className="grid gap-3 md:grid-cols-2">
+
+                <div className="space-y-4">
                   <LocationHierarchySelect
                     value={location}
-                    showState={false}
-                    showCity={false}
-                    showArea={false}
-                    onChange={onCountrySelected}
+                    showCountry={true}
+                    showState={true}
+                    showDistrict={true}
+                    showCity={true}
+                    showArea={true}
+                    allowManageLink={true}
+                    onChange={onLocationChange}
                   />
 
-                  <div className="space-y-2">
-                    <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Currency</Label>
-                    <Input value={currency} readOnly placeholder="Auto from selected Country" />
+                  <div className="grid gap-3 md:grid-cols-3">
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Currency</Label>
+                      <Input value={currency} readOnly placeholder="Auto from selected Country" className="bg-muted/50 font-semibold" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">ZIP / Postal Code</Label>
+                      <Input value={zip} readOnly placeholder="Auto from selected Area or City" className="bg-muted/50 font-semibold" />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Branch Code</Label>
+                      <Input value={branchCode} readOnly placeholder="Auto-generated" className="bg-muted/50 font-mono font-semibold" />
+                    </div>
                   </div>
 
-                  <div className="space-y-1.5 md:col-span-2">
+                  <div className="space-y-1.5">
                     <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">
                       Branch Email (Hostinger Titan Mailbox) *
                     </Label>
@@ -1100,39 +1113,9 @@ function CountryBranchSetupContent() {
                       Enter your Hostinger Titan mailbox address for this branch. The ERP will securely send emails using this sender address via Titan SMTP.
                     </p>
                   </div>
-                </div>
-                <input type="hidden" value={branchType} readOnly />
-                <input type="hidden" value={branchCode} readOnly />
-              </section>
 
-              <section hidden={activeStep !== 1} className="order-1 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">
-                <div className="flex items-center gap-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-blue-50 dark:bg-blue-950 text-xs font-bold text-blue-600 dark:text-blue-400">2</span>
-                  <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Step 2 - Location</h2>
-                </div>
-                <div className="grid gap-3 md:grid-cols-12">
-                  <div className="space-y-2 md:col-span-4">
-                    <Label className="text-xs text-slate-600">Country (auto)</Label>
-                    <Input value={locationMeta.country?.name ?? ""} readOnly />
-                  </div>
-                  <div className="space-y-2 md:col-span-8">
-                    <LocationHierarchySelect
-                      value={location}
-                      showCountry={false}
-                      showDistrict={false}
-                      showArea={true}
-                      allowManageLink={false}
-                      onChange={onLocationChange}
-                      disabled={!location.countryId}
-                    />
-                  </div>
-
-                  <div className="space-y-2 md:col-span-4">
-                    <Label className="text-xs text-slate-600">Zip / Postal Code</Label>
-                    <Input value={zip} readOnly placeholder="Auto from selected Area or City" />
-                  </div>
-                  <div className="space-y-2 md:col-span-8">
-                    <Label className="text-xs text-slate-600">Full Address</Label>
+                  <div className="space-y-2">
+                    <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">Full Address</Label>
                     <textarea
                       value={fullAddress}
                       onChange={(event) => setFullAddress(event.target.value)}
@@ -1141,6 +1124,8 @@ function CountryBranchSetupContent() {
                     />
                   </div>
                 </div>
+
+                <input type="hidden" value={branchType} readOnly />
               </section>
 
               <section hidden={activeStep !== 3} className="order-3 rounded-xl border border-slate-100 dark:border-slate-800/80 bg-white dark:bg-slate-950 p-5 shadow-sm space-y-4">

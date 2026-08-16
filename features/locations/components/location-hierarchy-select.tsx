@@ -306,10 +306,22 @@ export function LocationHierarchySelect({
   if (showCity) secondRowItems.push("city");
   if (showArea) secondRowItems.push("area");
 
+  const firstRowGridClass =
+    firstRowItems.length === 1
+      ? "grid gap-3 grid-cols-1"
+      : firstRowItems.length === 2
+      ? "grid gap-3 grid-cols-1 md:grid-cols-2"
+      : "grid gap-3 grid-cols-1 md:grid-cols-3";
+
+  const secondRowGridClass =
+    secondRowItems.length === 1
+      ? "grid gap-3 grid-cols-1"
+      : "grid gap-3 grid-cols-1 md:grid-cols-2";
+
   return (
     <div className="space-y-3">
       {firstRowItems.length > 0 ? (
-        <div className={`grid gap-3 md:grid-cols-${firstRowItems.length}`}>
+        <div className={firstRowGridClass}>
           {showCountry && (
             <div className="space-y-2">
               <SearchSelect
@@ -411,7 +423,7 @@ export function LocationHierarchySelect({
       ) : null}
 
       {secondRowItems.length > 0 ? (
-        <div className={`grid gap-3 md:grid-cols-${secondRowItems.length}`}>
+        <div className={secondRowGridClass}>
           {showCity && (
             <SearchSelect
               label={loc("city")}

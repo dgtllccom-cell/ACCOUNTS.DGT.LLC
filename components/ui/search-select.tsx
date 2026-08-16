@@ -131,14 +131,14 @@ export function SearchSelect({
               <span
                 aria-hidden
                 className={cn(
-                  "flex h-7 w-7 items-center justify-center rounded-md border border-input bg-muted/60 text-muted-foreground transition-colors",
-                  !disabled && "group-hover:bg-muted"
+                  "flex h-7 w-7 items-center justify-center rounded-md border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 transition-colors shadow-2xs",
+                  !disabled && "group-hover:bg-slate-200 dark:group-hover:bg-slate-700 group-hover:border-slate-300 dark:group-hover:border-slate-600 group-hover:text-slate-900 dark:group-hover:text-white"
                 )}
               >
                 {loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin text-blue-600 dark:text-blue-400" />
+                  <Loader2 className="h-3.5 w-3.5 animate-spin text-blue-600 dark:text-blue-400" />
                 ) : (
-                  <ChevronDown className="h-4 w-4" />
+                  <ChevronDown className="h-3.5 w-3.5 stroke-[2.5]" />
                 )}
               </span>
             </div>
