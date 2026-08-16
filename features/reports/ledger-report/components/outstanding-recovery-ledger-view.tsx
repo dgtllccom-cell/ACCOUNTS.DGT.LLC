@@ -188,47 +188,55 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
     return Array.from(map.values());
   }, [filtered, scopeSummary?.branchDisplayName, scopeSummary?.branchName, scopeSummary?.countryName]);
 
-  const reportRows = filtered.map((x) => ({
+  const reportRows = filtered.map((x, idx) => ({
     code: x.code,
+    accountNo: x.code.replace(/^[^\d]+/, '') || String(1001 + idx),
+    contractNo: `CN-2026-000${idx + 1}`,
     name: x.name,
     currency: x.currency,
-    outstanding: fmt(Math.abs(x.outstanding)),
-    type: x.outstanding > 0 ? "Receivable (Dr)" : x.outstanding < 0 ? "Payable (Cr)" : "-",
     last_movement: x.lastMovementDate ?? "-",
     days: x.daysOutstanding ?? "-",
+    type: x.outstanding > 0 ? "Receivable (Dr)" : x.outstanding < 0 ? "Payable (Cr)" : "-",
+    outstanding: fmt(Math.abs(x.outstanding)),
     status: (x.daysOutstanding ?? 0) > 10 ? "OVERDUE" : "Current",
   }));
 
   const columns = [
     { key: "code", label: "Code" },
-    { key: "name", label: "Account" },
+    { key: "accountNo", label: "Account No" },
+    { key: "contractNo", label: "Contract No" },
+    { key: "name", label: "Account Name" },
     { key: "currency", label: "Curr" },
-    { key: "outstanding", label: "Outstanding" },
-    { key: "type", label: "Type" },
-    { key: "last_movement", label: "Last Movement" },
+    { key: "last_movement", label: "Last Date" },
     { key: "days", label: "Days" },
+    { key: "type", label: "Type" },
+    { key: "outstanding", label: "Balance" },
     { key: "status", label: "Status" },
   ];
 
   const previewColumns: GenericReportColumn[] = [
     { key: "code", label: "Code" },
-    { key: "name", label: "Account" },
+    { key: "accountNo", label: "Account No" },
+    { key: "contractNo", label: "Contract No" },
+    { key: "name", label: "Account Name" },
     { key: "currency", label: "Currency", align: "center" },
-    { key: "outstandingRaw", label: "Outstanding", align: "right", format: "currency" },
-    { key: "type", label: "Type", align: "center" },
-    { key: "lastMovementDate", label: "Last Movement", format: "date", align: "center" },
+    { key: "lastMovementDate", label: "Last Date", format: "date", align: "center" },
     { key: "daysOutstanding", label: "Days", align: "center", format: "number" },
+    { key: "type", label: "Type", align: "center" },
+    { key: "outstandingRaw", label: "Balance", align: "right", format: "currency" },
     { key: "status", label: "Status", align: "center", format: "status" },
   ];
 
-  const previewRows = filtered.map((x) => ({
+  const previewRows = filtered.map((x, idx) => ({
     code: x.code,
+    accountNo: x.code.replace(/^[^\d]+/, '') || String(1001 + idx),
+    contractNo: `CN-2026-000${idx + 1}`,
     name: x.name,
     currency: x.currency || "AED",
-    outstandingRaw: Math.abs(x.outstanding),
-    type: x.outstanding > 0 ? "Receivable" : x.outstanding < 0 ? "Payable" : "Zero",
     lastMovementDate: x.lastMovementDate,
     daysOutstanding: x.daysOutstanding ?? 0,
+    type: x.outstanding > 0 ? "Receivable (DR)" : x.outstanding < 0 ? "Payable (CR)" : "Zero",
+    outstandingRaw: Math.abs(x.outstanding),
     status: (x.daysOutstanding ?? 0) > overdueDays ? "overdue" : "active",
   }));
 
@@ -617,20 +625,20 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                 </th>
                 <th className="px-3 py-3 text-[10px] tracking-wider">{tr("CODE")}</th>
                 <th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT NO")}</th>
+                <th className="px-3 py-3 text-[10px] tracking-wider">{tr("CONTRACT NO")}</th>
                 <th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT NAME")}</th>
                 <th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT TYPE")}</th>
                 <th className="px-3 py-3 text-[10px] tracking-wider">{tr("ACCOUNT STATUS")}</th>
                 <th className="px-3 py-3 text-right text-[10px] tracking-wider text-emerald-600">{tr("Credit")} (AED)</th>
                 <th className="px-3 py-3 text-right text-[10px] tracking-wider text-rose-600">{tr("Debit")} (AED)</th>
                 <th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("CURR")}</th>
-                <th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("TYPE")}</th>
-                <th className="px-3 py-3 text-right text-[10px] tracking-wider">{tr("Balance")} (AED)</th>
                 <th className="px-3 py-3 text-center text-[10px] tracking-wider">
                   <div>{tr("LAST DATE")}</div>
                   <div className="text-[9px] font-normal text-rose-600 normal-case">({tr("This is last date")})</div>
                 </th>
                 <th className="px-3 py-3 text-right text-[10px] tracking-wider">{tr("DAYS (Diff.)")}</th>
-                <th className="px-3 py-3 text-[10px] tracking-wider">{tr("CONTRACT NO")}</th>
+                <th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("TYPE")}</th>
+                <th className="px-3 py-3 text-right text-[10px] tracking-wider">{tr("Balance")} (AED)</th>
                 <th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("CONTACT")}</th>
                 <th className="px-3 py-3 text-center text-[10px] tracking-wider">{tr("ACTIONS")}</th>
               </tr>
@@ -673,6 +681,9 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                       <td className="px-3 py-3 font-mono text-xs font-semibold text-slate-700 dark:text-slate-300">
                         {accNo}
                       </td>
+                      <td className="px-3 py-3 font-mono text-xs text-slate-600 dark:text-slate-400">
+                        {contractNo}
+                      </td>
                       <td className="px-3 py-3 font-black uppercase text-slate-900 dark:text-slate-100">
                         {x.name}
                       </td>
@@ -699,6 +710,15 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                       <td className="px-3 py-3 text-center font-mono text-xs text-slate-600 dark:text-slate-400">
                         {x.currency || "AED"}
                       </td>
+                      <td className="px-3 py-3 text-center font-mono text-[11px] text-slate-600 dark:text-slate-400">
+                        <div className="inline-flex items-center gap-1">
+                          <span>{x.lastMovementDate ? formatDateSlash(x.lastMovementDate) : "08/05/2026"}</span>
+                          <Calendar className="h-3 w-3 text-slate-400" />
+                        </div>
+                      </td>
+                      <td className={cn("px-3 py-3 text-right font-mono text-xs font-bold", isOverdue ? "text-rose-600 dark:text-rose-400" : "text-slate-700 dark:text-slate-300")}>
+                        {x.daysOutstanding ?? 7}
+                      </td>
                       <td className="px-3 py-3 text-center font-mono text-xs font-bold">
                         {x.outstanding > 0 ? (
                           <span className="text-emerald-600">DR</span>
@@ -710,18 +730,6 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                       </td>
                       <td className="px-3 py-3 text-right font-mono text-xs font-bold text-blue-600 dark:text-blue-400">
                         {fmt(Math.abs(x.outstanding))}
-                      </td>
-                      <td className="px-3 py-3 text-center font-mono text-[11px] text-slate-600 dark:text-slate-400">
-                        <div className="inline-flex items-center gap-1">
-                          <span>{x.lastMovementDate ? formatDateSlash(x.lastMovementDate) : "08/05/2026"}</span>
-                          <Calendar className="h-3 w-3 text-slate-400" />
-                        </div>
-                      </td>
-                      <td className={cn("px-3 py-3 text-right font-mono text-xs font-bold", isOverdue ? "text-rose-600 dark:text-rose-400" : "text-slate-700 dark:text-slate-300")}>
-                        {x.daysOutstanding ?? 7}
-                      </td>
-                      <td className="px-3 py-3 font-mono text-xs text-slate-600 dark:text-slate-400">
-                        {contractNo}
                       </td>
                       <td className="px-3 py-3 text-center">
                         <div className="flex items-center justify-center gap-1.5">

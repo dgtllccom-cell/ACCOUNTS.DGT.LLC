@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireErpSession } from "@/lib/auth/session";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { ensureEmployeesTable } from "@/lib/services/ensure-employees-table";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +22,7 @@ function isSchemaCacheError(errMsg: string) {
 export async function GET(request: NextRequest) {
   try {
     await requireErpSession();
-    let supabase = createSupabaseAdminClient();
+    let supabase = await createServerSupabaseClient();
 
     const searchParams = request.nextUrl.searchParams;
     const countryId = searchParams.get("countryId");
@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
     if (error && isSchemaCacheError(error.message)) {
       console.log("[HR-PAYROLL] Schema cache error detected on GET /employees, attempting auto-repair...");
       await ensureEmployeesTable();
-      supabase = createSupabaseAdminClient();
+      supabase = await createServerSupabaseClient();
       const retry = await (supabase as any).rpc("list_employees_with_relations", {
         p_country_id: countryId || null,
         p_branch_id: branchId || null,
@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const session = await requireErpSession();
-    let supabase = createSupabaseAdminClient();
+    let supabase = await createServerSupabaseClient();
     const body = await request.json();
 
     const {
@@ -239,7 +239,7 @@ export async function POST(request: NextRequest) {
     if (insertError && isSchemaCacheError(insertError.message)) {
       console.log("[HR-PAYROLL] Schema cache error detected on insert, auto-repairing...");
       await ensureEmployeesTable();
-      supabase = createSupabaseAdminClient();
+      supabase = await createServerSupabaseClient();
       const retryInsert = await (supabase as any).rpc("create_employee", {
         p_payload: insertPayload,
         p_actor_id: session.userId

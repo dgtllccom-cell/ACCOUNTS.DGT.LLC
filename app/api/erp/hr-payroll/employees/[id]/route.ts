@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { requireErpSession } from "@/lib/auth/session";
 import { ensureEmployeesTable } from "@/lib/services/ensure-employees-table";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
 
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
   const params = await props.params;
   try {
     await requireErpSession();
-    let supabase = createSupabaseAdminClient();
+    let supabase = await createServerSupabaseClient();
 
     // See list_employees_with_relations / create_employee for why single-record reads also go
     // through a SECURITY DEFINER RPC rather than a direct .from("employees").select(...).
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
     if (error && isSchemaCacheError(error.message)) {
       console.log("[HR-PAYROLL] Schema cache error detected on GET /employees/[id], auto-repairing...");
       await ensureEmployeesTable();
-      supabase = createSupabaseAdminClient();
+      supabase = await createServerSupabaseClient();
       const retryRes = await (supabase as any).rpc("get_employee_with_relations", {
         p_id: params.id
       });
@@ -68,7 +68,7 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
   const params = await props.params;
   try {
     const session = await requireErpSession();
-    let supabase = createSupabaseAdminClient();
+    let supabase = await createServerSupabaseClient();
     const body = await request.json();
 
     const {
@@ -195,7 +195,7 @@ export async function PATCH(request: NextRequest, props: { params: Promise<{ id:
     if (updateError && isSchemaCacheError(updateError.message)) {
       console.log("[HR-PAYROLL] Schema cache error detected on PATCH /employees/[id], auto-repairing...");
       await ensureEmployeesTable();
-      supabase = createSupabaseAdminClient();
+      supabase = await createServerSupabaseClient();
       const retryUpdate = await (supabase as any).rpc("update_employee", {
         p_id: params.id,
         p_payload: updateData
@@ -246,14 +246,14 @@ export async function DELETE(request: NextRequest, props: { params: Promise<{ id
   const params = await props.params;
   try {
     await requireErpSession();
-    let supabase = createSupabaseAdminClient();
+    let supabase = await createServerSupabaseClient();
 
     let { error: deleteError } = await (supabase as any).rpc("delete_employee", { p_id: params.id });
 
     if (deleteError && isSchemaCacheError(deleteError.message)) {
       console.log("[HR-PAYROLL] Schema cache error detected on DELETE /employees/[id], auto-repairing...");
       await ensureEmployeesTable();
-      supabase = createSupabaseAdminClient();
+      supabase = await createServerSupabaseClient();
       const retryDelete = await (supabase as any).rpc("delete_employee", { p_id: params.id });
       deleteError = retryDelete.error;
     }

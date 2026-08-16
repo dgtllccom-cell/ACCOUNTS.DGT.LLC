@@ -2,9 +2,10 @@ import { NextRequest } from "next/server";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { resolveReportScope } from "@/lib/permissions/middleware";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { withLocalPg } from "@/lib/db/local-postgres";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export const dynamic = "force-dynamic";
@@ -90,7 +91,113 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    const admin = createSupabaseAdminClient() as any;
+    const localPgMeta = await withLocalPg(async (sql) => {
+      const countries = await sql`
+        select id, name, iso2, iso3, currency_code
+        from public.countries
+        where deleted_at is null
+        order by name
+      `;
+      const mainBranches = await sql`
+        select id, name, code, country_id, city_id, phone, local_currency, status
+        from public.country_branches
+        where deleted_at is null
+        order by name
+      `;
+      const cityBranches = await sql`
+        select id, name, code, country_id, country_branch_id, city_name, local_currency, status
+        from public.city_branches
+        where deleted_at is null
+        order by name
+      `;
+      const assignments = await sql`
+        select user_id, country_id, country_branch_id, city_branch_id
+        from public.user_role_assignments
+        where is_active = true and deleted_at is null
+      `;
+      const profileIds = [...new Set((assignments as Array<{ user_id: string }>)
+        .map((row) => row.user_id)
+        .filter(Boolean))];
+      const users = profileIds.length
+        ? await sql`
+            select id, full_name, user_code
+            from public.profiles
+            where deleted_at is null and id = any(${profileIds})
+            order by full_name
+          `
+        : [];
+      const purchaseProjects = await sql`
+        select id, form_data, country_id, country_branch_id, city_branch_id
+        from public.purchase_orders
+        where deleted_at is null
+        order by created_at desc
+        limit 1000
+      `;
+      const salesProjects = await sql`
+        select id, form_data, country_id, country_branch_id, city_branch_id
+        from public.sales_orders
+        where deleted_at is null
+        order by created_at desc
+        limit 1000
+      `;
+      const projectMap = new Map<string, any>();
+      for (const row of [...purchaseProjects, ...salesProjects]) {
+        const name = extractProject((row as any).form_data);
+        if (!name) continue;
+        const key = `${(row as any).country_id || ""}:${(row as any).country_branch_id || ""}:${(row as any).city_branch_id || ""}:${name}`;
+        if (!projectMap.has(key)) {
+          projectMap.set(key, { id: key, name, country_id: (row as any).country_id, country_branch_id: (row as any).country_branch_id, city_branch_id: (row as any).city_branch_id });
+        }
+      }
+      return {
+        countries,
+        mainBranches,
+        cityBranches,
+        assignments,
+        users,
+        projects: [...projectMap.values()]
+      };
+    });
+
+    if (localPgMeta) {
+      const [localizedCountries, localizedMainBranches, localizedCityBranches] = await Promise.all([
+        localizeRecordNames((localPgMeta.countries ?? []) as Array<{ id: string; name: string }>, "countries", "name", lang),
+        localizeRecordNames((localPgMeta.mainBranches ?? []) as Array<{ id: string; name: string }>, "country_branches", "name", lang),
+        localizeRecordNames((localPgMeta.cityBranches ?? []) as Array<{ id: string; name: string }>, "city_branches", "name", lang)
+      ]);
+      const lockedCountryName = (localizedCountries ?? []).find((country: any) => country.id === scope.countryId)?.name ?? null;
+      const lockedMainBranchName = (localizedMainBranches ?? []).find((branch: any) => branch.id === scope.countryBranchId)?.name ?? null;
+      const lockedBranchName = (localizedCityBranches ?? []).find((branch: any) => branch.id === scope.branchId)?.name ?? lockedMainBranchName;
+      return apiOk({
+        scope: {
+          level: scope.level,
+          scopeLabel: scope.scopeLabel,
+          lockedCountryId: scope.countryId,
+          lockedCountryName,
+          lockedMainBranchId: scope.countryBranchId,
+          lockedMainBranchName,
+          lockedBranchId: scope.branchId,
+          lockedBranchName
+        },
+        countries: localizedCountries,
+        mainBranches: localizedMainBranches,
+        cityBranches: localizedCityBranches,
+        users: (localPgMeta.users ?? []).map((user: any) => ({
+          id: user.id,
+          name: user.full_name || user.user_code || user.id,
+          assignments: (localPgMeta.assignments ?? []).filter((assignment: any) => assignment.user_id === user.id).map((assignment: any) => ({
+            country_id: assignment.country_id,
+            country_branch_id: assignment.country_branch_id,
+            city_branch_id: assignment.city_branch_id
+          }))
+        })),
+        projects: localPgMeta.projects,
+        currencies,
+        reportTypes
+      });
+    }
+
+    const admin = await createServerSupabaseClient();
 
     let countriesQuery = admin
       .from("countries")

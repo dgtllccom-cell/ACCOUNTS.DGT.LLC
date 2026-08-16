@@ -3,8 +3,9 @@ import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorize, resolveReportScope } from "@/lib/permissions/middleware";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { withLocalPg } from "@/lib/db/local-postgres";
 
 export const dynamic = "force-dynamic";
 
@@ -87,7 +88,199 @@ export async function GET(request: NextRequest) {
       throw new Error("Requested city branch is outside the signed-in user's report scope.");
     }
 
-    const db = createSupabaseAdminClient() as any;
+    const localPgResponse = await withLocalPg(async (sql) => {
+      const countryRows = await sql`
+        select id, name, currency_code
+        from public.countries
+        where deleted_at is null and id = ${params.countryId}::uuid
+        limit 1
+      `;
+      if (!countryRows[0]) return null;
+
+      const branchRows = params.scopeMode === "main-branch"
+        ? await sql`
+            select id, name, code, country_id
+            from public.country_branches
+            where deleted_at is null
+              and id = ${params.mainBranchId}::uuid
+              and country_id = ${params.countryId}::uuid
+            limit 1
+          `
+        : [];
+      const cityRows = params.scopeMode === "city-branch"
+        ? await sql`
+            select id, name, code, country_id, country_branch_id
+            from public.city_branches
+            where deleted_at is null
+              and id = ${params.branchId}::uuid
+              and country_id = ${params.countryId}::uuid
+            limit 1
+          `
+        : [];
+
+      if (params.reportType === "branch") {
+        const mainBranches = params.scopeMode !== "city-branch"
+          ? await sql`
+              select id, name, code, status, local_currency, country_id, created_at, created_by, is_main
+              from public.country_branches
+              where deleted_at is null
+                and country_id = ${params.countryId}::uuid
+                ${params.scopeMode === "main-branch" ? sql`and id = ${params.mainBranchId}::uuid` : sql``}
+              order by name
+            `
+          : [];
+        const cityBranches = params.scopeMode !== "main-branch"
+          ? await sql`
+              select id, name, code, status, local_currency, country_id, country_branch_id, city_name, created_at, created_by
+              from public.city_branches
+              where deleted_at is null
+                and country_id = ${params.countryId}::uuid
+                ${params.scopeMode === "city-branch" ? sql`and id = ${params.branchId}::uuid` : sql``}
+              order by name
+            `
+          : [];
+        return {
+          reportType: params.reportType,
+          data: [
+            ...mainBranches.map((row: any) => ({
+              id: row.id,
+              reference: row.code,
+              branch: row.name,
+              branchType: "main",
+              country: countryRows[0].name,
+              city: "—",
+              currency: row.local_currency,
+              status: row.status,
+              user: row.created_by || "—",
+              createdAt: row.created_at,
+              sourceTable: "country_branches"
+            })),
+            ...cityBranches.map((row: any) => ({
+              id: row.id,
+              reference: row.code,
+              branch: row.name,
+              branchType: "city",
+              country: countryRows[0].name,
+              city: row.city_name,
+              currency: row.local_currency,
+              status: row.status,
+              user: row.created_by || "—",
+              createdAt: row.created_at,
+              sourceTable: "city_branches"
+            }))
+          ],
+          summary: {},
+          history: {},
+          sourceTables: ["country_branches", "city_branches"],
+          generatedAt: new Date().toISOString(),
+          generatedBy: { id: session.userId, name: session.fullName || session.email || session.userId },
+          applied: {
+            countryId: params.countryId,
+            country: countryRows[0].name,
+            scopeMode: params.scopeMode,
+            mainBranchId: params.mainBranchId || null,
+            mainBranch: branchRows[0]?.name || null,
+            branchId: params.branchId || null,
+            branch: cityRows[0]?.name || null,
+            project: params.project && params.project !== "all" ? params.project : null,
+            userId: params.userId || null,
+            fromDate: params.fromDate || null,
+            toDate: params.toDate || null,
+            currency: params.currency || "all",
+            year: params.fromDate ? params.fromDate.slice(0, 4) : null
+          },
+          scope: { level: scope.level, label: scope.scopeLabel }
+        };
+      }
+
+      if (params.reportType === "user-activity") {
+        const assignments = await sql`
+          select user_id, country_id, country_branch_id, city_branch_id
+          from public.user_role_assignments
+          where is_active = true and deleted_at is null
+            and country_id = ${params.countryId}::uuid
+            ${params.scopeMode === "main-branch" ? sql`and country_branch_id = ${params.mainBranchId}::uuid and city_branch_id is null` : sql``}
+            ${params.scopeMode === "city-branch" ? sql`and city_branch_id = ${params.branchId}::uuid` : sql``}
+        `;
+        const userIds = [...new Set((assignments as Array<{ user_id: string }>).map((row) => row.user_id).filter(Boolean))];
+        const profiles = userIds.length
+          ? await sql`
+              select id, full_name, user_code
+              from public.profiles
+              where deleted_at is null and id = any(${userIds})
+              order by full_name
+            `
+          : [];
+        let activities = await sql`
+          select id, created_at, actor_id, action, resource, record_id, record_table, metadata, ip_address, user_agent, country_id, country_branch_id, city_branch_id
+          from public.erp_activity_events
+          where country_id = ${params.countryId}::uuid
+          order by created_at desc
+          limit ${params.limit}
+        `;
+        if (params.scopeMode === "main-branch") {
+          activities = activities.filter((row: any) => row.country_branch_id === params.mainBranchId && !row.city_branch_id);
+        } else if (params.scopeMode === "city-branch") {
+          activities = activities.filter((row: any) => row.city_branch_id === params.branchId);
+        }
+        if (params.fromDate) {
+          activities = activities.filter((row: any) => String(row.created_at).slice(0, 10) >= params.fromDate);
+        }
+        if (params.toDate) {
+          activities = activities.filter((row: any) => String(row.created_at).slice(0, 10) <= params.toDate);
+        }
+        if (params.userId) {
+          activities = activities.filter((row: any) => row.actor_id === params.userId);
+        }
+        const profileMap = new Map((profiles as Array<{ id: string; full_name?: string | null; user_code?: string | null }>)
+          .map((row) => [row.id, row]));
+        return {
+          reportType: params.reportType,
+          data: activities.map((row: any) => ({
+            id: row.id,
+            date: row.created_at,
+            user: profileMap.get(row.actor_id)?.full_name || profileMap.get(row.actor_id)?.user_code || row.actor_id || "—",
+            action: row.action,
+            resource: row.resource,
+            reference: row.record_id || "—",
+            description: asObject(row.metadata)?.description || asObject(row.metadata)?.message || "—",
+            ip: String(row.ip_address || "—"),
+            status: "logged",
+            createdAt: row.created_at,
+            sourceTable: row.record_table || "erp_activity_events"
+          })),
+          summary: {},
+          history: {},
+          sourceTables: ["erp_activity_events", "audit_logs", "record_change_history"],
+          generatedAt: new Date().toISOString(),
+          generatedBy: { id: session.userId, name: session.fullName || session.email || session.userId },
+          applied: {
+            countryId: params.countryId,
+            country: countryRows[0].name,
+            scopeMode: params.scopeMode,
+            mainBranchId: params.mainBranchId || null,
+            mainBranch: branchRows[0]?.name || null,
+            branchId: params.branchId || null,
+            branch: cityRows[0]?.name || null,
+            project: params.project && params.project !== "all" ? params.project : null,
+            userId: params.userId || null,
+            fromDate: params.fromDate || null,
+            toDate: params.toDate || null,
+            currency: params.currency || "all",
+            year: params.fromDate ? params.fromDate.slice(0, 4) : null
+          },
+          scope: { level: scope.level, label: scope.scopeLabel }
+        };
+      }
+
+      return null;
+    });
+
+    if (localPgResponse) {
+      return apiOk(localPgResponse);
+    }
+
+    const db = await createServerSupabaseClient();
     const [countryResult, mainResult, cityResult] = await Promise.all([
       db.from("countries").select("id, name, currency_code").eq("id", params.countryId).is("deleted_at", null).maybeSingle(),
       params.mainBranchId
