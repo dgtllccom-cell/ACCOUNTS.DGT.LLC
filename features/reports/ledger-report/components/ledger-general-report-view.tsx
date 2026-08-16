@@ -926,26 +926,6 @@ export function LedgerReportView({
         </div>
       ) : null}
 
-      {/* Top Meta Bar & 4 KPI Summary Panels (as in Picture 1) */}
-      <div className="flex flex-wrap items-center justify-between gap-4 text-[11px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 px-4 shadow-sm">
-        <div className="flex items-center gap-2">
-          <span>BRANCH NAME:</span>
-          <span className="text-slate-900 dark:text-slate-100 font-bold">UNITED ARAB EMIRATES MAIN BRANCH</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span>USER NAME:</span>
-          <span className="text-slate-900 dark:text-slate-100 font-bold">{sessionInfo?.user?.fullName || "SUPER ADMIN"}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span>DATE:</span>
-          <span className="text-slate-900 dark:text-slate-100 font-bold">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span>TIME:</span>
-          <span className="text-slate-900 dark:text-slate-100 font-bold">{new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true }).toUpperCase()}</span>
-        </div>
-      </div>
-
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
         {/* Panel 1: Branch & User Details */}
         <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
@@ -960,11 +940,11 @@ export function LedgerReportView({
           <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
               <span>COUNTRY:</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">متحده عرب امارات</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">{(sessionInfo as any)?.scopes?.summary?.countryName || "United Arab Emirates"}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>BRANCH NAME:</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">MAIN BRANCH</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{(sessionInfo as any)?.scopes?.summary?.branchDisplayName || (sessionInfo as any)?.scopes?.summary?.branchName || "UNITED ARAB EMIRATES MAIN BRANCH"}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>USER ID:</span>
@@ -972,11 +952,11 @@ export function LedgerReportView({
             </div>
             <div className="flex justify-between items-center">
               <span>USER NAME:</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{sessionInfo?.user?.fullName || "SUPER ADMIN"}</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{sessionInfo?.user?.fullName || sessionInfo?.user?.email || "SUPER ADMIN"}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>ROLE:</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">SUPER ADMIN</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{(sessionInfo as any)?.roles?.[0]?.replace(/_/g, " ") || "SUPER ADMIN"}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>DATE & TIME:</span>
@@ -1193,6 +1173,8 @@ export function LedgerReportView({
           {(() => {
             const columns: ReportColumn<GeneralReportRow>[] = [
               { key: "index", header: "SR#", width: "40px", align: "center", render: (_, idx) => (page - 1) * pageSize + idx + 1 },
+              { key: "startDate", header: "Starting Date", align: "center", render: () => formatDateString(fromDate) },
+              { key: "lastDate", header: "Last Date", align: "center", render: () => formatDateString(toDate) },
               { key: "countryName", header: "Country", render: (r) => r.countryName || "-" },
               { key: "branch", header: "Branch", render: (r) => buildBranchLabel(r) },
               { key: "accountCode", header: "Account No", render: (r) => r.accountCode || r.ledgerCode },
@@ -1228,8 +1210,6 @@ export function LedgerReportView({
                   </span>
                 )
               },
-              { key: "startDate", header: "Starting Date", align: "center", render: () => formatDateString(fromDate) },
-              { key: "lastDate", header: "Last Date", align: "center", render: () => formatDateString(toDate) },
               ...(canViewConversionColumns ? ([
                 {
                   key: "usdCredit",
