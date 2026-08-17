@@ -470,6 +470,9 @@ export const shippingBlRecordCreateSchema = scopeSchema.extend({
   loadingRecordId: optionalUuidSchema,
   roznamchaEntryId: optionalUuidSchema,
   ledgerId: optionalUuidSchema,
+  // Clearing agent (shipping line) this BL belongs to — stamped so shipping-only logins can be
+  // scoped to their own agent's records.
+  clearingAgentId: optionalUuidSchema,
   shippingLineName: z.string().trim().min(2).max(200),
   blNumber: z.string().trim().min(2).max(120),
   containerNumber: z.string().trim().max(120).nullable().optional(),

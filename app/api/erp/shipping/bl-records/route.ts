@@ -329,6 +329,7 @@ export async function POST(request: NextRequest) {
       loading_record_id: body.loadingRecordId ?? null,
       roznamcha_entry_id: body.roznamchaEntryId ?? null,
       ledger_id: body.ledgerId ?? null,
+      clearing_agent_id: body.clearingAgentId ?? null,
       created_by: session.userId,
       shipping_line_name: body.shippingLineName,
       bl_number: body.blNumber,
@@ -344,7 +345,8 @@ export async function POST(request: NextRequest) {
       debit: body.debit,
       credit: body.credit,
       currency_code: body.currencyCode,
-      report_payload: body.reportPayload ?? {}
+      // report_payload has a DB default of '{}' and is not a client input on this schema.
+      report_payload: {}
     };
 
     const inserted = await requireSupabaseData(
