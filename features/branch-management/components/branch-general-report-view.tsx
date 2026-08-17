@@ -625,13 +625,15 @@ function ReportMetricCard({
   value,
   subtitle,
   icon,
-  tone = "indigo"
+  tone = "indigo",
+  tooltip
 }: {
   title: string;
   value: ReactNode;
   subtitle: string;
   icon: ReactNode;
   tone?: "indigo" | "emerald" | "sky" | "amber" | "rose" | "slate";
+  tooltip?: string;
 }) {
   const toneClasses: Record<string, string> = {
     indigo: "from-indigo-500/10 to-indigo-50 text-indigo-700 ring-indigo-100",
@@ -643,7 +645,10 @@ function ReportMetricCard({
   };
 
   return (
-    <div className="group rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_16px_40px_-28px_rgba(15,23,42,0.45)] ring-1 ring-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[0_24px_46px_-30px_rgba(79,70,229,0.45)]">
+    <div
+      title={tooltip || title}
+      className="group rounded-2xl border border-slate-200/80 bg-white p-4 shadow-[0_16px_40px_-28px_rgba(15,23,42,0.45)] ring-1 ring-slate-100 transition-all duration-200 hover:-translate-y-0.5 hover:border-indigo-200 hover:shadow-[0_24px_46px_-30px_rgba(79,70,229,0.45)]"
+    >
       <div className="flex items-start justify-between gap-3">
         <div>
           <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{title}</div>
@@ -991,19 +996,26 @@ export function BranchGeneralReportView({
         ),
       0
     ) || data?.summary?.totalActiveBranches || 0;
-    const totalUsers = sourceCountries.reduce(
-      (sum, country) =>
-        sum +
-        (country.users?.length ?? 0) +
-        (country.mainBranches || []).reduce(
-          (branchSum, branch) =>
-            branchSum +
-            (branch.users?.length ?? 0) +
-            (branch.cityBranches || []).reduce((citySum, city) => citySum + (city.users?.length ?? 0), 0),
-          0
-        ),
-      0
-    ) || data?.summary?.totalActiveUsers || 0;
+
+    // Deduplicate user IDs across the hierarchy to avoid double/triple counting between city, main branch, and country
+    const userMap = new Map<string, BranchUserDetail>();
+    sourceCountries.forEach((country) => {
+      (country.users || []).forEach((u) => {
+        if (u?.id) userMap.set(u.id, u);
+      });
+      (country.mainBranches || []).forEach((branch) => {
+        (branch.users || []).forEach((u) => {
+          if (u?.id) userMap.set(u.id, u);
+        });
+        (branch.cityBranches || []).forEach((city) => {
+          (city.users || []).forEach((u) => {
+            if (u?.id) userMap.set(u.id, u);
+          });
+        });
+      });
+    });
+    const totalUsers = userMap.size || (searchQuery.trim() ? 0 : data?.summary?.totalActiveUsers || 0);
+
     const currencies = new Set<string>();
     sourceCountries.forEach((country) => {
       if (country.currency) currencies.add(country.currency);
@@ -1135,6 +1147,7 @@ export function BranchGeneralReportView({
           {/* Interactive Metric Filter Buttons */}
           <button
             type="button"
+            title={`Operating Countries: ${visibleSummary.totalCountries}`}
             className={cn(
               "h-7 px-2 rounded-lg border text-[9px] font-bold shadow-sm transition-all duration-200 flex items-center gap-1 focus:outline-none focus:ring-1 focus:ring-indigo-500",
               searchType === "country"
@@ -1154,6 +1167,7 @@ export function BranchGeneralReportView({
 
           <button
             type="button"
+            title={`Total Branches: ${visibleSummary.totalMainBranches + visibleSummary.totalCityBranches} (${visibleSummary.totalMainBranches} Main + ${visibleSummary.totalCityBranches} City)`}
             className={cn(
               "h-7 px-2 rounded-lg border text-[9px] font-bold shadow-sm transition-all duration-200 flex items-center gap-1 focus:outline-none focus:ring-1 focus:ring-indigo-500",
               searchType === "branch"
@@ -1173,6 +1187,7 @@ export function BranchGeneralReportView({
 
           <button
             type="button"
+            title={`Assigned ERP Users: ${visibleSummary.totalUsers}`}
             className={cn(
               "h-7 px-2 rounded-lg border text-[9px] font-bold shadow-sm transition-all duration-200 flex items-center gap-1 focus:outline-none focus:ring-1 focus:ring-indigo-500",
               expandedUserScope === "all-users"
@@ -1186,7 +1201,7 @@ export function BranchGeneralReportView({
               "px-1 py-0.2 rounded font-mono text-[8px] font-extrabold leading-none",
               expandedUserScope === "all-users" ? "bg-indigo-500/40 text-white" : "bg-slate-100 text-slate-600"
             )}>
-              {data?.summary?.totalActiveUsers ?? "95+"}
+              {visibleSummary.totalUsers}
             </span>
           </button>
 
@@ -1358,20 +1373,23 @@ export function BranchGeneralReportView({
           subtitle="Operating country network"
           icon={<Shield className="h-5 w-5" />}
           tone="indigo"
+          tooltip={`Operating country network (${visibleSummary.totalCountries} countries)`}
         />
         <ReportMetricCard
           title="Total Main Branches"
           value={visibleSummary.totalMainBranches}
-          subtitle="Country-level branches"
+          subtitle={`Country-level (${visibleSummary.totalMainBranches} of ${visibleSummary.totalMainBranches + visibleSummary.totalCityBranches} total)`}
           icon={<ShieldCheck className="h-5 w-5" />}
           tone="emerald"
+          tooltip={`Country-level primary branches (${visibleSummary.totalMainBranches} of ${visibleSummary.totalMainBranches + visibleSummary.totalCityBranches} total branches)`}
         />
         <ReportMetricCard
           title="Total City Branches"
           value={visibleSummary.totalCityBranches}
-          subtitle="City-level branch offices"
+          subtitle={`City-level (${visibleSummary.totalCityBranches} of ${visibleSummary.totalMainBranches + visibleSummary.totalCityBranches} total)`}
           icon={<Landmark className="h-5 w-5" />}
           tone="sky"
+          tooltip={`City-level branch offices (${visibleSummary.totalCityBranches} of ${visibleSummary.totalMainBranches + visibleSummary.totalCityBranches} total branches)`}
         />
         <ReportMetricCard
           title="Total Users"
@@ -1379,27 +1397,31 @@ export function BranchGeneralReportView({
           subtitle="Active assigned ERP users"
           icon={<Users className="h-5 w-5" />}
           tone="rose"
+          tooltip={`Total unique active ERP users assigned across all branches (${visibleSummary.totalUsers} users)`}
         />
         <ReportMetricCard
           title="Total Main Accounts"
           value={visibleSummary.totalMainAccounts}
-          subtitle="Enterprise account entries"
+          subtitle="Number of registered main accounts"
           icon={<BarChart3 className="h-5 w-5" />}
           tone="amber"
+          tooltip={`Total registered enterprise main accounts across all hierarchy scopes (${visibleSummary.totalMainAccounts} accounts)`}
         />
         <ReportMetricCard
           title="Active Branches"
           value={visibleSummary.activeBranches}
-          subtitle="Currently active units"
+          subtitle={`All ${visibleSummary.activeBranches} units active (${visibleSummary.totalMainBranches} Main + ${visibleSummary.totalCityBranches} City)`}
           icon={<ShieldCheck className="h-5 w-5" />}
           tone="emerald"
+          tooltip={`Active branches breakdown: ${visibleSummary.totalMainBranches} Main Branches + ${visibleSummary.totalCityBranches} City Branches = ${visibleSummary.activeBranches} Active of ${visibleSummary.totalMainBranches + visibleSummary.totalCityBranches} Total`}
         />
         <ReportMetricCard
           title="Inactive Branches"
           value={visibleSummary.inactiveBranches}
-          subtitle="Suspended or closed"
+          subtitle={visibleSummary.inactiveBranches === 0 ? "0 suspended or closed units" : `${visibleSummary.inactiveBranches} suspended or closed units`}
           icon={<XCircle className="h-5 w-5" />}
           tone="slate"
+          tooltip="Total suspended or closed branches"
         />
       </div>
 
