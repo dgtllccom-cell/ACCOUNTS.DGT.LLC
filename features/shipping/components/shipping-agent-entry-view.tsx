@@ -322,8 +322,8 @@ export function ShippingAgentEntryView({ lang }: { lang: SupportedLanguage }) {
             <div className="py-12 text-center text-slate-500 text-sm">No shipping agents registered yet.</div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-300">
-                <thead className="bg-slate-950 text-slate-400 text-xs uppercase font-semibold border-b border-slate-800">
+              <table className="w-full text-left text-sm text-slate-800 dark:text-slate-300">
+                <thead className="bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-200 text-xs uppercase font-bold border-b border-slate-200 dark:border-slate-700">
                   <tr>
                     <Th className="px-4 py-3">Agent Code</Th>
                     <Th className="px-4 py-3">Agent Name</Th>

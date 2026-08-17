@@ -752,7 +752,7 @@ export const sidebarTree: SidebarNode[] = [
       },
       {
         key: "shipping-bl-entry",
-        labelKey: "nav.clearing_bill_entry",
+        labelKey: "nav.bl_entry",
         href: "/dashboard/shipping-line/bl-entry" as Route,
         roles: ["super_admin", "agent_user"]
       },

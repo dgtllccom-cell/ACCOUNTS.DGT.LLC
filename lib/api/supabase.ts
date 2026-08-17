@@ -1,4 +1,7 @@
+import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getAppEnvironment } from "@/lib/env/environment";
+import { getSupabasePublicKey, getSupabaseSecretKey } from "@/lib/supabase/config";
 
 type QueryResult<T = unknown> = Promise<{ data: T | null; error: { message: string } | null }>;
 
@@ -37,12 +40,21 @@ export type LooseSupabaseClient = {
   rpc(functionName: string, args?: Record<string, unknown>): QueryResult;
 };
 
+function hasRealServiceRoleKey() {
+  const secretKey = getSupabaseSecretKey();
+  return Boolean(secretKey && !/^sb_(publishable|anon)_/i.test(secretKey) && secretKey !== getSupabasePublicKey());
+}
+
 export async function createApiSupabaseClient() {
-  // API routes call `requireErpSession` + `authorizeApiScope` before reaching
-  // database writes. Use the service-role client here so temp ERP sessions and
-  // route-level authorization can persist records even without a Supabase Auth
-  // JWT cookie.
-  return createSupabaseAdminClient() as unknown as LooseSupabaseClient;
+  // Preferred path: real service-role client for privileged server operations.
+  // Local DEV fallback: session-aware server client when only anon/publishable
+  // credentials are available. This keeps authenticated DEV routes usable while
+  // production remains protected by the strict admin guard.
+  if (hasRealServiceRoleKey()) {
+    return createSupabaseAdminClient() as unknown as LooseSupabaseClient;
+  }
+
+  return (await createServerSupabaseClient()) as unknown as LooseSupabaseClient;
 }
 
 export async function requireSupabaseData<T>(
@@ -66,6 +78,13 @@ export async function writeAuditLog(input: {
   after?: unknown;
   ipAddress?: string | null;
 }) {
+  // Audit logging is non-critical. In local DEV, if we don't have a real
+  // service-role secret, skip the write entirely rather than surfacing noisy
+  // admin-client failures for every successful business write.
+  if (getAppEnvironment() !== "production" && !hasRealServiceRoleKey()) {
+    return;
+  }
+
   // Preferred path: database RPC writes actor_id from auth.uid().
   // During initial bootstrap we may only have the temp ERP session cookie (no Supabase JWT),
   // so we fall back to a privileged insert with actor_id=null.

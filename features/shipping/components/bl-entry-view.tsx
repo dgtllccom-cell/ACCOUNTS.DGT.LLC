@@ -693,7 +693,7 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
               </div>
               <div className="overflow-x-auto rounded-lg border">
                 <table className="w-full min-w-[1180px] border-separate border-spacing-0 text-xs">
-                  <thead className="bg-slate-900 text-white dark:bg-[#020817]">
+                  <thead className="bg-slate-100/90 dark:bg-slate-800/90 text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
                     <tr>
                       {["SR#", "Good Name", "Size", "Brand", "Origin", "HS Code", "Allot Name", "Warehouse", "Qty Name", "Qty No", "Total Gross KG", "Empty/Bag KG", "Total Empty KG", "Net Weight KG", "Container Type", "Container Name", "Container No", "Seal No"].map((head) => (
                         <Th key={head} className="px-3 py-2 text-left text-[10px] font-black uppercase tracking-wide">{head}</Th>
