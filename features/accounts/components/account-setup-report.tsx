@@ -338,9 +338,9 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
 
   const reportSummary = {
     TotalAccounts: filtered.length,
-    TotalCustomers: countryStats.reduce((acc, c) => acc + c.customers, 0),
-    TotalCompanies: countryStats.reduce((acc, c) => acc + c.companies, 0),
-    TotalBanks: countryStats.reduce((acc, c) => acc + c.banks, 0),
+    TotalCustomers: countryBreakdowns.reduce((acc, c) => acc + c.customers, 0),
+    TotalCompanies: countryBreakdowns.reduce((acc, c) => acc + c.companies, 0),
+    TotalBanks: countryBreakdowns.reduce((acc, c) => acc + c.banks, 0),
   };
 
   const reportRows = useMemo(() => {

@@ -594,7 +594,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
                   Ledger Statement
                 </h1>
                 <p className="text-xs text-muted-foreground">
-                  Status: Active | Created: {account ? fmtDate(lines[0]?.createdAt) : "-"}
+                  Status: Active | Created: {account ? fmtDate(account.createdAt || (account as any)?.createdDate || lines[0]?.createdAt || new Date().toISOString()) : "-"}
                 </p>
               </div>
               <div className="text-xs text-muted-foreground">
@@ -615,7 +615,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
             </InfoPanel>
 
             <InfoPanel title="Company Details" accent="blue">
-              <InfoRow label="Company Name" value={safeText(account?.companyName)} />
+              <InfoRow label="Company Name" value={account?.companyName ? account.companyName : (account ? "Not Assigned" : "-")} />
               <InfoRow label="Country" value={safeText(account?.countryName)} />
               <InfoRow label="Main Branch" value={safeText(account?.countryBranchName)} />
               <InfoRow label="City Branch" value={safeText(account?.cityBranchName)} />
@@ -636,14 +636,19 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
                 strong={!fmtBalance(totals.balance || account?.currentBalance || 0, account?.normalBalance).isCr && !fmtBalance(totals.balance || account?.currentBalance || 0, account?.normalBalance).isDr} 
               />
               {isSuperAdmin && <InfoRow label="1 USD" value="Rate stored per posting" />}
+              {account && totals.entries === 0 && (
+                <div className="mt-2 rounded-md bg-amber-50 dark:bg-amber-950/40 p-1.5 text-[10px] text-amber-800 dark:text-amber-300 font-medium text-center">
+                  No ledger entries available for this account.
+                </div>
+              )}
             </InfoPanel>
 
             <InfoPanel title="Session / Login Details" accent="violet">
               <InfoRow label="Session Branch" value={branchLabel(account)} strong />
               <InfoRow label="Login Date" value={new Date().toLocaleDateString()} />
               <InfoRow label="Login Time" value={new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} />
-              <InfoRow label="User Name" value={safeText(session?.user?.fullName ?? "Super Admin")} strong />
-              <InfoRow label="User ID" value={safeText(session?.user?.id)} />
+              <InfoRow label="User Name" value={safeText(session?.user?.fullName || (session as any)?.fullName || "Super Admin")} strong />
+              <InfoRow label="User ID" value={safeText(session?.user?.id || (session as any)?.userId || (session?.user as any)?.user_id || "USR-SA-001")} />
               <InfoRow label="System" value="ERP / FMS" />
             </InfoPanel>
           </div>
@@ -713,8 +718,11 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
                   })
                 ) : (
                   <tr>
-                    <td colSpan={isSuperAdmin ? 15 : 11} className="px-4 py-12 text-center text-muted-foreground">
-                      {account ? "No posted ledger entries found for this account." : "Search an account to load the full ledger statement."}
+                    <td colSpan={isSuperAdmin ? 15 : 11} className="px-4 py-12 text-center text-slate-500 bg-slate-50/50 dark:bg-slate-900/30">
+                      <div className="flex flex-col items-center justify-center gap-1">
+                        <span className="font-semibold text-slate-700 dark:text-slate-300 text-sm">No ledger entries available for this account.</span>
+                        <span className="text-xs text-slate-400">There are currently no posted transactions recorded for this account.</span>
+                      </div>
                     </td>
                   </tr>
                 )}

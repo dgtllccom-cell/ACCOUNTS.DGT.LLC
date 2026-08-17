@@ -630,13 +630,6 @@ export const accountTranslations: Record<string, Record<SupportedLanguage, strin
     fa: "نوع سفارشی",
     ps: "ځانګړی ډول"
   },
-  saveNext: {
-    en: "Save & Continue",
-    ur: "محفوظ کریں اور آگے بڑھیں",
-    ar: "حفظ ومتابعة",
-    fa: "ذخیره و ادامه",
-    ps: "خوندي کړئ او پرمخ لاړشئ"
-  },
   completeRequiredFields: {
     en: "Please enter account name before proceeding.",
     ur: "برائے مہربانی آگے بڑھنے سے پہلے اکاؤنٹ کا نام درج کریں۔",

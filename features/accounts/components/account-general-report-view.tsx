@@ -4,7 +4,7 @@ import { DownloadActionIcon } from "@/components/ui/download-action-icon";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Download, Expand, Eye, FileSpreadsheet, FileText, MoreVertical, PencilLine, Printer, Search, Trash2, CalendarDays, RefreshCw, SlidersHorizontal, Landmark, CheckCircle2, ChevronDown, ChevronRight, PackageCheck, FileCheck2, Building2, MapPin, Phone, MessageCircle, Mail, Plus } from "lucide-react";
+import { Download, Expand, Eye, FileSpreadsheet, FileText, MoreVertical, PencilLine, Printer, Search, Trash2, CalendarDays, RefreshCw, SlidersHorizontal, Landmark, CheckCircle2, ChevronDown, ChevronRight, PackageCheck, FileCheck2, Building2, MapPin, Phone, MessageCircle, Mail, Plus, X } from "lucide-react";
 import type { Route } from "next";
 import { useRouter } from "next/navigation";
 
@@ -32,6 +32,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
+import { SimpleModal } from "@/components/ui/simple-modal";
 import { ReportFilterMenu } from "@/components/reports/report-filter-menu";
 import { ReportPageHeader } from "@/components/reports/report-page-header";
 import { ReportTd, ReportTh } from "@/components/reports/report-primitives";
@@ -427,15 +428,6 @@ function AccountRowActionsMenu({
 
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") setOpen(false);
-    }
-
-    function onMouseDown(event: MouseEvent) {
-      const root = rootRef.current;
-      if (!root) return;
-      if (root.contains(event.target as Node)) return;
-      setOpen(false);
-    }
-
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("mousedown", onMouseDown);
     return () => {
@@ -512,10 +504,11 @@ export function AccountGeneralReportView({
   const lang = useActiveLanguage() || initialLang;
   const tr = (label: string) => translateHeader(lang, label);
   const router = useRouter();
-  const actionsRef = useRef<HTMLDivElement | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadingDeleting, setLoadingDeleting] = useState(false);
-  const [actionsOpen, setActionsOpen] = useState(false);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [datePickerOpen, setDatePickerOpen] = useState(false);
+  const datePickerRef = useRef<HTMLDivElement | null>(null);
   const [expandedView, setExpandedView] = useState(false);
   const [session, setSession] = useState<SessionInfo | null>(null);
   const [data, setData] = useState<AccountGeneralReportResponse | null>(null);
@@ -528,6 +521,7 @@ export function AccountGeneralReportView({
   const [draftCountryName, setDraftCountryName] = useState("all");
   const [draftBranchCode, setDraftBranchCode] = useState("all");
   const [draftStatus, setDraftStatus] = useState("all");
+  const [draftCategory, setDraftCategory] = useState("all");
   const [draftFromDate, setDraftFromDate] = useState("");
   const [draftToDate, setDraftToDate] = useState("");
   const [query, setQuery] = useState("");
@@ -535,6 +529,7 @@ export function AccountGeneralReportView({
   const [countryName, setCountryName] = useState("all");
   const [branchCode, setBranchCode] = useState("all");
   const [status, setStatus] = useState("all");
+  const [category, setCategory] = useState("all");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [dashboardScope, setDashboardScope] = useState<AccountDashboardScope>("super_admin");
@@ -547,6 +542,18 @@ export function AccountGeneralReportView({
     setTitlePortal(document.getElementById("erp-page-title-slot"));
     setActionsPortal(document.getElementById("erp-page-actions-slot"));
   }, []);
+
+  // Close date picker on outside click
+  useEffect(() => {
+    if (!datePickerOpen) return;
+    function onMouseDown(e: MouseEvent) {
+      if (datePickerRef.current && !datePickerRef.current.contains(e.target as Node)) {
+        setDatePickerOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", onMouseDown);
+    return () => document.removeEventListener("mousedown", onMouseDown);
+  }, [datePickerOpen]);
 
   useEffect(() => {
     let cancelled = false;
@@ -584,28 +591,6 @@ export function AccountGeneralReportView({
       cancelled = true;
     };
   }, [initialAccountId]);
-
-  useEffect(() => {
-    if (!actionsOpen) return;
-
-    function onKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") setActionsOpen(false);
-    }
-
-    function onMouseDown(e: MouseEvent) {
-      const root = actionsRef.current;
-      if (!root) return;
-      if (root.contains(e.target as Node)) return;
-      setActionsOpen(false);
-    }
-
-    document.addEventListener("keydown", onKeyDown);
-    document.addEventListener("mousedown", onMouseDown);
-    return () => {
-      document.removeEventListener("keydown", onKeyDown);
-      document.removeEventListener("mousedown", onMouseDown);
-    };
-  }, [actionsOpen]);
 
   const rows = useMemo(() => data?.rows ?? [], [data]);
   const isSuperAdmin = session?.scopes?.isSuperAdmin ?? session?.roles.includes("super_admin") ?? false;
@@ -654,6 +639,10 @@ export function AccountGeneralReportView({
     setDraftBranchCode(branchCode);
   }, [branchCode]);
 
+  useEffect(() => {
+    setDraftCategory(category);
+  }, [category]);
+
   // Reset draftBranchCode if it is no longer valid in the selected country's branches list
   useEffect(() => {
     const validCodes = branchOptions.map(opt => opt.value);
@@ -682,18 +671,21 @@ export function AccountGeneralReportView({
       .filter((row) => (branchCode !== "all" ? row.branchCode === branchCode : true))
       .filter((row) => (status !== "all" ? row.status === status : true))
       .filter((row) => {
+        if (category === "all") return true;
+        const cat = (row.accountCategory || "").toLowerCase();
+        const sub = (row.subType || "").toLowerCase();
+        const target = category.toLowerCase();
+        return cat.includes(target) || sub.includes(target);
+      })
+      .filter((row) => {
         if (fromDate && row.createdAt.slice(0, 10) < fromDate) return false;
         if (toDate && row.createdAt.slice(0, 10) > toDate) return false;
         if (!q) return true;
         return safeRowText(row).includes(q);
       });
-  }, [accountId, branchCode, fromDate, query, scopedRows, status, toDate]);
+  }, [accountId, branchCode, category, fromDate, query, scopedRows, status, toDate]);
 
   const userBranchRows = useMemo(() => {
-    if (!session) return [];
-    
-    // Try to match by session assignments or cityBranchIds
-    const cityBranchIds = session.scopes?.cityBranchIds || [];
     const countryBranchIds = session.scopes?.countryBranchIds || [];
     
     let matched = allFilteredRows.filter(row => {
@@ -932,12 +924,25 @@ export function AccountGeneralReportView({
 
   const canDelete = Boolean(session?.permissions.includes("accounts:delete") || session?.roles.includes("super_admin"));
 
+  const activeFilterCount = useMemo(() => {
+    let count = 0;
+    if (query.trim()) count++;
+    if (countryName !== "all") count++;
+    if (branchCode !== "all") count++;
+    if (status !== "all") count++;
+    if (category !== "all") count++;
+    if (fromDate) count++;
+    if (toDate) count++;
+    return count;
+  }, [query, countryName, branchCode, status, category, fromDate, toDate]);
+
   function resetFilters() {
     setDraftQuery("");
     setDraftAccountId("all");
     setDraftCountryName("all");
     setDraftBranchCode("all");
     setDraftStatus("all");
+    setDraftCategory("all");
     setDraftFromDate("");
     setDraftToDate("");
     setQuery("");
@@ -945,11 +950,14 @@ export function AccountGeneralReportView({
     setCountryName("all");
     setBranchCode("all");
     setStatus("all");
+    setCategory("all");
     setFromDate("");
     setToDate("");
     setSelectedCountryForSummary(null);
     setSelectedUserBranchOnly(false);
     setExpandedCountries({});
+    setFiltersOpen(false);
+    setDatePickerOpen(false);
   }
 
   function applyFilters() {
@@ -958,11 +966,13 @@ export function AccountGeneralReportView({
     setCountryName(draftCountryName);
     setBranchCode(draftBranchCode);
     setStatus(draftStatus);
+    setCategory(draftCategory);
     setFromDate(draftFromDate);
     setToDate(draftToDate);
     setSelectedCountryForSummary(null);
     setSelectedUserBranchOnly(false);
     setExpandedCountries({});
+    setFiltersOpen(false);
   }
 
   function openPrint(autoPrint: boolean) {
@@ -1126,23 +1136,186 @@ export function AccountGeneralReportView({
         />
       </div>
 
-      <Button type="button" size="sm" variant="outline" onClick={() => setActionsOpen(!actionsOpen)} className="h-9 rounded-xl border-slate-200 font-bold text-xs shadow-sm">
-        <SlidersHorizontal className="mr-1.5 h-3.5 w-3.5" /> {tr("FILTER")}
+      <Button
+        type="button"
+        size="sm"
+        variant="outline"
+        onClick={() => setFiltersOpen(true)}
+        className={cn(
+          "h-9 rounded-xl font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer",
+          activeFilterCount > 0
+            ? "bg-indigo-50 border-indigo-300 text-indigo-700 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:border-indigo-700 dark:text-indigo-300"
+            : "border-slate-200 hover:bg-slate-50 dark:border-slate-800"
+        )}
+      >
+        <SlidersHorizontal className="h-3.5 w-3.5" />
+        <span>{tr("FILTER")}</span>
+        {activeFilterCount > 0 && (
+          <span className="ml-1 inline-flex h-5 min-w-[18px] items-center justify-center rounded-full bg-indigo-600 px-1 text-[10px] font-extrabold text-white">
+            {activeFilterCount}
+          </span>
+        )}
       </Button>
-      <Button type="button" size="sm" variant="outline" onClick={resetFilters} className="h-9 rounded-xl border-slate-200 font-bold text-xs shadow-sm">
+
+      <Button type="button" size="sm" variant="outline" onClick={resetFilters} className="h-9 rounded-xl border-slate-200 font-bold text-xs shadow-sm cursor-pointer hover:bg-slate-50">
         <RefreshCw className={loading ? "mr-1.5 h-3.5 w-3.5 animate-spin" : "mr-1.5 h-3.5 w-3.5"} /> {tr("RESET")}
       </Button>
 
-      <div className="flex h-9 items-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-950 dark:text-slate-400">
-        <CalendarDays className="h-4 w-4 text-slate-400" />
-        <span>{new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}, {new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+      {/* Interactive Date Picker Dropdown */}
+      <div className="relative" ref={datePickerRef}>
+        <Button
+          type="button"
+          size="sm"
+          variant="outline"
+          onClick={() => setDatePickerOpen(!datePickerOpen)}
+          className={cn(
+            "h-9 rounded-xl border font-bold text-xs shadow-sm flex items-center gap-2 cursor-pointer transition-all",
+            fromDate || toDate
+              ? "bg-blue-50 border-blue-300 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/60 dark:border-blue-700 dark:text-blue-300"
+              : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300"
+          )}
+        >
+          <CalendarDays className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+          <span>
+            {fromDate && toDate
+              ? `${fromDate} → ${toDate}`
+              : fromDate
+              ? `From: ${fromDate}`
+              : toDate
+              ? `Until: ${toDate}`
+              : `${new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}`}
+          </span>
+          <ChevronDown className="h-3 w-3 opacity-60" />
+        </Button>
+
+        {datePickerOpen && (
+          <div className="absolute right-0 top-full mt-2 w-72 rounded-2xl border border-slate-200 bg-white p-4 shadow-2xl z-[99999] dark:border-slate-800 dark:bg-slate-950 animate-in fade-in zoom-in-95 duration-100">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-100 dark:border-slate-800 mb-3">
+              <span className="text-xs font-bold text-slate-900 dark:text-slate-100">Filter by Date</span>
+              <button type="button" onClick={() => setDatePickerOpen(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-1.5 mb-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setFromDate("");
+                  setToDate("");
+                  setDraftFromDate("");
+                  setDraftToDate("");
+                  setDatePickerOpen(false);
+                }}
+                className="text-[11px] font-semibold py-1.5 px-2 rounded-lg border border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 text-center cursor-pointer"
+              >
+                All Dates
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const today = new Date().toISOString().slice(0, 10);
+                  setFromDate(today);
+                  setToDate(today);
+                  setDraftFromDate(today);
+                  setDraftToDate(today);
+                  setDatePickerOpen(false);
+                }}
+                className="text-[11px] font-semibold py-1.5 px-2 rounded-lg border border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 text-center cursor-pointer"
+              >
+                Today
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const d = new Date();
+                  const firstDay = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().slice(0, 10);
+                  const today = d.toISOString().slice(0, 10);
+                  setFromDate(firstDay);
+                  setToDate(today);
+                  setDraftFromDate(firstDay);
+                  setDraftToDate(today);
+                  setDatePickerOpen(false);
+                }}
+                className="text-[11px] font-semibold py-1.5 px-2 rounded-lg border border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 text-center cursor-pointer"
+              >
+                This Month
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const d = new Date();
+                  const firstDay = new Date(d.getFullYear(), 0, 1).toISOString().slice(0, 10);
+                  const today = d.toISOString().slice(0, 10);
+                  setFromDate(firstDay);
+                  setToDate(today);
+                  setDraftFromDate(firstDay);
+                  setDraftToDate(today);
+                  setDatePickerOpen(false);
+                }}
+                className="text-[11px] font-semibold py-1.5 px-2 rounded-lg border border-slate-200 hover:bg-slate-100 dark:border-slate-800 dark:hover:bg-slate-900 text-slate-700 dark:text-slate-300 text-center cursor-pointer"
+              >
+                This Year
+              </button>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <div>
+                <label className="block text-[10px] font-semibold text-slate-500 mb-1">From Date</label>
+                <input
+                  type="date"
+                  value={draftFromDate}
+                  onChange={(e) => setDraftFromDate(e.target.value)}
+                  className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 outline-none"
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-semibold text-slate-500 mb-1">To Date</label>
+                <input
+                  type="date"
+                  value={draftToDate}
+                  onChange={(e) => setDraftToDate(e.target.value)}
+                  className="w-full h-8 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-3 mt-3 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => {
+                  setFromDate("");
+                  setToDate("");
+                  setDraftFromDate("");
+                  setDraftToDate("");
+                  setDatePickerOpen(false);
+                }}
+                className="text-xs font-semibold text-slate-500 hover:text-slate-800 dark:hover:text-slate-200 cursor-pointer"
+              >
+                Clear
+              </button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => {
+                  setFromDate(draftFromDate);
+                  setToDate(draftToDate);
+                  setDatePickerOpen(false);
+                }}
+                className="h-7 text-xs font-bold bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 cursor-pointer"
+              >
+                Apply Date
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
 
       <Button
         type="button"
         size="sm"
         onClick={() => router.push("/dashboard/accounts/setup")}
-        className="h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm px-4 gap-1.5 shrink-0"
+        className="h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs shadow-sm px-4 gap-1.5 shrink-0 cursor-pointer"
       >
         <Plus className="h-3.5 w-3.5" /> {tr("NEW ACCOUNT")}
       </Button>
@@ -1152,7 +1325,7 @@ export function AccountGeneralReportView({
         size="sm"
         variant="outline"
         onClick={() => openPrint(true)}
-        className="h-9 rounded-xl border-slate-200 font-bold text-xs shadow-sm gap-1.5"
+        className="h-9 rounded-xl border-slate-200 font-bold text-xs shadow-sm gap-1.5 cursor-pointer"
       >
         <Printer className="h-3.5 w-3.5" /> {tr("PRINT")}
       </Button>
@@ -1162,7 +1335,7 @@ export function AccountGeneralReportView({
         size="sm"
         variant="outline"
         onClick={() => openPrint(false)}
-        className="h-9 rounded-xl border-slate-200 font-bold text-xs shadow-sm gap-1.5"
+        className="h-9 rounded-xl border-slate-200 font-bold text-xs shadow-sm gap-1.5 cursor-pointer"
       >
         <Download className="h-3.5 w-3.5" /> {tr("EXPORT PDF")}
       </Button>
@@ -1748,6 +1921,16 @@ export function AccountGeneralReportView({
                     </div>
 
                     <div className="flex flex-wrap gap-2 pt-2">
+                          <span className="font-mono font-bold text-[11px] text-emerald-700 dark:text-emerald-400">{fmtNumber(selectedRow.creditTotal)} {selectedRow.currency}</span>
+                        </div>
+                        <div className="flex justify-between items-center pt-1">
+                          <span className="text-blue-700 dark:text-blue-400 font-black uppercase text-[10px]">Current Balance</span>
+                          <span className={cn("font-mono font-black text-sm", rowTone(selectedRow.currentBalance))}>{fmtNumber(selectedRow.currentBalance)} {selectedRow.currency}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2 pt-2">
                       <Button type="button" variant="outline" className="flex-1 h-9 font-bold text-[10px] uppercase tracking-wider shadow-sm" onClick={() => router.push(`/dashboard/accounts/setup?accountId=${selectedRow.accountId}` as Route)}>
                         <PencilLine className="h-3.5 w-3.5 mr-1.5" /> Edit Account
                       </Button>
@@ -1768,6 +1951,147 @@ export function AccountGeneralReportView({
           )}
         </div>
       </section>
+
+      {filtersOpen && (
+        <SimpleModal
+          title={tr("Filter Account Master Registry")}
+          isOpen={filtersOpen}
+          onClose={() => setFiltersOpen(false)}
+          maxWidth="max-w-xl"
+        >
+          <div className="space-y-4 text-xs">
+            <div>
+              <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                {tr("Account Name / Number / Keyword")}
+              </Label>
+              <Input
+                value={draftQuery}
+                onChange={(e) => setDraftQuery(e.target.value)}
+                placeholder={tr("Search by account name, code, ref no, etc.")}
+                className="h-9 rounded-xl text-xs"
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                {tr("Country")}
+              </Label>
+              <SearchSelect
+                value={draftCountryName}
+                options={countryOptions}
+                onChange={(val) => setDraftCountryName(val)}
+                placeholder={tr("ALL COUNTRIES")}
+                className="w-full"
+              />
+            </div>
+
+            <div>
+              <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                {tr("Branch")}
+              </Label>
+              <SearchSelect
+                value={draftBranchCode}
+                options={branchOptions}
+                onChange={(val) => setDraftBranchCode(val)}
+                placeholder={tr("ALL BRANCHES")}
+                className="w-full"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                  {tr("Account Status")}
+                </Label>
+                <select
+                  value={draftStatus}
+                  onChange={(e) => setDraftStatus(e.target.value)}
+                  className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 outline-none"
+                >
+                  <option value="all">{tr("ALL STATUSES")}</option>
+                  <option value="active">{tr("Active")}</option>
+                  <option value="inactive">{tr("Inactive")}</option>
+                </select>
+              </div>
+
+              <div>
+                <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                  {tr("Account Category / Type")}
+                </Label>
+                <select
+                  value={draftCategory}
+                  onChange={(e) => setDraftCategory(e.target.value)}
+                  className="w-full h-9 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200 outline-none"
+                >
+                  <option value="all">{tr("ALL CATEGORIES")}</option>
+                  <option value="asset">{tr("Asset / Bank")}</option>
+                  <option value="liability">{tr("Liability / Vendor")}</option>
+                  <option value="income">{tr("Income / Sales")}</option>
+                  <option value="expense">{tr("Expense")}</option>
+                  <option value="customer">{tr("Customer")}</option>
+                  <option value="company">{tr("Company")}</option>
+                  <option value="employee">{tr("Employee")}</option>
+                  <option value="personal">{tr("Personal")}</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <Label className="text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5 block">
+                {tr("Creation Date Range")}
+              </Label>
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <span className="text-[10px] text-slate-500 font-semibold mb-1 block">{tr("From Date")}</span>
+                  <Input
+                    type="date"
+                    value={draftFromDate}
+                    onChange={(e) => setDraftFromDate(e.target.value)}
+                    className="h-9 rounded-xl text-xs"
+                  />
+                </div>
+                <div>
+                  <span className="text-[10px] text-slate-500 font-semibold mb-1 block">{tr("To Date")}</span>
+                  <Input
+                    type="date"
+                    value={draftToDate}
+                    onChange={(e) => setDraftToDate(e.target.value)}
+                    className="h-9 rounded-xl text-xs"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={resetFilters}
+                className="h-9 rounded-xl font-bold text-xs cursor-pointer"
+              >
+                <RefreshCw className="mr-1.5 h-3.5 w-3.5" /> {tr("Reset All")}
+              </Button>
+              <div className="flex items-center gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setFiltersOpen(false)}
+                  className="h-9 rounded-xl text-xs cursor-pointer"
+                >
+                  {tr("Cancel")}
+                </Button>
+                <Button
+                  type="button"
+                  onClick={applyFilters}
+                  className="h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 cursor-pointer"
+                >
+                  {tr("Apply Filters")}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </SimpleModal>
+      )}
     </div>
   );
 }
@@ -1780,4 +2104,3 @@ function PreviewRow({ label, value, tone }: { label: string; value?: string | nu
     </div>
   );
 }
-

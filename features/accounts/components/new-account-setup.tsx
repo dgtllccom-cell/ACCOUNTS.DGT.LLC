@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import {
+  ArrowRight,
+  ArrowLeft,
   BookOpen,
   CheckCircle2,
   ClipboardList,
@@ -1033,7 +1035,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                 </div>
               </div>
 
-              <div className="flex justify-end pt-4">
+              <div className="flex justify-end pt-4 border-t border-slate-100 dark:border-slate-800">
                 <Button
                   type="button"
                   onClick={() => {
@@ -1061,15 +1063,16 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                       setMessage(getLabel("completeRequiredFields", lang));
                     }
                   }}
-                  className="bg-primary text-white font-bold px-6"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-5 shadow-sm rounded-lg flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
                 >
-                  {getLabel("saveNext", lang)}
+                  <span>{getLabel("saveNext", lang) || "Save & Next"}</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
           )}
 
-          {/* Step 2: Customer Details â€” Master Form Picker */}
+          {/* Step 2: Customer Details — Master Form Picker */}
           {currentStep === 2 && (
             <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm space-y-5">
               <div className="flex items-center gap-2.5 border-b pb-3">
@@ -1081,7 +1084,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                 {getLabel("customerPickerHelp", lang)}
               </p>
 
-              {/* Master Form Picker â€” single source of truth */}
+              {/* Master Form Picker — single source of truth */}
               <CustomerPicker
                 label={getLabel("customerMaster", lang)}
                 value={linkedCustomerId ?? ""}
@@ -1116,16 +1119,31 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                 </div>
               )}
 
-              <div className="flex justify-between pt-4 border-t">
-                <Button variant="outline" onClick={() => setCurrentStep(prevStep)}>{getLabel("back", lang)}</Button>
-                <Button type="button" onClick={() => setCurrentStep(nextStep)} className="bg-primary text-white">
-                  {linkedCustomerId ? getLabel("saveNext", lang) : getLabel("skipNext", lang)}
+              <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentStep(prevStep)}
+                  className="font-bold text-xs h-9 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+                  {getLabel("back", lang)}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setCurrentStep(nextStep)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-5 shadow-sm rounded-lg flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span>{linkedCustomerId ? getLabel("saveNext", lang) : getLabel("skipNext", lang)}</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
           )}
 
-          {/* Step 3: Company Details â€” Master Form Picker */}
+          {/* Step 3: Company Details — Master Form Picker */}
           {currentStep === 3 && (
             <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm space-y-5">
               <div className="flex items-center gap-2.5 border-b pb-3">
@@ -1137,7 +1155,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                 {getLabel("companyPickerHelp", lang)}
               </p>
 
-              {/* Master Form Picker â€” single source of truth */}
+              {/* Master Form Picker — single source of truth */}
               <CompanyPicker
                 label={getLabel("companyMaster", lang)}
                 value={linkedCompanyId ?? ""}
@@ -1171,16 +1189,31 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                 </div>
               )}
 
-              <div className="flex justify-between pt-4 border-t">
-                <Button variant="outline" onClick={() => setCurrentStep(prevStep)}>{getLabel("back", lang)}</Button>
-                <Button type="button" onClick={() => setCurrentStep(nextStep)} className="bg-primary text-white">
-                  {linkedCompanyId ? getLabel("saveNext", lang) : getLabel("skipNext", lang)}
+              <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentStep(prevStep)}
+                  className="font-bold text-xs h-9 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+                  {getLabel("back", lang)}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setCurrentStep(nextStep)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-5 shadow-sm rounded-lg flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span>{linkedCompanyId ? getLabel("saveNext", lang) : getLabel("skipNext", lang)}</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
           )}
 
-          {/* Step 4: Bank Details â€” Master Form Picker */}
+          {/* Step 4: Bank Details — Master Form Picker */}
           {currentStep === 4 && (
             <div className="rounded-xl border border-slate-100 bg-white p-5 shadow-sm space-y-5">
               <div className="flex items-center gap-2.5 border-b pb-3">
@@ -1192,7 +1225,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                 {getLabel("bankPickerHelp", lang)}
               </p>
 
-              {/* Master Form Picker â€” single source of truth */}
+              {/* Master Form Picker — single source of truth */}
               <BankPicker
                 label={getLabel("bankMaster", lang)}
                 value={linkedBankId ?? ""}
@@ -1225,10 +1258,25 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                 </div>
               )}
 
-              <div className="flex justify-between pt-4 border-t">
-                <Button variant="outline" onClick={() => setCurrentStep(prevStep)}>{getLabel("back", lang)}</Button>
-                <Button type="button" onClick={() => setCurrentStep(nextStep)} className="bg-primary text-white">
-                  {linkedBankId ? getLabel("saveNext", lang) : getLabel("skipNext", lang)}
+              <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentStep(prevStep)}
+                  className="font-bold text-xs h-9 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+                  {getLabel("back", lang)}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setCurrentStep(nextStep)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-5 shadow-sm rounded-lg flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span>{linkedBankId ? getLabel("saveNext", lang) : getLabel("skipNext", lang)}</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
@@ -1258,10 +1306,25 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                 </div>
               </div>
 
-              <div className="flex justify-between pt-4 border-t">
-                <Button variant="outline" onClick={() => setCurrentStep(prevStep)}>{getLabel("back", lang)}</Button>
-                <Button type="button" onClick={() => setCurrentStep(nextStep)} className="bg-primary text-white">
-                  {linkedWarehouseId ? getLabel("saveNext", lang) : getLabel("skipNext", lang)}
+              <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentStep(prevStep)}
+                  className="font-bold text-xs h-9 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+                  {getLabel("back", lang)}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => setCurrentStep(nextStep)}
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-5 shadow-sm rounded-lg flex items-center gap-1.5 cursor-pointer"
+                >
+                  <span>{linkedWarehouseId ? getLabel("saveNext", lang) : getLabel("skipNext", lang)}</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
                 </Button>
               </div>
             </div>
@@ -1316,8 +1379,17 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                 </div>
               )}
 
-              <div className="flex justify-between pt-4 border-t">
-                <Button variant="outline" onClick={() => setCurrentStep(prevStep)}>{getLabel("back", lang)}</Button>
+              <div className="flex justify-between items-center pt-4 border-t border-slate-100 dark:border-slate-800">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setCurrentStep(prevStep)}
+                  className="font-bold text-xs h-9 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                >
+                  <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+                  {getLabel("back", lang)}
+                </Button>
                 {/* Save button has been moved to the bottom of the Live Report Panel */}
                 <div className="text-xs text-slate-400 italic">{getLabel("reviewDetailsHint", lang)}</div>
               </div>
