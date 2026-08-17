@@ -121,40 +121,54 @@ type RowEntry = {
 
 const RenderAccountDetail = ({ ledger, colorClass, borderColorClass }: { ledger: any, colorClass: string, borderColorClass: string }) => {
   if (!ledger) return null;
-  const contacts = ledger.enterprise_accounts?.contacts;
-  
+  // `ledgers` state holds camelCase LedgerLookupRow rows (ledgerId/ledgerName/ledgerCurrency/
+  // countryName/cityBranchName/accountCode). Read those, with a fallback to the older raw shape
+  // (id/name/currency/enterprise_accounts/countries/city_branches) so this stays correct if ever
+  // handed a raw ledger. Previously it read only the raw keys, so every field came out blank.
+  const displayName = ledger.ledgerName ?? ledger.name ?? "Unknown Ledger";
+  const displayId = String(ledger.ledgerId ?? ledger.id ?? "");
+  const accountNo = ledger.accountCode ?? ledger.manualReferenceNumber ?? ledger.customerNumber ?? ledger.enterprise_accounts?.account_number;
+  const countryName = ledger.countryName ?? ledger.countries?.name;
+  const branchName = ledger.cityBranchName ?? ledger.city_branches?.name;
+  const currency = ledger.ledgerCurrency ?? ledger.currency;
+  const contacts = ledger.contacts ?? ledger.enterprise_accounts?.contacts;
+
   return (
     <div className={`bg-white border ${borderColorClass} rounded p-2 text-xs relative shadow-sm mb-2 group flex flex-col gap-1.5`}>
-       <p className="font-bold text-slate-800 break-words border-b pb-1 border-slate-100">{ledger.name || "Unknown Ledger"}</p>
+       <p className="font-bold text-slate-800 break-words border-b pb-1 border-slate-100">{displayName}</p>
        <div className="grid grid-cols-2 gap-x-2 gap-y-1 mt-1 text-[10px]">
-         <span className="text-slate-500">ID:</span>
-         <span className="font-mono text-slate-700 text-right">{ledger.id.substring(0,8).toUpperCase()}</span>
-         
-         {ledger.enterprise_accounts?.account_number && (
+         {displayId && (
+           <>
+             <span className="text-slate-500">ID:</span>
+             <span className="font-mono text-slate-700 text-right">{displayId.substring(0,8).toUpperCase()}</span>
+           </>
+         )}
+
+         {accountNo && (
            <>
              <span className="text-slate-500">Account No:</span>
-             <span className="font-mono text-slate-700 text-right">{ledger.enterprise_accounts.account_number}</span>
+             <span className="font-mono text-slate-700 text-right">{accountNo}</span>
            </>
          )}
 
-         {ledger.countries?.name && (
+         {countryName && (
            <>
              <span className="text-slate-500">Country:</span>
-             <span className="text-slate-700 text-right">{ledger.countries.name}</span>
+             <span className="text-slate-700 text-right">{countryName}</span>
            </>
          )}
 
-         {ledger.city_branches?.name && (
+         {branchName && (
            <>
              <span className="text-slate-500">Branch:</span>
-             <span className="text-slate-700 text-right">{ledger.city_branches.name}</span>
+             <span className="text-slate-700 text-right">{branchName}</span>
            </>
          )}
-         
-         {ledger.currency && (
+
+         {currency && (
            <>
              <span className="text-slate-500">Currency:</span>
-             <span className={`font-bold ${colorClass} text-right`}>{ledger.currency}</span>
+             <span className={`font-bold ${colorClass} text-right`}>{currency}</span>
            </>
          )}
        </div>
@@ -819,8 +833,8 @@ export function ExpensesBillEntryForm({
       })),
       debit_ledger_id: formDebitLedgerId,
       credit_ledger_id: formCreditLedgerId,
-      debit_ledger_name: ledgers.find(l => l.id === formDebitLedgerId)?.name,
-      credit_ledger_name: ledgers.find(l => l.id === formCreditLedgerId)?.name
+      debit_ledger_name: ledgers.find(l => l.ledgerId === formDebitLedgerId)?.ledgerName,
+      credit_ledger_name: ledgers.find(l => l.ledgerId === formCreditLedgerId)?.ledgerName
     };
   }, [billSerial, billDate, referenceNo, billTitle, sessionInfo, cityBranches, branch, countries, selectedCountry, branchCurrency, rows, formDebitLedgerId, formCreditLedgerId, ledgers]);
 
@@ -1072,7 +1086,7 @@ export function ExpensesBillEntryForm({
                     </div>
                   ) : formDebitLedgerId ? (
                     <RenderAccountDetail 
-                      ledger={ledgers.find(l => l.id === formDebitLedgerId)} 
+                      ledger={ledgers.find(l => l.ledgerId === formDebitLedgerId)}
                       colorClass="text-blue-600" 
                       borderColorClass="border-blue-100" 
                     />
@@ -1120,7 +1134,7 @@ export function ExpensesBillEntryForm({
                     </div>
                   ) : formCreditLedgerId ? (
                     <RenderAccountDetail 
-                      ledger={ledgers.find(l => l.id === formCreditLedgerId)} 
+                      ledger={ledgers.find(l => l.ledgerId === formCreditLedgerId)}
                       colorClass="text-emerald-600" 
                       borderColorClass="border-emerald-100" 
                     />
@@ -1555,8 +1569,8 @@ export function ExpensesBillEntryForm({
                   <ExpensesInvoicePrintStyle2 
                     bill={{
                       ...transferBill, 
-                      debit_ledger_name: ledgers.find(l => l.id === debitLedgerId)?.name, 
-                      credit_ledger_name: ledgers.find(l => l.id === creditLedgerId)?.name,
+                      debit_ledger_name: ledgers.find(l => l.ledgerId === debitLedgerId)?.ledgerName,
+                      credit_ledger_name: ledgers.find(l => l.ledgerId === creditLedgerId)?.ledgerName,
                       debit_ledger_id: debitLedgerId,
                       credit_ledger_id: creditLedgerId
                     }} 
