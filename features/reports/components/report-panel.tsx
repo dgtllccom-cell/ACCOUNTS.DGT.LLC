@@ -358,6 +358,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
 
   const orderedColumns = columnOrder.map((key) => baseColumns.find((column) => column.key === key)).filter(Boolean) as typeof baseColumns;
   const visibleColumns = orderedColumns.filter((column) => visibleColumnKeys.includes(column.key));
+  const printableColumns = visibleColumns as unknown as GenericReportColumn[];
   const applied = reportResult?.applied ?? {};
   
   const previewFilters = [
@@ -427,7 +428,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
     openGenericErpReport({
       title: `${panelTitle} — ${t(lang, `report.${appliedReportType.replace(/-/g, "_")}` as UiKey, appliedReportType)}`,
       lang,
-      columns: visibleColumns,
+      columns: printableColumns,
       rows: reportData,
       summary: reportSummary,
       filters: previewFilters,
@@ -436,11 +437,11 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
   };
 
   const handleCsvExport = () => {
-    exportToCsv(reportData, visibleColumns, `${filename}.csv`);
+    exportToCsv(reportData, printableColumns, `${filename}.csv`);
   };
 
   const handleExcelExport = () => {
-    exportToExcel(reportData, visibleColumns, `${filename}.xls`);
+    exportToExcel(reportData, printableColumns, `${filename}.xls`);
   };
 
   const handleWhatsAppShare = () => {
@@ -877,7 +878,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               >
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-black text-slate-800 dark:text-slate-200">{c.name}</span>
-                  <span className="text-[10px] font-mono text-slate-400">{c.currency_code || "AED"}</span>
+                  <span className="text-[10px] font-mono text-slate-400">{c.code || "AED"}</span>
                 </div>
                 <div className="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">
                   {meta?.mainBranches?.filter((b: any) => b.country_id === c.id).length || 1} {th("BRANCHES ACTIVE")}
@@ -984,7 +985,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
               <button
                 type="button"
                 className="ml-auto flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2 text-xs font-black text-white hover:bg-blue-700"
-                onClick={() => openGenericErpReport({ title: `${t(lang, "report.record_details" as UiKey, "Record details")} — ${String(selectedRow.reference || selectedRow.id)}`, lang, columns: visibleColumns, rows: [selectedRow], summary: reportSummary, filters: previewFilters, companyInfo })}
+                onClick={() => openGenericErpReport({ title: `${t(lang, "report.record_details" as UiKey, "Record details")} — ${String(selectedRow.reference || selectedRow.id)}`, lang, columns: printableColumns, rows: [selectedRow], summary: reportSummary, filters: previewFilters, companyInfo })}
               >
                 <Printer className="h-4 w-4" /> {t(lang, "report.print")}
               </button>

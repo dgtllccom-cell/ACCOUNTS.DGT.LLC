@@ -698,8 +698,6 @@ export function AccountGeneralReportView({
     
     let matched = allFilteredRows.filter(row => {
       if (row.cityId && cityBranchIds.includes(row.cityId)) return true;
-      if (row.cityBranchId && cityBranchIds.includes(row.cityBranchId)) return true;
-      if (row.countryBranchId && countryBranchIds.includes(row.countryBranchId)) return true;
       return false;
     });
 
@@ -1343,7 +1341,7 @@ export function AccountGeneralReportView({
                   </div>
                   {/* Assigned Info */}
                   <div className="text-[9px] text-slate-450 font-bold mt-auto pt-1 truncate max-w-[250px]">
-                    Assigned: {session?.user?.fullName || "Super Admin"} — {userBranchRows[0]?.branchName || "Main Branch"}
+                    Assigned: {(session as any)?.fullName || (session as any)?.email || "Super Admin"} — {userBranchRows[0]?.branchName || "Main Branch"}
                   </div>
                 </div>
               </div>

@@ -80,6 +80,8 @@ interface LocalPurchaseRecord {
   country_branch_id?: string;
   branchName?: string;
   branch_name?: string;
+  status?: string;
+  journal_serial_no?: string;
   goodsName?: string;
   goods_name?: string;
   brand?: string;
@@ -101,16 +103,33 @@ interface LocalPurchaseRecord {
   net_weight?: number;
   purchaseRate?: number;
   purchase_rate?: number;
+  size?: string;
   purchaseCost?: number;
   purchase_cost?: number;
   taxAmount?: number;
   tax_amount?: number;
+  taxPercentage?: number;
+  tax_percentage?: number;
   finalCost?: number;
   final_cost?: number;
   localCurrency?: string;
   local_currency?: string;
   paymentMode?: string;
   payment_mode?: string;
+  shippingMode?: string;
+  shipping_mode?: string;
+  supplierName?: string;
+  supplier_name?: string;
+  warehouseName?: string;
+  warehouse_name?: string;
+  truckNo?: string;
+  truck_no?: string;
+  remainingBalance?: number;
+  remaining_balance?: number;
+  applyTax?: boolean;
+  apply_tax?: boolean;
+  taxType?: string;
+  tax_type?: string;
   purchaseAccountNo?: string;
   purchase_account_no?: string;
   salesAccountNo?: string;
@@ -381,7 +400,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
             <div className="flex justify-between"><span className="text-slate-400">{th("CITY BRANCH")}:</span> <span className="font-bold text-blue-600">CHAMAN CITY BRANCH</span></div>
             <div className="flex justify-between"><span className="text-slate-400">{th("USER NAME")}:</span> <span className="font-black text-slate-900 dark:text-white uppercase">{session.fullName || session.email || "SUPER ADMIN"}</span></div>
             <div className="flex justify-between"><span className="text-slate-400">{th("ROLE")}:</span> <span className="font-black text-purple-600 uppercase">{session.role || "SUPER ADMIN"}</span></div>
-            <div className="flex justify-between" compressHydrationWarning><span className="text-slate-400">{th("DATE & TIME")}:</span> <span className="font-mono text-[10px] text-slate-700 dark:text-slate-300">20 JUL 2026, 09:35 PM</span></div>
+            <div className="flex justify-between" suppressHydrationWarning><span className="text-slate-400">{th("DATE & TIME")}:</span> <span className="font-mono text-[10px] text-slate-700 dark:text-slate-300">20 JUL 2026, 09:35 PM</span></div>
             <div className="flex justify-between items-center"><span className="text-slate-400">{th("STATUS")}:</span> <span className="bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.5 rounded text-[8px] uppercase">{th("ACTIVE")}</span></div>
           </CardContent>
         </Card>
@@ -558,7 +577,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                   <tr>
                     <td colSpan={19} className="p-8 text-center text-slate-400 font-mono">
                       <Loader2 className="h-6 w-6 animate-spin mx-auto text-blue-600 mb-2" />
-                      {t(lang, "purchase.pmw_loading" as any, "Loading purchase records...")}
+                      {th("LOADING PURCHASE RECORDS")}
                     </td>
                   </tr>
                 ) : countryGroups.length === 0 ? (
@@ -954,7 +973,7 @@ export function LocalPurchaseJournalReportView({ session }: { session: any }) {
                                   Chs: {selectedRowForVoucher.chassisCode || selectedRowForVoucher.chassis_code || "-"} | Lot: {selectedRowForVoucher.lotNo || selectedRowForVoucher.lot_no || "-"}
                                 </div>
                               )}
-                              {(selectedRowForVoucher.applyTax === "Yes" || selectedRowForVoucher.apply_tax === "Yes") && (
+                              {(selectedRowForVoucher.applyTax || selectedRowForVoucher.apply_tax) && (
                                 <div className="text-[8px] text-indigo-650 font-bold uppercase mt-0.5">
                                   Tax: {selectedRowForVoucher.taxType || selectedRowForVoucher.tax_type || "VAT"} ({selectedRowForVoucher.taxPercentage || selectedRowForVoucher.tax_percentage || 0}%) - ${Number(selectedRowForVoucher.taxAmount || selectedRowForVoucher.tax_amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </div>
