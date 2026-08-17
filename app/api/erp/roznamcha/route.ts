@@ -635,10 +635,16 @@ async function postRoznamchaWithErpSessionPg(sql: any, input: {
     // skips the extra check rather than corrupting the actual posting below.
     const { validateLedgerCountryScope, validateAccountCountryScope } = await import("@/lib/api/country-scope-validator");
     if (input.session) {
-      const admin = createSupabaseAdminClient() as any;
-      await validateLedgerCountryScope(input.session, ledgerId, body.countryId, admin);
-      if (enterpriseAccountId) {
-        await validateAccountCountryScope(input.session, enterpriseAccountId, body.countryId, admin);
+      // The country-scope check is advisory. When the privileged admin client is unavailable
+      // (e.g. local/dev without a service key), skip it (fail-open) instead of letting the
+      // constructor throw abort the whole posting after the entry header was already inserted.
+      let admin: any = null;
+      try { admin = createSupabaseAdminClient(); } catch { admin = null; }
+      if (admin) {
+        await validateLedgerCountryScope(input.session, ledgerId, body.countryId, admin);
+        if (enterpriseAccountId) {
+          await validateAccountCountryScope(input.session, enterpriseAccountId, body.countryId, admin);
+        }
       }
     }
 
