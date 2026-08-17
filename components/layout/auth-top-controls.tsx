@@ -64,7 +64,7 @@ export function AuthTopControls({ lang }: { lang: SupportedLanguage }) {
         >
           {languageOptions.map((l) => (
             <option key={l.code} value={l.code} className="text-slate-900 font-bold bg-white">
-              {l.englishName}
+              {l.englishName === l.nativeName ? l.englishName : `${l.englishName} - ${l.nativeName}`}
             </option>
           ))}
         </select>

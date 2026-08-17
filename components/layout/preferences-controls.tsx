@@ -232,7 +232,7 @@ export function PreferencesControls() {
           >
             {languageOptions.map((lang) => (
               <option key={lang.code} value={lang.code}>
-                {lang.englishName} - {lang.nativeName}
+                {lang.englishName === lang.nativeName ? lang.englishName : `${lang.englishName} - ${lang.nativeName}`}
               </option>
             ))}
           </select>

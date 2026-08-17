@@ -60,6 +60,13 @@ export function isSupportedLanguage(value: string | null | undefined): value is 
   return supportedLanguages.some((language) => language.code === value);
 }
 
+export function getLanguageLabel(language: (typeof supportedLanguages)[number]): string {
+  if (language.englishName === language.nativeName) {
+    return language.englishName;
+  }
+  return `${language.englishName} - ${language.nativeName}`;
+}
+
 export function normalizeSupportedLanguage(value: string | null | undefined, fallback: SupportedLanguage = "en"): SupportedLanguage {
   return isSupportedLanguage(value) ? value : fallback;
 }
