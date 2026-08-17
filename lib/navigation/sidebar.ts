@@ -15,13 +15,30 @@ export type SidebarIconKey =
   | "scroll-text"
   | "settings"
   | "bar-chart"
+  | "bar-chart-3"
   | "message-square"
   | "mail"
   | "bell"
   | "palette"
   | "search"
   | "truck"
-  | "video";
+  | "video"
+  | "globe"
+  | "send"
+  | "shield-check"
+  | "package"
+  | "shopping-bag"
+  | "clock"
+  | "calendar"
+  | "badge"
+  | "user-check"
+  | "shield"
+  | "check-square"
+  | "coins"
+  | "calculator"
+  | "file-spreadsheet"
+  | "scale"
+  | "credit-card";
 
 export type SidebarNode = {
   key: string;

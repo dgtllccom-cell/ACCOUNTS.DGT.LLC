@@ -141,7 +141,7 @@ export default function JournalReport({
   session,
   initialLevel = "salesman"
 }: {
-  session: { branchName?: string; fullName?: string; email?: string } | null | undefined;
+  session: { branchName?: string; fullName?: string | null; email?: string | null } | null | undefined;
   initialLevel?: "salesman" | "country" | "branch";
 }) {
   const lang = useActiveLanguage();

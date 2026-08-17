@@ -2187,6 +2187,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
 }
 type LoadingStatus = "draft" | "pending" | "loaded" | "received" | "cancelled";
 type LoadingRecord = {
+  [key: string]: any;
   id: string;
   purchase_order_id?: string | null;
   country_id?: string | null;
@@ -2204,9 +2205,9 @@ type LoadingRecord = {
   carrier_name: string | null;
   remarks: string | null;
   created_at: string;
-  countries?: { name?: string | null; iso2?: string | null; currency?: string | null } | null;
-  country_branches?: { name?: string | null; code?: string | null } | null;
-  city_branches?: { name?: string | null; code?: string | null; city_name?: string | null } | null;
+  countries?: { id?: string | null; name?: string | null; iso2?: string | null; currency?: string | null } | null;
+  country_branches?: { id?: string | null; name?: string | null; code?: string | null } | null;
+  city_branches?: { id?: string | null; name?: string | null; code?: string | null; city_name?: string | null } | null;
   purchase_orders?: { form_data?: any } | null;
   report_payload?: any;
 };
@@ -3513,7 +3514,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
   );
 }
 
-function Metric({ label, value, tone }: { label: string; value: number; tone?: "green" | "amber" | "blue" }) {
+function Metric({ label, value, tone }: { label: string; value: number; tone?: "green" | "amber" | "blue" | "slate" }) {
   const color = tone === "green" ? "text-emerald-600 dark:text-emerald-400" : tone === "amber" ? "text-amber-600 dark:text-amber-400" : tone === "blue" ? "text-blue-600 dark:text-blue-400" : "text-slate-800 dark:text-slate-100";
   const bg = tone === "green" ? "bg-emerald-50 dark:bg-emerald-950/30 border-emerald-100 dark:border-emerald-900/50" : tone === "amber" ? "bg-amber-50 dark:bg-amber-950/30 border-amber-100 dark:border-amber-900/50" : tone === "blue" ? "bg-blue-50 dark:bg-blue-950/30 border-blue-100 dark:border-blue-900/50" : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800";
   

@@ -20,10 +20,12 @@ import { cn } from "@/lib/utils";
 import { openSalesA4ReportWindow } from "@/lib/reports/open-sales-a4-report-window";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 type SalesModuleType = "sales" | "stock";
 
 type SalesOrderRow = {
+  [key: string]: any;
   id: string;
   sales_order_no?: string | null;
   sales_contract_no?: string | null;
@@ -190,6 +192,8 @@ export function SalesModuleWorkspace({
   type?: SalesModuleType;
 }) {
   const router = useRouter();
+  const activeLang = useActiveLanguage();
+  const lang = activeLang;
   const [orders, setOrders] = useState<SalesOrderRow[]>([]);
   const [query, setQuery] = useState("");
   const [countryFilter, setCountryFilter] = useState("");
@@ -238,6 +242,18 @@ export function SalesModuleWorkspace({
 
   const stageRows = useMemo(() => orders.filter((row) => stageMatches(row, title, type)), [orders, title, type]);
   const countries = useMemo(() => Array.from(new Set(stageRows.map(country))).sort(), [stageRows]);
+  const columns = useMemo(() => [
+    { key: "sales_order_no", label: "SO Number" },
+    { key: "sales_contract_no", label: "Contract No" },
+    { key: "created_at", label: "Date" },
+    { key: "countryName", label: "Country" },
+    { key: "branchName", label: "Branch" },
+    { key: "customerName", label: "Customer" },
+    { key: "productName", label: "Goods" },
+    { key: "quantity", label: "Qty" },
+    { key: "order_total", label: "Total Amount" },
+    { key: "payment_status", label: "Status" }
+  ], []);
   const statuses = useMemo(() => Array.from(new Set(stageRows.map(status))).sort(), [stageRows]);
 
   const rows = useMemo(() => {
@@ -308,19 +324,19 @@ export function SalesModuleWorkspace({
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <JournalPrintButton
-              fetchData={async () => rows}
-              reportTitle={`${title} Journal`}
+              title={`${title} Journal`}
+              fetchFullData={async () => rows as Record<string, unknown>[]}
               columns={[
-                { key: (row) => soNumber(row), label: "SO Number" },
-                { key: (row) => contractNumber(row), label: "Contract No" },
-                { key: (row) => date(row.created_at), label: "Date" },
-                { key: (row) => country(row), label: "Country" },
-                { key: (row) => branch(row), label: "Branch" },
-                { key: (row) => customer(row), label: "Customer" },
-                { key: (row) => product(row), label: "Goods" },
-                { key: (row) => quantity(row).toLocaleString(), label: "Qty", align: "right" },
-                { key: (row) => money(amount(row), currency(row)), label: "Total Amount", align: "right" },
-                { key: (row) => status(row), label: "Status" },
+                { key: "sales_order_no", label: "SO Number" },
+                { key: "sales_contract_no", label: "Contract No" },
+                { key: "created_at", label: "Date" },
+                { key: "countryName", label: "Country" },
+                { key: "branchName", label: "Branch" },
+                { key: "customerName", label: "Customer" },
+                { key: "productName", label: "Goods" },
+                { key: "quantity", label: "Qty", align: "right" },
+                { key: "order_total", label: "Total Amount", align: "right" },
+                { key: "payment_status", label: "Status" },
               ]}
               className="h-9 font-extrabold shadow-md"
             />
@@ -481,7 +497,7 @@ export function SalesModuleWorkspace({
                   <td className="px-4 py-3.5"><b>{form(row).salesAccountName || "-"}</b><br /><span className="text-slate-400 text-[11px]">{form(row).salesAccountNo || "-"}</span></td>
                   <td className="px-4 py-3.5"><b>{product(row)}</b><br /><span className="text-slate-400 text-[11px]">{goods(row)[0]?.brand || "-"}</span></td>
                   <td className="px-4 py-3.5">Qty: <b>{quantity(row).toLocaleString()}</b><br />Net: <b>{weight(row).toLocaleString()} KG</b></td>
-                  <td className="px-4 py-3.5 font-mono"><b>{money(amount(row), currency(row))}</b><br /><span className="text-slate-400 text-[11px]">Rate: {Number(row.exchange_rate || form.exchangeRate || 1)}</span></td>
+                  <td className="px-4 py-3.5 font-mono"><b>{money(amount(row), currency(row))}</b><br /><span className="text-slate-400 text-[11px]">Rate: {Number(row.exchange_rate || form(row).exchangeRate || 1)}</span></td>
                   <td className="px-4 py-3.5 font-mono">
                     <b>{money(advance(row), currency(row))}</b><br />
                     <span className={cn("inline-flex rounded-full border px-2.5 py-0.5 text-[10px] font-black uppercase mt-1", statusClass(status(row)))}>

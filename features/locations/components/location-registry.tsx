@@ -161,7 +161,12 @@ export function LocationRegistry() {
         </body>
       </html>
     `;
-    openA4ReportWindow(html, "locations-report");
+    const win = window.open("", "_blank", "width=1120,height=900");
+    if (!win) return;
+    win.document.write(html);
+    win.document.close();
+    win.focus();
+    win.print();
   }
 
   const totalPages = Math.ceil(filtered.length / pageSize);

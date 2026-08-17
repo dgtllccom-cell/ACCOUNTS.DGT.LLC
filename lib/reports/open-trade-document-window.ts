@@ -72,7 +72,19 @@ export function openTradeDocumentWindow(type: TradeDocType, b: any) {
   const salesAccountName = b.salesAccountName || form.salesAccountName || "Damaan Sales Account";
 
   // Parse Goods entries
-  let items = [];
+  let items: Array<{
+    productName: string;
+    brand: string;
+    size: string;
+    code: string;
+    quantity: number;
+    unit: string;
+    rate: number;
+    amount: number;
+    netWeight: number;
+    grossWeight: number;
+    packing: string;
+  }> = [];
   if (goods.length > 0) {
     items = goods.map((g: any) => ({
       productName: g.goodsName,
@@ -103,10 +115,10 @@ export function openTradeDocumentWindow(type: TradeDocType, b: any) {
     }];
   }
 
-  const grandTotalAmount = items.reduce((sum, item) => sum + item.amount, 0);
-  const totalQuantity = items.reduce((sum, item) => sum + item.quantity, 0);
-  const totalNetWeight = items.reduce((sum, item) => sum + item.netWeight, 0);
-  const totalGrossWeight = items.reduce((sum, item) => sum + item.grossWeight, 0);
+  const grandTotalAmount = items.reduce((sum: number, item) => sum + item.amount, 0);
+  const totalQuantity = items.reduce((sum: number, item) => sum + item.quantity, 0);
+  const totalNetWeight = items.reduce((sum: number, item) => sum + item.netWeight, 0);
+  const totalGrossWeight = items.reduce((sum: number, item) => sum + item.grossWeight, 0);
 
   // Document specific text/titles
   let docTitle = "";
@@ -241,7 +253,7 @@ export function openTradeDocumentWindow(type: TradeDocType, b: any) {
             </tr>
           </thead>
           <tbody>
-            ${items.map((item, idx) => `
+            ${items.map((item: (typeof items)[number], idx: number) => `
               <tr>
                 <td style="text-align: center;">${idx + 1}</td>
                 <td>
@@ -287,7 +299,7 @@ export function openTradeDocumentWindow(type: TradeDocType, b: any) {
             </tr>
           </thead>
           <tbody>
-            ${items.map((item, idx) => `
+            ${items.map((item: (typeof items)[number], idx: number) => `
               <tr>
                 <td style="text-align: center;">${idx + 1}</td>
                 <td>

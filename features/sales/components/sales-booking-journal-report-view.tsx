@@ -15,6 +15,7 @@ import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
 
 type SalesReport = {
+  [key: string]: any;
   id: string;
   salesBookingOrderNumber: string;
   salesDate: string;

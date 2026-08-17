@@ -63,6 +63,7 @@ import { buildPurchaseBookingTransferUrl } from "@/lib/services/purchase-booking
 import { translateHeader } from "@/lib/i18n/table-headers";
 
 type PurchaseReport = {
+  [key: string]: any;
   id: string;
   purchaseBookingOrderNumber: string;
   purchaseDate: string;
@@ -1225,11 +1226,13 @@ function SuperAdminPurchaseSummary({
 export function PurchaseBookingJournalReportView({
   onNewBooking,
   refreshKey = 0,
-  highlightPurchaseOrderNo = ""
+  highlightPurchaseOrderNo = "",
+  lang: _lang
 }: {
   onNewBooking?: () => void;
   refreshKey?: number;
   highlightPurchaseOrderNo?: string;
+  lang?: string;
 }) {
   const router = useRouter();
   const [reports, setReports] = useState<PurchaseReport[]>([]);
@@ -2469,7 +2472,7 @@ export function PurchaseBookingJournalReportView({
                                 order: {
                                   id: report.id,
                                   systemBillNo: report.purchaseBookingOrderNumber || f.bookingNo || `PB-2026-${report.id.slice(0, 4)}`,
-                                  manualBillNo: f.salesOrderNo || f.billNo || report.purchaseContractNumber,
+                                  manualBillNo: f.salesOrderNo || f.billNo || report.purchaseContractNo,
                                   superAdminSerialNo: (report as any).super_admin_serial_number || f.superAdminSerialNo,
                                   countrySerialNo: (report as any).country_transaction_serial_number || f.countrySerialNo,
                                   branchSerialNo: (report as any).branch_transaction_serial_number || f.branchSerialNo,
@@ -2551,7 +2554,7 @@ export function PurchaseBookingJournalReportView({
                                 order: {
                                   id: report.id,
                                   systemBillNo: report.purchaseBookingOrderNumber || f.bookingNo || `PB-2026-${report.id.slice(0, 4)}`,
-                                  manualBillNo: f.salesOrderNo || f.billNo || report.purchaseContractNumber,
+                                  manualBillNo: f.salesOrderNo || f.billNo || report.purchaseContractNo,
                                   superAdminSerialNo: (report as any).super_admin_serial_number || f.superAdminSerialNo,
                                   countrySerialNo: (report as any).country_transaction_serial_number || f.countrySerialNo,
                                   branchSerialNo: (report as any).branch_transaction_serial_number || f.branchSerialNo,
@@ -2799,7 +2802,7 @@ export function PurchaseBookingJournalReportView({
                             order: {
                               id: report.id,
                               systemBillNo: report.purchaseBookingOrderNumber || f.bookingNo || `PB-2026-${report.id.slice(0, 4)}`,
-                              manualBillNo: f.salesOrderNo || f.billNo || report.purchaseContractNumber,
+                              manualBillNo: f.salesOrderNo || f.billNo || report.purchaseContractNo,
                               superAdminSerialNo: (report as any).super_admin_serial_number || f.superAdminSerialNo,
                               countrySerialNo: (report as any).country_transaction_serial_number || f.countrySerialNo,
                               branchSerialNo: (report as any).branch_transaction_serial_number || f.branchSerialNo,

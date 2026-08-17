@@ -220,27 +220,27 @@ export function ReportDataTable({
         ) : (
           <table className="w-full text-xs border-collapse">
             <thead>
-              <tr className="bg-slate-900 dark:bg-slate-950">
+              <tr className="bg-slate-100/90 dark:bg-slate-800/90 border-b border-slate-200 dark:border-slate-700">
                 {columns.map((col) => (
                   <th
                     key={col.key}
                     className={cn(
-                      "px-4 py-3 font-black uppercase tracking-wider text-slate-100 whitespace-nowrap select-none",
-                      col.sortable && "cursor-pointer hover:bg-slate-800 transition-colors",
+                      "px-4 py-2.5 font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 whitespace-nowrap select-none",
+                      col.sortable && "cursor-pointer hover:bg-slate-200/80 dark:hover:bg-slate-700 transition-colors",
                       col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left",
                       col.width
                     )}
                     onClick={() => col.sortable && handleSort(col.key)}
-                    style={{ letterSpacing: "0.05em", fontSize: "10px" }}
+                    style={{ letterSpacing: "0.04em", fontSize: "10px" }}
                   >
                     <div className="flex items-center gap-1.5">
                       {col.label}
                       {col.sortable && (
-                        <span className="text-slate-400">
+                        <span className="text-slate-400 dark:text-slate-500">
                           {sortKey === col.key
                             ? sortDir === "asc"
-                              ? <ChevronUp className="h-3 w-3 text-indigo-400" />
-                              : <ChevronDown className="h-3 w-3 text-indigo-400" />
+                              ? <ChevronUp className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
+                              : <ChevronDown className="h-3 w-3 text-indigo-600 dark:text-indigo-400" />
                             : <ChevronsUpDown className="h-3 w-3 opacity-40" />}
                         </span>
                       )}
@@ -248,7 +248,7 @@ export function ReportDataTable({
                   </th>
                 ))}
               </tr>
-              <tr className="bg-slate-800 dark:bg-slate-900">
+              <tr className="bg-slate-50/90 dark:bg-slate-850/80 border-b border-slate-200 dark:border-slate-700">
                 {columns.map((column) => (
                   <th key={`${column.key}-filter`} className="px-2 py-1.5">
                     <input
@@ -257,7 +257,7 @@ export function ReportDataTable({
                       onClick={(event) => event.stopPropagation()}
                       placeholder={_("report.search", "Filter")}
                       aria-label={`${_("report.search", "Filter")} ${column.label}`}
-                      className="w-full min-w-[80px] rounded-md border border-slate-600 bg-slate-900/70 px-2 py-1 text-[10px] font-medium text-white outline-none placeholder:text-slate-500 focus:border-indigo-400"
+                      className="w-full min-w-[70px] rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1 text-[10px] font-medium text-slate-800 dark:text-slate-200 outline-none placeholder:text-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-2xs transition-all"
                     />
                   </th>
                 ))}

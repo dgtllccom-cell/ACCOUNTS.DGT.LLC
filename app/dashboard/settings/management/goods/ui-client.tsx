@@ -136,7 +136,6 @@ export default function GoodsManagementClient({ session }: { session: any }) {
       await apiPatch(`/api/erp/goods/${editRow.id}`, {
         chsCode: next.chsCode,
         goodsName: next.goodsName,
-        originCountryId: next.originCountryId || null,
         originalLanguage: "en"
       });
       setEditRow(null);

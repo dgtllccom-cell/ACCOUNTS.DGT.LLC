@@ -259,7 +259,7 @@ export function openPurchaseBookingOrderPrintReport(input: {
       &bull; Double-entry accounting postings assigned.<br />
       &bull; Subject to company standard terms & conditions.
     `,
-    lang
+    lang: targetLang
   });
 
   const printWindow = window.open("", "_blank");

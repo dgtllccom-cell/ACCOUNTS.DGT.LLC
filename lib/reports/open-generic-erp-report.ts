@@ -11,13 +11,17 @@ import {
 } from "./erp-report-template-builder";
 
 export type GenericReportColumn = {
-  key: string;
+  key: string | ((row: Record<string, unknown>) => unknown);
   label: string;
   align?: "left" | "center" | "right";
   format?: "date" | "currency" | "number" | "status" | "text";
   currency?: string;
   render?: (value: unknown, row: Record<string, unknown>) => string;
 };
+
+function getRowValue(row: Record<string, unknown>, key: GenericReportColumn["key"]) {
+  return typeof key === "function" ? key(row) : row[key];
+}
 
 function formatCellValue(value: unknown, column: GenericReportColumn, lang: string): string {
   if (value === null || value === undefined || value === "") return "—";
@@ -72,7 +76,10 @@ function buildCsv(columns: GenericReportColumn[], rows: Record<string, unknown>[
   const headers = columns.map((column) => `"${translateHeader(lang, column.label).replace(/"/g, '""')}"`).join(",");
   const lines = rows.map((row) =>
     columns
-      .map((column) => `"${formatCellValue(row[column.key], column, lang).replace(/"/g, '""')}"`)
+      .map((column) => {
+        const value = getRowValue(row, column.key);
+        return `"${formatCellValue(value, column, lang).replace(/"/g, '""')}"`;
+      })
       .join(",")
   );
   return [headers, ...lines].join("\n");
@@ -155,7 +162,7 @@ export function openGenericErpReport(input: {
                 .map(
                   (row) => `
               <tr>
-                ${columns.map((column) => `<td>${renderCell(row[column.key], column, row, lang)}</td>`).join("")}
+                ${columns.map((column) => `<td>${renderCell(getRowValue(row, column.key), column, row, lang)}</td>`).join("")}
               </tr>`
                 )
                 .join("")
@@ -166,7 +173,7 @@ export function openGenericErpReport(input: {
             ? `<tr class="total-row">
                 ${columns
                   .map((column, idx) => {
-                    const val = totalsRow[column.key];
+                    const val = getRowValue(totalsRow, column.key);
                     const align = column.align === "right" ? "right" : column.align === "center" ? "center" : "left";
                     if (val !== undefined && val !== null) {
                       return `<td><span style="display:block;text-align:${align};">${escapeHtml(formatCellValue(val, column, lang))}</span></td>`;
@@ -209,4 +216,3 @@ export function openGenericErpReport(input: {
   preview.document.write(html);
   preview.document.close();
 }
-

@@ -33,6 +33,7 @@ import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
 
 type SalesOrder = {
+  [key: string]: any;
   id: string;
   sales_order_no: string;
   sales_contract_no: string | null;

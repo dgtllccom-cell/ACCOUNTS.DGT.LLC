@@ -203,7 +203,7 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
       return {
         userId: resolvedUserId,
         email: temp.email,
-        fullName: temp.fullName,
+        fullName: temp.fullName ?? null,
         preferredLanguage: temp.preferredLanguage,
         roles: temp.roles,
         permissions: perms,

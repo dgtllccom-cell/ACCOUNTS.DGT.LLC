@@ -891,7 +891,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
                 country_name: b.country_name || "All",
                 quantity_on_hand: b.quantity_on_hand,
                 quantity_available: b.quantity_available
-              }))
+              })) as any
             : movements.map(m => ({
                 created_at: new Date(m.created_at).toLocaleString(),
                 movement_type: m.movement_type,
@@ -900,7 +900,7 @@ export default function InventoryWorkspaceClient({ session }: { session: any }) 
                 quantity: m.quantity,
                 unit_cost: m.unit_cost,
                 reference_no: m.reference_no || "-"
-              }))
+              })) as any
         }
       />
     </div>

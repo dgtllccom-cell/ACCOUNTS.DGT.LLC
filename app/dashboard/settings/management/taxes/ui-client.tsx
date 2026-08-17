@@ -32,7 +32,7 @@ export default function TaxesManagementClient({ session }: { session: any }) {
 
   const fetchTaxes = async () => {
     try {
-      const data = await apiGet("/api/erp/master-data/taxes");
+      const data = await apiGet<TaxCodeRow[]>("/api/erp/master-data/taxes");
       setTaxes(data || []);
     } catch (err) {
       console.error(err);

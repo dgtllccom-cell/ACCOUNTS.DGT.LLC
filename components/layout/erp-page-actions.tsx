@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import {
   ArrowLeft,
   Edit3,
@@ -70,7 +70,14 @@ function parentPathFor(pathname: string) {
   return `/${parts.slice(0, -1).join("/")}`;
 }
 
-export function ErpPageActions() {
+type ErpPageActionsProps = {
+  children?: ReactNode;
+  backLink?: string;
+  title?: string;
+  subtitle?: string;
+};
+
+export function ErpPageActions({ children, backLink, title: titleOverride, subtitle: subtitleOverride }: ErpPageActionsProps) {
   const router = useRouter();
   const pathname = usePathname();
   const lang = useActiveLanguage();
@@ -81,7 +88,8 @@ export function ErpPageActions() {
   const isReportPage = pathname?.startsWith("/dashboard/reports") || pathname?.startsWith("/dashboard/roznamcha/reports") || pathname?.startsWith("/dashboard/ledger");
   if (isReportPage) return null;
 
-  const title = titleFromPath(pathname || "/dashboard", lang);
+  const title = titleOverride || titleFromPath(pathname || "/dashboard", lang);
+  const subtitle = subtitleOverride || t(lang, "pa.subtitle", "Standard ERP navigation and page actions");
 
   useEffect(() => {
     if (!open) return;
@@ -110,6 +118,10 @@ export function ErpPageActions() {
   }
 
   function goBack() {
+    if (backLink) {
+      router.push(backLink as any);
+      return;
+    }
     if (typeof window !== "undefined" && window.history.length > 1) {
       router.back();
       return;
@@ -118,7 +130,7 @@ export function ErpPageActions() {
   }
 
   function closePage() {
-    router.push(parentPathFor(pathname || "/dashboard") as any);
+    router.push((backLink || parentPathFor(pathname || "/dashboard")) as any);
   }
 
   function editCurrentRecord() {
@@ -157,7 +169,7 @@ export function ErpPageActions() {
         <style>{`#erp-page-title-slot:not(:empty) + .default-title { display: none; }`}</style>
         <div className="min-w-0 default-title">
           <h1 className="truncate text-xs font-black tracking-tight text-slate-900 dark:text-slate-100 sm:text-sm">{title}</h1>
-          <p className="hidden text-[9.5px] font-medium text-slate-400 sm:block">{t(lang, "pa.subtitle", "Standard ERP navigation and page actions")}</p>
+          <p className="hidden text-[9.5px] font-medium text-slate-400 sm:block">{subtitle}</p>
         </div>
       </div>
 
@@ -223,6 +235,7 @@ export function ErpPageActions() {
           <X className="h-3.5 w-3.5" aria-hidden />
         </Button>
       </div>
+      {children ? <div className="w-full flex flex-wrap items-center gap-2 pt-2">{children}</div> : null}
     </section>
   );
 }

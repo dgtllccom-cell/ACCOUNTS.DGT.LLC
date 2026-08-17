@@ -57,6 +57,7 @@ import { RecordTranslationCorrectionDialog } from "@/features/translations/compo
 import { buildPurchaseBookingTransferUrl } from "@/lib/services/purchase-booking-transfer-routing";
 
 type PurchaseReport = {
+  [key: string]: any;
   id: string;
   purchaseBookingOrderNumber: string;
   purchaseDate: string;
@@ -855,6 +856,7 @@ function makeContainers(row: PurchaseReport) {
   const loaded = shipmentStatus(row) === "Completed" ? total : shipmentStatus(row) === "Container Loading" || shipmentStatus(row) === "In Transit" ? Math.max(1, Math.floor(total / 2)) : 0;
   return Array.from({ length: total }).map((_, idx) => ({
     containerNumber: `CONT-${String(idx + 1).padStart(3, "0")}`,
+    containerNo: `CONT-${String(idx + 1).padStart(3, "0")}`,
     sealNumber: idx < loaded ? `SEAL-${row.purchaseBookingOrderNumber.slice(-4)}-${idx + 1}` : "-",
     size: idx % 2 ? "20 FT" : "40 FT",
     loadingDate: idx < loaded ? row.purchaseDate : "-",

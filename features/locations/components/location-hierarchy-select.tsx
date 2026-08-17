@@ -172,7 +172,7 @@ export function LocationHierarchySelect({
         ? areas.find(
             (a) =>
               a.id === value.areaId ||
-              (Boolean(value.areaId) && a.name.toLowerCase() === value.areaId.toLowerCase())
+              (Boolean(value.areaId) && a.name.toLowerCase() === (value.areaId || "").toLowerCase())
           ) ?? null
         : null,
     [areas, value.areaId]

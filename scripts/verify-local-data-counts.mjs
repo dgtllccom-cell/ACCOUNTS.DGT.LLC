@@ -1,10 +1,10 @@
 import fs from "node:fs";
 import postgres from "postgres";
 
-function loadEnv() {
+function loadEnvFile(path) {
   const env = {};
   try {
-    for (const line of fs.readFileSync(".env.local", "utf8").split(/\r?\n/)) {
+    for (const line of fs.readFileSync(path, "utf8").split(/\r?\n/)) {
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith("#")) continue;
       const index = trimmed.indexOf("=");
@@ -13,6 +13,10 @@ function loadEnv() {
     }
   } catch (e) {}
   return env;
+}
+
+function loadEnv() {
+  return { ...loadEnvFile(".env"), ...loadEnvFile(".env.local") };
 }
 
 const env = loadEnv();

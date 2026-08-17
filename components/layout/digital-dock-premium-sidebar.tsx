@@ -155,8 +155,8 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
         icon: Boxes,
         label: "Stock & Warehouse",
         children: [
-          { label: "Stock Register", href: "/dashboard/stock", icon: Package },
-          { label: "Stock Reports", href: "/dashboard/stock/reports", icon: BarChart3 },
+          { label: "Stock Register", href: "/dashboard/inventory", icon: Package },
+          { label: "Stock Reports", href: "/dashboard/inventory/stock-reports/branch", icon: BarChart3 },
         ],
       },
     ],
@@ -168,9 +168,9 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
         icon: Ship,
         label: "Shipping & Logistics",
         children: [
-          { label: "Shipping Lines", href: "/dashboard/shipping-lines" },
-          { label: "Clearing Agents", href: "/dashboard/clearing-agents" },
-          { label: "Loading Records", href: "/dashboard/purchase-loading-records" },
+          { label: "Shipping Lines", href: "/dashboard/shipping-line" },
+          { label: "Clearing Agents", href: "/dashboard/clearing-agent" },
+          { label: "Loading Records", href: "/dashboard/purchase/purchase-loading-records" },
           { label: "Containers", href: "/dashboard/containers", icon: Container },
         ],
       },

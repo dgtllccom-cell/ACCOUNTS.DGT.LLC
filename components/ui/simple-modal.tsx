@@ -8,18 +8,23 @@ export function SimpleModal({
   title,
   children,
   onClose,
-  className
+  className,
+  isOpen,
+  maxWidth
 }: {
   title: string;
   children: React.ReactNode;
   onClose: () => void;
   className?: string;
+  isOpen?: boolean;
+  maxWidth?: string;
 }) {
   const modal = (
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-slate-950/70 p-2 sm:p-4 overflow-y-auto print:static print:bg-transparent print:p-0 print:block backdrop-blur-xs">
       <div
         className={cn(
           "relative w-full max-w-2xl rounded-2xl border bg-card shadow-2xl my-auto flex flex-col print:max-w-none print:border-none print:shadow-none",
+          maxWidth || "",
           // max-height: leave gap from viewport edges
           "max-h-[calc(100dvh-1.5rem)] sm:max-h-[calc(100dvh-2.5rem)]",
           className

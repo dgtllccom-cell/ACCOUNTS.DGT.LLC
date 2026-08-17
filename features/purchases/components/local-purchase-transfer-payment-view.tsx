@@ -118,6 +118,7 @@ interface LocalPurchaseRecord {
   status?: string;
   supplierName?: string;
   supplier_name?: string;
+  journal_serial_no?: string | null;
   shippingMode?: string;
   shipping_mode?: string;
   warehouseName?: string;

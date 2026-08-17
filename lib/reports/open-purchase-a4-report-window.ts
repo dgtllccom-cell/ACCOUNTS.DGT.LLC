@@ -3,6 +3,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { printStore } from "@/lib/store/print-store";
 
 export type PurchaseReportData = {
+  [key: string]: any;
   id: string;
   purchaseBookingOrderNumber: string;
   purchaseDate: string;

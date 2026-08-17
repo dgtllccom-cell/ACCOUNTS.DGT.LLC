@@ -2,15 +2,16 @@ import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type SalesReportData = {
+  [key: string]: any;
   id: string;
   salesBookingOrderNumber: string;
   salesDate: string;
   bookingDate: string;
   salesAccountName: string;
   salesAccountNumber: string;
-  purchaseAccountName: string;
-  purchaseAccountNumber: string;
-  supplierName: string;
+  purchaseAccountName?: string;
+  purchaseAccountNumber?: string;
+  supplierName?: string;
   customerName: string;
   productName: string;
   goodsDescription: string;
@@ -360,4 +361,3 @@ export function openSalesA4ReportWindow(input: {
     };
   }
 }
-

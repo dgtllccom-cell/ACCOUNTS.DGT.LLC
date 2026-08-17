@@ -43,6 +43,7 @@ export type CompanyIncorporationData = {
   state: string;
   district?: string;
   city: string;
+  area?: string;
   zipCode: string;
   address: string;
   contacts: DynamicRow[];
