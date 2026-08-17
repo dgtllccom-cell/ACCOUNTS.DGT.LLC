@@ -1057,7 +1057,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                       setMessage(getLabel("completeRequiredFields", lang));
                     } else if (accountName || manualReferenceNumber) {
                       if (!accountName && manualReferenceNumber) setAccountName(`Account ${manualReferenceNumber}`);
-                      setMessage(null);
+                      setMessage("");
                       setCurrentStep(nextStep);
                     } else {
                       setMessage(getLabel("completeRequiredFields", lang));

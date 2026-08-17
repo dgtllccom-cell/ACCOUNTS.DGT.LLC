@@ -25,7 +25,7 @@ import {
 import type { SidebarIconKey } from "@/lib/navigation/sidebar";
 import { cn } from "@/lib/utils";
 
-const iconMap: Record<SidebarIconKey, LucideIcon> = {
+const iconMap: Partial<Record<SidebarIconKey, LucideIcon>> = {
   "layout-dashboard": LayoutDashboard,
   "list-plus": ListPlus,
   "building-2": Building2,

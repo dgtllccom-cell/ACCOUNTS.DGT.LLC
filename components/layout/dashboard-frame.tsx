@@ -208,7 +208,7 @@ export function DashboardFrame({
 
       const visibility = {
         ...sidebarDefaultVisibility,
-        ...(allotments?.[scopeKey] || {})
+        ...(scopeKey && allotments?.[scopeKey] ? allotments[scopeKey] : {})
       };
       if (!cancelled) setSidebarMenuVisibility(visibility);
     }

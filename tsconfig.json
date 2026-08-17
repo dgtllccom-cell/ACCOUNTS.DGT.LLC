@@ -43,6 +43,8 @@
     "android",
     "ios",
     "scripts",
-    "fix-broken-transfers.ts"
+    "fix-broken-transfers.ts",
+    "check-superadmins.ts",
+    "check_roznamcha.ts"
   ]
 }

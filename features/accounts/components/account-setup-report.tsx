@@ -363,7 +363,7 @@ export function AccountSetupReport({ lang: propLang }: { lang?: SupportedLanguag
         { label: "Branch", value: reportContext.branchName },
         { label: "User", value: reportContext.userName },
         { label: "Role", value: reportContext.userRole },
-        { label: "Category", value: category },
+        { label: "Category", value: accType },
         { label: "Search", value: accNo.trim() || "All" },
       ],
       companyInfo: {

@@ -1,6 +1,5 @@
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { type EnterpriseRole } from "@/lib/permissions/enterprise-roles";
-import { v4 as uuidv4 } from 'uuid';
 
 /**
  * HierarchyService
@@ -48,7 +47,7 @@ export class HierarchyService {
     const userId = authUser.user.id;
 
     // 2. Insert Profile
-    await supabase.from("profiles").insert({
+    await (supabase.from("profiles") as any).insert({
       id: userId,
       full_name: fullName,
       created_at: new Date().toISOString(),
@@ -56,7 +55,7 @@ export class HierarchyService {
     });
 
     // 3. Assign Role and Scope
-    await supabase.from("user_role_assignments").insert({
+    await (supabase.from("user_role_assignments") as any).insert({
       user_id: userId,
       role: role,
       country_id: scope.countryId || null,
@@ -75,9 +74,9 @@ export class HierarchyService {
     const supabase = createSupabaseAdminClient();
 
     // 1. Create Country
-    const { data: country, error: countryError } = await supabase
-      .from("countries")
-      .insert({ name, iso2, currency_code: currencyCode, is_active: true })
+    const { data: country, error: countryError } = await (supabase
+      .from("countries") as any)
+      .insert({ name, iso2, currency_code: currencyCode, is_active: true, admin_email: `admin@${iso2.toLowerCase()}.dgt.local`, official_email: `admin@${iso2.toLowerCase()}.dgt.local` })
       .select("id")
       .single();
 

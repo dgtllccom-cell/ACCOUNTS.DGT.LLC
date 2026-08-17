@@ -14,6 +14,7 @@ export type BankRecord = {
   account_title: string;
   account_number: string;
   iban_number: string | null;
+  opening_balance?: number | string | null;
   currency: string;
   account_status: string;
   country_id: string | null;

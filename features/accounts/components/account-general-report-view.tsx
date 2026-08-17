@@ -693,7 +693,8 @@ export function AccountGeneralReportView({
   }, [accountId, branchCode, category, fromDate, query, scopedRows, status, toDate]);
 
   const userBranchRows = useMemo(() => {
-    const countryBranchIds = session.scopes?.countryBranchIds || [];
+    const cityBranchIds = session?.scopes?.cityBranchIds || [];
+    const countryBranchIds = session?.scopes?.countryBranchIds || [];
     
     let matched = allFilteredRows.filter(row => {
       if (row.cityId && cityBranchIds.includes(row.cityId)) return true;
@@ -1692,7 +1693,7 @@ export function AccountGeneralReportView({
 
       {/* REPORT-3: SEARCH & TRANSACTION REPORT */}
       <section className="bg-white border border-slate-200 dark:border-slate-800 dark:bg-slate-950 p-6 rounded-2xl shadow-sm space-y-6">
-        {actionsOpen ? (
+        {filtersOpen ? (
           <div className="rounded border border-slate-200 bg-slate-50/30 p-4 dark:border-slate-800 dark:bg-slate-955 animate-in fade-in duration-200">
             <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
               <label className="space-y-1">
@@ -1976,9 +1977,8 @@ export function AccountGeneralReportView({
               <SearchSelect
                 value={draftCountryName}
                 options={countryOptions}
-                onChange={(val) => setDraftCountryName(val)}
+                onValueChange={(val: string) => setDraftCountryName(val)}
                 placeholder={tr("ALL COUNTRIES")}
-                className="w-full"
               />
             </div>
 
@@ -1989,9 +1989,8 @@ export function AccountGeneralReportView({
               <SearchSelect
                 value={draftBranchCode}
                 options={branchOptions}
-                onChange={(val) => setDraftBranchCode(val)}
+                onValueChange={(val: string) => setDraftBranchCode(val)}
                 placeholder={tr("ALL BRANCHES")}
-                className="w-full"
               />
             </div>
 

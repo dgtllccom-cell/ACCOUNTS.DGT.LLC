@@ -24,6 +24,10 @@ type AccountGeneralReportRow = {
   accountId: string;
   accountCode: string;
   rawAccountCode?: string;
+  customerId?: string | null;
+  customerName?: string | null;
+  companyId?: string | null;
+  bankId?: string | null;
   customerNumber?: string;
   countrySerialNumber?: string;
   branchSerialNumber?: string;
@@ -121,11 +125,11 @@ function rowTone(balance: number) {
   return balance < 0 ? "text-red-600" : "text-emerald-600";
 }
 
-function PreviewRow({ label, value, tone }: { label: string; value?: string | null; tone?: string }) {
+function PreviewRow({ label, value, tone }: { label: string; value?: React.ReactNode; tone?: string }) {
   return (
     <div className="flex items-baseline justify-between gap-3 border-b border-dashed py-1.5 text-sm last:border-b-0">
       <span className="text-xs font-medium text-muted-foreground">{label}</span>
-      <span className={cn("text-right font-semibold", tone ?? "text-foreground")}>{value || "-"}</span>
+      <span className={cn("text-right font-semibold", tone ?? "text-foreground")}>{value ?? "-"}</span>
     </div>
   );
 }
@@ -654,8 +658,8 @@ export function AccountProfileView({
                   value={
                     selectedRow.companyId ? (
                       <Button
-                        variant="link"
-                        className="p-0 h-auto font-black text-blue-600 dark:text-blue-400 text-xs text-left"
+                        variant="ghost"
+                        className="p-0 h-auto font-black text-blue-600 dark:text-blue-400 text-xs text-left hover:underline"
                         onClick={() => router.push(`/dashboard/settings/company-setup?companyId=${selectedRow.companyId}`)}
                       >
                         {selectedRow.companyName || "Linked Company Profile"}
@@ -668,8 +672,8 @@ export function AccountProfileView({
                   value={
                     selectedRow.bankId ? (
                       <Button
-                        variant="link"
-                        className="p-0 h-auto font-black text-blue-600 dark:text-blue-400 text-xs text-left"
+                        variant="ghost"
+                        className="p-0 h-auto font-black text-blue-600 dark:text-blue-400 text-xs text-left hover:underline"
                         onClick={() => router.push(`/dashboard/settings/company-setup?companyId=${selectedRow.bankId}`)}
                       >
                         Linked Bank Profile
