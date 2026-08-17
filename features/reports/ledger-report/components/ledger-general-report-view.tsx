@@ -699,6 +699,8 @@ export function LedgerReportView({
         <ReportHeader
           title={pageTitle}
           generatedAt={generatedAt}
+          fromDate={fromDate}
+          toDate={toDate}
         />
         {/* Account Details moved to Header area */}
         {selectedLedger ? (
@@ -997,6 +999,11 @@ export function LedgerReportView({
               <span className="text-slate-700 dark:text-slate-300 font-bold">BALANCE (AED):</span>
               <span className="font-black text-blue-600 dark:text-blue-400 font-mono text-sm">{fmtNumber(summary?.balance || displayRows.reduce((acc, r) => acc + (r.balance || 0), 0))}</span>
             </div>
+            {displayRows.length === 0 && !loading && (
+              <div className="mt-1 rounded bg-emerald-50/60 dark:bg-emerald-950/30 p-1.5 text-[10px] text-emerald-800 dark:text-emerald-300 font-medium text-center">
+                No financial entries available for the selected date range.
+              </div>
+            )}
           </div>
         </div>
 
@@ -1027,55 +1034,66 @@ export function LedgerReportView({
               <span>SYSTEM STATUS:</span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400">ONLINE & SYNCED</span>
             </div>
+            {displayRows.length === 0 && !loading && (
+              <div className="mt-1 rounded bg-purple-50/60 dark:bg-purple-950/30 p-1.5 text-[10px] text-purple-800 dark:text-purple-300 font-medium text-center">
+                No bill entries found for the selected period.
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Panel 4: All Countries Report Details Toggle */}
-        <button
-          type="button"
-          onClick={() => setShowAllCountries(!showAllCountries)}
+        {/* Panel 4: All Countries Report */}
+        <div
           className={cn(
-            "flex flex-col rounded-xl border transition-all duration-200 text-left overflow-hidden h-full group",
+            "flex flex-col rounded-xl border transition-all duration-200 text-left overflow-hidden h-full",
             showAllCountries
               ? "border-orange-500 bg-orange-50/30 shadow-md dark:border-orange-500/50 dark:bg-orange-950/20"
-              : "border-slate-200 bg-white shadow-sm hover:border-orange-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
+              : "border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900"
           )}
         >
           <div className={cn(
-            "flex items-center justify-between px-4 py-3 border-b w-full transition-colors",
+            "flex items-center justify-between px-4 py-3 border-b w-full",
             showAllCountries
               ? "border-orange-200 bg-orange-100/50 dark:border-orange-900/50 dark:bg-orange-900/30"
               : "border-slate-100 bg-orange-50/50 dark:border-slate-800 dark:bg-orange-900/10"
           )}>
             <div className="flex items-center gap-2">
-              <div className={cn(
-                "p-1 rounded-full text-white transition-colors",
-                showAllCountries ? "bg-orange-500" : "bg-orange-600"
-              )}>
+              <div className="bg-orange-600 p-1 rounded-full text-white">
                 <Globe className="h-3.5 w-3.5" />
               </div>
               <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">
                 4. ALL COUNTRIES REPORT
               </h4>
             </div>
-            <span className="text-[10px] font-bold bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-0.5 rounded border border-slate-200 dark:border-slate-700">
-              {showAllCountries ? "HIDE DETAILS" : "SHOW DETAILS"}
-            </span>
           </div>
-          <div className="p-4 flex flex-col justify-between flex-1 w-full gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400">
-            <div className="space-y-1.5">
-              {countryDashboardData.slice(0, 3).map((item) => (
-                <div key={item.name} className="flex justify-between items-center p-1.5 rounded bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800">
-                  <span className="font-bold text-slate-800 dark:text-slate-200">{item.name}</span>
-                  <span className="text-[10px] font-mono text-slate-500">{item.branches.size} BRANCHES</span>
-                </div>
-              ))}
+          <div className="p-4 flex flex-col justify-between flex-1 w-full gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
+            <div className="flex justify-between items-center">
+              <span>TOTAL COUNTRIES:</span>
+              <span className="font-black text-slate-800 dark:text-slate-200">{countryDashboardData.length || countries.length || 1}</span>
             </div>
-            <div className="mt-2 text-[10px] uppercase font-bold text-orange-600 dark:text-orange-400 hover:underline flex items-center gap-1">
-              {showAllCountries ? "HIDE REPORT DETAILS ↑" : "SHOW REPORT DETAILS →"}
+            <div className="flex justify-between items-center">
+              <span>TOTAL ENTRIES:</span>
+              <span className="font-black text-slate-800 dark:text-slate-200">{countryDashboardData.reduce((acc, c) => acc + c.entries, 0)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span>TOTAL CREDIT (AED):</span>
+              <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono">{fmtNumber(countryDashboardData.reduce((acc, c) => acc + c.credit, 0))}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-rose-600 dark:text-rose-400">TOTAL DEBIT (AED):</span>
+              <span className="font-black text-rose-600 dark:text-rose-400 font-mono">{fmtNumber(countryDashboardData.reduce((acc, c) => acc + c.debit, 0))}</span>
+            </div>
+            <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
+              <button
+                type="button"
+                onClick={() => setShowAllCountries(!showAllCountries)}
+                className="w-full text-center text-[10.5px] uppercase font-bold text-orange-600 dark:text-orange-400 hover:text-orange-700 dark:hover:text-orange-300 py-0.5 hover:underline flex items-center justify-center gap-1 cursor-pointer"
+              >
+                {showAllCountries ? "Hide All Countries Report ↑" : "View All Countries Report →"}
+              </button>
             </div>
           </div>
-        </button>
+        </div>
       </div>
 
       {/* Collapsible Country & Branch Breakdown Accordion */}
@@ -1163,7 +1181,14 @@ export function LedgerReportView({
               <div className="text-xs text-muted-foreground dark:text-slate-500">
                 {t(effectiveLang, "ledger.rows")}: <b className="text-foreground dark:text-slate-200">{tableRows.length}</b>
               </div>
-              <Button type="button" variant="outline" size="sm" className="gap-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800 dark:bg-blue-900/20 dark:border-blue-800/50 dark:text-blue-300 dark:hover:bg-blue-900/40" onClick={() => setPrintMode(true)}>
+              <Button 
+                type="button" 
+                variant="outline" 
+                size="sm" 
+                disabled={tableRows.length === 0 || loading}
+                className="gap-2 bg-blue-50 text-blue-700 border-blue-200 hover:bg-blue-100 hover:text-blue-800 dark:bg-blue-900/20 dark:border-blue-800/50 dark:text-blue-300 dark:hover:bg-blue-900/40 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer" 
+                onClick={() => setPrintMode(true)}
+              >
                 <Printer className="h-4 w-4" />
                 {t(effectiveLang, "ledger.print_preview", "Print Preview")}
               </Button>
@@ -1279,8 +1304,15 @@ export function LedgerReportView({
                   ))}
                   {tableRows.length === 0 && !loading && (
                     <tr>
-                      <Td className="text-center py-8 text-muted-foreground" colSpan={columns.length}>
-                        {t(effectiveLang, "ledger.no_ledger_accounts_found", "No ledger accounts found.")}
+                      <Td className="text-center py-12 text-slate-500 bg-slate-50/50 dark:bg-slate-900/30" colSpan={columns.length}>
+                        <div className="flex flex-col items-center justify-center gap-1.5 py-4">
+                          <span className="font-semibold text-slate-700 dark:text-slate-300 text-sm">
+                            No ledger entries found for the selected date range.
+                          </span>
+                          <span className="text-xs text-slate-400">
+                            Try adjusting your date range, scope, or search filters to view records.
+                          </span>
+                        </div>
                       </Td>
                     </tr>
                   )}
@@ -1488,19 +1520,33 @@ function ExportOptions({ onPrint, onExportCsv }: { onPrint: (isPrint: boolean) =
 function ReportHeader({
   title,
   generatedAt,
-  actions
+  actions,
+  fromDate,
+  toDate
 }: {
   title: string;
   generatedAt: string | null;
   actions?: ReactNode;
+  fromDate?: string;
+  toDate?: string;
 }) {
   return (
     <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">{title}</h1>
-        <p className="text-sm text-muted-foreground">
-          Generated Date: <span className="font-medium text-foreground">{generatedAt ? new Date(generatedAt).toLocaleString() : new Date().toLocaleString()}</span>
-        </p>
+        <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground mt-1">
+          <span>
+            Report Generated: <span className="font-semibold text-foreground">{generatedAt ? new Date(generatedAt).toLocaleString() : new Date().toLocaleString()}</span>
+          </span>
+          {fromDate && toDate && (
+            <>
+              <span className="text-slate-300 dark:text-slate-700">|</span>
+              <span>
+                Selected Period: <span className="font-semibold text-foreground font-mono">{fromDate} → {toDate}</span>
+              </span>
+            </>
+          )}
+        </div>
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
     </div>
