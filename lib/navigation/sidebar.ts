@@ -825,6 +825,12 @@ export const sidebarTree: SidebarNode[] = [
     href: "/dashboard/reports" as Route,
     children: [
       {
+        key: "reports-forms-directory",
+        labelKey: "nav.forms_directory_audit" as any,
+        iconKey: "clipboard-list",
+        href: "/dashboard/reports/system-forms-directory" as Route
+      },
+      {
         key: "reports-journal-report-pdf",
         labelKey: "nav.journal_report_pdf_erp",
         iconKey: "file-text",
