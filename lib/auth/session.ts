@@ -7,11 +7,15 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { isDemoAuthEnabled, isSupabaseConfigured } from "@/lib/supabase/config";
 import { readTempSession } from "@/lib/auth/temp-session";
 
+export type LedgerVisibility = "scoped" | "shipping_only" | "full";
+
 export type RoleAssignmentScope = {
   role: EnterpriseRole;
   countryId: string | null;
   countryBranchId: string | null;
   cityBranchId: string | null;
+  clearingAgentId: string | null;
+  ledgerVisibility: LedgerVisibility;
 };
 
 export type ErpSession = {
@@ -26,6 +30,12 @@ export type ErpSession = {
   countryBranchIds: string[];
   cityBranchIds: string[];
   isSuperAdmin: boolean;
+  // Shipping/Clearing scope. `clearingAgentIds` = the clearing agents this login is bound to.
+  // `isShippingScoped` = true only for a shipping-only login (bound to an agent, no 'full' grant,
+  // not super admin) — such a login must see ONLY its own agent's shipping transactions.
+  clearingAgentIds: string[];
+  ledgerVisibility: LedgerVisibility;
+  isShippingScoped: boolean;
 };
 
 type ProfileRow = {
@@ -42,7 +52,23 @@ type AssignmentRow = {
   country_id: string | null;
   country_branch_id: string | null;
   city_branch_id: string | null;
+  clearing_agent_id?: string | null;
+  ledger_visibility?: string | null;
 };
+
+/** Derive the shipping/clearing scope fields from a user's active assignments. */
+export function resolveShippingScope(assignments: RoleAssignmentScope[], isSuperAdmin: boolean): {
+  clearingAgentIds: string[];
+  ledgerVisibility: LedgerVisibility;
+  isShippingScoped: boolean;
+} {
+  const clearingAgentIds = [...new Set(assignments.map((a) => a.clearingAgentId).filter((v): v is string => Boolean(v)))];
+  const hasFull = assignments.some((a) => a.ledgerVisibility === "full");
+  const hasShippingOnly = assignments.some((a) => a.clearingAgentId && a.ledgerVisibility === "shipping_only");
+  const ledgerVisibility: LedgerVisibility = hasFull ? "full" : hasShippingOnly ? "shipping_only" : "scoped";
+  const isShippingScoped = !isSuperAdmin && !hasFull && hasShippingOnly && clearingAgentIds.length > 0;
+  return { clearingAgentIds, ledgerVisibility, isShippingScoped };
+}
 
 type LooseQueryBuilder = {
   select(columns: string): LooseQueryBuilder;
@@ -211,7 +237,8 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
         countryIds: resolvedScopes.countryIds,
         countryBranchIds: resolvedScopes.countryBranchIds,
         cityBranchIds: resolvedScopes.cityBranchIds,
-        isSuperAdmin
+        isSuperAdmin,
+        ...resolveShippingScope(temp.assignments, isSuperAdmin)
       };
     }
 
@@ -234,12 +261,23 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
     const profileQuery = db.from("profiles").select("full_name, preferred_language_code").eq("id", user.id);
     const profileResult = await profileQuery.maybeSingle();
 
-    const assignmentsQuery = db
+    // Select the shipping/clearing scope columns when present, but fall back gracefully for
+    // databases where the 20260818_shipping_clearing_rbac migration has not been applied yet —
+    // otherwise an unknown-column error here would return null and break authentication.
+    let assignmentsResult = await db
       .from("user_role_assignments")
-      .select("role, country_id, country_branch_id, city_branch_id")
+      .select("role, country_id, country_branch_id, city_branch_id, clearing_agent_id, ledger_visibility")
       .eq("user_id", user.id)
-      .eq("is_active", true);
-    const assignmentsResult = await assignmentsQuery.is("deleted_at", null);
+      .eq("is_active", true)
+      .is("deleted_at", null);
+    if (assignmentsResult.error) {
+      assignmentsResult = await db
+        .from("user_role_assignments")
+        .select("role, country_id, country_branch_id, city_branch_id")
+        .eq("user_id", user.id)
+        .eq("is_active", true)
+        .is("deleted_at", null);
+    }
 
     if (assignmentsResult.error) {
       console.error("Role assignments query error:", assignmentsResult.error.message);
@@ -255,7 +293,9 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
           role,
           countryId: assignment.country_id,
           countryBranchId: assignment.country_branch_id,
-          cityBranchId: assignment.city_branch_id
+          cityBranchId: assignment.city_branch_id,
+          clearingAgentId: assignment.clearing_agent_id ?? null,
+          ledgerVisibility: (assignment.ledger_visibility as LedgerVisibility) ?? "scoped"
         };
       })
       .filter((assignment): assignment is RoleAssignmentScope => Boolean(assignment));
@@ -313,7 +353,8 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
       countryIds: resolvedScopes.countryIds,
       countryBranchIds: resolvedScopes.countryBranchIds,
       cityBranchIds: resolvedScopes.cityBranchIds,
-      isSuperAdmin
+      isSuperAdmin,
+      ...resolveShippingScope(assignments, isSuperAdmin)
     };
   } catch (err: any) {
     if (err?.digest === "DYNAMIC_SERVER_USAGE" || (err?.message && String(err.message).includes("Dynamic server usage"))) {

@@ -55,12 +55,22 @@ export async function GET(request: NextRequest) {
       const term = String(params.get("q")).replace(/[%_]/g, "");
       query = query.or(`shipping_line_name.ilike."%${term}%",vessel_name.ilike."%${term}%",voyage_number.ilike."%${term}%",shipping_reference_no.ilike."%${term}%",account_number.ilike."%${term}%",manual_reference_number.ilike."%${term}%"`);
     }
-    if (countryId) query = query.eq("country_id", countryId);
-    else if (!session.isSuperAdmin) query = query.in("country_id", session.countryIds.length ? session.countryIds : ["00000000-0000-0000-0000-000000000000"]);
-    if (countryBranchId) query = query.eq("country_branch_id", countryBranchId);
-    else if (!session.isSuperAdmin && session.countryBranchIds.length) query = query.in("country_branch_id", session.countryBranchIds);
-    if (cityBranchId) query = query.eq("city_branch_id", cityBranchId);
-    else if (!session.isSuperAdmin && session.cityBranchIds.length) query = query.in("city_branch_id", session.cityBranchIds);
+    if (session.isShippingScoped) {
+      // A shipping-only login sees ONLY its own clearing agent's shipping records — never the
+      // country/branch-wide set, and never records with no agent tag. The service-role connection
+      // bypasses RLS, so this API-layer filter is the authoritative gate.
+      const agentIds = session.clearingAgentIds.length
+        ? session.clearingAgentIds
+        : ["00000000-0000-0000-0000-000000000000"];
+      query = query.in("clearing_agent_id", agentIds);
+    } else {
+      if (countryId) query = query.eq("country_id", countryId);
+      else if (!session.isSuperAdmin) query = query.in("country_id", session.countryIds.length ? session.countryIds : ["00000000-0000-0000-0000-000000000000"]);
+      if (countryBranchId) query = query.eq("country_branch_id", countryBranchId);
+      else if (!session.isSuperAdmin && session.countryBranchIds.length) query = query.in("country_branch_id", session.countryBranchIds);
+      if (cityBranchId) query = query.eq("city_branch_id", cityBranchId);
+      else if (!session.isSuperAdmin && session.cityBranchIds.length) query = query.in("city_branch_id", session.cityBranchIds);
+    }
 
     return apiOk({ shippingLineRecords: await requireSupabaseData(query) });
   } catch (error) {

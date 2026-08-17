@@ -238,11 +238,23 @@ export class LedgerReportService {
             : sql`true`
         : sql`true`;
 
+    // Shipping-only login: restrict to ONLY the ledgers reachable through its own clearing agent's
+    // shipping records. It must never receive the shared party's unrelated business ledger.
+    const shippingCond = session.isShippingScoped
+      ? sql`id IN (
+          SELECT ledger_id FROM public.shipping_line_records
+           WHERE ledger_id IS NOT NULL AND deleted_at IS NULL AND clearing_agent_id = ANY(${session.clearingAgentIds ?? []}::uuid[])
+          UNION
+          SELECT ledger_id FROM public.shipping_bl_records
+           WHERE ledger_id IS NOT NULL AND deleted_at IS NULL AND clearing_agent_id = ANY(${session.clearingAgentIds ?? []}::uuid[])
+        )`
+      : sql`true`;
+
     const ledgerRows = await sql`
       SELECT id, scope, country_id, country_branch_id, city_branch_id, account_id, enterprise_account_id,
              code, name, currency, normal_balance, current_balance, debit_total, credit_total, is_active, created_at
       FROM public.ledgers
-      WHERE deleted_at IS NULL AND ${scopeCond} AND ${idCond} AND ${countryCond} AND ${countryBranchCond} AND ${cityBranchCond} AND ${scopeTabCond}
+      WHERE deleted_at IS NULL AND ${scopeCond} AND ${idCond} AND ${countryCond} AND ${countryBranchCond} AND ${cityBranchCond} AND ${scopeTabCond} AND ${shippingCond}
       ORDER BY code ASC
       LIMIT ${limit}
     `;
