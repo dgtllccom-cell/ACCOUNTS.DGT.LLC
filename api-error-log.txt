@@ -33516,3 +33516,74 @@ Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for p
     at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
     at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
 2026-08-17T04:12:48.133Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-17T04:38:34.934Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at LoadingPortsRepository.search (webpack-internal:///(rsc)/./lib/repositories/ports-repository.ts:17:104)
+    at LoadingPortsService.search (webpack-internal:///(rsc)/./lib/services/ports-service.ts:12:109)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/ports/loading/route.ts:24:107)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fports%2Floading%2Froute&page=%2Fapi%2Ferp%2Fports%2Floading%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fports%2Floading%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fports%2Floading%2Froute&page=%2Fapi%2Ferp%2Fports%2Floading%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fports%2Floading%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fports%2Floading%2Froute&page=%2Fapi%2Ferp%2Fports%2Floading%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fports%2Floading%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-17T04:38:34.939Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-17T04:38:35.208Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at ReceivedPortsRepository.search (webpack-internal:///(rsc)/./lib/repositories/ports-repository.ts:118:104)
+    at ReceivedPortsService.search (webpack-internal:///(rsc)/./lib/services/ports-service.ts:29:110)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/ports/received/route.ts:24:108)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fports%2Freceived%2Froute&page=%2Fapi%2Ferp%2Fports%2Freceived%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fports%2Freceived%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fports%2Freceived%2Froute&page=%2Fapi%2Ferp%2Fports%2Freceived%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fports%2Freceived%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fports%2Freceived%2Froute&page=%2Fapi%2Ferp%2Fports%2Freceived%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fports%2Freceived%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-17T04:38:35.209Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-17T05:27:45.868Z] PostgresError: insert or update on table "record_change_history" violates foreign key constraint "record_change_history_city_branch_id_fkey"
+PostgresError: insert or update on table "record_change_history" violates foreign key constraint "record_change_history_city_branch_id_fkey"
+    at ErrorResponse (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:830:70)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at Socket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at Socket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TCP.callbackTrampoline (node:internal/async_hooks:130:17)
+    at cachedError (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:175:23)
+    at new Query (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:41:24)
+    at sql (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:110:11)
+    at eval (webpack-internal:///(rsc)/./lib/api/record-change-history.ts:26:18)
+2026-08-17T05:27:45.874Z - SERVER_ERROR - insert or update on table "record_change_history" violates foreign key constraint "record_change_history_city_branch_id_fkey" - {}

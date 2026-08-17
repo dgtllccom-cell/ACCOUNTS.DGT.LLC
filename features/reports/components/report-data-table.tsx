@@ -558,6 +558,137 @@ export function getColumnsForReportType(reportType: string, lang: SupportedLangu
         { key: "midRate", label: "Mid Rate", format: "number", align: "right", sortable: true }
       ];
 
+    case "receipts":
+      return [
+        ...common,
+        { key: "voucherNo", label: _("report.col_reference", "Voucher No.") },
+        { key: "narration", label: _("report.col_description") },
+        { key: "amount", label: _("report.col_amount"), format: "currency", align: "right", currency, sortable: true },
+        { key: "currency", label: _("report.col_currency"), align: "center" },
+        { key: "status", label: _("report.col_status"), format: "status", align: "center" }
+      ];
+
+    case "customer-accounts":
+      return [
+        { key: "serial", label: _("report.col_serial", "Code"), sortable: true },
+        { key: "customer", label: _("report.col_party" as UiKey, "Customer / Account Name"), sortable: true },
+        { key: "contactPerson", label: _("report.col_user", "Contact Person") },
+        { key: "phone", label: "Phone" },
+        { key: "email", label: "Email" },
+        { key: "country", label: _("report.col_country") },
+        { key: "date", label: _("report.col_created" as UiKey, "Registered"), format: "date", sortable: true },
+        { key: "status", label: _("report.col_status"), format: "status", align: "center" }
+      ];
+
+    case "customer-companies":
+      return [
+        { key: "serial", label: _("report.col_serial", "Reg No."), sortable: true },
+        { key: "company", label: "Company Name", sortable: true },
+        { key: "regNo", label: "Registration No." },
+        { key: "taxNo", label: "Tax / NTN No." },
+        { key: "country", label: _("report.col_country") },
+        { key: "date", label: _("report.col_created" as UiKey, "Registered"), format: "date", sortable: true },
+        { key: "status", label: _("report.col_status"), format: "status", align: "center" }
+      ];
+
+    case "branch-transactions":
+      return [
+        { key: "serial", label: _("report.col_serial", "Journal No."), sortable: true },
+        { key: "date", label: _("report.col_date"), format: "date", sortable: true },
+        { key: "voucherNo", label: "Voucher No." },
+        { key: "type", label: _("report.col_type" as UiKey, "Type"), align: "center" },
+        { key: "narration", label: _("report.col_description") },
+        { key: "debit", label: _("report.col_debit"), format: "currency", align: "right", currency },
+        { key: "credit", label: _("report.col_credit"), format: "currency", align: "right", currency },
+        { key: "amount", label: _("report.col_amount"), format: "currency", align: "right", currency, sortable: true },
+        { key: "currency", label: _("report.col_currency"), align: "center" },
+        { key: "status", label: _("report.col_status"), format: "status", align: "center" }
+      ];
+
+    case "audit-logs":
+      return [
+        { key: "date", label: _("report.col_date"), format: "date", sortable: true },
+        { key: "userId", label: _("report.col_user", "User / Actor") },
+        { key: "action", label: _("report.col_action" as UiKey, "Action") },
+        { key: "resource", label: _("report.col_resource" as UiKey, "Resource / Table") },
+        { key: "reference", label: _("report.col_reference", "Record ID") },
+        { key: "ip", label: _("report.col_ip" as UiKey, "IP Address") },
+        { key: "status", label: _("report.col_status"), format: "status", align: "center" }
+      ];
+
+    case "approval-workflows":
+      return [
+        { key: "date", label: _("report.col_date"), format: "date", sortable: true },
+        { key: "entityType", label: _("report.col_type" as UiKey, "Entity Type") },
+        { key: "entityId", label: _("report.col_reference", "Entity ID") },
+        { key: "requestedBy", label: "Requested By" },
+        { key: "approvedBy", label: "Approved By" },
+        { key: "status", label: _("report.col_status"), format: "status", align: "center" }
+      ];
+
+    case "expenses":
+      return [
+        ...common,
+        { key: "voucherNo", label: "Voucher No." },
+        { key: "narration", label: _("report.col_description") },
+        { key: "amount", label: _("report.col_amount"), format: "currency", align: "right", currency, sortable: true },
+        { key: "currency", label: _("report.col_currency"), align: "center" },
+        { key: "status", label: _("report.col_status"), format: "status", align: "center" }
+      ];
+
+    case "financial-summaries":
+      return [
+        { key: "serial", label: _("report.col_serial", "Ref"), sortable: true, width: "w-20" },
+        { key: "metric", label: "Financial Statement Metric / Line", sortable: true },
+        { key: "type", label: _("report.col_type" as UiKey, "Classification"), align: "center" },
+        { key: "amount", label: _("report.col_amount"), format: "currency", align: "right", currency, sortable: true },
+        { key: "status", label: _("report.col_status"), format: "status", align: "center" }
+      ];
+
+    case "daily-comprehensive":
+      return [
+        ...common,
+        { key: "type", label: _("report.col_type" as UiKey, "Type"), align: "center" },
+        { key: "narration", label: _("report.col_description") },
+        { key: "debit", label: _("report.col_debit"), format: "currency", align: "right", currency },
+        { key: "credit", label: _("report.col_credit"), format: "currency", align: "right", currency },
+        { key: "amount", label: _("report.col_amount"), format: "currency", align: "right", currency, sortable: true },
+        { key: "currency", label: _("report.col_currency"), align: "center" },
+        { key: "status", label: _("report.col_status"), format: "status", align: "center" }
+      ];
+
+    case "inventory":
+      return [
+        ...common,
+        { key: "product", label: "Product / Stock Item", sortable: true },
+        { key: "quantity", label: "Quantity", format: "number", align: "right", sortable: true },
+        { key: "unit", label: "Unit", align: "center" },
+        { key: "warehouse", label: "Warehouse", sortable: true },
+        { key: "status", label: _("report.col_status"), format: "status", align: "center" }
+      ];
+
+    case "purchase-booking-register":
+      return [
+        { key: "serial", label: _("report.col_serial"), sortable: true },
+        { key: "date", label: _("report.col_date"), format: "date", sortable: true },
+        { key: "party", label: _("report.col_party" as UiKey, "Supplier / Customer"), sortable: true },
+        { key: "amount", label: _("report.col_amount"), format: "currency", align: "right", currency, sortable: true },
+        { key: "paid", label: _("report.col_paid" as UiKey, "Paid"), format: "currency", align: "right", currency },
+        { key: "outstanding", label: _("report.col_outstanding" as UiKey, "Outstanding"), format: "currency", align: "right", currency, sortable: true },
+        { key: "currency", label: _("report.col_currency"), align: "center" },
+        { key: "status", label: _("report.col_status"), format: "status", align: "center" }
+      ];
+
+    case "cash-entry":
+      return [
+        ...common,
+        { key: "narration", label: _("report.col_description") },
+        { key: "debit", label: _("report.col_debit"), format: "currency", align: "right", currency, sortable: true },
+        { key: "credit", label: _("report.col_credit"), format: "currency", align: "right", currency, sortable: true },
+        { key: "balance", label: _("report.col_balance"), format: "currency", align: "right", currency, sortable: true },
+        { key: "status", label: _("report.col_status"), format: "status", align: "center" }
+      ];
+
     default:
       return [
         ...common,

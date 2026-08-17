@@ -14,7 +14,7 @@ const scopeModes = ["entire-country", "main-branch", "city-branch"] as const;
 
 const querySchema = z.object({
   reportType: z.enum(reportTypes).default("ledger"),
-  countryId: z.string().uuid(),
+  countryId: z.string().optional().or(z.literal("all")).or(z.literal("")),
   scopeMode: z.enum(scopeModes).default("entire-country"),
   mainBranchId: z.string().uuid().optional(),
   branchId: z.string().uuid().optional(),
@@ -377,7 +377,10 @@ export async function GET(request: NextRequest) {
       throw new Error("Edit history reports are restricted to Super Admin users.");
     }
 
-    if (!session.isSuperAdmin && !session.countryIds.includes(params.countryId)) {
+    const isGlobalCountry = !params.countryId || params.countryId === "all";
+    const targetCountryId = isGlobalCountry ? null : params.countryId;
+
+    if (!session.isSuperAdmin && targetCountryId && !session.countryIds.includes(targetCountryId)) {
       throw new Error("Requested country is outside the signed-in user's report scope.");
     }
     if (params.scopeMode === "main-branch" && !params.mainBranchId) throw new Error("Main branch is required for Main Branch scope.");
@@ -390,31 +393,33 @@ export async function GET(request: NextRequest) {
     }
 
     const localPgResponse = await withLocalPg(async (sql) => {
-      const countryRows = await sql`
-        select id, name, currency_code
-        from public.countries
-        where deleted_at is null and id = ${params.countryId}::uuid
-        limit 1
-      `;
+      const countryRows = targetCountryId
+        ? await sql`
+            select id, name, currency_code
+            from public.countries
+            where deleted_at is null and id = ${targetCountryId}::uuid
+            limit 1
+          `
+        : [{ id: "all", name: "All Countries", currency_code: "USD" }];
       if (!countryRows[0]) return null;
 
-      const branchRows = params.scopeMode === "main-branch"
+      const branchRows = (params.scopeMode === "main-branch" && params.mainBranchId)
         ? await sql`
             select id, name, code, country_id
             from public.country_branches
             where deleted_at is null
               and id = ${params.mainBranchId}::uuid
-              and country_id = ${params.countryId}::uuid
+              ${targetCountryId ? sql`and country_id = ${targetCountryId}::uuid` : sql``}
             limit 1
           `
         : [];
-      const cityRows = params.scopeMode === "city-branch"
+      const cityRows = (params.scopeMode === "city-branch" && params.branchId)
         ? await sql`
             select id, name, code, country_id, country_branch_id
             from public.city_branches
             where deleted_at is null
               and id = ${params.branchId}::uuid
-              and country_id = ${params.countryId}::uuid
+              ${targetCountryId ? sql`and country_id = ${targetCountryId}::uuid` : sql``}
             limit 1
           `
         : [];
@@ -423,24 +428,24 @@ export async function GET(request: NextRequest) {
         const allMainBranches = await sql`
           select id, name, code, country_id
           from public.country_branches
-          where deleted_at is null and country_id = ${params.countryId}::uuid
+          where deleted_at is null ${targetCountryId ? sql`and country_id = ${targetCountryId}::uuid` : sql``}
           order by name
         `;
         const allCityBranches = await sql`
           select id, name, code, country_id, country_branch_id
           from public.city_branches
-          where deleted_at is null and country_id = ${params.countryId}::uuid
+          where deleted_at is null ${targetCountryId ? sql`and country_id = ${targetCountryId}::uuid` : sql``}
           order by name
         `;
         const assignments = await sql`
           select user_id, role, country_id, country_branch_id, city_branch_id
           from public.user_role_assignments
-          where is_active = true and deleted_at is null and country_id = ${params.countryId}::uuid
+          where is_active = true and deleted_at is null ${targetCountryId ? sql`and country_id = ${targetCountryId}::uuid` : sql``}
         `;
         let historyRows = await sql`
           select id, record_table, record_id, country_id, city_branch_id, action, actor_id, approval_request_id, before_data, after_data, created_at
           from public.record_change_history
-          where country_id = ${params.countryId}::uuid
+          where 1=1 ${targetCountryId ? sql`and country_id = ${targetCountryId}::uuid` : sql``}
           order by created_at desc
           limit ${params.limit}
         `;
@@ -459,7 +464,7 @@ export async function GET(request: NextRequest) {
         const cityBranchMap = new Map((localizedCityBranches as any[]).map((row) => [row.id, row]));
         const filteredHistoryRows = historyRows.filter((row: any) => {
           const snapshot = asObject(row.after_data) ?? asObject(row.before_data) ?? {};
-          const scopeSnapshot = extractBranchNames(snapshot, new Map([[params.countryId, countryRows[0].name]]), mainBranchMap, cityBranchMap);
+          const scopeSnapshot = extractBranchNames(snapshot, new Map([[targetCountryId || "all", countryRows[0].name]]), mainBranchMap, cityBranchMap);
           if (params.scopeMode === "main-branch") {
             return scopeSnapshot.mainBranchId === params.mainBranchId && !scopeSnapshot.cityBranchId;
           }
@@ -496,7 +501,7 @@ export async function GET(request: NextRequest) {
               select id, name, code, status, local_currency, country_id, created_at, created_by, is_main
               from public.country_branches
               where deleted_at is null
-                and country_id = ${params.countryId}::uuid
+                ${targetCountryId ? sql`and country_id = ${targetCountryId}::uuid` : sql``}
                 ${params.scopeMode === "main-branch" ? sql`and id = ${params.mainBranchId}::uuid` : sql``}
               order by name
             `
@@ -506,7 +511,7 @@ export async function GET(request: NextRequest) {
               select id, name, code, status, local_currency, country_id, country_branch_id, city_name, created_at, created_by
               from public.city_branches
               where deleted_at is null
-                and country_id = ${params.countryId}::uuid
+                ${targetCountryId ? sql`and country_id = ${targetCountryId}::uuid` : sql``}
                 ${params.scopeMode === "city-branch" ? sql`and id = ${params.branchId}::uuid` : sql``}
               order by name
             `
@@ -547,7 +552,7 @@ export async function GET(request: NextRequest) {
           generatedAt: new Date().toISOString(),
           generatedBy: { id: session.userId, name: session.fullName || session.email || session.userId },
           applied: {
-            countryId: params.countryId,
+            countryId: targetCountryId,
             country: countryRows[0].name,
             scopeMode: params.scopeMode,
             mainBranchId: params.mainBranchId || null,
@@ -570,7 +575,7 @@ export async function GET(request: NextRequest) {
           select user_id, country_id, country_branch_id, city_branch_id
           from public.user_role_assignments
           where is_active = true and deleted_at is null
-            and country_id = ${params.countryId}::uuid
+            ${targetCountryId ? sql`and country_id = ${targetCountryId}::uuid` : sql``}
             ${params.scopeMode === "main-branch" ? sql`and country_branch_id = ${params.mainBranchId}::uuid and city_branch_id is null` : sql``}
             ${params.scopeMode === "city-branch" ? sql`and city_branch_id = ${params.branchId}::uuid` : sql``}
         `;
@@ -586,7 +591,7 @@ export async function GET(request: NextRequest) {
         let activities = await sql`
           select id, created_at, actor_id, action, resource, record_id, record_table, metadata, ip_address, user_agent, country_id, country_branch_id, city_branch_id
           from public.erp_activity_events
-          where country_id = ${params.countryId}::uuid
+          where 1=1 ${targetCountryId ? sql`and country_id = ${targetCountryId}::uuid` : sql``}
           order by created_at desc
           limit ${params.limit}
         `;
@@ -627,7 +632,7 @@ export async function GET(request: NextRequest) {
           generatedAt: new Date().toISOString(),
           generatedBy: { id: session.userId, name: session.fullName || session.email || session.userId },
           applied: {
-            countryId: params.countryId,
+            countryId: targetCountryId,
             country: countryRows[0].name,
             scopeMode: params.scopeMode,
             mainBranchId: params.mainBranchId || null,
@@ -654,12 +659,18 @@ export async function GET(request: NextRequest) {
 
     const db = await createServerSupabaseClient();
     const [countryResult, mainResult, cityResult] = await Promise.all([
-      db.from("countries").select("id, name, currency_code").eq("id", params.countryId).is("deleted_at", null).maybeSingle(),
+      targetCountryId
+        ? db.from("countries").select("id, name, currency_code").eq("id", targetCountryId).is("deleted_at", null).maybeSingle()
+        : Promise.resolve({ data: { id: "all", name: "All Countries", currency_code: "USD" }, error: null }),
       params.mainBranchId
-        ? db.from("country_branches").select("id, name, code, country_id").eq("id", params.mainBranchId).eq("country_id", params.countryId).is("deleted_at", null).maybeSingle()
+        ? (targetCountryId
+            ? db.from("country_branches").select("id, name, code, country_id").eq("id", params.mainBranchId).eq("country_id", targetCountryId).is("deleted_at", null).maybeSingle()
+            : db.from("country_branches").select("id, name, code, country_id").eq("id", params.mainBranchId).is("deleted_at", null).maybeSingle())
         : Promise.resolve({ data: null, error: null }),
       params.branchId
-        ? db.from("city_branches").select("id, name, code, country_id, country_branch_id").eq("id", params.branchId).eq("country_id", params.countryId).is("deleted_at", null).maybeSingle()
+        ? (targetCountryId
+            ? db.from("city_branches").select("id, name, code, country_id, country_branch_id").eq("id", params.branchId).eq("country_id", targetCountryId).is("deleted_at", null).maybeSingle()
+            : db.from("city_branches").select("id, name, code, country_id, country_branch_id").eq("id", params.branchId).is("deleted_at", null).maybeSingle())
         : Promise.resolve({ data: null, error: null })
     ]);
     let country = requireQuery(countryResult, "Country lookup");
@@ -671,14 +682,17 @@ export async function GET(request: NextRequest) {
     if (params.scopeMode === "city-branch" && params.mainBranchId && cityBranch?.country_branch_id !== params.mainBranchId) {
       throw new Error("Selected city branch does not belong to the selected main branch.");
     }
-    [country] = await localizeRecordNames([country], "countries", "name", params.lang);
+    if (targetCountryId) {
+      [country] = await localizeRecordNames([country], "countries", "name", params.lang);
+    }
     if (mainBranch) [mainBranch] = await localizeRecordNames([mainBranch], "country_branches", "name", params.lang);
     if (cityBranch) [cityBranch] = await localizeRecordNames([cityBranch], "city_branches", "name", params.lang);
 
     const applyOrderScope = (query: any, dateField: string) => {
-      query = query.eq("country_id", params.countryId).is("deleted_at", null);
-      if (params.scopeMode === "main-branch") query = query.eq("country_branch_id", params.mainBranchId).is("city_branch_id", null);
-      if (params.scopeMode === "city-branch") query = query.eq("city_branch_id", params.branchId);
+      query = query.is("deleted_at", null);
+      if (targetCountryId) query = query.eq("country_id", targetCountryId);
+      if (params.scopeMode === "main-branch" && params.mainBranchId) query = query.eq("country_branch_id", params.mainBranchId).is("city_branch_id", null);
+      if (params.scopeMode === "city-branch" && params.branchId) query = query.eq("city_branch_id", params.branchId);
       if (params.fromDate) query = query.gte(dateField, params.fromDate);
       if (params.toDate) query = query.lte(dateField, params.toDate);
       if (params.userId) query = query.eq("created_by", params.userId);
@@ -692,20 +706,12 @@ export async function GET(request: NextRequest) {
     let sourceTables: string[] = [];
 
     if (params.reportType === "edit-history") {
-      const db = await createServerSupabaseClient();
-      const [countryResult, mainBranchesResult, cityBranchesResult, assignmentsResult] = await Promise.all([
-        db.from("countries").select("id, name, currency_code").eq("id", params.countryId).is("deleted_at", null).maybeSingle(),
-        db.from("country_branches").select("id, name, code, country_id").eq("country_id", params.countryId).is("deleted_at", null).order("name"),
-        db.from("city_branches").select("id, name, code, country_id, country_branch_id").eq("country_id", params.countryId).is("deleted_at", null).order("name"),
-        db.from("user_role_assignments").select("user_id, role, country_id, country_branch_id, city_branch_id").eq("country_id", params.countryId).eq("is_active", true).is("deleted_at", null)
-      ]);
-      const country = requireQuery(countryResult, "Edit history country query");
-      if (!country) throw new Error("Selected country was not found or is unavailable.");
-      let historyRows = requireQuery(await db.from("record_change_history")
+      let historyQuery = db.from("record_change_history")
         .select("id, record_table, record_id, country_id, city_branch_id, action, actor_id, approval_request_id, before_data, after_data, created_at")
-        .eq("country_id", params.countryId)
         .order("created_at", { ascending: false })
-        .limit(params.limit), "Edit history query") ?? [];
+        .limit(params.limit);
+      if (targetCountryId) historyQuery = historyQuery.eq("country_id", targetCountryId);
+      let historyRows = requireQuery(await historyQuery, "Edit history query") ?? [];
       if (params.userId) {
         historyRows = historyRows.filter((row: any) => row.actor_id === params.userId);
       }
@@ -715,14 +721,21 @@ export async function GET(request: NextRequest) {
       if (params.toDate) {
         historyRows = historyRows.filter((row: any) => String(row.created_at).slice(0, 10) <= params.toDate);
       }
-      const localizedCountry = await localizeRecordNames([country], "countries", "name", params.lang);
+      let mainBranchesQ = db.from("country_branches").select("id, name, code, country_id").is("deleted_at", null).order("name");
+      if (targetCountryId) mainBranchesQ = mainBranchesQ.eq("country_id", targetCountryId);
+      let cityBranchesQ = db.from("city_branches").select("id, name, code, country_id, country_branch_id").is("deleted_at", null).order("name");
+      if (targetCountryId) cityBranchesQ = cityBranchesQ.eq("country_id", targetCountryId);
+      let assignmentsQ = db.from("user_role_assignments").select("user_id, role, country_id, country_branch_id, city_branch_id").eq("is_active", true).is("deleted_at", null);
+      if (targetCountryId) assignmentsQ = assignmentsQ.eq("country_id", targetCountryId);
+
+      const [mainBranchesResult, cityBranchesResult, assignmentsResult] = await Promise.all([mainBranchesQ, cityBranchesQ, assignmentsQ]);
       const localizedMainBranches = await localizeRecordNames<any>(requireQuery(mainBranchesResult, "Edit history main branches query") ?? [], "country_branches", "name", params.lang);
       const localizedCityBranches = await localizeRecordNames<any>(requireQuery(cityBranchesResult, "Edit history city branches query") ?? [], "city_branches", "name", params.lang);
       const mainBranchMap = new Map((localizedMainBranches as any[]).map((row) => [row.id, row]));
       const cityBranchMap = new Map((localizedCityBranches as any[]).map((row) => [row.id, row]));
       const filteredHistoryRows = historyRows.filter((row: any) => {
         const snapshot = asObject(row.after_data) ?? asObject(row.before_data) ?? {};
-        const scopeSnapshot = extractBranchNames(snapshot, new Map([[params.countryId, localizedCountry[0].name]]), mainBranchMap, cityBranchMap);
+        const scopeSnapshot = extractBranchNames(snapshot, new Map([[targetCountryId || "all", country.name]]), mainBranchMap, cityBranchMap);
         if (params.scopeMode === "main-branch") {
           return scopeSnapshot.mainBranchId === params.mainBranchId && !scopeSnapshot.cityBranchId;
         }
@@ -739,7 +752,7 @@ export async function GET(request: NextRequest) {
         session,
         scopeLevel: scope.level,
         scopeLabel: scope.scopeLabel,
-        countryName: localizedCountry[0].name,
+        countryName: country.name,
         mainBranches: localizedMainBranches as Array<{ id: string; name: string; code?: string | null }>,
         cityBranches: localizedCityBranches as Array<{ id: string; name: string; code?: string | null; country_branch_id?: string | null }>,
         profiles: profiles as Array<{ id: string; full_name?: string | null; user_code?: string | null }>,
@@ -788,25 +801,26 @@ export async function GET(request: NextRequest) {
 
     if (params.reportType === "payments") {
       let purchaseQ = db.from("purchase_order_payments").select("id, amount, currency_code, entry_date, kind, narration, reference_no, status, created_at, created_by, journal_posted_at, roznamcha_entry_id, purchase_order_id, purchase_orders!inner(purchase_order_no, country_id, country_branch_id, city_branch_id, form_data)").is("deleted_at", null).order("entry_date", { ascending: false });
-      purchaseQ = purchaseQ.eq("purchase_orders.country_id", params.countryId);
-      if (params.scopeMode === "main-branch") purchaseQ = purchaseQ.eq("purchase_orders.country_branch_id", params.mainBranchId).is("purchase_orders.city_branch_id", null);
-      if (params.scopeMode === "city-branch") purchaseQ = purchaseQ.eq("purchase_orders.city_branch_id", params.branchId);
+      if (targetCountryId) purchaseQ = purchaseQ.eq("purchase_orders.country_id", targetCountryId);
+      if (params.scopeMode === "main-branch" && params.mainBranchId) purchaseQ = purchaseQ.eq("purchase_orders.country_branch_id", params.mainBranchId).is("purchase_orders.city_branch_id", null);
+      if (params.scopeMode === "city-branch" && params.branchId) purchaseQ = purchaseQ.eq("purchase_orders.city_branch_id", params.branchId);
       if (params.fromDate) purchaseQ = purchaseQ.gte("entry_date", params.fromDate);
       if (params.toDate) purchaseQ = purchaseQ.lte("entry_date", params.toDate);
       if (params.userId) purchaseQ = purchaseQ.eq("created_by", params.userId);
       let salesQ = db.from("sales_order_payments").select("id, amount, currency_code, payment_date, payment_kind, remarks, status, created_at, created_by, roznamcha_entry_id, sales_order_id, sales_orders!inner(sales_order_no, country_id, country_branch_id, city_branch_id, form_data)").is("deleted_at", null).order("payment_date", { ascending: false });
-      salesQ = salesQ.eq("sales_orders.country_id", params.countryId);
-      if (params.scopeMode === "main-branch") salesQ = salesQ.eq("sales_orders.country_branch_id", params.mainBranchId).is("sales_orders.city_branch_id", null);
-      if (params.scopeMode === "city-branch") salesQ = salesQ.eq("sales_orders.city_branch_id", params.branchId);
+      if (targetCountryId) salesQ = salesQ.eq("sales_orders.country_id", targetCountryId);
+      if (params.scopeMode === "main-branch" && params.mainBranchId) salesQ = salesQ.eq("sales_orders.country_branch_id", params.mainBranchId).is("sales_orders.city_branch_id", null);
+      if (params.scopeMode === "city-branch" && params.branchId) salesQ = salesQ.eq("sales_orders.city_branch_id", params.branchId);
       if (params.fromDate) salesQ = salesQ.gte("payment_date", params.fromDate);
       if (params.toDate) salesQ = salesQ.lte("payment_date", params.toDate);
       if (params.userId) salesQ = salesQ.eq("created_by", params.userId);
       const [purchasePayments, salesPayments] = await Promise.all([purchaseQ.limit(params.limit), salesQ.limit(params.limit)]);
       const pp = requireQuery(purchasePayments, "Purchase payments query") ?? [];
       const sp = requireQuery(salesPayments, "Sales payments query") ?? [];
-      let rozQ = db.from("roznamcha_entries").select("id, entry_date, journal_no, voucher_no, reference_no, source_reference_no, source_module, source_transaction_type, entry_category, narration, status, posted_at, journal_entry_id, created_at, created_by, country_id, country_branch_id, city_branch_id, roznamcha_lines(debit, credit, currency, payment_entry_type, description)").eq("country_id", params.countryId).is("deleted_at", null).order("entry_date", { ascending: false });
-      if (params.scopeMode === "main-branch") rozQ = rozQ.eq("country_branch_id", params.mainBranchId).is("city_branch_id", null);
-      if (params.scopeMode === "city-branch") rozQ = rozQ.eq("city_branch_id", params.branchId);
+      let rozQ = db.from("roznamcha_entries").select("id, entry_date, journal_no, voucher_no, reference_no, source_reference_no, source_module, source_transaction_type, entry_category, narration, status, posted_at, journal_entry_id, created_at, created_by, country_id, country_branch_id, city_branch_id, roznamcha_lines(debit, credit, currency, payment_entry_type, description)").is("deleted_at", null).order("entry_date", { ascending: false });
+      if (targetCountryId) rozQ = rozQ.eq("country_id", targetCountryId);
+      if (params.scopeMode === "main-branch" && params.mainBranchId) rozQ = rozQ.eq("country_branch_id", params.mainBranchId).is("city_branch_id", null);
+      if (params.scopeMode === "city-branch" && params.branchId) rozQ = rozQ.eq("city_branch_id", params.branchId);
       if (params.fromDate) rozQ = rozQ.gte("entry_date", params.fromDate);
       if (params.toDate) rozQ = rozQ.lte("entry_date", params.toDate);
       if (params.userId) rozQ = rozQ.eq("created_by", params.userId);
@@ -831,18 +845,19 @@ export async function GET(request: NextRequest) {
     }
 
     if (params.reportType === "ledger") {
-      let q = db.from("ledger_posting_batches").select("id, entry_date, reference_no, narration, status, approval_status, approved_at, approved_by, created_at, created_by, scope, country_id, country_branch_id, city_branch_id, branch_name_snapshot, transaction_type, ledger_posting_lines(id, ledger_id, ledger_name_snapshot, account_number, description, debit, credit, currency, usd_amount, user_name_snapshot)").eq("country_id", params.countryId).is("deleted_at", null).order("entry_date", { ascending: false });
-      if (params.scopeMode === "main-branch") q = q.eq("country_branch_id", params.mainBranchId).is("city_branch_id", null);
-      if (params.scopeMode === "city-branch") q = q.eq("city_branch_id", params.branchId);
+      let q = db.from("ledger_posting_batches").select("id, entry_date, reference_no, narration, status, approval_status, approved_at, approved_by, created_at, created_by, scope, country_id, country_branch_id, city_branch_id, branch_name_snapshot, transaction_type, ledger_posting_lines(id, ledger_id, ledger_name_snapshot, account_number, description, debit, credit, currency, usd_amount, user_name_snapshot)").is("deleted_at", null).order("entry_date", { ascending: false });
+      if (targetCountryId) q = q.eq("country_id", targetCountryId);
+      if (params.scopeMode === "main-branch" && params.mainBranchId) q = q.eq("country_branch_id", params.mainBranchId).is("city_branch_id", null);
+      if (params.scopeMode === "city-branch" && params.branchId) q = q.eq("city_branch_id", params.branchId);
       if (params.fromDate) q = q.gte("entry_date", params.fromDate);
       if (params.toDate) q = q.lte("entry_date", params.toDate);
       if (params.userId) q = q.eq("created_by", params.userId);
       const batches = requireQuery(await q.limit(params.limit), "Ledger report query") ?? [];
       let rozQ = db.from("roznamcha_lines").select("id, roznamcha_entry_id, ledger_id, account_number, description, debit, credit, currency, usd_amount, ledgers(code, name), roznamcha_entries!inner(entry_date, voucher_no, narration, status, posted_at, created_at, created_by, country_id, country_branch_id, city_branch_id, deleted_at)")
-        .eq("roznamcha_entries.country_id", params.countryId)
         .is("roznamcha_entries.deleted_at", null);
-      if (params.scopeMode === "main-branch") rozQ = rozQ.eq("roznamcha_entries.country_branch_id", params.mainBranchId).is("roznamcha_entries.city_branch_id", null);
-      if (params.scopeMode === "city-branch") rozQ = rozQ.eq("roznamcha_entries.city_branch_id", params.branchId);
+      if (targetCountryId) rozQ = rozQ.eq("roznamcha_entries.country_id", targetCountryId);
+      if (params.scopeMode === "main-branch" && params.mainBranchId) rozQ = rozQ.eq("roznamcha_entries.country_branch_id", params.mainBranchId).is("roznamcha_entries.city_branch_id", null);
+      if (params.scopeMode === "city-branch" && params.branchId) rozQ = rozQ.eq("roznamcha_entries.city_branch_id", params.branchId);
       if (params.fromDate) rozQ = rozQ.gte("roznamcha_entries.entry_date", params.fromDate);
       if (params.toDate) rozQ = rozQ.lte("roznamcha_entries.entry_date", params.toDate);
       if (params.userId) rozQ = rozQ.eq("roznamcha_entries.created_by", params.userId);
@@ -877,9 +892,10 @@ export async function GET(request: NextRequest) {
     }
 
     if (params.reportType === "user-activity") {
-      let q = db.from("erp_activity_events").select("id, created_at, actor_id, action, resource, record_id, record_table, metadata, ip_address, user_agent, country_id, country_branch_id, city_branch_id").eq("country_id", params.countryId).order("created_at", { ascending: false });
-      if (params.scopeMode === "main-branch") q = q.eq("country_branch_id", params.mainBranchId).is("city_branch_id", null);
-      if (params.scopeMode === "city-branch") q = q.eq("city_branch_id", params.branchId);
+      let q = db.from("erp_activity_events").select("id, created_at, actor_id, action, resource, record_id, record_table, metadata, ip_address, user_agent, country_id, country_branch_id, city_branch_id").order("created_at", { ascending: false });
+      if (targetCountryId) q = q.eq("country_id", targetCountryId);
+      if (params.scopeMode === "main-branch" && params.mainBranchId) q = q.eq("country_branch_id", params.mainBranchId).is("city_branch_id", null);
+      if (params.scopeMode === "city-branch" && params.branchId) q = q.eq("city_branch_id", params.branchId);
       if (params.fromDate) q = q.gte("created_at", `${params.fromDate}T00:00:00`);
       if (params.toDate) q = q.lte("created_at", `${params.toDate}T23:59:59.999`);
       if (params.userId) q = q.eq("actor_id", params.userId);
@@ -889,23 +905,25 @@ export async function GET(request: NextRequest) {
     }
 
     if (params.reportType === "employee") {
-      const employeeResult = await db.rpc("list_employees_with_relations", { p_country_id: params.countryId, p_branch_id: params.scopeMode === "city-branch" ? params.branchId : null, p_category: null, p_status: null });
+      const employeeResult = await db.rpc("list_employees_with_relations", { p_country_id: targetCountryId || null, p_branch_id: params.scopeMode === "city-branch" ? params.branchId : null, p_category: null, p_status: null });
       let employees = requireQuery(employeeResult, "Employee report query") ?? [];
-      if (params.scopeMode === "main-branch") employees = employees.filter((r: any) => r.country_branch_id === params.mainBranchId && !r.city_branch_id);
+      if (params.scopeMode === "main-branch" && params.mainBranchId) employees = employees.filter((r: any) => r.country_branch_id === params.mainBranchId && !r.city_branch_id);
       rows = employees.filter((r: any) => currencyMatches(r.salary_currency)).map((r: any) => ({ id: r.id, reference: r.employee_code, employee: r.person?.customer_name || r.full_name || r.employee_code, department: r.department || "—", designation: r.designation || "—", employmentType: r.employment_type || "—", joiningDate: r.joining_date, basicSalary: money(r.basic_salary), allowance: money(r.allowance) + money(r.other_allowance), deduction: money(r.deduction), netSalary: money(r.net_salary), currency: r.salary_currency, branch: r.city_branch?.name || r.country_branch?.name || "—", status: r.status, user: r.created_by || "—", createdAt: r.created_at, sourceTable: "employees" }));
       sourceTables = ["employees", "employee_salaries_due", "employee_advances_loans"];
     }
 
     if (params.reportType === "branch") {
       if (params.scopeMode !== "city-branch") {
-        let q = db.from("country_branches").select("id, name, code, status, local_currency, country_id, created_at, created_by, is_main").eq("country_id", params.countryId).is("deleted_at", null).order("name");
-        if (params.scopeMode === "main-branch") q = q.eq("id", params.mainBranchId);
+        let q = db.from("country_branches").select("id, name, code, status, local_currency, country_id, created_at, created_by, is_main").is("deleted_at", null).order("name");
+        if (targetCountryId) q = q.eq("country_id", targetCountryId);
+        if (params.scopeMode === "main-branch" && params.mainBranchId) q = q.eq("id", params.mainBranchId);
         const mains = await localizeRecordNames<any>(requireQuery(await q, "Main branch report query") ?? [], "country_branches", "name", params.lang);
         rows.push(...mains.map((r: any) => ({ id: r.id, reference: r.code, branch: r.name, branchType: "main", country: country.name, city: "—", currency: r.local_currency, status: r.status, user: r.created_by || "—", createdAt: r.created_at, sourceTable: "country_branches" })));
       }
       if (params.scopeMode !== "main-branch") {
-        let q = db.from("city_branches").select("id, name, code, status, local_currency, country_id, country_branch_id, city_name, created_at, created_by").eq("country_id", params.countryId).is("deleted_at", null).order("name");
-        if (params.scopeMode === "city-branch") q = q.eq("id", params.branchId);
+        let q = db.from("city_branches").select("id, name, code, status, local_currency, country_id, country_branch_id, city_name, created_at, created_by").is("deleted_at", null).order("name");
+        if (targetCountryId) q = q.eq("country_id", targetCountryId);
+        if (params.scopeMode === "city-branch" && params.branchId) q = q.eq("id", params.branchId);
         const cities = await localizeRecordNames<any>(requireQuery(await q, "City branch report query") ?? [], "city_branches", "name", params.lang);
         rows.push(...cities.map((r: any) => ({ id: r.id, reference: r.code, branch: r.name, branchType: "city", country: country.name, city: r.city_name, currency: r.local_currency, status: r.status, user: r.created_by || "—", createdAt: r.created_at, sourceTable: "city_branches" })));
       }
@@ -951,7 +969,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return apiOk({ reportType: params.reportType, data: rows, summary, history, sourceTables: [...new Set(sourceTables)], generatedAt: new Date().toISOString(), generatedBy: { id: session.userId, name: session.fullName || session.email || session.userId }, applied: { countryId: params.countryId, country: country.name, scopeMode: params.scopeMode, mainBranchId: params.mainBranchId || null, mainBranch: mainBranch?.name || null, branchId: params.branchId || null, branch: cityBranch?.name || null, project: params.project && params.project !== "all" ? params.project : null, userId: params.userId || null, fromDate: params.fromDate || null, toDate: params.toDate || null, currency: params.currency || "all", year: params.fromDate ? params.fromDate.slice(0, 4) : null }, scope: { level: scope.level, label: scope.scopeLabel } });
+    return apiOk({ reportType: params.reportType, data: rows, summary, history, sourceTables: [...new Set(sourceTables)], generatedAt: new Date().toISOString(), generatedBy: { id: session.userId, name: session.fullName || session.email || session.userId }, applied: { countryId: targetCountryId, country: country.name, scopeMode: params.scopeMode, mainBranchId: params.mainBranchId || null, mainBranch: mainBranch?.name || null, branchId: params.branchId || null, branch: cityBranch?.name || null, project: params.project && params.project !== "all" ? params.project : null, userId: params.userId || null, fromDate: params.fromDate || null, toDate: params.toDate || null, currency: params.currency || "all", year: params.fromDate ? params.fromDate.slice(0, 4) : null }, scope: { level: scope.level, label: scope.scopeLabel } });
   } catch (error) {
     return handleApiError(error);
   }

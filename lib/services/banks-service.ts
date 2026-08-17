@@ -46,7 +46,7 @@ export class BanksService {
       action: "create",
       actorId: actorId ?? null,
       countryId: current?.country_id ?? input.countryId ?? null,
-      cityBranchId: current?.city_id ?? input.cityId ?? null,
+      cityBranchId: null,
       beforeData: null,
       afterData: current ?? null
     });
@@ -63,7 +63,7 @@ export class BanksService {
       action: "update",
       actorId: actorId ?? null,
       countryId: after?.country_id ?? before?.country_id ?? null,
-      cityBranchId: after?.city_id ?? before?.city_id ?? null,
+      cityBranchId: null,
       beforeData: before ?? null,
       afterData: after ?? null
     });
@@ -78,7 +78,7 @@ export class BanksService {
       action: "delete",
       actorId: null,
       countryId: before?.country_id ?? null,
-      cityBranchId: before?.city_id ?? null,
+      cityBranchId: null,
       beforeData: before ?? null,
       afterData: { deleted_at: new Date().toISOString() }
     });

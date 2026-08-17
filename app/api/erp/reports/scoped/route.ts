@@ -673,7 +673,15 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        data = [];
+        data = [
+          { serial: "FS-01", metric: "Total Sales Revenue", amount: totalSales, type: "Income", status: "confirmed" },
+          { serial: "FS-02", metric: "Total Purchases & Direct Costs", amount: totalPurchase, type: "Expense", status: "confirmed" },
+          { serial: "FS-03", metric: "Gross / Net Operating Balance", amount: totalSales - totalPurchase, type: totalSales >= totalPurchase ? "Surplus" : "Deficit", status: "confirmed" },
+          { serial: "FS-04", metric: "Total Inward Cash / Debit Entries", amount: totalDebit, type: "Debit Flow", status: "posted" },
+          { serial: "FS-05", metric: "Total Outward Cash / Credit Entries", amount: totalCredit, type: "Credit Flow", status: "posted" },
+          { serial: "FS-06", metric: "Net Roznamcha Cash Position", amount: totalCredit - totalDebit, type: "Net Cash", status: "posted" },
+          { serial: "FS-07", metric: "Outstanding Supplier / Order Payables", amount: totalRemaining, type: "Liability", status: "pending" }
+        ];
         summary = {
           totalPurchase,
           totalSales,

@@ -1,4 +1,4 @@
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 
 export type PortRow = {
@@ -37,7 +37,7 @@ export class LoadingPortsRepository {
     limit?: number;
     all?: boolean;
   }) {
-    const supabase = createSupabaseAdminClient() as any;
+    const supabase = (await createApiSupabaseClient()) as any;
     const limit = Math.min(Math.max(input.limit ?? 50, 1), 250);
 
     let query = supabase
@@ -82,7 +82,7 @@ export class LoadingPortsRepository {
   }
 
   async getById(id: string) {
-    const supabase = createSupabaseAdminClient() as any;
+    const supabase = (await createApiSupabaseClient()) as any;
     const { data, error } = await supabase
       .from("ports")
       .select(`
@@ -105,7 +105,7 @@ export class LoadingPortsRepository {
   }
 
   async create(input: PortInput, actorId?: string | null) {
-    const supabase = createSupabaseAdminClient() as any;
+    const supabase = (await createApiSupabaseClient()) as any;
     const { data, error } = await supabase
       .from("ports")
       .insert({
@@ -124,7 +124,7 @@ export class LoadingPortsRepository {
   }
 
   async update(id: string, input: Partial<PortInput>, _actorId?: string | null) {
-    const supabase = createSupabaseAdminClient() as any;
+    const supabase = (await createApiSupabaseClient()) as any;
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if ("portName" in input) patch.port_name = input.portName;
     if ("countryId" in input) patch.country_id = input.countryId;
@@ -144,7 +144,7 @@ export class LoadingPortsRepository {
   }
 
   async softDelete(id: string) {
-    const supabase = createSupabaseAdminClient() as any;
+    const supabase = (await createApiSupabaseClient()) as any;
     const { error } = await supabase
       .from("ports")
       .update({
@@ -166,7 +166,7 @@ export class ReceivedPortsRepository {
     limit?: number;
     all?: boolean;
   }) {
-    const supabase = createSupabaseAdminClient() as any;
+    const supabase = (await createApiSupabaseClient()) as any;
     const limit = Math.min(Math.max(input.limit ?? 50, 1), 250);
 
     let query = supabase
@@ -211,7 +211,7 @@ export class ReceivedPortsRepository {
   }
 
   async getById(id: string) {
-    const supabase = createSupabaseAdminClient() as any;
+    const supabase = (await createApiSupabaseClient()) as any;
     const { data, error } = await supabase
       .from("ports")
       .select(`
@@ -234,7 +234,7 @@ export class ReceivedPortsRepository {
   }
 
   async create(input: PortInput, actorId?: string | null) {
-    const supabase = createSupabaseAdminClient() as any;
+    const supabase = (await createApiSupabaseClient()) as any;
     const { data, error } = await supabase
       .from("ports")
       .insert({
@@ -253,7 +253,7 @@ export class ReceivedPortsRepository {
   }
 
   async update(id: string, input: Partial<PortInput>, _actorId?: string | null) {
-    const supabase = createSupabaseAdminClient() as any;
+    const supabase = (await createApiSupabaseClient()) as any;
     const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
     if ("portName" in input) patch.port_name = input.portName;
     if ("countryId" in input) patch.country_id = input.countryId;
@@ -273,7 +273,7 @@ export class ReceivedPortsRepository {
   }
 
   async softDelete(id: string) {
-    const supabase = createSupabaseAdminClient() as any;
+    const supabase = (await createApiSupabaseClient()) as any;
     const { error } = await supabase
       .from("ports")
       .update({

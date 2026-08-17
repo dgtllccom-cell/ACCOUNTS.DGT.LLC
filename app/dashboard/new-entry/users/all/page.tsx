@@ -78,8 +78,15 @@ export default function SuperAdminAllUsersDirectoryPage() {
     try {
       const res = await fetch("/api/erp/users/journal-report?limit=1000", { cache: "no-store" });
       const json = await res.json();
-      if (json.ok && Array.isArray(json.data)) {
-        const mapped: UserDirectoryItem[] = json.data.map((u: any, idx: number) => {
+      if (json.ok) {
+        const rawList: any[] = Array.isArray(json.data)
+          ? json.data
+          : Array.isArray(json.data?.rows)
+            ? json.data.rows
+            : Array.isArray(json.data?.users)
+              ? json.data.users
+              : [];
+        const mapped: UserDirectoryItem[] = rawList.map((u: any, idx: number) => {
           const userCode = u.userCode || `USR-${String(idx + 1).padStart(4, "0")}`;
           // Generate initial access password key format for staff onboarding
           const passwordKey = u.rawPassword || `Dgt@${u.userCode || userCode.replace(/[^A-Za-z0-9]/g, "")}#2026`;

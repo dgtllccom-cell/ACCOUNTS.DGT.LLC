@@ -6,6 +6,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
+import { getSupabasePublicKey, getSupabaseSecretKey } from "@/lib/supabase/config";
 
 function isUuid(value: string | null | undefined) {
   return Boolean(
@@ -37,6 +38,11 @@ function sequencePrefix(value: string | null | undefined, fallback: string, leng
 function isMissingPrivilegedSupabaseKey(error: unknown) {
   const message = error instanceof Error ? error.message : String(error ?? "");
   return message.includes("SUPABASE_SECRET_KEY") || message.includes("SUPABASE_SERVICE_ROLE_KEY");
+}
+
+function hasRealServiceRoleKey() {
+  const secretKey = getSupabaseSecretKey();
+  return Boolean(secretKey && !/^sb_(publishable|anon)_/i.test(secretKey) && secretKey !== getSupabasePublicKey());
 }
 
 async function buildAccountListViaLocalPg(
@@ -312,15 +318,11 @@ export async function GET(request: NextRequest) {
       ...scope
     });
 
-    let supabase;
-    try {
-      supabase = await createApiSupabaseClient();
-    } catch (error) {
-      if (isMissingPrivilegedSupabaseKey(error)) {
-        return apiOk(await buildAccountListViaLocalPg(session, scope, limit));
-      }
-      throw error;
+    if (!hasRealServiceRoleKey()) {
+      return apiOk(await buildAccountListViaLocalPg(session, scope, limit));
     }
+
+    let supabase = await createApiSupabaseClient();
     let query: any = supabase
       .from("enterprise_accounts")
       .select(
@@ -358,6 +360,10 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       throw new Error(error.message);
+    }
+
+    if ((!data || data.length === 0) && !hasRealServiceRoleKey()) {
+      return apiOk(await buildAccountListViaLocalPg(session, scope, limit));
     }
 
     return apiOk({
