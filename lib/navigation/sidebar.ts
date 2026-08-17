@@ -799,6 +799,12 @@ export const sidebarTree: SidebarNode[] = [
         roles: ["super_admin", "agent_user"]
       },
       {
+        key: "clearing-transit-entry",
+        labelKey: "nav.transit_entry",
+        href: "/dashboard/clearing-agent/transit-entry" as Route,
+        roles: ["super_admin", "agent_user", "country_admin", "main_branch_admin"]
+      },
+      {
         key: "clearing-payment-bill",
         labelKey: "nav.payment_bill_entry",
         href: "/dashboard/clearing-agent/payment-bill-entry" as Route,
