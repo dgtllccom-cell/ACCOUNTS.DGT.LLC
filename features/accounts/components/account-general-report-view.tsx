@@ -428,6 +428,13 @@ function AccountRowActionsMenu({
 
     function onKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") setOpen(false);
+    }
+    function onMouseDown(event: MouseEvent) {
+      if (rootRef.current && !rootRef.current.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("mousedown", onMouseDown);
     return () => {
@@ -1911,16 +1918,6 @@ export function AccountGeneralReportView({
                         </div>
                         <div className="flex justify-between items-center border-b border-blue-100 dark:border-blue-900/30 pb-1">
                           <span className="text-emerald-600 font-bold uppercase text-[9px]">{tr("TOTAL CREDIT")}</span>
-                          <span className="font-mono font-bold text-[11px] text-emerald-700 dark:text-emerald-400">{fmtNumber(selectedRow.creditTotal)} {selectedRow.currency}</span>
-                        </div>
-                        <div className="flex justify-between items-center pt-1">
-                          <span className="text-blue-700 dark:text-blue-400 font-black uppercase text-[10px]">Current Balance</span>
-                          <span className={cn("font-mono font-black text-sm", rowTone(selectedRow.currentBalance))}>{fmtNumber(selectedRow.currentBalance)} {selectedRow.currency}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-wrap gap-2 pt-2">
                           <span className="font-mono font-bold text-[11px] text-emerald-700 dark:text-emerald-400">{fmtNumber(selectedRow.creditTotal)} {selectedRow.currency}</span>
                         </div>
                         <div className="flex justify-between items-center pt-1">
