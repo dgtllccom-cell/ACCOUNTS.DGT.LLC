@@ -27,7 +27,8 @@ import {
   AlertCircle
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useLanguage } from "@/lib/i18n/use-language";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { getLanguageDirection } from "@/lib/i18n/languages";
 import { t, type UiKey } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
 
@@ -53,7 +54,8 @@ interface UserDirectoryItem {
 }
 
 export default function SuperAdminAllUsersDirectoryPage() {
-  const { lang, isRTL } = useLanguage();
+  const lang = useActiveLanguage();
+  const isRTL = getLanguageDirection(lang) === "rtl";
   const [users, setUsers] = useState<UserDirectoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

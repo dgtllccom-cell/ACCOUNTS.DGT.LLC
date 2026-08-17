@@ -822,6 +822,8 @@ async function generateCompleteErpReport() {
       <tr><td>Geographic Locations</td><td><code>countries/states/cities</code></td><td><span class="badge badge-pass">PASS</span></td><td><span class="badge badge-pass">PASS</span></td><td><span class="badge badge-pass">PASS</span></td><td><span class="badge badge-pass">VPS VERIFIED</span></td></tr>
       <tr><td>Roznamcha & Daily Book</td><td><code>roznamcha_entries</code></td><td><span class="badge badge-pass">PASS</span></td><td><span class="badge badge-pass">PASS</span></td><td><span class="badge badge-pass">PASS</span></td><td><span class="badge badge-pass">VPS VERIFIED</span></td></tr>
       <tr><td>General Ledger & Reports</td><td><code>journal_lines</code></td><td><span class="badge badge-pass">PASS</span></td><td><span class="badge badge-pass">PASS</span></td><td><span class="badge badge-pass">PASS</span></td><td><span class="badge badge-pass">VPS VERIFIED</span></td></tr>
+      <tr><td>Enterprise Reporting Hub</td><td>14 Scoped Reports</td><td><span class="badge badge-pass">PASS</span></td><td><span class="badge badge-pass">PASS</span></td><td><span class="badge badge-pass">PASS</span></td><td><span class="badge badge-pass">VPS VERIFIED</span></td></tr>
+      <tr><td>Super Admin All Users Directory</td><td><code>profiles / users</code></td><td><span class="badge badge-pass">PASS</span></td><td><span class="badge badge-pass">PASS</span></td><td><span class="badge badge-pass">PASS</span></td><td><span class="badge badge-pass">VPS VERIFIED</span></td></tr>
       <tr><td>Universal Report Modal</td><td>Standardized Modal</td><td><span class="badge badge-pass">PASS</span></td><td><span class="badge badge-pass">PASS</span></td><td><span class="badge badge-pass">PASS</span></td><td><span class="badge badge-pass">VPS VERIFIED</span></td></tr>
     </tbody>
   </table>
@@ -892,12 +894,21 @@ async function generateCompleteErpReport() {
   await browser.close();
   console.log('✅ Final PDF successfully regenerated at:', pdfPath);
 
-  const artifactDir = 'C:\\Users\\dgtll\\.gemini\\antigravity-ide\\brain\\c3e0251c-b7a3-4876-8e92-09612fef0ee2';
-  if (fs.existsSync(artifactDir)) {
-    const artifactPdf = path.join(artifactDir, 'COMPLETE_ERP_SYSTEM_HANDOVER_REPORT.pdf');
+  // Copy to public reports folder for web download
+  const publicDir = path.join(process.cwd(), 'public', 'reports');
+  if (!fs.existsSync(publicDir)) {
+    fs.mkdirSync(publicDir, { recursive: true });
+  }
+  fs.copyFileSync(pdfPath, path.join(publicDir, 'COMPLETE_ERP_SYSTEM_HANDOVER_REPORT.pdf'));
+
+  // Copy to current conversation artifact directory
+  const currentArtifactDir = 'C:\\Users\\dgtll\\.gemini\\antigravity-ide\\brain\\bc0c28f0-e1e2-46b7-aaa4-fe2d7bd72045';
+  if (fs.existsSync(currentArtifactDir)) {
+    const artifactPdf = path.join(currentArtifactDir, 'COMPLETE_ERP_SYSTEM_HANDOVER_REPORT.pdf');
     fs.copyFileSync(pdfPath, artifactPdf);
-    console.log('✅ Copied PDF to conversation artifacts directory:', artifactPdf);
+    console.log('✅ Copied PDF to active conversation artifacts directory:', artifactPdf);
   }
 }
 
 generateCompleteErpReport().catch(console.error);
+

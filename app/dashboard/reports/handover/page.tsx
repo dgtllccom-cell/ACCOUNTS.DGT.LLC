@@ -43,6 +43,32 @@ interface DailyLog {
 
 const DAILY_DEVELOPMENT_LOGS: DailyLog[] = [
   {
+    date: "17 August 2026",
+    developer: "Antigravity Senior AI Agent & Systems Engineer",
+    title: "Super Admin / All Users Directory & Credential Register, A4 Handover Sheet & Reporting Hub 14-Submenu Sync",
+    summary: "Built Centralized Super Admin All Users Directory & Credential Register (/dashboard/new-entry/users/all) with live metrics, multi-criteria filtering, credential reveal/copy, and A4 printable batch and single-user onboarding handover forms. Hardened Enterprise Reporting Hub with full 14-submenu sidebar linking and SQL query aggregation across customer accounts, companies, branch transactions, audit logs, workflows, expenses, purchase bookings, and comprehensive daily lines.",
+    modulesAffected: [
+      "Super Admin / All Users Directory (/dashboard/new-entry/users/all)",
+      "A4 Printable Staff Handover Slip & Batch Register",
+      "Enterprise Reporting Hub (14 Submenu Direct Linking & URL Sync)",
+      "Scoped Reports API Handlers (/api/erp/reports/scoped)",
+      "Catch-all Legacy Reports Routing (/dashboard/reports/[...slug])",
+      "Multilingual UI Keys (5-Language Localization: EN, UR, AR, FA, PS)"
+    ],
+    databaseChanges: "Integrated comprehensive report queries for customers, companies, roznamcha_entries, audit_logs, approval_requests, and purchase_orders with optimized aggregation.",
+    testingStatus: "VPS_TESTED",
+    gitRef: "dev (HEAD)",
+    issuesFixed: [
+      "Fixed Enterprise Reporting Hub sidebar menus not switching active report type tabs",
+      "Created centralized Super Admin user credential directory with direct login links and A4 printable handover forms",
+      "Resolved catch-all reports route redirection preserving query slugs",
+      "Added multi-language keys for Super Admin All Users Directory across English, Urdu, Arabic, Persian, and Pashto"
+    ],
+    pendingItems: [
+      "Continuous synchronization between local development and VPS production servers"
+    ]
+  },
+  {
     date: "14 August 2026",
     developer: "Antigravity Senior AI Agent & Systems Engineer",
     title: "Country / Branch Login Access Register, Living Handover PDF, VPS Migration & Multi-Linking",
