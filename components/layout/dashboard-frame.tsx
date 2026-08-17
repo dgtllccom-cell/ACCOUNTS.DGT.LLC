@@ -2,7 +2,37 @@
 
 import { useEffect, useMemo, useState, useRef } from "react";
 import Link from "next/link";
-import { Menu, Search, X } from "lucide-react";
+import { 
+  ArrowLeftRight,
+  BadgePercent,
+  BookOpen,
+  Briefcase,
+  Building,
+  Building2,
+  Calendar,
+  Check,
+  CheckCircle2,
+  ChevronDown,
+  Coins,
+  Compass,
+  CreditCard,
+  FileSpreadsheet,
+  Globe,
+  History,
+  LayoutDashboard,
+  MapPin,
+  Menu,
+  PlusCircle,
+  Receipt,
+  Repeat,
+  Search,
+  Shield,
+  ShieldCheck,
+  UserCheck,
+  UserPlus,
+  Users,
+  X
+} from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import type { SidebarMenuVisibilityMap, SidebarNode } from "@/lib/navigation/sidebar";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
@@ -61,8 +91,17 @@ export function DashboardFrame({
 
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategoryTab, setSelectedCategoryTab] = useState<string>("All");
   const [dbResults, setDbResults] = useState<any[]>([]);
   const [searchingDb, setSearchingDb] = useState(false);
+
+  // Date Filter Dropdown State
+  const [dateMenuOpen, setDateMenuOpen] = useState(false);
+  const [selectedDateFilter, setSelectedDateFilter] = useState("all");
+  const [customDateFrom, setCustomDateFrom] = useState("");
+  const [customDateTo, setCustomDateTo] = useState("");
+  const dateMenuRef = useRef<HTMLDivElement>(null);
+
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [sidebarMenuVisibility, setSidebarMenuVisibility] = useState<SidebarMenuVisibilityMap | null>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -124,7 +163,6 @@ export function DashboardFrame({
     window.addEventListener("unhandledrejection", handleChunkError);
     window.addEventListener("error", handleChunkError);
 
-    // Reset auto-chunk retry count after 3s of stable page execution
     const resetTimer = setTimeout(() => {
       try {
         sessionStorage.removeItem("erp_auto_chunk_cnt");
@@ -213,6 +251,9 @@ export function DashboardFrame({
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
         setProfileMenuOpen(false);
       }
+      if (dateMenuRef.current && !dateMenuRef.current.contains(event.target as Node)) {
+        setDateMenuOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -245,43 +286,34 @@ export function DashboardFrame({
     return labels[roles[0]] ?? null;
   }, [roles, lang]);
 
-  // Command palette search database
   const searchItems = useMemo(() => {
     return [
-      { title: "Dashboard Overview", titleKey: "cmd.dashboard_overview", category: "Navigation", href: "/dashboard", keywords: "home main landing dashboard overview" },
-      { title: "Super Admin Dashboard", titleKey: "cmd.super_admin_dashboard", category: "Navigation", href: "/dashboard/super-admin", keywords: "super admin dashboard summary stats" },
-      { title: "Country Admin Dashboard", titleKey: "cmd.country_admin_dashboard", category: "Navigation", href: "/dashboard/country", keywords: "country admin dashboard summary stats" },
-      { title: "City Branch Dashboard", titleKey: "cmd.city_branch_dashboard", category: "Navigation", href: "/dashboard/city", keywords: "city branch dashboard summary stats" },
-
-      { title: "Customers Directory List", titleKey: "cmd.customers_directory", category: "Modules", href: "/dashboard/settings/customers", keywords: "customers directory clients list accounts" },
-      { title: "Add New Customer Profile", titleKey: "cmd.add_customer", category: "Actions", href: "/dashboard/settings/customers/setup", keywords: "create add new customer account client profile" },
-
-      { title: "Country Branch Setup", titleKey: "cmd.country_branch_setup", category: "Modules", href: "/dashboard/new-entry/branch-entry/country-branch", keywords: "country branch office setup creation edit" },
-      { title: "City Branch Setup", titleKey: "cmd.city_branch_setup", category: "Modules", href: "/dashboard/new-entry/branch-entry/city-branch", keywords: "city branch office setup creation edit" },
-      { title: "Super Admin Branch Registry", titleKey: "cmd.super_admin_branch_registry", category: "Modules", href: "/dashboard/new-entry/branches/super-admin", keywords: "super admin branch registry setup" },
-
-      { title: "User Registration / Management", titleKey: "cmd.user_registration", category: "Modules", href: "/dashboard/new-entry/users/registration", keywords: "register user employee create edit staff role assignment" },
-      { title: "User Journal Log Report", titleKey: "cmd.user_journal_log", category: "Modules", href: "/dashboard/new-entry/users/journal-report", keywords: "user journal log activity report auditing" },
-
-      { title: "Daily Exchange Rate Manager", titleKey: "cmd.daily_exchange_rate", category: "Modules", href: "/dashboard/reports/exchange-rate", keywords: "daily exchange rate usd foreign currency update converter settings" },
-      { title: "Credit & Debit Entries (Cash Entry)", titleKey: "cmd.cash_entry", category: "Modules", href: "/dashboard/roznamcha/cash-entry", keywords: "cash entry debit credit roznamcha entries post transaction" },
-      { title: "Expenses Bill (Bill Entry)", titleKey: "cmd.expenses_bill", category: "Modules", href: "/dashboard/roznamcha/expenses-bill", keywords: "expenses bill entry roznamcha tax invoice" },
-      { title: "Money Changer (Currency Exchange)", titleKey: "cmd.money_changer", category: "Modules", href: "/dashboard/roznamcha/money-exchange", keywords: "money changer currency exchange buy sell profit loss roznamcha" },
-      { title: "Roznamcha All Report Ledger", titleKey: "cmd.roznamcha_all", category: "Modules", href: "/dashboard/roznamcha/all", keywords: "roznamcha all report transaction logs ledger postings" },
-
-      { title: "Accounts Master General Report", titleKey: "cmd.accounts_master", category: "Modules", href: "/dashboard/accounts", keywords: "accounts master general report setup balance" },
-      { title: "Create New Account Item", titleKey: "cmd.create_account", category: "Actions", href: "/dashboard/accounts/setup", keywords: "create add account category chart of accounts asset liability equity" },
-      { title: "Ledger Statement General Report", titleKey: "cmd.ledger_statement", category: "Modules", href: "/dashboard/ledger/general-report", keywords: "ledger general statement report balance credit debit logs" },
-
-      { title: "Purchase Order Advance Payment", titleKey: "cmd.po_advance_payment", category: "Modules", href: "/dashboard/journal/purchase-order-payment/advance", keywords: "purchase order advance payment entries history" },
-      { title: "Purchase Order Remaining Payment", titleKey: "cmd.po_remaining_payment", category: "Modules", href: "/dashboard/journal/purchase-order-payment/remaining", keywords: "purchase order remaining payment balance entries history" },
-
-      { title: "Settings - Location Nodes Setup", titleKey: "cmd.settings_location", category: "Settings", href: "/dashboard/settings/location", keywords: "settings location setup country state city area" },
-      { title: "Settings - Enterprise Company Profile", titleKey: "cmd.settings_company", category: "Settings", href: "/dashboard/settings/company", keywords: "settings company setup legal profile tax registry" }
+      { title: "Dashboard Overview", titleKey: "cmd.dashboard_overview", category: "Navigation" as const, href: "/dashboard", keywords: "home main landing dashboard overview", icon: LayoutDashboard, tone: "indigo" as const },
+      { title: "Super Admin Dashboard", titleKey: "cmd.super_admin_dashboard", category: "Navigation" as const, href: "/dashboard/super-admin", keywords: "super admin dashboard summary stats", icon: ShieldCheck, tone: "emerald" as const },
+      { title: "Country Admin Dashboard", titleKey: "cmd.country_admin_dashboard", category: "Navigation" as const, href: "/dashboard/country", keywords: "country admin dashboard summary stats", icon: Globe, tone: "sky" as const },
+      { title: "City Branch Dashboard", titleKey: "cmd.city_branch_dashboard", category: "Navigation" as const, href: "/dashboard/city", keywords: "city branch dashboard summary stats", icon: Building2, tone: "amber" as const },
+      { title: "Customers Directory List", titleKey: "cmd.customers_directory", category: "Modules" as const, href: "/dashboard/settings/customers", keywords: "customers directory clients list accounts", icon: Users, tone: "blue" as const },
+      { title: "Add New Customer Profile", titleKey: "cmd.add_customer", category: "Actions" as const, href: "/dashboard/settings/customers/setup", keywords: "create add new customer account client profile", icon: UserPlus, tone: "emerald" as const },
+      { title: "Country Branch Setup", titleKey: "cmd.country_branch_setup", category: "Modules" as const, href: "/dashboard/new-entry/branch-entry/country-branch", keywords: "country branch office setup creation edit", icon: MapPin, tone: "sky" as const },
+      { title: "City Branch Setup", titleKey: "cmd.city_branch_setup", category: "Modules" as const, href: "/dashboard/new-entry/branch-entry/city-branch", keywords: "city branch office setup creation edit", icon: Building, tone: "violet" as const },
+      { title: "Super Admin Branch Registry", titleKey: "cmd.super_admin_branch_registry", category: "Modules" as const, href: "/dashboard/new-entry/branches/super-admin", keywords: "super admin branch registry setup", icon: Shield, tone: "indigo" as const },
+      { title: "User Registration / Management", titleKey: "cmd.user_registration", category: "Modules" as const, href: "/dashboard/new-entry/users/registration", keywords: "register user employee create edit staff role assignment", icon: UserCheck, tone: "purple" as const },
+      { title: "User Journal Log Report", titleKey: "cmd.user_journal_log", category: "Modules" as const, href: "/dashboard/new-entry/users/journal-report", keywords: "user journal log activity report auditing", icon: History, tone: "slate" as const },
+      { title: "Daily Exchange Rate Manager", titleKey: "cmd.daily_exchange_rate", category: "Modules" as const, href: "/dashboard/reports/exchange-rate", keywords: "daily exchange rate usd foreign currency update converter settings", icon: Coins, tone: "amber" as const },
+      { title: "Credit & Debit Entries (Cash Entry)", titleKey: "cmd.cash_entry", category: "Modules" as const, href: "/dashboard/roznamcha/cash-entry", keywords: "cash entry debit credit roznamcha entries post transaction", icon: ArrowLeftRight, tone: "emerald" as const },
+      { title: "Expenses Bill (Bill Entry)", titleKey: "cmd.expenses_bill", category: "Modules" as const, href: "/dashboard/roznamcha/expenses-bill", keywords: "expenses bill entry roznamcha tax invoice", icon: Receipt, tone: "rose" as const },
+      { title: "Money Changer (Currency Exchange)", titleKey: "cmd.money_changer", category: "Modules" as const, href: "/dashboard/roznamcha/money-exchange", keywords: "money changer currency exchange buy sell profit loss roznamcha", icon: Repeat, tone: "cyan" as const },
+      { title: "Roznamcha All Report Ledger", titleKey: "cmd.roznamcha_all", category: "Modules" as const, href: "/dashboard/roznamcha/all", keywords: "roznamcha all report transaction logs ledger postings", icon: BookOpen, tone: "indigo" as const },
+      { title: "Accounts Master General Report", titleKey: "cmd.accounts_master", category: "Modules" as const, href: "/dashboard/accounts", keywords: "accounts master general report setup balance", icon: CreditCard, tone: "blue" as const },
+      { title: "Create New Account Item", titleKey: "cmd.create_account", category: "Actions" as const, href: "/dashboard/accounts/setup", keywords: "create add account category chart of accounts asset liability equity", icon: PlusCircle, tone: "emerald" as const },
+      { title: "Ledger Statement General Report", titleKey: "cmd.ledger_statement", category: "Modules" as const, href: "/dashboard/ledger/general-report", keywords: "ledger general statement report balance credit debit logs", icon: FileSpreadsheet, tone: "sky" as const },
+      { title: "Purchase Order Advance Payment", titleKey: "cmd.po_advance_payment", category: "Modules" as const, href: "/dashboard/journal/purchase-order-payment/advance", keywords: "purchase order advance payment entries history", icon: BadgePercent, tone: "amber" as const },
+      { title: "Purchase Order Remaining Payment", titleKey: "cmd.po_remaining_payment", category: "Modules" as const, href: "/dashboard/journal/purchase-order-payment/remaining", keywords: "purchase order remaining payment balance entries history", icon: CheckCircle2, tone: "emerald" as const },
+      { title: "Settings - Location Nodes Setup", titleKey: "cmd.settings_location", category: "Settings" as const, href: "/dashboard/settings/location", keywords: "settings location setup country state city area", icon: Compass, tone: "slate" as const },
+      { title: "Settings - Enterprise Company Profile", titleKey: "cmd.settings_company", category: "Settings" as const, href: "/dashboard/settings/company", keywords: "settings company setup legal profile tax registry", icon: Briefcase, tone: "slate" as const }
     ];
   }, []);
 
-  // Keyboard shortcut listener for Ctrl+K
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === "k") {
@@ -295,7 +327,7 @@ export function DashboardFrame({
 
   const filteredSearchItems = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return searchItems.slice(0, 7);
+    if (!q) return searchItems;
     return searchItems.filter(
       (item) =>
         item.title.toLowerCase().includes(q) ||
@@ -304,6 +336,13 @@ export function DashboardFrame({
     );
   }, [searchQuery, searchItems]);
 
+  const categories = ["All", "Navigation", "Modules", "Actions", "Settings"] as const;
+
+  const navigationItems = useMemo(() => filteredSearchItems.filter(i => i.category === "Navigation"), [filteredSearchItems]);
+  const moduleItems = useMemo(() => filteredSearchItems.filter(i => i.category === "Modules"), [filteredSearchItems]);
+  const actionItems = useMemo(() => filteredSearchItems.filter(i => i.category === "Actions"), [filteredSearchItems]);
+  const settingItems = useMemo(() => filteredSearchItems.filter(i => i.category === "Settings"), [filteredSearchItems]);
+
   const onSelectLink = (href: string) => {
     setSearchOpen(false);
     setSearchQuery("");
@@ -311,12 +350,29 @@ export function DashboardFrame({
     router.push(href);
   };
 
+  function getDateFilterLabel(filter: string): string {
+    const currentYear = new Date().getFullYear();
+    switch (filter) {
+      case "today":
+        return t(lang, "ledger.preset_today", "Today");
+      case "week":
+        return t(lang, "ledger.preset_this_week", "This Week");
+      case "month":
+        return t(lang, "ledger.preset_this_month", "This Month");
+      case "year":
+        return `This Year (${currentYear})`;
+      case "custom":
+        return t(lang, "ledger.preset_custom", "Custom Date Range");
+      case "all":
+      default:
+        return `${t(lang, "nav.all_dates", "All Dates")} (${currentYear})`;
+    }
+  }
+
   return (
     <div className="min-h-screen bg-background text-foreground">
-      {/* Premium Overlay Drawer Navigation */}
       {(drawerOpen || mobileOpen) && (
         <div className="fixed inset-0 z-50 flex">
-          {/* Backdrop Overlay with Blur */}
           <button
             type="button"
             className="fixed inset-0 bg-slate-950/60 backdrop-blur-xs transition-opacity duration-300 animate-in fade-in cursor-pointer border-none p-0 outline-none"
@@ -326,8 +382,6 @@ export function DashboardFrame({
               setMobileOpen(false);
             }}
           />
-
-          {/* Slide-in Overlay Drawer Panel */}
           <aside className="relative z-50 h-full w-72 max-w-[85vw] border-r border-border bg-white dark:bg-slate-950 shadow-2xl flex flex-col animate-in slide-in-from-left duration-250 text-card-foreground">
             <div className="border-b border-border/80 px-5 py-4 flex items-center justify-between gap-2 bg-muted/20">
               <Link href="/dashboard" className="block flex-1 min-w-0" onClick={() => { setDrawerOpen(false); setMobileOpen(false); }}>
@@ -369,9 +423,7 @@ export function DashboardFrame({
         </div>
       )}
 
-      {/* Main Content Container - Always 100% Full Width (No Content Compression or Layout Shift) */}
       <div className="transition-all duration-300 min-h-screen flex flex-col w-full">
-        {/* Sticky Premium Layout Header */}
         <header className="erp-topbar sticky top-0 z-40 border-b border-border/80 bg-background/80 backdrop-blur-md">
           <div className={cn("flex items-center gap-2 sm:gap-4 px-3 sm:px-4 lg:px-6 transition-all duration-200 justify-between", isWizardPath ? "h-16" : "h-14")}>
             <div className="flex items-center gap-3">
@@ -388,14 +440,11 @@ export function DashboardFrame({
               <h2 className="text-base font-bold text-foreground hidden sm:block">{t(lang, "nav.dashboard", "Dashboard")}</h2>
             </div>
 
-            {/* Smart Search, Date picker, Bell and Profile controls */}
             <div className="flex items-center gap-2 sm:gap-3 lg:gap-4">
-              {/* Search trigger filter mockup */}
-              {/* Search trigger filter */}
               <button
                 type="button"
                 onClick={() => setSearchOpen(true)}
-                className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-2 sm:px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/80 transition-colors"
+                className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-2 sm:px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/80 transition-colors cursor-pointer"
                 aria-label={t(lang, "nav.search", "Search")}
               >
                 <Search className="h-3.5 w-3.5 shrink-0" />
@@ -405,24 +454,94 @@ export function DashboardFrame({
                 </kbd>
               </button>
 
-              {/* Date selector indicator — deferred to lg: (was md:, i.e. visible starting
-                  exactly at the 768px tablet breakpoint) because the topbar's right-hand
-                  button group (search, date filter, bell, divider, language/theme, avatar)
-                  together overflowed the available width at 768px, pushing the whole page
-                  into horizontal scroll instead of staying contained. This is the lowest
-                  priority item in the group, so it's the one deferred. */}
-              <button
-                type="button"
-                onClick={() => setSearchOpen(true)}
-                className="hidden lg:flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-foreground/80 hover:bg-muted/80 transition-colors"
-                title={t(lang, "nav.filter_by_date_range", "Filter by date range")}
-              >
-                <svg className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>
-                <span className="font-semibold">{t(lang, "nav.all_dates", "All Dates")} ({new Date().getFullYear()})</span>
-                <svg className="h-3 w-3 text-slate-500" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" /></svg>
-              </button>
+              <div className="relative hidden lg:block" ref={dateMenuRef}>
+                <button
+                  type="button"
+                  onClick={() => setDateMenuOpen(!dateMenuOpen)}
+                  className="flex items-center gap-2 rounded-lg border border-border bg-muted/40 px-3 py-1.5 text-xs text-foreground/80 hover:bg-muted/80 transition-colors cursor-pointer"
+                  title={t(lang, "nav.filter_by_date_range", "Filter by date range")}
+                >
+                  <Calendar className="h-3.5 w-3.5 text-slate-400" />
+                  <span className="font-semibold">{getDateFilterLabel(selectedDateFilter)}</span>
+                  <ChevronDown className={cn("h-3 w-3 text-slate-500 transition-transform duration-200", dateMenuOpen ? "rotate-180" : "")} />
+                </button>
 
-              {/* Bell Notification center icon */}
+                {dateMenuOpen && (
+                  <div className="absolute top-full left-0 mt-2 w-64 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-50 p-1.5 font-sans">
+                    <div className="px-2.5 py-1.5 text-[9px] font-black uppercase tracking-wider text-muted-foreground border-b border-border/80 mb-1 flex items-center justify-between">
+                      <span>{t(lang, "nav.filter_by_date_range", "Filter by date range")}</span>
+                      <span className="font-mono text-[9px] text-primary">{new Date().getFullYear()}</span>
+                    </div>
+
+                    {[
+                      { id: "all", label: `${t(lang, "nav.all_dates", "All Dates")} (${new Date().getFullYear()})` },
+                      { id: "today", label: t(lang, "ledger.preset_today", "Today") },
+                      { id: "week", label: t(lang, "ledger.preset_this_week", "This Week") },
+                      { id: "month", label: t(lang, "ledger.preset_this_month", "This Month") },
+                      { id: "year", label: `This Year (${new Date().getFullYear()})` },
+                      { id: "custom", label: t(lang, "ledger.preset_custom", "Custom Date Range") }
+                    ].map((opt) => (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedDateFilter(opt.id);
+                          if (opt.id !== "custom") {
+                            setDateMenuOpen(false);
+                          }
+                        }}
+                        className={cn(
+                          "flex w-full items-center justify-between px-2.5 py-2 text-xs font-semibold rounded-lg transition-colors text-left cursor-pointer",
+                          selectedDateFilter === opt.id
+                            ? "bg-primary/10 text-primary font-bold"
+                            : "hover:bg-muted text-foreground/80"
+                        )}
+                      >
+                        <span className="flex items-center gap-2">
+                          <Calendar className="h-3.5 w-3.5 text-muted-foreground" />
+                          {opt.label}
+                        </span>
+                        {selectedDateFilter === opt.id && (
+                          <Check className="h-3.5 w-3.5 text-primary" />
+                        )}
+                      </button>
+                    ))}
+
+                    {selectedDateFilter === "custom" && (
+                      <div className="mt-2 pt-2 border-t border-border/80 px-2 pb-1">
+                        <div className="grid grid-cols-2 gap-2 text-[10px]">
+                          <div>
+                            <label className="text-muted-foreground font-bold block mb-1">From</label>
+                            <input
+                              type="date"
+                              value={customDateFrom}
+                              onChange={(e) => setCustomDateFrom(e.target.value)}
+                              className="w-full rounded border border-border bg-background px-1.5 py-1 text-xs outline-none focus:ring-1 focus:ring-primary"
+                            />
+                          </div>
+                          <div>
+                            <label className="text-muted-foreground font-bold block mb-1">To</label>
+                            <input
+                              type="date"
+                              value={customDateTo}
+                              onChange={(e) => setCustomDateTo(e.target.value)}
+                              className="w-full rounded border border-border bg-background px-1.5 py-1 text-xs outline-none focus:ring-1 focus:ring-primary"
+                            />
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setDateMenuOpen(false)}
+                          className="mt-2 w-full rounded bg-primary text-primary-foreground py-1 text-xs font-bold hover:bg-primary/90 transition-colors"
+                        >
+                          Apply Filter
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <button
                 type="button"
                 className="relative p-1.5 rounded-full hover:bg-muted text-muted-foreground"
@@ -433,7 +552,6 @@ export function DashboardFrame({
 
               <div className="h-8 w-px bg-border hidden sm:block" />
 
-              {/* Right Profile avatar selection block */}
               <div className="flex items-center gap-3 relative" ref={profileMenuRef}>
                 <PreferencesControls />
                 <button 
@@ -450,7 +568,6 @@ export function DashboardFrame({
                   </div>
                 </button>
 
-              {/* Profile Dropdown */}
               {profileMenuOpen && (
                 <div className="absolute top-full right-0 mt-2 w-72 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-50">
                   <div className="p-4 border-b border-border bg-muted/30">
@@ -478,23 +595,20 @@ export function DashboardFrame({
                       ["/dashboard/settings/profile?mode=edit", t(lang, "nav.edit_profile", "Edit Profile"), "bg-cyan-50 text-cyan-600 dark:bg-cyan-950/30 dark:text-cyan-400"],
                       ["/dashboard/settings/profile?panel=password", t(lang, "nav.change_password", "Change Password"), "bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400"],
                       ["/dashboard/settings/profile?panel=email", t(lang, "nav.change_email", "Change Email"), "bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400"],
-                      ["/dashboard/settings/profile?panel=security", t(lang, "nav.security_settings", "Security Settings"), "bg-purple-50 text-purple-600 dark:bg-purple-950/30 dark:text-purple-400"]
-                    ].map(([href, label, iconBg]) => (
-                      <Link key={href} href={href as any} onClick={() => setProfileMenuOpen(false)} className="px-3 py-2.5 text-xs font-semibold rounded-lg hover:bg-muted text-foreground flex items-center gap-3 transition-colors">
-                        <span className={cn("flex h-6 w-6 items-center justify-center rounded-md", iconBg)}>
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 21a8 8 0 0 0-16 0"/><circle cx="12" cy="7" r="4"/></svg>
-                        </span>
-                        {label}
+                    ].map(([href, label, tone], i) => (
+                      <Link
+                        key={i}
+                        href={href as any}
+                        onClick={() => setProfileMenuOpen(false)}
+                        className="px-3 py-2 text-xs font-semibold rounded-lg hover:bg-muted text-foreground flex items-center justify-between transition-colors"
+                      >
+                        <span>{label}</span>
+                        <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded", tone)}>Access</span>
                       </Link>
                     ))}
+                  </div>
 
-                    <Link href="/dashboard/new-entry/users/registration" onClick={() => setProfileMenuOpen(false)} className="px-3 py-2.5 text-xs font-semibold rounded-lg hover:bg-muted text-foreground flex items-center gap-3 transition-colors">
-                      <span className="flex h-6 w-6 items-center justify-center rounded-md bg-muted text-muted-foreground">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" x2="19" y1="8" y2="14"/><line x1="22" x2="16" y1="11" y2="11"/></svg>
-                      </span>
-                      {t(lang, "nav.sign_up_new_user", "Sign Up New User")}
-                    </Link>
-
+                  <div className="p-2 border-t border-border bg-muted/10">
                     <button
                       type="button"
                       onClick={() => {
@@ -503,11 +617,8 @@ export function DashboardFrame({
                           window.location.href = "/";
                         });
                       }}
-                      className="w-full text-left px-3 py-2.5 text-xs font-semibold rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 flex items-center gap-3 transition-colors"
+                      className="w-full text-left px-3 py-2 text-xs font-semibold rounded-lg hover:bg-red-50 dark:hover:bg-red-950/30 text-red-600 dark:text-red-400 flex items-center gap-3 transition-colors"
                     >
-                      <span className="flex h-6 w-6 items-center justify-center rounded-md bg-red-100 dark:bg-red-900/50">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" x2="9" y1="12" y2="12"/></svg>
-                      </span>
                       {t(lang, "nav.log_out", "Log Out")}
                     </button>
                   </div>
@@ -518,7 +629,6 @@ export function DashboardFrame({
           </div>
         </header>
 
-        {/* Main Work Area */}
         <main className="w-full flex-1 p-4 lg:p-6 bg-background">
           <ErpPageActions />
           {children}
@@ -531,7 +641,26 @@ export function DashboardFrame({
           value={searchQuery}
           onValueChange={setSearchQuery}
         />
-        <CommandList>
+        
+        <div className="flex items-center gap-1.5 px-3 py-2 border-b border-border/70 bg-muted/20 overflow-x-auto text-[10px]">
+          {categories.map((cat) => (
+            <button
+              key={cat}
+              type="button"
+              onClick={() => setSelectedCategoryTab(cat)}
+              className={cn(
+                "px-2.5 py-1 rounded-md font-bold transition-all cursor-pointer",
+                selectedCategoryTab === cat
+                  ? "bg-primary text-primary-foreground shadow-xs"
+                  : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+              )}
+            >
+              {cat === "All" ? "All Categories" : t(lang, `cmd.cat_${cat.toLowerCase()}` as any, cat)}
+            </button>
+          ))}
+        </div>
+
+        <CommandList className="max-h-[380px] overflow-y-auto">
           {searchingDb ? (
             <div className="flex items-center justify-center py-6 text-sm text-muted-foreground">
               <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin mr-3 shrink-0" />
@@ -541,29 +670,123 @@ export function DashboardFrame({
             <CommandEmpty>{t(lang, "nav.no_matching_results", "No matching modules, actions or records found.")}</CommandEmpty>
           )}
 
-          {!searchingDb && filteredSearchItems.length > 0 && (
-            <CommandGroup heading={t(lang, "nav.quick_actions_navigation", "Quick Actions / Navigation")}>
-              {filteredSearchItems.map((item, idx) => (
+          {!searchingDb && (selectedCategoryTab === "All" || selectedCategoryTab === "Navigation") && navigationItems.length > 0 && (
+            <CommandGroup heading={t(lang, "cmd.cat_navigation", "Navigation")}>
+              {navigationItems.map((item, idx) => (
                 <CommandItem
                   key={`nav-${idx}`}
                   value={item.title + " " + item.keywords}
                   onSelect={() => onSelectLink(item.href)}
-                  className="flex items-center gap-3 py-2 cursor-pointer"
+                  className="flex items-center justify-between py-2 cursor-pointer rounded-lg px-2 hover:bg-accent"
                 >
-                  <span className={cn(
-                    "flex h-7 w-7 items-center justify-center rounded-lg border text-xs font-semibold",
-                    item.category === "Actions"
-                      ? "bg-emerald-50 border-emerald-100 text-emerald-600 dark:bg-emerald-950/30 dark:border-emerald-900/30 dark:text-emerald-400"
-                      : item.category === "Settings"
-                        ? "bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300"
-                        : "bg-primary/5 border-primary/10 text-primary dark:bg-primary/15"
-                  )}>
-                    {item.category === "Actions" ? "+" : t(lang, item.titleKey).substring(0, 1)}
-                  </span>
-                  <div>
-                    <p className="text-xs font-bold">{t(lang, item.titleKey)}</p>
-                    <p className="text-[10px] text-muted-foreground">{t(lang, `cmd.cat_${item.category.toLowerCase()}`)}</p>
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className={cn(
+                      "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-xs shadow-xs",
+                      item.tone === "indigo" && "bg-indigo-50 border-indigo-100 text-indigo-600 dark:bg-indigo-950/40 dark:border-indigo-900/40 dark:text-indigo-400",
+                      item.tone === "emerald" && "bg-emerald-50 border-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:border-emerald-900/40 dark:text-emerald-400",
+                      item.tone === "sky" && "bg-sky-50 border-sky-100 text-sky-600 dark:bg-sky-950/40 dark:border-sky-900/40 dark:text-sky-400",
+                      item.tone === "amber" && "bg-amber-50 border-amber-100 text-amber-600 dark:bg-amber-950/40 dark:border-amber-900/40 dark:text-amber-400"
+                    )}>
+                      <item.icon className="h-3.5 w-3.5" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold truncate">{t(lang, item.titleKey as any, item.title)}</p>
+                      <p className="text-[10px] text-muted-foreground font-mono truncate">{item.href}</p>
+                    </div>
                   </div>
+                  <span className="shrink-0 ml-2 rounded bg-indigo-50 dark:bg-indigo-950/50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200/60 dark:ring-indigo-800">
+                    Navigation
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+
+          {!searchingDb && (selectedCategoryTab === "All" || selectedCategoryTab === "Modules") && moduleItems.length > 0 && (
+            <CommandGroup heading={t(lang, "cmd.cat_modules", "Modules & Reports")}>
+              {moduleItems.map((item, idx) => (
+                <CommandItem
+                  key={`mod-${idx}`}
+                  value={item.title + " " + item.keywords}
+                  onSelect={() => onSelectLink(item.href)}
+                  className="flex items-center justify-between py-2 cursor-pointer rounded-lg px-2 hover:bg-accent"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className={cn(
+                      "flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-xs shadow-xs",
+                      item.tone === "blue" && "bg-blue-50 border-blue-100 text-blue-600 dark:bg-blue-950/40 dark:border-blue-900/40 dark:text-blue-400",
+                      item.tone === "sky" && "bg-sky-50 border-sky-100 text-sky-600 dark:bg-sky-950/40 dark:border-sky-900/40 dark:text-sky-400",
+                      item.tone === "violet" && "bg-violet-50 border-violet-100 text-violet-600 dark:bg-violet-950/40 dark:border-violet-900/40 dark:text-violet-400",
+                      item.tone === "indigo" && "bg-indigo-50 border-indigo-100 text-indigo-600 dark:bg-indigo-950/40 dark:border-indigo-900/40 dark:text-indigo-400",
+                      item.tone === "purple" && "bg-purple-50 border-purple-100 text-purple-600 dark:bg-purple-950/40 dark:border-purple-900/40 dark:text-purple-400",
+                      item.tone === "slate" && "bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300",
+                      item.tone === "amber" && "bg-amber-50 border-amber-100 text-amber-600 dark:bg-amber-950/40 dark:border-amber-900/40 dark:text-amber-400",
+                      item.tone === "emerald" && "bg-emerald-50 border-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:border-emerald-900/40 dark:text-emerald-400",
+                      item.tone === "rose" && "bg-rose-50 border-rose-100 text-rose-600 dark:bg-rose-950/40 dark:border-rose-900/40 dark:text-rose-400",
+                      item.tone === "cyan" && "bg-cyan-50 border-cyan-100 text-cyan-600 dark:bg-cyan-950/40 dark:border-cyan-900/40 dark:text-cyan-400"
+                    )}>
+                      <item.icon className="h-3.5 w-3.5" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold truncate">{t(lang, item.titleKey as any, item.title)}</p>
+                      <p className="text-[10px] text-muted-foreground font-mono truncate">{item.href}</p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 ml-2 rounded bg-sky-50 dark:bg-sky-950/50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase text-sky-700 dark:text-sky-300 ring-1 ring-sky-200/60 dark:ring-sky-800">
+                    Module
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+
+          {!searchingDb && (selectedCategoryTab === "All" || selectedCategoryTab === "Actions") && actionItems.length > 0 && (
+            <CommandGroup heading={t(lang, "cmd.cat_actions", "Quick Actions")}>
+              {actionItems.map((item, idx) => (
+                <CommandItem
+                  key={`act-${idx}`}
+                  value={item.title + " " + item.keywords}
+                  onSelect={() => onSelectLink(item.href)}
+                  className="flex items-center justify-between py-2 cursor-pointer rounded-lg px-2 hover:bg-accent"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-xs shadow-xs bg-emerald-50 border-emerald-100 text-emerald-600 dark:bg-emerald-950/40 dark:border-emerald-900/40 dark:text-emerald-400">
+                      <item.icon className="h-3.5 w-3.5" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold truncate">{t(lang, item.titleKey as any, item.title)}</p>
+                      <p className="text-[10px] text-muted-foreground font-mono truncate">{item.href}</p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 ml-2 rounded bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-200/60 dark:ring-emerald-800">
+                    Action
+                  </span>
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          )}
+
+          {!searchingDb && (selectedCategoryTab === "All" || selectedCategoryTab === "Settings") && settingItems.length > 0 && (
+            <CommandGroup heading={t(lang, "cmd.cat_settings", "Settings & Configuration")}>
+              {settingItems.map((item, idx) => (
+                <CommandItem
+                  key={`set-${idx}`}
+                  value={item.title + " " + item.keywords}
+                  onSelect={() => onSelectLink(item.href)}
+                  className="flex items-center justify-between py-2 cursor-pointer rounded-lg px-2 hover:bg-accent"
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border text-xs shadow-xs bg-slate-100 border-slate-200 text-slate-600 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-300">
+                      <item.icon className="h-3.5 w-3.5" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold truncate">{t(lang, item.titleKey as any, item.title)}</p>
+                      <p className="text-[10px] text-muted-foreground font-mono truncate">{item.href}</p>
+                    </div>
+                  </div>
+                  <span className="shrink-0 ml-2 rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[9px] font-extrabold uppercase text-slate-700 dark:text-slate-300 ring-1 ring-slate-200/60 dark:ring-slate-700">
+                    Settings
+                  </span>
                 </CommandItem>
               ))}
             </CommandGroup>
@@ -576,7 +799,7 @@ export function DashboardFrame({
                   key={`db-${idx}`}
                   value={item.title + " " + item.subtitle}
                   onSelect={() => onSelectLink(item.link)}
-                  className="flex items-center gap-3 py-2 cursor-pointer"
+                  className="flex items-center gap-3 py-2 cursor-pointer rounded-lg px-2 hover:bg-accent"
                 >
                   <span className="flex h-7 w-7 items-center justify-center rounded-lg border text-[10px] font-bold bg-blue-50 border-blue-100 text-blue-600 dark:bg-blue-950/30 dark:border-blue-900/30 dark:text-blue-400 uppercase">
                     {item.entityType.substring(0, 3)}
@@ -596,4 +819,3 @@ export function DashboardFrame({
     </div>
   );
 }
-
