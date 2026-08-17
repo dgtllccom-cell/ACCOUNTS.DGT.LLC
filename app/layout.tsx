@@ -126,6 +126,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               if (seg.length > 3 && seg.slice(-3) === '.js') seg = seg.slice(0, -3);
               var dash = seg.lastIndexOf('-');
               if (dash > 0) seg = seg.slice(0, dash);
+              if (seg.length >= 5 && seg.slice(-5) === '/page') seg = seg.slice(0, -5);
+              if (seg.length >= 7 && seg.slice(-7) === '/layout') seg = seg.slice(0, -7);
+              if (seg.length >= 6 && seg.slice(-6) === '/route') seg = seg.slice(0, -6);
               if (seg && seg.charAt(0) === '/') targetRoute = seg;
             }
           } catch(e) {}

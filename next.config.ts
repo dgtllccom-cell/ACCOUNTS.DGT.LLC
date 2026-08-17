@@ -21,73 +21,53 @@ const nextConfig: NextConfig = {
     maxInactiveAge: 60 * 1000,
     pagesBufferLength: 5,
   },
-  ...(process.env.NODE_ENV !== "production"
-    ? {
-        async headers() {
-          return [
-            {
-              source: "/_next/static/:path*",
-              headers: [
-                // In `next dev`, chunk filenames (e.g. page.js) are STABLE across rebuilds —
-                // a long-lived cache here would keep stale bundles alive in the browser.
-                {
-                  key: "Cache-Control",
-                  value: "no-store, no-cache, must-revalidate",
-                },
-              ],
-            },
-            {
-              source: "/dashboard/:path*",
-              headers: [
-                { key: "Cache-Control", value: "no-store, no-cache, must-revalidate, proxy-revalidate" },
-                { key: "Pragma", value: "no-cache" },
-                { key: "Expires", value: "0" },
-              ],
-            },
-          ];
-        },
-      }
-    : {}),
+  async headers() {
+    return [
+      {
+        source: "/_next/static/:path*",
+        headers: [
+          {
+            key: "Cache-Control",
+            value: process.env.NODE_ENV === "production" 
+              ? "public, max-age=31536000, immutable" 
+              : "no-store, no-cache, must-revalidate",
+          },
+        ],
+      },
+      {
+        source: "/dashboard/:path*",
+        headers: [
+          { key: "Cache-Control", value: "no-store, no-cache, must-revalidate, proxy-revalidate" },
+          { key: "Pragma", value: "no-cache" },
+          { key: "Expires", value: "0" },
+        ],
+      },
+    ];
+  },
   experimental: {
     // Reduces initial memory footprint in dev by avoiding eager preloading of every route entrypoint.
-    // This can help prevent dev server restarts caused by high memory usage.
     preloadEntriesOnStart: false,
-    // Disable the webpack build worker in this Windows local environment because
-    // the worker fork/IPC path can fail with EPERM during production builds.
     webpackBuildWorker: false,
-    // Worker threads stay enabled so the Windows build path avoids the fork/EPERM
-    // fallback. A small local build preload sanitizes non-cloneable config callbacks
-    // before they reach the build worker.
     workerThreads: true,
-    // NOTE: `webpackMemoryOptimizations` was removed — it caused faulty server-chunk
-    // splitting where in-module bindings (e.g. getTableHeader) were separated from
-    // their usages and became `undefined` at runtime, 500-ing some pages.
   },
-  ...(process.env.NODE_ENV !== "production"
-    ? {
-        webpack: (config, { dev }) => {
-          // Extend Webpack chunk loading timeout from default 12s to 60s to prevent script timeout errors
-          config.output = {
-            ...config.output,
-            chunkLoadTimeout: 60000,
-          };
+  webpack: (config, { dev }) => {
+    // Extend Webpack chunk loading timeout from default 12s to 60s to prevent script timeout errors
+    config.output = {
+      ...config.output,
+      chunkLoadTimeout: 60000,
+    };
 
-          // OneDrive / Windows file locking can cause EPERM rename failures inside `.next/cache/webpack/*pack.gz`.
-          // Use in-memory caching during development to avoid filesystem cache writes/renames.
-          if (dev) {
-            config.cache = { type: "memory" };
-          }
+    if (dev) {
+      config.cache = { type: "memory" };
+    }
 
-          // Suppress Webpack PackFileCacheStrategy serializing big strings performance warnings
-          config.infrastructureLogging = {
-            ...config.infrastructureLogging,
-            level: "error",
-          };
+    config.infrastructureLogging = {
+      ...config.infrastructureLogging,
+      level: "error",
+    };
 
-          return config;
-        },
-      }
-    : {}),
+    return config;
+  },
 };
 
 export default nextConfig;

@@ -55,10 +55,17 @@ export default function GlobalClientError({
               let targetRoute: string | null = null;
               try {
                 const match = msg.match(/_next\/static\/chunks\/app(\/[^.\?]+?)(?:\/page|\/layout|\/route|-[a-f0-9]+|\.js)/i);
-                if (match && match[1]) targetRoute = match[1];
+                if (match && match[1]) {
+                  let r = match[1];
+                  if (r.endsWith("/page")) r = r.slice(0, -5);
+                  if (r.endsWith("/layout")) r = r.slice(0, -7);
+                  if (r.endsWith("/route")) r = r.slice(0, -6);
+                  targetRoute = r || "/dashboard";
+                }
               } catch (e) {}
               const dest = targetRoute || window.location.pathname;
-              window.location.replace(dest + (dest.includes("?") ? "&" : "?") + "_v=" + now);
+              const cleanDest = dest.replace(/\/page$/, "");
+              window.location.replace(cleanDest + (cleanDest.includes("?") ? "&" : "?") + "_v=" + now);
             }
           }
         } catch {}

@@ -44,7 +44,11 @@ function extractTargetRouteFromChunkError(msg: string): string | null {
   try {
     const match = msg.match(/_next\/static\/chunks\/app(\/[^.\?]+?)(?:\/page|\/layout|\/route|-[a-f0-9]+|\.js)/i);
     if (match && match[1]) {
-      return match[1];
+      let route = match[1];
+      if (route.endsWith("/page")) route = route.slice(0, -5);
+      if (route.endsWith("/layout")) route = route.slice(0, -7);
+      if (route.endsWith("/route")) route = route.slice(0, -6);
+      return route || "/dashboard";
     }
   } catch (e) {}
   return null;
@@ -85,7 +89,8 @@ export default function DashboardError({
         sessionStorage.setItem(countKey, String(currentCount + 1));
         sessionStorage.setItem(tsKey, String(now));
         const targetRoute = extractTargetRouteFromChunkError(msg) || window.location.pathname;
-        window.location.replace(targetRoute + (targetRoute.includes("?") ? "&" : "?") + "_v=" + now);
+        const cleanRoute = targetRoute.replace(/\/page$/, "");
+        window.location.replace(cleanRoute + (cleanRoute.includes("?") ? "&" : "?") + "_v=" + now);
         return;
       }
     }
@@ -96,7 +101,8 @@ export default function DashboardError({
   const handleTryAgain = () => {
     clearChunkReloadCache();
     const targetRoute = extractTargetRouteFromChunkError(msg) || window.location.pathname;
-    window.location.href = targetRoute + (targetRoute.includes("?") ? "&" : "?") + "_t=" + Date.now();
+    const cleanRoute = targetRoute.replace(/\/page$/, "");
+    window.location.href = cleanRoute + (cleanRoute.includes("?") ? "&" : "?") + "_t=" + Date.now();
   };
 
   return (
