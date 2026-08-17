@@ -1014,13 +1014,38 @@ function CountryBranchSetupContent() {
           ))}
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
-          <span className="text-xs font-semibold text-slate-500">Step {activeStep} of 9</span>
-          <div className="flex flex-wrap gap-2">
-            <Button type="button" variant="outline" size="sm" disabled={saving || activeStep === 1} onClick={() => setActiveStep((step) => Math.max(1, step - 1))}>Back</Button>
+          <span className="text-xs font-bold text-slate-500">Step {activeStep} of 9</span>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={saving || activeStep === 1}
+              onClick={() => setActiveStep((step) => Math.max(1, step - 1))}
+              className="font-bold text-xs h-8 px-3.5 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer disabled:opacity-40"
+            >
+              ← Back
+            </Button>
             {activeStep < 9 ? (
-              <Button type="button" size="sm" onClick={() => setActiveStep((step) => Math.min(9, step + 1))}>Next</Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={() => setActiveStep((step) => Math.min(9, step + 1))}
+                className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm h-8 px-4 flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+              >
+                <span>Next</span>
+                <span className="text-sm font-black">→</span>
+              </Button>
             ) : (
-              <Button type="submit" form="country-branch-wizard-form" size="sm" disabled={saving || Boolean(existingMainBranch && !editingCountryBranchId) || !location.countryId}>{saving ? "Saving..." : editingCountryBranchId ? "Update" : "Accept & Save"}</Button>
+              <Button
+                type="submit"
+                form="country-branch-wizard-form"
+                size="sm"
+                disabled={saving || Boolean(existingMainBranch && !editingCountryBranchId) || !location.countryId}
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm h-8 px-4 cursor-pointer disabled:opacity-40"
+              >
+                {saving ? "Saving..." : editingCountryBranchId ? "Update Branch" : "Accept & Save"}
+              </Button>
             )}
           </div>
         </div>
@@ -1239,13 +1264,56 @@ function CountryBranchSetupContent() {
                 />
               </section>
 
-              <div className="flex flex-wrap justify-end gap-2">
-                <Button type="reset" variant="outline" disabled={saving}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={saving || Boolean(existingMainBranch && !editingCountryBranchId) || !location.countryId}>
-                  {saving ? "Saving..." : editingCountryBranchId ? "Update" : "Save"}
-                </Button>
+              <div className="flex flex-wrap items-center justify-between gap-3 pt-5 border-t border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    disabled={saving || activeStep === 1}
+                    onClick={() => {
+                      setActiveStep((step) => Math.max(1, step - 1));
+                      window.scrollTo({ top: 0, behavior: "smooth" });
+                    }}
+                    className="font-bold text-xs h-9 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer disabled:opacity-40"
+                  >
+                    ← Back
+                  </Button>
+                  <Button
+                    type="reset"
+                    variant="ghost"
+                    size="sm"
+                    disabled={saving}
+                    className="text-xs text-muted-foreground hover:text-foreground h-9 px-3"
+                  >
+                    Reset
+                  </Button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  {activeStep < 9 ? (
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        setActiveStep((step) => Math.min(9, step + 1));
+                        window.scrollTo({ top: 0, behavior: "smooth" });
+                      }}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-sm h-9 px-5 flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+                    >
+                      <span>Next</span>
+                      <span className="text-sm font-black">→</span>
+                    </Button>
+                  ) : (
+                    <Button
+                      type="submit"
+                      disabled={saving || Boolean(existingMainBranch && !editingCountryBranchId) || !location.countryId}
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm h-9 px-6 cursor-pointer disabled:opacity-40"
+                    >
+                      {saving ? "Saving..." : editingCountryBranchId ? "Update Country Branch" : "Accept & Save Country Branch"}
+                    </Button>
+                  )}
+                </div>
               </div>
             </form>
           </CardContent>

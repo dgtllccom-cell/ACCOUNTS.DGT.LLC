@@ -21,6 +21,7 @@ import {
   type LocationState,
   type LocationDistrict
 } from "@/features/locations/location-api";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 export type LocationHierarchyValue = {
   countryId: string;
@@ -58,8 +59,6 @@ function toOptions<T extends { id: string; name: string }>(rows: T[]): SearchSel
     return { value: row.id, label, keywords };
   });
 }
-
-import type { SupportedLanguage } from "@/lib/i18n/languages";
 
 const locationLabels: Record<string, Record<SupportedLanguage, string>> = {
   country: { en: "Country", ur: "ملک", ar: "الدولة", fa: "کشور", ps: "هیواد" },
@@ -186,6 +185,8 @@ export function LocationHierarchySelect({
       try {
         const rows = await listCountries();
         if (!cancelled) setCountries(rows);
+      } catch {
+        if (!cancelled) setCountries([]);
       } finally {
         if (!cancelled) setLoadingCountries(false);
       }
@@ -195,76 +196,99 @@ export function LocationHierarchySelect({
     };
   }, []);
 
-  // 2. Fetch states when country changes
+  // 2. Parallel fetch for States and initial Districts when Country changes
   useEffect(() => {
     let cancelled = false;
-    if (!value.countryId || !showState) {
+    if (!value.countryId) {
       setStates([]);
+      setDistricts([]);
+      setLoadingStates(false);
+      setLoadingDistricts(false);
       return;
     }
 
-    (async () => {
+    if (showState) {
       setLoadingStates(true);
-      try {
-        const rows = await listStates({ countryId: value.countryId });
-        if (!cancelled) setStates(rows);
-      } finally {
-        if (!cancelled) setLoadingStates(false);
-      }
-    })();
+      listStates({ countryId: value.countryId })
+        .then((rows) => {
+          if (!cancelled) setStates(rows);
+        })
+        .catch(() => {
+          if (!cancelled) setStates([]);
+        })
+        .finally(() => {
+          if (!cancelled) setLoadingStates(false);
+        });
+    }
+
+    if (showDistrict && !value.stateProvinceId) {
+      setLoadingDistricts(true);
+      listDistricts({ countryId: value.countryId })
+        .then((rows) => {
+          if (!cancelled) setDistricts(rows);
+        })
+        .catch(() => {
+          if (!cancelled) setDistricts([]);
+        })
+        .finally(() => {
+          if (!cancelled) setLoadingDistricts(false);
+        });
+    }
 
     return () => {
       cancelled = true;
     };
-  }, [value.countryId, showState]);
+  }, [value.countryId, showState, showDistrict]);
 
-  // 3. Fetch districts when country or state changes
+  // 3. Fast fetch districts when specific State/Province is selected
   useEffect(() => {
     let cancelled = false;
-    if (!showDistrict || (!value.countryId && !value.stateProvinceId)) {
-      setDistricts([]);
-      return;
-    }
+    if (!showDistrict || !value.stateProvinceId) return;
 
-    (async () => {
-      setLoadingDistricts(true);
-      try {
-        const rows = await listDistricts({
-          countryId: value.countryId || undefined,
-          stateProvinceId: value.stateProvinceId || undefined
-        });
+    setLoadingDistricts(true);
+    listDistricts({
+      countryId: value.countryId || undefined,
+      stateProvinceId: value.stateProvinceId
+    })
+      .then((rows) => {
         if (!cancelled) setDistricts(rows);
-      } finally {
+      })
+      .catch(() => {
+        if (!cancelled) setDistricts([]);
+      })
+      .finally(() => {
         if (!cancelled) setLoadingDistricts(false);
-      }
-    })();
+      });
 
     return () => {
       cancelled = true;
     };
-  }, [value.countryId, value.stateProvinceId, showDistrict]);
+  }, [value.stateProvinceId, value.countryId, showDistrict]);
 
-  // 4. Fetch cities when country, state, or district changes
+  // 4. Fast fetch cities when country, state, or district changes
   useEffect(() => {
     let cancelled = false;
     if (!showCity || !value.countryId) {
       setCities([]);
+      setLoadingCities(false);
       return;
     }
 
-    (async () => {
-      setLoadingCities(true);
-      try {
-        const rows = await listCities({
-          countryId: value.countryId,
-          stateProvinceId: value.stateProvinceId || null,
-          districtId: value.districtId || null
-        });
+    setLoadingCities(true);
+    listCities({
+      countryId: value.countryId,
+      stateProvinceId: value.stateProvinceId || null,
+      districtId: value.districtId || null
+    })
+      .then((rows) => {
         if (!cancelled) setCities(rows);
-      } finally {
+      })
+      .catch(() => {
+        if (!cancelled) setCities([]);
+      })
+      .finally(() => {
         if (!cancelled) setLoadingCities(false);
-      }
-    })();
+      });
 
     return () => {
       cancelled = true;
@@ -276,18 +300,21 @@ export function LocationHierarchySelect({
     let cancelled = false;
     if (!showArea || !value.cityId) {
       setAreas([]);
+      setLoadingAreas(false);
       return;
     }
 
-    (async () => {
-      setLoadingAreas(true);
-      try {
-        const rows = await listAreas({ cityId: value.cityId });
+    setLoadingAreas(true);
+    listAreas({ cityId: value.cityId })
+      .then((rows) => {
         if (!cancelled) setAreas(rows);
-      } finally {
+      })
+      .catch(() => {
+        if (!cancelled) setAreas([]);
+      })
+      .finally(() => {
         if (!cancelled) setLoadingAreas(false);
-      }
-    })();
+      });
 
     return () => {
       cancelled = true;
@@ -729,4 +756,3 @@ export function LocationQuickCreateModal({
     </SimpleModal>
   );
 }
-

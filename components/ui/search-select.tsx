@@ -145,11 +145,12 @@ export function SearchSelect({
           </button>
         </PopoverTrigger>
         <PopoverContent
-          className="w-[var(--radix-popover-trigger-width)] min-w-[320px] p-0 rounded-xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 !bg-opacity-100 isolate z-[999999]"
+          className="w-[var(--radix-popover-trigger-width)] min-w-[320px] p-0 rounded-xl overflow-hidden shadow-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950 isolate z-[999999]"
           align="start"
+          style={{ backgroundColor: "var(--card, #ffffff)", opacity: 1 }}
         >
           <Command
-            className="bg-white dark:bg-slate-950"
+            className="bg-white dark:bg-slate-950 opacity-100"
             filter={(value, search, keywords) => {
               const extendValue = value + " " + (keywords?.join(" ") ?? "");
               if (extendValue.toLowerCase().includes(search.toLowerCase())) return 1;
@@ -161,9 +162,9 @@ export function SearchSelect({
               onValueChange={onSearchValueChange}
               className="bg-slate-50 dark:bg-slate-900"
             />
-            <CommandList className="bg-white dark:bg-slate-950 max-h-[300px] overflow-y-auto">
+            <CommandList className="bg-white dark:bg-slate-950 opacity-100 max-h-[300px] overflow-y-auto">
               <CommandEmpty>{emptyLabel}</CommandEmpty>
-              <CommandGroup className="bg-white dark:bg-slate-950">
+              <CommandGroup className="bg-white dark:bg-slate-950 opacity-100">
                 {uniqueOptions.map((opt) => (
                   <CommandItem
                     key={opt.value}
