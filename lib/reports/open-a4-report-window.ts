@@ -51,6 +51,9 @@ export type BranchReportData = {
   designation?: string;
   ownershipType?: string;
   ownershipPercent?: string;
+  phone?: string;
+  email?: string;
+  ownerCountry?: string;
   ownerPhone?: string;
   ownerWhatsApp?: string;
   ownerEmail?: string;

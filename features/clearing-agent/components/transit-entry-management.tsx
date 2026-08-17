@@ -476,7 +476,7 @@ export function TransitEntryManagementView({ lang = "en" }: { lang?: SupportedLa
 
                 <button
                   type="button"
-                  onClick={() => setActiveTab(activeTab === "report" ? "split" : "report")}
+                  onClick={() => setActiveTab((curr) => (curr as string) === "report" ? "split" : "report")}
                   className="flex items-center gap-1.5 rounded-lg bg-blue-500 hover:bg-blue-600 px-3 py-1.5 text-xs font-bold text-white transition-colors cursor-pointer shadow-xs"
                 >
                   <Eye className="h-3.5 w-3.5" />

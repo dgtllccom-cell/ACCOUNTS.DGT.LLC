@@ -50,7 +50,7 @@ import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
 import { openPurchaseA4ReportWindow, type PurchaseReportData } from "@/lib/reports/open-purchase-a4-report-window";
 import { PaymentEditModal } from "./payment-edit-modal";
-import { JournalPrintButton } from "@/components/reports/journal-print-button";
+
 import type { GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
 import { Th } from "@/components/ui/translated-th";
 import { t, tData, type LanguageCode } from "@/features/i18n/purchase-journal-translations";
@@ -238,7 +238,7 @@ function handlePrintReceipt(payment: any, orderRow: any, ledgers: any[], localCu
           </tr>
           <tr>
             <th>${th("Payment Date")}</th><td>${paymentDate}</td>
-            <th>${th("Posted By")}</th><td>${re.profiles?.full_name ? re.profiles.full_name.toUpperCase() : t(lang, "role.super_admin", "Super Admin")}</td>
+            <th>${th("Posted By")}</th><td>${re.profiles?.full_name ? re.profiles.full_name.toUpperCase() : tGlobal(lang, "role.super_admin", "Super Admin")}</td>
           </tr>
           <tr>
             <th>${th("Reference No")}</th><td>${payment.reference_no || "-"}</td>

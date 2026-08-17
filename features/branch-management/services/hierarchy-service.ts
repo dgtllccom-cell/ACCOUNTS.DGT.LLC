@@ -105,7 +105,7 @@ export class HierarchyService {
 
     const { data: branch, error } = await supabase
       .from("country_branches")
-      .insert({ country_id: countryId, name, code, local_currency: localCurrency, is_main: false })
+      .insert({ country_id: countryId, name, code, local_currency: localCurrency, is_main: false, email: `branch_${code.toLowerCase()}@dgt.local` } as any)
       .select("id")
       .single();
 
@@ -133,7 +133,7 @@ export class HierarchyService {
 
     const { data: cityBranch, error } = await supabase
       .from("city_branches")
-      .insert({ country_id: countryId, country_branch_id: countryBranchId, city_name: cityName, name, code, local_currency: localCurrency })
+      .insert({ country_id: countryId, country_branch_id: countryBranchId, city_name: cityName, name, code, local_currency: localCurrency, email: `city_${code.toLowerCase()}@dgt.local` } as any)
       .select("id")
       .single();
 

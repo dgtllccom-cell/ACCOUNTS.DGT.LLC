@@ -108,9 +108,16 @@ function buildLedgerOption(row: LedgerLookupRow): SearchSelectOption {
   return { value: row.ledgerId, label, keywords };
 }
 
+
 type SessionInfo = {
   user: { id: string; email: string | null; fullName: string | null };
   roles: string[];
+  scopes?: {
+    isSuperAdmin?: boolean;
+    countryIds?: string[];
+    countryBranchIds?: string[];
+    cityBranchIds?: string[];
+  };
 };
 
 async function fetchSessionInfo() {
@@ -624,7 +631,7 @@ export function LedgerReportView({
               ]}
               rows={filteredLines as unknown as Record<string, unknown>[]}
               summary={{
-                OpeningBalance: header?.openingBalance || 0,
+                OpeningBalance: (header as any)?.opening_balance ?? (header as any)?.openingBalance ?? 0,
                 TotalDebit: displayTotals?.debit || 0,
                 TotalCredit: displayTotals?.credit || 0,
                 ClosingBalance: displayTotals?.balance || 0
@@ -837,8 +844,6 @@ export function LedgerReportView({
                 <KV k={t(lang, "ledger.roles")} v={sessionInfo?.roles?.length ? sessionInfo.roles.join(", ") : "-"} />
               </div>
             </div>
-
-            {/* Filters moved to compact top filter menu */}
           </div>
         </CardContent>
       </Card>
@@ -860,31 +865,26 @@ export function LedgerReportView({
           { key: "entryDate", header: "Date", align: "center", width: "80px" },
           { key: "sourceId", header: "Voucher No.", align: "center", render: (r) => r.sourceId.slice(0, 8) },
           { key: "referenceNo", header: "Manual Bill No.", align: "center", render: (r) => safeText(r.referenceNo) },
-          { key: "sourceTable", header: "System Bill No.", align: "center", render: (r) => r.sourceTable === "roznamcha_entries" ? t(lang, "ledger.source_roznamcha") : t(lang, "ledger.source_ledger") },
-          { key: "countryName", header: "Country", width: "100px", render: () => header.countryName || "-" },
-          { key: "branch", header: "Branch", width: "100px", render: () => deriveLedgerBranchName(header) },
-          { key: "cityBranch", header: "City Branch", width: "100px", render: () => header.cityBranchName || "-" },
-          { key: "user", header: "User", render: (r) => safeText(r.createdByName || (r.createdById ? r.createdById.slice(0, 8) : "")) },
-          { key: "accountCode", header: "Account Code", align: "center", render: () => header.accountCode || header.ledgerCode },
-          { key: "accountName", header: "Account Name", render: () => header.accountName || header.ledgerName },
-          { key: "description", header: "Narration", render: (r) => safeText(r.description) },
-          { key: "debit", header: "Debit", align: "right", render: (r) => fmtNumber(r.debit) },
-          { key: "credit", header: "Credit", align: "right", render: (r) => fmtNumber(r.credit) },
-          { key: "runningBalance", header: "Running Balance", align: "right", render: (r) => fmtNumber(r.runningBalance) },
-          { key: "currency", header: "Currency", align: "center", render: () => header.ledgerCurrency || "-" },
+          { key: "sourceTable", header: "System Bill No.", align: "center", render: (r) => r.sourceTable === "roznamcha_entries" ? "ROZ" : "LED" },
+          { key: "createdByName", header: "User", align: "center", render: (r) => safeText(r.createdByName || (r.createdById ? r.createdById.slice(0, 8) : "-")) },
+          { key: "description", header: "Narration / Description", render: (r) => safeText(r.description) },
+          { key: "currency", header: "Currency", align: "center", render: (r) => r.currency || ledgerCurrency },
+          { key: "debit", header: "Debit", align: "right", render: (r) => r.debit > 0 ? fmtNumber(r.debit) : "-" },
+          { key: "credit", header: "Credit", align: "right", render: (r) => r.credit > 0 ? fmtNumber(r.credit) : "-" },
+          { key: "runningBalance", header: "Balance", align: "right", render: (r) => fmtNumber(r.runningBalance) },
           ...(canViewConversionColumns ? ([
             {
               key: "usdRate",
               header: "Exchange Rate",
               align: "right",
-              render: (r: LedgerStatementLine) => fmtRate(effectiveUsdRateForDisplay ?? r.usdRate || 1)
+              render: (r: LedgerStatementLine) => fmtRate(effectiveUsdRateForDisplay ?? (r.usdRate || 1))
             },
             {
               key: "finalAmount",
               header: "Final Amount",
               align: "right",
               render: (r: LedgerStatementLine) => {
-                const rate = effectiveUsdRateForDisplay ?? r.usdRate || 1;
+                const rate = effectiveUsdRateForDisplay ?? (r.usdRate || 1);
                 const usdAmount = r.debit > 0 ? (r.usdAmount > 0 ? r.usdAmount : r.debit / rate) : (r.credit > 0 ? (r.usdAmount > 0 ? r.usdAmount : r.credit / rate) : 0);
                 return fmtNumber(usdAmount);
               }
@@ -952,7 +952,7 @@ export function LedgerReportView({
                     filters={{
                       "Account No": header.accountCode || header.ledgerCode,
                       "Account Name": header.accountName || header.ledgerName,
-                      Country: header.countryName,
+                      Country: header.countryName || "-",
                       Branch: deriveLedgerBranchName(header),
                       Currency: ledgerCurrency,
                       "Date From": fromDate,

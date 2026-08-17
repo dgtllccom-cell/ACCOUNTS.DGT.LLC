@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { SearchSelect } from "@/components/ui/search-select";
 import { Loader2, CheckCircle2 } from "lucide-react";
-import { date as formatDate, money } from "@/lib/utils/format";
+
 
 export function PaymentEditModal({
   open,
@@ -182,12 +182,12 @@ export function PaymentEditModal({
 
         <div className="flex flex-col gap-1.5 col-span-2">
           <Label className="text-xs font-bold uppercase text-indigo-600">Debit Ledger (Supplier Payable) <span className="text-red-500">*</span></Label>
-          <SearchSelect options={ledgerOptions} value={debitLedgerId} onChange={setDebitLedgerId} placeholder="Search ledger..." />
+          <SearchSelect options={ledgerOptions} value={debitLedgerId} onValueChange={setDebitLedgerId} placeholder="Search ledger..." />
         </div>
 
         <div className="flex flex-col gap-1.5 col-span-2">
           <Label className="text-xs font-bold uppercase text-violet-600">Credit Ledger (Payment Source) <span className="text-red-500">*</span></Label>
-          <SearchSelect options={ledgerOptions} value={creditLedgerId} onChange={setCreditLedgerId} placeholder="Search ledger..." />
+          <SearchSelect options={ledgerOptions} value={creditLedgerId} onValueChange={setCreditLedgerId} placeholder="Search ledger..." />
         </div>
 
         <div className="flex flex-col gap-1.5">

@@ -56,6 +56,7 @@ type DbSuperAdminBranchRow = {
   currency: string | null;
   country_id: string | null;
   state_province_id: string | null;
+  district_id?: string | null;
   city_id: string | null;
   address: string | null;
   phone: string | null;
@@ -75,6 +76,7 @@ type CompanyDetailRow = {
   name: string;
   legal_name: string | null;
   base_currency: string;
+  address?: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;

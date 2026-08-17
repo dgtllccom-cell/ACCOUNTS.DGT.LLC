@@ -47,13 +47,14 @@ import { SimpleModal } from "@/components/ui/simple-modal";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
 
-type EmailFolder = "inbox" | "sent" | "draft" | "trash" | "spam" | "attachments" | "notifications";
+type EmailFolder = "inbox" | "sent" | "draft" | "trash" | "spam" | "attachments" | "notifications" | "dashboard";
 type EmailChannel = "email" | "whatsapp" | "internal" | "notifications";
 
 type EmailMessage = {
   id: string;
   folder: EmailFolder;
   channel: EmailChannel;
+  status: "draft" | "received" | "sent" | "failed";
   provider: string;
   subject: string;
   preview: string;
@@ -64,11 +65,11 @@ type EmailMessage = {
   ccSummary: string;
   companyId: string | null;
   companyName: string;
+  countryId?: string | null;
   branchId: string | null;
   branchName: string;
   branchType: string;
   createdAt: string;
-  status: "draft" | "sent" | "received";
   isUnread: boolean;
   labels: string[];
   attachmentCount: number;
@@ -100,6 +101,8 @@ type EmailReportResponse = {
     providers: SearchSelectOption[];
     labels: SearchSelectOption[];
   };
+  countries?: any[];
+  cityBranches?: any[];
   rows: EmailMessage[];
   generatedAt: string;
 };
@@ -177,6 +180,9 @@ function folderIcon(folder: EmailFolder) {
       return Paperclip;
     case "notifications":
       return MessageSquareText;
+    case "dashboard":
+    default:
+      return Globe2;
   }
 }
 
@@ -194,7 +200,8 @@ const folderLabels: Record<EmailFolder, string> = {
   trash: "Trash",
   spam: "Spam",
   attachments: "Attachments",
-  notifications: "ERP Notifications"
+  notifications: "ERP Notifications",
+  dashboard: "Dashboard"
 };
 
 const channelLabels: Record<EmailChannel, { title: string; subtitle: string }> = {
@@ -1564,12 +1571,14 @@ function Field({
   label,
   value,
   onChange,
-  placeholder
+  placeholder,
+  className
 }: {
   label: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+  className?: string;
 }) {
   return (
     <div className="space-y-1.5">

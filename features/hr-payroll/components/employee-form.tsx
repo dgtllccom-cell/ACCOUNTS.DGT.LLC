@@ -53,6 +53,7 @@ type BranchOption = {
   id: string;
   name: string;
   code: string;
+  country_branch_id?: string | null;
 };
 
 export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps) {

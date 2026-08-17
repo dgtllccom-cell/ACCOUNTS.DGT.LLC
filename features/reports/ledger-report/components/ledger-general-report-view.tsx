@@ -88,6 +88,12 @@ type GeneralReportResponse = {
 type SessionInfo = {
   user: { id: string; email: string | null; fullName: string | null };
   roles: string[];
+  scopes?: {
+    isSuperAdmin?: boolean;
+    countryIds?: string[];
+    countryBranchIds?: string[];
+    cityBranchIds?: string[];
+  };
 };
 
 function fmtNumber(value: number) {
@@ -1069,7 +1075,7 @@ export function LedgerReportView({
           <div className="p-4 flex flex-col justify-between flex-1 w-full gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
               <span>TOTAL COUNTRIES:</span>
-              <span className="font-black text-slate-800 dark:text-slate-200">{countryDashboardData.length || countries.length || 1}</span>
+              <span className="font-black text-slate-800 dark:text-slate-200">{countryDashboardData.length || countryOptions.length || 1}</span>
             </div>
             <div className="flex justify-between items-center">
               <span>TOTAL ENTRIES:</span>
@@ -1304,7 +1310,7 @@ export function LedgerReportView({
                   ))}
                   {tableRows.length === 0 && !loading && (
                     <tr>
-                      <Td className="text-center py-12 text-slate-500 bg-slate-50/50 dark:bg-slate-900/30" colSpan={columns.length}>
+                      <td className="text-center py-12 text-slate-500 bg-slate-50/50 dark:bg-slate-900/30" colSpan={columns.length}>
                         <div className="flex flex-col items-center justify-center gap-1.5 py-4">
                           <span className="font-semibold text-slate-700 dark:text-slate-300 text-sm">
                             No ledger entries found for the selected date range.
@@ -1313,7 +1319,7 @@ export function LedgerReportView({
                             Try adjusting your date range, scope, or search filters to view records.
                           </span>
                         </div>
-                      </Td>
+                      </td>
                     </tr>
                   )}
                 </ReportTable>

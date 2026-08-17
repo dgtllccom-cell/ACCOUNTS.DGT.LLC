@@ -23,6 +23,8 @@ export type UserReportData = {
   rawPassword?: string | null;
   department?: string;
   designation?: string;
+  employmentType?: string;
+  joiningDate?: string;
   employeeCode?: string;
   phone?: string;
   email?: string;

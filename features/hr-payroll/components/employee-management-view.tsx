@@ -540,8 +540,7 @@ export function EmployeeManagementView() {
           className="max-w-5xl w-[95vw]"
         >
           <EmployeeLedgerPanel
-            employee={selectedEmployeeForHistory}
-            onClose={() => setSelectedEmployeeForHistory(null)}
+            employeeId={selectedEmployeeForHistory.id}
           />
         </SimpleModal>
       )}

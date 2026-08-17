@@ -24,7 +24,7 @@ import {
   Truck,
   Warehouse
 } from "lucide-react";
-import { DashboardFrame } from "@/components/layout/dashboard-frame";
+
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { Th } from "@/components/ui/translated-th";
@@ -60,6 +60,14 @@ type CompanyRow = {
 
 type CountryRow = { id: string; name: string };
 type PortRow = { id: string; port_name: string };
+type GoodsVariationRow = { id: string; goods_id: string; size: string; brand: string };
+type GoodsRow = {
+  id: string;
+  chs_code: string;
+  goods_name: string;
+  origin_country_id?: string | null;
+  variations?: GoodsVariationRow[];
+};
 
 type PartySelection = {
   customerId: string;
@@ -81,6 +89,14 @@ const PARTY_ROLES: Array<{ key: PartyRoleKey; label: string; required?: boolean 
 const EMPTY_FORM = {
   customer_id: "",
   customer_name: "",
+  goods_id: "",
+  goods_variation_id: "",
+  goods_name: "",
+  goods_chs_code: "",
+  goods_variation_label: "",
+  goods_brand: "",
+  goods_size: "",
+  goods_origin_country_name: "",
   route_name: "",
   shipment_type: "FCL",
   transport_mode: "by_sea" as TransportMode,
@@ -141,6 +157,17 @@ function optionLabelFromCustomer(row: CustomerRow) {
 
 function optionLabelFromCompany(row: CompanyRow) {
   return row.legal_name ? `${row.name} (${row.legal_name})` : row.name;
+}
+
+function optionLabelFromGoods(row: GoodsRow) {
+  const variationCount = Array.isArray(row.variations) ? row.variations.length : 0;
+  return [row.goods_name, row.chs_code ? `CHS ${row.chs_code}` : "", variationCount ? `${variationCount} variation${variationCount === 1 ? "" : "s"}` : ""]
+    .filter(Boolean)
+    .join(" • ");
+}
+
+function optionLabelFromGoodsVariation(row: GoodsVariationRow) {
+  return [row.size, row.brand].filter(Boolean).join(" • ");
 }
 
 function guessAddressOptions(
@@ -462,6 +489,7 @@ export function CustomerOrderManagementView() {
   const [orders, setOrders] = useState<ClearingCustomerOrderRow[]>([]);
   const [customers, setCustomers] = useState<CustomerRow[]>([]);
   const [companies, setCompanies] = useState<CompanyRow[]>([]);
+  const [goods, setGoods] = useState<GoodsRow[]>([]);
   const [countries, setCountries] = useState<CountryRow[]>([]);
   const [ports, setPorts] = useState<PortRow[]>([]);
   const [reportQuery, setReportQuery] = useState("");
@@ -482,26 +510,33 @@ export function CustomerOrderManagementView() {
   const fetchInitialData = async () => {
     setLoading(true);
     try {
-      const [orderRes, customerRes, companyRes, countryRes, portRes] = await Promise.all([
+      const [orderRes, customerRes, companyRes, countryRes, portRes, goodsRes] = await Promise.all([
         fetch("/api/erp/clearing-agent/customer-order"),
         fetch("/api/erp/customers?limit=250"),
         fetch("/api/erp/companies?limit=250"),
         fetch("/api/erp/locations/countries"),
-        fetch("/api/erp/ports")
+        fetch("/api/erp/ports"),
+        fetch("/api/erp/goods?limit=250")
       ]);
 
-      const [orderJson, customerJson, companyJson, countryJson, portJson] = await Promise.all([
+      const [orderJson, customerJson, companyJson, countryJson, portJson, goodsJson] = await Promise.all([
         orderRes.json(),
         customerRes.json(),
         companyRes.json(),
         countryRes.json(),
-        portRes.json()
+        portRes.json(),
+        goodsRes.json()
       ]);
 
       const extractArray = (json: any, keys: string[]) => {
         if (!json) return [];
         if (Array.isArray(json)) return json;
         if (Array.isArray(json.data)) return json.data;
+        if (json.data && typeof json.data === "object") {
+          for (const key of keys) {
+            if (Array.isArray(json.data[key])) return json.data[key];
+          }
+        }
         for (const key of keys) {
           if (Array.isArray(json[key])) return json[key];
         }
@@ -511,6 +546,7 @@ export function CustomerOrderManagementView() {
       setOrders(extractArray(orderJson, ["data", "orders", "entries"]));
       setCustomers(extractArray(customerJson, ["customers", "data"]));
       setCompanies(extractArray(companyJson, ["companies", "data"]));
+      setGoods(extractArray(goodsJson, ["goods", "data"]));
       setCountries(extractArray(countryJson, ["countries", "data"]));
       setPorts(extractArray(portJson, ["ports", "data"]));
     } catch (error) {
@@ -560,6 +596,69 @@ export function CustomerOrderManagementView() {
     }));
   };
 
+  const handleGoodsChange = (goodsId: string) => {
+    const row = goods.find((item) => item.id === goodsId);
+    const originCountry = countries.find((country) => country.id === row?.origin_country_id);
+    const firstVariation = row?.variations?.[0];
+    setFormData((current) => ({
+      ...current,
+      goods_id: goodsId,
+      goods_name: row?.goods_name || "",
+      goods_chs_code: row?.chs_code || "",
+      goods_origin_country_name: originCountry?.name || "",
+      goods_variation_id: row?.variations?.length === 1 ? firstVariation?.id || "" : "",
+      goods_variation_label: row?.variations?.length === 1 && firstVariation ? optionLabelFromGoodsVariation(firstVariation) : "",
+      goods_brand: row?.variations?.length === 1 ? firstVariation?.brand || "" : "",
+      goods_size: row?.variations?.length === 1 ? firstVariation?.size || "" : ""
+    }));
+  };
+
+  const handleGoodsVariationChange = (variationId: string) => {
+    const selectedGoods = goods.find((item) => item.id === formData.goods_id);
+    const variation = selectedGoods?.variations?.find((item) => item.id === variationId);
+    setFormData((current) => ({
+      ...current,
+      goods_variation_id: variationId,
+      goods_variation_label: variation ? optionLabelFromGoodsVariation(variation) : "",
+      goods_brand: variation?.brand || "",
+      goods_size: variation?.size || ""
+    }));
+  };
+
+  const goodsOptions = useMemo(
+    () =>
+      goods.map((row) => ({
+        value: row.id,
+        label: optionLabelFromGoods(row),
+        keywords: [
+          row.goods_name,
+          row.chs_code,
+          row.origin_country_id ? countries.find((country) => country.id === row.origin_country_id)?.name : "",
+          ...(row.variations ?? []).flatMap((variation) => [variation.size, variation.brand, optionLabelFromGoodsVariation(variation)])
+        ]
+          .filter(Boolean)
+          .join(" ")
+      })),
+    [goods, countries]
+  );
+
+  const selectedGoods = useMemo(() => goods.find((item) => item.id === formData.goods_id) || null, [goods, formData.goods_id]);
+
+  const variationOptions = useMemo(
+    () =>
+      (selectedGoods?.variations ?? []).map((variation) => ({
+        value: variation.id,
+        label: optionLabelFromGoodsVariation(variation),
+        keywords: [variation.size, variation.brand, optionLabelFromGoodsVariation(variation)].filter(Boolean).join(" ")
+      })),
+    [selectedGoods]
+  );
+
+  const selectedGoodsVariation = useMemo(
+    () => selectedGoods?.variations?.find((item) => item.id === formData.goods_variation_id) || null,
+    [selectedGoods, formData.goods_variation_id]
+  );
+
   const visibleOrders = useMemo(() => {
     const query = normalize(reportQuery);
     if (!query) return orders;
@@ -567,6 +666,12 @@ export function CustomerOrderManagementView() {
       const haystack = [
         order.order_no,
         order.customer_name,
+        order.goods_name,
+        order.goods_chs_code,
+        order.goods_variation_label,
+        order.goods_brand,
+        order.goods_size,
+        order.goods_origin_country_name,
         order.exporter_name,
         order.importer_name,
         order.notify_party_name,
@@ -620,6 +725,14 @@ export function CustomerOrderManagementView() {
     setFormData({
       customer_id: order.customer_id || "",
       customer_name: order.customer_name || "",
+      goods_id: order.goods_id || "",
+      goods_variation_id: order.goods_variation_id || "",
+      goods_name: order.goods_name || "",
+      goods_chs_code: order.goods_chs_code || "",
+      goods_variation_label: order.goods_variation_label || "",
+      goods_brand: order.goods_brand || "",
+      goods_size: order.goods_size || "",
+      goods_origin_country_name: order.goods_origin_country_name || "",
       route_name: order.route_name || "",
       shipment_type: order.shipment_type || "FCL",
       transport_mode: (order.transport_mode || "by_sea") as TransportMode,
@@ -686,6 +799,7 @@ export function CustomerOrderManagementView() {
       </style></head><body>
       <h1>${order.order_no || "Customer Order"}</h1>
       <p><strong>Party:</strong> ${order.customer_name || "-"}</p>
+      <p><strong>Goods:</strong> ${[order.goods_name, order.goods_chs_code ? `CHS ${order.goods_chs_code}` : "", order.goods_variation_label, order.goods_origin_country_name].filter(Boolean).join(" • ") || "-"}</p>
       <p><strong>Route:</strong> ${order.route_name || "-"}</p>
       <p><strong>Movement:</strong> ${order.movement_type || "-"}</p>
       <table>
@@ -733,6 +847,14 @@ export function CustomerOrderManagementView() {
         ...formData,
         customer_id: supplier.customerId || null,
         customer_name: supplier.customerName,
+        goods_id: formData.goods_id || null,
+        goods_variation_id: formData.goods_variation_id || null,
+        goods_name: formData.goods_name || null,
+        goods_chs_code: formData.goods_chs_code || null,
+        goods_variation_label: formData.goods_variation_label || null,
+        goods_brand: formData.goods_brand || null,
+        goods_size: formData.goods_size || null,
+        goods_origin_country_name: formData.goods_origin_country_name || null,
         party_links: Object.entries(partySelections).map(([roleKey, selection]) => ({
           roleKey: roleKey as PartyRoleKey,
           partyCustomerId: selection.customerId || null,
@@ -767,8 +889,7 @@ export function CustomerOrderManagementView() {
   };
 
   return (
-    <DashboardFrame title={title} subtitle="Shipping Line / Clearing Agent — searchable party, company and address workflow">
-      <div className="mx-auto max-w-[1700px] space-y-6 pb-12">
+    <div className="mx-auto max-w-[1700px] space-y-6 pb-12">
         <div className="rounded-2xl border border-indigo-500/20 bg-gradient-to-r from-slate-950 via-indigo-950 to-slate-950 p-6 text-white shadow-xl">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div className="space-y-2">
@@ -931,6 +1052,58 @@ export function CustomerOrderManagementView() {
                   onChange={(e) => setFormData((current) => ({ ...current, loading_source_name: e.target.value }))}
                   className="mt-2 w-full rounded-xl border border-slate-800 bg-slate-950 px-4 py-2.5 text-sm text-slate-200 outline-none focus:border-indigo-500"
                 />
+              </div>
+
+              <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4 space-y-4">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-slate-400">
+                  <Boxes className="h-4 w-4 text-emerald-400" />
+                  Goods / Item Master
+                </div>
+                <SearchSelect
+                  label="Goods Master"
+                  value={formData.goods_id}
+                  placeholder="Search existing Goods Master by name / CHS code"
+                  options={goodsOptions}
+                  onValueChange={handleGoodsChange}
+                  disabled={loading}
+                  searchPlaceholder="Search goods / CHS code / variation"
+                  emptyLabel="No matching goods found"
+                />
+                <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+                  <div className="rounded-xl border border-slate-800 bg-slate-950 p-3 text-xs">
+                    <div className="uppercase tracking-wider text-slate-500">Selected Goods</div>
+                    <div className="mt-1 font-semibold text-slate-100">
+                      {formData.goods_name ? `${formData.goods_name}${formData.goods_chs_code ? ` • ${formData.goods_chs_code}` : ""}` : "-"}
+                    </div>
+                    <div className="mt-1 text-[11px] text-slate-500">
+                      {selectedGoods
+                        ? `Canonical ID: ${selectedGoods.id}${selectedGoods.variations?.length ? ` • ${selectedGoods.variations.length} variation(s)` : ""}`
+                        : "Select an existing Goods Master record."}
+                    </div>
+                  </div>
+                  <div className="rounded-xl border border-slate-800 bg-slate-950 p-3 text-xs">
+                    <div className="uppercase tracking-wider text-slate-500">Origin / Variation</div>
+                    <div className="mt-1 font-semibold text-slate-100">
+                      {formData.goods_origin_country_name || "-"}
+                      {selectedGoodsVariation ? ` • ${selectedGoodsVariation.size} / ${selectedGoodsVariation.brand}` : ""}
+                    </div>
+                    <div className="mt-1 text-[11px] text-slate-500">
+                      {formData.goods_variation_label || "Choose a variation if the goods master has more than one size/brand combination."}
+                    </div>
+                  </div>
+                </div>
+                {variationOptions.length > 0 ? (
+                  <SearchSelect
+                    label="Goods Variation"
+                    value={formData.goods_variation_id}
+                    placeholder="Search variation size / brand"
+                    options={variationOptions}
+                    onValueChange={handleGoodsVariationChange}
+                    disabled={loading}
+                    searchPlaceholder="Search size / brand"
+                    emptyLabel="No matching variations found"
+                  />
+                ) : null}
               </div>
 
               <div className="grid grid-cols-1 gap-4">
@@ -1175,6 +1348,7 @@ export function CustomerOrderManagementView() {
                         <Th className="px-4 py-3">Party</Th>
                         <Th className="px-4 py-3">Movement / Mode</Th>
                         <Th className="px-4 py-3">Company / Address</Th>
+                        <Th className="px-4 py-3">Goods / Variation</Th>
                         <Th className="px-4 py-3">Route / Port</Th>
                         <Th className="px-4 py-3">Next Step</Th>
                         <Th className="px-4 py-3">Status</Th>
@@ -1188,6 +1362,14 @@ export function CustomerOrderManagementView() {
                         const source = order.loading_source_name || order.loading_source || "-";
                         const route = order.route_name || `${order.loading_country_name || "-"} → ${order.receiving_country_name || "-"}`;
                         const port = [order.loading_port_name, order.destination_port_name].filter(Boolean).join(" → ") || "-";
+                        const goodsSummary = [
+                          order.goods_name,
+                          order.goods_chs_code ? `CHS ${order.goods_chs_code}` : "",
+                          order.goods_variation_label,
+                          order.goods_origin_country_name
+                        ]
+                          .filter(Boolean)
+                          .join(" • ") || "-";
                         const nextStep =
                           String(order.transport_mode || "").toLowerCase().includes("sea") || Boolean(order.notify_party_required)
                             ? "Bill Entry"
@@ -1245,6 +1427,12 @@ export function CustomerOrderManagementView() {
                                     .filter(Boolean)
                                     .join(" • ") || "Selected addresses"}
                                 </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-xs text-slate-300">
+                              <div className="font-semibold text-slate-100">{goodsSummary}</div>
+                              <div className="mt-1 text-[11px] text-slate-500">
+                                {order.goods_id ? `Goods ID: ${order.goods_id}` : "Uses the canonical Goods Master when selected."}
                               </div>
                             </td>
                             <td className="px-4 py-3 text-xs text-slate-400">
@@ -1309,7 +1497,6 @@ export function CustomerOrderManagementView() {
             </div>
           </div>
         </div>
-      </div>
 
       {viewOrder ? (
         <SimpleModal
@@ -1327,9 +1514,11 @@ export function CustomerOrderManagementView() {
               </div>
               <div className="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">
                 <div><span className="text-slate-500">Party:</span> <span className="font-semibold">{viewOrder.customer_name}</span></div>
+                <div><span className="text-slate-500">Goods:</span> <span className="font-semibold">{[viewOrder.goods_name, viewOrder.goods_chs_code ? `CHS ${viewOrder.goods_chs_code}` : "", viewOrder.goods_variation_label, viewOrder.goods_origin_country_name].filter(Boolean).join(" • ") || "-"}</span></div>
                 <div><span className="text-slate-500">Route:</span> <span className="font-semibold">{viewOrder.route_name || "-"}</span></div>
                 <div><span className="text-slate-500">Movement:</span> <span className="font-semibold">{viewOrder.movement_type}</span></div>
                 <div><span className="text-slate-500">Transport:</span> <span className="font-semibold">{viewOrder.transport_mode}</span></div>
+                <div><span className="text-slate-500">Goods ID:</span> <span className="font-semibold">{viewOrder.goods_id || "-"}</span></div>
               </div>
             </div>
             <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
@@ -1345,6 +1534,6 @@ export function CustomerOrderManagementView() {
           </div>
         </SimpleModal>
       ) : null}
-    </DashboardFrame>
+    </div>
   );
 }

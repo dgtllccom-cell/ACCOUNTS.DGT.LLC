@@ -18,6 +18,14 @@ export type ClearingCustomerOrderInput = {
   id?: string | null;
   customerId?: string | null;
   customerName: string;
+  goodsId?: string | null;
+  goodsVariationId?: string | null;
+  goodsName?: string | null;
+  goodsChsCode?: string | null;
+  goodsVariationLabel?: string | null;
+  goodsBrand?: string | null;
+  goodsSize?: string | null;
+  goodsOriginCountryName?: string | null;
   routeName?: string | null;
   shipmentType?: string | null;
   transportMode?: string | null;
@@ -211,6 +219,14 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
         order_no: orderNo,
         customer_id: trimOrNull(input.customerId),
         customer_name: trimOrNull(input.customerName) ?? "Shipping Party",
+        goods_id: trimOrNull(input.goodsId),
+        goods_variation_id: trimOrNull(input.goodsVariationId),
+        goods_name: trimOrNull(input.goodsName),
+        goods_chs_code: trimOrNull(input.goodsChsCode),
+        goods_variation_label: trimOrNull(input.goodsVariationLabel),
+        goods_brand: trimOrNull(input.goodsBrand),
+        goods_size: trimOrNull(input.goodsSize),
+        goods_origin_country_name: trimOrNull(input.goodsOriginCountryName),
         route_name: trimOrNull(input.routeName),
         shipment_type: trimOrNull(input.shipmentType) ?? "FCL",
         transport_mode: trimOrNull(input.transportMode) ?? "by_sea",
@@ -243,6 +259,14 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
           update public.clearing_customer_orders
           set customer_id = ${orderPayload.customer_id},
               customer_name = ${orderPayload.customer_name},
+              goods_id = ${orderPayload.goods_id},
+              goods_variation_id = ${orderPayload.goods_variation_id},
+              goods_name = ${orderPayload.goods_name},
+              goods_chs_code = ${orderPayload.goods_chs_code},
+              goods_variation_label = ${orderPayload.goods_variation_label},
+              goods_brand = ${orderPayload.goods_brand},
+              goods_size = ${orderPayload.goods_size},
+              goods_origin_country_name = ${orderPayload.goods_origin_country_name},
               route_name = ${orderPayload.route_name},
               shipment_type = ${orderPayload.shipment_type},
               transport_mode = ${orderPayload.transport_mode},
@@ -280,14 +304,19 @@ export async function saveCustomerOrder(input: ClearingCustomerOrderInput) {
       } else {
         const [inserted] = await tx`
           insert into public.clearing_customer_orders (
-            order_no, customer_id, customer_name, route_name, shipment_type, transport_mode, movement_type,
+            order_no, customer_id, customer_name, goods_id, goods_variation_id, goods_name, goods_chs_code,
+            goods_variation_label, goods_brand, goods_size, goods_origin_country_name,
+            route_name, shipment_type, transport_mode, movement_type,
             exporter_name, importer_name, notify_party_required, notify_party_name, buyer_name,
             loading_source, loading_source_name, loading_country_id, loading_country_name,
             receiving_country_id, receiving_country_name, loading_port_id, loading_port_name,
             destination_port_id, destination_port_name, cargo_details, expected_loading_date, remarks,
             status, created_at, updated_at
           ) values (
-            ${orderPayload.order_no}, ${orderPayload.customer_id}, ${orderPayload.customer_name}, ${orderPayload.route_name},
+            ${orderPayload.order_no}, ${orderPayload.customer_id}, ${orderPayload.customer_name}, ${orderPayload.goods_id},
+            ${orderPayload.goods_variation_id}, ${orderPayload.goods_name}, ${orderPayload.goods_chs_code},
+            ${orderPayload.goods_variation_label}, ${orderPayload.goods_brand}, ${orderPayload.goods_size},
+            ${orderPayload.goods_origin_country_name}, ${orderPayload.route_name},
             ${orderPayload.shipment_type}, ${orderPayload.transport_mode}, ${orderPayload.movement_type},
             ${orderPayload.exporter_name}, ${orderPayload.importer_name}, ${orderPayload.notify_party_required},
             ${orderPayload.notify_party_name}, ${orderPayload.buyer_name}, ${orderPayload.loading_source},

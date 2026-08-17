@@ -458,7 +458,7 @@ export function CityBranchRegistrationWizard() {
           {activeStep.key === "permissions" ? (
             <PermissionAssignmentSection
               title="City Branch Roles, Permissions & Operational Rights"
-              level="city_branch"
+              level="city"
               template={permissionTemplate}
               selected={permissionGrants}
               onTemplateChange={setPermissionTemplate}

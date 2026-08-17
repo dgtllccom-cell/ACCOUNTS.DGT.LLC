@@ -115,11 +115,15 @@ function htmlCell(value: unknown) {
   return String(value ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
+function getColumnValue(row: Record<string, any>, key: GenericReportColumn["key"]): unknown {
+  return typeof key === "function" ? key(row) : row[key];
+}
+
 function exportToCsv(data: Record<string, any>[], columns: GenericReportColumn[], filename: string) {
   if (!data.length || !columns.length) return;
   const headers = columns.map((column) => csvCell(column.label)).join(",");
   const rows = data.map((r) =>
-    columns.map((column) => r[column.key])
+    columns.map((column) => getColumnValue(r, column.key))
       .map(csvCell)
       .join(",")
   );
@@ -137,7 +141,7 @@ function exportToExcel(data: Record<string, any>[], columns: GenericReportColumn
   if (!data.length || !columns.length) return;
   const headerRow = columns.map((column) => `<th>${htmlCell(column.label)}</th>`).join("");
   const bodyRows = data
-    .map((row) => `<tr>${columns.map((column) => `<td>${htmlCell(row[column.key])}</td>`).join("")}</tr>`)
+    .map((row) => `<tr>${columns.map((column) => `<td>${htmlCell(getColumnValue(row, column.key))}</td>`).join("")}</tr>`)
     .join("");
   const html = `<!doctype html><html><head><meta charset="utf-8" /></head><body><table><thead><tr>${headerRow}</tr></thead><tbody>${bodyRows}</tbody></table></body></html>`;
   const blob = new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8;" });

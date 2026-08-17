@@ -884,7 +884,7 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
                         {row.voucherNo}
                       </td>
                       <td className="px-3 py-3 text-center text-slate-600 dark:text-slate-400 border-r border-slate-100 dark:border-slate-800">
-                        {scope === "country" ? "Country" : scope === "city" ? "Branch" : "Project"}
+                        {(scope as string) === "country" ? "Country" : (scope as string) === "city" ? "Branch" : "Project"}
                       </td>
                       <td className="px-3 py-3 font-bold text-blue-700 dark:text-blue-400 border-r border-slate-100 dark:border-slate-800">
                         {row.accountNumber ? `${row.accountNumber} - ` : ""}{row.accountName}

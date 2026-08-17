@@ -5201,7 +5201,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                             </td>
                             <td className="px-3 py-2">
                               <div className="font-bold text-slate-900 dark:text-slate-100">{doubleEntry.creditName}</div>
-                              <div className="text-[9px] text-slate-400 font-semibold">{selectedPaymentSource ? "Bank/Cash Account" : "Payment Source"}</div>
+                              <div className="text-[9px] text-slate-400 font-semibold">{doubleEntry.creditName ? "Bank/Cash Account" : "Payment Source"}</div>
                             </td>
                             <td className="px-3 py-2 font-mono text-[10px] font-bold text-slate-700 dark:text-slate-300">
                               {doubleEntry.creditCode}

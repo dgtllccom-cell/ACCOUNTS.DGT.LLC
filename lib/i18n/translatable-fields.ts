@@ -310,6 +310,11 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
   approval_status_history: [{ field: "note", mode: "translate" }],
   clearing_customer_orders: [
     { field: "customer_name", mode: "transliterate" },
+    { field: "goods_name", mode: "translate" },
+    { field: "goods_variation_label", mode: "translate" },
+    { field: "goods_brand", mode: "translate" },
+    { field: "goods_size", mode: "translate" },
+    { field: "goods_origin_country_name", mode: "transliterate" },
     { field: "route_name", mode: "translate" },
     { field: "exporter_name", mode: "transliterate" },
     { field: "importer_name", mode: "transliterate" },
