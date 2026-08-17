@@ -56,7 +56,7 @@ export function WarehousePicker({
     <>
       <SearchSelect
         label={label}
-        value={value}
+        value={value ?? ""}
         placeholder={placeholder ?? (loading ? "Loading warehouses..." : "Search warehouse by name, type...")}
         disabled={disabled || loading}
         options={options}
@@ -172,7 +172,7 @@ export function WarehousePicker({
         >
           <WarehouseForm
             mode="embedded"
-            initialWarehouseId={editWarehouseId}
+            initialWarehouse={warehouses.find((w) => w.id === editWarehouseId) || null}
             onSave={(warehouseId, savedRecord) => {
               loadList().catch(() => null);
               onValueChange?.(warehouseId);

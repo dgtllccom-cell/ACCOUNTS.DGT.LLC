@@ -7,6 +7,9 @@ export type UserReportData = {
   userId: string;
   userCode: string;
   fullName: string;
+  firstName?: string;
+  middleName?: string;
+  lastName?: string;
   countryName: string;
   branchName: string;
   branchCode?: string | null;

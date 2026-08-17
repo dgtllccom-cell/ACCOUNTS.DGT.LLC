@@ -5,7 +5,6 @@ import { Plus, Pencil, Search, Loader2, RefreshCw, FileText, CheckCircle2, Shiel
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { Th } from "@/components/ui/translated-th";
-import { DashboardFrame } from "@/components/layout/dashboard-frame";
 
 type AgentCustomEntryRow = {
   id: string;
@@ -127,8 +126,7 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
   }
 
   return (
-    <DashboardFrame title="Agent Custom Declaration Entry" subtitle="Customs GD, Port Clearance & Station Register">
-      <div dir={dir} className="max-w-7xl mx-auto space-y-6 pb-12">
+    <div dir={dir} className="max-w-7xl mx-auto space-y-6 pb-12">
         {/* Ribbon Header */}
         <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-slate-700/50 rounded-2xl p-6 shadow-xl text-white">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -418,6 +416,5 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
           )}
         </div>
       </div>
-    </DashboardFrame>
   );
 }

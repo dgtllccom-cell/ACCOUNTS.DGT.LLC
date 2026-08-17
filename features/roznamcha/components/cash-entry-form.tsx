@@ -465,6 +465,8 @@ export function CashEntryForm({
   const [ledgerRefreshCount, setLedgerRefreshCount] = useState(0);
   const [showPaymentWorkReport, setShowPaymentWorkReport] = useState(false);
 
+  const isSuperAdmin = session?.scopes?.isSuperAdmin ?? false;
+
   const userRoleLevel: "operator" | "branch" | "country" | "super_admin" = useMemo(() => {
     if (isSuperAdmin || session?.scopes?.isSuperAdmin) return "super_admin";
     const roles = session?.roles || [];
@@ -1908,7 +1910,7 @@ export function CashEntryForm({
     </div>
   );
 
-  const isSuperAdmin = session?.scopes?.isSuperAdmin ?? false;
+
   const viewScopeLabel =
     effectiveScopeMode === "super_admin" ? "Super Admin" : effectiveScopeMode === "country" ? "Country" : "City";
   const hasFixedCityScope = Boolean(!isSuperAdmin && session?.scopes?.cityBranchIds?.length);

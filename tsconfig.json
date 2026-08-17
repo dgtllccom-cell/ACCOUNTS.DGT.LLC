@@ -41,6 +41,8 @@
     "node_modules",
     ".sdfghj",
     "android",
-    "ios"
+    "ios",
+    "scripts",
+    "fix-broken-transfers.ts"
   ]
 }

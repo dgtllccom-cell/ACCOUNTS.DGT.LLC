@@ -30,6 +30,7 @@ type UserLiveReportPanelProps = {
   accountRegNo: string;
   role: string;
   userCode: string;
+  rawPassword?: string;
   status?: string;
 
   // Scopes context

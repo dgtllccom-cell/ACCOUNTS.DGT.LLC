@@ -81,7 +81,6 @@ describe("Goods variations service layer", () => {
     const variationId = await goodsService.createVariation(
       {
         goodsId: "mocked-goods-id",
-        originCountryId: "country-id-abc",
         size: "22/24",
         brand: "Brand A"
       },
@@ -91,7 +90,6 @@ describe("Goods variations service layer", () => {
     expect(variationId).toBe("mocked-variation-id");
     expect(goodsRepository.createVariation).toHaveBeenCalledWith({
       goodsId: "mocked-goods-id",
-      originCountryId: "country-id-abc",
       size: "22/24",
       brand: "Brand A",
       createdBy: "actor-123"

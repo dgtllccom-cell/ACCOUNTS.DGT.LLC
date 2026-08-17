@@ -83,7 +83,7 @@ describe("Account Operations Authentication and Validation", () => {
         .mockResolvedValueOnce({ data: { id: "a2b3c4d5-1111-4111-8111-111111111111" }, error: null }) // profiles query
         .mockResolvedValueOnce({ data: { id: "ledger-id-mock" }, error: null }); // ledgers parent search if any
       
-      mockSupabase.limit.mockResolvedValueOnce([]); // nextEnterpriseAccountCode existing query
+      mockSupabase.limit.mockResolvedValueOnce({ data: [], error: null } as any); // nextEnterpriseAccountCode existing query
       
       // exact count head query for serial numbers
       mockSupabase.single.mockResolvedValueOnce({ data: { id: "new-account-id" }, error: null }); // insert enterprise_accounts

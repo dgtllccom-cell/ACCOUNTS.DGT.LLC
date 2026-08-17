@@ -5,7 +5,6 @@ import { Plus, Pencil, Search, Loader2, RefreshCw, Ship, CheckCircle2, Building2
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { Th } from "@/components/ui/translated-th";
-import { DashboardFrame } from "@/components/layout/dashboard-frame";
 
 type ShippingAgentRow = {
   id: string;
@@ -116,8 +115,7 @@ export function ShippingAgentEntryView({ lang }: { lang: SupportedLanguage }) {
   }
 
   return (
-    <DashboardFrame title="Shipping Agent Entry" subtitle="Shipping Line Agent Master & Registration">
-      <div dir={dir} className="max-w-7xl mx-auto space-y-6 pb-12">
+    <div dir={dir} className="max-w-7xl mx-auto space-y-6 pb-12">
         {/* Ribbon Header */}
         <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-slate-700/50 rounded-2xl p-6 shadow-xl text-white">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -375,6 +373,5 @@ export function ShippingAgentEntryView({ lang }: { lang: SupportedLanguage }) {
           )}
         </div>
       </div>
-    </DashboardFrame>
   );
 }

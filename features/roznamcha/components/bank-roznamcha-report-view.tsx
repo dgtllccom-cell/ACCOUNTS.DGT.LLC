@@ -1341,8 +1341,8 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
       {/* Cheque Status Action & Clearance Modal */}
       {actionModalRow && (
         <SimpleModal
-          open={Boolean(actionModalRow)}
-          onOpenChange={(open) => !open && setActionModalRow(null)}
+          isOpen={Boolean(actionModalRow)}
+          onClose={() => setActionModalRow(null)}
           title={`Cheque Action — ${actionModalRow.entry_serial_number} (${actionModalRow.cheque_no || "No Cheque #"})`}
         >
           <div className="space-y-4 text-xs">
@@ -1488,8 +1488,8 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
       {/* New Cheque Transaction Modal */}
       {newEntryModalOpen && (
         <SimpleModal
-          open={newEntryModalOpen}
-          onOpenChange={(open) => setNewEntryModalOpen(open)}
+          isOpen={newEntryModalOpen}
+          onClose={() => setNewEntryModalOpen(false)}
           title="New Bank Cheque / Transaction Entry"
         >
           <form onSubmit={handleCreateNewEntry} className="space-y-3.5 text-xs">

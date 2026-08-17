@@ -105,7 +105,7 @@ export function localizeMasterRows<T extends Record<string, unknown>>(
   return rows.map((row) => {
     const localized: T & Record<string, string> = { ...row } as T & Record<string, string>;
     for (const field of fields) {
-      localized[field.outputKey ?? field.baseName] = resolveMultilingualField(
+      (localized as Record<string, string>)[field.outputKey ?? field.baseName] = resolveMultilingualField(
         row,
         field.baseName,
         language,

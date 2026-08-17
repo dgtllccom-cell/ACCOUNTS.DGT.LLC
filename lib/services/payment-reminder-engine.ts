@@ -69,7 +69,7 @@ export async function processAutomatedPaymentReminders() {
   let queuedCount = 0;
   for (const rule of rules) {
     // Search POs with remaining amounts
-    let poQuery = admin
+    let poQuery = (admin as any)
       .from("purchase_orders")
       .select("id, po_number, total_amount, remaining_amount, currency, customer_id, country_id, city_branch_id, po_date, customers(customer_name, mobile, email)")
       .gt("remaining_amount", 0)
@@ -80,8 +80,8 @@ export async function processAutomatedPaymentReminders() {
 
     const { data: posToRemind } = await poQuery.limit(20);
 
-    for (const po of (posToRemind || [])) {
-      const customer = po.customers as any;
+    for (const po of (posToRemind || []) as any[]) {
+      const customer = po.customers;
       if (!customer) continue;
 
       const contactId = rule.channel === "email" ? customer.email : customer.mobile;

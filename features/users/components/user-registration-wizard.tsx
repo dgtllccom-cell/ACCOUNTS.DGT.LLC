@@ -1181,7 +1181,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                         label={tr("assignedBranch")}
                         value={cityBranchId}
                         placeholder="Select city branch"
-                        options={cityBranches.map((b) => ({ value: b.id, label: `${b.cityName} - ${b.name} (${b.code})`, keywords: `${b.name} ${b.cityName}` }))}
+                        options={cityBranches.map((b) => ({ value: b.id, label: `${b.city_name || (b as any).cityName || ""} - ${b.name} (${b.code})`, keywords: `${b.name} ${b.city_name || (b as any).cityName || ""}` }))}
                         disabled={!countryId || role === "super_admin"}
                         onValueChange={setCityBranchId}
                       />

@@ -49,8 +49,8 @@ export async function resolveContactFromIdentifier(identifier: string): Promise<
   }
 
   // 2. Check Employees / User Profiles
-  let userQuery = admin
-    .from("user_profiles")
+  let userQuery = (admin as any)
+    .from("profiles")
     .select("id, full_name, email, phone_number")
     .limit(1);
 
@@ -62,7 +62,7 @@ export async function resolveContactFromIdentifier(identifier: string): Promise<
 
   const { data: userRows } = await userQuery;
   if (userRows && userRows.length > 0) {
-    const u = userRows[0];
+    const u = userRows[0] as any;
     return {
       type: "employee",
       id: u.id,
@@ -100,7 +100,7 @@ export async function findRelatedErpRecord(queryText: string, countryId?: string
   if (!q) return { entityType: null, entityId: null, referenceNo: null, summaryText: null };
 
   // Search Purchase Orders
-  const { data: pos } = await admin
+  const { data: pos } = await (admin as any)
     .from("purchase_orders")
     .select("id, po_number, total_amount, currency, status, remaining_amount")
     .or(`po_number.ilike.%${q}%,id.eq.${q}`)
@@ -108,17 +108,17 @@ export async function findRelatedErpRecord(queryText: string, countryId?: string
     .limit(1);
 
   if (pos && pos.length > 0) {
-    const po = pos[0];
+    const po = pos[0] as any;
     return {
       entityType: "purchase_order",
       entityId: po.id,
-      referenceNo: po.po_number || po.id.slice(0, 8),
-      summaryText: `Purchase Order ${po.po_number || po.id.slice(0, 8)} (${po.currency} ${po.total_amount}, Remaining: ${po.remaining_amount || 0}, Status: ${po.status})`
+      referenceNo: po.po_number || po.id?.slice(0, 8),
+      summaryText: `Purchase Order ${po.po_number || po.id?.slice(0, 8)} (${po.currency || "AED"} ${po.total_amount || 0}, Remaining: ${po.remaining_amount || 0}, Status: ${po.status})`
     };
   }
 
   // Search Sales Orders
-  const { data: sos } = await admin
+  const { data: sos } = await (admin as any)
     .from("sales_orders")
     .select("id, order_number, total_amount, currency, status")
     .or(`order_number.ilike.%${q}%,id.eq.${q}`)
@@ -126,17 +126,17 @@ export async function findRelatedErpRecord(queryText: string, countryId?: string
     .limit(1);
 
   if (sos && sos.length > 0) {
-    const so = sos[0];
+    const so = sos[0] as any;
     return {
       entityType: "sales_order",
       entityId: so.id,
-      referenceNo: so.order_number || so.id.slice(0, 8),
-      summaryText: `Sales Order ${so.order_number || so.id.slice(0, 8)} (${so.currency} ${so.total_amount}, Status: ${so.status})`
+      referenceNo: so.order_number || so.id?.slice(0, 8),
+      summaryText: `Sales Order ${so.order_number || so.id?.slice(0, 8)} (${so.currency || "AED"} ${so.total_amount || 0}, Status: ${so.status})`
     };
   }
 
   // Search Roznamcha Entries
-  const { data: roz } = await admin
+  const { data: roz } = await (admin as any)
     .from("roznamcha_entries")
     .select("id, journal_no, voucher_no, narration, status")
     .or(`journal_no.ilike.%${q}%,voucher_no.ilike.%${q}%,id.eq.${q}`)
@@ -144,11 +144,11 @@ export async function findRelatedErpRecord(queryText: string, countryId?: string
     .limit(1);
 
   if (roz && roz.length > 0) {
-    const r = roz[0];
+    const r = roz[0] as any;
     return {
       entityType: "roznamcha",
       entityId: r.id,
-      referenceNo: r.journal_no || r.voucher_no || r.id.slice(0, 8),
+      referenceNo: r.journal_no || r.voucher_no || r.id?.slice(0, 8),
       summaryText: `Roznamcha ${r.journal_no || r.voucher_no} (${r.narration || "Entry"}, Status: ${r.status})`
     };
   }

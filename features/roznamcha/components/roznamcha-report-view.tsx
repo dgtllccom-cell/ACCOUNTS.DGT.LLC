@@ -296,6 +296,201 @@ export function RoznamchaReportView({
   }
 
   const selectedLedgerId = useMemo(
+const keywords = [label, row.city_branches?.code, row.country_branches?.code].filter(Boolean).join(" ");
+  return { value: id, label, keywords };
+}
+
+function normalizeQuery(value: string) {
+  return String(value || "")
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+export function RoznamchaReportView({
+  lang,
+  pageTitle,
+  typeFilter
+}: {
+  lang: SupportedLanguage;
+  pageTitle: string;
+  typeFilter: RoznamchaType;
+}) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(true);
+  const [entries, setEntries] = useState<RoznamchaEntryRow[]>([]);
+  const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
+
+  const [fromDate, setFromDate] = useState(monthStartIso());
+  const [toDate, setToDate] = useState(todayIso());
+  const [countryId, setCountryId] = useState<string>("all");
+  const [branchId, setBranchId] = useState<string>("all");
+  const [q, setQ] = useState("");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const [selectedId, setSelectedId] = useState("");
+  const [selectedLoading, setSelectedLoading] = useState(false);
+  const [selectedHeader, setSelectedHeader] = useState<RoznamchaEntryRow | null>(null);
+  const [selectedLines, setSelectedLines] = useState<RoznamchaLineRow[]>([]);
+  const [selectedTotals, setSelectedTotals] = useState<{ lines: number; debit: number; credit: number } | null>(null);
+
+  async function loadData() {
+    setLoading(true);
+    try {
+      const info = await fetchSessionInfo();
+      setSessionInfo(info);
+
+      // Default filters (country/branch) for non-super roles to avoid "empty" screens.
+      if (!info.scopes.isSuperAdmin) {
+        const nextCountry = info.scopes.countryIds[0] ?? "";
+        const nextBranch = info.scopes.cityBranchIds[0] ?? info.scopes.countryBranchIds[0] ?? "";
+        if (nextCountry) setCountryId(nextCountry);
+        if (nextBranch) setBranchId(nextBranch);
+      }
+
+      const res = await listRoznamchaEntries({
+        countryId: info.scopes.isSuperAdmin ? null : info.scopes.countryIds[0] ?? null,
+        countryBranchId: info.scopes.isSuperAdmin ? null : info.scopes.countryBranchIds[0] ?? null,
+        cityBranchId: info.scopes.isSuperAdmin ? null : info.scopes.cityBranchIds[0] ?? null
+      });
+
+      setEntries(res.entries ?? []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    void loadData();
+
+    const handleSaved = () => {
+      void loadData();
+    };
+
+    window.addEventListener("erp:posting-saved", handleSaved);
+    window.addEventListener("erp:posting-deleted", handleSaved);
+    return () => {
+      window.removeEventListener("erp:posting-saved", handleSaved);
+      window.removeEventListener("erp:posting-deleted", handleSaved);
+    };
+  }, []);
+
+  const countryOptions = useMemo(() => {
+    const map = new Map<string, SearchSelectOption>();
+    for (const row of entries) {
+      const opt = buildCountryOption(row);
+      if (opt) map.set(opt.value, opt);
+    }
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [entries]);
+
+  const branchOptions = useMemo(() => {
+    const map = new Map<string, SearchSelectOption>();
+    for (const row of entries) {
+      const opt = buildBranchOption(row);
+      if (opt) map.set(opt.value, opt);
+    }
+    return Array.from(map.values()).sort((a, b) => a.label.localeCompare(b.label));
+  }, [entries]);
+
+  const filteredEntries = useMemo(() => {
+    const from = fromDate;
+    const to = toDate;
+    const needle = normalizeQuery(q);
+    return entries
+      .filter((row) => {
+        if (typeFilter === "super_admin") {
+          return true;
+        }
+        if (typeFilter === "country") {
+          return row.type === "country" || row.type === "branch";
+        }
+        return row.type === "branch";
+      })
+      .filter((row) => {
+        if (countryId !== "all" && row.country_id !== countryId) return false;
+        if (branchId !== "all" && entryBranchId(row) !== branchId) return false;
+        if (from && row.entry_date < from) return false;
+        if (to && row.entry_date > to) return false;
+        if (!needle) return true;
+        const hay = normalizeQuery(
+          [
+            row.journal_no,
+            row.voucher_no,
+            row.reference_no,
+            row.narration,
+            entryCountryName(row),
+            entryBranchName(row),
+            row.profiles?.full_name
+          ]
+            .filter(Boolean)
+            .join(" ")
+        );
+        return hay.includes(needle);
+      })
+      .sort((a, b) => (a.entry_date === b.entry_date ? a.voucher_no.localeCompare(b.voucher_no) : b.entry_date.localeCompare(a.entry_date)));
+  }, [branchId, countryId, entries, fromDate, q, toDate, typeFilter]);
+
+  const summary = useMemo(() => {
+    const countries = new Set(filteredEntries.map((row) => row.country_id ?? entryCountryName(row)));
+    
+    let totalDebit = 0;
+    let totalCredit = 0;
+    
+    for (const row of filteredEntries) {
+      const firstLine = row.roznamcha_lines?.[0];
+      if (firstLine) {
+        const amt = Number(firstLine.debit || firstLine.credit || 0);
+        const type = firstLine.payment_entry_type || "";
+        const isDebit = ["cash_receipt", "bank_deposit", "debit"].includes(type);
+        if (isDebit) {
+          totalDebit += amt;
+        } else {
+          totalCredit += amt;
+        }
+      }
+    }
+
+    return {
+      countries: countries.size,
+      entries: filteredEntries.length,
+      debit: totalDebit,
+      credit: totalCredit,
+      balance: totalDebit - totalCredit
+    };
+  }, [filteredEntries]);
+
+  function applyFilters() {
+    void 0;
+  }
+
+  function resetFilters() {
+    setFromDate(monthStartIso());
+    setToDate(todayIso());
+    setCountryId(sessionInfo?.scopes.isSuperAdmin ? "all" : sessionInfo?.scopes.countryIds[0] ?? "all");
+    setBranchId(sessionInfo?.scopes.isSuperAdmin ? "all" : sessionInfo?.scopes.cityBranchIds[0] ?? sessionInfo?.scopes.countryBranchIds[0] ?? "all");
+    setQ("");
+  }
+
+  async function selectEntry(id: string) {
+    setSelectedId(id);
+    setSelectedLoading(true);
+    try {
+      const res = await getRoznamchaEntry(id);
+      setSelectedHeader(res.header);
+      setSelectedLines(res.lines ?? []);
+      setSelectedTotals(res.totals ?? null);
+    } finally {
+      setSelectedLoading(false);
+    }
+  }
+
+  const selectedLedgerId = useMemo(
     () => selectedLines.find((line) => line.ledger_id)?.ledger_id ?? selectedLines.find((line) => line.account_id)?.account_id ?? null,
     [selectedLines]
   );
@@ -393,19 +588,19 @@ export function RoznamchaReportView({
   function openSelectedReport(autoPrint: boolean, mode: "voucher" | "journal") {
     if (!selectedHeader) return;
     if (mode === "voucher") {
-      const totalDr = selectedLines.reduce((sum, l) => sum + (Number(l.debit_amount || 0)), 0);
-      const totalCr = selectedLines.reduce((sum, l) => sum + (Number(l.credit_amount || 0)), 0);
-      const firstLine = selectedLines[0] || {};
+      const totalDr = selectedLines.reduce((sum, l) => sum + (Number(l.debit || 0)), 0);
+      const totalCr = selectedLines.reduce((sum, l) => sum + (Number(l.credit || 0)), 0);
+      const firstLine = (selectedLines[0] || {}) as any;
       openRoznamchaVoucherPrintReport({
         data: {
           receiptNo: selectedHeader.voucher_no || "CE-1001",
           date: selectedHeader.entry_date || new Date().toISOString(),
-          accountNo: firstLine.account_no || firstLine.ledger_no || "1010-CASH",
-          accountName: firstLine.account_name || firstLine.ledger_name || selectedHeader.voucher_no || "Roznamcha Cash Account",
-          paidBy: firstLine.account_name || selectedHeader.voucher_no || "Cash Settlement",
+          accountNo: firstLine.account_number || firstLine.account_id || "1010-CASH",
+          accountName: firstLine.accounts?.name || firstLine.ledgers?.name || selectedHeader.voucher_no || "Roznamcha Cash Account",
+          paidBy: firstLine.accounts?.name || firstLine.ledgers?.name || selectedHeader.voucher_no || "Cash Settlement",
           amount: Math.max(totalDr, totalCr, 0),
-          currency: selectedHeader.currency_code || "AED",
-          narration: firstLine.narration || selectedHeader.remarks || "Roznamcha transaction entry",
+          currency: firstLine.currency || "AED",
+          narration: firstLine.description || selectedHeader.narration || "Roznamcha transaction entry",
           type: totalDr > 0 ? "payment" : "receipt"
         },
         companyInfo: {
@@ -482,14 +677,14 @@ export function RoznamchaReportView({
                 ...e,
                 countryName: entryCountryName(e),
                 branchName: entryBranchName(e),
-                debit: e.lines?.reduce((s, l) => s + (Number(l.debit_amount) || 0), 0) || 0,
-                credit: e.lines?.reduce((s, l) => s + (Number(l.credit_amount) || 0), 0) || 0,
+                debit: e.roznamcha_lines?.reduce((s, l) => s + (Number(l.debit) || 0), 0) || 0,
+                credit: e.roznamcha_lines?.reduce((s, l) => s + (Number(l.credit) || 0), 0) || 0,
               }))}
               summary={{
-                totalEntries: metrics.entries,
-                totalDebit: metrics.debit,
-                totalCredit: metrics.credit,
-                balance: metrics.balance
+                totalEntries: summary.entries,
+                totalDebit: summary.totalDebit,
+                totalCredit: summary.totalCredit,
+                balance: summary.balance
               }}
               orientation="landscape"
             />

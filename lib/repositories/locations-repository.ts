@@ -288,7 +288,7 @@ export class LocationsRepository {
         const localRows = q
           ? await localSql`SELECT id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number FROM public.countries WHERE deleted_at IS NULL AND (name ILIKE ${'%' + q + '%'} OR iso2 ILIKE ${'%' + q + '%'} OR iso3 ILIKE ${'%' + q + '%'}) ORDER BY name ASC LIMIT ${limit}`
           : await localSql`SELECT id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number FROM public.countries WHERE deleted_at IS NULL ORDER BY name ASC LIMIT ${limit}`;
-        if (localRows.length > 0) return localRows as CountryRow[];
+        if (localRows.length > 0) return localRows as unknown as CountryRow[];
       } finally {
         await localSql.end({ timeout: 5 });
       }
@@ -315,7 +315,7 @@ export class LocationsRepository {
         const rows = q
           ? await sql`SELECT id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number FROM public.countries WHERE deleted_at IS NULL AND (name ILIKE ${'%' + q + '%'} OR iso2 ILIKE ${'%' + q + '%'} OR iso3 ILIKE ${'%' + q + '%'}) ORDER BY name ASC LIMIT ${limit}`
           : await sql`SELECT id, name, iso2, iso3, currency_code, default_language_code, phone_code, is_active, official_email, admin_email, whatsapp_number FROM public.countries WHERE deleted_at IS NULL ORDER BY name ASC LIMIT ${limit}`;
-        if (rows.length > 0) return rows as CountryRow[];
+        if (rows.length > 0) return rows as unknown as CountryRow[];
       } finally {
         await sql.end({ timeout: 5 });
       }
@@ -483,7 +483,7 @@ export class LocationsRepository {
               ORDER BY name ASC LIMIT ${limit}
             `;
         await sql.end();
-        if (rows && rows.length > 0) return rows as StateRow[];
+        if (rows && rows.length > 0) return rows as unknown as StateRow[];
       } catch {
         // Fallthrough
       }
@@ -532,7 +532,7 @@ export class LocationsRepository {
               ORDER BY name ASC LIMIT ${limit}
             `;
         await sql.end();
-        if (rows && rows.length > 0) return rows as DistrictRow[];
+        if (rows && rows.length > 0) return rows as unknown as DistrictRow[];
       } catch {
         // Fallthrough
       }
@@ -591,7 +591,7 @@ export class LocationsRepository {
               ORDER BY name ASC LIMIT ${limit}
             `;
         await sql.end();
-        if (rows && rows.length > 0) return rows as CityRow[];
+        if (rows && rows.length > 0) return rows as unknown as CityRow[];
       } catch {
         // Fallthrough
       }
@@ -704,7 +704,7 @@ export class LocationsRepository {
           : (q
             ? await sql`SELECT id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active FROM public.areas_locations WHERE deleted_at IS NULL AND name ILIKE ${'%' + q + '%'} ORDER BY name ASC LIMIT ${limit}`
             : await sql`SELECT id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active FROM public.areas_locations WHERE deleted_at IS NULL ORDER BY name ASC LIMIT ${limit}`);
-        return rows as AreaRow[];
+        return rows as unknown as AreaRow[];
       } catch (fallbackErr) {
         console.error("Direct Postgres fallback for listAreas failed:", fallbackErr);
       } finally {
@@ -1184,20 +1184,24 @@ export class LocationsRepository {
     if (dbUrl) {
       const sql = postgres(dbUrl, { max: 1, prepare: false });
       try {
+        const nameParam = input.name !== undefined && input.name !== null ? input.name.trim() : null;
+        const codeParam = input.code !== undefined && input.code !== null ? (input.code ? input.code.trim() : null) : null;
+        const distParam = input.districtId !== undefined && input.districtId !== null ? input.districtId : null;
+        const activeParam = input.isActive !== undefined && input.isActive !== null ? Boolean(input.isActive) : null;
         const rows = await sql`
           UPDATE public.areas_locations
           SET
-            name = COALESCE(${input.name !== undefined ? input.name?.trim() : null}, name),
-            code = COALESCE(${input.code !== undefined ? (input.code ? input.code.trim() : null) : null}, code),
-            district_id = COALESCE(${input.districtId !== undefined ? input.districtId : null}::uuid, district_id),
-            is_active = COALESCE(${input.isActive !== undefined && input.isActive !== null ? Boolean(input.isActive) : null}, is_active),
+            name = COALESCE(${nameParam}, name),
+            code = COALESCE(${codeParam}, code),
+            district_id = COALESCE(${distParam}::uuid, district_id),
+            is_active = COALESCE(${activeParam}, is_active),
             updated_at = NOW()
           WHERE id = ${input.areaId}::uuid AND deleted_at IS NULL
           RETURNING id, country_id, state_province_id, district_id, city_id, name, code, postal_code, phone_area_code, is_active
         `;
         if (rows && rows[0]) {
           void translateMasterRecord("areas_locations", rows[0].id, { name: rows[0].name }, "en");
-          return rows[0] as AreaRow;
+          return rows[0] as unknown as AreaRow;
         }
       } catch (pgErr: any) {
         console.error("Direct Postgres updateArea fallback error:", pgErr);

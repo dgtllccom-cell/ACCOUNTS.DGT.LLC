@@ -1,5 +1,5 @@
-import type { EnterpriseRole } from "./enterprise-roles.ts";
-import { enterpriseRolePermissions, enterpriseRoleScopes } from "./enterprise-roles.ts";
+import type { EnterpriseRole } from "./enterprise-roles";
+import { enterpriseRolePermissions, enterpriseRoleScopes } from "./enterprise-roles";
 
 export interface ModulePermissionCapability {
   moduleKey: string;

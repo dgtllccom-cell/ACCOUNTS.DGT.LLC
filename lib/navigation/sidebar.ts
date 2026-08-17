@@ -800,7 +800,7 @@ export const sidebarTree: SidebarNode[] = [
       },
       {
         key: "clearing-transit-entry",
-        labelKey: "nav.transit_entry",
+        labelKey: "nav.agent_custom_entry",
         href: "/dashboard/clearing-agent/transit-entry" as Route,
         roles: ["super_admin", "agent_user", "country_admin", "main_branch_admin"]
       },

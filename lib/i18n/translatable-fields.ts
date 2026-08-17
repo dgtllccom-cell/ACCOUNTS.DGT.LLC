@@ -311,11 +311,21 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
   clearing_customer_orders: [
     { field: "customer_name", mode: "transliterate" },
     { field: "route_name", mode: "translate" },
+    { field: "exporter_name", mode: "transliterate" },
+    { field: "importer_name", mode: "transliterate" },
+    { field: "notify_party_name", mode: "transliterate" },
+    { field: "buyer_name", mode: "transliterate" },
     { field: "loading_country_name", mode: "transliterate" },
     { field: "receiving_country_name", mode: "transliterate" },
     { field: "loading_port_name", mode: "transliterate" },
     { field: "destination_port_name", mode: "transliterate" },
+    { field: "loading_source_name", mode: "transliterate" },
     { field: "cargo_details", mode: "translate" },
+  ],
+  clearing_customer_order_parties: [
+    { field: "party_customer_name", mode: "transliterate" },
+    { field: "party_company_name", mode: "transliterate" },
+    { field: "selected_address_text", mode: "translate" },
   ],
 };
 

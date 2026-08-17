@@ -90,7 +90,7 @@ export async function acquireIdempotencyLock(options: IdempotencyOptions): Promi
 
   try {
     // Attempt RPC lock acquisition first
-    const { data: rpcData, error: rpcError } = await admin.rpc("acquire_idempotency_lock", {
+    const { data: rpcData, error: rpcError } = await (admin as any).rpc("acquire_idempotency_lock", {
       p_idempotency_key: key,
       p_tenant_hash: tenantHash,
       p_scope_module: options.scopeModule,
@@ -103,7 +103,7 @@ export async function acquireIdempotencyLock(options: IdempotencyOptions): Promi
     });
 
     if (!rpcError && Array.isArray(rpcData) && rpcData.length > 0) {
-      const lockRes = rpcData[0];
+      const lockRes = rpcData[0] as any;
       if (lockRes.is_replayed) {
         return {
           acquired: false,
@@ -121,7 +121,7 @@ export async function acquireIdempotencyLock(options: IdempotencyOptions): Promi
     }
 
     // Fallback: Direct DB query if RPC is not yet applied
-    const { data: existing } = await admin
+    const { data: existing } = await (admin as any)
       .from("idempotency_keys")
       .select("*")
       .eq("tenant_hash", tenantHash)
@@ -147,7 +147,7 @@ export async function acquireIdempotencyLock(options: IdempotencyOptions): Promi
 
     // Insert or update processing lock
     const expiresAt = new Date(Date.now() + 90 * 1000).toISOString();
-    await admin.from("idempotency_keys").upsert(
+    await (admin as any).from("idempotency_keys").upsert(
       {
         idempotency_key: key,
         tenant_hash: tenantHash,
@@ -188,7 +188,7 @@ export async function commitIdempotencySuccess(
       ? { ...responseBody, isReplayed: true }
       : { ok: true, data: responseBody, isReplayed: true };
 
-    await admin
+    await (admin as any)
       .from("idempotency_keys")
       .update({
         status: "COMPLETED",
@@ -210,7 +210,7 @@ export async function releaseIdempotencyLock(idempotencyKey: string, tenantHash:
   if (!idempotencyKey || !tenantHash) return;
   try {
     const admin = createSupabaseAdminClient();
-    await admin
+    await (admin as any)
       .from("idempotency_keys")
       .delete()
       .eq("tenant_hash", tenantHash)
@@ -244,6 +244,7 @@ export async function withIdempotency(
 
   if (!lockRes.acquired) {
     return apiError(
+      "IDEMPOTENCY_CONFLICT",
       "A request with this idempotency key is currently being processed or duplicate submission detected. Please wait.",
       409
     );

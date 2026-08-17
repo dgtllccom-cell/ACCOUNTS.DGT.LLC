@@ -90,7 +90,7 @@ export function buildProfessionalReportLayout(
     },
     dateRange: options.dateRange,
     generatedAt,
-    generatedBy: session.fullName || session.email,
+    generatedBy: session.fullName || session.email || undefined,
     data,
     pageInfo: {
       currentPage: options.currentPage,

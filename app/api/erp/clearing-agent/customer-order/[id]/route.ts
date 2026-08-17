@@ -1,35 +1,48 @@
 import { NextRequest, NextResponse } from "next/server";
 import {
+  deleteCustomerOrder,
   getCustomerOrderById,
-  listCustomerOrders,
   saveCustomerOrder
 } from "@/lib/services/clearing-customer-order-service";
 
-export async function GET(req: NextRequest) {
+async function resolveOrderId(req: NextRequest, params: Promise<{ id: string }> | { id: string }) {
   try {
-    const { searchParams } = new URL(req.url);
-    const status = searchParams.get("status");
-    const orderId = searchParams.get("id");
+    const resolved = await Promise.resolve(params as any);
+    const id = typeof resolved?.id === "string" ? resolved.id.trim() : "";
+    if (id) return id;
+  } catch {
+    // fall back to the path segment below
+  }
 
-    if (orderId) {
-      const order = await getCustomerOrderById(orderId);
-      if (!order) {
-        return NextResponse.json({ success: false, error: "Customer order not found" }, { status: 404 });
-      }
-      return NextResponse.json({ success: true, data: order });
+  const parts = new URL(req.url).pathname.split("/").filter(Boolean);
+  return parts[parts.length - 1] || "";
+}
+
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> | { id: string } }) {
+  try {
+    const id = await resolveOrderId(req, params);
+    if (!id) {
+      return NextResponse.json({ success: false, error: "Customer order id is required" }, { status: 400 });
     }
-
-    const data = await listCustomerOrders(status);
-    return NextResponse.json({ success: true, data });
+    const order = await getCustomerOrderById(id);
+    if (!order) {
+      return NextResponse.json({ success: false, error: "Customer order not found" }, { status: 404 });
+    }
+    return NextResponse.json({ success: true, data: order });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
-export async function POST(req: NextRequest) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> | { id: string } }) {
   try {
+    const id = await resolveOrderId(req, params);
+    if (!id) {
+      return NextResponse.json({ success: false, error: "Customer order id is required" }, { status: 400 });
+    }
     const body = await req.json();
     const result = await saveCustomerOrder({
+      id,
       customerId: body.customer_id ?? body.customerId ?? null,
       customerName: body.customer_name ?? body.customerName ?? body.supplier_name ?? body.supplierName ?? "",
       routeName: body.route_name ?? body.routeName ?? null,
@@ -55,7 +68,6 @@ export async function POST(req: NextRequest) {
       expectedLoadingDate: body.expected_loading_date ?? body.expectedLoadingDate ?? null,
       remarks: body.remarks ?? null,
       status: body.status ?? "pending",
-      orderNo: body.order_no ?? body.orderNo ?? null,
       partyLinks: body.party_links ?? body.partyLinks ?? undefined,
       originalLanguage: body.original_language ?? body.originalLanguage ?? "en",
       countryId: body.country_id ?? body.countryId ?? null,
@@ -64,6 +76,19 @@ export async function POST(req: NextRequest) {
     });
 
     return NextResponse.json({ success: true, data: result.order, party_links: result.partyLinks });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> | { id: string } }) {
+  try {
+    const id = await resolveOrderId(req, params);
+    if (!id) {
+      return NextResponse.json({ success: false, error: "Customer order id is required" }, { status: 400 });
+    }
+    const deleted = await deleteCustomerOrder(id);
+    return NextResponse.json({ success: true, data: deleted });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

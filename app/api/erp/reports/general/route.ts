@@ -2,7 +2,7 @@ import { NextRequest } from "next/server";
 import { z } from "zod";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
-import { authorize } from "@/lib/permissions/middleware";
+import { authorize, resolveReportScope, enforceScopeFilters } from "@/lib/permissions/middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 const reportQuerySchema = z.object({
@@ -48,7 +48,35 @@ export async function GET(request: NextRequest) {
       limit: searchParams.get("limit") ?? undefined
     });
 
+    // Security: never trust the client-supplied countryId/branchId. Clamp every report query to the
+    // caller's authorized report scope (super_admin => unrestricted; country/branch roles => forced to
+    // their own country/branch). Without this, a scoped user could pass countryId=all and read every
+    // country's data. Mirrors the resolveReportScope contract used by the other report handlers.
+    const reportScope = resolveReportScope(session);
+    const { effectiveCountryId, effectiveBranchId } = enforceScopeFilters(
+      reportScope,
+      parsed.countryId && parsed.countryId !== "all" ? parsed.countryId : null,
+      parsed.branchId && parsed.branchId !== "all" ? parsed.branchId : null
+    );
+    parsed.countryId = effectiveCountryId ?? "all";
+    parsed.branchId = effectiveBranchId ?? "all";
+
     const admin = createSupabaseAdminClient();
+
+    // For roznamcha_lines-based report types (receipts/payments/expenses) the country/branch scope
+    // lives on the PARENT roznamcha_entries row, not on the line. For a non-global caller, resolve the
+    // set of in-scope entry ids once and constrain the line queries with `.in(...)`. `null` => global
+    // (super admin) => no constraint. Basic `.eq`/`.or`/`.in` filters only (version-stable).
+    let scopedEntryIds: string[] | null = null;
+    if (reportScope.level !== "global") {
+      let scopeQuery = admin.from("roznamcha_entries").select("id").is("deleted_at", null);
+      if (parsed.countryId !== "all") scopeQuery = scopeQuery.eq("country_id", parsed.countryId);
+      if (parsed.branchId !== "all") {
+        scopeQuery = scopeQuery.or(`city_branch_id.eq.${parsed.branchId},country_branch_id.eq.${parsed.branchId}`);
+      }
+      const { data: scopeRows } = await scopeQuery.limit(100000);
+      scopedEntryIds = (scopeRows ?? []).map((r: any) => r.id);
+    }
 
     let data: any = [];
     let summary: any = {};
@@ -135,6 +163,8 @@ export async function GET(request: NextRequest) {
             .gt("debit", 0)
             .order("id", { ascending: false });
 
+          if (scopedEntryIds) query = query.in("roznamcha_entry_id", scopedEntryIds);
+
           const { data: dbData } = await query.limit(parsed.limit);
           const mapped = (dbData ?? []).filter((r: any) => r.roznamcha_entries).map((row: any) => ({
             id: row.id,
@@ -184,6 +214,8 @@ export async function GET(request: NextRequest) {
             .gt("credit", 0)
             .order("id", { ascending: false });
 
+          if (scopedEntryIds) query = query.in("roznamcha_entry_id", scopedEntryIds);
+
           const { data: dbData } = await query.limit(parsed.limit);
           const mapped = (dbData ?? []).filter((r: any) => r.roznamcha_entries).map((row: any) => ({
             id: row.id,
@@ -227,11 +259,12 @@ export async function GET(request: NextRequest) {
 
       case "customer-accounts": {
         try {
-          const { data: dbData } = await admin
+          let custQuery = admin
             .from("customers")
             .select("id, customer_number, company_name, phone_number, email_address, currency_code, notes, created_at")
-            .is("deleted_at", null)
-            .limit(parsed.limit);
+            .is("deleted_at", null);
+          if (parsed.countryId && parsed.countryId !== "all") custQuery = custQuery.eq("country_id", parsed.countryId);
+          const { data: dbData } = await custQuery.limit(parsed.limit);
 
           const mapped = (dbData ?? []).map((row: any) => {
             let notesObj: any = {};
@@ -287,10 +320,12 @@ export async function GET(request: NextRequest) {
 
       case "customer-companies": {
         try {
-          const { data: dbData } = await admin
+          let compQuery = admin
             .from("companies")
             .select("id, name, legal_name, base_currency, is_active, created_at")
             .is("deleted_at", null);
+          if (parsed.countryId && parsed.countryId !== "all") compQuery = compQuery.eq("country_id", parsed.countryId);
+          const { data: dbData } = await compQuery;
 
           const mapped = (dbData ?? []).map((row: any) => ({
             id: row.id,
@@ -371,10 +406,15 @@ export async function GET(request: NextRequest) {
 
       case "branch-transactions": {
         try {
-          const { data: dbData } = await admin
+          let btQuery = admin
             .from("roznamcha_entries")
             .select("id, country_id, countries(name), city_branch_id, city_branches(name, code), roznamcha_lines(debit, credit, currency)")
             .is("deleted_at", null);
+          if (parsed.countryId && parsed.countryId !== "all") btQuery = btQuery.eq("country_id", parsed.countryId);
+          if (parsed.branchId && parsed.branchId !== "all") {
+            btQuery = btQuery.or(`city_branch_id.eq.${parsed.branchId},country_branch_id.eq.${parsed.branchId}`);
+          }
+          const { data: dbData } = await btQuery;
 
           const branchGroups: Record<string, any> = {};
           (dbData ?? []).forEach((row: any) => {
@@ -556,9 +596,11 @@ export async function GET(request: NextRequest) {
 
       case "expenses": {
         try {
-          const { data: dbData } = await admin
+          let expQuery = admin
             .from("roznamcha_lines")
             .select("id, debit, credit, currency, description, roznamcha_entries(entry_date)");
+          if (scopedEntryIds) expQuery = expQuery.in("roznamcha_entry_id", scopedEntryIds);
+          const { data: dbData } = await expQuery;
 
           const expenses = (dbData ?? [])
             .filter((r: any) => {

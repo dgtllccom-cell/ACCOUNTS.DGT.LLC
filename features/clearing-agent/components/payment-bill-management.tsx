@@ -7,7 +7,6 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { ReportActions } from "@/components/ui/report-actions";
 import { Th } from "@/components/ui/translated-th";
-import { DashboardFrame } from "@/components/layout/dashboard-frame";
 
 type PaymentBillRow = {
   id: string;
@@ -161,8 +160,7 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
   }
 
   return (
-    <DashboardFrame title="Clearing Agent Payment Bill Entry" subtitle="Customs Duty, Clearance Charges & Payment Voucher Register">
-      <div dir={dir} className="max-w-7xl mx-auto space-y-6 pb-12">
+    <div dir={dir} className="max-w-7xl mx-auto space-y-6 pb-12">
         {/* Header Ribbon */}
         <div className="bg-gradient-to-r from-slate-900 via-slate-800 to-indigo-950 border border-slate-700/50 rounded-2xl p-6 shadow-xl text-white">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -593,6 +591,5 @@ export function PaymentBillManagementView({ lang }: { lang: SupportedLanguage })
           )}
         </div>
       </div>
-    </DashboardFrame>
   );
 }

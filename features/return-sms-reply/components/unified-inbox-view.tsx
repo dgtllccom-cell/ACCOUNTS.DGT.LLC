@@ -108,6 +108,7 @@ export function UnifiedInboxView({ lang }: Props) {
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [whatsappConfig, setWhatsappConfig] = useState({
     officialNumber: null as string | null,
+    adminNumber: null as string | null,
     accountName: null as string | null,
     wbaId: null as string | null,
     phoneNumberId: null as string | null,
@@ -765,7 +766,7 @@ export function UnifiedInboxView({ lang }: Props) {
                   <label className="font-bold text-slate-700 dark:text-slate-300">Connected Company WhatsApp Number</label>
                   <input
                     type="text"
-                    value={whatsappConfig.officialNumber}
+                    value={whatsappConfig.officialNumber || ""}
                     onChange={(e) => setWhatsappConfig({ ...whatsappConfig, officialNumber: e.target.value })}
                     className="w-full font-mono font-bold p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 outline-none"
                   />
@@ -774,7 +775,7 @@ export function UnifiedInboxView({ lang }: Props) {
                   <label className="font-bold text-slate-700 dark:text-slate-300">Admin Notification Mobile Number</label>
                   <input
                     type="text"
-                    value={whatsappConfig.adminNumber}
+                    value={whatsappConfig.adminNumber || ""}
                     onChange={(e) => setWhatsappConfig({ ...whatsappConfig, adminNumber: e.target.value })}
                     className="w-full font-mono font-bold p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 outline-none"
                   />
@@ -786,7 +787,7 @@ export function UnifiedInboxView({ lang }: Props) {
                   <label className="font-bold text-slate-700 dark:text-slate-300">WhatsApp Business Account ID (WBAID)</label>
                   <input
                     type="text"
-                    value={whatsappConfig.wbaId}
+                    value={whatsappConfig.wbaId || ""}
                     onChange={(e) => setWhatsappConfig({ ...whatsappConfig, wbaId: e.target.value })}
                     className="w-full font-mono text-[11px] p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 outline-none"
                   />
@@ -795,7 +796,7 @@ export function UnifiedInboxView({ lang }: Props) {
                   <label className="font-bold text-slate-700 dark:text-slate-300">Phone Number ID</label>
                   <input
                     type="text"
-                    value={whatsappConfig.phoneNumberId}
+                    value={whatsappConfig.phoneNumberId || ""}
                     onChange={(e) => setWhatsappConfig({ ...whatsappConfig, phoneNumberId: e.target.value })}
                     className="w-full font-mono text-[11px] p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 outline-none"
                   />
@@ -845,7 +846,7 @@ export function UnifiedInboxView({ lang }: Props) {
       <WhatsAppWizardModal
         isOpen={showQrModal}
         onClose={() => setShowQrModal(false)}
-        defaultPhoneNumber={whatsappConfig.officialNumber}
+        defaultPhoneNumber={whatsappConfig.officialNumber ?? undefined}
         defaultScope={selectedBranchScope}
         onConnected={(acc) => {
           setWhatsappConfig((prev) => ({

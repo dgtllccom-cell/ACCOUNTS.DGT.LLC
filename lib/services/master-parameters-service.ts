@@ -39,7 +39,7 @@ export const GLOBAL_OFFICIAL_MASTER_PARAMETERS: Array<{
   { category: "seaport", countryIso2: "AE", countryName: "United Arab Emirates", officialName: "Jebel Ali Port", code: "AEJAF" },
   { category: "seaport", countryIso2: "AE", countryName: "United Arab Emirates", officialName: "Port Rashid", code: "AEPRA" },
   { category: "seaport", countryIso2: "AE", countryName: "United Arab Emirates", officialName: "Khalifa Port", code: "AEKHL" },
-  { category: "seaport", countryIso2: "AE", countryName: "United Arab Emirates", officialName: "Hamriyah Port", countryName: "United Arab Emirates", code: "AEHAM" },
+  { category: "seaport", countryIso2: "AE", countryName: "United Arab Emirates", officialName: "Hamriyah Port", code: "AEHAM" },
   { category: "seaport", countryIso2: "AE", countryName: "United Arab Emirates", officialName: "Fujairah Port", code: "AEFUJ" },
   { category: "seaport", countryIso2: "AE", countryName: "United Arab Emirates", officialName: "Khor Fakkan Port", code: "AEKFK" },
   { category: "seaport", countryIso2: "AE", countryName: "United Arab Emirates", officialName: "Mina Zayed Port", code: "AEMZY" },

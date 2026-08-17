@@ -11,13 +11,24 @@ export type WarehouseRecord = {
   owner_customer_id?: string | null;
   warehouse_type: string;
   country_id: string | null;
+  country_name?: string | null;
   state_province_id: string | null;
   district_id: string | null;
   city_id: string | null;
+  city_name?: string | null;
   area_id?: string | null;
+  area_name?: string | null;
   full_address: string | null;
   contact_number: string | null;
   status: string;
+  warehouse_code?: string | null;
+  branch_name?: string | null;
+  total_capacity_tons?: number | string | null;
+  address?: string | null;
+  manager_name?: string | null;
+  phone_number?: string | null;
+  is_cold_storage?: boolean | null;
+  is_active?: boolean | null;
   created_at: string;
   updated_at: string;
 };
@@ -60,6 +71,8 @@ export async function updateWarehouse(
 
 export async function deleteWarehouse(id: string): Promise<void> {
   const res = await fetch(`${BASE}/${id}`, { method: "DELETE" });
-  const json = await res.json();
-  if (!res.ok) throw new Error(json.error || "Failed to delete warehouse");
+  if (!res.ok) {
+    const json = await res.json().catch(() => ({}));
+    throw new Error(json.error || "Failed to delete warehouse");
+  }
 }

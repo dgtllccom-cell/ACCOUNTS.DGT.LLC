@@ -22,7 +22,7 @@ export async function registerMobileDevicePushToken(params: {
 }) {
   const admin = createSupabaseAdminClient();
 
-  const { data, error } = await admin
+  const { data, error } = await (admin as any)
     .from("user_device_tokens")
     .upsert(
       {
@@ -51,7 +51,7 @@ export async function sendMobilePushNotification(payload: MobilePushNotification
   const admin = createSupabaseAdminClient();
 
   // Fetch device tokens for user or country/branch users
-  let query = admin.from("user_device_tokens").select("device_token, platform, user_id");
+  let query = (admin as any).from("user_device_tokens").select("device_token, platform, user_id");
   if (payload.userId) query = query.eq("user_id", payload.userId);
 
   const { data: devices } = await query;

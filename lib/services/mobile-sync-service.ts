@@ -77,7 +77,7 @@ export async function getMobileAutoSyncPayload(session: ErpSession): Promise<Mob
   let aiRepliesReady = 0;
 
   for (const c of (convs || [])) {
-    if (c.unread_count > 0) newMessages += c.unread_count;
+    if ((c.unread_count || 0) > 0) newMessages += (c.unread_count || 0);
     if (c.status === "pending_reply" || c.status === "approval_required") pendingReplies++;
     if (c.status === "ai_ready") aiRepliesReady++;
   }
@@ -90,9 +90,9 @@ export async function getMobileAutoSyncPayload(session: ErpSession): Promise<Mob
   return {
     user: {
       id: session.userId,
-      fullName: session.userFullName || session.email || "ERP User",
+      fullName: session.fullName || session.email || "ERP User",
       email: session.email || "",
-      role: session.role || "staff_user",
+      role: (session as any).role || session.roles?.[0] || "staff_user",
       preferredLanguage: session.preferredLanguage || "en"
     },
     scope: {

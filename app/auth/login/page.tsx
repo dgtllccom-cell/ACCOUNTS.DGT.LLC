@@ -9,10 +9,13 @@ export const metadata = {
   description: "Sign in to the Damaan Business Group ERP — Global Inventory & Logistics Management System.",
 };
 
+export const dynamic = "force-dynamic";
+export const fetchCache = "force-no-store";
+
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams?: { error?: string } | Promise<{ error?: string }>;
+  searchParams?: Promise<{ error?: string }>;
 }) {
   const resolvedSearchParams = searchParams ? await searchParams : {};
   const params = resolvedSearchParams || {};

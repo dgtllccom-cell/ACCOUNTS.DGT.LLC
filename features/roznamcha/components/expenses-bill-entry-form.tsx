@@ -195,6 +195,12 @@ export function ExpensesBillEntryForm({
   type SessionInfo = {
     user: { id: string; email: string | null; fullName: string | null };
     roles: string[];
+    scopes?: {
+      isSuperAdmin?: boolean;
+      countryIds?: string[];
+      countryBranchIds?: string[];
+      cityBranchIds?: string[];
+    };
   };
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
 
@@ -685,9 +691,9 @@ export function ExpensesBillEntryForm({
       return;
     }
 
-    const newRow: RowEntry = {
+    const newRow: any = {
       id: crypto.randomUUID(),
-      rowSerial: rows.length + 1,
+      rowSerial: String(rows.length + 1),
       serial: billSerial,
       branch,
       date: billDate,
@@ -1354,12 +1360,12 @@ export function ExpensesBillEntryForm({
                     <td className="px-3 py-2 text-center font-bold text-slate-400">{r.rowSerial}</td>
                     <td className="px-3 py-2 text-slate-700 max-w-[150px] truncate" title={r.details}>{r.details}</td>
                     <td className="px-3 py-2 text-right font-mono">{r.qty}</td>
-                    <td className="px-3 py-2 text-right font-mono">{r.unitPrice.toFixed(2)}</td>
-                    <td className="px-3 py-2 text-right font-mono text-slate-500">{r.amount.toFixed(2)}</td>
+                    <td className="px-3 py-2 text-right font-mono">{Number(r.unitPrice || 0).toFixed(2)}</td>
+                    <td className="px-3 py-2 text-right font-mono text-slate-500">{Number(r.amount || 0).toFixed(2)}</td>
                     <td className="px-3 py-2 text-center font-bold text-[11px]">{r.currency}</td>
                     <td className="px-3 py-2 text-center font-mono">{r.operation}</td>
-                    <td className="px-3 py-2 text-right font-mono">{r.exchangeRate > 0 ? r.exchangeRate.toFixed(4) : "-"}</td>
-                    <td className="px-3 py-2 text-right font-mono font-medium">{r.finalAmount.toFixed(2)}</td>
+                    <td className="px-3 py-2 text-right font-mono">{Number(r.exchangeRate || 0) > 0 ? Number(r.exchangeRate || 0).toFixed(4) : "-"}</td>
+                    <td className="px-3 py-2 text-right font-mono font-medium">{Number(r.finalAmount || 0).toFixed(2)}</td>
                     <td className="px-3 py-2 text-right font-mono">
                       {r.taxOn ? <span className="inline-flex items-center text-amber-600 bg-amber-50 px-1.5 py-0.5 rounded text-[10px]"><BadgePercent className="w-3 h-3 mr-0.5"/> {r.taxPct}%</span> : "-"}
                     </td>

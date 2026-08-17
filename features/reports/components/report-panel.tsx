@@ -253,11 +253,10 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
           const rawUrlType = searchParams.get("type") || searchParams.get("reportType");
           let targetReportType = rawUrlType || json.data.reportTypes?.[0]?.key || (workspace === "super-admin" ? "ledger" : "roznamcha");
           if (targetReportType === "exchange-rates") targetReportType = "exchange-rate";
-
           const initialFilterVals: ReportFilterValues = {
             ...DEFAULT_FILTERS,
             reportType: targetReportType,
-            countryId: json.data.scope?.lockedCountryId ?? json.data.countries?.[0]?.id ?? "all",
+            countryId: json.data.scope?.lockedCountryId ?? "all",
             mainBranchId: json.data.scope?.lockedMainBranchId ?? "all",
             branchId: json.data.scope?.lockedBranchId ?? "all"
           };
@@ -298,7 +297,7 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
   const handleReset = () => {
     const nextFilters: ReportFilterValues = {
       ...DEFAULT_FILTERS,
-      countryId: meta?.scope.lockedCountryId ?? meta?.countries[0]?.id ?? "all",
+      countryId: meta?.scope.lockedCountryId ?? "all",
       reportType: meta?.reportTypes[0]?.key ?? (workspace === "super-admin" ? "ledger" : "roznamcha")
     };
     setFilters(nextFilters);
@@ -321,6 +320,35 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
     : "report.panel_branch";
 
   const panelTitle = _(panelTitleKey);
+
+  // Computed summary metrics
+  const totalEntriesCount = Number(reportSummary?.totalRecords || reportSummary?.entriesCount || reportData.length || 0);
+  const totalCreditVal = Number(reportSummary?.credit || reportSummary?.totalCredit || reportSummary?.totalIncome || 0);
+  const totalDebitVal = Number(reportSummary?.debit || reportSummary?.totalDebit || reportSummary?.totalExpense || 0);
+  const netBalanceVal = Number(reportSummary?.balance || reportSummary?.netBalance || reportSummary?.totalAmount || (totalCreditVal - totalDebitVal));
+  const clearedCount = Number(reportSummary?.clearedCount || reportSummary?.postedCount || 0);
+  const remainingCount = Math.max(0, totalEntriesCount - clearedCount);
+  const currentCurrencySymbol = appliedCurrency !== "all" ? appliedCurrency : "AED";
+
+  // Active country / branch names for Card 1
+  const selectedMainBranch = meta?.mainBranches.find((b) => b.id === filters.mainBranchId);
+  const selectedCityBranch = meta?.cityBranches.find((b) => b.id === filters.branchId);
+  const activeBranchCountryId = selectedCityBranch?.country_id || selectedMainBranch?.country_id;
+
+  const selectedCountryName =
+    filters.countryId && filters.countryId !== "all"
+      ? meta?.countries.find((c) => c.id === filters.countryId)?.name || scope?.lockedCountryName || "All Countries"
+      : activeBranchCountryId
+        ? meta?.countries.find((c) => c.id === activeBranchCountryId)?.name || "United Arab Emirates"
+        : scope?.lockedCountryName || "All Countries (Global)";
+
+  const selectedBranchName =
+    selectedCityBranch?.name ||
+    selectedMainBranch?.name ||
+    scope?.lockedBranchName ||
+    (filters.countryId && filters.countryId !== "all"
+      ? `${meta?.countries.find((c) => c.id === filters.countryId)?.name || ""} ALL BRANCHES`.trim()
+      : "ALL GLOBAL BRANCHES");
 
   useEffect(() => {
     setVisibleColumnKeys((current) => {
@@ -408,19 +436,6 @@ export function ReportPanel({ lang: initialLang, initialScopeLevel = "global", v
       return next;
     });
   };
-
-  // Executive summary metrics calculation
-  const totalEntriesCount = reportResult?.records || reportData.length || 0;
-  const totalCreditVal = Number(reportSummary?.credit || reportSummary?.totalCredit || reportSummary?.totalIncome || 0);
-  const totalDebitVal = Number(reportSummary?.debit || reportSummary?.totalDebit || reportSummary?.totalExpense || 0);
-  const netBalanceVal = Number(reportSummary?.balance || reportSummary?.netBalance || reportSummary?.totalAmount || (totalCreditVal - totalDebitVal));
-  const clearedCount = Number(reportSummary?.clearedCount || reportSummary?.postedCount || 0);
-  const remainingCount = Math.max(0, totalEntriesCount - clearedCount);
-  const currentCurrencySymbol = appliedCurrency !== "all" ? appliedCurrency : "AED";
-
-  // Active country / branch names for Card 1
-  const selectedCountryName = meta?.countries.find((c) => c.id === filters.countryId)?.name || scope?.lockedCountryName || "United Arab Emirates";
-  const selectedBranchName = meta?.cityBranches.find((b) => b.id === filters.branchId)?.name || meta?.mainBranches.find((b) => b.id === filters.mainBranchId)?.name || scope?.lockedBranchName || "UNITED ARAB EMIRATES MAIN BRANCH";
 
   const filename = `${appliedReportType}-${new Date().toISOString().slice(0, 10)}`;
 
