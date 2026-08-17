@@ -114,12 +114,23 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       }
     ]));
 
+    const normalizedFormData = row && typeof row === "object"
+      ? (typeof (row as any).form_data === "string"
+        ? (() => { try { return JSON.parse((row as any).form_data); } catch { return (row as any).form_data; } })()
+        : (row as any).form_data)
+      : null;
+
     const normalizedRow = row && typeof row === "object" ? {
       ...(row as any),
-      form_data: typeof (row as any).form_data === "string"
-        ? (() => { try { return JSON.parse((row as any).form_data); } catch { return (row as any).form_data; } })()
-        : (row as any).form_data,
-      companies: (row as any).companies ?? null
+      form_data: normalizedFormData && typeof normalizedFormData === "object"
+        ? {
+            ...normalizedFormData,
+            translations: (normalizedFormData as any).translations ?? translations,
+            translationStatus: (normalizedFormData as any).translationStatus ?? null
+          }
+        : normalizedFormData,
+      companies: (row as any).companies ?? null,
+      translations
     } : row;
 
     return apiOk({ order: { ...(normalizedRow as any), translations } });

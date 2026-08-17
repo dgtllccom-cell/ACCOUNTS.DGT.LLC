@@ -3,6 +3,7 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 import type { ErpSession } from "@/lib/auth/session";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { lookupApprovedDictionary } from "@/lib/i18n/localize-records";
+import { isUuid } from "@/lib/utils";
 
 export type LedgerReportScope = "super_admin" | "country" | "branch";
 
@@ -133,23 +134,11 @@ async function loadTranslations(input: {
   for (const row of (allData ?? []) as TranslationRow[]) {
     const raw = (row.original_text ?? "").trim();
     const recVal = ((row[col] as string | null) ?? "").trim();
+    // Honest resolution only (record value → approved central dictionary → original). No machine
+    // transliteration / auto-translation of names — per the ERP master-data policy (never guess or
+    // invent a proper-name spelling). This also removed a broken auto-translate call that used
+    // undefined imports (detectScriptType / autoTranslate5Languages).
     let resolved = recVal;
-
-    const rawScript = detectScriptType(raw);
-    const resolvedScript = detectScriptType(resolved || raw);
-
-    // If English is selected but the text is in Arabic script, or if a non-English language is selected
-    // but the text is pure English, run the dynamic 5-language auto-translator
-    if (
-      !resolved ||
-      (input.language === "en" && resolvedScript === "arabic") ||
-      (input.language !== "en" && resolvedScript === "latin" && rawScript === "latin")
-    ) {
-      const auto5 = autoTranslate5Languages(raw, rawScript === "arabic" ? "ur" : "en");
-      if (auto5[input.language] && auto5[input.language] !== raw) {
-        resolved = auto5[input.language];
-      }
-    }
 
     if (!resolved) {
       const dictVal = await lookupApprovedDictionary(row.record_table, raw, input.language);

@@ -233,10 +233,19 @@ export async function GET(request: NextRequest) {
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
 
-    if (query.countryId) recordsQuery = recordsQuery.eq("country_id", query.countryId);
-    else if (!session.isSuperAdmin) recordsQuery = recordsQuery.in("country_id", session.countryIds.length ? session.countryIds : ["00000000-0000-0000-0000-000000000000"]);
-    if (query.countryBranchId) recordsQuery = recordsQuery.eq("country_branch_id", query.countryBranchId);
-    if (query.cityBranchId) recordsQuery = recordsQuery.eq("city_branch_id", query.cityBranchId);
+    if (session.isShippingScoped) {
+      // Shipping-only login: ONLY its own clearing agent's BL records (never country/branch-wide,
+      // never untagged). Service-role bypasses RLS, so this API filter is the authoritative gate.
+      const agentIds = session.clearingAgentIds.length
+        ? session.clearingAgentIds
+        : ["00000000-0000-0000-0000-000000000000"];
+      recordsQuery = recordsQuery.in("clearing_agent_id", agentIds);
+    } else {
+      if (query.countryId) recordsQuery = recordsQuery.eq("country_id", query.countryId);
+      else if (!session.isSuperAdmin) recordsQuery = recordsQuery.in("country_id", session.countryIds.length ? session.countryIds : ["00000000-0000-0000-0000-000000000000"]);
+      if (query.countryBranchId) recordsQuery = recordsQuery.eq("country_branch_id", query.countryBranchId);
+      if (query.cityBranchId) recordsQuery = recordsQuery.eq("city_branch_id", query.cityBranchId);
+    }
     if (query.q) {
       const like = `%${query.q}%`;
       recordsQuery = (recordsQuery as any).or(

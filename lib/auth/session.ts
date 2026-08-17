@@ -215,7 +215,16 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
       const adminSupabase: any = null;
 
       const perms = [...new Set(temp.roles.flatMap((role) => enterpriseRolePermissions[role] ?? []))];
-      const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds } = getAssignmentRoots(temp.assignments);
+      // A bootstrap/temp session has no clearing-agent binding; normalize to full RoleAssignmentScope.
+      const tempAssignments: RoleAssignmentScope[] = (temp.assignments ?? []).map((a) => ({
+        role: a.role,
+        countryId: a.countryId,
+        countryBranchId: a.countryBranchId,
+        cityBranchId: a.cityBranchId,
+        clearingAgentId: null,
+        ledgerVisibility: "scoped" as const
+      }));
+      const { initialCountryIds, initialCountryBranchIds, initialCityBranchIds } = getAssignmentRoots(tempAssignments);
       const isSuperAdmin = temp.roles.includes("super_admin");
 
       const resolvedScopes = await resolveHierarchyScopes(
@@ -233,12 +242,12 @@ export async function getCurrentErpSession(): Promise<ErpSession | null> {
         preferredLanguage: temp.preferredLanguage,
         roles: temp.roles,
         permissions: perms,
-        assignments: temp.assignments,
+        assignments: tempAssignments,
         countryIds: resolvedScopes.countryIds,
         countryBranchIds: resolvedScopes.countryBranchIds,
         cityBranchIds: resolvedScopes.cityBranchIds,
         isSuperAdmin,
-        ...resolveShippingScope(temp.assignments, isSuperAdmin)
+        ...resolveShippingScope(tempAssignments, isSuperAdmin)
       };
     }
 

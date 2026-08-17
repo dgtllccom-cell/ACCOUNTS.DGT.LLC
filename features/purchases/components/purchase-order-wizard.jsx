@@ -459,8 +459,15 @@ function LightTd({ children, className = "", center = false, right = false }) {
  * yet saved, or English display) — never blank.
  */
 function localizeBiz(form, lang, field, fallback) {
-  const map = form?.translations?.[field];
-  if (map && lang && lang !== "en" && map[lang]) return map[lang];
+  const toSnakeCase = (value) =>
+    String(value || "")
+      .replace(/([a-z0-9])([A-Z])/g, "$1_$2")
+      .replace(/[.\s]+/g, "_")
+      .toLowerCase();
+  const map = form?.translations?.[field] || form?.translations?.[toSnakeCase(field)];
+  if (map && lang && lang !== "en") {
+    return map[lang] || translationPendingLabel(lang);
+  }
   return fallback;
 }
 
@@ -1523,7 +1530,7 @@ export function PurchaseOrderWizard({ session }) {
             // `form` inside form_data, not part of the saved form itself. Read by localizeBiz()
             // so Complete Summary / Voucher / Print show the stored translation for the active
             // language instead of always the raw English/entry-language text.
-            translations: rawFormData.translations || prev.translations || null,
+            translations: rawFormData.translations || poData.translations || prev.translations || null,
           }));
           setScopeConfirmed(true);
 
