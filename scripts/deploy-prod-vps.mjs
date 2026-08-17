@@ -48,8 +48,8 @@ try {
     console.log("Remote sync notice:", err.message);
   }
 
-  execSync('git push -f origin main', { stdio: 'inherit' });
-  console.log("✅ GitHub main branch updated successfully!\n");
+  execSync('git push -f origin HEAD:main', { stdio: 'inherit' });
+  console.log("✅ GitHub main branch updated successfully from HEAD!\n");
 } catch (err) {
   console.error("Git merge/push error:", err.message);
 }
