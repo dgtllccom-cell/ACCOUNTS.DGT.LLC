@@ -1063,10 +1063,10 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                       setMessage(getLabel("completeRequiredFields", lang));
                     }
                   }}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-5 shadow-sm rounded-lg flex items-center gap-1.5 cursor-pointer disabled:opacity-40"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-6 shadow-sm rounded-xl flex items-center gap-2 border border-blue-700/20 cursor-pointer disabled:opacity-50"
                 >
                   <span>{getLabel("saveNext", lang) || "Save & Next"}</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -1125,19 +1125,19 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentStep(prevStep)}
-                  className="font-bold text-xs h-9 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  className="font-bold text-xs h-10 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
                 >
-                  <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+                  <ArrowLeft className="h-4 w-4 mr-1" />
                   {getLabel("back", lang)}
                 </Button>
                 <Button
                   type="button"
                   size="sm"
                   onClick={() => setCurrentStep(nextStep)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-5 shadow-sm rounded-lg flex items-center gap-1.5 cursor-pointer"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-6 shadow-sm rounded-xl flex items-center gap-2 border border-blue-700/20 cursor-pointer"
                 >
                   <span>{linkedCustomerId ? getLabel("saveNext", lang) : getLabel("skipNext", lang)}</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -1195,19 +1195,19 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentStep(prevStep)}
-                  className="font-bold text-xs h-9 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  className="font-bold text-xs h-10 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
                 >
-                  <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+                  <ArrowLeft className="h-4 w-4 mr-1" />
                   {getLabel("back", lang)}
                 </Button>
                 <Button
                   type="button"
                   size="sm"
                   onClick={() => setCurrentStep(nextStep)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-5 shadow-sm rounded-lg flex items-center gap-1.5 cursor-pointer"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-6 shadow-sm rounded-xl flex items-center gap-2 border border-blue-700/20 cursor-pointer"
                 >
                   <span>{linkedCompanyId ? getLabel("saveNext", lang) : getLabel("skipNext", lang)}</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -1264,19 +1264,19 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentStep(prevStep)}
-                  className="font-bold text-xs h-9 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  className="font-bold text-xs h-10 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
                 >
-                  <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+                  <ArrowLeft className="h-4 w-4 mr-1" />
                   {getLabel("back", lang)}
                 </Button>
                 <Button
                   type="button"
                   size="sm"
                   onClick={() => setCurrentStep(nextStep)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-5 shadow-sm rounded-lg flex items-center gap-1.5 cursor-pointer"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-6 shadow-sm rounded-xl flex items-center gap-2 border border-blue-700/20 cursor-pointer"
                 >
                   <span>{linkedBankId ? getLabel("saveNext", lang) : getLabel("skipNext", lang)}</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>
@@ -1312,19 +1312,19 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                   variant="outline"
                   size="sm"
                   onClick={() => setCurrentStep(prevStep)}
-                  className="font-bold text-xs h-9 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+                  className="font-bold text-xs h-10 px-4 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl cursor-pointer"
                 >
-                  <ArrowLeft className="h-3.5 w-3.5 mr-1" />
+                  <ArrowLeft className="h-4 w-4 mr-1" />
                   {getLabel("back", lang)}
                 </Button>
                 <Button
                   type="button"
                   size="sm"
                   onClick={() => setCurrentStep(nextStep)}
-                  className="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs h-9 px-5 shadow-sm rounded-lg flex items-center gap-1.5 cursor-pointer"
+                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs h-10 px-6 shadow-sm rounded-xl flex items-center gap-2 border border-blue-700/20 cursor-pointer"
                 >
                   <span>{linkedWarehouseId ? getLabel("saveNext", lang) : getLabel("skipNext", lang)}</span>
-                  <ArrowRight className="h-3.5 w-3.5" />
+                  <ArrowRight className="h-4 w-4" />
                 </Button>
               </div>
             </div>

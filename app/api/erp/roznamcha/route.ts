@@ -10,6 +10,7 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { saveVerifiedEnterpriseRecordTranslations } from "@/lib/services/enterprise-multilingual-service";
 import { roznamchaTranslationFields } from "@/lib/i18n/roznamcha-entry-translations";
+import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 import { revalidatePath } from "next/cache";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
@@ -1244,8 +1245,8 @@ export async function POST(request: NextRequest) {
       req: request,
       scopeModule: "ROZNAMCHA",
       userId: session.userId,
-      countryId: session.countryId,
-      cityBranchId: session.cityBranchId,
+      countryId: session.countryIds[0] ?? null,
+      cityBranchId: session.cityBranchIds[0] ?? null,
       businessReference: rawJson?.voucherNumber || rawJson?.referenceNo || rawJson?.sourceTransactionType,
       payload: rawJson
     });

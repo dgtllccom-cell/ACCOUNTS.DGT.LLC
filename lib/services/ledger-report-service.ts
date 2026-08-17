@@ -275,10 +275,10 @@ export class LedgerReportService {
 
     const [accounts, enterpriseAccounts, countries, countryBranches, cityBranches] = await Promise.all([
       accountIds.length
-        ? sql`SELECT id, code, name, kind, currency, company_id FROM public.accounts WHERE id = ANY(${accountIds}::uuid[]) AND deleted_at IS NULL`
+        ? sql`SELECT id, code, name, kind, currency, company_id, created_at FROM public.accounts WHERE id = ANY(${accountIds}::uuid[]) AND deleted_at IS NULL`
         : Promise.resolve([]),
       enterpriseAccountIds.length
-        ? sql`SELECT id, code, account_number, manual_reference_number, customer_number, country_serial_number, branch_serial_number, name, kind, currency, contacts FROM public.enterprise_accounts WHERE id = ANY(${enterpriseAccountIds}::uuid[]) AND deleted_at IS NULL`
+        ? sql`SELECT id, code, account_number, manual_reference_number, customer_number, country_serial_number, branch_serial_number, name, kind, currency, contacts, company_id, created_at FROM public.enterprise_accounts WHERE id = ANY(${enterpriseAccountIds}::uuid[]) AND deleted_at IS NULL`
         : Promise.resolve([]),
       countryIds.length
         ? sql`SELECT id, name FROM public.countries WHERE id = ANY(${countryIds}::uuid[]) AND deleted_at IS NULL`
@@ -291,7 +291,10 @@ export class LedgerReportService {
         : Promise.resolve([])
     ]);
 
-    const companyIds = unique((accounts as any[]).map((a) => a.company_id));
+    const companyIds = unique([
+      ...(accounts as any[]).map((a) => a.company_id),
+      ...(enterpriseAccounts as any[]).map((a) => a.company_id)
+    ]);
     const stateIds = unique([...(countryBranches as any[]).map((b) => b.state_province_id), ...(cityBranches as any[]).map((b) => b.state_province_id)]);
     const cityIds = unique([...(countryBranches as any[]).map((b) => b.city_id), ...(cityBranches as any[]).map((b) => b.city_id)]);
 
@@ -364,7 +367,8 @@ export class LedgerReportService {
       const enterpriseAccount = row.enterprise_account_id ? enterpriseAccountById.get(row.enterprise_account_id) ?? null : null;
       const legacyAccount = row.account_id ? accountById.get(row.account_id) ?? null : null;
       const account = enterpriseAccount ?? legacyAccount;
-      const company = legacyAccount?.company_id ? companyById.get(legacyAccount.company_id) ?? null : null;
+      const companyId = (enterpriseAccount as any)?.company_id ?? legacyAccount?.company_id ?? null;
+      const company = companyId ? companyById.get(companyId) ?? null : null;
       const country = row.country_id ? countryById.get(row.country_id) ?? null : null;
       const countryBranch = row.country_branch_id ? countryBranchById.get(row.country_branch_id) ?? null : null;
       const cityBranch = row.city_branch_id ? cityBranchById.get(row.city_branch_id) ?? null : null;
@@ -404,7 +408,7 @@ export class LedgerReportService {
         branchSerialNumber: enterpriseAccount?.branch_serial_number ?? null,
         accountName: account?.name ?? null,
         accountKind: (account as any)?.kind ?? null,
-        companyId: legacyAccount?.company_id ?? null,
+        companyId: companyId,
         companyName: company?.name ?? null,
         stateId: branchStateId,
         stateName,
@@ -412,7 +416,7 @@ export class LedgerReportService {
         cityName,
         address,
         contacts: enterpriseAccount?.contacts ?? null,
-        createdAt: row.created_at ?? null
+        createdAt: (enterpriseAccount as any)?.created_at ?? (legacyAccount as any)?.created_at ?? row.created_at ?? null
       } as LedgerLookupRow;
     });
   }
@@ -557,10 +561,10 @@ export class LedgerReportService {
 
     const [accountsRes, enterpriseAccountsRes, countriesRes, countryBranchesRes, cityBranchesRes] = await Promise.all([
       accountIds.length
-        ? fetchInChunks("accounts", "id, code, name, kind, currency, company_id", accountIds)
+        ? fetchInChunks("accounts", "id, code, name, kind, currency, company_id, created_at", accountIds)
         : Promise.resolve({ data: [], error: null }),
       enterpriseAccountIds.length
-        ? fetchInChunks("enterprise_accounts", "id, code, account_number, manual_reference_number, customer_number, country_serial_number, branch_serial_number, name, kind, currency, contacts", enterpriseAccountIds)
+        ? fetchInChunks("enterprise_accounts", "id, code, account_number, manual_reference_number, customer_number, country_serial_number, branch_serial_number, name, kind, currency, contacts, company_id, created_at", enterpriseAccountIds)
         : Promise.resolve({ data: [], error: null }),
       countryIds.length
         ? fetchInChunks("countries", "id, name", countryIds)
@@ -586,6 +590,7 @@ export class LedgerReportService {
       kind: string;
       currency: string;
       company_id: string;
+      created_at?: string | null;
     }>;
     const enterpriseAccounts = (enterpriseAccountsRes.data ?? []) as Array<{
       id: string;
@@ -599,6 +604,8 @@ export class LedgerReportService {
       kind: string;
       currency: string;
       contacts: any;
+      company_id?: string | null;
+      created_at?: string | null;
     }>;
     const countries = (countriesRes.data ?? []) as Array<{ id: string; name: string }>;
     const countryBranches = (countryBranchesRes.data ?? []) as Array<{
@@ -618,7 +625,10 @@ export class LedgerReportService {
       address: string | null;
     }>;
 
-    const companyIds = unique(accounts.map((a) => a.company_id));
+    const companyIds = unique([
+      ...accounts.map((a) => a.company_id),
+      ...enterpriseAccounts.map((a) => a.company_id)
+    ]);
     const stateIds = unique([...countryBranches.map((b) => b.state_province_id), ...cityBranches.map((b) => b.state_province_id)]);
     const cityIds = unique([...countryBranches.map((b) => b.city_id), ...cityBranches.map((b) => b.city_id)]);
 

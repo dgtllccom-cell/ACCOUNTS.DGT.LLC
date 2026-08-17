@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Purchase Form - Digital Dock ERP</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="page-container">
+    
+    <!-- 1. Header Section -->
+    <header class="header-card">
+      <div class="header-left">
+        <button type="button" class="btn-back" id="btnBack" onclick="handleBack()">
+          <span class="back-arrow">&larr;</span> Back
+        </button>
+        <div class="header-title-block">
+          <div class="header-main-row">
+            <h1 class="main-heading">Purchase Form</h1>
+            <span class="sub-heading-inline">New Purchase Booking Order</span>
+          </div>
+          <div class="header-sub-row">
+            <span class="sub-text-muted">Wholesaler / Import Export / Container Trading Standard ERP navigation and page actions</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- 2. Toolbar Section -->
+    <section class="toolbar-card">
+      <div class="toolbar-left">
+        <!-- Country Dropdown -->
+        <div class="custom-select-wrapper" id="countryDropdown">
+          <button type="button" class="select-btn" onclick="toggleDropdown('countryMenu')">
+            <span id="countryLabel">Select Country (All)</span>
+            <span class="select-arrow">&#9662;</span>
+          </button>
+          <div class="dropdown-menu" id="countryMenu">
+            <div class="dropdown-item active" onclick="selectFilter('country', 'All', 'Select Country (All)')">All Countries</div>
+            <div class="dropdown-item" onclick="selectFilter('country', 'UAE', 'UAE')">UAE</div>
+            <div class="dropdown-item" onclick="selectFilter('country', 'Pakistan', 'Pakistan')">Pakistan</div>
+            <div class="dropdown-item" onclick="selectFilter('country', 'Oman', 'Oman')">Oman</div>
+          </div>
+        </div>
+
+        <!-- Branch Dropdown -->
+        <div class="custom-select-wrapper" id="branchDropdown">
+          <button type="button" class="select-btn" onclick="toggleDropdown('branchMenu')">
+            <span id="branchLabel">Select Branch (All)</span>
+            <span class="select-arrow">&#9662;</span>
+          </button>
+          <div class="dropdown-menu" id="branchMenu">
+            <div class="dropdown-item active" onclick="selectFilter('branch', 'All', 'Select Branch (All)')">All Branches</div>
+            <div class="dropdown-item" onclick="selectFilter('branch', 'Dubai', 'Dubai Branch')">Dubai Branch</div>
+            <div class="dropdown-item" onclick="selectFilter('branch', 'Sharjah', 'Sharjah Branch')">Sharjah Branch</div>
+            <div class="dropdown-item" onclick="selectFilter('branch', 'Abu Dhabi', 'Abu Dhabi Branch')">Abu Dhabi Branch</div>
+          </div>
+        </div>
+
+        <!-- Status Dropdown -->
+        <div class="custom-select-wrapper" id="statusDropdown">
+          <button type="button" class="select-btn" onclick="toggleDropdown('statusMenu')">
+            <span id="statusLabel">Select Status (All)</span>
+            <span class="select-arrow">&#9662;</span>
+          </button>
+          <div class="dropdown-menu" id="statusMenu">
+            <div class="dropdown-item active" onclick="selectFilter('status', 'All', 'Select Status (All)')">All Statuses</div>
+            <div class="dropdown-item" onclick="selectFilter('status', 'Draft', 'Draft')">Draft</div>
+            <div class="dropdown-item" onclick="selectFilter('status', 'Accepted', 'Accepted')">Accepted</div>
+            <div class="dropdown-item" onclick="selectFilter('status', 'Transferred', 'Transferred')">Transferred</div>
+            <div class="dropdown-item" onclick="selectFilter('status', 'Completed', 'Completed')">Completed</div>
+          </div>
+        </div>
+
+        <!-- Search Field -->
+        <div class="search-input-wrapper">
+          <svg class="search-icon" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#6B7FA3" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          <input type="text" id="searchInput" placeholder="Search booking, supplier, branch..." oninput="handleSearch()">
+        </div>
+      </div>
+
+      <div class="toolbar-right">
+        <!-- Print Button -->
+        <button type="button" class="btn-tool" onclick="window.print()">
+          <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+          </svg>
+          Print
+        </button>
+
+        <!-- Reset & Refresh Button -->
+        <button type="button" class="btn-tool" onclick="resetFilters()">
+          <svg class="tool-icon" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+          </svg>
+          Reset &amp; Refresh
+        </button>
+
+        <!-- Single Dot Button -->
+        <button type="button" class="btn-tool btn-icon-only" onclick="toggleDropdown('moreOptionsMenu')">
+          &#8942;
+        </button>
+
+        <!-- + New Booking (Primary Action) -->
+        <button type="button" class="btn-primary" onclick="handleNewBooking()">
+          + New Booking
+        </button>
+
+        <!-- Actions Menu Button -->
+        <div class="custom-select-wrapper">
+          <button type="button" class="btn-tool" onclick="toggleDropdown('actionsMenu')">
+            &#8942; Actions
+          </button>
+          <div class="dropdown-menu dropdown-right" id="actionsMenu">
+            <div class="dropdown-item" onclick="alert('Exporting to Excel...')">Export Excel</div>
+            <div class="dropdown-item" onclick="alert('Exporting to PDF...')">Export PDF</div>
+            <div class="dropdown-item" onclick="alert('Batch Posting...')">Batch Posting</div>
+          </div>
+        </div>
+
+        <!-- Close / Clear Button -->
+        <button type="button" class="btn-tool btn-icon-only btn-close-x" onclick="resetFilters()">
+          &times;
+        </button>
+      </div>
+    </section>
+
+    <!-- 3. KPI Cards Section (Exactly 5 Cards) -->
+    <section class="kpi-grid">
+      <!-- Card 1: Bill Summary -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <svg class="kpi-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#2463D8" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+          </svg>
+          <h2 class="kpi-title">BILL SUMMARY</h2>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-row">
+            <span class="kpi-label">Total Bills</span>
+            <span class="kpi-value">13</span>
+          </div>
+          <div class="kpi-row">
+            <span class="kpi-label">Draft</span>
+            <span class="kpi-value">13</span>
+          </div>
+          <div class="kpi-row">
+            <span class="kpi-label">Accepted (Not Transferred)</span>
+            <span class="kpi-value">0</span>
+          </div>
+          <div class="kpi-row">
+            <span class="kpi-label">Transferred</span>
+            <span class="kpi-value">0</span>
+          </div>
+          <div class="kpi-row">
+            <span class="kpi-label">Completed</span>
+            <span class="kpi-value">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 2: Total Amounts (AED) -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <svg class="kpi-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#2463D8" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"></path>
+            <line x1="12" y1="6" x2="12" y2="8"></line>
+            <line x1="12" y1="16" x2="12" y2="18"></line>
+          </svg>
+          <h2 class="kpi-title">TOTAL AMOUNTS (AED)</h2>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-row">
+            <span class="kpi-label">Total Purchase Amount</span>
+            <span class="kpi-value font-bold">7,265,900.00</span>
+          </div>
+          <div class="kpi-row">
+            <span class="kpi-label">Accepted (Not Transferred)</span>
+            <span class="kpi-value">0.00</span>
+          </div>
+          <div class="kpi-row">
+            <span class="kpi-label">Transferred</span>
+            <span class="kpi-value">0.00</span>
+          </div>
+          <div class="kpi-row">
+            <span class="kpi-label">Completed</span>
+            <span class="kpi-value">0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 3: Branches -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <svg class="kpi-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#2463D8" stroke-width="2">
+            <path d="M3 21h18M3 7v14M21 7v14M6 7V3h12v4"></path>
+            <line x1="9" y1="11" x2="9" y2="11.01"></line>
+            <line x1="15" y1="11" x2="15" y2="11.01"></line>
+            <line x1="9" y1="15" x2="9" y2="15.01"></line>
+            <line x1="15" y1="15" x2="15" y2="15.01"></line>
+          </svg>
+          <h2 class="kpi-title">BRANCHES</h2>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-row">
+            <span class="kpi-label">Total Branches</span>
+            <span class="kpi-value">3</span>
+          </div>
+          <div class="kpi-row">
+            <span class="kpi-label">Active Branches</span>
+            <span class="kpi-value">3</span>
+          </div>
+          <div class="kpi-row">
+            <span class="kpi-label">Inactive Branches</span>
+            <span class="kpi-value">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 4: This Month -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <svg class="kpi-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#2463D8" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+          <h2 class="kpi-title">THIS MONTH</h2>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-row">
+            <span class="kpi-label">Bills Created</span>
+            <span class="kpi-value">13</span>
+          </div>
+          <div class="kpi-row">
+            <span class="kpi-label">Amount (AED)</span>
+            <span class="kpi-value font-bold">7,265,900.00</span>
+          </div>
+          <div class="kpi-row">
+            <span class="kpi-label">Transferred</span>
+            <span class="kpi-value">0</span>
+          </div>
+          <div class="kpi-row">
+            <span class="kpi-label">Completed</span>
+            <span class="kpi-value">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card 5: Quick Info -->
+      <div class="kpi-card">
+        <div class="kpi-header">
+          <svg class="kpi-icon" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#2463D8" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <h2 class="kpi-title">QUICK INFO</h2>
+        </div>
+        <div class="kpi-body">
+          <div class="kpi-row">
+            <span class="kpi-label">Currency</span>
+            <span class="kpi-value font-bold">USD</span>
+          </div>
+          <div class="kpi-row">
+            <span class="kpi-label">Exchange Rate (Avg.)</span>
+            <span class="kpi-value">6.6938</span>
+          </div>
+          <div class="kpi-row">
+            <span class="kpi-label">Company</span>
+            <span class="kpi-value font-bold">DGT LLC</span>
+          </div>
+          <div class="kpi-row">
+            <span class="kpi-label">Financial Year</span>
+            <span class="kpi-value">2026-27</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 4. Register & Table Section -->
+    <main class="register-container">
+      <div class="register-header">
+        <div class="register-title-area">
+          <div class="register-icon-wrap">
+            <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="#12345A" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+            </svg>
+          </div>
+          <div>
+            <h2 class="register-main-title">Purchase Booking Register</h2>
+            <p class="register-sub-title">View, manage and track all purchase booking bills across branches</p>
+          </div>
+        </div>
+        
+        <div class="register-tabs">
+          <button type="button" class="tab-btn" id="tabStandard" onclick="switchTab('standard')">
+            Standard Register (13 Columns)
+          </button>
+          <button type="button" class="tab-btn active" id="tabDetailed" onclick="switchTab('detailed')">
+            Detailed Audit Register (41 Columns)
+          </button>
+        </div>
+      </div>
+
+      <!-- Dark Navy Section Header -->
+      <div class="navy-section-header">
+        <span>GENERAL INFORMATION</span>
+      </div>
+
+      <!-- Responsive Table Container -->
+      <div class="table-responsive">
+        <table class="data-table" id="purchaseTable">
+          <thead>
+            <tr>
+              <th style="width: 50px;">SR</th>
+              <th>SUPER S/N</th>
+              <th>CTY S/N</th>
+              <th>BR S/N</th>
+              <th>PURCHASE ACC</th>
+              <th>SALES ACC</th>
+              <th>COUNTRY</th>
+              <th>CITY BRANCH</th>
+              <th>DATE</th>
+              <th>USER</th>
+            </tr>
+          </thead>
+          <tbody id="tableBody">
+            <tr data-row="1" data-country="UAE" data-branch="Dubai" data-status="Draft">
+              <td>1</td>
+              <td>001</td>
+              <td>001</td>
+              <td>001</td>
+              <td>PA-1001</td>
+              <td>SA-2001</td>
+              <td>UAE</td>
+              <td>Dubai</td>
+              <td>12 Jan 2026</td>
+              <td>Super Admin</td>
+            </tr>
+            <tr data-row="2" data-country="UAE" data-branch="Sharjah" data-status="Draft">
+              <td>2</td>
+              <td>002</td>
+              <td>002</td>
+              <td>001</td>
+              <td>PA-1002</td>
+              <td>SA-2002</td>
+              <td>UAE</td>
+              <td>Sharjah</td>
+              <td>14 Jan 2026</td>
+              <td>Super Admin</td>
+            </tr>
+            <tr data-row="3" data-country="UAE" data-branch="Abu Dhabi" data-status="Draft">
+              <td>3</td>
+              <td>003</td>
+              <td>003</td>
+              <td>002</td>
+              <td>PA-1003</td>
+              <td>SA-2003</td>
+              <td>UAE</td>
+              <td>Abu Dhabi</td>
+              <td>15 Jan 2026</td>
+              <td>Super Admin</td>
+            </tr>
+          </tbody>
+        </table>
+        <div id="noResultsMessage" class="no-results-msg" style="display: none;">
+          No matching purchase booking records found.
+        </div>
+      </div>
+    </main>
+
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
