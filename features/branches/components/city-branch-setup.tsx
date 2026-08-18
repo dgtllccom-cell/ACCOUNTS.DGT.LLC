@@ -28,6 +28,8 @@ import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { getPermissionKeysForTemplate } from "@/lib/permissions/catalog";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
+import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
+import { t } from "@/lib/i18n/ui";
 import type { ContactTypeKey } from "@/features/contact-types/contact-type-api";
 
 type CountryBranchRow = {
@@ -233,6 +235,7 @@ function CityBranchSetupContent() {
 
   const [banner, setBanner] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [saving, setSaving] = useState(false);
+  const [formTouched, setFormTouched] = useState(false);
   const [editLoading, setEditLoading] = useState(false);
 
   const [emailPrefix, setEmailPrefix] = useState("");
@@ -712,13 +715,65 @@ function CityBranchSetupContent() {
   ]);
 
   function openReport(autoPrint: boolean) {
-    const activeLang = typeof document !== "undefined" ? document.documentElement.lang : "en";
-    openA4ReportWindow({
-      title: "City Branch Report",
-      subtitle: "Store Entry Preview (A4)",
+    const activeLang = (typeof document !== "undefined" ? document.documentElement.lang : "en") || "en";
+    const tt = (key: string, fallback: string) => t(activeLang as never, key as never, fallback);
+    const lb = liveBranchData;
+    const phone = contacts.find((c) => c.type.toLowerCase().includes("phone"))?.value;
+    const email = contacts.find((c) => c.type.toLowerCase().includes("email"))?.value;
+    const whatsapp = contacts.find((c) => c.type.toLowerCase().includes("whatsapp"))?.value;
+    // Canonical master-profile engine — same A4 design/i18n/RTL as every other master. Real record data only.
+    openMasterProfileReportWindow({
+      lang: activeLang,
       autoPrint,
-      branchData: liveBranchData,
-      lang: activeLang
+      title: tt("branch.report_title", "City Branch Profile Report"),
+      subtitle: tt("branch.report_subtitle", "Branch Profile Summary"),
+      overviewLabel: tt("branch.overview", "Branch Profile Overview"),
+      name: lb.branchName,
+      status: lb.branchStatus,
+      createdBy: lb.createdBy,
+      reportIdPrefix: "BRANCH",
+      reportIdValue: lb.branchCode,
+      meta: [
+        { label: tt("branch.branch_code", "Branch Code"), value: lb.branchCode },
+        { label: tt("branch.branch_type", "Branch Type"), value: lb.branchType },
+        { label: tt("acct.country", "Country"), value: lb.country },
+        { label: tt("acct.currency", "Currency"), value: lb.currency }
+      ],
+      sections: [
+        { title: tt("branch.sec_branch_info", "Branch Information"), rows: [
+          { label: tt("branch.branch_name", "Branch Name"), value: lb.branchName },
+          { label: tt("branch.branch_code", "Branch Code"), value: lb.branchCode },
+          { label: tt("branch.branch_type", "Branch Type"), value: lb.branchType },
+          { label: tt("branch.serial", "Serial No."), value: lb.serialNumber },
+          { label: tt("acct.currency", "Currency"), value: lb.currency },
+          { label: tt("acct.status", "Status"), value: lb.branchStatus }
+        ]},
+        { title: tt("branch.sec_location", "Location & Address"), rows: [
+          { label: tt("acct.country", "Country"), value: lb.country },
+          { label: tt("acct.city", "City"), value: lb.city },
+          { label: tt("acct.address", "Address"), value: lb.fullAddress }
+        ]},
+        { title: tt("branch.sec_hierarchy", "Branch Hierarchy"), rows: [
+          { label: tt("branch.parent_branch", "Parent (Main) Branch"), value: lb.parentBranch?.name },
+          { label: tt("branch.branch_code", "Branch Code"), value: lb.parentBranch?.code },
+          { label: tt("branch.branch_type", "Branch Type"), value: lb.parentBranch?.type }
+        ]},
+        { title: tt("branch.sec_contact", "Contact Information"), rows: [
+          { label: tt("acct.phone", "Phone"), value: phone },
+          { label: tt("acct.email", "Email"), value: email },
+          { label: tt("branch.whatsapp", "WhatsApp"), value: whatsapp }
+        ]},
+        { title: tt("branch.sec_company", "Company & Ownership"), rows: [
+          { label: tt("acct.company_name", "Company Name"), value: lb.companyName },
+          { label: tt("branch.owner_name", "Owner / Manager"), value: lb.ownerName }
+        ]},
+        { title: tt("acct.sec_audit_info", "System / Audit Information"), rows: [
+          { label: tt("acct.created_by", "Created By"), value: lb.createdBy },
+          { label: tt("acct.created_on", "Created On"), value: lb.createdDate },
+          { label: tt("acct.updated_by", "Last Updated By"), value: lb.updatedBy },
+          { label: tt("acct.updated_on", "Last Updated On"), value: lb.updatedDate }
+        ]}
+      ]
     });
   }
 
@@ -1110,6 +1165,7 @@ function CityBranchSetupContent() {
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    setFormTouched(true);
     setBanner(null);
 
     if (!isUuid(location.countryId) || !isUuid(countryBranchId)) {
@@ -1491,7 +1547,7 @@ function CityBranchSetupContent() {
                       value={zip}
                       onChange={(e) => setManualZip(e.target.value)}
                       placeholder={autoZip ? autoZip : "Enter ZIP / postal code"}
-                      className={compactInputClass(!zip)}
+                      className={compactInputClass(formTouched && !zip)}
                     />
                     {!manualZip && autoZip && (
                       <p className="text-[10px] text-slate-400 leading-tight">
@@ -1514,7 +1570,7 @@ function CityBranchSetupContent() {
                       value={fullAddress}
                       onChange={(event) => setFullAddress(event.target.value)}
                       placeholder="Area / Road, Building, Street, Landmark, etc."
-                      className={compactTextareaClass(!fullAddress.trim() || changedFromSaved(fullAddress, activeExistingCityBranch?.address))}
+                      className={compactTextareaClass(formTouched && (!fullAddress.trim() || changedFromSaved(fullAddress, activeExistingCityBranch?.address)))}
                     />
                   </div>
                 </div>
