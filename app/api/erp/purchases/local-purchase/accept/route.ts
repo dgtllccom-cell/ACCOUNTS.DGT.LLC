@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -200,10 +201,6 @@ export async function POST(request: NextRequest) {
     if (idempotencyKey && tenantHash) {
       await releaseIdempotencyLock(idempotencyKey, tenantHash);
     }
-    console.error("[POST /api/erp/purchases/local-purchase/accept] Error:", err);
-    return NextResponse.json(
-      { ok: false, error: { message: err.message || "Failed to accept local purchase." } },
-      { status: 500 }
-    );
+    return handleApiError(err);
   }
 }

@@ -510,7 +510,7 @@ export function RoznamchaTypeReportView({
             type="button"
             variant="outline"
             size="sm"
-            onClick={reload}
+            onClick={loadData}
             disabled={loading}
             className="h-7 gap-1 rounded-lg border-slate-200 bg-slate-50 px-2 text-[10px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >

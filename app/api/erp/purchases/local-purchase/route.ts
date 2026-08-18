@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import { NextRequest, NextResponse } from "next/server";
+import { handleApiError } from "@/lib/api/response";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
@@ -178,11 +179,7 @@ export async function GET(request: NextRequest) {
       data: { purchases: recordsViaPg }
     });
   } catch (err: any) {
-    console.error("[GET /api/erp/purchases/local-purchase] Error:", err);
-    return NextResponse.json(
-      { ok: false, error: { message: err.message || "Failed to fetch local purchases" } },
-      { status: 500 }
-    );
+    return handleApiError(err);
   }
 }
 
@@ -272,11 +269,7 @@ export async function POST(request: NextRequest) {
       data: { purchase: inserted }
     });
   } catch (err: any) {
-    console.error("[POST /api/erp/purchases/local-purchase] Error:", err);
-    return NextResponse.json(
-      { ok: false, error: { message: err.message || "Failed to save local purchase" } },
-      { status: 500 }
-    );
+    return handleApiError(err);
   }
 }
 
@@ -325,10 +318,6 @@ export async function PATCH(request: NextRequest) {
 
     return NextResponse.json({ ok: true, data: { purchase: updated } });
   } catch (err: any) {
-    console.error("[PATCH /api/erp/purchases/local-purchase] Error:", err);
-    return NextResponse.json(
-      { ok: false, error: { message: err.message || "Failed to update local goods receipt" } },
-      { status: 500 }
-    );
+    return handleApiError(err);
   }
 }

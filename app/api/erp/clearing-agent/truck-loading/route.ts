@@ -3,6 +3,7 @@ import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
+import { handleApiError } from "@/lib/api/response";
 
 /**
  * Clearing Agent — Truck Loading form (secure, scoped CRUD).
@@ -28,10 +29,10 @@ export async function GET(req: Request) {
       q = q.or(`truck_number.ilike.%${search}%,driver_name.ilike.%${search}%,goods_name.ilike.%${search}%,loading_serial.ilike.%${search}%`);
     }
     const { data, error } = await q;
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) throw error;
     return NextResponse.json({ records: data || [] });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return handleApiError(err);
   }
 }
 
@@ -78,9 +79,9 @@ export async function POST(req: Request) {
 
     const supabase = createSupabaseAdminClient();
     const { data, error } = await supabase.from("truck_loadings").insert(row).select(COLS).single();
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) throw error;
     return NextResponse.json({ record: data });
   } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 500 });
+    return handleApiError(err);
   }
 }
