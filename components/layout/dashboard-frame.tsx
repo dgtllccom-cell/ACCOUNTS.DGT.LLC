@@ -38,6 +38,7 @@ import { usePathname, useRouter } from "next/navigation";
 import type { SidebarMenuVisibilityMap, SidebarNode } from "@/lib/navigation/sidebar";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { filterSidebarTree } from "@/lib/navigation/sidebar";
 import { enterpriseRoles, type EnterpriseRole } from "@/lib/permissions/enterprise-roles";
 import { cn } from "@/lib/utils";
@@ -50,7 +51,7 @@ import { CommandDialog, CommandEmpty, CommandGroup, CommandInput, CommandItem, C
 export function DashboardFrame({
   children,
   nodes,
-  lang,
+  lang: langProp,
   roles,
   permissions,
   userEmail,
@@ -65,6 +66,15 @@ export function DashboardFrame({
   userName?: string | null;
 }) {
   const router = useRouter();
+  // The server threads `lang` from the erp_lang cookie, but the client language switcher is the live
+  // source of truth (localStorage erp_lang, read reactively by useActiveLanguage). If the two ever
+  // diverge (e.g. login set localStorage but not the cookie, or a stale/absent cookie), the sidebar
+  // and every label below would render in the server's stale language while the page body follows the
+  // client — the "half-English, half-Urdu" screen. Reconcile: once mounted, prefer the client's active
+  // language; fall back to the server prop during SSR/first render (useActiveLanguage returns "en" on
+  // the server, matching SSR, so this introduces no hydration mismatch).
+  const activeLang = useActiveLanguage();
+  const lang: SupportedLanguage = activeLang !== "en" ? activeLang : langProp;
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
