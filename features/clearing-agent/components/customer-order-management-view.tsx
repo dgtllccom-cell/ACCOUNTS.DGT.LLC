@@ -25,8 +25,6 @@ import {
   Warehouse
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { Th } from "@/components/ui/translated-th";
@@ -317,17 +315,17 @@ function PartyRolePanel({
   const effectiveAddress = selection.addressText || selectedCompany?.address || customers.find((item) => item.id === selection.customerId)?.address || "";
 
   return (
-    <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-4 shadow-xs space-y-3 dark:border-slate-800 dark:bg-slate-900/60">
+    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs space-y-3 dark:border-slate-800 dark:bg-slate-900">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">{label}</div>
-          <div className="mt-0.5 text-sm font-bold text-slate-800 dark:text-slate-100">
+          <div className="text-[10.5px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400">{label}</div>
+          <div className="mt-0.5 text-sm font-bold text-slate-900 dark:text-slate-100">
             {selection.customerName ? selection.customerName : `Select ${label}`}
           </div>
         </div>
-        <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300">
-          <Building2 className="h-3.5 w-3.5" />
-          {effectiveCompanyName ? "Company selected" : "Linked companies"}
+        <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300">
+          <Building2 className="h-3 w-3" />
+          {effectiveCompanyName ? "Company Linked" : "Pick Company"}
         </span>
       </div>
 
@@ -372,18 +370,18 @@ function PartyRolePanel({
           type="button"
           disabled={disabled || !selection.customerId}
           onClick={() => setCompanyPickerOpen(true)}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-700 shadow-2xs transition hover:border-blue-500 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:border-blue-400 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-2.5 py-1.5 text-xs font-bold text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
         >
           <Building2 className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
-          {linkedCompanies.length > 0 ? `${linkedCompanies.length} linked companies` : "Pick company"}
+          {linkedCompanies.length > 0 ? `${linkedCompanies.length} Linked Companies` : "Pick Company"}
         </button>
-        <div className="text-[11px] text-slate-500 dark:text-slate-400">
-          <span className="font-semibold text-slate-700 dark:text-slate-300">Selected Company:</span> {effectiveCompanyName || "-"}
+        <div className="text-[11px] text-slate-600 dark:text-slate-400 truncate max-w-[280px]">
+          <span className="font-semibold text-slate-800 dark:text-slate-200">Company:</span> {effectiveCompanyName || "-"}
         </div>
       </div>
 
       <div>
-        <div className="mb-1 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
+        <div className="mb-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
           <MapPin className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
           Address / Billing / Shipping
         </div>
@@ -408,24 +406,24 @@ function PartyRolePanel({
             value={selection.addressText}
             onChange={(e) => onChange({ ...selection, addressText: e.target.value, addressSource: "manual" })}
             placeholder="Enter address"
-            className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 shadow-2xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+            className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
           />
         )}
-        <div className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">Selected Address: {summaryValue(effectiveAddress)}</div>
+        <div className="mt-1 text-[10.5px] text-slate-500 truncate">Selected Address: {summaryValue(effectiveAddress)}</div>
       </div>
 
-      <div className="grid grid-cols-1 gap-1.5 rounded-lg border border-slate-200 bg-white p-2.5 text-xs dark:border-slate-800 dark:bg-slate-950">
-        <div className="flex items-start justify-between gap-3">
-          <span className="text-slate-500 font-medium">Party</span>
-          <span className="text-right font-bold text-slate-800 dark:text-slate-100">{summaryValue(selection.customerName)}</span>
+      <div className="grid grid-cols-1 gap-1.5 rounded-xl border border-slate-100 bg-slate-50/70 p-2.5 text-xs dark:border-slate-800 dark:bg-slate-800/50">
+        <div className="flex items-start justify-between gap-2">
+          <span className="text-slate-500 text-[11px]">Party</span>
+          <span className="text-right font-semibold text-slate-800 dark:text-slate-200">{summaryValue(selection.customerName)}</span>
         </div>
-        <div className="flex items-start justify-between gap-3">
-          <span className="text-slate-500 font-medium">Company</span>
-          <span className="text-right font-bold text-slate-800 dark:text-slate-100">{summaryValue(effectiveCompanyName)}</span>
+        <div className="flex items-start justify-between gap-2">
+          <span className="text-slate-500 text-[11px]">Company</span>
+          <span className="text-right font-semibold text-slate-800 dark:text-slate-200">{summaryValue(effectiveCompanyName)}</span>
         </div>
-        <div className="flex items-start justify-between gap-3">
-          <span className="text-slate-500 font-medium">Address</span>
-          <span className="max-w-[70%] text-right font-medium text-slate-700 dark:text-slate-300">{summaryValue(effectiveAddress)}</span>
+        <div className="flex items-start justify-between gap-2">
+          <span className="text-slate-500 text-[11px]">Address</span>
+          <span className="max-w-[70%] text-right font-medium text-slate-700 dark:text-slate-300 truncate">{summaryValue(effectiveAddress)}</span>
         </div>
       </div>
 
@@ -433,14 +431,14 @@ function PartyRolePanel({
         <SimpleModal
           title={`${label} - Linked Companies`}
           onClose={() => setCompanyPickerOpen(false)}
-          className="w-[96vw] max-w-[900px] max-h-[90vh] overflow-y-auto rounded-xl font-sans"
+          className="w-[96vw] max-w-[800px] max-h-[90vh] overflow-y-auto rounded-2xl font-sans"
         >
           <div className="space-y-4 p-4">
             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3.5 dark:border-slate-800 dark:bg-slate-900">
-              <div className="text-sm font-bold text-slate-800 dark:text-slate-100">
-                Search and select the correct company/business linked to this party.
+              <div className="text-xs font-bold text-slate-800 dark:text-slate-100">
+                Search and select the company/business linked to this party.
               </div>
-              <div className="mt-1 text-xs text-slate-500">
+              <div className="mt-0.5 text-[11px] text-slate-500">
                 If previous orders already linked this party to companies, they appear first.
               </div>
             </div>
@@ -472,7 +470,7 @@ function PartyRolePanel({
               <button
                 type="button"
                 onClick={() => setCompanyPickerOpen(false)}
-                className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+                className="rounded-lg border border-slate-200 bg-slate-50 px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
               >
                 Close
               </button>
@@ -501,43 +499,220 @@ export function CustomerOrderManagementView() {
   const [partySelections, setPartySelections] = useState<Record<PartyRoleKey, PartySelection>>(emptyPartyState());
   const [formData, setFormData] = useState({ ...EMPTY_FORM });
 
+  const title = t(lang, "nav.customer_order", "Customer Order");
+  const refreshLabel = t(lang, "common.refresh", "Refresh");
+  const saveLabel = editingOrderId ? "Update Customer Order" : "Save Customer Order";
+
+  useEffect(() => {
+    void fetchInitialData();
+  }, []);
+
   const fetchInitialData = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      const [orderRes, custRes, compRes, goodsRes, countryRes, portRes] = await Promise.all([
-        fetch("/api/erp/clearing-agent/customer-orders?limit=100", { cache: "no-store" }),
-        fetch("/api/erp/settings/customers?limit=200", { cache: "no-store" }),
-        fetch("/api/erp/settings/companies?limit=200", { cache: "no-store" }),
-        fetch("/api/erp/settings/goods?limit=200", { cache: "no-store" }),
-        fetch("/api/erp/settings/locations/countries", { cache: "no-store" }),
-        fetch("/api/erp/settings/ports", { cache: "no-store" })
+      const [orderRes, customerRes, companyRes, countryRes, portRes, goodsRes] = await Promise.all([
+        fetch("/api/erp/clearing-agent/customer-order"),
+        fetch("/api/erp/customers?limit=250"),
+        fetch("/api/erp/companies?limit=250"),
+        fetch("/api/erp/locations/countries"),
+        fetch("/api/erp/ports"),
+        fetch("/api/erp/goods?limit=250")
       ]);
 
-      const [orderJson, custJson, compJson, goodsJson, countryJson, portJson] = await Promise.all([
-        orderRes.json().catch(() => ({})),
-        custRes.json().catch(() => ({})),
-        compJson.json().catch(() => ({})),
-        goodsJson.json().catch(() => ({})),
-        countryJson.json().catch(() => ({})),
-        portJson.json().catch(() => ({}))
+      const [orderJson, customerJson, companyJson, countryJson, portJson, goodsJson] = await Promise.all([
+        orderRes.json(),
+        customerRes.json(),
+        companyRes.json(),
+        countryRes.json(),
+        portRes.json(),
+        goodsRes.json()
       ]);
 
-      if (orderJson?.data) setOrders(orderJson.data);
-      if (custJson?.data) setCustomers(custJson.data);
-      if (compJson?.data) setCompanies(compJson.data);
-      if (goodsJson?.data) setGoods(goodsJson.data);
-      if (countryJson?.data) setCountries(countryJson.data);
-      if (portJson?.data) setPorts(portJson.data);
+      const extractArray = (json: any, keys: string[]) => {
+        if (!json) return [];
+        if (Array.isArray(json)) return json;
+        if (Array.isArray(json.data)) return json.data;
+        if (json.data && typeof json.data === "object") {
+          for (const key of keys) {
+            if (Array.isArray(json.data[key])) return json.data[key];
+          }
+        }
+        for (const key of keys) {
+          if (Array.isArray(json[key])) return json[key];
+        }
+        return [];
+      };
+
+      setOrders(extractArray(orderJson, ["data", "orders", "entries"]));
+      setCustomers(extractArray(customerJson, ["customers", "data"]));
+      setCompanies(extractArray(companyJson, ["companies", "data"]));
+      setGoods(extractArray(goodsJson, ["goods", "data"]));
+      setCountries(extractArray(countryJson, ["countries", "data"]));
+      setPorts(extractArray(portJson, ["ports", "data"]));
     } catch (error) {
-      console.error("Error fetching clearing initial data:", error);
+      console.error("Error loading customer-order data:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => {
-    fetchInitialData();
-  }, []);
+  const handlePartyChange = (roleKey: PartyRoleKey, next: PartySelection) => {
+    setPartySelections((current) => ({ ...current, [roleKey]: next }));
+  };
+
+  const handleLoadingCountryChange = (countryId: string) => {
+    const row = countries.find((item) => item.id === countryId);
+    setFormData((current) => ({
+      ...current,
+      loading_country_id: countryId,
+      loading_country_name: row?.name || ""
+    }));
+  };
+
+  const handleReceivingCountryChange = (countryId: string) => {
+    const row = countries.find((item) => item.id === countryId);
+    setFormData((current) => ({
+      ...current,
+      receiving_country_id: countryId,
+      receiving_country_name: row?.name || ""
+    }));
+  };
+
+  const handleLoadingPortChange = (portId: string) => {
+    const row = ports.find((item) => item.id === portId);
+    setFormData((current) => ({
+      ...current,
+      loading_port_id: portId,
+      loading_port_name: row?.port_name || ""
+    }));
+  };
+
+  const handleDestinationPortChange = (portId: string) => {
+    const row = ports.find((item) => item.id === portId);
+    setFormData((current) => ({
+      ...current,
+      destination_port_id: portId,
+      destination_port_name: row?.port_name || ""
+    }));
+  };
+
+  const handleGoodsChange = (goodsId: string) => {
+    const row = goods.find((item) => item.id === goodsId);
+    const originCountry = countries.find((country) => country.id === row?.origin_country_id);
+    const firstVariation = row?.variations?.[0];
+    setFormData((current) => ({
+      ...current,
+      goods_id: goodsId,
+      goods_name: row?.goods_name || "",
+      goods_chs_code: row?.chs_code || "",
+      goods_origin_country_name: originCountry?.name || "",
+      goods_variation_id: row?.variations?.length === 1 ? firstVariation?.id || "" : "",
+      goods_variation_label: row?.variations?.length === 1 && firstVariation ? optionLabelFromGoodsVariation(firstVariation) : "",
+      goods_brand: row?.variations?.length === 1 ? firstVariation?.brand || "" : "",
+      goods_size: row?.variations?.length === 1 ? firstVariation?.size || "" : ""
+    }));
+  };
+
+  const handleGoodsVariationChange = (variationId: string) => {
+    const selectedGoods = goods.find((item) => item.id === formData.goods_id);
+    const variation = selectedGoods?.variations?.find((item) => item.id === variationId);
+    setFormData((current) => ({
+      ...current,
+      goods_variation_id: variationId,
+      goods_variation_label: variation ? optionLabelFromGoodsVariation(variation) : "",
+      goods_brand: variation?.brand || "",
+      goods_size: variation?.size || ""
+    }));
+  };
+
+  const goodsOptions = useMemo(
+    () =>
+      goods.map((row) => ({
+        value: row.id,
+        label: optionLabelFromGoods(row),
+        keywords: [
+          row.goods_name,
+          row.chs_code,
+          row.origin_country_id ? countries.find((country) => country.id === row.origin_country_id)?.name : "",
+          ...(row.variations ?? []).flatMap((variation) => [variation.size, variation.brand, optionLabelFromGoodsVariation(variation)])
+        ]
+          .filter(Boolean)
+          .join(" ")
+      })),
+    [goods, countries]
+  );
+
+  const selectedGoods = useMemo(() => goods.find((item) => item.id === formData.goods_id) || null, [goods, formData.goods_id]);
+
+  const variationOptions = useMemo(
+    () =>
+      (selectedGoods?.variations ?? []).map((variation) => ({
+        value: variation.id,
+        label: optionLabelFromGoodsVariation(variation),
+        keywords: [variation.size, variation.brand, optionLabelFromGoodsVariation(variation)].filter(Boolean).join(" ")
+      })),
+    [selectedGoods]
+  );
+
+  const selectedGoodsVariation = useMemo(
+    () => selectedGoods?.variations?.find((item) => item.id === formData.goods_variation_id) || null,
+    [selectedGoods, formData.goods_variation_id]
+  );
+
+  const visibleOrders = useMemo(() => {
+    const query = normalize(reportQuery);
+    if (!query) return orders;
+    return orders.filter((order) => {
+      const haystack = [
+        order.order_no,
+        order.customer_name,
+        order.goods_name,
+        order.goods_chs_code,
+        order.goods_variation_label,
+        order.goods_brand,
+        order.goods_size,
+        order.goods_origin_country_name,
+        order.exporter_name,
+        order.importer_name,
+        order.notify_party_name,
+        order.buyer_name,
+        order.loading_source_name,
+        order.loading_country_name,
+        order.receiving_country_name,
+        order.loading_port_name,
+        order.destination_port_name,
+        order.route_name,
+        order.cargo_details,
+        ...(order.party_links ?? []).map((link) => [link.party_customer_name, link.party_company_name, link.selected_address_text].filter(Boolean).join(" "))
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return haystack.includes(query);
+    });
+  }, [orders, reportQuery]);
+
+  const orderCounts = useMemo(
+    () => ({
+      total: orders.length,
+      import: orders.filter((order) => String(order.movement_type || "").toLowerCase() === "import").length,
+      export: orders.filter((order) => String(order.movement_type || "").toLowerCase() === "export").length,
+      domestic: orders.filter((order) => String(order.movement_type || "").toLowerCase() === "domestic").length,
+      transit: orders.filter((order) => String(order.movement_type || "").toLowerCase() === "up_transit").length
+    }),
+    [orders]
+  );
+
+  const isSeaMode = formData.transport_mode === "by_sea";
+  const isRoadMode = formData.transport_mode === "by_road" || formData.transport_mode === "by_truck";
+  const shouldShowBuyer = isSeaMode || formData.notify_party_required;
+  const nextActionLabel = isSeaMode || formData.notify_party_required ? "Bill Entry" : isRoadMode ? "Truck Entry" : "Review";
+  const loadingSourceLabel =
+    formData.loading_source === "warehouse"
+      ? "Warehouse"
+      : formData.loading_source === "truck_transfer"
+        ? "Transfer from Truck"
+        : "Transfer from Container";
 
   const resetForm = () => {
     setFormData({ ...EMPTY_FORM });
@@ -545,111 +720,30 @@ export function CustomerOrderManagementView() {
     setEditingOrderId(null);
   };
 
-  const handlePartyChange = (roleKey: PartyRoleKey, next: PartySelection) => {
-    setPartySelections((prev) => ({
-      ...prev,
-      [roleKey]: next
-    }));
-  };
-
-  const selectedGoods = goods.find((item) => item.id === formData.goods_id);
-  const selectedGoodsVariation = selectedGoods?.variations?.find((item) => item.id === formData.goods_variation_id);
-
-  const goodsOptions = useMemo(
-    () =>
-      goods.map((item) => ({
-        value: item.id,
-        label: `${item.goods_name || item.name || "Goods"}${item.chs_code ? ` • CHS ${item.chs_code}` : ""}`,
-        keywords: [item.goods_name, item.name, item.chs_code, item.origin_country_name].filter(Boolean).join(" ")
-      })),
-    [goods]
-  );
-
-  const variationOptions = useMemo(() => {
-    if (!selectedGoods?.variations?.length) return [];
-    return selectedGoods.variations.map((v) => ({
-      value: v.id,
-      label: [v.size, v.brand].filter(Boolean).join(" • ") || `Variation ${v.id}`,
-      keywords: [v.size, v.brand].filter(Boolean).join(" ")
-    }));
-  }, [selectedGoods]);
-
-  const handleGoodsChange = (goodsId: string) => {
-    const item = goods.find((g) => g.id === goodsId);
-    setFormData((prev) => ({
-      ...prev,
-      goods_id: goodsId,
-      goods_name: item?.goods_name || item?.name || "",
-      goods_chs_code: item?.chs_code || "",
-      goods_origin_country_id: item?.origin_country_id || "",
-      goods_origin_country_name: item?.origin_country_name || "",
-      goods_variation_id: "",
-      goods_variation_label: ""
-    }));
-  };
-
-  const handleGoodsVariationChange = (variationId: string) => {
-    const v = selectedGoods?.variations?.find((item) => item.id === variationId);
-    setFormData((prev) => ({
-      ...prev,
-      goods_variation_id: variationId,
-      goods_variation_label: v ? [v.size, v.brand].filter(Boolean).join(" • ") : ""
-    }));
-  };
-
-  const handleLoadingCountryChange = (countryId: string) => {
-    const country = countries.find((c) => c.id === countryId);
-    setFormData((prev) => ({
-      ...prev,
-      loading_country_id: countryId,
-      loading_country_name: country?.name || ""
-    }));
-  };
-
-  const handleReceivingCountryChange = (countryId: string) => {
-    const country = countries.find((c) => c.id === countryId);
-    setFormData((prev) => ({
-      ...prev,
-      receiving_country_id: countryId,
-      receiving_country_name: country?.name || ""
-    }));
-  };
-
-  const handleLoadingPortChange = (portId: string) => {
-    const port = ports.find((p) => p.id === portId);
-    setFormData((prev) => ({
-      ...prev,
-      loading_port_id: portId,
-      loading_port_name: port?.port_name || ""
-    }));
-  };
-
-  const handleDestinationPortChange = (portId: string) => {
-    const port = ports.find((p) => p.id === portId);
-    setFormData((prev) => ({
-      ...prev,
-      destination_port_id: portId,
-      destination_port_name: port?.port_name || ""
-    }));
-  };
-
   const loadEditOrder = (order: ClearingCustomerOrderRow) => {
     setEditingOrderId(order.id);
     setFormData({
-      movement_type: (order.movement_type as MovementType) || "import",
-      transport_mode: (order.transport_mode as TransportMode) || "by_sea",
-      loading_source: (order.loading_source as LoadingSource) || "warehouse",
-      loading_source_name: order.loading_source_name || "",
-      shipment_type: order.shipment_type || "FCL",
+      customer_id: order.customer_id || "",
+      customer_name: order.customer_name || "",
       goods_id: order.goods_id || "",
+      goods_variation_id: order.goods_variation_id || "",
       goods_name: order.goods_name || "",
       goods_chs_code: order.goods_chs_code || "",
-      goods_origin_country_id: order.goods_origin_country_id || "",
-      goods_origin_country_name: order.goods_origin_country_name || "",
-      goods_variation_id: order.goods_variation_id || "",
       goods_variation_label: order.goods_variation_label || "",
-      expected_loading_date: order.expected_loading_date || "",
+      goods_brand: order.goods_brand || "",
+      goods_size: order.goods_size || "",
+      goods_origin_country_name: order.goods_origin_country_name || "",
+      route_name: order.route_name || "",
+      shipment_type: order.shipment_type || "FCL",
+      transport_mode: (order.transport_mode || "by_sea") as TransportMode,
+      movement_type: (order.movement_type || "import") as MovementType,
+      loading_source: (order.loading_source || "warehouse") as LoadingSource,
+      loading_source_name: order.loading_source_name || "",
+      exporter_name: order.exporter_name || "",
+      importer_name: order.importer_name || "",
       notify_party_required: Boolean(order.notify_party_required),
+      notify_party_name: order.notify_party_name || "",
+      buyer_name: order.buyer_name || "",
       loading_country_id: order.loading_country_id || "",
       loading_country_name: order.loading_country_name || "",
       receiving_country_id: order.receiving_country_id || "",
@@ -658,126 +752,133 @@ export function CustomerOrderManagementView() {
       loading_port_name: order.loading_port_name || "",
       destination_port_id: order.destination_port_id || "",
       destination_port_name: order.destination_port_name || "",
-      route_name: order.route_name || "",
       cargo_details: order.cargo_details || "",
+      expected_loading_date: order.expected_loading_date ? String(order.expected_loading_date).slice(0, 10) : new Date().toISOString().split("T")[0],
       remarks: order.remarks || ""
     });
 
-    const nextState = emptyPartyState();
-    (order.party_links || []).forEach((link) => {
-      if (link.role_key in nextState) {
-        nextState[link.role_key as PartyRoleKey] = {
-          customerId: link.party_customer_id || "",
-          customerName: link.party_customer_name || "",
-          companyId: link.party_company_id || "",
-          companyName: link.party_company_name || "",
-          addressText: link.selected_address_text || "",
-          addressSource: "selected"
-        };
-      }
-    });
-    setPartySelections(nextState);
+    const next = emptyPartyState();
+    for (const link of order.party_links || []) {
+      const roleKey = link.role_key;
+      next[roleKey] = {
+        customerId: link.party_customer_id || "",
+        customerName: link.party_customer_name || "",
+        companyId: link.party_company_id || "",
+        companyName: link.party_company_name || "",
+        addressText: link.selected_address_text || "",
+        addressSource: link.selected_address_source || ""
+      };
+    }
+    setPartySelections(next);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const openViewOrder = (order: ClearingCustomerOrderRow) => {
     setViewOrder(order);
   };
 
-  const handlePrintOrder = (order: ClearingCustomerOrderRow) => {
-    const win = window.open("", "_blank");
-    if (!win) return;
-    win.document.write(`
-      <html><head><title>${order.order_no || "Customer Order"}</title>
-      <style>body{font-family:sans-serif;padding:24px;font-size:12px;color:#1e293b}h1{font-size:18px;margin-bottom:8px}table{width:100%;border-collapse:collapse;margin-top:12px}th,td{border:1px solid #cbd5e1;padding:8px;text-align:left}</style>
-      </head><body>
-      <h1>Customer Order — ${order.order_no || ""}</h1>
-      <p>Status: ${order.status} | Movement: ${order.movement_type} | Mode: ${order.transport_mode}</p>
-      <table>
-        <tr><th>Order No</th><td>${order.order_no}</td><th>Date</th><td>${order.created_at || ""}</td></tr>
-        <tr><th>Party / Customer</th><td>${order.customer_name}</td><th>Goods</th><td>${order.goods_name || "-"}</td></tr>
-        <tr><th>Route</th><td>${order.route_name || "-"}</td><th>Cargo Details</th><td>${order.cargo_details || "-"}</td></tr>
-      </table>
-      </body></html>
-    `);
-    win.document.close();
-    win.print();
-  };
-
   const handleExportOrder = (order: ClearingCustomerOrderRow) => {
-    const json = JSON.stringify(order, null, 2);
-    const blob = new Blob([json], { type: "application/json" });
+    const blob = new Blob([JSON.stringify(order, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `order-${order.order_no || order.id}.json`;
-    a.click();
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `${order.order_no || "customer-order"}.json`;
+    anchor.click();
     URL.revokeObjectURL(url);
   };
 
-  const isRoadMode = formData.transport_mode === "by_road" || formData.transport_mode === "by_truck";
-  const isSeaMode = formData.transport_mode === "by_sea";
-  const shouldShowBuyer = formData.movement_type === "export" || formData.movement_type === "up_transit";
-
-  const nextActionLabel =
-    isSeaMode || formData.notify_party_required
-      ? "Bill Entry"
-      : isRoadMode
-        ? "Truck Entry"
-        : "Review & Dispatch";
-
-  const loadingSourceLabel =
-    formData.loading_source === "warehouse"
-      ? "Warehouse Loading"
-      : formData.loading_source === "truck_transfer"
-        ? "Truck-to-Truck Transfer"
-        : "Container-to-Truck Transfer";
-
-  const visibleOrders = useMemo(() => {
-    if (!reportQuery.trim()) return orders;
-    const q = reportQuery.toLowerCase();
-    return orders.filter(
-      (o) =>
-        o.order_no?.toLowerCase().includes(q) ||
-        o.customer_name?.toLowerCase().includes(q) ||
-        o.route_name?.toLowerCase().includes(q) ||
-        o.goods_name?.toLowerCase().includes(q) ||
-        o.cargo_details?.toLowerCase().includes(q)
-    );
-  }, [orders, reportQuery]);
-
-  const orderCounts = useMemo(() => {
-    const total = orders.length;
-    const imp = orders.filter((o) => o.movement_type === "import").length;
-    const exp = orders.filter((o) => o.movement_type === "export").length;
-    const dom = orders.filter((o) => o.movement_type === "domestic").length;
-    const trn = orders.filter((o) => o.movement_type === "up_transit").length;
-    return { total, import: imp, export: exp, domestic: dom, transit: trn };
-  }, [orders]);
+  const handlePrintOrder = (order: ClearingCustomerOrderRow) => {
+    const html = `
+      <html><head><title>${order.order_no || "Customer Order"}</title>
+      <style>
+        body{font-family:Arial,sans-serif;padding:24px;color:#0f172a;}
+        h1{margin:0 0 10px 0;}
+        table{width:100%;border-collapse:collapse;margin-top:16px;}
+        th,td{border:1px solid #cbd5e1;padding:8px;text-align:left;font-size:12px;}
+        th{background:#f1f5f9;}
+      </style></head><body>
+      <h1>${order.order_no || "Customer Order"}</h1>
+      <p><strong>Party:</strong> ${order.customer_name || "-"}</p>
+      <p><strong>Goods:</strong> ${[order.goods_name, order.goods_chs_code ? `CHS ${order.goods_chs_code}` : "", order.goods_variation_label, order.goods_origin_country_name].filter(Boolean).join(" • ") || "-"}</p>
+      <p><strong>Route:</strong> ${order.route_name || "-"}</p>
+      <p><strong>Movement:</strong> ${order.movement_type || "-"}</p>
+      <table>
+        <thead><tr><th>Role</th><th>Party</th><th>Company</th><th>Address</th></tr></thead>
+        <tbody>
+          ${(order.party_links || []).map((link) => `
+            <tr>
+              <td>${link.role_key}</td>
+              <td>${link.party_customer_name || "-"}</td>
+              <td>${link.party_company_name || "-"}</td>
+              <td>${link.selected_address_text || "-"}</td>
+            </tr>
+          `).join("")}
+        </tbody>
+      </table>
+      <script>window.onload=()=>window.print();</script>
+      </body></html>`;
+    const win = window.open("", "_blank", "noopener,noreferrer,width=1100,height=850");
+    if (!win) return;
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    const supplier = partySelections.supplier;
+    if (!supplier.customerName) {
+      alert("Please select the Supplier / Order Party.");
+      return;
+    }
+    if (!partySelections.importer.customerName) {
+      alert("Please select an Importer.");
+      return;
+    }
+    if (!partySelections.exporter.customerName) {
+      alert("Please select an Exporter.");
+      return;
+    }
+
+    setSaving(true);
+    setSuccessMessage("");
     try {
-      setSaving(true);
       const payload = {
         ...formData,
-        parties: partySelections
+        customer_id: supplier.customerId || null,
+        customer_name: supplier.customerName,
+        goods_id: formData.goods_id || null,
+        goods_variation_id: formData.goods_variation_id || null,
+        goods_name: formData.goods_name || null,
+        goods_chs_code: formData.goods_chs_code || null,
+        goods_variation_label: formData.goods_variation_label || null,
+        goods_brand: formData.goods_brand || null,
+        goods_size: formData.goods_size || null,
+        goods_origin_country_name: formData.goods_origin_country_name || null,
+        party_links: Object.entries(partySelections).map(([roleKey, selection]) => ({
+          roleKey: roleKey as PartyRoleKey,
+          partyCustomerId: selection.customerId || null,
+          partyCustomerName: selection.customerName || null,
+          partyCompanyId: selection.companyId || null,
+          partyCompanyName: selection.companyName || null,
+          selectedAddressText: selection.addressText || null,
+          selectedAddressSource: selection.addressSource || null
+        } satisfies PartyLinkInput))
       };
 
-      const url = editingOrderId
-        ? `/api/erp/clearing-agent/customer-orders/${editingOrderId}`
-        : "/api/erp/clearing-agent/customer-orders";
-      const method = editingOrderId ? "PUT" : "POST";
+      const response = await fetch(
+        editingOrderId ? `/api/erp/clearing-agent/customer-order/${editingOrderId}` : "/api/erp/clearing-agent/customer-order",
+        {
+          method: editingOrderId ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        }
+      );
 
-      const res = await fetch(url, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload)
-      });
+      const result = await response.json();
+      if (!result.success) throw new Error(result.error || "Failed to save order");
 
-      const result = await res.json();
-      if (!res.ok) throw new Error(result?.error || "Failed to save customer order");
-
-      setSuccessMessage(`Order ${result.data?.order_no || ""} ${editingOrderId ? "updated" : "created"} successfully.`);
+      setSuccessMessage(`Order ${result.data.order_no || ""} ${editingOrderId ? "updated" : "created"} successfully.`);
       resetForm();
       await fetchInitialData();
     } catch (error: any) {
@@ -788,93 +889,87 @@ export function CustomerOrderManagementView() {
   };
 
   return (
-    <div className="w-full space-y-4 pb-12 text-foreground animate-in fade-in duration-200">
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-white px-4 py-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-        <div className="space-y-1">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-[11px] font-bold text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300">
-              Customer Order Entry
-            </span>
-            <span className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300">
-              Form & Live Register
-            </span>
-            <span className="rounded-md border border-sky-200 bg-sky-50 px-2 py-0.5 text-[11px] font-bold text-sky-700 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-300">
-              Next: {nextActionLabel}
-            </span>
+    <div className="w-full space-y-4 pb-12">
+      {/* Top Header Card */}
+      <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="space-y-1.5">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:border-blue-800 dark:bg-blue-950/50 dark:text-blue-300">
+                Customer Order Entry
+              </span>
+              <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300">
+                Left Entry / Right Register
+              </span>
+              <span className="rounded-full border border-sky-200 bg-sky-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-sky-700 dark:border-sky-800 dark:bg-sky-950/50 dark:text-sky-300">
+                Next: {nextActionLabel}
+              </span>
+            </div>
+            <h1 className="text-xl font-black text-slate-900 dark:text-white">Customer Order</h1>
+            <p className="max-w-4xl text-xs text-slate-500 dark:text-slate-400">
+              Search Supplier, Importer, Exporter and Notify Party masters, pick the linked company/business and
+              address, then save a database-backed shipping order with the same row refreshed in the live register.
+            </p>
           </div>
-          <h1 className="text-lg font-black text-slate-900 dark:text-slate-100">Customer Order Management</h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400">
-            Search Supplier, Importer, Exporter and Notify Party masters, link addresses, and register database-backed shipping orders.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={fetchInitialData}
-            disabled={loading}
-            className="h-8 gap-1.5 rounded-lg border-slate-200 bg-slate-50 px-3 text-xs font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
-          >
-            <RefreshCw className={cn("h-3.5 w-3.5", loading && "animate-spin")} />
-            Reload
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            onClick={resetForm}
-            className="h-8 gap-1.5 rounded-lg bg-blue-600 px-3 text-xs font-bold text-white shadow-xs hover:bg-blue-700"
-          >
-            <Plus className="h-3.5 w-3.5" />
-            New Order
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={fetchInitialData}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-700 shadow-xs transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+              {refreshLabel}
+            </button>
+            <button
+              type="button"
+              onClick={resetForm}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-blue-600 px-3 py-1.5 text-xs font-bold text-white shadow-xs transition hover:bg-blue-700"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              New
+            </button>
+          </div>
         </div>
       </div>
 
       {successMessage ? (
-        <div className="flex items-center gap-3 rounded-xl border border-emerald-200 bg-emerald-50/80 p-3 text-emerald-800 dark:border-emerald-800/50 dark:bg-emerald-950/30 dark:text-emerald-300 animate-in fade-in">
+        <div className="flex items-center gap-2.5 rounded-xl border border-emerald-200 bg-emerald-50 px-3.5 py-2.5 text-xs font-bold text-emerald-800 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300 animate-in fade-in">
           <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-600" />
-          <span className="text-xs font-bold">{successMessage}</span>
+          <span>{successMessage}</span>
         </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-12">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-12">
+        {/* Left Form */}
         <form
           onSubmit={handleSubmit}
-          className="space-y-4 self-start rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 xl:col-span-5 xl:sticky xl:top-4"
+          className="space-y-4 self-start rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 xl:col-span-5 xl:sticky xl:top-4"
         >
-          <div className="space-y-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
-            <div className="flex items-center justify-between">
-              <h2 className="flex items-center gap-2 text-sm font-bold text-slate-800 dark:text-slate-100">
-                <FileText className="h-4 w-4 text-blue-600 dark:text-blue-400" />
-                {editingOrderId ? "Edit Customer Order" : "New Order Entry"}
-              </h2>
-              {editingOrderId ? (
-                <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[10px] font-black uppercase tracking-wider text-amber-700">
-                  Editing
-                </span>
-              ) : null}
-            </div>
-            <div className="grid grid-cols-2 gap-2 text-xs">
-              <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-950/60">
+          <div className="space-y-2.5 border-b border-slate-100 dark:border-slate-800 pb-3">
+            <h2 className="flex items-center gap-2 text-base font-bold text-slate-900 dark:text-slate-100">
+              <FileText className="h-4 w-4 text-blue-600" />
+              Order Entry
+            </h2>
+            <div className="grid grid-cols-2 gap-2.5 text-xs">
+              <div className="rounded-lg border border-slate-100 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-800/60">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Movement</div>
-                <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200">{formData.movement_type.replace("_", " ")}</div>
+                <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200 capitalize">{formData.movement_type.replace("_", " ")}</div>
               </div>
-              <div className="rounded-lg border border-slate-200 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-950/60">
+              <div className="rounded-lg border border-slate-100 bg-slate-50 p-2 dark:border-slate-800 dark:bg-slate-800/60">
                 <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Transport</div>
-                <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200">{formData.transport_mode.replace("_", " ")}</div>
+                <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200 capitalize">{formData.transport_mode.replace("_", " ")}</div>
               </div>
             </div>
           </div>
 
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 gap-3.5">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">Movement Type *</label>
                 <select
                   value={formData.movement_type}
                   onChange={(e) => setFormData((current) => ({ ...current, movement_type: e.target.value as MovementType }))}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 shadow-2xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 >
                   <option value="import">Import</option>
                   <option value="export">Export</option>
@@ -887,7 +982,7 @@ export function CustomerOrderManagementView() {
                 <select
                   value={formData.shipment_type}
                   onChange={(e) => setFormData((current) => ({ ...current, shipment_type: e.target.value }))}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 shadow-2xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 >
                   <option value="FCL">FCL (Full Container Load)</option>
                   <option value="LCL">LCL (Less than Container)</option>
@@ -910,12 +1005,11 @@ export function CustomerOrderManagementView() {
                     key={key}
                     type="button"
                     onClick={() => setFormData((current) => ({ ...current, transport_mode: key as TransportMode }))}
-                    className={cn(
-                      "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-bold transition-all",
+                    className={`flex items-center gap-2 rounded-xl border px-3 py-2 text-xs font-bold transition-all ${
                       formData.transport_mode === key
-                        ? "border-blue-600 bg-blue-50 text-blue-700 shadow-2xs dark:border-blue-500 dark:bg-blue-950/40 dark:text-blue-300"
-                        : "border-slate-200 bg-slate-50/60 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                    )}
+                        ? "border-blue-600 bg-blue-50 text-blue-700 shadow-xs dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-300"
+                        : "border-slate-200 bg-slate-50/70 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                    }`}
                   >
                     <Icon className="h-3.5 w-3.5" />
                     {label}
@@ -942,12 +1036,11 @@ export function CustomerOrderManagementView() {
                         loading_source_name: label
                       }))
                     }
-                    className={cn(
-                      "flex items-center justify-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-bold transition-all",
+                    className={`flex items-center justify-center gap-1.5 rounded-xl border px-2.5 py-2 text-xs font-bold transition-all ${
                       formData.loading_source === key
-                        ? "border-sky-600 bg-sky-50 text-sky-700 shadow-2xs dark:border-sky-500 dark:bg-sky-950/40 dark:text-sky-300"
-                        : "border-slate-200 bg-slate-50/60 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
-                    )}
+                        ? "border-blue-600 bg-blue-50 text-blue-700 shadow-xs dark:border-blue-500 dark:bg-blue-950/50 dark:text-blue-300"
+                        : "border-slate-200 bg-slate-50/70 text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300"
+                    }`}
                   >
                     <Icon className="h-3.5 w-3.5" />
                     {label}
@@ -959,13 +1052,14 @@ export function CustomerOrderManagementView() {
                 placeholder="Source name / truck number / container reference"
                 value={formData.loading_source_name}
                 onChange={(e) => setFormData((current) => ({ ...current, loading_source_name: e.target.value }))}
-                className="mt-2 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 shadow-2xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                className="mt-2 w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
               />
             </div>
 
-            <div className="rounded-xl border border-slate-200/80 bg-slate-50/60 p-3.5 space-y-3 dark:border-slate-800 dark:bg-slate-900/60">
-              <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                <Boxes className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+            {/* Goods Master Card */}
+            <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5 space-y-3 dark:border-slate-800 dark:bg-slate-800/40">
+              <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                <Boxes className="h-4 w-4 text-emerald-600" />
                 Goods / Item Master
               </div>
               <SearchSelect
@@ -978,26 +1072,26 @@ export function CustomerOrderManagementView() {
                 searchPlaceholder="Search goods / CHS code / variation"
                 emptyLabel="No matching goods found"
               />
-              <div className="grid grid-cols-1 gap-2.5 md:grid-cols-2">
-                <div className="rounded-lg border border-slate-200 bg-white p-2.5 text-xs dark:border-slate-800 dark:bg-slate-950">
+              <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                <div className="rounded-xl border border-slate-200 bg-white p-2.5 text-xs dark:border-slate-700 dark:bg-slate-800">
                   <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Selected Goods</div>
                   <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200">
                     {formData.goods_name ? `${formData.goods_name}${formData.goods_chs_code ? ` • ${formData.goods_chs_code}` : ""}` : "-"}
                   </div>
                   <div className="mt-0.5 text-[10.5px] text-slate-500">
                     {selectedGoods
-                      ? `ID: ${selectedGoods.id.substring(0, 8)}...${selectedGoods.variations?.length ? ` • ${selectedGoods.variations.length} variation(s)` : ""}`
-                      : "Select Goods Master."}
+                      ? `Canonical ID: ${selectedGoods.id}${selectedGoods.variations?.length ? ` • ${selectedGoods.variations.length} variation(s)` : ""}`
+                      : "Select an existing Goods Master record."}
                   </div>
                 </div>
-                <div className="rounded-lg border border-slate-200 bg-white p-2.5 text-xs dark:border-slate-800 dark:bg-slate-950">
+                <div className="rounded-xl border border-slate-200 bg-white p-2.5 text-xs dark:border-slate-700 dark:bg-slate-800">
                   <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Origin / Variation</div>
                   <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200">
                     {formData.goods_origin_country_name || "-"}
                     {selectedGoodsVariation ? ` • ${selectedGoodsVariation.size} / ${selectedGoodsVariation.brand}` : ""}
                   </div>
-                  <div className="mt-0.5 text-[10.5px] text-slate-500 truncate">
-                    {formData.goods_variation_label || "No variation selected"}
+                  <div className="mt-0.5 text-[10.5px] text-slate-500">
+                    {formData.goods_variation_label || "Choose a variation if goods master has multiple sizes/brands."}
                   </div>
                 </div>
               </div>
@@ -1015,7 +1109,8 @@ export function CustomerOrderManagementView() {
               ) : null}
             </div>
 
-            <div className="space-y-3">
+            {/* Party Role Panels */}
+            <div className="grid grid-cols-1 gap-3.5">
               {PARTY_ROLES.map((role) => (
                 <PartyRolePanel
                   key={role.key}
@@ -1040,7 +1135,7 @@ export function CustomerOrderManagementView() {
                   type="date"
                   value={formData.expected_loading_date}
                   onChange={(e) => setFormData((current) => ({ ...current, expected_loading_date: e.target.value }))}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 shadow-2xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
               </div>
               <div>
@@ -1050,7 +1145,7 @@ export function CustomerOrderManagementView() {
                   onChange={(e) =>
                     setFormData((current) => ({ ...current, notify_party_required: e.target.value === "yes" }))
                   }
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 shadow-2xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 >
                   <option value="no">No</option>
                   <option value="yes">Yes</option>
@@ -1064,7 +1159,7 @@ export function CustomerOrderManagementView() {
                 <select
                   value={formData.loading_country_id}
                   onChange={(e) => handleLoadingCountryChange(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 shadow-2xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 >
                   <option value="">Select Loading Country</option>
                   {countries.map((country) => (
@@ -1079,7 +1174,7 @@ export function CustomerOrderManagementView() {
                 <select
                   value={formData.receiving_country_id}
                   onChange={(e) => handleReceivingCountryChange(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 shadow-2xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 >
                   <option value="">Select Receiving Country</option>
                   {countries.map((country) => (
@@ -1097,7 +1192,7 @@ export function CustomerOrderManagementView() {
                 <select
                   value={formData.loading_port_id}
                   onChange={(e) => handleLoadingPortChange(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 shadow-2xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 >
                   <option value="">Select Loading Port</option>
                   {ports.map((port) => (
@@ -1112,7 +1207,7 @@ export function CustomerOrderManagementView() {
                 <select
                   value={formData.destination_port_id}
                   onChange={(e) => handleDestinationPortChange(e.target.value)}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 shadow-2xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 >
                   <option value="">Select Destination Port</option>
                   {ports.map((port) => (
@@ -1132,7 +1227,7 @@ export function CustomerOrderManagementView() {
                   placeholder="e.g. Karachi to Kabul via Torkham"
                   value={formData.route_name}
                   onChange={(e) => setFormData((current) => ({ ...current, route_name: e.target.value }))}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 shadow-2xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
               </div>
               <div>
@@ -1142,108 +1237,133 @@ export function CustomerOrderManagementView() {
                   placeholder="e.g. 40ft High Cube Container"
                   value={formData.cargo_details}
                   onChange={(e) => setFormData((current) => ({ ...current, cargo_details: e.target.value }))}
-                  className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 shadow-2xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
               </div>
             </div>
 
-            <div>
-              <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">Remarks</label>
-              <textarea
-                rows={3}
-                placeholder="Additional instructions or notes..."
-                value={formData.remarks}
-                onChange={(e) => setFormData((current) => ({ ...current, remarks: e.target.value }))}
-                className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs text-slate-900 shadow-2xs outline-none focus:border-blue-600 focus:ring-1 focus:ring-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
-              />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs font-bold text-slate-700 dark:text-slate-300">Remarks</label>
+                <textarea
+                  rows={4}
+                  placeholder="Additional instructions or notes..."
+                  value={formData.remarks}
+                  onChange={(e) => setFormData((current) => ({ ...current, remarks: e.target.value }))}
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2 text-sm text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                />
+              </div>
+              <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3.5 space-y-2 dark:border-slate-800 dark:bg-slate-800/40">
+                <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  <BadgeInfo className="h-4 w-4 text-blue-600" />
+                  Flow Hints
+                </div>
+                <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
+                  <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Next Action</div>
+                    <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200">{nextActionLabel}</div>
+                  </div>
+                  <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Loading Source</div>
+                    <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200">{loadingSourceLabel}</div>
+                  </div>
+                  <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Buyer Section</div>
+                    <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200">{shouldShowBuyer ? "Visible" : "Optional"}</div>
+                  </div>
+                  <div className="rounded-lg border border-slate-200 bg-white p-2 dark:border-slate-700 dark:bg-slate-800">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Transport Gate</div>
+                    <div className="mt-0.5 font-bold text-slate-800 dark:text-slate-200">{isRoadMode ? "Truck Entry" : isSeaMode ? "Bill Entry" : "Review"}</div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+            <div className="flex justify-end gap-2.5 pt-2 border-t border-slate-100 dark:border-slate-800">
               {editingOrderId ? (
-                <Button
+                <button
                   type="button"
-                  variant="outline"
-                  size="sm"
                   onClick={resetForm}
-                  className="h-8 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:text-slate-300"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-bold text-slate-700 transition hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                 >
                   Cancel Edit
-                </Button>
+                </button>
               ) : null}
-              <Button
+              <button
                 type="submit"
-                size="sm"
                 disabled={saving}
-                className="h-8 gap-1.5 bg-blue-600 px-4 text-xs font-bold text-white shadow-xs hover:bg-blue-700"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-xs transition-all hover:bg-blue-700 disabled:opacity-50"
               >
                 {saving ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Plus className="h-3.5 w-3.5" />}
-                {editingOrderId ? "Update Customer Order" : "Save Customer Order"}
-              </Button>
+                {saveLabel}
+              </button>
             </div>
           </div>
         </form>
 
+        {/* Right Side Register & Live Report */}
         <div className="space-y-4 xl:col-span-7">
-          <div className="rounded-xl border border-slate-200/80 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900 space-y-3">
+          {/* Top KPI Cards */}
+          <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
               {[
-                { label: "Total Orders", value: orderCounts.total, icon: FileText, color: "text-blue-600 bg-blue-50 border-blue-200" },
-                { label: "Import", value: orderCounts.import, icon: ArrowRight, color: "text-emerald-600 bg-emerald-50 border-emerald-200" },
-                { label: "Export", value: orderCounts.export, icon: Route, color: "text-purple-600 bg-purple-50 border-purple-200" },
-                { label: "Domestic / Transit", value: `${orderCounts.domestic} / ${orderCounts.transit}`, icon: Boxes, color: "text-amber-600 bg-amber-50 border-amber-200" }
+                { label: "Total Orders", value: orderCounts.total, icon: FileText, color: "text-blue-600 dark:text-blue-400" },
+                { label: "Import", value: orderCounts.import, icon: ArrowRight, color: "text-emerald-600 dark:text-emerald-400" },
+                { label: "Export", value: orderCounts.export, icon: Route, color: "text-purple-600 dark:text-purple-400" },
+                { label: "Domestic / Transit", value: `${orderCounts.domestic} / ${orderCounts.transit}`, icon: Boxes, color: "text-amber-600 dark:text-amber-400" }
               ].map((item) => (
-                <div key={item.label} className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-950/60">
+                <div key={item.label} className="rounded-xl border border-slate-100 bg-slate-50/80 p-3 dark:border-slate-800 dark:bg-slate-800/60">
                   <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                    <item.icon className="h-3.5 w-3.5 text-slate-600 dark:text-slate-400" />
+                    <item.icon className={`h-3.5 w-3.5 ${item.color}`} />
                     {item.label}
                   </div>
-                  <div className="mt-1.5 text-xl font-black text-slate-900 dark:text-white">{item.value}</div>
+                  <div className="mt-1 text-xl font-black text-slate-900 dark:text-white">{item.value}</div>
                 </div>
               ))}
             </div>
-
             <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center sm:justify-between pt-1">
               <div>
-                <h2 className="text-sm font-bold text-slate-900 dark:text-slate-100">Registered Customer Orders ({orders.length})</h2>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Live report connected to registered clearing agent orders and party links.
+                <h2 className="text-sm font-bold text-slate-900 dark:text-white">Registered Customer Orders ({orders.length})</h2>
+                <p className="text-[11px] text-slate-500">
+                  Live report driven from canonical shipping orders and linked parties.
                 </p>
               </div>
               <div className="relative sm:w-72">
-                <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
+                <Search className="pointer-events-none absolute start-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
                 <input
                   value={reportQuery}
                   onChange={(e) => setReportQuery(e.target.value)}
                   placeholder="Search order, party, route..."
-                  className="h-8 w-full rounded-lg border border-slate-200 bg-slate-50 pl-8 pr-3 text-xs text-slate-900 shadow-2xs outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+                  className="w-full rounded-xl border border-slate-200 bg-slate-50 py-1.5 ps-8 pe-3 text-xs text-slate-900 outline-none focus:border-blue-600 focus:bg-white dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
                 />
               </div>
             </div>
           </div>
 
-          <div className="rounded-xl border border-slate-200/80 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
+          {/* Orders Data Table */}
+          <div className="rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
             {loading ? (
-              <div className="py-12 text-center text-xs text-slate-500">Loading customer orders…</div>
+              <div className="py-12 text-center text-xs font-semibold text-slate-400">Loading customer orders…</div>
             ) : visibleOrders.length === 0 ? (
               <div className="py-12 text-center text-xs text-slate-500">No customer orders created yet.</div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-700 dark:text-slate-300">
-                  <thead className="bg-slate-900 text-white font-bold text-[11px] uppercase tracking-wider">
+                <table className="w-full min-w-[950px] text-left text-xs text-slate-800 dark:text-slate-200">
+                  <thead className="bg-slate-900 text-white dark:bg-slate-800 text-[11px] font-bold">
                     <tr>
-                      <th className="px-3 py-2.5">Order No</th>
-                      <th className="px-3 py-2.5">Party</th>
-                      <th className="px-3 py-2.5">Movement / Mode</th>
-                      <th className="px-3 py-2.5">Company / Address</th>
-                      <th className="px-3 py-2.5">Goods / Variation</th>
-                      <th className="px-3 py-2.5">Route / Port</th>
-                      <th className="px-3 py-2.5">Next Step</th>
-                      <th className="px-3 py-2.5">Status</th>
-                      <th className="px-3 py-2.5 text-right">Actions</th>
+                      <Th className="px-3 py-2.5">Order No</Th>
+                      <Th className="px-3 py-2.5">Party</Th>
+                      <Th className="px-3 py-2.5">Movement / Mode</Th>
+                      <Th className="px-3 py-2.5">Company / Address</Th>
+                      <Th className="px-3 py-2.5">Goods / Variation</Th>
+                      <Th className="px-3 py-2.5">Route / Port</Th>
+                      <Th className="px-3 py-2.5">Next Step</Th>
+                      <Th className="px-3 py-2.5">Status</Th>
+                      <Th className="px-3 py-2.5 text-right">Actions</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-                    {visibleOrders.map((order, idx) => {
+                    {visibleOrders.map((order) => {
                       const movement = String(order.movement_type || "-").replace(/_/g, " ");
                       const mode = String(order.transport_mode || "-").replace(/_/g, " ");
                       const source = order.loading_source_name || order.loading_source || "-";
@@ -1270,12 +1390,12 @@ export function CustomerOrderManagementView() {
                       const buyerLink = (order.party_links || []).find((link) => link.role_key === "buyer");
 
                       return (
-                        <tr key={order.id} className={cn("align-top transition-colors hover:bg-slate-50 dark:hover:bg-slate-800/50", idx % 2 ? "bg-slate-50/30" : "bg-white")}>
+                        <tr key={order.id} className="align-top hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors">
                           <td className="px-3 py-2.5 font-mono font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">{order.order_no}</td>
                           <td className="px-3 py-2.5">
                             <div className="space-y-0.5">
-                              <div className="font-bold text-slate-900 dark:text-slate-100">{order.customer_name}</div>
-                              <div className="text-[10px] text-slate-500">
+                              <div className="font-bold text-slate-900 dark:text-white">{order.customer_name}</div>
+                              <div className="text-[10.5px] text-slate-500">
                                 {[supplierLink?.party_customer_name, importLink?.party_customer_name, exportLink?.party_customer_name, notifyLink?.party_customer_name, buyerLink?.party_customer_name]
                                   .filter(Boolean)
                                   .join(" • ") || "Customer order party"}
@@ -1284,10 +1404,10 @@ export function CustomerOrderManagementView() {
                           </td>
                           <td className="px-3 py-2.5">
                             <div className="space-y-0.5">
-                              <span className="inline-flex rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                              <span className="inline-flex rounded-md border border-blue-200 bg-blue-50 px-2 py-0.5 text-[10px] font-bold text-blue-700 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-300 capitalize">
                                 {movement}
                               </span>
-                              <div className="text-[10px] text-slate-500 font-medium">{mode}</div>
+                              <div className="text-[10.5px] text-slate-500 capitalize">{mode}</div>
                             </div>
                           </td>
                           <td className="px-3 py-2.5 max-w-[200px]">
@@ -1316,35 +1436,34 @@ export function CustomerOrderManagementView() {
                               </div>
                             </div>
                           </td>
-                          <td className="px-3 py-2.5 max-w-[180px]">
-                            <div className="font-semibold text-slate-800 dark:text-slate-200 truncate">{goodsSummary}</div>
+                          <td className="px-3 py-2.5 text-xs">
+                            <div className="font-semibold text-slate-800 dark:text-slate-200">{goodsSummary}</div>
                             <div className="mt-0.5 text-[10px] text-slate-500">
-                              {order.goods_id ? `Goods ID: ${order.goods_id.substring(0, 8)}...` : "Goods Master"}
+                              {order.goods_id ? `Goods ID: ${order.goods_id}` : "Uses Goods Master"}
                             </div>
                           </td>
-                          <td className="px-3 py-2.5 max-w-[160px]">
-                            <div className="font-medium text-slate-700 dark:text-slate-300 truncate">{route}</div>
-                            <div className="mt-0.5 text-[10px] text-slate-500 truncate">{port}</div>
+                          <td className="px-3 py-2.5 text-xs text-slate-600 dark:text-slate-400">
+                            <div>{route}</div>
+                            <div className="mt-0.5 text-[10px] text-slate-500">{port}</div>
                           </td>
-                          <td className="px-3 py-2.5 font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">{nextStep}</td>
-                          <td className="px-3 py-2.5 whitespace-nowrap">
+                          <td className="px-3 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200">{nextStep}</td>
+                          <td className="px-3 py-2.5">
                             <span
-                              className={cn(
-                                "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
+                              className={`rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider ${
                                 order.status === "pending"
-                                  ? "border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-300"
-                                  : "border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
-                              )}
+                                  ? "border border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-900/50 dark:bg-amber-950/40 dark:text-amber-300"
+                                  : "border border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300"
+                              }`}
                             >
                               {order.status}
                             </span>
                           </td>
-                          <td className="px-3 py-2.5 text-right whitespace-nowrap">
-                            <div className="flex flex-wrap justify-end gap-1">
+                          <td className="px-3 py-2.5">
+                            <div className="flex flex-wrap justify-end gap-1.5">
                               <button
                                 type="button"
                                 onClick={() => openViewOrder(order)}
-                                className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[10.5px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                               >
                                 <Eye className="h-3 w-3" />
                                 View
@@ -1352,7 +1471,7 @@ export function CustomerOrderManagementView() {
                               <button
                                 type="button"
                                 onClick={() => loadEditOrder(order)}
-                                className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[10.5px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                               >
                                 <Pencil className="h-3 w-3" />
                                 Edit
@@ -1360,7 +1479,7 @@ export function CustomerOrderManagementView() {
                               <button
                                 type="button"
                                 onClick={() => handlePrintOrder(order)}
-                                className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[10.5px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                               >
                                 <Printer className="h-3 w-3" />
                                 Print
@@ -1368,7 +1487,7 @@ export function CustomerOrderManagementView() {
                               <button
                                 type="button"
                                 onClick={() => handleExportOrder(order)}
-                                className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-1 text-[10px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
+                                className="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-2 py-1 text-[10.5px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200"
                               >
                                 <Download className="h-3 w-3" />
                                 Export
@@ -1386,36 +1505,37 @@ export function CustomerOrderManagementView() {
         </div>
       </div>
 
+      {/* View Customer Order Modal */}
       {viewOrder ? (
         <SimpleModal
           title={`View Customer Order — ${viewOrder.order_no}`}
           onClose={() => setViewOrder(null)}
-          className="w-[96vw] max-w-[1100px] max-h-[90vh] overflow-y-auto rounded-xl font-sans"
+          className="w-[96vw] max-w-[1000px] max-h-[90vh] overflow-y-auto rounded-2xl font-sans"
         >
           <div className="space-y-4 p-4">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200">
+            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-xs text-slate-800 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-200">
               <div className="flex flex-wrap items-center gap-3">
                 <div className="text-base font-black text-slate-900 dark:text-white">{viewOrder.order_no}</div>
                 <span className="rounded-full border border-slate-200 bg-white px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-700 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
                   {viewOrder.status}
                 </span>
               </div>
-              <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2 md:grid-cols-3">
-                <div><span className="text-slate-500 font-medium">Party:</span> <span className="font-bold text-slate-800 dark:text-slate-100">{viewOrder.customer_name}</span></div>
-                <div><span className="text-slate-500 font-medium">Goods:</span> <span className="font-bold text-slate-800 dark:text-slate-100">{[viewOrder.goods_name, viewOrder.goods_chs_code ? `CHS ${viewOrder.goods_chs_code}` : "", viewOrder.goods_variation_label, viewOrder.goods_origin_country_name].filter(Boolean).join(" • ") || "-"}</span></div>
-                <div><span className="text-slate-500 font-medium">Route:</span> <span className="font-bold text-slate-800 dark:text-slate-100">{viewOrder.route_name || "-"}</span></div>
-                <div><span className="text-slate-500 font-medium">Movement:</span> <span className="font-bold text-slate-800 dark:text-slate-100">{viewOrder.movement_type}</span></div>
-                <div><span className="text-slate-500 font-medium">Transport:</span> <span className="font-bold text-slate-800 dark:text-slate-100">{viewOrder.transport_mode}</span></div>
-                <div><span className="text-slate-500 font-medium">Goods ID:</span> <span className="font-bold text-slate-800 dark:text-slate-100">{viewOrder.goods_id || "-"}</span></div>
+              <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                <div><span className="text-slate-500 font-medium">Party:</span> <span className="font-bold">{viewOrder.customer_name}</span></div>
+                <div><span className="text-slate-500 font-medium">Goods:</span> <span className="font-bold">{[viewOrder.goods_name, viewOrder.goods_chs_code ? `CHS ${viewOrder.goods_chs_code}` : "", viewOrder.goods_variation_label, viewOrder.goods_origin_country_name].filter(Boolean).join(" • ") || "-"}</span></div>
+                <div><span className="text-slate-500 font-medium">Route:</span> <span className="font-bold">{viewOrder.route_name || "-"}</span></div>
+                <div><span className="text-slate-500 font-medium">Movement:</span> <span className="font-bold capitalize">{viewOrder.movement_type}</span></div>
+                <div><span className="text-slate-500 font-medium">Transport:</span> <span className="font-bold capitalize">{viewOrder.transport_mode}</span></div>
+                <div><span className="text-slate-500 font-medium">Goods ID:</span> <span className="font-mono">{viewOrder.goods_id || "-"}</span></div>
               </div>
             </div>
-            <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
               {(viewOrder.party_links || []).map((link) => (
                 <div key={link.id} className="rounded-xl border border-slate-200 bg-white p-3.5 dark:border-slate-800 dark:bg-slate-900">
-                  <div className="text-[10px] font-black uppercase tracking-wider text-slate-500">{link.role_key.replace("_", " ")}</div>
-                  <div className="mt-1 text-sm font-bold text-slate-900 dark:text-white">{link.party_customer_name}</div>
-                  <div className="text-xs text-slate-600 dark:text-slate-300">{link.party_company_name || "-"}</div>
-                  <div className="mt-1.5 text-[11px] text-slate-500">{link.selected_address_text || "-"}</div>
+                  <div className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">{link.role_key.replace("_", " ")}</div>
+                  <div className="mt-1 text-xs font-bold text-slate-900 dark:text-white">{link.party_customer_name}</div>
+                  <div className="text-xs text-slate-600 dark:text-slate-400">{link.party_company_name || "-"}</div>
+                  <div className="mt-1 text-[11px] text-slate-500">{link.selected_address_text || "-"}</div>
                 </div>
               ))}
             </div>

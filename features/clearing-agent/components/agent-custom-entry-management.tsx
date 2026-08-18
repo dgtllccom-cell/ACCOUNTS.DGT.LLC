@@ -126,30 +126,32 @@ export function AgentCustomEntryManagementView({ lang }: { lang: SupportedLangua
   }
 
   return (
-    <div dir={dir} className="w-full space-y-4 pb-12 text-foreground">
-        {/* Ribbon Header (Clean White ERP Style) */}
-        <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200/80 bg-white px-4 py-3 shadow-xs dark:border-slate-800 dark:bg-slate-900">
-          <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <span className="bg-blue-50 text-blue-700 text-xs font-bold px-2 py-0.5 rounded-md border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800">
-                Customs & Border Station Module
-              </span>
-              <span className="bg-emerald-50 text-emerald-700 text-xs font-bold px-2 py-0.5 rounded-md border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800">
-                5-Language Translation Sync
-              </span>
+    <div dir={dir} className="max-w-7xl mx-auto space-y-6 pb-12">
+        {/* Ribbon Header */}
+        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-slate-700/50 rounded-2xl p-6 shadow-xl text-white">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                <span className="bg-indigo-500/20 text-indigo-300 text-xs font-semibold px-2.5 py-1 rounded-md border border-indigo-500/30">
+                  Customs & Border Station Module
+                </span>
+                <span className="bg-emerald-500/20 text-emerald-300 text-xs font-semibold px-2.5 py-1 rounded-md border border-emerald-500/30">
+                  5-Language Translation Sync
+                </span>
+              </div>
+              <h1 className="text-2xl font-bold tracking-tight">Agent Custom Declaration Form</h1>
+              <p className="text-slate-400 text-sm">
+                Record customs declarations (GD numbers, HS Codes, Duty payments & inspection clearance).
+              </p>
             </div>
-            <h1 className="text-lg font-black text-slate-900 dark:text-slate-100">Agent Custom Declaration Form</h1>
-            <p className="text-slate-500 dark:text-slate-400 text-xs">
-              Record customs declarations (GD numbers, HS Codes, Duty payments & inspection clearance).
-            </p>
+            <button
+              onClick={loadData}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-xl text-sm font-medium transition-colors border border-slate-700 text-slate-200"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              Refresh Declarations
+            </button>
           </div>
-          <button
-            onClick={loadData}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-50 hover:bg-slate-100 rounded-lg text-xs font-bold transition-colors border border-slate-200 text-slate-700 dark:bg-slate-800 dark:border-slate-700 dark:text-slate-200"
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-            Refresh Declarations
-          </button>
         </div>
 
         {error && (
