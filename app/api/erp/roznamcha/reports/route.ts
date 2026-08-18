@@ -72,6 +72,37 @@ export async function GET(request: NextRequest) {
       const safeQ = q ? q.replace(/[%,]/g, "") : null;
       const safeRef = referenceNo ? referenceNo.replace(/[%,]/g, "") : null;
 
+      // entry_category is unreliable at posting time (purchase/sales/transfer flows hardcode
+      // 'business'; cash entries were historically mis-tagged 'bank'), so each report category is
+      // resolved from the reliable posting signals source_module / source_transaction_type as well
+      // as entry_category. This changes NO data — it only widens the report filter to match how
+      // entries are actually recorded. Mapping confirmed with the product owner:
+      //   cash     -> source_module='cash_entry' (the genuine cash-book entries)
+      //   invoice  -> purchase/expense bills (source_module purchase/local_purchase, or *purchase* txn)
+      //   transfer -> any *_transfer transaction type
+      //   bank     -> bank-tagged entries excluding the mis-tagged cash ones
+      //   business -> general (entry_category='business'); all -> unfiltered
+      let categoryCondPg;
+      switch (entryCategory) {
+        case "cash":
+          categoryCondPg = sql`(e.entry_category = 'cash' or e.source_module = 'cash_entry' or e.source_transaction_type in ('Cash Book No.', 'Receipt No.'))`;
+          break;
+        case "invoice":
+          categoryCondPg = sql`(e.entry_category = 'invoice' or e.source_module in ('purchase', 'local_purchase') or e.source_transaction_type ilike '%purchase%')`;
+          break;
+        case "transfer":
+          categoryCondPg = sql`(e.entry_category = 'transfer' or e.source_transaction_type ilike '%transfer%')`;
+          break;
+        case "bank":
+          categoryCondPg = sql`(e.entry_category = 'bank' and e.source_module is distinct from 'cash_entry')`;
+          break;
+        case "business":
+          categoryCondPg = sql`e.entry_category = 'business'`;
+          break;
+        default:
+          categoryCondPg = sql`true`;
+      }
+
       let orderFragment;
       switch (sortBy) {
         case "voucher_no": orderFragment = sortDir === "asc" ? sql`order by e.voucher_no asc` : sql`order by e.voucher_no desc`; break;
@@ -97,7 +128,7 @@ export async function GET(request: NextRequest) {
         left join public.city_branches cib on cib.id = e.city_branch_id
         left join public.profiles cp on cp.id = e.created_by
         where e.deleted_at is null
-          and (${entryCategory && entryCategory !== "all" ? sql`e.entry_category = ${entryCategory}` : sql`true`})
+          and (${categoryCondPg})
           and (${scope.countryId ? sql`e.country_id = ${scope.countryId}` : sql`true`})
           and (${scope.countryBranchId ? sql`e.country_branch_id = ${scope.countryBranchId}` : sql`true`})
           and (${scope.cityBranchId ? sql`e.city_branch_id = ${scope.cityBranchId}` : sql`true`})
@@ -148,8 +179,27 @@ export async function GET(request: NextRequest) {
       const supabase = await createApiSupabaseClient();
       let query = supabase.from("roznamcha_entries").select(SELECT_COLUMNS).is("deleted_at", null) as any;
 
-      if (entryCategory && entryCategory !== "all") {
-        query = query.eq("entry_category", entryCategory);
+      // Mirror the direct-Postgres category resolution (see categoryCondPg above): resolve each
+      // report category from the reliable source_module / source_transaction_type signals, not the
+      // unreliable entry_category alone. No data is changed — only the report filter is widened.
+      switch (entryCategory) {
+        case "cash":
+          query = query.or("entry_category.eq.cash,source_module.eq.cash_entry");
+          break;
+        case "invoice":
+          query = query.or("entry_category.eq.invoice,source_module.eq.purchase,source_module.eq.local_purchase,source_transaction_type.ilike.*purchase*");
+          break;
+        case "transfer":
+          query = query.or("entry_category.eq.transfer,source_transaction_type.ilike.*transfer*");
+          break;
+        case "bank":
+          query = query.eq("entry_category", "bank");
+          break;
+        case "business":
+          query = query.eq("entry_category", "business");
+          break;
+        default:
+          break; // "all" or null -> no category filter
       }
       if (scope.countryId) query = query.eq("country_id", scope.countryId);
       if (scope.countryBranchId) query = query.eq("country_branch_id", scope.countryBranchId);
