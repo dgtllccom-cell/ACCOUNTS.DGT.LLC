@@ -146,7 +146,7 @@ export async function sendBranchEmail(options: SendBranchEmailOptions): Promise<
  * - Super Admin: logs for all countries and branches
  */
 export async function getBranchEmailLogs(options: {
-  session: { isSuperAdmin: boolean; countryIds: string[]; branchIds: string[] };
+  session: { isSuperAdmin: boolean; countryIds: string[]; branchIds?: string[]; cityBranchIds?: string[]; countryBranchIds?: string[] };
   branchId?: string | null;
   countryId?: string | null;
   customerId?: string | null;
@@ -173,8 +173,9 @@ export async function getBranchEmailLogs(options: {
 
   // Scope Filtering based on User Role & Privileges
   if (!options.session.isSuperAdmin) {
-    if (options.session.branchIds && options.session.branchIds.length > 0) {
-      query = query.in("branch_id", options.session.branchIds);
+    const branches = options.session.cityBranchIds?.length ? options.session.cityBranchIds : (options.session.branchIds ?? []);
+    if (branches.length > 0) {
+      query = query.in("branch_id", branches);
     } else if (options.session.countryIds && options.session.countryIds.length > 0) {
       query = query.in("country_id", options.session.countryIds);
     } else {

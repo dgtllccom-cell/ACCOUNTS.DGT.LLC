@@ -143,36 +143,36 @@ export async function GET(request: NextRequest) {
         where deleted_at is null
         order by name
       `;
-      const assignments = await sql`
+      const assignments = (await sql`
         select user_id, country_id, country_branch_id, city_branch_id
         from public.user_role_assignments
         where is_active = true and deleted_at is null
-      `;
-      const profileIds = [...new Set((assignments as Array<{ user_id: string }>)
-        .map((row) => row.user_id)
+      `) as any[];
+      const profileIds = [...new Set(assignments
+        .map((row: any) => row.user_id)
         .filter(Boolean))];
       const users = profileIds.length
-        ? await sql`
+        ? (await sql`
             select id, full_name, user_code
             from public.profiles
             where deleted_at is null and id = any(${profileIds})
             order by full_name
-          `
+          `) as any[]
         : [];
-      const purchaseProjects = await sql`
+      const purchaseProjects = (await sql`
         select id, form_data, country_id, country_branch_id, city_branch_id
         from public.purchase_orders
         where deleted_at is null
         order by created_at desc
         limit 1000
-      `;
-      const salesProjects = await sql`
+      `) as any[];
+      const salesProjects = (await sql`
         select id, form_data, country_id, country_branch_id, city_branch_id
         from public.sales_orders
         where deleted_at is null
         order by created_at desc
         limit 1000
-      `;
+      `) as any[];
       const projectMap = new Map<string, any>();
       for (const row of [...purchaseProjects, ...salesProjects]) {
         const name = extractProject((row as any).form_data);
@@ -194,9 +194,9 @@ export async function GET(request: NextRequest) {
 
     if (localPgMeta) {
       const [localizedCountries, localizedMainBranches, localizedCityBranches] = await Promise.all([
-        localizeRecordNames((localPgMeta.countries ?? []) as Array<{ id: string; name: string }>, "countries", "name", lang),
-        localizeRecordNames((localPgMeta.mainBranches ?? []) as Array<{ id: string; name: string }>, "country_branches", "name", lang),
-        localizeRecordNames((localPgMeta.cityBranches ?? []) as Array<{ id: string; name: string }>, "city_branches", "name", lang)
+        localizeRecordNames(((localPgMeta.countries ?? []) as unknown) as Array<{ id: string; name: string }>, "countries", "name", lang),
+        localizeRecordNames(((localPgMeta.mainBranches ?? []) as unknown) as Array<{ id: string; name: string }>, "country_branches", "name", lang),
+        localizeRecordNames(((localPgMeta.cityBranches ?? []) as unknown) as Array<{ id: string; name: string }>, "city_branches", "name", lang)
       ]);
       const lockedCountryName = (localizedCountries ?? []).find((country: any) => country.id === scope.countryId)?.name ?? null;
       const lockedMainBranchName = (localizedMainBranches ?? []).find((branch: any) => branch.id === scope.countryBranchId)?.name ?? null;

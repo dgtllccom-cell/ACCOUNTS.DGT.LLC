@@ -151,7 +151,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       return apiOk(responsePayload);
     }
 
-    const supabase = await createApiSupabaseClient();
+    const supabase = (await createApiSupabaseClient()) as any;
     const adminSupabase = createSupabaseAdminClient() as any;
 
     const { data: order, error: orderErr } = await adminSupabase
@@ -325,13 +325,13 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     });
     assertPostedRoznamchaTrace({
       label: "Business Roznamcha",
-      entry: await requireSupabaseData(
+      entry: (await requireSupabaseData(
         supabase
           .from("roznamcha_entries")
           .select("country_id, country_branch_id, city_branch_id, status, posted_at, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number")
           .eq("id", roznamchaEntryId)
           .maybeSingle()
-      )
+      )) as any
     });
 
     // NOTE: A separate journal_entries/journal_lines posting used to be written here for the same

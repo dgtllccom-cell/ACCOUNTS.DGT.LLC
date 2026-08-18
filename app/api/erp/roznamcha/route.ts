@@ -1142,7 +1142,7 @@ export async function GET(request: NextRequest) {
       return apiOk({ entries: resolvedEntries, limit });
     }
 
-    const supabase = await createApiSupabaseClient();
+    const supabase = (await createApiSupabaseClient()) as any;
     let query = supabase
       .from("roznamcha_entries")
       .select(

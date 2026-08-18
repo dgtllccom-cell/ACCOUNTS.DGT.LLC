@@ -225,8 +225,21 @@ export async function getOrCreateConversation(params: {
       contact_identifier: cleanId,
       sender_name: params.senderName || contactInfo.name,
       sender_type: contactInfo.type,
+      sender_entity_id: contactInfo.id,
+      country_id: params.countryId || contactInfo.countryId || null,
+      city_branch_id: params.cityBranchId || contactInfo.cityBranchId || null,
+      related_entity_type: relatedType,
+      related_entity_id: relatedId,
       status: "unread",
-      unread_count: 1
+      priority: "normal",
+      message_language: "en",
+      reply_mode: "manual",
+      last_message_text: params.initialMessageText || "",
+      last_message_at: new Date().toISOString(),
+      unread_count: 1,
+      assigned_user_id: null,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
   }
 

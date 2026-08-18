@@ -115,7 +115,8 @@ export async function POST(req: Request) {
     });
 
     // Mark as transferred
-    const { error: updateError } = await supabase
+    const adminSupabase = createSupabaseAdminClient() as any;
+    const { error: updateError } = await adminSupabase
       .from("expenses_bills")
       .update({
         transferred_to_roznamcha: true,

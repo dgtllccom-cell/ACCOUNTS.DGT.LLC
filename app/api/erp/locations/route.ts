@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       toDate: request.nextUrl.searchParams.get("toDate"),
     });
 
-    const db = createSupabaseAdminClient();
+    const db = createSupabaseAdminClient() as any;
 
     // Build query - REAL DATA ONLY
     let qb = db
@@ -131,7 +131,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const db = createSupabaseAdminClient();
+    const db = createSupabaseAdminClient() as any;
 
     const { data, error } = await db
       .from("locations")

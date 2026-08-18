@@ -88,15 +88,15 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     const params = paramsSchema.parse(await context.params);
     const body = salesOrderUpdateSchema.parse(await request.json());
 
-    const supabase = await createApiSupabaseClient();
-    const before = await requireSupabaseData(
+    const supabase = (await createApiSupabaseClient()) as any;
+    const before = (await requireSupabaseData(
       supabase
         .from("sales_orders")
         .select("*")
         .eq("id", params.id)
         .is("deleted_at", null)
         .maybeSingle()
-    );
+    )) as any;
 
     if (!before) {
       return NextResponse.json({ ok: false, error: { message: "Sales order not found" } }, { status: 404 });
@@ -184,8 +184,8 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
               .select("id, code")
               .in("code", [purchaseAccountCode, salesAccountCode]);
 
-            const debitAccObj = foundAccounts?.find(a => a.code === purchaseAccountCode);
-            const creditAccObj = foundAccounts?.find(a => a.code === salesAccountCode);
+            const debitAccObj = foundAccounts?.find((a: any) => a.code === purchaseAccountCode);
+            const creditAccObj = foundAccounts?.find((a: any) => a.code === salesAccountCode);
 
             if (debitAccObj && creditAccObj) {
               const { data: journalEntry } = await admin

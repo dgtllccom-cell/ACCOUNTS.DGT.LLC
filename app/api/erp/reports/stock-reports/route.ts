@@ -630,7 +630,7 @@ export async function GET(request: NextRequest) {
       const invoicePayment = Math.round(purchaseAmount * 0.78);
       const remainingPayment = purchaseAmount - invoicePayment;
 
-      const salesmanName = profileMap.get(row.created_by) || String(form.userName || "System Admin");
+      const salesmanName = (row.created_by ? profileMap.get(row.created_by) : null) || String(form.userName || "System Admin");
 
       const countriesData = row.countries as unknown as { name: string } | null;
       const branchesData = row.city_branches as unknown as { name: string } | null;

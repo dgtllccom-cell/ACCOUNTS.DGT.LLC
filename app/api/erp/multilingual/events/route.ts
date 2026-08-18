@@ -27,7 +27,7 @@ type MultilingualEventRow = {
 };
 
 function eventQuery(table: string): EventQuery {
-  const supabase = createSupabaseAdminClient();
+  const supabase = createSupabaseAdminClient() as any;
   return supabase.from(table) as unknown as EventQuery;
 }
 

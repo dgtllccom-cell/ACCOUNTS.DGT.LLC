@@ -65,12 +65,10 @@ export async function GET(request: NextRequest) {
         .is("deleted_at", null),
 
       // Loading Records
-      admin
+      (admin as any)
         .from("purchase_loading_records")
         .select("id, country_branch_id, country_id, created_at")
-        .is("deleted_at", null)
-        .then((res) => res)
-        .catch(() => ({ data: [], error: null })),
+        .is("deleted_at", null),
 
       // Enterprise Accounts
       admin
@@ -79,12 +77,10 @@ export async function GET(request: NextRequest) {
         .is("deleted_at", null),
 
       // Shipping Line Records
-      admin
+      (admin as any)
         .from("shipping_line_records")
         .select("id, country_branch_id, country_id, created_at")
-        .is("deleted_at", null)
-        .then((res) => res)
-        .catch(() => ({ data: [], error: null })),
+        .is("deleted_at", null),
     ]);
 
     const purchases = purchaseRows.data ?? [];

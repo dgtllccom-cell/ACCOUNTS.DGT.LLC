@@ -19,7 +19,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     if (body.countryId !== undefined) patch.country_id = body.countryId ?? null;
     if (body.isActive !== undefined) patch.is_active = Boolean(body.isActive);
 
-    const supabase = createSupabaseAdminClient();
+    const supabase = createSupabaseAdminClient() as any;
     const { data, error } = await supabase
       .from("product_brands")
       .update(patch)

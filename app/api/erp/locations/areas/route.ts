@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
       name: body.name,
       code: body.code ?? null,
       postalCode: body.postalCode ?? null,
-      createdBy: isUuid(session.userId) ? session.userId : null
+      createdBy: session?.userId && isUuid(session.userId) ? session.userId : null
     });
 
     return apiOk({ area });

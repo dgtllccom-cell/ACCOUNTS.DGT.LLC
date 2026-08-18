@@ -251,6 +251,11 @@ export const purchaseOrderCreateSchema = scopeSchema.extend({
   supplierCompanyId: optionalUuidSchema,
   purchaseContractNo: z.string().trim().max(120).optional(),
 
+  purchaseOrderNo: z.string().trim().optional(),
+  advanceAmount: z.coerce.number().finite().min(0).optional(),
+  purchaseCurrency: currencyCodeSchema.optional(),
+  paymentCurrency: currencyCodeSchema.optional(),
+
   currencyCode: currencyCodeSchema.default("USD"),
   paymentCurrencyCode: currencyCodeSchema.default("USD"),
   exchangeRate: z.coerce.number().finite().positive().default(1),
@@ -402,7 +407,9 @@ export const goodsCreateSchema = z.object({
   }).optional().nullable()
 });
 
-export const goodsUpdateSchema = goodsCreateSchema.partial();
+export const goodsUpdateSchema = goodsCreateSchema.partial().extend({
+  isActive: z.boolean().optional()
+});
 
 export const goodsVariationCreateSchema = z.object({
   size: z.string().trim().min(1).max(100),

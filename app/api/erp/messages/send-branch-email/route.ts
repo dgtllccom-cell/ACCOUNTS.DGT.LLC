@@ -19,8 +19,9 @@ export async function POST(request: Request) {
 
     // Role-based Multi-Tenant Security Checks
     if (!session.isSuperAdmin) {
-      if (session.branchIds && session.branchIds.length > 0) {
-        if (!session.branchIds.includes(branchId)) {
+      const allowedBranches = [...(session.cityBranchIds || []), ...(session.countryBranchIds || [])];
+      if (allowedBranches.length > 0) {
+        if (!allowedBranches.includes(branchId)) {
           return NextResponse.json(
             { error: "Access Denied: Branch Admin/Staff can send emails only from their assigned branch mailbox." },
             { status: 403 }

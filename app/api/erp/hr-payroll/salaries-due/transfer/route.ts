@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
       p_narration: `Accrued Salary for ${employeeName} - Month: ${dueRecord.salary_month}`,
       p_lines: accrualLines,
       p_bypass_ledger_scope: true
-    });
+    } as any);
 
     if (accPostError) {
       return NextResponse.json({ error: "Accrual post error: " + accPostError.message }, { status: 400 });
@@ -177,7 +177,7 @@ export async function POST(request: NextRequest) {
         p_narration: `Salary payment transfer to ${employeeName} - Month: ${dueRecord.salary_month}`,
         p_lines: paymentLines,
         p_bypass_ledger_scope: true
-      });
+      } as any);
 
       if (payPostError) {
         // Rollback accrual entry? Supabase transactions are atomic if called inside single RPC, 

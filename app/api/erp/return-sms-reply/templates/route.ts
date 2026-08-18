@@ -75,7 +75,12 @@ export async function GET(_request: NextRequest) {
     }));
 
     if (templates.length === 0) {
-      templates = PRESET_TEMPLATES.map((pt, idx) => ({ id: `tmpl-${idx + 1}`, ...pt }));
+      templates = PRESET_TEMPLATES.map((pt, idx) => ({
+        id: `tmpl-${idx + 1}`,
+        appliesToCountryId: null,
+        appliesToBranchId: null,
+        ...pt
+      }));
     }
 
     return apiOk({ templates });

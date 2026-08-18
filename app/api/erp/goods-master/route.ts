@@ -9,7 +9,7 @@ export async function GET(request: NextRequest) {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "goods_master", action: "read" });
 
-    const db = createSupabaseAdminClient();
+    const db = createSupabaseAdminClient() as any;
     const { data, error } = await db
       .from("goods_master")
       .select(`id, chs_code, name, category, origin_country, brand, sizes, is_active, created_at`)
@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
       return new Response(JSON.stringify({ error: "name and chsCode required" }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
-    const db = createSupabaseAdminClient();
+    const db = createSupabaseAdminClient() as any;
     const { data, error } = await db
       .from("goods_master")
       .insert([{ chs_code: chsCode, name, category: category || null, origin_country: originCountry || null, brand: brand || null, sizes: sizes || null, is_active: isActive !== false, created_at: new Date().toISOString() }])

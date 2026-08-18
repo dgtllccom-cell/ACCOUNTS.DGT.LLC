@@ -31,7 +31,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     if (body.status !== undefined && ["active", "inactive", "suspended", "expired"].includes(body.status)) patch.status = body.status;
     if (body.is_active !== undefined) patch.is_active = Boolean(body.is_active);
 
-    const supabase = createSupabaseAdminClient();
+    const supabase = createSupabaseAdminClient() as any;
     const { data, error } = await supabase.from("trucks").update(patch).eq("id", id).is("deleted_at", null).select(COLS).single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ truck: data });

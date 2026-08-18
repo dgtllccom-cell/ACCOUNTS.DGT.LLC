@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       return new Response(JSON.stringify({ error: "name, code, countryId required" }), { status: 400, headers: { "Content-Type": "application/json" } });
     }
 
-    const db = createSupabaseAdminClient();
+    const db = createSupabaseAdminClient() as any;
     const { data, error } = await db
       .from("ports")
       .insert([{ code, name, country_id: countryId, border_type: borderType || null, is_active: isActive !== false, created_at: new Date().toISOString() }])

@@ -17,7 +17,7 @@ export async function GET(
       action: "read",
     });
 
-    const db = createSupabaseAdminClient();
+    const db = createSupabaseAdminClient() as any;
 
     const { data, error } = await db
       .from("locations")
@@ -65,7 +65,7 @@ export async function PUT(
       action: "update",
     });
 
-    const db = createSupabaseAdminClient();
+    const db = createSupabaseAdminClient() as any;
 
     // Get existing location to verify scope
     const { data: existing, error: getError } = await db
@@ -126,7 +126,7 @@ export async function DELETE(
       action: "delete",
     });
 
-    const db = createSupabaseAdminClient();
+    const db = createSupabaseAdminClient() as any;
 
     // Get existing location to verify scope
     const { data: existing, error: getError } = await db

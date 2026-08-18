@@ -119,7 +119,7 @@ export async function POST(request: NextRequest) {
         p_narration: remarks || `${type} issued to ${employee.person?.customer_name || ""}`,
         p_lines: lines,
         p_bypass_ledger_scope: true
-      });
+      } as any);
 
       if (postError) {
         return NextResponse.json({ error: "Failed to post to Roznamcha: " + postError.message }, { status: 400 });

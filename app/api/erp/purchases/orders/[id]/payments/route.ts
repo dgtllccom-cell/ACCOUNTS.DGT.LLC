@@ -9,6 +9,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
+import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -72,6 +73,7 @@ function buildPurchaseGoodsAuditRemark(orderRow: any, fallbackReference?: string
   const purchaseCurrency = String(goodsEntries[0]?.purchaseCurrency || goodsEntries[0]?.pricingCurrency || form.purchaseCurrency || form.pricingCurrency || orderRow.currency_code || "USD").toUpperCase();
   return `Purchase Bill: ${billNo} | Goods: ${goodsName} | Qty: ${formatAuditNumber(totalQty)}${unit ? ` ${unit}` : ""} | Gross WT: ${formatAuditNumber(grossWeight)} KG | Net WT: ${formatAuditNumber(netWeight)} KG | Purchase Price: ${formatAuditNumber(purchaseAmount)} ${purchaseCurrency}`;
 }
+
 async function assertLedgerMatchesPurchaseScope(supabase: any, ledgerId: string, orderRow: any, label: string) {
   const { data: ledger, error } = await supabase
     .from("ledgers")
@@ -99,13 +101,12 @@ async function assertLedgerMatchesPurchaseScope(supabase: any, ledgerId: string,
   return ledger;
 }
 
-
 export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
 
-    const supabase = await createApiSupabaseClient();
+    const supabase = (await createApiSupabaseClient()) as any;
     const order = await requireSupabaseData(
       supabase
         .from("purchase_orders")
@@ -150,8 +151,6 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   }
 }
 
-import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
-
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   let idempotencyKey = "";
   let tenantHash = "";
@@ -176,9 +175,9 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       req: request,
       scopeModule: "PURCHASE_PAYMENT",
       userId: session.userId,
-      countryId: session.countryId,
-      cityBranchId: session.cityBranchId,
-      businessReference: params.id || body?.referenceNo || body?.roznamchaNumber,
+      countryId: session.countryIds?.[0] ?? null,
+      cityBranchId: session.cityBranchIds?.[0] ?? null,
+      businessReference: params.id || body?.referenceNo || (body as any)?.roznamchaNumber,
       payload: body
     });
 
@@ -193,12 +192,11 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     idempotencyKey = lockRes.idempotencyKey;
     tenantHash = lockRes.tenantHash;
 
-
     if (!isSupabaseConfigured()) {
       throw new Error("Supabase is not configured. Purchase posting requires a real Supabase login.");
     }
 
-    const supabase = await createApiSupabaseClient();
+    const supabase = (await createApiSupabaseClient()) as any;
     const order = await requireSupabaseData(
       supabase
         .from("purchase_orders")
@@ -235,7 +233,6 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     } else {
       remainingDueUSD = Math.max(0, orderTotalUSD - advancePaidUSD - remainingPaidUSD - creditAmountUSD);
     }
-
 
     const goodsEntries = Array.isArray(orderRow.form_data?.goodsEntries) ? orderRow.form_data.goodsEntries : [];
     const formTotalUSD = goodsEntries.length
@@ -289,7 +286,6 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const effectiveRoznamchaExchangeRate = isForeignCurrency ? Number(body.exchangeRate || 1) : 1;
 
     // Transaction-safe posting via RPC using the security definer wrapper post_purchase_booking_transfer.
-    // This wrapper sets config('request.jwt.claims', ...) so audit log triggers find auth.uid().
     const { data, error } = await supabase.rpc("post_purchase_booking_transfer", {
       p_actor_id: session.userId,
       p_purchase_order_id: params.id,
@@ -310,8 +306,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
     const paymentId = data as string;
 
-    // 4-level serial (Global/Country/Branch/Entry) — additive metadata only, applied
-    // AFTER the atomic posting RPC. Does NOT touch the posting/ledger/roznamcha logic.
+    // 4-level serial (Global/Country/Branch/Entry)
     try {
       const s = await allocateFormSerials("payment_purchase", { countryId: (order as any).country_id, branchKey: (order as any).country_branch_id ?? (order as any).city_branch_id ?? null });
       await supabase.from("purchase_order_payments").update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial }).eq("id", paymentId);
@@ -338,13 +333,11 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       throw new Error("Purchase payment was created but the linked Journal/Roznamcha entry is missing.");
     }
 
-    // Fix: Ensure the roznamcha entry has the correct branch and country scopes assigned
-    // so it shows up in branch-specific Roznamcha reports.
     let rozType = "super_admin";
     if (orderRow.city_branch_id) rozType = "branch";
     else if (orderRow.country_branch_id || orderRow.country_id) rozType = "country";
 
-    const adminSupabase = createSupabaseAdminClient();
+    const adminSupabase = createSupabaseAdminClient() as any;
     const { error: updateError } = await adminSupabase.from("roznamcha_entries").update({
       country_id: orderRow.country_id || null,
       country_branch_id: orderRow.country_branch_id || null,
@@ -364,12 +357,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         .maybeSingle()
     ) as any;
 
-    const journalLines = await requireSupabaseData(
+    const journalLines = (await requireSupabaseData(
       supabase
         .from("roznamcha_lines")
         .select("id, ledger_id, debit, credit, currency, usd_rate, usd_amount")
         .eq("roznamcha_entry_id", paymentRecord.roznamcha_entry_id)
-    ) as any[];
+    )) as any[];
 
     const exRate = Number(body.exchangeRate || (orderRow as any)?.exchange_rate || 1) || 1;
     assertDistinctBookingLedgers(body.debitLedgerId, body.creditLedgerId, "Purchase payment");
@@ -457,7 +450,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       ipAddress: request.headers.get("x-forwarded-for") ?? null
     });
 
-    // Check if the advance payment is completed and auto-move to Loading Module
+    // Check if advance payment is completed
     try {
       const { data: updatedOrder, error: orderError } = await supabase
         .from("purchase_orders")

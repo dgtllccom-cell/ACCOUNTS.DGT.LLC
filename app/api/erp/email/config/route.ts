@@ -71,11 +71,11 @@ export async function GET(request: NextRequest) {
         const suppQuery = docNo.match(/^[0-9a-fA-F-]{36}$/)
           ? queryBuilder.eq("id", docNo)
           : queryBuilder.eq("name", docNo);
-        const { data: comp } = await suppQuery.maybeSingle();
+        const { data: comp } = (await suppQuery.maybeSingle()) as any;
         if (comp) {
           scope.countryId = comp.country_id || scope.countryId;
-          const contacts = Array.isArray(comp.contacts) ? comp.contacts : [];
-          const emailContact = contacts.find((c: any) => c.email || c.emailAddress);
+          const contacts = Array.isArray(comp.contacts) ? (comp.contacts as any[]) : [];
+          const emailContact = contacts.find((c: any) => c?.email || c?.emailAddress);
           recipientEmail = emailContact?.email || emailContact?.emailAddress || null;
         }
       }

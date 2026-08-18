@@ -60,7 +60,7 @@ interface JournalBillRecord {
   nextStepColor: "green" | "orange" | "red" | "blue" | "gray";
   // Optional: MOCK_JOURNAL_BILLS omit it and it is assigned later in processedMockBills;
   // db/local records set it directly from row.created_by.
-  salesmanId?: string;
+  salesmanId?: string | null;
   journey: JourneyStep[];
   goods: BillGoodsItem[];
   payments: BillPaymentItem[];

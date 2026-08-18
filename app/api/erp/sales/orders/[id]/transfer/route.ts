@@ -8,6 +8,7 @@ import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/l
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
 import { resolveSalesBookingPaymentRoute } from "@/lib/services/sales-booking-routing";
+import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -42,8 +43,6 @@ function buildSalesGoodsAuditRemark(orderRow: any, fallbackReference?: string | 
   return `Sales Bill: ${billNo} | Goods: ${goodsName} | Qty: ${formatAuditNumber(totalQty)}${unit ? ` ${unit}` : ""} | Gross WT: ${formatAuditNumber(grossWeight)} KG | Net WT: ${formatAuditNumber(netWeight)} KG | Sales Price: ${formatAuditNumber(salesAmount)} ${salesCurrency}`;
 }
 
-import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
-
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   let idempotencyKey = "";
   let tenantHash = "";
@@ -56,8 +55,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       req: request,
       scopeModule: "SALES_TRANSFER",
       userId: session.userId,
-      countryId: session.countryId,
-      cityBranchId: session.cityBranchId,
+      countryId: session.countryIds?.[0] ?? null,
+      cityBranchId: session.cityBranchIds?.[0] ?? null,
       businessReference: params.id,
       payload: body
     });
@@ -73,7 +72,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     idempotencyKey = lockRes.idempotencyKey;
     tenantHash = lockRes.tenantHash;
 
-    const supabase = await createApiSupabaseClient();
+    const supabase = (await createApiSupabaseClient()) as any;
     const order = await requireSupabaseData(
       supabase
         .from("sales_orders")
@@ -222,13 +221,13 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       throw new Error(rpcError.message);
     }
 
-    const paymentRecord = await requireSupabaseData(
+    const paymentRecord = (await requireSupabaseData(
       supabase
         .from("sales_order_payments")
         .select("id, roznamcha_entry_id")
-        .eq("id", paymentId)
+        .eq("id", paymentId as string)
         .maybeSingle()
-    ) as any;
+    )) as any;
 
     let rozType = "super_admin";
     if (orderRow.city_branch_id) rozType = "branch";
@@ -243,12 +242,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       entry_category: "business"
     }).eq("id", paymentRecord.roznamcha_entry_id);
 
-    const postedLines = await requireSupabaseData(
+    const postedLines = (await requireSupabaseData(
       supabase
         .from("roznamcha_lines")
         .select("ledger_id, debit, credit")
         .eq("roznamcha_entry_id", paymentRecord.roznamcha_entry_id)
-    ) as any[];
+    )) as any[];
 
     const exRate = Number(orderRow.exchange_rate || form.exchangeRate || 1) || 1;
     assertDistinctBookingLedgers(debitLedgerId, creditLedgerId, "Sales booking");
@@ -261,13 +260,13 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       expectedExchangeRate: exRate
     });
 
-    const journalRecord = await requireSupabaseData(
+    const journalRecord = (await requireSupabaseData(
       supabase
         .from("roznamcha_entries")
         .select("id, status, posted_at, country_id, country_branch_id, city_branch_id, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number")
         .eq("id", paymentRecord.roznamcha_entry_id)
         .maybeSingle()
-    ) as any;
+    )) as any;
 
     assertPostedRoznamchaTrace({
       label: "Sales booking",
@@ -310,14 +309,14 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       }
     };
 
-    const updatedOrder = await requireSupabaseData(
+    const updatedOrder = (await requireSupabaseData(
       supabase
         .from("sales_orders")
         .update(patch)
         .eq("id", params.id)
         .select("id, sales_order_no, sales_contract_no, ledger_posting_status, payment_status")
         .maybeSingle()
-    );
+    )) as any;
 
     await writeAuditLog({
       action: "transfer_to_sales_payment",
@@ -331,7 +330,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const resPayload = {
       success: true,
       salesOrderId: params.id,
-      salesOrderNo: (updatedOrder as any).sales_order_no,
+      salesOrderNo: updatedOrder?.sales_order_no,
       systemBillNumber,
       manualBillNumber,
       referenceNo,

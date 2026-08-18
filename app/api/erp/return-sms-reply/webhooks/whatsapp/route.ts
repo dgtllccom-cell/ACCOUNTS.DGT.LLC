@@ -46,7 +46,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const payload = await request.json();
-    const admin = createSupabaseAdminClient();
+    const admin = createSupabaseAdminClient() as any;
 
     const entry = payload?.entry?.[0];
     const changes = entry?.changes?.[0];

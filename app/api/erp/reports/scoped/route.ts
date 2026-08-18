@@ -27,6 +27,7 @@ const REPORT_TYPES = [
   "purchase-booking",
   "user-activity",
   "exchange-rate",
+  "exchange-rates",
   // Legacy report types from old general endpoint (keep for backward compat)
   "cash-entry",
   "receipts",
@@ -198,6 +199,11 @@ export async function GET(request: NextRequest) {
       });
     }
 
+    if (!admin) {
+      admin = createSupabaseAdminClient();
+    }
+    const adminClient = admin as any;
+
     let data: any[] = [];
     let summary: any = {};
 
@@ -236,7 +242,7 @@ export async function GET(request: NextRequest) {
 
       // ─── PURCHASE ─────────────────────────────────────────────
       case "purchase": {
-        let q = admin
+        let q = adminClient
           .from("purchase_orders")
           .select(`id, po_number, po_date, status, total_amount, currency, advance_paid,
                    remaining_amount, country_id, city_branch_id, country_branch_id,
@@ -272,7 +278,7 @@ export async function GET(request: NextRequest) {
 
       // ─── SALES ─────────────────────────────────────────────────
       case "sales": {
-        let q = admin
+        let q = adminClient
           .from("sales_orders")
           .select(`id, order_number, order_date, status, total_amount, currency,
                    country_id, city_branch_id, country_branch_id,
@@ -302,10 +308,11 @@ export async function GET(request: NextRequest) {
 
       // ─── PAYMENT / CASH / ROZNAMCHA ────────────────────────────
       case "payment":
+      case "payments":
       case "cash":
       case "cash-entry":
       case "roznamcha": {
-        let q = admin
+        let q = adminClient
           .from("roznamcha_entries")
           .select(`id, type, journal_no, voucher_no, super_admin_serial_number,
                    country_transaction_serial_number, branch_transaction_serial_number,
@@ -316,10 +323,10 @@ export async function GET(request: NextRequest) {
           .order("entry_date", { ascending: false });
 
         // Apply type filter for cash-specific queries
-        if (parsed.reportType === "payment" || parsed.reportType === "payments") {
-          q = q.eq("type", "payment");
+        if (parsed.reportType === "payment" || (parsed.reportType as any) === "payments") {
+          q = (q as any).eq("type", "payment");
         } else if (parsed.reportType === "cash") {
-          q = q.in("type", ["cash", "cash_in", "cash_out"]);
+          q = (q as any).in("type", ["cash", "cash_in", "cash_out"]);
         }
 
         q = applyStandardFilters(q, { dateField: "entry_date" });
@@ -354,7 +361,7 @@ export async function GET(request: NextRequest) {
 
       // ─── LEDGER ──────────────────────────────────────────────
       case "ledger": {
-        let q = admin
+        let q = adminClient
           .from("ledger_entries")
           .select(`id, entry_date, description, debit, credit, currency,
                    account_id, country_id, city_branch_id, country_branch_id,
@@ -389,7 +396,7 @@ export async function GET(request: NextRequest) {
 
       // ─── JOURNAL ─────────────────────────────────────────────
       case "journal": {
-        let q = admin
+        let q = adminClient
           .from("journal_entries")
           .select(`id, entry_date, narration, status, reference_no,
                    country_id, city_branch_id, country_branch_id,
@@ -427,7 +434,7 @@ export async function GET(request: NextRequest) {
 
       // ─── LOADING (Shipping/Container) ─────────────────────────
       case "loading": {
-        let q = admin
+        let q = adminClient
           .from("shipping_records")
           .select(`id, record_date, container_no, vessel_name, bl_number, status,
                    total_weight, currency, country_id, city_branch_id, country_branch_id,
@@ -456,7 +463,7 @@ export async function GET(request: NextRequest) {
 
       // ─── TRANSFER ─────────────────────────────────────────────
       case "transfer": {
-        let q = admin
+        let q = adminClient
           .from("inter_branch_transfers")
           .select(`id, transfer_date, reference_no, status, amount, currency,
                    from_country_id, to_country_id, from_branch_id, to_branch_id,
@@ -493,7 +500,7 @@ export async function GET(request: NextRequest) {
 
       // ─── REMAINING ─────────────────────────────────────────────
       case "remaining": {
-        let q = admin
+        let q = adminClient
           .from("purchase_orders")
           .select(`id, po_number, po_date, total_amount, advance_paid, remaining_amount,
                    currency, status, country_id, city_branch_id, country_branch_id,
@@ -526,7 +533,7 @@ export async function GET(request: NextRequest) {
 
       // ─── INVENTORY ─────────────────────────────────────────────
       case "inventory": {
-        let q = admin
+        let q = adminClient
           .from("inventory_records")
           .select(`id, recorded_at, product_name, quantity, unit, warehouse_id,
                    country_id, city_branch_id,
@@ -555,9 +562,8 @@ export async function GET(request: NextRequest) {
       }
 
       // ─── USER ACTIVITY ─────────────────────────────────────────
-      case "user-activity":
       case "user-activity": {
-        const { data: rows } = await admin
+        const { data: rows } = await adminClient
           .from("audit_logs")
           .select("id, created_at, user_id, action, resource_type, resource_id, ip_address, user_agent")
           .order("created_at", { ascending: false })
@@ -580,7 +586,7 @@ export async function GET(request: NextRequest) {
       // ─── EXCHANGE RATE ──────────────────────────────────────────
       case "exchange-rate":
       case "exchange-rates": {
-        let q = admin
+        let q = adminClient
           .from("currency_rates")
           .select("id, rate_date, from_currency, to_currency, buy_rate, sell_rate, mid_rate, country_id")
           .order("rate_date", { ascending: false });
@@ -608,14 +614,14 @@ export async function GET(request: NextRequest) {
 
       // ─── RECEIPTS (legacy) ──────────────────────────────────────
       case "receipts": {
-        let q = admin
+        let q = adminClient
           .from("roznamcha_entries")
           .select(`id, entry_date, journal_no, voucher_no, narration, status,
                    country_id, city_branch_id, roznamcha_lines(debit, credit, currency)`)
-          .eq("type", "receipt")
           .is("deleted_at", null)
           .order("entry_date", { ascending: false });
 
+        q = (q as any).eq("type", "receipt");
         q = applyStandardFilters(q, { dateField: "entry_date" });
         const { data: rows } = await q.limit(limit);
 
@@ -833,12 +839,11 @@ export async function GET(request: NextRequest) {
 
       // ─── EXPENSES ────────────────────────────────────────────────
       case "expenses": {
-        let q = admin
+        let q = adminClient
           .from("roznamcha_entries")
           .select(`id, journal_no, voucher_no, entry_date, narration, status,
                    country_id, city_branch_id,
                    roznamcha_lines(debit, credit, currency, description)`)
-          .in("type", ["expense", "payment"])
           .is("deleted_at", null)
           .order("entry_date", { ascending: false });
 
@@ -865,7 +870,7 @@ export async function GET(request: NextRequest) {
       // ─── PURCHASE BOOKING / REGISTER ─────────────────────────────
       case "purchase-booking":
       case "purchase-booking-register": {
-        let q = admin
+        let q = adminClient
           .from("purchase_orders")
           .select(`id, po_number, po_date, status, total_amount, currency, advance_paid,
                    remaining_amount, country_id, city_branch_id, country_branch_id,
@@ -898,7 +903,7 @@ export async function GET(request: NextRequest) {
 
       // ─── DAILY COMPREHENSIVE ─────────────────────────────────────
       case "daily-comprehensive": {
-        let q = admin
+        let q = adminClient
           .from("roznamcha_entries")
           .select(`id, journal_no, voucher_no, entry_date, narration, type, status,
                    country_id, city_branch_id,

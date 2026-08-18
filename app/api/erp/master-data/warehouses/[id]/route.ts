@@ -32,7 +32,7 @@ export async function PATCH(req: Request, context: { params: Promise<{ id: strin
     if (body.area_id !== undefined) patch.area_id = body.area_id ?? null;
     if (body.is_active !== undefined) patch.is_active = Boolean(body.is_active);
 
-    const supabase = createSupabaseAdminClient();
+    const supabase = createSupabaseAdminClient() as any;
     const { data, error } = await supabase
       .from("warehouses")
       .update(patch)

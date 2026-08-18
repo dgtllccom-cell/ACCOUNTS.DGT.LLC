@@ -30,8 +30,8 @@ export async function POST(request: NextRequest) {
       req: request,
       scopeModule: "LOCAL_PURCHASE_ACCEPT",
       userId: session.userId,
-      countryId: session.countryId,
-      cityBranchId: session.cityBranchId,
+      countryId: session.countryIds?.[0] ?? null,
+      cityBranchId: session.cityBranchIds?.[0] ?? null,
       businessReference: purchaseId,
       payload: body
     });

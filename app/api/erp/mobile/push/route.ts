@@ -37,7 +37,7 @@ export async function POST(request: NextRequest) {
       deviceName: parsed.deviceName
     });
 
-    return apiOk({ registered: true, ...registered });
+    return apiOk({ ...registered });
   } catch (error) {
     return handleApiError(error);
   }

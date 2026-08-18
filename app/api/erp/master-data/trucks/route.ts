@@ -84,7 +84,7 @@ export async function POST(req: Request) {
     row.entry_serial = serials.entrySerial;
     if (!row.truck_serial) row.truck_serial = serials.entrySerial;
 
-    const supabase = createSupabaseAdminClient();
+    const supabase = createSupabaseAdminClient() as any;
     const { data, error } = await supabase.from("trucks").insert(row).select(COLS).single();
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     return NextResponse.json({ truck: data });

@@ -437,26 +437,23 @@ export async function GET(request: NextRequest) {
           where deleted_at is null ${targetCountryId ? sql`and country_id = ${targetCountryId}::uuid` : sql``}
           order by name
         `;
-        const assignments = await sql`
-          select user_id, role, country_id, country_branch_id, city_branch_id
-          from public.user_role_assignments
-          where is_active = true and deleted_at is null ${targetCountryId ? sql`and country_id = ${targetCountryId}::uuid` : sql``}
-        `;
-        let historyRows = await sql`
+        let historyRows = (await sql`
           select id, record_table, record_id, country_id, city_branch_id, action, actor_id, approval_request_id, before_data, after_data, created_at
           from public.record_change_history
           where 1=1 ${targetCountryId ? sql`and country_id = ${targetCountryId}::uuid` : sql``}
           order by created_at desc
           limit ${params.limit}
-        `;
+        `) as any[];
         if (params.userId) {
           historyRows = historyRows.filter((row: any) => row.actor_id === params.userId);
         }
         if (params.fromDate) {
-          historyRows = historyRows.filter((row: any) => String(row.created_at).slice(0, 10) >= params.fromDate);
+          const fDate = params.fromDate;
+          historyRows = historyRows.filter((row: any) => String(row.created_at).slice(0, 10) >= fDate);
         }
         if (params.toDate) {
-          historyRows = historyRows.filter((row: any) => String(row.created_at).slice(0, 10) <= params.toDate);
+          const tDate = params.toDate;
+          historyRows = historyRows.filter((row: any) => String(row.created_at).slice(0, 10) <= tDate);
         }
         const localizedMainBranches = await localizeRecordNames<any>(allMainBranches as any, "country_branches", "name", params.lang);
         const localizedCityBranches = await localizeRecordNames<any>(allCityBranches as any, "city_branches", "name", params.lang);
@@ -475,12 +472,19 @@ export async function GET(request: NextRequest) {
         });
         const actorIds = [...new Set(filteredHistoryRows.map((row: any) => row.actor_id).filter(Boolean))];
         const profiles = actorIds.length
-          ? await sql`
+          ? (await sql`
               select id, full_name, user_code
               from public.profiles
               where deleted_at is null and id = any(${actorIds})
               order by full_name
-            `
+            `) as any[]
+          : [];
+        const assignments = actorIds.length
+          ? (await sql`
+              select user_id, role, country_id, country_branch_id, city_branch_id
+              from public.user_role_assignments
+              where is_active = true and deleted_at is null and user_id = any(${actorIds})
+            `) as any[]
           : [];
         return buildEditHistoryReport({
           session,
@@ -496,25 +500,27 @@ export async function GET(request: NextRequest) {
       }
 
       if (params.reportType === "branch") {
+        const mbId = params.mainBranchId;
+        const bId = params.branchId;
         const mainBranches = params.scopeMode !== "city-branch"
-          ? await sql`
+          ? (await sql`
               select id, name, code, status, local_currency, country_id, created_at, created_by, is_main
               from public.country_branches
               where deleted_at is null
                 ${targetCountryId ? sql`and country_id = ${targetCountryId}::uuid` : sql``}
-                ${params.scopeMode === "main-branch" ? sql`and id = ${params.mainBranchId}::uuid` : sql``}
+                ${params.scopeMode === "main-branch" && mbId ? sql`and id = ${mbId}::uuid` : sql``}
               order by name
-            `
+            `) as any[]
           : [];
         const cityBranches = params.scopeMode !== "main-branch"
-          ? await sql`
+          ? (await sql`
               select id, name, code, status, local_currency, country_id, country_branch_id, city_name, created_at, created_by
               from public.city_branches
               where deleted_at is null
                 ${targetCountryId ? sql`and country_id = ${targetCountryId}::uuid` : sql``}
-                ${params.scopeMode === "city-branch" ? sql`and id = ${params.branchId}::uuid` : sql``}
+                ${params.scopeMode === "city-branch" && bId ? sql`and id = ${bId}::uuid` : sql``}
               order by name
-            `
+            `) as any[]
           : [];
         return {
           reportType: params.reportType,
@@ -571,40 +577,44 @@ export async function GET(request: NextRequest) {
       }
 
       if (params.reportType === "user-activity") {
-        const assignments = await sql`
+        const mbId = params.mainBranchId;
+        const bId = params.branchId;
+        const assignments = (await sql`
           select user_id, country_id, country_branch_id, city_branch_id
           from public.user_role_assignments
           where is_active = true and deleted_at is null
             ${targetCountryId ? sql`and country_id = ${targetCountryId}::uuid` : sql``}
-            ${params.scopeMode === "main-branch" ? sql`and country_branch_id = ${params.mainBranchId}::uuid and city_branch_id is null` : sql``}
-            ${params.scopeMode === "city-branch" ? sql`and city_branch_id = ${params.branchId}::uuid` : sql``}
-        `;
-        const userIds = [...new Set((assignments as Array<{ user_id: string }>).map((row) => row.user_id).filter(Boolean))];
+            ${params.scopeMode === "main-branch" && mbId ? sql`and country_branch_id = ${mbId}::uuid and city_branch_id is null` : sql``}
+            ${params.scopeMode === "city-branch" && bId ? sql`and city_branch_id = ${bId}::uuid` : sql``}
+        `) as any[];
+        const userIds = [...new Set(assignments.map((row: any) => row.user_id).filter(Boolean))];
         const profiles = userIds.length
-          ? await sql`
+          ? (await sql`
               select id, full_name, user_code
               from public.profiles
               where deleted_at is null and id = any(${userIds})
               order by full_name
-            `
+            `) as any[]
           : [];
-        let activities = await sql`
+        let activities = (await sql`
           select id, created_at, actor_id, action, resource, record_id, record_table, metadata, ip_address, user_agent, country_id, country_branch_id, city_branch_id
           from public.erp_activity_events
           where 1=1 ${targetCountryId ? sql`and country_id = ${targetCountryId}::uuid` : sql``}
           order by created_at desc
           limit ${params.limit}
-        `;
+        `) as any[];
         if (params.scopeMode === "main-branch") {
           activities = activities.filter((row: any) => row.country_branch_id === params.mainBranchId && !row.city_branch_id);
         } else if (params.scopeMode === "city-branch") {
           activities = activities.filter((row: any) => row.city_branch_id === params.branchId);
         }
         if (params.fromDate) {
-          activities = activities.filter((row: any) => String(row.created_at).slice(0, 10) >= params.fromDate);
+          const fDate = params.fromDate;
+          activities = activities.filter((row: any) => String(row.created_at).slice(0, 10) >= fDate);
         }
         if (params.toDate) {
-          activities = activities.filter((row: any) => String(row.created_at).slice(0, 10) <= params.toDate);
+          const tDate = params.toDate;
+          activities = activities.filter((row: any) => String(row.created_at).slice(0, 10) <= tDate);
         }
         if (params.userId) {
           activities = activities.filter((row: any) => row.actor_id === params.userId);
@@ -716,10 +726,12 @@ export async function GET(request: NextRequest) {
         historyRows = historyRows.filter((row: any) => row.actor_id === params.userId);
       }
       if (params.fromDate) {
-        historyRows = historyRows.filter((row: any) => String(row.created_at).slice(0, 10) >= params.fromDate);
+        const fDate = params.fromDate;
+        historyRows = historyRows.filter((row: any) => String(row.created_at).slice(0, 10) >= fDate);
       }
       if (params.toDate) {
-        historyRows = historyRows.filter((row: any) => String(row.created_at).slice(0, 10) <= params.toDate);
+        const tDate = params.toDate;
+        historyRows = historyRows.filter((row: any) => String(row.created_at).slice(0, 10) <= tDate);
       }
       let mainBranchesQ = db.from("country_branches").select("id, name, code, country_id").is("deleted_at", null).order("name");
       if (targetCountryId) mainBranchesQ = mainBranchesQ.eq("country_id", targetCountryId);

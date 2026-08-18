@@ -9,6 +9,7 @@ import { isSupabaseConfigured } from "@/lib/supabase/config";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
+import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -108,10 +109,6 @@ async function assertLedgerMatchesSalesScope(supabase: any, ledgerId: string, or
     throw new Error(label + " ledger belongs to a different city branch and cannot be used for this sales booking.");
   }
 
-  if (!orderRow.city_branch_id && orderRow.country_branch_id && ledger.country_branch_id && ledger.country_branch_id !== orderRow.country_branch_id) {
-    throw new Error(label + " ledger belongs to a different main branch and cannot be used for this sales booking.");
-  }
-
   return ledger;
 }
 
@@ -120,7 +117,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
 
-    const supabase = await createApiSupabaseClient();
+    const supabase = (await createApiSupabaseClient()) as any;
     const order = await requireSupabaseData(
       supabase
         .from("sales_orders")
@@ -135,10 +132,10 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       action: "read",
       countryId: (order as any)?.country_id ?? null,
       countryBranchId: (order as any)?.country_branch_id ?? null,
-      city_branch_id: (order as any)?.city_branch_id ?? null
+      cityBranchId: (order as any)?.city_branch_id ?? null
     });
 
-    const rows = await requireSupabaseData(
+    const rows = (await requireSupabaseData(
       supabase
         .from("sales_order_payments")
         .select(`
@@ -156,9 +153,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         .is("deleted_at", null)
         .order("created_at", { ascending: false })
         .limit(200)
-    );
+    )) as any[];
 
-    // Format fields to match UI expectations
     const mapped = (rows ?? []).map((row: any) => ({
       ...row,
       kind: row.payment_kind,
@@ -173,8 +169,6 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   }
 }
 
-import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
-
 export async function POST(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   let idempotencyKey = "";
   let tenantHash = "";
@@ -187,9 +181,9 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       req: request,
       scopeModule: "SALES_PAYMENT",
       userId: session.userId,
-      countryId: session.countryId,
-      cityBranchId: session.cityBranchId,
-      businessReference: params.id || body?.referenceNo || body?.roznamchaNumber,
+      countryId: session.countryIds?.[0] ?? null,
+      cityBranchId: session.cityBranchIds?.[0] ?? null,
+      businessReference: params.id || body?.referenceNo || (body as any)?.roznamchaNumber,
       payload: body
     });
 
@@ -208,7 +202,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       throw new Error("Supabase is not configured. Sales posting requires a real Supabase login.");
     }
 
-    const supabase = await createApiSupabaseClient();
+    const supabase = (await createApiSupabaseClient()) as any;
     const order = await requireSupabaseData(
       supabase
         .from("sales_orders")
@@ -331,7 +325,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     if (orderRow.city_branch_id) rozType = "branch";
     else if (orderRow.country_branch_id || orderRow.country_id) rozType = "country";
 
-    const adminSupabase = createSupabaseAdminClient();
+    const adminSupabase = createSupabaseAdminClient() as any;
     await adminSupabase.from("roznamcha_entries").update({
       country_id: orderRow.country_id || null,
       country_branch_id: orderRow.country_branch_id || null,

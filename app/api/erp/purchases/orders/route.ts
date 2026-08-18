@@ -1,4 +1,4 @@
-﻿export const dynamic = "force-dynamic";
+export const dynamic = "force-dynamic";
 
 import { NextRequest } from "next/server";
 import { z } from "zod";
@@ -18,6 +18,8 @@ import { revalidatePath } from "next/cache";
 import { purchaseOrderTranslationFields } from "@/lib/i18n/purchase-order-translations";
 import { buildVerifiedTranslationSet } from "@/lib/i18n/verified-record-translations";
 import { getDbUrl, withLocalPg } from "@/lib/db/local-postgres";
+import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
+import { validateAccountCountryScope, validateLedgerCountryScope } from "@/lib/api/country-scope-validator";
 
 const listQuerySchema = z.object({
   countryId: uuidSchema.optional(),
@@ -79,7 +81,7 @@ async function resolveEffectiveScope(req: { countryId?: string | null; countryBr
     if (viaPg) return viaPg;
   }
 
-  const supabase = await createApiSupabaseClient();
+  const supabase = (await createApiSupabaseClient()) as any;
   
   if (req.cityBranchId) {
     const { data: row } = await supabase
@@ -87,7 +89,7 @@ async function resolveEffectiveScope(req: { countryId?: string | null; countryBr
       .select("id, country_id, country_branch_id")
       .eq("id", req.cityBranchId)
       .maybeSingle();
-    if (row) return { countryId: row.country_id, countryBranchId: row.country_branch_id, cityBranchId: req.cityBranchId };
+    if (row) return { countryId: (row as any).country_id, countryBranchId: (row as any).country_branch_id, cityBranchId: req.cityBranchId };
   }
 
   if (req.countryBranchId) {
@@ -96,7 +98,7 @@ async function resolveEffectiveScope(req: { countryId?: string | null; countryBr
       .select("id, country_id")
       .eq("id", req.countryBranchId)
       .maybeSingle();
-    if (row) return { countryId: row.country_id, countryBranchId: req.countryBranchId, cityBranchId: null };
+    if (row) return { countryId: (row as any).country_id, countryBranchId: req.countryBranchId, cityBranchId: null };
   }
 
   return { countryId: req.countryId ?? null, countryBranchId: null, cityBranchId: null };
@@ -231,11 +233,6 @@ export async function GET(request: NextRequest) {
       cityBranchId: query.cityBranchId ?? null
     });
 
-    // purchase_orders has scoped RLS and this app's Supabase client is not guaranteed to
-    // carry a real service-role key that bypasses RLS on its own — reads through it silently
-    // return an empty array (RLS filters rows, it doesn't error on SELECT) rather than the
-    // real data. Read via a direct Postgres connection when available (same proven bypass as
-    // the POST handler above), falling back to the Supabase client otherwise.
     const term = query.q ? query.q.trim().replace(/[%_]/g, "") : null;
     const like = term ? `%${term}%` : null;
     const viaPgRows = await withLocalPg(async (sql) => {
@@ -267,7 +264,7 @@ export async function GET(request: NextRequest) {
     if (viaPgRows) {
       rawRows = viaPgRows;
     } else {
-      const supabase = await createApiSupabaseClient();
+      const supabase = (await createApiSupabaseClient()) as any;
       let q = supabase
         .from("purchase_orders")
         .select(`
@@ -365,9 +362,6 @@ export async function GET(request: NextRequest) {
   }
 }
 
-import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
-import { validateAccountCountryScope, validateLedgerCountryScope } from "@/lib/api/country-scope-validator";
-
 export async function POST(request: NextRequest) {
   let idempotencyKey = "";
   let tenantHash = "";
@@ -417,14 +411,16 @@ export async function POST(request: NextRequest) {
     const adminSupabase = hasLocalPg ? null : (createSupabaseAdminClient() as any);
     if (hasLocalPg) {
       const responsePayload = await createPurchaseOrderViaLocalPg({ session, body, effective });
-      await writeAuditLog({
-        action: "create_purchase_order",
-        entityTable: "purchase_orders",
-        entityId: responsePayload.purchaseOrderId,
-        before: null,
-        after: responsePayload,
-        ipAddress: request.headers.get("x-forwarded-for") ?? null
-      });
+      if (responsePayload?.purchaseOrderId) {
+        await writeAuditLog({
+          action: "create_purchase_order",
+          entityTable: "purchase_orders",
+          entityId: responsePayload.purchaseOrderId,
+          before: null,
+          after: responsePayload,
+          ipAddress: request.headers.get("x-forwarded-for") ?? null
+        });
+      }
       revalidatePath("/dashboard/purchase/purchase-order");
       if (idempotencyKey && tenantHash) {
         await commitIdempotencySuccess(idempotencyKey, tenantHash, 201, responsePayload);
@@ -432,8 +428,8 @@ export async function POST(request: NextRequest) {
       return apiCreated(responsePayload);
     }
 
-    // â”€â”€ Rule 1: Country Scope Validation for Purchase Accounts â”€â”€
-    const form = body.formData?.form || {};
+    // Rule 1: Country Scope Validation for Purchase Accounts
+    const form = (body.formData as any)?.form || {};
     const purchaseAccountId = form.purchaseAccountId || form.purchaseAccountNo;
     const salesAccountId = form.salesAccountId || form.salesAccountNo;
 
@@ -536,10 +532,10 @@ export async function POST(request: NextRequest) {
       landed_cost_usd: body.landedCostUsd ?? 0,
 
       form_data: {
-        ...(body.formData || {}),
+        ...((body.formData as any) || {}),
         form: {
-          ...(body.formData?.form || {}),
-          billNo: branchTransactionSerialNumber || body.formData?.form?.billNo || null
+          ...((body.formData as any)?.form || {}),
+          billNo: branchTransactionSerialNumber || (body.formData as any)?.form?.billNo || null
         }
       },
       payment_status: paymentStatus,
@@ -551,12 +547,6 @@ export async function POST(request: NextRequest) {
       branch_transaction_serial_number: branchTransactionSerialNumber
     };
 
-    // purchase_orders has scoped RLS and this app's Supabase client is not guaranteed to
-    // carry a real service-role key that bypasses RLS on its own (confirmed live: this
-    // insert failed with "new row violates row-level security policy for table
-    // \"purchase_orders\"" for every purchase order creation attempt). Insert via a direct
-    // Postgres connection when available (same proven bypass as banks/customers/sales_orders),
-    // falling back to the Supabase client + its existing schema-cache retry otherwise.
     let inserted: any;
     const viaPgInsert = await withLocalPg(async (sql) => {
       const rows = await sql`INSERT INTO public.purchase_orders ${sql(payload as any)} RETURNING id, purchase_order_no`;
@@ -568,7 +558,7 @@ export async function POST(request: NextRequest) {
     } else {
       try {
         inserted = await requireSupabaseData(
-          supabase.from("purchase_orders").insert(payload).select("id, purchase_order_no").single()
+          (supabase as any).from("purchase_orders").insert(payload).select("id, purchase_order_no").single()
         );
       } catch (e: any) {
         const errMsg = String(e.message || e);
@@ -576,7 +566,7 @@ export async function POST(request: NextRequest) {
           await ensurePurchaseSchemaAndEnums();
           try {
             inserted = await requireSupabaseData(
-              supabase.from("purchase_orders").insert(payload).select("id, purchase_order_no").single()
+              (supabase as any).from("purchase_orders").insert(payload).select("id, purchase_order_no").single()
             );
           } catch (retryErr: any) {
             return apiError("INSERT_FAILED", retryErr.message || String(retryErr), 400);
@@ -588,8 +578,6 @@ export async function POST(request: NextRequest) {
     }
 
     const orderId = (inserted as any).id;
-
-    // 4-level serial (Global/Country/Branch/Entry) — additive metadata only, applied
     // AFTER the order row is created. Does NOT touch posting/ledger logic.
     try {
       const s = await allocateFormSerials("purchase", { countryId: effective.countryId, branchKey: effective.countryBranchId ?? effective.cityBranchId ?? null });
@@ -638,11 +626,7 @@ export async function POST(request: NextRequest) {
         expense_type: ex.expenseType,
         ledger_id: ex.ledgerId || null,
         description: ex.description || null,
-        // expense_currency: ex.expenseCurrency || "USD",
-        exchange_rate: ex.exchangeRate || 1,
-        // amount_original: ex.amountOriginal || 0,
-        // amount_local: ex.amountLocal || 0,
-        // amount_usd: ex.amountUsd || 0
+        exchange_rate: ex.exchangeRate || 1
       }));
       try {
         await safeInsertPurchaseOrderExpenses(supabase, expPayload);
@@ -651,11 +635,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Ledger posting has been removed from Purchase Booking.
-    // Booking must remain only in the Purchase Booking Register until transferred and paid.
-
-    // Reuse the central five-language translation store. Unknown target text is
-    // persisted as pending/null, never as a false copy of the source language.
     let translationSummary: { status: "complete" | "pending"; fields: Record<string, unknown> } = { status: "pending", fields: {} };
     try {
       const currentFormData: any = payload.form_data || {};
@@ -701,7 +680,6 @@ export async function POST(request: NextRequest) {
       ipAddress: request.headers.get("x-forwarded-for") ?? null
     });
 
-    // Requirement 9 & 11: Real-time Synchronization
     revalidatePath("/dashboard/purchases", "layout");
     revalidatePath("/dashboard/reports", "layout");
 
@@ -723,4 +701,3 @@ export async function POST(request: NextRequest) {
     return handleApiError(error);
   }
 }
-

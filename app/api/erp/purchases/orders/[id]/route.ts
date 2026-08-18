@@ -145,7 +145,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     const params = paramsSchema.parse(await context.params);
     const body = purchaseOrderUpdateSchema.parse(await request.json());
 
-    const supabase = await createApiSupabaseClient();
+    const supabase = (await createApiSupabaseClient()) as any;
     const before = await requireSupabaseData(
       supabase
         .from("purchase_orders")
@@ -852,7 +852,7 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
 
-    const supabase = await createApiSupabaseClient();
+    const supabase = (await createApiSupabaseClient()) as any;
     const row = await requireSupabaseData(
       supabase
         .from("purchase_orders")

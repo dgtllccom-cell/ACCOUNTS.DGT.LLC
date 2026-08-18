@@ -21,12 +21,7 @@ export async function GET(request: NextRequest) {
     });
 
     const viaPg = await withLocalPg(async (sql) => {
-      let query = sql`
-        select id, scope, country_id, country_branch_id, city_branch_id, account_id, code, name, currency,
-               opening_balance, current_balance, debit_total, credit_total, is_active, created_at, updated_at
-        from public.ledgers
-        where deleted_at is null
-      `;
+      let rows: any[] = [];
 
       if (!session.isSuperAdmin) {
         const cityIds = session.cityBranchIds ?? [];
@@ -35,7 +30,7 @@ export async function GET(request: NextRequest) {
         if (cityIds.length === 0 && countryBranchIds.length === 0 && countryIds.length === 0) {
           return [] as any[];
         }
-        query = await sql`
+        rows = await sql`
           select id, scope, country_id, country_branch_id, city_branch_id, account_id, code, name, currency,
                  opening_balance, current_balance, debit_total, credit_total, is_active, created_at, updated_at
           from public.ledgers
@@ -48,7 +43,7 @@ export async function GET(request: NextRequest) {
           limit 100
         `;
       } else {
-        query = await sql`
+        rows = await sql`
           select id, scope, country_id, country_branch_id, city_branch_id, account_id, code, name, currency,
                  opening_balance, current_balance, debit_total, credit_total, is_active, created_at, updated_at
           from public.ledgers
@@ -61,7 +56,7 @@ export async function GET(request: NextRequest) {
         `;
       }
 
-      return query as any[];
+      return rows;
     });
 
     if (!viaPg) {

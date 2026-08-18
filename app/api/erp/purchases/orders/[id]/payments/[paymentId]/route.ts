@@ -120,12 +120,10 @@ export async function PUT(request: NextRequest, context: { params: Promise<{ id:
     }
 
     await writeAuditLog({
-      supabase,
-      userId: session.userId,
-      action: "UPDATE",
-      entity: "purchase_order_payments",
+      action: "update",
+      entityTable: "purchase_order_payments",
       entityId: params.paymentId,
-      details: { message: "Edited purchase order payment via reversal and reposting", newPaymentId }
+      after: { message: "Edited purchase order payment via reversal and reposting", newPaymentId }
     });
 
     return apiOk({ id: newPaymentId, message: "Payment updated successfully" });

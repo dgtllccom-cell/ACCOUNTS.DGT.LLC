@@ -53,9 +53,9 @@ export async function POST(req: NextRequest) {
       req,
       scopeModule: "EXPENSES",
       userId: session.userId,
-      countryId: session.countryId,
-      cityBranchId: session.cityBranchId || header.branch,
-      businessReference: header.billNo || header.referenceNo,
+      countryId: session.countryIds?.[0] ?? null,
+      cityBranchId: session.cityBranchIds?.[0] || header.branch,
+      businessReference: header.billSerial || header.referenceNo,
       payload: body
     });
 
@@ -132,7 +132,7 @@ export async function POST(req: NextRequest) {
 
       if (billError) throw new Error("Failed to insert bill header: " + billError.message);
       billId = billData.id;
-      if (header.billTitle) void translateMasterRecord("expenses_bills", billId, { bill_title: header.billTitle }, "en", session.userId || null);
+      if (header.billTitle && billId) void translateMasterRecord("expenses_bills", billId, { bill_title: header.billTitle }, "en", session.userId || null);
     }
 
     const linesToInsert = entries.map((e) => ({

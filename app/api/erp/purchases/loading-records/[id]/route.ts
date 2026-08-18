@@ -27,14 +27,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const body = updateSchema.parse(await request.json());
 
     const supabase = createSupabaseAdminClient() as any;
-    const existing = await requireSupabaseData(
+    const existing = (await requireSupabaseData(
       supabase
         .from("purchase_loading_records")
         .select("*")
         .eq("id", (await params).id)
         .is("deleted_at", null)
         .single()
-    );
+    )) as any;
 
     authorizeApiScope(session, {
       resource: "purchases",
@@ -56,14 +56,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     if (body.remarks !== undefined) payload.remarks = body.remarks;
     if (body.reportPayload !== undefined) payload.report_payload = body.reportPayload;
 
-    const updated = await requireSupabaseData(
+    const updated = (await requireSupabaseData(
       supabase
         .from("purchase_loading_records")
         .update(payload)
         .eq("id", (await params).id)
         .select("id, loading_record_no")
         .single()
-    );
+    )) as any;
 
     await writeAuditLog({
       action: "update",
@@ -85,14 +85,14 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     const session = await requireErpSession();
 
     const supabase = createSupabaseAdminClient() as any;
-    const existing = await requireSupabaseData(
+    const existing = (await requireSupabaseData(
       supabase
         .from("purchase_loading_records")
         .select("*")
         .eq("id", (await params).id)
         .is("deleted_at", null)
         .single()
-    );
+    )) as any;
 
     authorizeApiScope(session, {
       resource: "purchases",
@@ -103,14 +103,14 @@ export async function DELETE(request: NextRequest, { params }: { params: Promise
     });
 
     const deletedAt = new Date().toISOString();
-    const updated = await requireSupabaseData(
+    const updated = (await requireSupabaseData(
       supabase
         .from("purchase_loading_records")
         .update({ deleted_at: deletedAt })
         .eq("id", (await params).id)
         .select("id, loading_record_no")
         .single()
-    );
+    )) as any;
 
     await writeAuditLog({
       action: "delete",

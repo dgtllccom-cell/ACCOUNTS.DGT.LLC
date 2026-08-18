@@ -42,7 +42,7 @@ export async function GET(request: NextRequest) {
       countryBranchId: countryBranchId || null
     });
 
-    const supabase = await createApiSupabaseClient();
+    const supabase = (await createApiSupabaseClient()) as any;
     let totalDebit = 0;
     let totalCredit = 0;
     let entryCount = 0;

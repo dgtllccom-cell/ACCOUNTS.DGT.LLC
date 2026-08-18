@@ -84,7 +84,8 @@ const salesOrderSchema = z.object({
   deliveryStatus: z.string().trim().max(80).default("pending"),
   workflowState: z.unknown().optional(),
   formData: z.unknown().optional(),
-  originalLanguage: z.enum(["en", "ur", "ar", "fa", "ps"]).optional()
+  translations: z.record(z.string(), z.any()).optional(),
+  originalLanguage: z.enum(["en", "ur", "ar", "fa", "ps"]).default("en")
 });
 
 function orderNo() {
@@ -270,8 +271,8 @@ export async function POST(request: NextRequest) {
       req: request,
       scopeModule: "SALES_ORDER",
       userId: session.userId,
-      countryId: session.countryId,
-      cityBranchId: session.cityBranchId,
+      countryId: session.countryIds?.[0] ?? null,
+      cityBranchId: session.cityBranchIds?.[0] ?? null,
       businessReference: rawJson?.salesOrderNo || rawJson?.salesContractNo,
       payload: rawJson
     });

@@ -47,8 +47,8 @@ export async function POST(req: NextRequest) {
       req,
       scopeModule: "MONEY_EXCHANGE",
       userId: session.userId,
-      countryId: session.countryId,
-      cityBranchId: session.cityBranchId || parsed.branchId,
+      countryId: session.countryIds?.[0] ?? null,
+      cityBranchId: session.cityBranchIds?.[0] || parsed.branchId,
       businessReference: parsed.serialNo,
       payload: body
     });

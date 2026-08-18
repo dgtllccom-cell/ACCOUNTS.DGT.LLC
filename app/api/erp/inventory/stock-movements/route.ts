@@ -86,7 +86,7 @@ export async function GET(request: NextRequest) {
         )`;
       }
 
-      let rows = await sql`
+      let rows: any[] = await sql`
         ${query}
         ORDER BY sm.movement_date DESC, sm.created_at DESC
         LIMIT ${limit} OFFSET ${offset}
@@ -181,7 +181,7 @@ export async function POST(request: NextRequest) {
       const whRows = await sql`SELECT country_id FROM public.warehouses WHERE id = ${warehouseId}::uuid`;
       const whCountryId = whRows[0]?.country_id || null;
 
-      let fallbackCountryId = body.countryId || session.activeCountryId || session.countryIds?.[0] || whCountryId;
+      let fallbackCountryId = body.countryId || session.countryIds?.[0] || whCountryId;
       if (!fallbackCountryId) {
         const cRows = await sql`SELECT id FROM public.countries ORDER BY created_at ASC LIMIT 1`;
         fallbackCountryId = cRows[0]?.id || null;
@@ -191,8 +191,8 @@ export async function POST(request: NextRequest) {
         throw new Error("403: Not authorized for this country scope");
       }
 
-      const countryBranchId = body.countryBranchId || session.activeBranchId || null;
-      const cityBranchId = body.cityBranchId || null;
+      const countryBranchId = body.countryBranchId || session.countryBranchIds?.[0] || null;
+      const cityBranchId = body.cityBranchId || session.cityBranchIds?.[0] || null;
 
       // 3. Ensure shadow record in public.products table for FK constraint in product_inventory_balances
       await sql`

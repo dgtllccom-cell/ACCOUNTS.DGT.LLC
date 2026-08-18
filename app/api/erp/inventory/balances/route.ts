@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
         )`;
       }
 
-      let rows = await sql`
+      let rows: any[] = await sql`
         ${query}
         ORDER BY g.goods_name ASC, w.warehouse_name ASC
         LIMIT ${limit} OFFSET ${offset}

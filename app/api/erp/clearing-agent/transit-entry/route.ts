@@ -199,7 +199,7 @@ export async function POST(req: NextRequest) {
 
 export async function DELETE(req: NextRequest) {
   try {
-    const supabase = createSupabaseAdminClient();
+    const supabase = createSupabaseAdminClient() as any;
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
     const serial = searchParams.get("serial");
