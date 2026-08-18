@@ -1,6 +1,6 @@
 import { NextRequest } from "next/server";
 import { z } from "zod";
-import { apiOk, handleApiError } from "@/lib/api/response";
+import { ApiClientError, apiOk, handleApiError } from "@/lib/api/response";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { requireErpSession } from "@/lib/auth/session";
@@ -145,7 +145,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
     
     const actorId = isUuid(session.userId) ? session.userId : null;
     if (!actorId) {
-      throw new Error("A valid logged-in user ID is required to update an account.");
+      throw new ApiClientError("A valid logged-in user ID is required to update an account.");
     }
 
     // Verify the actorId exists in the profiles table
@@ -156,7 +156,7 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
       .maybeSingle();
 
     if (profileError || !userProfile) {
-      throw new Error("The user ID does not exist in the referenced users table. Account update requires a valid user reference.");
+      throw new ApiClientError("The user ID does not exist in the referenced users table. Account update requires a valid user reference.");
     }
 
     const current = await loadAccount(supabase, id);
@@ -287,7 +287,7 @@ export async function DELETE(_request: NextRequest, context: { params: Promise<{
 
     const actorId = isUuid(session.userId) ? session.userId : null;
     if (!actorId) {
-      throw new Error("A valid logged-in user ID is required to delete an account.");
+      throw new ApiClientError("A valid logged-in user ID is required to delete an account.");
     }
 
     // Verify the actorId exists in the profiles table
@@ -298,7 +298,7 @@ export async function DELETE(_request: NextRequest, context: { params: Promise<{
       .maybeSingle();
 
     if (profileError || !userProfile) {
-      throw new Error("The user ID does not exist in the referenced users table. Account deletion requires a valid user reference.");
+      throw new ApiClientError("The user ID does not exist in the referenced users table. Account deletion requires a valid user reference.");
     }
 
     const current = await loadAccount(supabase, id);

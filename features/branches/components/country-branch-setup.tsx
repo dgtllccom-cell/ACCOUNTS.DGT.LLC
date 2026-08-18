@@ -992,7 +992,8 @@ function CountryBranchSetupContent() {
       </div>
 
       <div className="rounded-2xl border border-slate-200/80 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-950">
-        <div className="grid gap-2 md:grid-cols-4 xl:grid-cols-9" aria-label="Country branch wizard sequence">
+        <div className="overflow-x-auto -mx-1 px-1" aria-label="Country branch wizard sequence">
+          <div className="flex gap-2 min-w-max">
           {[
             ["1", "Branch Information", "Country, currency and location"],
             ["2", "Access Scope", "Review country scope before setup"],
@@ -1004,14 +1005,15 @@ function CountryBranchSetupContent() {
             ["8", "AI Communication Setup", "Email, WhatsApp and alerts"],
             ["9", "Final Approval", "Accept setup or go back"]
           ].map(([no, title, desc]) => (
-            <div key={no} className={cn("rounded-xl border px-3 py-2 transition", Number(no) === activeStep ? "border-cyan-500 bg-cyan-50 shadow-sm ring-1 ring-cyan-200 dark:border-cyan-500 dark:bg-cyan-950/40" : "border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50")}>
-              <div className="flex items-center gap-2">
-                <span className={cn("flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-bold", Number(no) === activeStep ? "bg-cyan-600 text-white" : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200")}>{no}</span>
-                <span className="text-[11px] font-black uppercase tracking-wide text-slate-900 dark:text-slate-100">{title}</span>
+            <div key={no} className={cn("rounded-xl border px-3 py-2 transition min-w-[120px] max-w-[140px] flex-shrink-0", Number(no) === activeStep ? "border-cyan-500 bg-cyan-50 shadow-sm ring-1 ring-cyan-200 dark:border-cyan-500 dark:bg-cyan-950/40" : "border-slate-200 bg-slate-50/70 dark:border-slate-800 dark:bg-slate-900/50")}>
+              <div className="flex items-start gap-2">
+                <span className={cn("flex h-6 w-6 min-w-6 min-h-6 flex-shrink-0 items-center justify-center rounded-full text-[11px] font-bold", Number(no) === activeStep ? "bg-cyan-600 text-white" : "bg-slate-200 text-slate-700 dark:bg-slate-800 dark:text-slate-200")}>{no}</span>
+                <span className="text-[10px] font-bold uppercase tracking-wide text-slate-900 dark:text-slate-100 leading-tight line-clamp-2">{title}</span>
               </div>
-              <p className="mt-1 text-[10px] leading-snug text-slate-500">{desc}</p>
+              <p className="mt-1 text-[9px] leading-snug text-slate-500 line-clamp-2">{desc}</p>
             </div>
           ))}
+          </div>
         </div>
         <div className="mt-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-100 pt-3 dark:border-slate-800">
           <span className="text-xs font-bold text-slate-500">Step {activeStep} of 9</span>

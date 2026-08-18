@@ -33872,3 +33872,612 @@ Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for p
     at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
     at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
 2026-08-17T15:24:56.822Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-18T13:57:51.299Z] TypeError: supabase.from(...).select(...).ilike is not a function
+TypeError: supabase.from(...).select(...).ilike is not a function
+    at nextEnterpriseAccountCode (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:160:6)
+    at Module.POST (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:394:17)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:70:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+
+[2026-08-18T13:57:51.337Z] TypeError: supabase.from(...).select(...).ilike is not a function
+TypeError: supabase.from(...).select(...).ilike is not a function
+    at nextEnterpriseAccountCode (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:160:6)
+    at Module.POST (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:394:17)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:97:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+
+[2026-08-18T13:57:51.351Z] Error: The user ID does not exist in the referenced users table. Account update requires a valid user reference.
+Error: The user ID does not exist in the referenced users table. Account update requires a valid user reference.
+    at Module.PATCH (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\[id]\route.ts:159:13)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:121:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+
+[2026-08-18T13:57:51.441Z] Error: The user ID does not exist in the referenced users table. Account deletion requires a valid user reference.
+Error: The user ID does not exist in the referenced users table. Account deletion requires a valid user reference.
+    at Module.DELETE (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\[id]\route.ts:301:13)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:211:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+
+[2026-08-18T14:01:28.269Z] TypeError: supabase.from(...).select(...).ilike is not a function
+TypeError: supabase.from(...).select(...).ilike is not a function
+    at nextEnterpriseAccountCode (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:160:6)
+    at Module.POST (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:394:17)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:74:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:01:28.340Z - SERVER_ERROR - supabase.from(...).select(...).ilike is not a function - {}
+
+[2026-08-18T14:01:28.363Z] TypeError: supabase.from(...).select(...).ilike is not a function
+TypeError: supabase.from(...).select(...).ilike is not a function
+    at nextEnterpriseAccountCode (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:160:6)
+    at Module.POST (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:394:17)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:101:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:01:28.364Z - SERVER_ERROR - supabase.from(...).select(...).ilike is not a function - {}
+
+[2026-08-18T14:01:28.371Z] Error: The user ID does not exist in the referenced users table. Account update requires a valid user reference.
+Error: The user ID does not exist in the referenced users table. Account update requires a valid user reference.
+    at Module.PATCH (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\[id]\route.ts:159:13)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:125:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:01:28.375Z - SERVER_ERROR - The user ID does not exist in the referenced users table. Account update requires a valid user reference. - {}
+
+[2026-08-18T14:01:28.401Z] Error: The user ID does not exist in the referenced users table. Account deletion requires a valid user reference.
+Error: The user ID does not exist in the referenced users table. Account deletion requires a valid user reference.
+    at Module.DELETE (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\[id]\route.ts:301:13)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:217:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:01:28.402Z - SERVER_ERROR - The user ID does not exist in the referenced users table. Account deletion requires a valid user reference. - {}
+
+[2026-08-18T14:02:42.753Z] TypeError: supabase.from(...).select(...).ilike is not a function
+TypeError: supabase.from(...).select(...).ilike is not a function
+    at nextEnterpriseAccountCode (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:160:6)
+    at Module.POST (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:394:17)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:82:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:02:42.790Z - SERVER_ERROR - supabase.from(...).select(...).ilike is not a function - {}
+
+[2026-08-18T14:02:42.813Z] TypeError: supabase.from(...).select(...).ilike is not a function
+TypeError: supabase.from(...).select(...).ilike is not a function
+    at nextEnterpriseAccountCode (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:160:6)
+    at Module.POST (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:394:17)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:109:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:02:42.816Z - SERVER_ERROR - supabase.from(...).select(...).ilike is not a function - {}
+
+[2026-08-18T14:02:42.829Z] Error: The user ID does not exist in the referenced users table. Account update requires a valid user reference.
+Error: The user ID does not exist in the referenced users table. Account update requires a valid user reference.
+    at Module.PATCH (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\[id]\route.ts:159:13)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:133:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:02:42.832Z - SERVER_ERROR - The user ID does not exist in the referenced users table. Account update requires a valid user reference. - {}
+
+[2026-08-18T14:02:42.860Z] Error: The user ID does not exist in the referenced users table. Account deletion requires a valid user reference.
+Error: The user ID does not exist in the referenced users table. Account deletion requires a valid user reference.
+    at Module.DELETE (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\[id]\route.ts:301:13)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:225:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:02:42.861Z - SERVER_ERROR - The user ID does not exist in the referenced users table. Account deletion requires a valid user reference. - {}
+
+[2026-08-18T14:03:13.711Z] TypeError: supabase.from(...).select(...).ilike is not a function
+TypeError: supabase.from(...).select(...).ilike is not a function
+    at nextEnterpriseAccountCode (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:160:6)
+    at Module.POST (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:394:17)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:86:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:03:13.739Z - SERVER_ERROR - supabase.from(...).select(...).ilike is not a function - {}
+
+[2026-08-18T14:03:13.756Z] TypeError: supabase.from(...).select(...).ilike is not a function
+TypeError: supabase.from(...).select(...).ilike is not a function
+    at nextEnterpriseAccountCode (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:160:6)
+    at Module.POST (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:394:17)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:113:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:03:13.758Z - SERVER_ERROR - supabase.from(...).select(...).ilike is not a function - {}
+
+[2026-08-18T14:03:13.769Z] Error: The user ID does not exist in the referenced users table. Account update requires a valid user reference.
+Error: The user ID does not exist in the referenced users table. Account update requires a valid user reference.
+    at Module.PATCH (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\[id]\route.ts:159:13)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:137:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:03:13.772Z - SERVER_ERROR - The user ID does not exist in the referenced users table. Account update requires a valid user reference. - {}
+
+[2026-08-18T14:03:13.805Z] Error: The user ID does not exist in the referenced users table. Account deletion requires a valid user reference.
+Error: The user ID does not exist in the referenced users table. Account deletion requires a valid user reference.
+    at Module.DELETE (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\[id]\route.ts:301:13)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:229:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:03:13.808Z - SERVER_ERROR - The user ID does not exist in the referenced users table. Account deletion requires a valid user reference. - {}
+
+[2026-08-18T14:05:19.490Z] TypeError: supabase.from(...).select(...).ilike is not a function
+TypeError: supabase.from(...).select(...).ilike is not a function
+    at nextEnterpriseAccountCode (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:160:6)
+    at Module.POST (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:394:17)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:108:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:05:19.515Z - SERVER_ERROR - supabase.from(...).select(...).ilike is not a function - {}
+
+[2026-08-18T14:05:19.532Z] TypeError: supabase.from(...).select(...).ilike is not a function
+TypeError: supabase.from(...).select(...).ilike is not a function
+    at nextEnterpriseAccountCode (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:160:6)
+    at Module.POST (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:394:17)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:135:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:05:19.533Z - SERVER_ERROR - supabase.from(...).select(...).ilike is not a function - {}
+
+[2026-08-18T14:05:19.544Z] ApiClientError: The user ID does not exist in the referenced users table. Account update requires a valid user reference.
+ApiClientError: The user ID does not exist in the referenced users table. Account update requires a valid user reference.
+    at Module.PATCH (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\[id]\route.ts:159:13)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:159:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:05:19.553Z - BAD_REQUEST - The user ID does not exist in the referenced users table. Account update requires a valid user reference. - {}
+
+[2026-08-18T14:05:19.588Z] ApiClientError: The user ID does not exist in the referenced users table. Account deletion requires a valid user reference.
+ApiClientError: The user ID does not exist in the referenced users table. Account deletion requires a valid user reference.
+    at Module.DELETE (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\[id]\route.ts:301:13)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:251:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:05:19.590Z - BAD_REQUEST - The user ID does not exist in the referenced users table. Account deletion requires a valid user reference. - {}
+
+[2026-08-18T14:06:00.123Z] TypeError: supabase.from(...).select(...).ilike is not a function
+TypeError: supabase.from(...).select(...).ilike is not a function
+    at nextEnterpriseAccountCode (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:160:6)
+    at Module.POST (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:394:17)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:112:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:06:00.158Z - SERVER_ERROR - supabase.from(...).select(...).ilike is not a function - {}
+
+[2026-08-18T14:06:00.183Z] TypeError: supabase.from(...).select(...).ilike is not a function
+TypeError: supabase.from(...).select(...).ilike is not a function
+    at nextEnterpriseAccountCode (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:160:6)
+    at Module.POST (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:394:17)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:138:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:06:00.187Z - SERVER_ERROR - supabase.from(...).select(...).ilike is not a function - {}
+
+[2026-08-18T14:06:00.202Z] ApiClientError: The user ID does not exist in the referenced users table. Account update requires a valid user reference.
+ApiClientError: The user ID does not exist in the referenced users table. Account update requires a valid user reference.
+    at Module.PATCH (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\[id]\route.ts:159:13)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:163:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:06:00.207Z - BAD_REQUEST - The user ID does not exist in the referenced users table. Account update requires a valid user reference. - {}
+
+[2026-08-18T14:06:00.245Z] ApiClientError: The user ID does not exist in the referenced users table. Account deletion requires a valid user reference.
+ApiClientError: The user ID does not exist in the referenced users table. Account deletion requires a valid user reference.
+    at Module.DELETE (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\[id]\route.ts:301:13)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:256:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:06:00.246Z - BAD_REQUEST - The user ID does not exist in the referenced users table. Account deletion requires a valid user reference. - {}
+
+[2026-08-18T14:06:43.842Z] TypeError: supabase.from is not a function
+TypeError: supabase.from is not a function
+    at nextEnterpriseAccountCode (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:158:6)
+    at Module.POST (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:394:17)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:135:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:06:43.873Z - SERVER_ERROR - supabase.from is not a function - {}
+
+[2026-08-18T14:06:43.895Z] TypeError: supabase.from is not a function
+TypeError: supabase.from is not a function
+    at nextEnterpriseAccountCode (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:158:6)
+    at Module.POST (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:394:17)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:161:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:06:43.897Z - SERVER_ERROR - supabase.from is not a function - {}
+
+[2026-08-18T14:06:43.910Z] TypeError: supabase.from is not a function
+TypeError: supabase.from is not a function
+    at Module.PATCH (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\[id]\route.ts:153:8)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:186:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:06:43.917Z - SERVER_ERROR - supabase.from is not a function - {}
+
+[2026-08-18T14:06:43.927Z] TypeError: supabase.from is not a function
+TypeError: supabase.from is not a function
+    at Module.PATCH (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\[id]\route.ts:153:8)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:225:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:06:43.929Z - SERVER_ERROR - supabase.from is not a function - {}
+
+[2026-08-18T14:06:43.941Z] TypeError: supabase.from is not a function
+TypeError: supabase.from is not a function
+    at Module.DELETE (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\[id]\route.ts:295:8)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:243:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:06:43.944Z - SERVER_ERROR - supabase.from is not a function - {}
+
+[2026-08-18T14:06:43.950Z] TypeError: supabase.from is not a function
+TypeError: supabase.from is not a function
+    at Module.DELETE (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\[id]\route.ts:295:8)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:279:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:06:43.954Z - SERVER_ERROR - supabase.from is not a function - {}
+
+[2026-08-18T14:07:27.593Z] TypeError: supabase.from(...).select(...).ilike is not a function
+TypeError: supabase.from(...).select(...).ilike is not a function
+    at nextEnterpriseAccountCode (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:160:6)
+    at Module.POST (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:394:17)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:142:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:07:27.684Z - SERVER_ERROR - supabase.from(...).select(...).ilike is not a function - {}
+
+[2026-08-18T14:07:27.753Z] TypeError: supabase.from(...).select(...).ilike is not a function
+TypeError: supabase.from(...).select(...).ilike is not a function
+    at nextEnterpriseAccountCode (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:160:6)
+    at Module.POST (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\route.ts:394:17)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:168:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:07:27.763Z - SERVER_ERROR - supabase.from(...).select(...).ilike is not a function - {}
+
+[2026-08-18T14:07:27.787Z] ApiClientError: The user ID does not exist in the referenced users table. Account update requires a valid user reference.
+ApiClientError: The user ID does not exist in the referenced users table. Account update requires a valid user reference.
+    at Module.PATCH (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\[id]\route.ts:159:13)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:193:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:07:27.791Z - BAD_REQUEST - The user ID does not exist in the referenced users table. Account update requires a valid user reference. - {}
+
+[2026-08-18T14:07:27.914Z] ApiClientError: The user ID does not exist in the referenced users table. Account deletion requires a valid user reference.
+ApiClientError: The user ID does not exist in the referenced users table. Account deletion requires a valid user reference.
+    at Module.DELETE (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\app\api\erp\accounting\accounts\[id]\route.ts:301:13)
+    at B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\tests\api\accounts-auth.test.ts:285:24
+    at file:///B:/accounts.dgt.llc.code_project/ACCOUNTS.DGT.LLC/node_modules/@vitest/runner/dist/chunk-hooks.js:752:20
+2026-08-18T14:07:27.917Z - BAD_REQUEST - The user ID does not exist in the referenced users table. Account deletion requires a valid user reference. - {}
+
+[2026-08-18T15:34:26.962Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/admin/dashboard-settings/route.ts:117:104)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-18T15:34:26.967Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-18T15:34:34.136Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/admin/dashboard-settings/route.ts:117:104)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-18T15:34:34.138Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-18T15:35:37.051Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/admin/dashboard-settings/route.ts:117:104)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-18T15:35:37.054Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-18T15:36:32.219Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/admin/dashboard-settings/route.ts:117:104)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-18T15:36:32.222Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-18T15:37:48.250Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/admin/dashboard-settings/route.ts:117:104)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-18T15:37:48.253Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-18T15:38:22.634Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/admin/dashboard-settings/route.ts:117:104)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-18T15:38:22.640Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-18T15:38:39.667Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/admin/dashboard-settings/route.ts:117:104)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-18T15:38:39.670Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-18T15:39:11.673Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/admin/dashboard-settings/route.ts:117:104)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-18T15:39:11.675Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-18T15:39:15.155Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/admin/dashboard-settings/route.ts:117:104)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-18T15:39:15.157Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-18T15:39:35.598Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/admin/dashboard-settings/route.ts:117:104)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-18T15:39:35.599Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-18T15:41:14.599Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at createSupabaseAdminClient (webpack-internal:///(rsc)/./lib/supabase/admin.ts:13:15)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/admin/dashboard-settings/route.ts:117:104)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&page=%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fadmin%2Fdashboard-settings%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-18T15:41:14.602Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-18T16:22:15.066Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at f (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\31303.js:10:17876)
+    at y (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:3056)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:6933)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:7936)
+    at async F (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:9058)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+2026-08-18T16:22:15.072Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-18T16:22:24.260Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at f (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\31303.js:10:17876)
+    at y (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:3056)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:6933)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:7936)
+    at async F (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:9058)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+2026-08-18T16:22:24.262Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-18T16:25:31.252Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at f (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\31303.js:10:17876)
+    at y (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:3056)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:6933)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:7936)
+    at async F (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:9058)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+2026-08-18T16:25:31.253Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-18T16:28:11.610Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at f (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\31303.js:10:17876)
+    at y (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:3056)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:6933)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:7936)
+    at async F (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:9058)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+2026-08-18T16:28:11.611Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-18T16:28:15.961Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at f (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\31303.js:10:17876)
+    at y (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:3056)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:6933)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:7936)
+    at async F (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:9058)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+2026-08-18T16:28:15.961Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-18T16:47:06.361Z] Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted.
+    at f (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\chunks\31303.js:10:17876)
+    at y (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:3056)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async rH.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:21048)
+    at async rH.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:5:25866)
+    at async k (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:6933)
+    at async rH.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.prod.js:1:110708)
+    at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:7936)
+    at async F (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\admin\dashboard-settings\route.js:1:9058)
+    at async NextNodeServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+2026-08-18T16:47:06.363Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}

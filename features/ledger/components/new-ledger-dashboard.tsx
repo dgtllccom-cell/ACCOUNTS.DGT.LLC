@@ -515,7 +515,6 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
               onValueChange={(value) => {
                 setSelectedUser(value);
               }}
-              disabled={!lines.length}
             />
           </div>
           <div className="relative w-full md:w-auto">
@@ -541,7 +540,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
                 <Button
                   type="button"
                   size="sm"
-                  className="w-full"
+                  className="w-full font-bold"
                   onClick={() => {
                     setDateDropdownOpen(false);
                     void loadAccountById(ledgerId);
@@ -552,7 +551,12 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
               </div>
             ) : null}
           </div>
-          <Button type="button" onClick={() => void loadAccountById(ledgerId)} disabled={loading || !ledgerId} className="h-10 gap-2">
+          <Button 
+            type="button" 
+            onClick={() => void loadAccountById(ledgerId)} 
+            disabled={loading || !ledgerId} 
+            className="h-10 gap-2 px-4 font-bold bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+          >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
             Search
           </Button>
@@ -776,6 +780,7 @@ function InfoRow({
     <div className="grid grid-cols-[110px_1fr] gap-3 text-xs">
       <span className="text-muted-foreground">{label}:</span>
       <span
+        dir="auto"
         className={cn(
           "text-right text-foreground",
           strong && "font-semibold text-cyan-600 dark:text-cyan-300",

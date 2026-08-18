@@ -407,22 +407,22 @@ export default function HandoverReportPage() {
 
                     return (
                       <tr key={entry.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
-                        <td className="p-3 font-bold text-slate-900 dark:text-slate-100">{entry.country}</td>
-                        <td className="p-3 text-slate-700 dark:text-slate-300">{entry.mainBranch}</td>
-                        <td className="p-3 text-slate-600 dark:text-slate-400">{entry.cityBranch}</td>
-                        <td className="p-3 font-semibold text-slate-900 dark:text-slate-100">{entry.responsiblePerson}</td>
-                        <td className="p-3">
-                          <span className={`px-2 py-0.5 text-[10px] font-bold rounded border ${roleBadge}`}>
+                        <td className="p-3 font-bold text-slate-900 dark:text-slate-100 align-middle">{entry.country}</td>
+                        <td className="p-3 text-slate-700 dark:text-slate-300 align-middle">{entry.mainBranch}</td>
+                        <td className="p-3 text-slate-600 dark:text-slate-400 align-middle">{entry.cityBranch}</td>
+                        <td className="p-3 font-semibold text-slate-900 dark:text-slate-100 align-middle">{entry.responsiblePerson}</td>
+                        <td className="p-3 align-middle">
+                          <span className={`inline-flex items-center justify-center whitespace-nowrap px-2.5 py-1 text-[10px] font-bold rounded-full border shadow-2xs ${roleBadge}`}>
                             {entry.role}
                           </span>
                         </td>
-                        <td className="p-3 font-mono text-[11px] text-blue-600 dark:text-blue-400">{entry.username}</td>
-                        <td className="p-3 text-slate-600 dark:text-slate-400 text-[11px] max-w-xs">{entry.assignedPermissions}</td>
-                        <td className="p-3 font-mono font-bold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-800/60 rounded px-2 py-1">
+                        <td className="p-3 font-mono text-[11px] text-blue-700 dark:text-blue-300 font-semibold align-middle break-all">{entry.username}</td>
+                        <td className="p-3 text-slate-600 dark:text-slate-400 text-[11px] max-w-xs align-middle leading-relaxed break-words">{entry.assignedPermissions}</td>
+                        <td className="p-3 font-mono font-bold text-slate-800 dark:text-slate-200 bg-slate-50 dark:bg-slate-800/60 rounded px-2 py-1 align-middle">
                           {entry.passwordVaultRef}
                         </td>
-                        <td className="p-3">
-                          <span className="px-2 py-0.5 text-[10px] font-semibold rounded bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                        <td className="p-3 align-middle">
+                          <span className="inline-flex items-center whitespace-nowrap px-2.5 py-0.5 text-[10px] font-semibold rounded-full bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
                             {entry.status}
                           </span>
                         </td>

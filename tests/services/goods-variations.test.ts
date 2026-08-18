@@ -7,7 +7,8 @@ vi.mock("@/lib/repositories/goods-repository", () => {
     goodsRepository: {
       checkChsCodeExists: vi.fn(),
       create: vi.fn(),
-      createVariation: vi.fn()
+      createVariation: vi.fn(),
+      getById: vi.fn(async () => ({ id: "mocked-goods-id", variations: [{ id: "mocked-variation-id" }] }))
     }
   };
 });
@@ -37,6 +38,10 @@ vi.mock("@/lib/supabase/admin", () => {
     }))
   };
 });
+
+vi.mock("@/lib/api/record-change-history", () => ({
+  writeRecordChangeHistory: vi.fn(async () => {})
+}));
 
 describe("Goods variations service layer", () => {
   it("prevents registering duplicate CHS codes", async () => {

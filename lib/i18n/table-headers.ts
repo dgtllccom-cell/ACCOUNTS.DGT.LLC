@@ -1,25 +1,20 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
-/**
- * Table / column header translations.
- *
- * Column headings across the ERP are highly repetitive (DATE, COUNTRY, GOODS NAME,
- * QTY, TOTAL AMT, ...), so instead of a semantic key per column we key by the ENGLISH
- * header text itself (normalized). One dictionary therefore covers every report/table
- * in the system: a component only needs to wrap its header strings with
- * `translateHeader(activeLang, label)` and headers follow the selected language.
- *
- * Fallback is always safe: unknown labels (or `en`) return the original English text,
- * so wiring a table can never blank out a header.
- *
- * To translate a new header used somewhere in the app, add one entry below.
- */
-
-// Header translation dictionary — 278 entries covering all module tables.
 type Row = { ur: string; ar: string; fa: string; ps: string };
 
 export const HEADER_TRANSLATIONS: Record<string, Row> = {
-  // ── Group / section headers ──────────────────────────────────────────────
+  "CITY BRANCH SETUP": { ur: "سٹی برانچ سیٹ اپ", ar: "إعداد فرع المدينة", fa: "تنظیمات شعبه شهر", ps: "د ښار څانګې تنظیم" },
+  "COUNTRY & CURRENCY": { ur: "ملک اور کرنسی", ar: "الدولة والعملة", fa: "کشور و واحد پول", ps: "هېواد او اسعار" },
+  "FULL ADDRESS": { ur: "مکمل پتہ", ar: "العنوان الكامل", fa: "آدرس کامل", ps: "بشپړه پته" },
+  "ZIP / POSTAL CODE": { ur: "زپ / پوسٹل کوڈ", ar: "الرمز البريدي", fa: "کد پستی", ps: "پوسټل کوډ" },
+  "CUSTOMER / CLIENT": { ur: "گاہک / خریدار", ar: "العميل", fa: "مشتری", ps: "پیرودونکی" },
+  "EMPLOYEE / STAFF": { ur: "ملازم / عملہ", ar: "الموظف", fa: "کارمند", ps: "کارکوونکی" },
+  "TRUCK DRIVER": { ur: "ٹرک ڈرائیور", ar: "سائق الشاحنة", fa: "راننده لاری", ps: "موټر چلوونکی" },
+  "TRUCK OWNER": { ur: "ٹرک مالک", ar: "مالك الشاحنة", fa: "مالک موتر", ps: "موټر خاوند" },
+  "CLEARING / CUSTOM AGENT": { ur: "کلیرنگ / کسٹم ایجنٹ", ar: "مخلص جمركي", fa: "مامور گمرک", ps: "ګمرکي استازی" },
+  "SUPPLIER / VENDOR": { ur: "سپلائر / وینڈر", ar: "المورد", fa: "تامین کننده", ps: "عرضه کونکی" },
+  "PARTY / PERSON": { ur: "فریق / شخص", ar: "الطرف / الشخص", fa: "طرف / شخص", ps: "اړخ / شخص" },
+  "BACK": { ur: "پیچھے", ar: "السابق", fa: "قبلی", ps: "شاته" },
   "GENERAL INFORMATION": { ur: "عمومی معلومات", ar: "معلومات عامة", fa: "اطلاعات عمومی", ps: "عمومي معلومات" },
   "PRODUCT INFORMATION": { ur: "پروڈکٹ کی معلومات", ar: "معلومات المنتج", fa: "اطلاعات محصول", ps: "د محصول معلومات" },
   "FINANCIAL INFORMATION": { ur: "مالی معلومات", ar: "المعلومات المالية", fa: "اطلاعات مالی", ps: "مالي معلومات" },
@@ -29,11 +24,6 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "DATE FROM": { ur: "تاریخ از", ar: "التاريخ من", fa: "تاریخ از", ps: "نېټه له" },
   "DATE TO": { ur: "تاریخ تا", ar: "التاريخ إلى", fa: "تاریخ تا", ps: "نېټه تر" },
   "ACTIONS": { ur: "کارروائیاں", ar: "الإجراءات", fa: "عملیات", ps: "کړنې" },
-  "BRANCH & USER DETAILS": { ur: "برانچ اور صارف کی تفصیلات", ar: "تفاصيل الفرع والمستخدم", fa: "جزئیات شعبه و کاربر", ps: "د څانګې او کارن جزئیات" },
-  "COUNTRY & USER DETAILS": { ur: "ملک اور صارف کی تفصیلات", ar: "تفاصيل الدولة والمستخدم", fa: "جزئیات کشور و کاربر", ps: "د هېواد او کارن جزئیات" },
-  "GENERAL REPORT": { ur: "عمومی رپورٹ", ar: "تقرير عام", fa: "گزارش عمومی", ps: "عمومي راپور" },
-  "SYSTEM": { ur: "سسٹم", ar: "النظام", fa: "سیستم", ps: "سیسټم" },
-  "SYSTEM WIDE": { ur: "پورے نظام میں", ar: "على مستوى النظام", fa: "کل سیستم", ps: "په ټول سیستم کې" },
   "ACCOUNT CREATED SUCCESSFULLY": { ur: "اکاؤنٹ کامیابی سے بن گیا", ar: "تم إنشاء الحساب بنجاح", fa: "حساب با موفقیت ایجاد شد", ps: "حساب په بریالیتوب جوړ شو" },
   "COUNTRY-WISE FINANCIAL BREAKDOWN": { ur: "ملک وار مالی تقسیم", ar: "التوزيع المالي حسب الدولة", fa: "تفکیک مالی بر اساس کشور", ps: "د هېواد له مخې مالي وېش" },
   "CLEAR SELECTION (SHOW ALL COUNTRIES)": { ur: "انتخاب صاف کریں (تمام ممالک دکھائیں)", ar: "مسح التحديد (إظهار جميع الدول)", fa: "لغو انتخاب (نمایش همه کشورها)", ps: "غوره‌کړه پاکه کړئ (ټول هېوادونه ښکاره کړئ)" },

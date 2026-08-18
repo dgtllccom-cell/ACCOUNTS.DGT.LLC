@@ -448,7 +448,7 @@ export function CashEntryForm({
     const cIso = selectedCountry?.iso2 || "GLOBAL";
     const mCode = selectedMainBranch?.code || "MB";
     const cityCode = selectedCityBranch?.code || "CB";
-    const bCode = selectedCityBranch?.code || selectedMainBranch?.code || "BR";
+    const bCode = selectedCityBranch?.code ? `BR-${selectedCityBranch.code}` : selectedMainBranch?.code ? `MAIN-${selectedMainBranch.code}` : "BR";
 
     return {
       superAdmin: `JRN-2026-${String(nextSeq).padStart(4, "0")}`,
@@ -2299,28 +2299,28 @@ export function CashEntryForm({
                 {t(lang, "roz.total_credit_label", "Total Credit")}
               </span>
               <span className="font-extrabold text-emerald-700 dark:text-emerald-300 font-mono text-right tabular-nums text-sm">
-                {loadingSummary ? "…" : fmtAmount(cashSummary?.totalCredit ?? 0)}
+                {loadingSummary ? "…" : fmtAmount(cashSummary?.totalCredit || recentEntriesSummary?.totalCredit || 0)}
               </span>
 
               <span className="text-[10px] font-black uppercase tracking-wider text-rose-600 dark:text-rose-400 text-right self-center">
                 {t(lang, "roz.total_debit_label", "Total Debit")}
               </span>
               <span className="font-extrabold text-rose-700 dark:text-rose-300 font-mono text-right tabular-nums text-sm">
-                {loadingSummary ? "…" : fmtAmount(cashSummary?.totalDebit ?? 0)}
+                {loadingSummary ? "…" : fmtAmount(cashSummary?.totalDebit || recentEntriesSummary?.totalDebit || 0)}
               </span>
 
               <span className="text-[10px] font-black uppercase tracking-wider text-blue-600 dark:text-blue-400 text-right self-center">
                 {t(lang, "roz.current_balance", "Current Balance")}
               </span>
               <span className="font-extrabold text-blue-700 dark:text-blue-300 font-mono text-right tabular-nums text-sm">
-                {loadingSummary ? "…" : fmtAmount(cashSummary?.balance ?? 0)}
+                {loadingSummary ? "…" : fmtAmount(cashSummary?.balance ?? (recentEntriesSummary?.balance || 0))}
               </span>
 
               <span className="text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 text-right self-center">
                 {t(lang, "roz.total_entries", "Total Entries")}
               </span>
               <span className="font-extrabold text-slate-800 dark:text-slate-100 font-mono text-right tabular-nums text-sm">
-                {loadingSummary ? "…" : (cashSummary?.entryCount ?? 0)}
+                {loadingSummary ? "…" : (cashSummary?.entryCount || recentEntries.length || 0)}
               </span>
             </div>
           </div>

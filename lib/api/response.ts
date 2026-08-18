@@ -201,6 +201,10 @@ export async function handleApiError(error: unknown) {
 
     // Log the complete Zod validation failure details to the server console
     console.error("Zod Validation Failure Payload:", JSON.stringify(error.errors, null, 2));
+  } else if (error instanceof ApiClientError) {
+    code = error.code;
+    message = error.message;
+    status = error.status;
   } else if (error instanceof ErpAuthError) {
     code = "AUTH_REQUIRED";
     message = error.message;

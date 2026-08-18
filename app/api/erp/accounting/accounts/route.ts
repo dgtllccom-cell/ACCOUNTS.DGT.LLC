@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { apiCreated, apiOk, handleApiError } from "@/lib/api/response";
+import { ApiClientError, apiCreated, apiOk, handleApiError } from "@/lib/api/response";
 import { enterpriseAccountCreateSchema } from "@/lib/api/erp-validation";
 import { authorizeApiScope, getScopeFromSearchParams } from "@/lib/api/scope-middleware";
 import { requireErpSession } from "@/lib/auth/session";
@@ -410,7 +410,7 @@ export async function POST(request: NextRequest) {
     const actorId = isUuid(session.userId) ? session.userId : null;
     
     if (!actorId) {
-      throw new Error("A valid logged-in user ID is required to create an account.");
+      throw new ApiClientError("A valid logged-in user ID is required to create an account. Account creation requires a valid user reference.");
     }
 
     const localPgResult = await withLocalPg(async (sql) => {
@@ -734,8 +734,8 @@ export async function POST(request: NextRequest) {
           user_code: "BOOTSTRAP-" + actorId.slice(0, 4).toUpperCase()
         });
       if (insertError) {
-        throw new Error(
-          `The user ID does not exist in the referenced users table and could not be auto-created: ${insertError.message}`
+        throw new ApiClientError(
+          `The user ID does not exist in the referenced users table and could not be auto-created: ${insertError.message}. Account creation requires a valid user reference.`
         );
       }
     }

@@ -1,9 +1,9 @@
-import { EmployeeRegistry } from "@/features/employees/components/employee-registry";
+import { EmployeeManagementView } from "@/features/hr-payroll/components/employee-management-view";
 
 export default function EmployeesPage() {
   return (
     <div className="p-6">
-      <EmployeeRegistry />
+      <EmployeeManagementView />
     </div>
   );
 }

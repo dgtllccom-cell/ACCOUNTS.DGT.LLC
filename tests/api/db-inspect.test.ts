@@ -2,7 +2,8 @@ import { describe, it } from "vitest";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 describe("Database Inspect", () => {
-  it("prints all enterprise accounts", async () => {
+  const isConfigured = Boolean(process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.SUPABASE_SERVICE_ROLE_KEY);
+  (isConfigured ? it : it.skip)("prints all enterprise accounts", async () => {
     const supabase = createSupabaseAdminClient();
     const { data: accounts, error } = await supabase
       .from("enterprise_accounts")

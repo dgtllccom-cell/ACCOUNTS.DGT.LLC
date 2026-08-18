@@ -137,7 +137,8 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-6 pb-12">
-      {/* Design Options Switcher Toolbar */}
+      {/* Design Options Switcher Toolbar — dev-only */}
+      {process.env.NODE_ENV === 'development' && (
       <div className="rounded-xl border border-blue-200 bg-blue-50/80 p-3.5 dark:border-blue-900/50 dark:bg-blue-950/40">
         <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div className="flex items-center gap-2">
@@ -184,6 +185,7 @@ export default function SettingsPage() {
           </div>
         </div>
       </div>
+      )}
 
       {/* ──────────────────────────────────────────────────────────────
           HEADER OPTION 1: COMMAND CENTER (Glowing Badge + Search + 3 KPI Cards)
@@ -239,7 +241,7 @@ export default function SettingsPage() {
               />
             </div>
 
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap items-center gap-1.5">
               {categories.map((cat) => (
                 <button
                   key={cat}
@@ -248,7 +250,7 @@ export default function SettingsPage() {
                     "rounded-full px-3 py-1 text-[11px] font-medium transition",
                     activeCategory === cat
                       ? "bg-blue-500 text-white shadow-sm"
-                      : "bg-slate-800 text-slate-400 hover:bg-slate-750 hover:text-slate-200"
+                      : "bg-slate-800 text-slate-300 hover:bg-slate-750 hover:text-slate-100"
                   )}
                 >
                   {cat}
@@ -264,7 +266,7 @@ export default function SettingsPage() {
                 <span>Active Setup Modules</span>
                 <Layers className="h-4 w-4 text-blue-400" />
               </div>
-              <div className="mt-2 flex items-baseline gap-2">
+              <div className="mt-2 flex items-baseline gap-3">
                 <span className="text-xl font-bold text-white">9 Active</span>
                 <span className="text-[10px] text-emerald-400 font-medium">+100% operational</span>
               </div>
@@ -275,7 +277,7 @@ export default function SettingsPage() {
                 <span>Official Mailboxes</span>
                 <Mail className="h-4 w-4 text-cyan-400" />
               </div>
-              <div className="mt-2 flex items-baseline gap-2">
+              <div className="mt-2 flex items-baseline gap-3">
                 <span className="text-xl font-bold text-white">Titan SMTP</span>
                 <span className="text-[10px] text-blue-400 font-medium">SSL / STARTTLS</span>
               </div>
@@ -286,7 +288,7 @@ export default function SettingsPage() {
                 <span>System Security</span>
                 <ShieldCheck className="h-4 w-4 text-emerald-400" />
               </div>
-              <div className="mt-2 flex items-baseline gap-2">
+              <div className="mt-2 flex items-baseline gap-3">
                 <span className="text-xl font-bold text-emerald-400">Protected</span>
                 <span className="text-[10px] text-slate-400 font-medium">Multi-tenant Scoped</span>
               </div>

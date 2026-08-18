@@ -461,8 +461,8 @@ export function LocationHierarchySelect({
             <SearchSelect
               label={loc("city")}
               value={value.cityId}
-              placeholder={loadingCities ? "Loading cities..." : value.countryId ? loc("selectCity") : loc("selectCountryFirst")}
-              disabled={disabled || !value.countryId || loadingCities}
+              placeholder={loadingCities ? "Loading cities..." : (showState && !value.stateProvinceId) ? loc("selectStateFirst") : value.countryId ? loc("selectCity") : loc("selectCountryFirst")}
+              disabled={disabled || !value.countryId || (showState && !value.stateProvinceId) || loadingCities}
               loading={loadingCities}
               options={toOptions(cities)}
               onValueChange={(cityId) => {

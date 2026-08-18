@@ -67,11 +67,24 @@ function currentTimeString() {
 
 function getFlag(iso2: string | null | undefined) {
   if (!iso2) return "🌐";
-  return iso2
-    .toUpperCase()
-    .split("")
-    .map((char) => String.fromCodePoint(127397 + char.charCodeAt(0)))
-    .join("");
+  const c = iso2.toUpperCase();
+  if (c === "PK") return "🇵🇰";
+  if (c === "AE") return "🇦🇪";
+  if (c === "AF") return "🇦🇫";
+  if (c === "SA") return "🇸🇦";
+  if (c === "US") return "🇺🇸";
+  if (c === "CN") return "🇨🇳";
+  if (c === "IN") return "🇮🇳";
+  if (c === "IR") return "🇮🇷";
+  if (c === "OM") return "🇴🇲";
+  if (c === "GB" || c === "UK") return "🇬🇧";
+  if (c.length === 2) {
+    return c
+      .split("")
+      .map((char) => String.fromCodePoint(127397 + char.charCodeAt(0)))
+      .join("");
+  }
+  return "🌐";
 }
 
 export function DailyExchangeRateManager() {
@@ -132,8 +145,12 @@ export function DailyExchangeRateManager() {
       const fetchedCountries: CountryOption[] = Array.isArray(countriesRes)
         ? countriesRes
         : countriesRes?.countries ?? countriesRes?.data ?? [];
+      const cleanCountries = fetchedCountries.filter((c) => {
+        const n = (c.name || "").toUpperCase();
+        return !n.startsWith("QA ") && !n.includes("QA COUNTRY") && !n.startsWith("DEVTEST") && !n.startsWith("DEV-DEMO");
+      });
       const fallbackCountry =
-        fetchedCountries.length === 0 && sessionRes?.scopes?.summary?.countryId && sessionRes?.scopes?.summary?.countryName
+        cleanCountries.length === 0 && sessionRes?.scopes?.summary?.countryId && sessionRes?.scopes?.summary?.countryName
           ? [{
               id: sessionRes.scopes.summary.countryId,
               name: sessionRes.scopes.summary.countryName,
@@ -141,7 +158,7 @@ export function DailyExchangeRateManager() {
               iso2: null
             }]
           : [];
-      setCountries(fetchedCountries.length > 0 ? fetchedCountries : fallbackCountry);
+      setCountries(cleanCountries.length > 0 ? cleanCountries : fallbackCountry);
       setSessionInfo(sessionRes);
 
       if (!operatorUser) {

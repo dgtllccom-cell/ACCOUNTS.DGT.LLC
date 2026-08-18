@@ -1,9 +1,9 @@
-import { WarehouseRegistry } from "@/features/warehouses/components/warehouse-registry";
+import { WarehouseManagement } from "@/features/warehouses/components/warehouse-management";
 
 export default function WarehousePage() {
   return (
     <div className="p-6">
-      <WarehouseRegistry />
+      <WarehouseManagement />
     </div>
   );
 }

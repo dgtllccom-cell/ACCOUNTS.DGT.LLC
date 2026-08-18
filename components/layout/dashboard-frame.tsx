@@ -114,6 +114,8 @@ export function DashboardFrame({
   const dateMenuRef = useRef<HTMLDivElement>(null);
 
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const notificationsRef = useRef<HTMLDivElement>(null);
   const [sidebarMenuVisibility, setSidebarMenuVisibility] = useState<SidebarMenuVisibilityMap | null>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const sidebarDefaultVisibility: SidebarMenuVisibilityMap = {
@@ -261,6 +263,9 @@ export function DashboardFrame({
     const handleClickOutside = (event: MouseEvent) => {
       if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
         setProfileMenuOpen(false);
+      }
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+        setNotificationsOpen(false);
       }
       if (dateMenuRef.current && !dateMenuRef.current.contains(event.target as Node)) {
         setDateMenuOpen(false);
@@ -555,13 +560,42 @@ export function DashboardFrame({
                 )}
               </div>
 
-              <button
-                type="button"
-                className="relative p-1.5 rounded-full hover:bg-muted text-muted-foreground"
-              >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                <span className="absolute top-1 right-1 flex h-2 w-2 rounded-full bg-red-500" />
-              </button>
+              <div className="relative" ref={notificationsRef}>
+                <button
+                  type="button"
+                  onClick={() => setNotificationsOpen(!notificationsOpen)}
+                  aria-label="View notifications"
+                  className="relative p-1.5 rounded-full hover:bg-muted text-muted-foreground transition-colors focus:outline-none focus:ring-1 focus:ring-primary"
+                >
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+                  <span className="absolute top-1.5 right-1.5 flex h-2 w-2 rounded-full bg-rose-500 ring-2 ring-background" />
+                </button>
+
+                {notificationsOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-80 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-50">
+                    <div className="p-3 border-b border-border flex items-center justify-between bg-muted/40">
+                      <span className="font-bold text-xs">System Notifications</span>
+                      <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">Live</span>
+                    </div>
+                    <div className="divide-y divide-border/60 max-h-64 overflow-y-auto text-xs">
+                      <div className="p-3 hover:bg-muted/50 transition-colors cursor-pointer">
+                        <div className="font-semibold text-foreground flex items-center justify-between">
+                          <span>Roznamcha Cash Active</span>
+                          <span className="text-[10px] text-muted-foreground">Just now</span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">Real-time balances and ledger sync operational.</p>
+                      </div>
+                      <div className="p-3 hover:bg-muted/50 transition-colors cursor-pointer">
+                        <div className="font-semibold text-foreground flex items-center justify-between">
+                          <span>Exchange Rates Synced</span>
+                          <span className="text-[10px] text-muted-foreground">Today</span>
+                        </div>
+                        <p className="text-[11px] text-muted-foreground mt-0.5">Intra-day multi-currency exchange tables updated.</p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               <div className="h-8 w-px bg-border hidden sm:block" />
 
@@ -665,7 +699,7 @@ export function DashboardFrame({
                 "px-2.5 py-1 rounded-md font-bold transition-all cursor-pointer",
                 selectedCategoryTab === cat
                   ? "bg-primary text-primary-foreground shadow-xs"
-                  : "bg-muted/60 text-muted-foreground hover:bg-muted hover:text-foreground"
+                  : "bg-muted text-foreground/70 hover:bg-muted/80 hover:text-foreground"
               )}
             >
               {cat === "All" ? "All Categories" : t(lang, `cmd.cat_${cat.toLowerCase()}` as any, cat)}
@@ -684,7 +718,7 @@ export function DashboardFrame({
           )}
 
           {!searchingDb && (selectedCategoryTab === "All" || selectedCategoryTab === "Navigation") && navigationItems.length > 0 && (
-            <CommandGroup heading={t(lang, "cmd.cat_navigation", "Navigation")}>
+            <CommandGroup heading={t(lang, "cmd.cat_navigation", "Navigation")} className="pt-1">
               {navigationItems.map((item, idx) => (
                 <CommandItem
                   key={`nav-${idx}`}

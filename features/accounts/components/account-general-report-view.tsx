@@ -1428,6 +1428,7 @@ export function AccountGeneralReportView({
                   </div>
                   <div className="flex flex-col items-end">
                     <span className="text-[10px] font-black text-slate-800 dark:text-slate-200 bg-slate-200 dark:bg-slate-700 px-1.5 py-0.5 rounded">System</span>
+                    <span className="text-[9px] font-bold text-slate-500 mt-0.5">Consolidated</span>
                   </div>
                 </div>
 
@@ -1551,14 +1552,14 @@ export function AccountGeneralReportView({
                         setSelectedCountryForSummary(isSelected ? null : r.countryName);
                       }}
                     >
-                      <div className="flex items-center gap-2">
-                        <div className="text-lg">{getFlag(r.countryName)}</div>
+                      <div className="flex items-center gap-2 min-w-0 flex-1">
+                        <div className="flex h-8 w-8 min-w-8 items-center justify-center rounded-full bg-slate-100 dark:bg-slate-800 text-sm font-bold" title={r.countryCode || r.countryName}>{getFlag(r.countryName)}</div>
                         <div>
-                          <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-[11px] uppercase tracking-wider">{r.countryName}</h3>
+                          <h3 className="font-extrabold text-slate-800 dark:text-slate-100 text-[11px] uppercase tracking-wider truncate">{r.countryName}</h3>
                           <div className="text-[9px] font-bold text-slate-500">{r.totalAccounts} Accounts ({r.activeAccounts} Active)</div>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end" onClick={(e) => {
+                      <div className="flex flex-col items-end flex-shrink-0 ml-2" onClick={(e) => {
                         e.stopPropagation();
                         setExpandedCountries(prev => ({
                           ...prev,

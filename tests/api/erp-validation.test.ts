@@ -17,7 +17,7 @@ const ledgerId = "33333333-3333-4333-8333-333333333333";
 describe("ERP API validation schemas", () => {
   it("normalizes account currency and accepts scoped account creation", () => {
     const parsed = enterpriseAccountCreateSchema.parse({
-      scope: "global",
+      scope: "super_admin",
       companyId,
       code: "1001",
       name: "Cash Account",

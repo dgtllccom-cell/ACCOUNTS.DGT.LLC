@@ -24,6 +24,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
 import { UniversalReportModal } from "@/components/ui/universal-report-modal";
+import { SearchSelect } from "@/components/ui/search-select";
 
 type CountryOption = {
   id: string;
@@ -44,6 +45,7 @@ type TaxRateItem = {
   isDefault: boolean;
   isActive: boolean;
   createdAt?: string;
+  updatedAt?: string;
 };
 
 type Props = {
@@ -89,7 +91,11 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
       .then((json) => {
         if (cancelled) return;
         if (json.ok && json.data) {
-          const fetchedCountries = json.data.countries || [];
+          const rawCountries = json.data.countries || [];
+          const fetchedCountries = rawCountries.filter((c: any) => {
+            const n = (c.name || "").toUpperCase();
+            return !n.startsWith("QA ") && !n.includes("QA COUNTRY") && !n.startsWith("DEVTEST");
+          });
           setCountries(fetchedCountries);
           const scopeLevel = json.data.scope?.level;
           const isSuper = scopeLevel === "global";
@@ -336,23 +342,26 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
         
         {/* Country Selector */}
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Globe2 className="h-4 w-4 text-slate-500" />
+          <Globe2 className="h-4 w-4 text-slate-500 flex-shrink-0" />
           <span className="text-xs font-bold text-slate-600 dark:text-slate-400 whitespace-nowrap">
             {_("tax.select_country")}:
           </span>
           {isSuperAdmin ? (
-            <select
-              value={selectedCountryId}
-              onChange={(e) => setSelectedCountryId(e.target.value)}
-              className="text-xs font-bold rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 outline-none dark:bg-slate-950 dark:border-slate-800 focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-200"
-            >
-              <option value="all">All Countries</option>
-              {countries.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} {c.currency_code ? `(${c.currency_code})` : ""}
-                </option>
-              ))}
-            </select>
+            <div className="w-56 min-w-[200px]">
+              <SearchSelect
+                label=""
+                value={selectedCountryId}
+                placeholder="Select Country..."
+                options={[
+                  { value: "all", label: "All Countries" },
+                  ...countries.map((c) => ({
+                    value: c.id,
+                    label: `${c.name} ${c.currency_code ? `(${c.currency_code})` : ""}`
+                  }))
+                ]}
+                onValueChange={(val) => setSelectedCountryId(val)}
+              />
+            </div>
           ) : (
             <div className="rounded-xl bg-emerald-50 border border-emerald-200 px-3 py-1.5 text-xs font-bold text-emerald-700 dark:bg-emerald-950/40 dark:border-emerald-900 dark:text-emerald-400">
               {currentCountryName} (Locked)
@@ -362,17 +371,14 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
 
         {/* Search & Actions */}
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          <div className="relative flex-1 sm:w-64">
-            <Search className={cn("absolute top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400", isRTL ? "right-3" : "left-3")} />
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-slate-400" />
             <input
               type="text"
               placeholder="Search tax name, code..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className={cn(
-                "w-full text-xs rounded-xl border border-slate-200 bg-slate-50 dark:bg-slate-950 dark:border-slate-800 py-2 outline-none focus:ring-2 focus:ring-emerald-500 text-slate-800 dark:text-slate-200",
-                isRTL ? "pr-9 pl-3 text-right" : "pl-9 pr-3"
-              )}
+              className="w-full pl-9 pr-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 outline-none dark:bg-slate-950 dark:border-slate-800 focus:ring-2 focus:ring-emerald-500 font-medium"
             />
           </div>
 
@@ -542,18 +548,17 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
                 <label className="font-bold text-slate-600 dark:text-slate-400">
                   Country <span className="text-rose-500">*</span>
                 </label>
-                <select
+                <SearchSelect
+                  label=""
                   value={formCountryId}
-                  onChange={(e) => setFormCountryId(e.target.value)}
+                  placeholder="Select Country..."
+                  options={countries.map((c) => ({
+                    value: c.id,
+                    label: `${c.name} ${c.currency_code ? `(${c.currency_code})` : ""}`
+                  }))}
                   disabled={!isSuperAdmin && Boolean(initialCountryId)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 outline-none dark:bg-slate-950 dark:border-slate-800 focus:ring-2 focus:ring-emerald-500 font-bold"
-                >
-                  {countries.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} {c.currency_code ? `(${c.currency_code})` : ""}
-                    </option>
-                  ))}
-                </select>
+                  onValueChange={(val) => setFormCountryId(val)}
+                />
               </div>
 
               {/* Tax Name & Code */}
@@ -620,16 +625,18 @@ export function CountryTaxManagementView({ lang, initialCountryId }: Props) {
                 <label className="font-bold text-slate-600 dark:text-slate-400">
                   Applies To
                 </label>
-                <select
+                <SearchSelect
+                  label=""
                   value={formAppliesTo}
-                  onChange={(e) => setFormAppliesTo(e.target.value as any)}
-                  className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 outline-none dark:bg-slate-950 dark:border-slate-800 focus:ring-2 focus:ring-emerald-500 font-bold"
-                >
-                  <option value="both">Both Purchase & Sales</option>
-                  <option value="purchase">Purchase Orders Only</option>
-                  <option value="sales">Sales Orders Only</option>
-                  <option value="expense">Expenses / Roznamcha Only</option>
-                </select>
+                  placeholder="Select applicability..."
+                  options={[
+                    { value: "both", label: "Both Purchase & Sales" },
+                    { value: "purchase", label: "Purchase Orders Only" },
+                    { value: "sales", label: "Sales Orders Only" },
+                    { value: "expense", label: "Expenses / Roznamcha Only" }
+                  ]}
+                  onValueChange={(val) => setFormAppliesTo(val as any)}
+                />
               </div>
 
               {/* Toggles */}
