@@ -595,7 +595,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
             className={cn(filtersOpen && "border-blue-500 bg-blue-50 text-blue-700 dark:bg-blue-950/30")}
           >
             <Filter className="h-3.5 w-3.5" />
-            <span className="ms-1.5">{filtersOpen ? "Hide Filters" : "Search / Filter"}</span>
+            <span className="ms-1.5">{filtersOpen ? tt("bankroz.hide_filters", "Hide Filters") : tt("bankroz.show_filters", "Search / Filter")}</span>
           </Button>
 
           <Button
@@ -605,7 +605,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
             className="bg-blue-700 hover:bg-blue-800 text-white shadow-sm"
           >
             <Printer className="h-3.5 w-3.5" />
-            <span className="ms-1.5">Print / PDF</span>
+            <span className="ms-1.5">{tt("bankroz.print_pdf", "Print / PDF")}</span>
           </Button>
 
           <Button
@@ -615,7 +615,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
             className="bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm"
           >
             <Download className="h-3.5 w-3.5" />
-            <span className="ms-1.5">Excel Export</span>
+            <span className="ms-1.5">{tt("bankroz.excel_export", "Excel Export")}</span>
           </Button>
 
           <Button
@@ -625,7 +625,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
             className="bg-slate-900 hover:bg-slate-800 text-white dark:bg-slate-100 dark:text-slate-900"
           >
             <Plus className="h-3.5 w-3.5" />
-            <span className="ms-1.5">New Cheque</span>
+            <span className="ms-1.5">{tt("bankroz.new_cheque", "New Cheque")}</span>
           </Button>
         </div>
       </div>
@@ -636,7 +636,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
           <CardContent className="p-4 space-y-3">
             <div className="grid gap-3 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6">
               <div className="space-y-1">
-                <Label className="text-[11px] font-semibold text-muted-foreground">From Date</Label>
+                <Label className="text-[11px] font-semibold text-muted-foreground">{tt("bankroz.from_date", "From Date")}</Label>
                 <Input
                   className="h-8 text-xs bg-background"
                   type="date"
@@ -645,7 +645,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                 />
               </div>
               <div className="space-y-1">
-                <Label className="text-[11px] font-semibold text-muted-foreground">To Date</Label>
+                <Label className="text-[11px] font-semibold text-muted-foreground">{tt("bankroz.to_date", "To Date")}</Label>
                 <Input
                   className="h-8 text-xs bg-background"
                   type="date"
@@ -656,13 +656,13 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
 
               {/* Company Hierarchy */}
               <div className="space-y-1">
-                <Label className="text-[11px] font-semibold text-muted-foreground">Company</Label>
+                <Label className="text-[11px] font-semibold text-muted-foreground">{tt("bankroz.company", "Company")}</Label>
                 <select
                   className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs font-semibold"
                   value={companyId}
                   onChange={(e) => setCompanyId(e.target.value)}
                 >
-                  <option value="all">All Companies</option>
+                  <option value="all">{tt("bankroz.all_companies", "All Companies")}</option>
                   {companies.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -673,13 +673,13 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
 
               {/* Country */}
               <div className="space-y-1">
-                <Label className="text-[11px] font-semibold text-muted-foreground">Country</Label>
+                <Label className="text-[11px] font-semibold text-muted-foreground">{tt("bankroz.country", "Country")}</Label>
                 <select
                   className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs font-semibold"
                   value={countryId}
                   onChange={(e) => setCountryId(e.target.value)}
                 >
-                  <option value="all">All Countries</option>
+                  <option value="all">{tt("bankroz.all_countries", "All Countries")}</option>
                   {countries.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name}
@@ -690,13 +690,13 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
 
               {/* Country Main Branch */}
               <div className="space-y-1">
-                <Label className="text-[11px] font-semibold text-muted-foreground">Country Main Branch</Label>
+                <Label className="text-[11px] font-semibold text-muted-foreground">{tt("bankroz.country_main_branch", "Country Main Branch")}</Label>
                 <select
                   className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs font-semibold"
                   value={countryBranchId}
                   onChange={(e) => setCountryBranchId(e.target.value)}
                 >
-                  <option value="all">All Main Branches</option>
+                  <option value="all">{tt("bankroz.all_main_branches", "All Main Branches")}</option>
                   {countryBranches.map((b) => (
                     <option key={b.id} value={b.id}>
                       {b.name}
@@ -707,13 +707,13 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
 
               {/* Local / City Branch */}
               <div className="space-y-1">
-                <Label className="text-[11px] font-semibold text-muted-foreground">Branch</Label>
+                <Label className="text-[11px] font-semibold text-muted-foreground">{tt("bankroz.branch", "Branch")}</Label>
                 <select
                   className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs font-semibold"
                   value={cityBranchId}
                   onChange={(e) => setCityBranchId(e.target.value)}
                 >
-                  <option value="all">All Branches</option>
+                  <option value="all">{tt("bankroz.all_branches", "All Branches")}</option>
                   {cityBranches.map((b) => (
                     <option key={b.id} value={b.id}>
                       {b.name} ({b.code || "BR"})
@@ -724,13 +724,13 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
 
               {/* Bank Filter */}
               <div className="space-y-1">
-                <Label className="text-[11px] font-semibold text-muted-foreground">Bank</Label>
+                <Label className="text-[11px] font-semibold text-muted-foreground">{tt("bankroz.bank", "Bank")}</Label>
                 <select
                   className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs font-semibold"
                   value={bankName}
                   onChange={(e) => setBankName(e.target.value)}
                 >
-                  <option value="all">All Banks</option>
+                  <option value="all">{tt("bankroz.all_banks", "All Banks")}</option>
                   <option value="Habib Bank Limited">Habib Bank Limited (HBL)</option>
                   <option value="National Bank of Pakistan">National Bank of Pakistan (NBP)</option>
                   <option value="Bank Alfalah Limited">Bank Alfalah Limited (BAFL)</option>
@@ -759,14 +759,14 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
 
               {/* General Search */}
               <div className="space-y-1 sm:col-span-2 lg:col-span-4">
-                <Label className="text-[11px] font-semibold text-muted-foreground">Quick Search</Label>
+                <Label className="text-[11px] font-semibold text-muted-foreground">{tt("bankroz.quick_search", "Quick Search")}</Label>
                 <div className="relative">
                   <Search className="pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
                   <Input
                     className="h-8 pl-8 text-xs bg-background"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    placeholder="Search by serial #, particulars, bank or user..."
+                    placeholder={tt("bankroz.search_placeholder", "Search by serial #, particulars, bank or user...")}
                   />
                 </div>
               </div>
@@ -774,10 +774,10 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
 
             <div className="flex items-center justify-end gap-2 pt-1">
               <Button type="button" size="sm" variant="outline" onClick={handleResetFilters}>
-                Reset Filters
+                {tt("bankroz.reset_filters", "Reset Filters")}
               </Button>
               <Button type="button" size="sm" onClick={() => void loadData()} className="bg-blue-600 hover:bg-blue-700 text-white">
-                Apply Filters
+                {tt("bankroz.apply_filters", "Apply Filters")}
               </Button>
             </div>
           </CardContent>
@@ -790,9 +790,9 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
         <Card className="border-slate-200/80 shadow-sm dark:border-slate-800">
           <CardContent className="p-3.5 flex items-center justify-between">
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Entries</div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("bankroz.total_entries", "Total Entries")}</div>
               <div className="mt-1 text-2xl font-black text-slate-900 dark:text-slate-100">{summary.totalEntries}</div>
-              <div className="text-[10px] text-muted-foreground">All Transactions</div>
+              <div className="text-[10px] text-muted-foreground">{tt("bankroz.all_transactions", "All Transactions")}</div>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600 dark:bg-blue-950 dark:text-blue-400">
               <FileText className="h-5 w-5" />
@@ -804,7 +804,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
         <Card className="border-slate-200/80 shadow-sm dark:border-slate-800">
           <CardContent className="p-3.5 flex items-center justify-between">
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Debit</div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("bankroz.total_debit", "Total Debit")}</div>
               <div className="mt-1 text-xl font-black text-rose-600">{fmtNumber(summary.totalDebit)}</div>
               <div className="text-[10px] font-semibold text-rose-600/80">PKR</div>
             </div>
@@ -818,7 +818,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
         <Card className="border-slate-200/80 shadow-sm dark:border-slate-800">
           <CardContent className="p-3.5 flex items-center justify-between">
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Total Credit</div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("bankroz.total_credit", "Total Credit")}</div>
               <div className="mt-1 text-xl font-black text-emerald-600">{fmtNumber(summary.totalCredit)}</div>
               <div className="text-[10px] font-semibold text-emerald-600/80">PKR</div>
             </div>
@@ -832,7 +832,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
         <Card className="border-slate-200/80 shadow-sm dark:border-slate-800">
           <CardContent className="p-3.5 flex items-center justify-between">
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Opening Balance</div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("bankroz.opening_balance", "Opening Balance")}</div>
               <div className="mt-1 text-xl font-black text-blue-600 dark:text-blue-400">{fmtNumber(summary.openingBalance)}</div>
               <div className="text-[10px] font-semibold text-blue-600/80">PKR</div>
             </div>
@@ -846,7 +846,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
         <Card className="border-slate-200/80 shadow-sm dark:border-slate-800">
           <CardContent className="p-3.5 flex items-center justify-between">
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Closing Balance</div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("bankroz.closing_balance", "Closing Balance")}</div>
               <div className="mt-1 text-xl font-black text-purple-600 dark:text-purple-400">{fmtNumber(summary.closingBalance)}</div>
               <div className="text-[10px] font-semibold text-purple-600/80">PKR</div>
             </div>
@@ -860,9 +860,9 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
         <Card className="border-slate-200/80 shadow-sm dark:border-slate-800">
           <CardContent className="p-3.5 flex items-center justify-between">
             <div>
-              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">Pending / Unclear</div>
+              <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500">{tt("bankroz.pending_unclear", "Pending / Unclear")}</div>
               <div className="mt-1 text-2xl font-black text-amber-500">{summary.pendingCount}</div>
-              <div className="text-[10px] text-muted-foreground">Entries</div>
+              <div className="text-[10px] text-muted-foreground">{tt("bankroz.entries", "Entries")}</div>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400">
               <Clock className="h-5 w-5" />
@@ -876,13 +876,13 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
         {/* Tabs */}
         <div className="flex flex-wrap items-center gap-1">
           {[
-            { id: "all", label: "All Transactions" },
-            { id: "cleared", label: "Cleared" },
-            { id: "pending", label: "Pending" },
-            { id: "due_today", label: "Due Today", highlight: summary.dueTodayCount > 0 },
-            { id: "dishonored", label: "Dishonored" },
-            { id: "post_dated", label: "Post Dated" },
-            { id: "overdue", label: "Overdue" }
+            { id: "all", label: tt("bankroz.all_transactions", "All Transactions") },
+            { id: "cleared", label: tt("bankroz.cleared", "Cleared") },
+            { id: "pending", label: tt("bankroz.pending", "Pending") },
+            { id: "due_today", label: tt("bankroz.due_today", "Due Today"), highlight: summary.dueTodayCount > 0 },
+            { id: "dishonored", label: tt("bankroz.dishonored", "Dishonored") },
+            { id: "post_dated", label: tt("bankroz.post_dated", "Post Dated") },
+            { id: "overdue", label: tt("bankroz.overdue", "Overdue") }
           ].map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -920,19 +920,19 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
         <div className="flex flex-wrap items-center gap-3 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
           <div className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-emerald-500" />
-            <span>Cleared</span>
+            <span>{tt("bankroz.cleared", "Cleared")}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-amber-500" />
-            <span>Pending</span>
+            <span>{tt("bankroz.pending", "Pending")}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-rose-500" />
-            <span>Dishonored</span>
+            <span>{tt("bankroz.dishonored", "Dishonored")}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-full bg-blue-500" />
-            <span>Post Dated</span>
+            <span>{tt("bankroz.post_dated", "Post Dated")}</span>
           </div>
         </div>
       </div>
@@ -943,26 +943,26 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
           <table className="w-full min-w-[1400px] border-collapse text-xs">
             <thead>
               <tr className="bg-slate-50 text-slate-700 border-b dark:bg-slate-900/60 dark:text-slate-200 font-bold text-[11px]">
-                <th className="py-3 px-2 text-center w-12 border-r">Sr #</th>
-                <th className="py-3 px-2 text-center w-24 border-r">Entry #</th>
-                <th className="py-3 px-3 text-start w-32 border-r">Date / Time</th>
-                <th className="py-3 px-2 text-center w-24 border-r">Branch No.</th>
-                <th className="py-3 px-3 text-start w-32 border-r">Branch Name</th>
+                <th className="py-3 px-2 text-center w-12 border-r">{tt("bankroz.sr", "Sr #")}</th>
+                <th className="py-3 px-2 text-center w-24 border-r">{tt("bankroz.entry_no", "Entry #")}</th>
+                <th className="py-3 px-3 text-start w-32 border-r">{tt("bankroz.date_time", "Date / Time")}</th>
+                <th className="py-3 px-2 text-center w-24 border-r">{tt("bankroz.branch_no", "Branch No.")}</th>
+                <th className="py-3 px-3 text-start w-32 border-r">{tt("bankroz.branch_name", "Branch Name")}</th>
                 <th className="py-3 px-3 text-start w-28 border-r bg-blue-50/40 dark:bg-blue-950/20 text-blue-900 dark:text-blue-300">
-                  User Name
+                  {tt("bankroz.user_name", "User Name")}
                 </th>
-                <th className="py-3 px-3 text-start w-40 border-r">Bank Name</th>
-                <th className="py-3 px-2 text-center w-28 border-r font-mono">Check #</th>
-                <th className="py-3 px-3 text-start min-w-[200px] border-r">Details / Particulars</th>
-                <th className="py-3 px-2.5 text-center w-28 border-r">Check Date</th>
-                <th className="py-3 px-2.5 text-center w-28 border-r">Due / Payment Date</th>
-                <th className="py-3 px-3 text-end w-28 border-r text-rose-600">Debit (PKR)</th>
-                <th className="py-3 px-3 text-end w-28 border-r text-emerald-600">Credit (PKR)</th>
+                <th className="py-3 px-3 text-start w-40 border-r">{tt("bankroz.bank_name", "Bank Name")}</th>
+                <th className="py-3 px-2 text-center w-28 border-r font-mono">{tt("bankroz.check_no", "Check #")}</th>
+                <th className="py-3 px-3 text-start min-w-[200px] border-r">{tt("bankroz.details_particulars", "Details / Particulars")}</th>
+                <th className="py-3 px-2.5 text-center w-28 border-r">{tt("bankroz.check_date", "Check Date")}</th>
+                <th className="py-3 px-2.5 text-center w-28 border-r">{tt("bankroz.due_payment_date", "Due / Payment Date")}</th>
+                <th className="py-3 px-3 text-end w-28 border-r text-rose-600">{tt("bankroz.debit", "Debit")} (PKR)</th>
+                <th className="py-3 px-3 text-end w-28 border-r text-emerald-600">{tt("bankroz.credit", "Credit")} (PKR)</th>
                 <th className="py-3 px-3 text-end w-32 border-r font-bold text-slate-900 dark:text-slate-100">
-                  Balance (PKR)
+                  {tt("bankroz.balance", "Balance")} (PKR)
                 </th>
-                <th className="py-3 px-2.5 text-center w-28 border-r">Status</th>
-                <th className="py-3 px-2 text-center w-20">Action</th>
+                <th className="py-3 px-2.5 text-center w-28 border-r">{tt("bankroz.status", "Status")}</th>
+                <th className="py-3 px-2 text-center w-20">{tt("bankroz.action", "Action")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -971,14 +971,14 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                   <td colSpan={16} className="py-12 text-center text-slate-500 font-semibold">
                     <div className="inline-flex items-center gap-2">
                       <RefreshCw className="h-4 w-4 animate-spin text-blue-600" />
-                      <span>Loading Bank Roznamcha records...</span>
+                      <span>{tt("bankroz.loading", "Loading Bank Roznamcha records...")}</span>
                     </div>
                   </td>
                 </tr>
               ) : rows.length === 0 ? (
                 <tr>
                   <td colSpan={16} className="py-12 text-center text-slate-500 font-semibold">
-                    No bank transactions found matching the selected criteria.
+                    {tt("bankroz.no_transactions", "No bank transactions found matching the selected criteria.")}
                   </td>
                 </tr>
               ) : (
@@ -1095,31 +1095,31 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                         {row.effective_status === "cleared" && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2.5 py-0.5 text-[11px] font-bold text-emerald-700 dark:bg-emerald-950/40 dark:text-emerald-300">
                             <CheckCircle2 className="h-3 w-3" />
-                            <span>Cleared</span>
+                            <span>{tt("bankroz.cleared", "Cleared")}</span>
                           </span>
                         )}
                         {row.effective_status === "pending" && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-[11px] font-bold text-amber-700 dark:bg-amber-950/40 dark:text-amber-300">
                             <Clock className="h-3 w-3" />
-                            <span>Pending</span>
+                            <span>{tt("bankroz.pending", "Pending")}</span>
                           </span>
                         )}
                         {row.effective_status === "post_dated" && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-[11px] font-bold text-blue-700 dark:bg-blue-950/40 dark:text-blue-300">
                             <Calendar className="h-3 w-3" />
-                            <span>Post Dated</span>
+                            <span>{tt("bankroz.post_dated", "Post Dated")}</span>
                           </span>
                         )}
                         {row.effective_status === "overdue" && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
                             <AlertTriangle className="h-3 w-3" />
-                            <span>Overdue</span>
+                            <span>{tt("bankroz.overdue", "Overdue")}</span>
                           </span>
                         )}
                         {row.effective_status === "dishonored" && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-rose-50 px-2.5 py-0.5 text-[11px] font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">
                             <XCircle className="h-3 w-3" />
-                            <span>Dishonored</span>
+                            <span>{tt("bankroz.dishonored", "Dishonored")}</span>
                           </span>
                         )}
                       </td>
@@ -1206,7 +1206,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
           {/* Rows Per Page & Pagination Controls */}
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <span>Rows per page:</span>
+              <span>{tt("bankroz.rows_per_page", "Rows per page:")}</span>
               <select
                 className="h-7 rounded border bg-background px-1.5 text-xs font-semibold"
                 value={pageSize}
@@ -1308,23 +1308,23 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
         <div className="flex flex-wrap items-center gap-4 text-[11px]">
           <div className="flex items-center gap-1.5">
             <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" />
-            <span className="font-semibold text-slate-700 dark:text-slate-300">Cleared:</span>
-            <span>Approved and deposited</span>
+            <span className="font-semibold text-slate-700 dark:text-slate-300">{tt("bankroz.cleared", "Cleared")}:</span>
+            <span>{tt("bankroz.cleared_desc", "Approved and deposited")}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5 text-amber-600" />
-            <span className="font-semibold text-slate-700 dark:text-slate-300">Pending:</span>
-            <span>Awaiting clearance</span>
+            <span className="font-semibold text-slate-700 dark:text-slate-300">{tt("bankroz.pending", "Pending")}:</span>
+            <span>{tt("bankroz.pending_desc", "Awaiting clearance")}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <XCircle className="h-3.5 w-3.5 text-rose-600" />
-            <span className="font-semibold text-slate-700 dark:text-slate-300">Dishonored:</span>
-            <span>Cheque returned / unpaid</span>
+            <span className="font-semibold text-slate-700 dark:text-slate-300">{tt("bankroz.dishonored", "Dishonored")}:</span>
+            <span>{tt("bankroz.dishonored_desc", "Cheque returned / unpaid")}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <Calendar className="h-3.5 w-3.5 text-blue-600" />
-            <span className="font-semibold text-slate-700 dark:text-slate-300">Post Dated:</span>
-            <span>Future dated cheque</span>
+            <span className="font-semibold text-slate-700 dark:text-slate-300">{tt("bankroz.post_dated", "Post Dated")}:</span>
+            <span>{tt("bankroz.postdated_desc", "Future dated cheque")}</span>
           </div>
         </div>
 
@@ -1472,7 +1472,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
             {/* Modal Actions */}
             <div className="flex items-center justify-end gap-2 border-t pt-3">
               <Button type="button" variant="outline" size="sm" onClick={() => setActionModalRow(null)}>
-                Cancel
+                {tt("bankroz.cancel", "Cancel")}
               </Button>
               <Button
                 type="button"
@@ -1615,7 +1615,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
 
             <div className="flex items-center justify-end gap-2 border-t pt-3">
               <Button type="button" variant="outline" size="sm" onClick={() => setNewEntryModalOpen(false)}>
-                Cancel
+                {tt("bankroz.cancel", "Cancel")}
               </Button>
               <Button type="submit" size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
                 Save &amp; Post Cheque
