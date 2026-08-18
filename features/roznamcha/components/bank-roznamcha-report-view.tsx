@@ -378,7 +378,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
       <!DOCTYPE html>
       <html dir="${isRtl ? "rtl" : "ltr"}">
       <head>
-        <title>Bank Roznamcha / Cheque Management Report</title>
+        <title>${tt("bankroz.title", "Bank Roznamcha / Cheque Management Report")}</title>
         <style>
           body { font-family: Arial, sans-serif; padding: 24px; color: #1e293b; font-size: 11px; }
           .header { border-bottom: 2px solid #0f172a; padding-bottom: 12px; margin-bottom: 16px; }
@@ -405,43 +405,43 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
       </head>
       <body>
         <div class="header">
-          <h1>🏛️ BANK ROZNAMCHA / CHEQUE MANAGEMENT REPORT</h1>
+          <h1>🏛️ ${tt("bankroz.title", "Bank Roznamcha / Cheque Management Report")}</h1>
           <div class="meta">
-            <div><strong>Company:</strong> DGT International LLC</div>
-            <div><strong>Country:</strong> Pakistan (PKR)</div>
-            <div><strong>Date Range:</strong> ${fromDate} to ${toDate}</div>
-            <div><strong>Printed By:</strong> Super Admin</div>
-            <div><strong>Generated At:</strong> ${new Date().toLocaleString()}</div>
+            <div><strong>${tt("bankroz.company_label", "Company:")}</strong> DGT International LLC</div>
+            <div><strong>${tt("bankroz.country_label", "Country:")}</strong> Pakistan (PKR)</div>
+            <div><strong>${tt("bankroz.date_range", "Date Range:")}</strong> ${fromDate} to ${toDate}</div>
+            <div><strong>${tt("bankroz.printed_by", "Printed By:")}</strong> Super Admin</div>
+            <div><strong>${tt("bankroz.generated_at", "Generated At:")}</strong> ${new Date().toLocaleString()}</div>
           </div>
         </div>
 
         <div class="summary-grid">
-          <div class="summary-card"><div class="label">Total Entries</div><div class="val">${data.summary.totalEntries}</div></div>
-          <div class="summary-card"><div class="label">Opening Balance</div><div class="val" style="color:#2563eb;">${fmtNumber(data.summary.openingBalance)} PKR</div></div>
-          <div class="summary-card"><div class="label">Total Debit</div><div class="val" style="color:#dc2626;">${fmtNumber(data.summary.totalDebit)} PKR</div></div>
-          <div class="summary-card"><div class="label">Total Credit</div><div class="val" style="color:#16a34a;">${fmtNumber(data.summary.totalCredit)} PKR</div></div>
-          <div class="summary-card"><div class="label">Closing Balance</div><div class="val" style="color:#7c3aed;">${fmtNumber(data.summary.closingBalance)} PKR</div></div>
-          <div class="summary-card"><div class="label">Pending Cheques</div><div class="val" style="color:#d97706;">${data.summary.pendingCount}</div></div>
+          <div class="summary-card"><div class="label">${tt("bankroz.total_entries", "Total Entries")}</div><div class="val">${data.summary.totalEntries}</div></div>
+          <div class="summary-card"><div class="label">${tt("bankroz.opening_balance", "Opening Balance")}</div><div class="val" style="color:#2563eb;">${fmtNumber(data.summary.openingBalance)} PKR</div></div>
+          <div class="summary-card"><div class="label">${tt("bankroz.total_debit", "Total Debit")}</div><div class="val" style="color:#dc2626;">${fmtNumber(data.summary.totalDebit)} PKR</div></div>
+          <div class="summary-card"><div class="label">${tt("bankroz.total_credit", "Total Credit")}</div><div class="val" style="color:#16a34a;">${fmtNumber(data.summary.totalCredit)} PKR</div></div>
+          <div class="summary-card"><div class="label">${tt("bankroz.closing_balance", "Closing Balance")}</div><div class="val" style="color:#7c3aed;">${fmtNumber(data.summary.closingBalance)} PKR</div></div>
+          <div class="summary-card"><div class="label">${tt("bankroz.pending_cheques", "Pending Cheques")}</div><div class="val" style="color:#d97706;">${data.summary.pendingCount}</div></div>
         </div>
 
         <table>
           <thead>
             <tr>
-              <th>Sr #</th>
-              <th>Entry #</th>
-              <th>Date/Time</th>
-              <th>Branch No.</th>
-              <th>Branch Name</th>
-              <th>User Name</th>
-              <th>Bank Name</th>
-              <th>Cheque #</th>
-              <th>Particulars</th>
-              <th>Cheque Date</th>
-              <th>Due Date</th>
-              <th>Debit (PKR)</th>
-              <th>Credit (PKR)</th>
-              <th>Balance (PKR)</th>
-              <th>Status</th>
+              <th>${tt("bankroz.sr", "Sr #")}</th>
+              <th>${tt("bankroz.entry_no", "Entry #")}</th>
+              <th>${tt("bankroz.date_time", "Date / Time")}</th>
+              <th>${tt("bankroz.branch_no", "Branch No.")}</th>
+              <th>${tt("bankroz.branch_name", "Branch Name")}</th>
+              <th>${tt("bankroz.user_name", "User Name")}</th>
+              <th>${tt("bankroz.bank_name", "Bank Name")}</th>
+              <th>${tt("bankroz.cheque_hash", "Cheque #")}</th>
+              <th>${tt("bankroz.particulars", "Particulars")}</th>
+              <th>${tt("bankroz.cheque_date", "Cheque Date")}</th>
+              <th>${tt("bankroz.due_date", "Due Date")}</th>
+              <th>${tt("bankroz.debit", "Debit")} (PKR)</th>
+              <th>${tt("bankroz.credit", "Credit")} (PKR)</th>
+              <th>${tt("bankroz.balance", "Balance")} (PKR)</th>
+              <th>${tt("bankroz.status", "Status")}</th>
             </tr>
           </thead>
           <tbody>
@@ -449,7 +449,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
           </tbody>
           <tfoot>
             <tr style="background: #f1f5f9; font-weight: bold;">
-              <td colspan="11" style="text-align: right;">Totals (Opening: ${fmtNumber(data.summary.openingBalance)} PKR):</td>
+              <td colspan="11" style="text-align: right;">${tt("bankroz.totals", "Totals")} (${tt("bankroz.opening_balance", "Opening Balance")}: ${fmtNumber(data.summary.openingBalance)} PKR):</td>
               <td style="text-align: right; color: #dc2626;">${fmtNumber(data.summary.totalDebit)}</td>
               <td style="text-align: right; color: #16a34a;">${fmtNumber(data.summary.totalCredit)}</td>
               <td style="text-align: right; color: #7c3aed;">${fmtNumber(data.summary.closingBalance)}</td>
@@ -459,10 +459,10 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
         </table>
 
         <div class="signatures">
-          <div class="sig-line">Prepared By</div>
-          <div class="sig-line">Verified By (Accounts)</div>
-          <div class="sig-line">Branch Manager</div>
-          <div class="sig-line">Authorized Signatory</div>
+          <div class="sig-line">${tt("bankroz.prepared_by", "Prepared By")}</div>
+          <div class="sig-line">${tt("bankroz.verified_by", "Verified By (Accounts)")}</div>
+          <div class="sig-line">${tt("bankroz.branch_manager", "Branch Manager")}</div>
+          <div class="sig-line">${tt("bankroz.authorized_signatory", "Authorized Signatory")}</div>
         </div>
       </body>
       </html>
@@ -1346,40 +1346,40 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
         <SimpleModal
           isOpen={Boolean(actionModalRow)}
           onClose={() => setActionModalRow(null)}
-          title={`Cheque Action — ${actionModalRow.entry_serial_number} (${actionModalRow.cheque_no || "No Cheque #"})`}
+          title={`${tt("bankroz.cheque_action", "Cheque Action")} — ${actionModalRow.entry_serial_number} (${actionModalRow.cheque_no || tt("bankroz.no_cheque_no", "No Cheque #")})`}
         >
           <div className="space-y-4 text-xs">
             {/* Quick Header info */}
             <div className="rounded-lg border bg-slate-50 p-3 dark:bg-slate-900/50 space-y-2">
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 font-semibold">
                 <div>
-                  <span className="text-muted-foreground block text-[10px]">Bank</span>
+                  <span className="text-muted-foreground block text-[10px]">{tt("bankroz.bank", "Bank")}</span>
                   <span className="text-slate-900 dark:text-slate-100">{actionModalRow.bank_name}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground block text-[10px]">Cheque Date</span>
+                  <span className="text-muted-foreground block text-[10px]">{tt("bankroz.cheque_date", "Cheque Date")}</span>
                   <span>{formatShortDate(actionModalRow.cheque_date)}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground block text-[10px]">Due Date</span>
+                  <span className="text-muted-foreground block text-[10px]">{tt("bankroz.due_date", "Due Date")}</span>
                   <span>{formatShortDate(actionModalRow.due_date)}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground block text-[10px]">Amount</span>
+                  <span className="text-muted-foreground block text-[10px]">{tt("bankroz.amount", "Amount")}</span>
                   <span className="font-mono font-bold text-blue-600">
                     {fmtNumber(actionModalRow.debit || actionModalRow.credit)} {actionModalRow.currency}
                   </span>
                 </div>
               </div>
               <div className="text-muted-foreground">
-                <span className="font-bold text-slate-700 dark:text-slate-300">Particulars: </span>
+                <span className="font-bold text-slate-700 dark:text-slate-300">{tt("bankroz.particulars_label", "Particulars:")} </span>
                 {actionModalRow.particulars}
               </div>
             </div>
 
             {/* Action Selector */}
             <div className="space-y-1.5">
-              <Label className="font-bold">Select Clearance Action</Label>
+              <Label className="font-bold">{tt("bankroz.select_clearance_action", "Select Clearance Action")}</Label>
               <div className="grid grid-cols-3 gap-2">
                 <Button
                   type="button"
@@ -1389,7 +1389,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                   className={actionType === "clear" ? "bg-emerald-600 hover:bg-emerald-700 text-white" : ""}
                 >
                   <CheckCircle2 className="h-3.5 w-3.5 me-1.5" />
-                  Clear / Accept
+                  {tt("bankroz.clear_accept", "Clear / Accept")}
                 </Button>
                 <Button
                   type="button"
@@ -1399,7 +1399,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                   className={actionType === "dishonor" ? "bg-rose-600 hover:bg-rose-700 text-white" : ""}
                 >
                   <XCircle className="h-3.5 w-3.5 me-1.5" />
-                  Dishonor / Return
+                  {tt("bankroz.dishonor_return", "Dishonor / Return")}
                 </Button>
                 <Button
                   type="button"
@@ -1408,44 +1408,44 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                   onClick={() => setActionType("present")}
                 >
                   <Clock className="h-3.5 w-3.5 me-1.5" />
-                  Present / Deposit
+                  {tt("bankroz.present_deposit", "Present / Deposit")}
                 </Button>
               </div>
             </div>
 
             {actionType === "dishonor" && (
               <div className="space-y-1.5">
-                <Label className="font-bold text-rose-600">Dishonor Reason</Label>
+                <Label className="font-bold text-rose-600">{tt("bankroz.dishonor_reason", "Dishonor Reason")}</Label>
                 <select
                   className="h-8 w-full rounded border bg-background px-2 text-xs font-semibold"
                   value={dishonorReason}
                   onChange={(e) => setDishonorReason(e.target.value)}
                 >
-                  <option value="Insufficient funds">Insufficient funds in drawer account</option>
-                  <option value="Signature mismatch">Signature mismatch / irregular signature</option>
-                  <option value="Stop payment order">Payment stopped by drawer</option>
-                  <option value="Account closed">Account closed / frozen</option>
-                  <option value="Stale cheque">Stale / expired cheque</option>
-                  <option value="Post-dated presented early">Post-dated presented before maturity</option>
-                  <option value="Words and figures differ">Amount in words and figures differ</option>
-                  <option value="Other">Other reason</option>
+                  <option value="Insufficient funds">{tt("bankroz.dr_insufficient", "Insufficient funds in drawer account")}</option>
+                  <option value="Signature mismatch">{tt("bankroz.dr_signature", "Signature mismatch / irregular signature")}</option>
+                  <option value="Stop payment order">{tt("bankroz.dr_stop", "Payment stopped by drawer")}</option>
+                  <option value="Account closed">{tt("bankroz.dr_closed", "Account closed / frozen")}</option>
+                  <option value="Stale cheque">{tt("bankroz.dr_stale", "Stale / expired cheque")}</option>
+                  <option value="Post-dated presented early">{tt("bankroz.dr_postdated", "Post-dated presented before maturity")}</option>
+                  <option value="Words and figures differ">{tt("bankroz.dr_words", "Amount in words and figures differ")}</option>
+                  <option value="Other">{tt("bankroz.dr_other", "Other reason")}</option>
                 </select>
               </div>
             )}
 
             <div className="space-y-1.5">
-              <Label className="font-semibold">Action Remarks / Notes</Label>
+              <Label className="font-semibold">{tt("bankroz.action_remarks", "Action Remarks / Notes")}</Label>
               <Input
                 className="h-8 text-xs"
                 value={actionNotes}
                 onChange={(e) => setActionNotes(e.target.value)}
-                placeholder="Enter clearance notes or reference..."
+                placeholder={tt("bankroz.clearance_notes_ph", "Enter clearance notes or reference...")}
               />
             </div>
 
             {/* Audit Trail Timeline */}
             <div className="space-y-1.5 border-t pt-3">
-              <Label className="font-bold uppercase tracking-wider text-[10px] text-slate-500">Audit Trail</Label>
+              <Label className="font-bold uppercase tracking-wider text-[10px] text-slate-500">{tt("bankroz.audit_trail", "Audit Trail")}</Label>
               <div className="max-h-36 overflow-y-auto space-y-2 rounded border bg-slate-50/50 p-2 dark:bg-slate-900/30 text-[11px]">
                 {actionModalRow.audit_trail && actionModalRow.audit_trail.length > 0 ? (
                   actionModalRow.audit_trail.map((log, lidx) => (
@@ -1457,14 +1457,14 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                         </span>
                       </div>
                       <div className="text-slate-600 dark:text-slate-400">
-                        By: <span className="font-medium">{log.actor}</span>
+                        {tt("bankroz.by", "By:")} <span className="font-medium">{log.actor}</span>
                         {log.notes && ` — ${log.notes}`}
                         {log.reason && ` (Reason: ${log.reason})`}
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="text-slate-400">No audit log available for this record.</div>
+                  <div className="text-slate-400">{tt("bankroz.no_audit_log", "No audit log available for this record.")}</div>
                 )}
               </div>
             </div>
@@ -1481,7 +1481,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                 onClick={handleChequeActionSubmit}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
               >
-                {actionSubmitting ? "Processing..." : "Confirm Action"}
+                {actionSubmitting ? tt("bankroz.processing", "Processing...") : tt("bankroz.confirm_action", "Confirm Action")}
               </Button>
             </div>
           </div>
@@ -1493,24 +1493,24 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
         <SimpleModal
           isOpen={newEntryModalOpen}
           onClose={() => setNewEntryModalOpen(false)}
-          title="New Bank Cheque / Transaction Entry"
+          title={tt("bankroz.new_entry_title", "New Bank Cheque / Transaction Entry")}
         >
           <form onSubmit={handleCreateNewEntry} className="space-y-3.5 text-xs">
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
-                <Label className="font-semibold">Transaction Mode</Label>
+                <Label className="font-semibold">{tt("bankroz.transaction_mode", "Transaction Mode")}</Label>
                 <select
                   className="h-8 w-full rounded border bg-background px-2 text-xs font-semibold"
                   value={newEntry.type}
                   onChange={(e) => setNewEntry((p) => ({ ...p, type: e.target.value }))}
                 >
-                  <option value="credit">Credit / Cheque Received (+)</option>
-                  <option value="debit">Debit / Payment Issued (-)</option>
+                  <option value="credit">{tt("bankroz.credit_received", "Credit / Cheque Received (+)")}</option>
+                  <option value="debit">{tt("bankroz.debit_issued", "Debit / Payment Issued (-)")}</option>
                 </select>
               </div>
 
               <div className="space-y-1">
-                <Label className="font-semibold">Bank Name</Label>
+                <Label className="font-semibold">{tt("bankroz.bank_name", "Bank Name")}</Label>
                 <select
                   className="h-8 w-full rounded border bg-background px-2 text-xs font-semibold"
                   value={newEntry.bankName}
@@ -1537,7 +1537,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
               </div>
 
               <div className="space-y-1">
-                <Label className="font-semibold">Cheque #</Label>
+                <Label className="font-semibold">{tt("bankroz.cheque_hash", "Cheque #")}</Label>
                 <Input
                   className="h-8 text-xs font-mono"
                   value={newEntry.chequeNo}
@@ -1547,7 +1547,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
               </div>
 
               <div className="space-y-1">
-                <Label className="font-semibold">Amount</Label>
+                <Label className="font-semibold">{tt("bankroz.amount", "Amount")}</Label>
                 <div className="flex gap-1.5">
                   <Input
                     className="h-8 text-xs font-mono font-bold"
@@ -1572,7 +1572,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
               </div>
 
               <div className="space-y-1">
-                <Label className="font-semibold">Cheque Date</Label>
+                <Label className="font-semibold">{tt("bankroz.cheque_date", "Cheque Date")}</Label>
                 <Input
                   className="h-8 text-xs"
                   type="date"
@@ -1582,7 +1582,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
               </div>
 
               <div className="space-y-1">
-                <Label className="font-semibold">Due / Payment Date</Label>
+                <Label className="font-semibold">{tt("bankroz.due_payment_date", "Due / Payment Date")}</Label>
                 <Input
                   className="h-8 text-xs"
                   type="date"
@@ -1592,23 +1592,23 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
               </div>
 
               <div className="col-span-2 space-y-1">
-                <Label className="font-semibold">Particulars / Description</Label>
+                <Label className="font-semibold">{tt("bankroz.particulars_desc", "Particulars / Description")}</Label>
                 <Input
                   className="h-8 text-xs"
                   value={newEntry.particulars}
                   onChange={(e) => setNewEntry((p) => ({ ...p, particulars: e.target.value }))}
-                  placeholder="e.g. Customer payment for invoice #..."
+                  placeholder={tt("bankroz.invoice_ph", "e.g. Customer payment for invoice #...")}
                   required
                 />
               </div>
 
               <div className="col-span-2 space-y-1">
-                <Label className="font-semibold">Remarks / Notes</Label>
+                <Label className="font-semibold">{tt("bankroz.remarks_notes", "Remarks / Notes")}</Label>
                 <Input
                   className="h-8 text-xs"
                   value={newEntry.notes}
                   onChange={(e) => setNewEntry((p) => ({ ...p, notes: e.target.value }))}
-                  placeholder="Optional internal remarks"
+                  placeholder={tt("bankroz.optional_remarks_ph", "Optional internal remarks")}
                 />
               </div>
             </div>
@@ -1618,7 +1618,7 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
                 {tt("bankroz.cancel", "Cancel")}
               </Button>
               <Button type="submit" size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-                Save &amp; Post Cheque
+                {tt("bankroz.save_post_cheque", "Save & Post Cheque")}
               </Button>
             </div>
           </form>
