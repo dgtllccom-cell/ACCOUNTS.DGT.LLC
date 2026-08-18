@@ -171,6 +171,9 @@ function formatTimeOnly(timeStr?: string | null) {
 export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLanguage; pageTitle?: string }) {
   const activeLang = useActiveLanguage() || lang;
   const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang);
+  // Compact shorthand over the central i18n dictionary (lib/i18n/ui.ts). Every key below carries
+  // EN/UR/PS/FA/AR values there; the second arg is the English fallback only.
+  const tt = (key: string, fallback: string) => t(activeLang, key as never, fallback);
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<ApiResponse | null>(null);

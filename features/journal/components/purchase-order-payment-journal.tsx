@@ -56,6 +56,7 @@ import { Th } from "@/components/ui/translated-th";
 import { t, tData, type LanguageCode } from "@/features/i18n/purchase-journal-translations";
 import { t as tGlobal } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 function isUuid(value: any): boolean {
   if (!value || typeof value !== "string") return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim());
@@ -2154,6 +2155,7 @@ function DashboardSummaryHeader({
   const adminCountry = selectedCountryForSummary || summary.country || session?.countryName || "United Arab Emirates";
   const adminBranch = (summary.branchName && summary.branchName !== "All Branches") ? summary.branchName : (session?.branchName || "HEAD OFFICE");
   const adminUserId = session?.id || session?.username || summary.userId;
+  const th = (label: string) => translateHeader(lang, label);
 
     return (
       <div className="flex flex-col mb-6 space-y-4">
@@ -2165,36 +2167,36 @@ function DashboardSummaryHeader({
               <div className="bg-blue-600 p-1 rounded-full text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               </div>
-              <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">1. BRANCH & USER DETAILS</h4>
+              <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">1. {th("BRANCH & USER DETAILS")}</h4>
             </div>
             <div className="p-4 flex flex-col gap-2.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
               <div className="flex justify-between items-center">
-                <span>Country:</span>
+                <span>{th("Country")}</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">{getFlag(adminCountry)} {tData(adminCountry, lang)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>Branch Name:</span>
+                <span>{th("Branch Name")}</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{tData(adminBranch, lang)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>User ID:</span>
+                <span>{th("User ID")}</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{adminUserId}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>User Name:</span>
+                <span>{th("User Name")}</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{tData(summary.userName, lang)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>Role:</span>
+                <span>{th("Role")}</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{t(summary.role, lang)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>Date & Time:</span>
+                <span>{th("Date & Time")}</span>
                 <span className="font-bold text-slate-800 dark:text-slate-200">{dateStr}, {timeStr}</span>
               </div>
               <div className="flex justify-between items-center mt-auto">
-                <span>Status:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">Active</span>
+                <span>{th("Status")}</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">{th("Active")}</span>
               </div>
             </div>
           </div>
@@ -2205,23 +2207,23 @@ function DashboardSummaryHeader({
               <div className="bg-emerald-600 p-1 rounded-full text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
               </div>
-              <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">2. GLOBAL FINANCIAL SUMMARY (USD)</h4>
+              <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">2. {th("GLOBAL FINANCIAL SUMMARY (USD)")}</h4>
             </div>
             <div className="p-4 flex flex-col gap-3 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
               <div className="flex justify-between items-center">
-                <span>Total Global Entries:</span>
+                <span>{th("Total Global Entries")}</span>
                 <span className="font-black text-slate-800 dark:text-slate-200">{totalGlobalEntries}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>Total Purchase (USD):</span>
+                <span>{th("Total Purchase (USD)")}</span>
                 <span className="font-black text-emerald-700 dark:text-emerald-400 font-mono">{formatMoney(summary.totalPurchaseLC)}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-rose-600 dark:text-rose-500">Total Advance/Paid (USD):</span>
+                <span className="text-rose-600 dark:text-rose-500">{th("Total Advance/Paid (USD)")}</span>
                 <span className="font-black text-rose-700 dark:text-rose-400 font-mono">{formatMoney(summary.advancePaidLC)}</span>
               </div>
               <div className="flex justify-between items-center mt-1 pt-2 border-t border-slate-100 dark:border-slate-800">
-                <span className="text-slate-600 dark:text-slate-400 uppercase font-bold">Balance (USD):</span>
+                <span className="text-slate-600 dark:text-slate-400 uppercase font-bold">{th("Balance (USD)")}</span>
                 <span className="font-black text-slate-900 dark:text-slate-100 font-mono text-sm">{formatMoney(summary.remainingBalanceLC)}</span>
               </div>
             </div>
@@ -2233,24 +2235,24 @@ function DashboardSummaryHeader({
               <div className="bg-purple-600 p-1 rounded-full text-white">
                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
               </div>
-              <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400 truncate">3. BILL ENTRIES SUMMARY</h4>
+              <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400 truncate">3. {th("BILL ENTRIES SUMMARY")}</h4>
             </div>
             <div className="p-4 flex flex-col gap-3 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
               <div className="flex justify-between items-center">
-                <span>Total Bill Entries:</span>
+                <span>{th("Total Bill Entries")}</span>
                 <span className="font-black text-purple-700 dark:text-purple-400 font-mono">{totalGlobalEntries}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span>Transferred to Loading:</span>
+                <span>{th("Transferred to Loading")}</span>
                 <span className="font-black text-emerald-600 dark:text-emerald-500 font-mono">{transferredEntries}</span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-rose-600 dark:text-rose-500">Remaining Advance Balance:</span>
+                <span className="text-rose-600 dark:text-rose-500">{th("Remaining Advance Balance")}</span>
                 <span className="font-black text-rose-700 dark:text-rose-400 font-mono">{remainingEntries}</span>
               </div>
               <div className="flex justify-between items-center mt-auto pt-2 border-t border-dashed border-slate-200 dark:border-slate-700">
-                <span>System Status:</span>
-                <span className="font-bold text-emerald-600 dark:text-emerald-500">Online & Synced</span>
+                <span>{th("System Status")}</span>
+                <span className="font-bold text-emerald-600 dark:text-emerald-500">{th("Online & Synced")}</span>
               </div>
             </div>
           </div>
@@ -2275,8 +2277,8 @@ function DashboardSummaryHeader({
                 <div className={cn("bg-orange-600 p-1 rounded-full text-white transition-transform duration-300", showAllCountries ? "rotate-90" : "rotate-0")}>
                   <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m9 18 6-6-6-6"/></svg>
                 </div>
-                <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400 flex-1">4. ALL COUNTRIES REPORT</h4>
-                <span className="text-[9px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded text-slate-500 font-bold">{showAllCountries ? "Hide Details" : "Show Details"}</span>
+                <h4 className="text-xs font-black uppercase tracking-wider text-orange-800 dark:text-orange-400 flex-1">4. {th("ALL COUNTRIES REPORT")}</h4>
+                <span className="text-[9px] bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-1.5 py-0.5 rounded text-slate-500 font-bold">{showAllCountries ? th("Hide Details") : th("Show Details")}</span>
               </div>
               <div className="p-3 flex flex-col gap-1.5 text-[10px] font-semibold text-slate-500 dark:text-slate-400 h-full overflow-y-auto max-h-[160px] scrollbar-thin">
                 {summaryRows.map((r, idx) => (
@@ -2284,13 +2286,13 @@ function DashboardSummaryHeader({
                      <span className="font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 truncate max-w-[120px]">
                        {getFlag(r.country)} {tData(r.country, lang)}
                      </span>
-                     <span className="bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm text-[9px] whitespace-nowrap">{r.branches.length} Branches</span>
+                     <span className="bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm text-[9px] whitespace-nowrap">{r.branches.length} {th("Branches")}</span>
                    </div>
                 ))}
                 
                 <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
-                  {!showAllCountries && <span className="text-orange-600 dark:text-orange-500 font-bold uppercase text-[10px]">Show Report Details ?</span>}
-                  {showAllCountries && <span className="text-orange-600 dark:text-orange-500 font-bold uppercase text-[10px]">Hide Report Details ?</span>}
+                  {!showAllCountries && <span className="text-orange-600 dark:text-orange-500 font-bold uppercase text-[10px]">{th("Show Report Details ?")}</span>}
+                  {showAllCountries && <span className="text-orange-600 dark:text-orange-500 font-bold uppercase text-[10px]">{th("Hide Report Details ?")}</span>}
                 </div>
               </div>
             </div>
@@ -2308,33 +2310,33 @@ function DashboardSummaryHeader({
                       {getFlag(r.country)} {tData(r.country, lang)}
                     </span>
                     <span className="bg-white dark:bg-slate-900 px-1.5 py-0.5 rounded shadow-sm text-[9px] font-bold text-slate-500 uppercase tracking-wider">
-                      {r.branches.length} Branches
+                      {r.branches.length} {th("Branches")}
                     </span>
                   </div>
                   <div className="p-4">
                     <div className="mb-4 flex flex-col gap-2 rounded-xl bg-slate-50 p-3 dark:bg-slate-950">
                       <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Currency</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{th("Currency")}</span>
                         <span className="font-black text-slate-800 dark:text-slate-200 text-xs">{r.currency}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Purchase</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{th("Total Purchase")}</span>
                         <span className="font-black text-rose-600 dark:text-rose-400 font-mono text-[11px]">{formatMoney(r.purchase)}</span>
                       </div>
                       <div className="flex justify-between items-center">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Paid Advance</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{th("Paid Advance")}</span>
                         <span className="font-black text-emerald-600 font-mono text-[11px]">{formatMoney(r.sale)}</span>
                       </div>
                       <div className="mt-1 flex justify-between items-center border-t border-slate-200 pt-2 dark:border-slate-800">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Remaining Balance</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{th("Remaining Balance")}</span>
                         <span className="font-black text-slate-800 dark:text-slate-200 font-mono text-sm">{formatMoney(r.finalTotal)}</span>
                       </div>
                     </div>
                     
                     <div className="space-y-3">
                       <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex justify-between items-center">
-                        <span>Branch Breakdown</span>
-                        <span className="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-[8px] dark:bg-slate-800">All</span>
+                        <span>{th("Branch Breakdown")}</span>
+                        <span className="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-[8px] dark:bg-slate-800">{th("All")}</span>
                       </h5>
                       {r.branches.map((b, bIdx) => (
                         <div key={bIdx} className="flex flex-col gap-1.5 rounded-lg border border-slate-100 p-2.5 dark:border-slate-800 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
@@ -2343,19 +2345,19 @@ function DashboardSummaryHeader({
                           </div>
                           <div className="grid grid-cols-2 gap-1 text-[9px]">
                             <div className="flex justify-between items-center">
-                              <span className="text-slate-400">Total Purch.</span>
+                              <span className="text-slate-400">{th("Total Purch.")}</span>
                               <span className="font-bold text-rose-500 font-mono">{formatMoney(b.purchase)}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                              <span className="text-slate-400">Req. Adv</span>
+                              <span className="text-slate-400">{th("Req. Adv")}</span>
                               <span className="font-bold text-slate-500 font-mono">{formatMoney(b.requiredAdvance)}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                              <span className="text-slate-400">Paid Adv</span>
+                              <span className="text-slate-400">{th("Paid Adv")}</span>
                               <span className="font-bold text-emerald-500 font-mono">{formatMoney(b.paidAdvance)}</span>
                             </div>
                             <div className="flex justify-between items-center">
-                              <span className="text-slate-400">Rem. Bal</span>
+                              <span className="text-slate-400">{th("Remaining Balance")}</span>
                               <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">{formatMoney(b.remainingAdvance)}</span>
                             </div>
                           </div>
@@ -4329,11 +4331,11 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                                 <>
                                                   {isPaymentCompleted ? (
                                                     <span className="inline-flex rounded border border-emerald-300 bg-emerald-50 text-emerald-700 px-2 py-0.5 text-[9px] font-bold uppercase whitespace-nowrap shadow-sm tracking-wider">
-                                                      Transferred
+                                                      {translateHeader(currentLanguage, "Transferred")}
                                                     </span>
                                                   ) : (
                                                     <span className="inline-flex rounded border border-amber-300 bg-amber-50 text-amber-700 px-2 py-0.5 text-[9px] font-bold uppercase whitespace-nowrap shadow-sm tracking-wider animate-pulse">
-                                                      Pending
+                                                      {translateHeader(currentLanguage, "Pending")}
                                                     </span>
                                                   )}
                                                 <button
@@ -4346,7 +4348,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                                   title="Open full bill audit report"
                                                 >
                                                   <Eye className="h-3.5 w-3.5" />
-                                                  Open Full Bill
+                                                  {translateHeader(currentLanguage, "Open Full Bill")}
                                                 </button>
                                                 </>
                                               )}
@@ -4358,7 +4360,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                 activeMode === "advance_completed" ? "h-8 px-3 text-xs font-semibold" : "h-7 w-7"
                               )}
                               trigger={activeMode === "advance_completed" ? (
-                                <>Actions <ChevronDown className="ml-1 h-3.5 w-3.5" /></>
+                                <>{translateHeader(currentLanguage, "Actions")} <ChevronDown className="ml-1 h-3.5 w-3.5" /></>
                               ) : (
                                 <MoreVertical className="h-3.5 w-3.5" />
                               )}
@@ -4368,14 +4370,14 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                 <>
                                   {activeMode === "advance_completed" && (
                                     <div className="px-4 py-2.5 bg-slate-50/80 dark:bg-slate-900/50 border-b border-slate-100 dark:border-slate-800 flex flex-col gap-1.5 items-start pointer-events-none">
-                                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">Current Status</span>
+                                      <span className="text-[9px] font-black uppercase tracking-wider text-slate-400">{translateHeader(currentLanguage, "Current Status")}</span>
                                       {isPosted ? (
                                         <span className="inline-flex rounded border border-emerald-300 bg-emerald-50 text-emerald-700 px-2 py-0.5 text-[9px] font-bold uppercase whitespace-nowrap shadow-sm tracking-wider">
-                                          Transferred
+                                          {translateHeader(currentLanguage, "Transferred")}
                                         </span>
                                       ) : (
                                         <span className="inline-flex rounded border border-amber-300 bg-amber-50 text-amber-700 px-2 py-0.5 text-[9px] font-bold uppercase whitespace-nowrap shadow-sm tracking-wider animate-pulse">
-                                          Pending Transfer
+                                          {translateHeader(currentLanguage, "Pending Transfer")}
                                         </span>
                                       )}
                                     </div>
@@ -4392,7 +4394,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                           logClientError(`Error in Payment Entry click: ${e.stack || e.message || String(e)}`);
                                         }
                                       }}>
-                                        <WalletCards className="mr-2.5 h-4 w-4 text-slate-500" /> Payment Entry
+                                        <WalletCards className="mr-2.5 h-4 w-4 text-slate-500" /> {translateHeader(currentLanguage, "Payment Entry")}
                                       </button>
                                     )}
                                     {activeMode === "advance" && isPosted && (
@@ -4400,17 +4402,17 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                         close();
                                         router.push(`/dashboard/purchase/loading-form`);
                                       }}>
-                                        <Truck className="mr-2.5 h-4 w-4 text-blue-600 dark:text-blue-400" /> Transfer to Loading
+                                        <Truck className="mr-2.5 h-4 w-4 text-blue-600 dark:text-blue-400" /> {translateHeader(currentLanguage, "Transfer to Loading")}
                                       </button>
                                     )}
                                     <button className="flex w-full items-center px-4 py-2.5 text-xs text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition" onClick={() => { setViewingRow(row); close(); }}>
-                                      <Eye className="mr-2.5 h-4 w-4 text-blue-600" /> Open Full Bill
+                                      <Eye className="mr-2.5 h-4 w-4 text-blue-600" /> {translateHeader(currentLanguage, "Open Full Bill")}
                                     </button>
                                     <button className="flex w-full items-center px-4 py-2.5 text-xs text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition" onClick={() => { handleOpenA4PDF(row, true); close(); }}>
-                                      <Printer className="mr-2.5 h-4 w-4 text-slate-500" /> Print Statement
+                                      <Printer className="mr-2.5 h-4 w-4 text-slate-500" /> {translateHeader(currentLanguage, "Print Statement")}
                                     </button>
                                     <button className="flex w-full items-center px-4 py-2.5 text-xs text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition" onClick={() => { handleOpenA4PDF(row, false); close(); }}>
-                                      <FileText className="mr-2.5 h-4 w-4 text-slate-500" /> View Statement
+                                      <FileText className="mr-2.5 h-4 w-4 text-slate-500" /> {translateHeader(currentLanguage, "View Statement")}
                                     </button>
                                     <button className="flex w-full items-center px-4 py-2.5 text-xs text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800 transition" onClick={() => {
                                       try {
@@ -4421,7 +4423,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                         logClientError(`Error in Show Payment History click: ${e.stack || e.message || String(e)}`);
                                       }
                                     }}>
-                                      {isExpanded ? <XCircle className="mr-2.5 h-4 w-4 text-slate-500" /> : <Plus className="mr-2.5 h-4 w-4 text-slate-500" />} {isExpanded ? "Hide Payment History" : "Show Payment History"}
+                                      {isExpanded ? <XCircle className="mr-2.5 h-4 w-4 text-slate-500" /> : <Plus className="mr-2.5 h-4 w-4 text-slate-500" />} {isExpanded ? (translateHeader(currentLanguage, "Hide Details") + " - " + translateHeader(currentLanguage, "Payment History")) : (translateHeader(currentLanguage, "Show Details") + " - " + translateHeader(currentLanguage, "Payment History"))}
                                     </button>
                                     {activeMode === "advance_completed" && (
                                       <>
@@ -4430,7 +4432,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                                           close();
                                           router.push(`/dashboard/journal/purchase-order-payment/advance?purchaseOrderNo=${encodeURIComponent(row.purchase_order_no)}`);
                                         }}>
-                                          <RefreshCw className="mr-2.5 h-4 w-4 text-indigo-500" /> Revert & Edit Advance
+                                          <RefreshCw className="mr-2.5 h-4 w-4 text-indigo-500" /> {translateHeader(currentLanguage, "Revert & Edit Advance") || "Revert & Edit Advance"}
                                         </button>
                                       </>
                                     )}
@@ -4441,7 +4443,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                           </div>
                         </div>
                       </td>
-                                        </tr>
+                    </tr>
                                         {isExpanded && (
                                           <tr onClick={(e) => e.stopPropagation()} className="bg-slate-50/50 dark:bg-slate-900/30">
                                             <td colSpan={17} className="p-3 border-b border-slate-200 dark:border-slate-800">
