@@ -30,6 +30,7 @@ import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
+import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
 
 export type RoznamchaEntryCategory = "business" | "bank" | "cash" | "invoice" | "transfer";
 
@@ -433,12 +434,65 @@ export function RoznamchaTypeReportView({
   }
 
   function printReport() {
-    printReportTable({
+    // Daily/period Roznamcha journal via the reusable journal print engine (real data only).
+    const scope = sessionInfo?.scopes?.summary;
+    const jrows = rows.map((row, idx) => {
+      const line = primaryLine(row);
+      const debit = Number(line?.debit || 0);
+      const credit = Number(line?.credit || 0);
+      return {
+        sno: String(idx + 1),
+        date: cleanDate(row.entry_date || row.created_at),
+        serial: entrySerial(row),
+        country: row.countries?.name ?? "",
+        branch: branchName(row),
+        user: row.profiles?.full_name ?? "",
+        type: formatEntryType(row.source_transaction_type || row.type),
+        account: line?.account_number || line?.ledgers?.code || "",
+        narration: (row.narration ?? "").slice(0, 60),
+        currency: line?.currency ?? row.countries?.currency_code ?? "",
+        debit: debit ? fmtNumber(debit) : "-",
+        credit: credit ? fmtNumber(credit) : "-",
+        status: row.status
+      };
+    });
+    openJournalReportWindow({
+      lang: currentLang,
+      autoPrint: true,
       title: pageTitle,
-      subtitle: `${fromDate} to ${toDate} · Generated ${new Date().toLocaleString()}`,
-      rows,
-      totals: { debit: data?.totalDebit ?? 0, credit: data?.totalCredit ?? 0 },
-      lang: activeLang
+      subtitle: tt("jrn.roznamcha_journal", "Roznamcha Journal"),
+      overviewLabel: tt("jrn.overview", "Journal Overview"),
+      scopeName: pageTitle,
+      reportIdPrefix: "ROZ",
+      reportIdValue: entryCategory,
+      chips: [
+        { label: tt("jrn.date_range", "Date Range"), value: `${fromDate} → ${toDate}` },
+        { label: tt("rozrep.country", "Country"), value: scope?.countryName },
+        { label: tt("rozrep.branch", "Branch"), value: scope?.branchDisplayName || scope?.branchName }
+      ],
+      kpis: [
+        { label: tt("bankroz.total_debit", "Total Debit"), value: fmtNumber(data?.totalDebit ?? 0), tone: "debit" },
+        { label: tt("bankroz.total_credit", "Total Credit"), value: fmtNumber(data?.totalCredit ?? 0), tone: "credit" },
+        { label: tt("jrn.net_balance", "Net Balance"), value: fmtNumber(data?.netBalance ?? 0), tone: "current" },
+        { label: tt("jrn.entry_count", "Entry Count"), value: String(data?.totalCount ?? rows.length), tone: "open" }
+      ],
+      columns: [
+        { key: "sno", label: tt("rozrep.sno", "S.No") },
+        { key: "date", label: tt("rozrep.date", "Date") },
+        { key: "serial", label: tt("rozrep.entry_serial", "Entry Serial") },
+        { key: "country", label: tt("rozrep.country", "Country") },
+        { key: "branch", label: tt("rozrep.branch", "Branch") },
+        { key: "user", label: tt("rozrep.user", "User") },
+        { key: "type", label: tt("rozrep.entry_type", "Entry Type") },
+        { key: "account", label: tt("rozrep.account_no", "Account No") },
+        { key: "narration", label: tt("rozrep.narration", "Narration / Remarks") },
+        { key: "currency", label: tt("rozrep.currency", "Currency") },
+        { key: "debit", label: tt("rozrep.debit", "Debit"), num: true },
+        { key: "credit", label: tt("rozrep.credit", "Credit"), num: true },
+        { key: "status", label: tt("rozrep.status", "Status") }
+      ],
+      rows: jrows,
+      totals: { debit: fmtNumber(data?.totalDebit ?? 0), credit: fmtNumber(data?.totalCredit ?? 0) }
     });
   }
 
@@ -549,7 +603,7 @@ export function RoznamchaTypeReportView({
                   className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                 >
                   <Printer className="h-3.5 w-3.5 text-blue-600" />
-                  Print / PDF
+                  {tt("report.print_pdf_document", "Print / PDF")}
                 </button>
                 <button
                   type="button"
@@ -560,7 +614,7 @@ export function RoznamchaTypeReportView({
                   className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                 >
                   <DownloadActionIcon className="h-3.5 w-3.5 text-emerald-600" />
-                  Export to CSV
+                  {tt("report.export_csv", "Export CSV")}
                 </button>
               </div>
             </>
@@ -577,7 +631,7 @@ export function RoznamchaTypeReportView({
               <Users className="h-3 w-3" />
             </div>
             <h4 className="text-[11px] font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
-              1. BRANCH & USER DETAILS
+              1. {tt("rozrep.branch_user_details", "BRANCH & USER DETAILS")}
             </h4>
           </div>
           <div className="p-3 flex flex-col gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
@@ -632,7 +686,7 @@ export function RoznamchaTypeReportView({
               <DollarSign className="h-3 w-3" />
             </div>
             <h4 className="text-[11px] font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
-              2. GLOBAL FINANCIAL SUMMARY
+              2. {tt("rozrep.global_financial_summary", "GLOBAL FINANCIAL SUMMARY")}
             </h4>
           </div>
           <div className="p-3 flex flex-col gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">

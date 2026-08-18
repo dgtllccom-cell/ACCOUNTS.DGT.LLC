@@ -212,6 +212,7 @@ export type UiKey =
   | "rozrep.country_label" | "rozrep.branch_name_label" | "rozrep.user_id_label"
   | "rozrep.user_name_label" | "rozrep.role_label" | "rozrep.datetime_label"
   | "rozrep.status_label" | "rozrep.active" | "rozrep.total_global_entries"
+  | "rozrep.branch_user_details" | "rozrep.global_financial_summary"
   | "rozrep.total_bill_entries" | "rozrep.cleared_entries" | "rozrep.remaining_entries"
   | "rozrep.system_status" | "rozrep.online_synced" | "rozrep.from_date" | "rozrep.to_date"
   | "rozrep.all_types" | "rozrep.debit_credit" | "rozrep.all" | "rozrep.draft" | "rozrep.posted"
@@ -237,6 +238,10 @@ export type UiKey =
   | "branch.sec_location" | "branch.sec_hierarchy" | "branch.sec_contact" | "branch.sec_company"
   | "branch.branch_name" | "branch.branch_code" | "branch.branch_type" | "branch.parent_branch"
   | "branch.owner_name" | "branch.serial" | "branch.whatsapp"
+  // Journal / voucher print engines (jrn.* / vch.*)
+  | "jrn.overview" | "jrn.net_balance" | "jrn.entry_count" | "jrn.roznamcha_journal" | "jrn.date_range"
+  | "vch.overview" | "vch.entry_voucher" | "vch.prepared_by" | "vch.checked_by" | "vch.approved_by"
+  | "vch.received_by"
   | "nav.super_admin_dashboard"
   | "nav.country_dashboard"
   | "nav.city_dashboard"
@@ -1028,6 +1033,27 @@ export type UiKey =
   | "report.scope_entire_country"
   | "report.scope_main_branch"
   | "report.scope_city_branch"
+  | "report.all_countries"
+  | "report.united_arab_emirates"
+  | "report.all_countries_global"
+  | "report.all_branches"
+  | "report.all_global_branches"
+  | "report.start_date"
+  | "report.today"
+  | "report.to"
+  | "report.as_of"
+  | "report.current_period"
+  | "report.all_countries_report"
+  | "report.country_branch_breakdown_directory"
+  | "report.click_a_country_to_filter_instantly"
+  | "report.active_countries"
+  | "report.branches_active"
+  | "report.hide_details"
+  | "report.show_details"
+  | "report.explore"
+  | "report.active_types"
+  | "report.current_filter"
+  | "report.all_categories"
   | "report.generated_by"
   | "report.applied_filters"
   | "report.real_data"
@@ -1036,6 +1062,24 @@ export type UiKey =
   | "report.no_field_changes"
   | "report.no_history"
   | "report.edit_history"
+  | "report.branch_user_details"
+  | "report.global_financial_summary"
+  | "report.loading_report_engine"
+  | "report.failed_to_load_metadata"
+  | "report.country_label"
+  | "report.branch_label"
+  | "report.currency_label"
+  | "report.records"
+  | "report.page"
+  | "report.field"
+  | "report.before"
+  | "report.after"
+  | "report.who_changed_it"
+  | "report.login_user_id"
+  | "report.main_city_branch"
+  | "report.reason"
+  | "report.total_branches"
+  | "report.records_loaded"
   // ERP Reports System — KPI cards
   | "report.kpi_total_records"
   | "report.kpi_total_debit"
@@ -4053,6 +4097,8 @@ const en: Dict = {
   "rozrep.user_name_label": "USER NAME:",
   "rozrep.role_label": "ROLE:",
   "rozrep.datetime_label": "DATE & TIME:",
+  "rozrep.branch_user_details": "BRANCH & USER DETAILS",
+  "rozrep.global_financial_summary": "GLOBAL FINANCIAL SUMMARY",
   "rozrep.status_label": "STATUS:",
   "rozrep.active": "ACTIVE",
   "rozrep.total_global_entries": "TOTAL GLOBAL ENTRIES:",
@@ -4147,6 +4193,17 @@ const en: Dict = {
   "branch.owner_name": "Owner / Manager",
   "branch.serial": "Serial No.",
   "branch.whatsapp": "WhatsApp",
+  "jrn.overview": "Journal Overview",
+  "jrn.net_balance": "Net Balance",
+  "jrn.entry_count": "Entry Count",
+  "jrn.roznamcha_journal": "Roznamcha Journal",
+  "jrn.date_range": "Date Range",
+  "vch.overview": "Voucher Details",
+  "vch.entry_voucher": "Roznamcha Entry Voucher",
+  "vch.prepared_by": "Prepared By",
+  "vch.checked_by": "Checked By",
+  "vch.approved_by": "Approved By",
+  "vch.received_by": "Received By",
   "nav.customer_order": "Customer Order",
   "nav.open_navigation": "Open navigation",
   "nav.close_navigation": "Close navigation",
@@ -4467,7 +4524,26 @@ const en: Dict = {
   "report.exchange_rate": "Exchange Rate Report",
   "report.bills": "Bills and Invoices Report", "report.payments": "Payments Report", "report.employee": "Employee Report", "report.branch": "Branch Report", "report.project": "Project Report",
   "report.filter_scope": "Scope", "report.filter_project": "Project", "report.filter_all_projects": "All Projects", "report.scope_entire_country": "Entire Country", "report.scope_main_branch": "Main Branch", "report.scope_city_branch": "City Branch",
+  "report.all_countries": "All Countries", "report.united_arab_emirates": "United Arab Emirates", "report.all_countries_global": "All Countries (Global)", "report.all_branches": "ALL BRANCHES", "report.all_global_branches": "ALL GLOBAL BRANCHES", "report.start_date": "Start", "report.today": "Today", "report.to": "To", "report.as_of": "As of", "report.current_period": "Current Period",
+  "report.all_countries_report": "All Countries Report", "report.country_branch_breakdown_directory": "Country & Branch Breakdown Directory", "report.click_a_country_to_filter_instantly": "Click a country to filter instantly", "report.active_countries": "ACTIVE COUNTRIES", "report.branches_active": "BRANCHES ACTIVE", "report.hide_details": "Hide Details", "report.show_details": "Show Details", "report.explore": "EXPLORE", "report.active_types": "Active Types", "report.current_filter": "Current Filter", "report.all_categories": "All Categories",
   "report.generated_by": "Generated by", "report.applied_filters": "Applied report snapshot", "report.real_data": "Real database data", "report.record_details": "Report record details", "report.activity_history": "Activity and edit history", "report.no_field_changes": "No field-level changes recorded", "report.no_history": "No edit-history entries recorded for this record.", "report.edit_history": "Edit History",
+  "report.branch_user_details": "Branch & User Details", "report.global_financial_summary": "Global Financial Summary",
+  "report.loading_report_engine": "Loading Report Engine...",
+  "report.failed_to_load_metadata": "Failed to load report metadata",
+  "report.country_label": "Country",
+  "report.branch_label": "Branch",
+  "report.currency_label": "Currency",
+  "report.records": "records",
+  "report.page": "Page",
+  "report.field": "Field",
+  "report.before": "Before",
+  "report.after": "After",
+  "report.who_changed_it": "Who changed it",
+  "report.login_user_id": "Login/User ID",
+  "report.main_city_branch": "Main / City Branch",
+  "report.reason": "Reason",
+  "report.total_branches": "Total Branches",
+  "report.records_loaded": "Records Loaded",
   "report.col_opening": "Opening", "report.col_closing": "Closing", "report.col_type": "Type", "report.col_party": "Party", "report.col_paid": "Paid", "report.col_outstanding": "Outstanding", "report.col_posting_status": "Posting Status", "report.col_payment_type": "Payment Type", "report.col_action": "Action", "report.col_resource": "Resource", "report.col_ip": "IP Address", "report.col_department": "Department", "report.col_designation": "Designation", "report.col_joining_date": "Joining Date", "report.col_basic_salary": "Basic Salary", "report.col_allowance": "Allowance", "report.col_deduction": "Deduction", "report.col_net_salary": "Net Salary", "report.col_city": "City", "report.col_created": "Created", "report.col_module": "Module", "report.col_entry_reference": "Entry No. / Reference", "report.col_main_branch": "Main Branch", "report.col_city_branch": "City Branch", "report.col_edit_count": "Edit Count", "report.col_last_edited": "Last Edited", "report.col_history": "History [+]", "report.version_original": "Original", "report.version_edit": "Edit", "report.version_current": "Current Version", "report.changed_by": "Changed by", "report.login_user_id": "Login/User ID", "report.role": "Role", "report.reason": "Reason",
   // ERP Reports System — panel titles
   "report.panel_super_admin": "Super Admin Reports Panel",
@@ -6430,7 +6506,26 @@ const ur: Dict = {
   "report.exchange_rate": "ایکسچینج ریٹ رپورٹ",
   "report.bills": "بل اور انوائس رپورٹ", "report.payments": "ادائیگیوں کی رپورٹ", "report.employee": "ملازمین کی رپورٹ", "report.branch": "برانچ رپورٹ", "report.project": "پروجیکٹ رپورٹ",
   "report.filter_scope": "دائرہ", "report.filter_project": "پروجیکٹ", "report.filter_all_projects": "تمام پروجیکٹس", "report.scope_entire_country": "پورا ملک", "report.scope_main_branch": "مین برانچ", "report.scope_city_branch": "سٹی برانچ",
+  "report.all_countries": "تمام ممالک", "report.united_arab_emirates": "متحدہ عرب امارات", "report.all_countries_global": "تمام ممالک (عالمی)", "report.all_branches": "تمام برانچز", "report.all_global_branches": "تمام عالمی برانچز", "report.start_date": "آغاز", "report.today": "آج", "report.to": "سے", "report.as_of": "بمطابق", "report.current_period": "موجودہ مدت",
+  "report.all_countries_report": "تمام ممالک کی رپورٹ", "report.country_branch_breakdown_directory": "ملک اور برانچ تفصیلی فہرست", "report.click_a_country_to_filter_instantly": "فوری فلٹر کے لیے ملک منتخب کریں", "report.active_countries": "فعال ممالک", "report.branches_active": "فعال برانچز", "report.hide_details": "تفصیلات چھپائیں", "report.show_details": "تفصیلات دکھائیں", "report.explore": "جائزہ لیں", "report.active_types": "فعال اقسام", "report.current_filter": "موجودہ فلٹر", "report.all_categories": "تمام اقسام",
   "report.generated_by": "تیار کنندہ", "report.applied_filters": "لاگو رپورٹ خلاصہ", "report.real_data": "حقیقی ڈیٹابیس ڈیٹا", "report.record_details": "رپورٹ ریکارڈ کی تفصیل", "report.activity_history": "سرگرمی اور ترمیمی تاریخ", "report.no_field_changes": "فیلڈ کی تبدیلی درج نہیں", "report.no_history": "اس ریکارڈ کی ترمیمی تاریخ موجود نہیں۔", "report.edit_history": "ترمیمی تاریخ",
+  "report.branch_user_details": "برانچ اور صارف کی تفصیلات", "report.global_financial_summary": "عالمی مالی خلاصہ",
+  "report.loading_report_engine": "رپورٹ انجن لوڈ ہو رہا ہے...",
+  "report.failed_to_load_metadata": "رپورٹ میٹا ڈیٹا لوڈ نہیں ہو سکا",
+  "report.country_label": "ملک",
+  "report.branch_label": "برانچ",
+  "report.currency_label": "کرنسی",
+  "report.records": "ریکارڈز",
+  "report.page": "صفحہ",
+  "report.field": "فیلڈ",
+  "report.before": "پہلے",
+  "report.after": "بعد میں",
+  "report.who_changed_it": "کس نے بدلا",
+  "report.login_user_id": "لاگ اِن / یوزر آئی ڈی",
+  "report.main_city_branch": "مین / سٹی برانچ",
+  "report.reason": "وجہ",
+  "report.total_branches": "کل برانچز",
+  "report.records_loaded": "ریکارڈز لوڈ ہو گئے",
   "report.col_opening": "ابتدائی", "report.col_closing": "اختتامی", "report.col_type": "قسم", "report.col_party": "فریق", "report.col_paid": "ادا شدہ", "report.col_outstanding": "واجب الادا", "report.col_posting_status": "پوسٹنگ حالت", "report.col_payment_type": "ادائیگی کی قسم", "report.col_action": "عمل", "report.col_resource": "وسیلہ", "report.col_ip": "آئی پی پتہ", "report.col_department": "شعبہ", "report.col_designation": "عہدہ", "report.col_joining_date": "تاریخ شمولیت", "report.col_basic_salary": "بنیادی تنخواہ", "report.col_allowance": "الاؤنس", "report.col_deduction": "کٹوتی", "report.col_net_salary": "خالص تنخواہ", "report.col_city": "شہر", "report.col_created": "تخلیق شدہ", "report.col_module": "ماڈیول", "report.col_entry_reference": "انٹری نمبر / حوالہ", "report.col_main_branch": "مرکزی برانچ", "report.col_city_branch": "شہری برانچ", "report.col_edit_count": "ترمیمی تعداد", "report.col_last_edited": "آخری ترمیم", "report.col_history": "تاریخ [+]", "report.version_original": "اصل", "report.version_edit": "ترمیم", "report.version_current": "موجودہ ورژن", "report.changed_by": "تبدیل کنندہ", "report.login_user_id": "لاگ اِن / صارف آئی ڈی", "report.role": "کردار", "report.reason": "وجہ",
   "report.panel_super_admin": "سپر ایڈمن رپورٹ پینل",
   "report.panel_country": "کنٹری رپورٹ پینل",
@@ -6827,6 +6922,8 @@ const ur: Dict = {
   "rozrep.user_name_label": "صارف کا نام:",
   "rozrep.role_label": "کردار:",
   "rozrep.datetime_label": "تاریخ اور وقت:",
+  "rozrep.branch_user_details": "برانچ اور صارف کی تفصیلات",
+  "rozrep.global_financial_summary": "عالمی مالی خلاصہ",
   "rozrep.status_label": "حیثیت:",
   "rozrep.active": "فعال",
   "rozrep.total_global_entries": "کل عالمی اندراجات:",
@@ -6921,6 +7018,17 @@ const ur: Dict = {
   "branch.owner_name": "مالک / منیجر",
   "branch.serial": "سیریل نمبر",
   "branch.whatsapp": "واٹس ایپ",
+  "jrn.overview": "جرنل کا جائزہ",
+  "jrn.net_balance": "خالص بیلنس",
+  "jrn.entry_count": "اندراجات کی تعداد",
+  "jrn.roznamcha_journal": "روزنامچہ جرنل",
+  "jrn.date_range": "تاریخ کی حد",
+  "vch.overview": "واؤچر کی تفصیلات",
+  "vch.entry_voucher": "روزنامچہ اندراج واؤچر",
+  "vch.prepared_by": "تیار کنندہ",
+  "vch.checked_by": "جانچ کنندہ",
+  "vch.approved_by": "منظور کنندہ",
+  "vch.received_by": "وصول کنندہ",
   "nav.customer_order": "کسٹمر آرڈر",
   "nav.open_navigation": "نیویگیشن کھولیں",
   "nav.close_navigation": "نیویگیشن بند کریں",
@@ -8813,7 +8921,26 @@ const ar: Dict = {
   "report.exchange_rate": "تقرير أسعار الصرف",
   "report.bills": "تقرير الفواتير", "report.payments": "تقرير المدفوعات", "report.employee": "تقرير الموظفين", "report.branch": "تقرير الفروع", "report.project": "تقرير المشاريع",
   "report.filter_scope": "النطاق", "report.filter_project": "المشروع", "report.filter_all_projects": "كل المشاريع", "report.scope_entire_country": "الدولة بأكملها", "report.scope_main_branch": "الفرع الرئيسي", "report.scope_city_branch": "فرع المدينة",
+  "report.all_countries": "كل الدول", "report.united_arab_emirates": "الإمارات العربية المتحدة", "report.all_countries_global": "كل الدول (عالمي)", "report.all_branches": "جميع الفروع", "report.all_global_branches": "جميع الفروع العالمية", "report.start_date": "البداية", "report.today": "اليوم", "report.to": "إلى", "report.as_of": "اعتبارًا من", "report.current_period": "الفترة الحالية",
+  "report.all_countries_report": "تقرير كل الدول", "report.country_branch_breakdown_directory": "دليل تفصيل الدول والفروع", "report.click_a_country_to_filter_instantly": "انقر على الدولة للتصفية فورًا", "report.active_countries": "الدول النشطة", "report.branches_active": "الفروع النشطة", "report.hide_details": "إخفاء التفاصيل", "report.show_details": "إظهار التفاصيل", "report.explore": "استعرض", "report.active_types": "الأنواع النشطة", "report.current_filter": "الفلتر الحالي", "report.all_categories": "كل الفئات",
   "report.generated_by": "تم الإنشاء بواسطة", "report.applied_filters": "ملخص التقرير المطبق", "report.real_data": "بيانات قاعدة بيانات حقيقية", "report.record_details": "تفاصيل سجل التقرير", "report.activity_history": "سجل النشاط والتعديلات", "report.no_field_changes": "لا توجد تغييرات مسجلة", "report.no_history": "لا يوجد سجل تعديلات لهذا السجل.", "report.edit_history": "سجل التعديلات",
+  "report.branch_user_details": "تفاصيل الفرع والمستخدم", "report.global_financial_summary": "الملخص المالي العالمي",
+  "report.loading_report_engine": "جارٍ تحميل محرك التقارير...",
+  "report.failed_to_load_metadata": "فشل تحميل بيانات التقرير الوصفية",
+  "report.country_label": "الدولة",
+  "report.branch_label": "الفرع",
+  "report.currency_label": "العملة",
+  "report.records": "سجلات",
+  "report.page": "الصفحة",
+  "report.field": "الحقل",
+  "report.before": "قبل",
+  "report.after": "بعد",
+  "report.who_changed_it": "من قام بالتغيير",
+  "report.login_user_id": "تسجيل الدخول / معرّف المستخدم",
+  "report.main_city_branch": "الفرع الرئيسي / فرع المدينة",
+  "report.reason": "السبب",
+  "report.total_branches": "إجمالي الفروع",
+  "report.records_loaded": "تم تحميل السجلات",
   "report.col_opening": "الرصيد الافتتاحي", "report.col_closing": "الرصيد الختامي", "report.col_type": "النوع", "report.col_party": "الطرف", "report.col_paid": "المدفوع", "report.col_outstanding": "المستحق", "report.col_posting_status": "حالة الترحيل", "report.col_payment_type": "نوع الدفع", "report.col_action": "الإجراء", "report.col_resource": "المورد", "report.col_ip": "عنوان IP", "report.col_department": "القسم", "report.col_designation": "المسمى الوظيفي", "report.col_joining_date": "تاريخ الانضمام", "report.col_basic_salary": "الراتب الأساسي", "report.col_allowance": "البدل", "report.col_deduction": "الخصم", "report.col_net_salary": "صافي الراتب", "report.col_city": "المدينة", "report.col_created": "تاريخ الإنشاء", "report.col_module": "الوحدة", "report.col_entry_reference": "رقم القيد / المرجع", "report.col_main_branch": "الفرع الرئيسي", "report.col_city_branch": "فرع المدينة", "report.col_edit_count": "عدد التعديلات", "report.col_last_edited": "آخر تعديل", "report.col_history": "السجل [+]", "report.version_original": "الأصل", "report.version_edit": "تعديل", "report.version_current": "النسخة الحالية", "report.changed_by": "تم التعديل بواسطة", "report.login_user_id": "تسجيل الدخول / معرّف المستخدم", "report.role": "الدور", "report.reason": "السبب",
   "report.panel_super_admin": "لوحة تقارير المسؤول الأعلى",
   "report.panel_country": "لوحة تقارير الدولة",
@@ -9230,6 +9357,8 @@ const ar: Dict = {
   "rozrep.user_name_label": "اسم المستخدم:",
   "rozrep.role_label": "الدور:",
   "rozrep.datetime_label": "التاريخ والوقت:",
+  "rozrep.branch_user_details": "تفاصيل الفرع والمستخدم",
+  "rozrep.global_financial_summary": "الملخص المالي العالمي",
   "rozrep.status_label": "الحالة:",
   "rozrep.active": "نشط",
   "rozrep.total_global_entries": "إجمالي القيود العالمية:",
@@ -9324,6 +9453,17 @@ const ar: Dict = {
   "branch.owner_name": "المالك / المدير",
   "branch.serial": "الرقم التسلسلي",
   "branch.whatsapp": "واتساب",
+  "jrn.overview": "نظرة عامة على اليومية",
+  "jrn.net_balance": "صافي الرصيد",
+  "jrn.entry_count": "عدد القيود",
+  "jrn.roznamcha_journal": "يومية روزنامچه",
+  "jrn.date_range": "النطاق الزمني",
+  "vch.overview": "تفاصيل السند",
+  "vch.entry_voucher": "سند قيد روزنامچه",
+  "vch.prepared_by": "أعدّه",
+  "vch.checked_by": "دقّقه",
+  "vch.approved_by": "اعتمده",
+  "vch.received_by": "استلمه",
   "nav.customer_order": "طلب العميل",
   "nav.open_navigation": "فتح التنقل",
   "nav.close_navigation": "إغلاق التنقل",
@@ -11172,7 +11312,26 @@ const fa: Dict = {
   "report.exchange_rate": "گزارش نرخ ارز",
   "report.bills": "گزارش صورتحساب ها", "report.payments": "گزارش پرداخت ها", "report.employee": "گزارش کارمندان", "report.branch": "گزارش شعبه", "report.project": "گزارش پروژه",
   "report.filter_scope": "دامنه", "report.filter_project": "پروژه", "report.filter_all_projects": "همه پروژه ها", "report.scope_entire_country": "کل کشور", "report.scope_main_branch": "شعبه اصلی", "report.scope_city_branch": "شعبه شهری",
+  "report.all_countries": "همه کشورها", "report.united_arab_emirates": "امارات متحده عربی", "report.all_countries_global": "همه کشورها (سراسری)", "report.all_branches": "همه شعب", "report.all_global_branches": "همه شعب سراسری", "report.start_date": "شروع", "report.today": "امروز", "report.to": "تا", "report.as_of": "تا تاریخ", "report.current_period": "دوره جاری",
+  "report.all_countries_report": "گزارش همه کشورها", "report.country_branch_breakdown_directory": "فهرست تفکیکی کشور و شعبه", "report.click_a_country_to_filter_instantly": "برای فیلتر فوری روی کشور کلیک کنید", "report.active_countries": "کشورهای فعال", "report.branches_active": "شعب فعال", "report.hide_details": "پنهان کردن جزئیات", "report.show_details": "نمایش جزئیات", "report.explore": "بررسی", "report.active_types": "انواع فعال", "report.current_filter": "فیلتر فعلی", "report.all_categories": "همه دسته‌ها",
   "report.generated_by": "تهیه شده توسط", "report.applied_filters": "خلاصه گزارش اعمال شده", "report.real_data": "داده واقعی پایگاه داده", "report.record_details": "جزئیات رکورد گزارش", "report.activity_history": "تاریخچه فعالیت و ویرایش", "report.no_field_changes": "تغییر فیلدی ثبت نشده", "report.no_history": "تاریخچه ویرایشی برای این رکورد ثبت نشده است.", "report.edit_history": "تاریخچه ویرایش",
+  "report.branch_user_details": "جزئیات شعبه و کاربر", "report.global_financial_summary": "خلاصه مالی سراسری",
+  "report.loading_report_engine": "در حال بارگذاری موتور گزارش...",
+  "report.failed_to_load_metadata": "بارگذاری فراداده گزارش ناموفق بود",
+  "report.country_label": "کشور",
+  "report.branch_label": "شعبه",
+  "report.currency_label": "ارز",
+  "report.records": "رکوردها",
+  "report.page": "صفحه",
+  "report.field": "فیلد",
+  "report.before": "قبل",
+  "report.after": "بعد",
+  "report.who_changed_it": "چه کسی تغییر داد",
+  "report.login_user_id": "ورود / شناسه کاربر",
+  "report.main_city_branch": "شعبه اصلی / شعبه شهر",
+  "report.reason": "دلیل",
+  "report.total_branches": "کل شعب",
+  "report.records_loaded": "رکوردها بارگذاری شدند",
   "report.col_opening": "افتتاحیه", "report.col_closing": "اختتامیه", "report.col_type": "نوع", "report.col_party": "طرف حساب", "report.col_paid": "پرداخت شده", "report.col_outstanding": "مانده", "report.col_posting_status": "وضعیت ثبت", "report.col_payment_type": "نوع پرداخت", "report.col_action": "عمل", "report.col_resource": "منبع", "report.col_ip": "نشانی IP", "report.col_department": "بخش", "report.col_designation": "سمت", "report.col_joining_date": "تاریخ شروع", "report.col_basic_salary": "حقوق پایه", "report.col_allowance": "مزایا", "report.col_deduction": "کسورات", "report.col_net_salary": "حقوق خالص", "report.col_city": "شهر", "report.col_created": "ایجاد شده", "report.col_module": "ماژول", "report.col_entry_reference": "شماره / مرجع", "report.col_main_branch": "شعبه اصلی", "report.col_city_branch": "شعبه شهری", "report.col_edit_count": "تعداد ویرایش", "report.col_last_edited": "آخرین ویرایش", "report.col_history": "تاریخچه [+]", "report.version_original": "نسخه اصلی", "report.version_edit": "ویرایش", "report.version_current": "نسخه فعلی", "report.changed_by": "تغییر دهنده", "report.login_user_id": "ورود / شناسه کاربر", "report.role": "نقش", "report.reason": "دلیل",
   "report.panel_super_admin": "پنل گزارشات سوپر ادمین",
   "report.panel_country": "پنل گزارشات کشور",
@@ -11620,6 +11779,8 @@ const fa: Dict = {
   "rozrep.user_name_label": "نام کاربر:",
   "rozrep.role_label": "نقش:",
   "rozrep.datetime_label": "تاریخ و زمان:",
+  "rozrep.branch_user_details": "جزئیات شعبه و کاربر",
+  "rozrep.global_financial_summary": "خلاصه مالی سراسری",
   "rozrep.status_label": "وضعیت:",
   "rozrep.active": "فعال",
   "rozrep.total_global_entries": "مجموع ثبت‌های سراسری:",
@@ -11714,6 +11875,17 @@ const fa: Dict = {
   "branch.owner_name": "مالک / مدیر",
   "branch.serial": "شماره سریال",
   "branch.whatsapp": "واتساپ",
+  "jrn.overview": "نمای کلی دفتر روزنامه",
+  "jrn.net_balance": "مانده خالص",
+  "jrn.entry_count": "تعداد ثبت‌ها",
+  "jrn.roznamcha_journal": "دفتر روزنامچه",
+  "jrn.date_range": "بازه تاریخ",
+  "vch.overview": "جزئیات سند",
+  "vch.entry_voucher": "سند ثبت روزنامچه",
+  "vch.prepared_by": "تهیه‌کننده",
+  "vch.checked_by": "بررسی‌کننده",
+  "vch.approved_by": "تأییدکننده",
+  "vch.received_by": "دریافت‌کننده",
   "nav.customer_order": "سفارش مشتری",
   "nav.open_navigation": "باز کردن ناوبری",
   "nav.close_navigation": "بستن ناوبری",
@@ -13568,7 +13740,26 @@ const ps: Dict = {
   "report.exchange_rate": "د اسعارو نرخ راپور",
   "report.bills": "د بلونو او انوایسونو راپور", "report.payments": "د تادیاتو راپور", "report.employee": "د کارمندانو راپور", "report.branch": "د څانګې راپور", "report.project": "د پروژې راپور",
   "report.filter_scope": "ساحه", "report.filter_project": "پروژه", "report.filter_all_projects": "ټولې پروژې", "report.scope_entire_country": "ټول هیواد", "report.scope_main_branch": "اصلي څانګه", "report.scope_city_branch": "ښاري څانګه",
+  "report.all_countries": "ټول هېوادونه", "report.united_arab_emirates": "متحده عربي امارات", "report.all_countries_global": "ټول هېوادونه (نړیوال)", "report.all_branches": "ټولې څانګې", "report.all_global_branches": "ټولې نړیوالې څانګې", "report.start_date": "پیل", "report.today": "نن", "report.to": "تر", "report.as_of": "د", "report.current_period": "اوسنۍ موده",
+  "report.all_countries_report": "د ټولو هېوادونو راپور", "report.country_branch_breakdown_directory": "د هېواد او څانګې جلا فهرست", "report.click_a_country_to_filter_instantly": "د فوري فلټر لپاره هېواد وټاکئ", "report.active_countries": "فعال هېوادونه", "report.branches_active": "فعالې څانګې", "report.hide_details": "تفصیل پټ کړئ", "report.show_details": "تفصیل وښایئ", "report.explore": "وپلټئ", "report.active_types": "فعال ډولونه", "report.current_filter": "اوسنی فلټر", "report.all_categories": "ټولې کټګورۍ",
   "report.generated_by": "جوړونکی", "report.applied_filters": "د پلي شوي راپور لنډیز", "report.real_data": "د ډیټابیس ریښتیني معلومات", "report.record_details": "د راپور د ریکارډ تفصیل", "report.activity_history": "د فعالیت او سمون تاریخ", "report.no_field_changes": "د ساحې بدلون نه دی ثبت شوی", "report.no_history": "د دې ریکارډ د سمون تاریخ نشته.", "report.edit_history": "د سمون تاریخ",
+  "report.branch_user_details": "د څانګې او کارونکي تفصیل", "report.global_financial_summary": "نړیوال مالي لنډیز",
+  "report.loading_report_engine": "د راپور انجن لوډ کېږي...",
+  "report.failed_to_load_metadata": "د راپور میټاډاټا لوډ نشو",
+  "report.country_label": "هیواد",
+  "report.branch_label": "څانګه",
+  "report.currency_label": "اسعار",
+  "report.records": "ریکارډونه",
+  "report.page": "پاڼه",
+  "report.field": "فیلډ",
+  "report.before": "مخکې",
+  "report.after": "وروسته",
+  "report.who_changed_it": "چا بدل کړ",
+  "report.login_user_id": "ننوتل / د کارونکي پېژند",
+  "report.main_city_branch": "اصلي / ښاري څانګه",
+  "report.reason": "وجه",
+  "report.total_branches": "ټولې څانګې",
+  "report.records_loaded": "ریکارډونه لوډ شول",
   "report.col_opening": "پیل", "report.col_closing": "پای", "report.col_type": "ډول", "report.col_party": "اړخ", "report.col_paid": "تادیه شوی", "report.col_outstanding": "پاتې", "report.col_posting_status": "د ثبت حالت", "report.col_payment_type": "د تادیې ډول", "report.col_action": "عمل", "report.col_resource": "سرچینه", "report.col_ip": "IP پته", "report.col_department": "څانګه", "report.col_designation": "دنده", "report.col_joining_date": "د شاملېدو نېټه", "report.col_basic_salary": "بنسټیز معاش", "report.col_allowance": "امتیاز", "report.col_deduction": "کسر", "report.col_net_salary": "خالص معاش", "report.col_city": "ښار", "report.col_created": "جوړ شوی", "report.col_module": "ماډیول", "report.col_entry_reference": "د انټري شمېره / مرجع", "report.col_main_branch": "اصلي څانګه", "report.col_city_branch": "ښاري څانګه", "report.col_edit_count": "د سمون شمېر", "report.col_last_edited": "وروستی سمون", "report.col_history": "تاریخچه [+]", "report.version_original": "اصلي", "report.version_edit": "سمون", "report.version_current": "اوسنۍ بڼه", "report.changed_by": "بدلوونکی", "report.login_user_id": "ننوتل / د کارونکي پېژند", "report.role": "رول", "report.reason": "دلیل",
   // ERP Reports — panels
   "report.panel_super_admin": "د سوپر اډمین راپور پینل",
@@ -14037,6 +14228,8 @@ const ps: Dict = {
   "rozrep.user_name_label": "د کارونکي نوم:",
   "rozrep.role_label": "رول:",
   "rozrep.datetime_label": "نېټه او وخت:",
+  "rozrep.branch_user_details": "د څانګې او کارونکي تفصیل",
+  "rozrep.global_financial_summary": "نړیوال مالي لنډیز",
   "rozrep.status_label": "حالت:",
   "rozrep.active": "فعال",
   "rozrep.total_global_entries": "ټول نړیوال ثبتونه:",
@@ -14131,6 +14324,17 @@ const ps: Dict = {
   "branch.owner_name": "مالک / مدیر",
   "branch.serial": "سیریل شمېره",
   "branch.whatsapp": "واټساپ",
+  "jrn.overview": "د جرنل کتنه",
+  "jrn.net_balance": "خالص بیلانس",
+  "jrn.entry_count": "د ثبتونو شمېر",
+  "jrn.roznamcha_journal": "د روزنامچې جرنل",
+  "jrn.date_range": "د نېټې حد",
+  "vch.overview": "د واؤچر جزئیات",
+  "vch.entry_voucher": "د روزنامچې د ثبت واؤچر",
+  "vch.prepared_by": "چمتو کوونکی",
+  "vch.checked_by": "کتونکی",
+  "vch.approved_by": "تصویبوونکی",
+  "vch.received_by": "ترلاسه کوونکی",
   "nav.customer_order": "د پیرودونکي امر",
   "nav.open_navigation": "نیویګیشن خلاص کړئ",
   "nav.close_navigation": "نیویګیشن بند کړئ",
