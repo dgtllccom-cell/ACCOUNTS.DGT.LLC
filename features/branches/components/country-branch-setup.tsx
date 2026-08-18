@@ -27,6 +27,8 @@ import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { getPermissionKeysForTemplate } from "@/lib/permissions/catalog";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
+import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
+import { t } from "@/lib/i18n/ui";
 import type { ContactTypeKey } from "@/features/contact-types/contact-type-api";
 
 type CountryBranchRow = {
@@ -560,13 +562,53 @@ function CountryBranchSetupContent() {
   ]);
 
   function openReport(autoPrint: boolean) {
-    const activeLang = typeof document !== "undefined" ? document.documentElement.lang : "en";
-    openA4ReportWindow({
-      title: "Country Main Branch Report",
-      subtitle: "Store Entry Preview (A4)",
+    const activeLang = (typeof document !== "undefined" ? document.documentElement.lang : "en") || "en";
+    const tt = (key: string, fallback: string) => t(activeLang as never, key as never, fallback);
+    const lb: any = liveBranchData;
+    openMasterProfileReportWindow({
+      lang: activeLang,
       autoPrint,
-      branchData: liveBranchData,
-      lang: activeLang
+      title: tt("branch.report_title_country", "Country Main Branch Profile Report"),
+      subtitle: tt("branch.report_subtitle", "Branch Profile Summary"),
+      overviewLabel: tt("branch.overview", "Branch Profile Overview"),
+      name: lb.branchName,
+      status: lb.branchStatus,
+      createdBy: lb.createdBy,
+      reportIdPrefix: "MBRANCH",
+      reportIdValue: lb.branchCode,
+      meta: [
+        { label: tt("branch.branch_code", "Branch Code"), value: lb.branchCode },
+        { label: tt("branch.branch_type", "Branch Type"), value: lb.branchType },
+        { label: tt("acct.country", "Country"), value: lb.country },
+        { label: tt("acct.currency", "Currency"), value: lb.currency }
+      ],
+      sections: [
+        { title: tt("branch.sec_branch_info", "Branch Information"), rows: [
+          { label: tt("branch.branch_name", "Branch Name"), value: lb.branchName },
+          { label: tt("branch.branch_code", "Branch Code"), value: lb.branchCode },
+          { label: tt("branch.branch_type", "Branch Type"), value: lb.branchType },
+          { label: tt("branch.serial", "Serial No."), value: lb.serialNumber },
+          { label: tt("acct.currency", "Currency"), value: lb.currency },
+          { label: tt("acct.status", "Status"), value: lb.branchStatus }
+        ]},
+        { title: tt("branch.sec_location", "Location & Address"), rows: [
+          { label: tt("acct.country", "Country"), value: lb.country },
+          { label: tt("acct.city", "City"), value: lb.city },
+          { label: tt("acct.address", "Address"), value: lb.fullAddress }
+        ]},
+        { title: tt("branch.sec_company", "Company & Ownership"), rows: [
+          { label: tt("acct.company_name", "Company Name"), value: lb.companyName },
+          { label: tt("branch.owner_name", "Owner / Manager"), value: lb.ownerName },
+          { label: tt("acct.phone", "Phone"), value: lb.ownerPhone || lb.companyPhone },
+          { label: tt("acct.email", "Email"), value: lb.ownerEmail || lb.companyEmail }
+        ]},
+        { title: tt("acct.sec_audit_info", "System / Audit Information"), rows: [
+          { label: tt("acct.created_by", "Created By"), value: lb.createdBy },
+          { label: tt("acct.created_on", "Created On"), value: lb.createdDate },
+          { label: tt("acct.updated_by", "Last Updated By"), value: lb.updatedBy },
+          { label: tt("acct.updated_on", "Last Updated On"), value: lb.updatedDate }
+        ]}
+      ]
     });
   }
 

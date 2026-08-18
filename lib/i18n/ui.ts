@@ -1,4 +1,5 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { translationPendingLabel } from "@/lib/i18n/verified-record-translations";
 
 export type UiKey =
   | "bankroz.title"
@@ -234,10 +235,11 @@ export type UiKey =
   | "acct.reference_no" | "acct.branch" | "acct.remarks" | "acct.remarks_body"
   | "acct.authorized_signature" | "acct.administration" | "acct.no_data"
   // City / Country branch profile report (branch.*)
-  | "branch.report_title" | "branch.report_subtitle" | "branch.overview" | "branch.sec_branch_info"
+  | "branch.report_title" | "branch.report_title_country" | "branch.report_subtitle" | "branch.overview" | "branch.sec_branch_info"
   | "branch.sec_location" | "branch.sec_hierarchy" | "branch.sec_contact" | "branch.sec_company"
   | "branch.branch_name" | "branch.branch_code" | "branch.branch_type" | "branch.parent_branch"
   | "branch.owner_name" | "branch.serial" | "branch.whatsapp"
+  | "cust.report_title" | "cust.report_subtitle" | "cust.overview" | "cust.sec_customer" | "cust.sec_contact" | "cust.contact_person"
   // Journal / voucher print engines (jrn.* / vch.*)
   | "jrn.overview" | "jrn.net_balance" | "jrn.entry_count" | "jrn.roznamcha_journal" | "jrn.date_range"
   | "vch.overview" | "vch.entry_voucher" | "vch.prepared_by" | "vch.checked_by" | "vch.approved_by"
@@ -1887,6 +1889,9 @@ export type UiKey =
   | "common.loading"
   | "common.no_records"
   | "common.select"
+  | "common.clear_selection"
+  | "common.no_matches_found"
+  | "common.searching"
   | "common.confirm"
   | "common.reset"
   | "common.print"
@@ -1903,6 +1908,15 @@ export type UiKey =
   | "common.close"
   | "common.yes"
   | "common.no"
+  | "report.filters"
+  | "report.items"
+  | "report.totals"
+  | "report.official_system_verified_document"
+  | "report.no_records_selected_criteria"
+  | "party.search_placeholder"
+  | "party.searching"
+  | "party.no_matches_found"
+  | "party.clear_selection"
   | "money_exchange.page_title"
   | "money_exchange.section1_title"
   | "money_exchange.branch_label"
@@ -3106,6 +3120,9 @@ const en: Dict = {
   "common.loading": "Loading...",
   "common.no_records": "No Records Found",
   "common.select": "Select",
+  "common.clear_selection": "Clear selection",
+  "common.no_matches_found": "No matches found.",
+  "common.searching": "Searching...",
   "common.confirm": "Confirm",
   "common.reset": "Reset",
   "common.print": "Print",
@@ -4179,6 +4196,7 @@ const en: Dict = {
   "acct.administration": "FMS Administration",
   "acct.no_data": "-",
   "branch.report_title": "City Branch Profile Report",
+  "branch.report_title_country": "Country Main Branch Profile Report",
   "branch.report_subtitle": "Branch Profile Summary",
   "branch.overview": "Branch Profile Overview",
   "branch.sec_branch_info": "Branch Information",
@@ -4193,6 +4211,12 @@ const en: Dict = {
   "branch.owner_name": "Owner / Manager",
   "branch.serial": "Serial No.",
   "branch.whatsapp": "WhatsApp",
+  "cust.report_title": "Customer Profile Report",
+  "cust.report_subtitle": "Customer Profile Summary",
+  "cust.overview": "Customer Profile Overview",
+  "cust.sec_customer": "Customer Information",
+  "cust.sec_contact": "Contact Information",
+  "cust.contact_person": "Contact Person",
   "jrn.overview": "Journal Overview",
   "jrn.net_balance": "Net Balance",
   "jrn.entry_count": "Entry Count",
@@ -4535,6 +4559,15 @@ const en: Dict = {
   "report.currency_label": "Currency",
   "report.records": "records",
   "report.page": "Page",
+  "report.filters": "Filters",
+  "report.items": "items",
+  "report.totals": "Totals",
+  "report.official_system_verified_document": "Official System Verified Document",
+  "report.no_records_selected_criteria": "No records found for the selected criteria.",
+  "party.search_placeholder": "Search by name, code, mobile, or company...",
+  "party.searching": "Searching...",
+  "party.no_matches_found": "No matching persons or entities found",
+  "party.clear_selection": "Clear selection",
   "report.field": "Field",
   "report.before": "Before",
   "report.after": "After",
@@ -5559,6 +5592,9 @@ const ur: Dict = {
   "common.loading": "لوڈ ہو رہا ہے...",
   "common.no_records": "کوئی ریکارڈ نہیں ملا",
   "common.select": "منتخب کریں",
+  "common.clear_selection": "انتخاب صاف کریں",
+  "common.no_matches_found": "کوئی مماثلت نہیں ملی۔",
+  "common.searching": "تلاش ہو رہی ہے...",
   "common.confirm": "تصدیق کریں",
   "common.reset": "دوبارہ ترتیب دیں",
   "common.print": "پرنٹ کریں",
@@ -6603,6 +6639,15 @@ const ur: Dict = {
   "report.scope_global": "گلوبل",
   "report.scope_country": "ملک",
   "report.scope_branch": "برانچ",
+  "report.filters": "فلٹرز",
+  "report.items": "آئٹمز",
+  "report.totals": "کل",
+  "report.official_system_verified_document": "سرکاری طور پر تصدیق شدہ دستاویز",
+  "report.no_records_selected_criteria": "منتخب معیار کے مطابق کوئی ریکارڈ نہیں ملا۔",
+  "party.search_placeholder": "نام، کوڈ، موبائل یا کمپنی سے تلاش کریں...",
+  "party.searching": "تلاش ہو رہی ہے...",
+  "party.no_matches_found": "کوئی مماثل شخص یا ادارہ نہیں ملا",
+  "party.clear_selection": "انتخاب صاف کریں",
   "report.col_date": "تاریخ",
   "report.col_serial": "سیریل",
   "report.col_description": "تفصیل",
@@ -7004,6 +7049,7 @@ const ur: Dict = {
   "acct.administration": "ایف ایم ایس انتظامیہ",
   "acct.no_data": "-",
   "branch.report_title": "سٹی برانچ پروفائل رپورٹ",
+  "branch.report_title_country": "ملکی مرکزی برانچ پروفائل رپورٹ",
   "branch.report_subtitle": "برانچ پروفائل خلاصہ",
   "branch.overview": "برانچ پروفائل کا جائزہ",
   "branch.sec_branch_info": "برانچ کی معلومات",
@@ -7018,6 +7064,12 @@ const ur: Dict = {
   "branch.owner_name": "مالک / منیجر",
   "branch.serial": "سیریل نمبر",
   "branch.whatsapp": "واٹس ایپ",
+  "cust.report_title": "کسٹمر پروفائل رپورٹ",
+  "cust.report_subtitle": "کسٹمر پروفائل خلاصہ",
+  "cust.overview": "کسٹمر پروفائل کا جائزہ",
+  "cust.sec_customer": "کسٹمر کی معلومات",
+  "cust.sec_contact": "رابطہ کی معلومات",
+  "cust.contact_person": "رابطہ فرد",
   "jrn.overview": "جرنل کا جائزہ",
   "jrn.net_balance": "خالص بیلنس",
   "jrn.entry_count": "اندراجات کی تعداد",
@@ -8003,6 +8055,9 @@ const ar: Dict = {
   "common.loading": "جارٍ التحميل...",
   "common.no_records": "لا توجد سجلات",
   "common.select": "اختر",
+  "common.clear_selection": "مسح الاختيار",
+  "common.no_matches_found": "لم يتم العثور على نتائج مطابقة.",
+  "common.searching": "جارٍ البحث...",
   "common.confirm": "تأكيد",
   "common.reset": "إعادة تعيين",
   "common.print": "طباعة",
@@ -9018,6 +9073,15 @@ const ar: Dict = {
   "report.scope_global": "عالمي",
   "report.scope_country": "الدولة",
   "report.scope_branch": "الفرع",
+  "report.filters": "الفلاتر",
+  "report.items": "عناصر",
+  "report.totals": "الإجماليات",
+  "report.official_system_verified_document": "مستند معتمد من النظام",
+  "report.no_records_selected_criteria": "لم يتم العثور على سجلات للمعايير المحددة.",
+  "party.search_placeholder": "ابحث بالاسم أو الرمز أو الجوال أو الشركة...",
+  "party.searching": "جارٍ البحث...",
+  "party.no_matches_found": "لم يتم العثور على أشخاص أو كيانات مطابقة",
+  "party.clear_selection": "مسح الاختيار",
   "report.col_date": "التاريخ",
   "report.col_serial": "رقم تسلسلي",
   "report.col_description": "وصف",
@@ -9439,6 +9503,7 @@ const ar: Dict = {
   "acct.administration": "إدارة FMS",
   "acct.no_data": "-",
   "branch.report_title": "تقرير ملف فرع المدينة",
+  "branch.report_title_country": "تقرير ملف الفرع الرئيسي للدولة",
   "branch.report_subtitle": "ملخص ملف الفرع",
   "branch.overview": "نظرة عامة على ملف الفرع",
   "branch.sec_branch_info": "معلومات الفرع",
@@ -9453,6 +9518,12 @@ const ar: Dict = {
   "branch.owner_name": "المالك / المدير",
   "branch.serial": "الرقم التسلسلي",
   "branch.whatsapp": "واتساب",
+  "cust.report_title": "تقرير ملف العميل",
+  "cust.report_subtitle": "ملخص ملف العميل",
+  "cust.overview": "نظرة عامة على ملف العميل",
+  "cust.sec_customer": "معلومات العميل",
+  "cust.sec_contact": "معلومات الاتصال",
+  "cust.contact_person": "الشخص المسؤول",
   "jrn.overview": "نظرة عامة على اليومية",
   "jrn.net_balance": "صافي الرصيد",
   "jrn.entry_count": "عدد القيود",
@@ -10446,6 +10517,9 @@ const fa: Dict = {
   "common.loading": "در حال بارگذاری...",
   "common.no_records": "رکوردی یافت نشد",
   "common.select": "انتخاب کنید",
+  "common.clear_selection": "پاک کردن انتخاب",
+  "common.no_matches_found": "هیچ نتیجه‌ای یافت نشد.",
+  "common.searching": "در حال جستجو...",
   "common.confirm": "تأیید",
   "common.reset": "بازنشانی",
   "common.print": "چاپ",
@@ -11409,6 +11483,15 @@ const fa: Dict = {
   "report.scope_global": "جهانی",
   "report.scope_country": "کشور",
   "report.scope_branch": "شعبه",
+  "report.filters": "فیلترها",
+  "report.items": "موارد",
+  "report.totals": "مجموع",
+  "report.official_system_verified_document": "سند رسمی تأییدشده توسط سیستم",
+  "report.no_records_selected_criteria": "برای معیارهای انتخاب‌شده رکوردی یافت نشد.",
+  "party.search_placeholder": "با نام، کد، موبایل یا شرکت جستجو کنید...",
+  "party.searching": "در حال جستجو...",
+  "party.no_matches_found": "هیچ شخص یا نهادی پیدا نشد",
+  "party.clear_selection": "پاک کردن انتخاب",
   "report.col_date": "تاریخ",
   "report.col_serial": "شماره",
   "report.col_description": "توضیح",
@@ -11861,6 +11944,7 @@ const fa: Dict = {
   "acct.administration": "مدیریت FMS",
   "acct.no_data": "-",
   "branch.report_title": "گزارش پروفایل شعبه شهری",
+  "branch.report_title_country": "گزارش پروفایل شعبه اصلی کشور",
   "branch.report_subtitle": "خلاصه پروفایل شعبه",
   "branch.overview": "نمای کلی پروفایل شعبه",
   "branch.sec_branch_info": "اطلاعات شعبه",
@@ -11875,6 +11959,12 @@ const fa: Dict = {
   "branch.owner_name": "مالک / مدیر",
   "branch.serial": "شماره سریال",
   "branch.whatsapp": "واتساپ",
+  "cust.report_title": "گزارش پروفایل مشتری",
+  "cust.report_subtitle": "خلاصه پروفایل مشتری",
+  "cust.overview": "نمای کلی پروفایل مشتری",
+  "cust.sec_customer": "اطلاعات مشتری",
+  "cust.sec_contact": "اطلاعات تماس",
+  "cust.contact_person": "شخص رابط",
   "jrn.overview": "نمای کلی دفتر روزنامه",
   "jrn.net_balance": "مانده خالص",
   "jrn.entry_count": "تعداد ثبت‌ها",
@@ -12888,6 +12978,9 @@ const ps: Dict = {
   "common.loading": "بارول کیږي...",
   "common.no_records": "هیڅ ریکارډ ونه موندل شو",
   "common.select": "وټاکئ",
+  "common.clear_selection": "انتخاب پاک کړئ",
+  "common.no_matches_found": "هیڅ پایله ونه موندل شوه.",
+  "common.searching": "لټون کیږي...",
   "common.confirm": "تایید",
   "common.reset": "بیا تنظیم",
   "common.print": "چاپ",
@@ -13842,6 +13935,15 @@ const ps: Dict = {
   "report.scope_global": "نړیوال",
   "report.scope_country": "هیواد",
   "report.scope_branch": "شاخه",
+  "report.filters": "فلټرونه",
+  "report.items": "توکي",
+  "report.totals": "ټولیز",
+  "report.official_system_verified_document": "د سیستم له خوا تصدیق شوی رسمي سند",
+  "report.no_records_selected_criteria": "د ټاکل شویو معیارونو لپاره کوم ریکارډ ونه موندل شو.",
+  "party.search_placeholder": "د نوم، کوډ، موبایل یا شرکت له مخې ولټوئ...",
+  "party.searching": "لټون کیږي...",
+  "party.no_matches_found": "هیڅ مناسب شخص یا اداره ونه موندل شوه",
+  "party.clear_selection": "انتخاب پاک کړئ",
   // ERP Reports — columns
   "report.col_date": "نېټه",
   "report.col_serial": "شمیره",
@@ -14310,6 +14412,7 @@ const ps: Dict = {
   "acct.administration": "د FMS اداره",
   "acct.no_data": "-",
   "branch.report_title": "د ښار د څانګې پروفایل راپور",
+  "branch.report_title_country": "د هېواد د اصلي څانګې پروفایل راپور",
   "branch.report_subtitle": "د څانګې پروفایل لنډیز",
   "branch.overview": "د څانګې پروفایل کتنه",
   "branch.sec_branch_info": "د څانګې معلومات",
@@ -14324,6 +14427,12 @@ const ps: Dict = {
   "branch.owner_name": "مالک / مدیر",
   "branch.serial": "سیریل شمېره",
   "branch.whatsapp": "واټساپ",
+  "cust.report_title": "د پیرودونکي پروفایل راپور",
+  "cust.report_subtitle": "د پیرودونکي پروفایل لنډیز",
+  "cust.overview": "د پیرودونکي پروفایل کتنه",
+  "cust.sec_customer": "د پیرودونکي معلومات",
+  "cust.sec_contact": "د اړیکو معلومات",
+  "cust.contact_person": "د اړیکې کس",
   "jrn.overview": "د جرنل کتنه",
   "jrn.net_balance": "خالص بیلانس",
   "jrn.entry_count": "د ثبتونو شمېر",
@@ -14626,6 +14735,9 @@ export function t(lang: SupportedLanguage | string | null | undefined, key: stri
   const safeLang = (lang && typeof lang === "string" && ["en", "ar", "ur", "fa", "ps"].includes(lang) ? lang : "en") as SupportedLanguage;
   const dictKey = key as UiKey;
   const dict = dictionaries[safeLang] || dictionaries.en;
-  return dict?.[dictKey] ?? en[dictKey] ?? defaultValue ?? key;
+  const localized = dict?.[dictKey];
+  if (localized) return localized;
+  if (safeLang !== "en") return translationPendingLabel(safeLang);
+  return en[dictKey] ?? defaultValue ?? key;
 }
 
