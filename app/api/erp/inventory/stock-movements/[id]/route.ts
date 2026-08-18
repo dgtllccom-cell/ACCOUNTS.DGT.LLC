@@ -6,13 +6,13 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "inventory", action: "read" });
 
-    const id = params.id;
+    const id = (await params).id;
     const movement = await withLocalPg(async (sql) => {
       const rows = await sql`
         SELECT 
@@ -56,13 +56,13 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "inventory", action: "update" });
 
-    const id = params.id;
+    const id = (await params).id;
     const body = await request.json();
 
     const updatedMovement = await withLocalPg(async (sql) => {

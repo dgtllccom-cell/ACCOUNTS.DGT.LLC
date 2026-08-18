@@ -6,7 +6,7 @@ import { withLocalPg } from "@/lib/db/local-postgres";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await requireErpSession();
@@ -14,7 +14,7 @@ export async function GET(
 
     const item = await withLocalPg(async (sql) => {
       const rows = await sql`
-        SELECT * FROM public.document_types WHERE id = ${params.id}::uuid AND deleted_at IS NULL
+        SELECT * FROM public.document_types WHERE id = ${(await params).id}::uuid AND deleted_at IS NULL
       `;
       return rows[0] || null;
     });
@@ -31,7 +31,7 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await requireErpSession();
@@ -47,7 +47,7 @@ export async function PUT(
           description = COALESCE(${body.description}, description),
           is_active = COALESCE(${body.isActive}, is_active),
           updated_at = NOW()
-        WHERE id = ${params.id}::uuid AND deleted_at IS NULL
+        WHERE id = ${(await params).id}::uuid AND deleted_at IS NULL
         RETURNING *
       `;
       return rows[0] || null;
@@ -65,7 +65,7 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const session = await requireErpSession();
@@ -73,11 +73,11 @@ export async function DELETE(
 
     await withLocalPg(async (sql) => {
       await sql`
-        UPDATE public.document_types SET deleted_at = NOW() WHERE id = ${params.id}::uuid
+        UPDATE public.document_types SET deleted_at = NOW() WHERE id = ${(await params).id}::uuid
       `;
     });
 
-    return apiOk({ success: true, id: params.id });
+    return apiOk({ success: true, id: (await params).id });
   } catch (error) {
     return handleApiError(error);
   }

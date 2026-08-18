@@ -4,7 +4,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "accounts", action: "update" });
@@ -49,7 +49,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       const { data: existing, error: checkError } = await db
         .from(tableName)
         .select("id")
-        .eq("account_id", params.id)
+        .eq("account_id", (await params).id)
         .eq(columnName, linkedId)
         .single();
 
@@ -61,7 +61,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       }
 
       const insertData: Record<string, any> = {
-        account_id: params.id,
+        account_id: (await params).id,
         [columnName]: linkedId,
         created_at: new Date().toISOString()
       };
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
       const { error } = await db
         .from(tableName)
         .delete()
-        .eq("account_id", params.id)
+        .eq("account_id", (await params).id)
         .eq(columnName, linkedId);
 
       if (error) throw error;

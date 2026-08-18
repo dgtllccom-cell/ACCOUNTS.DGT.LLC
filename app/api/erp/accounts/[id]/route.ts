@@ -4,7 +4,7 @@ import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { apiOk, handleApiError } from "@/lib/api/response";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-export async function GET(request: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "accounts", action: "read" });
@@ -23,7 +23,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
         updated_at,
         country:countries(name)
       `)
-      .eq("id", params.id)
+      .eq("id", (await params).id)
       .single();
 
     if (error) throw error;
@@ -33,16 +33,16 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
     const [companies, banks, warehouses, customers] = await Promise.all([
       db.from("account_companies")
         .select("company_id, companies(id, name, code)")
-        .eq("account_id", params.id),
+        .eq("account_id", (await params).id),
       db.from("account_banks")
         .select("bank_id, banks(id, name, code)")
-        .eq("account_id", params.id),
+        .eq("account_id", (await params).id),
       db.from("account_warehouses")
         .select("warehouse_id, warehouses(id, name, code)")
-        .eq("account_id", params.id),
+        .eq("account_id", (await params).id),
       db.from("account_customer_owners")
         .select("customer_id, customers(id, name, code)")
-        .eq("account_id", params.id)
+        .eq("account_id", (await params).id)
     ]);
 
     const enriched = {
@@ -59,7 +59,7 @@ export async function GET(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "accounts", action: "update" });
@@ -77,7 +77,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
         is_active: isActive !== undefined ? isActive : undefined,
         updated_at: new Date().toISOString()
       })
-      .eq("id", params.id)
+      .eq("id", (await params).id)
       .select()
       .single();
 
@@ -88,7 +88,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 }
 
-export async function DELETE(request: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "accounts", action: "delete" });
@@ -97,14 +97,14 @@ export async function DELETE(request: NextRequest, { params }: { params: { id: s
 
     // Delete all associations first
     await Promise.all([
-      db.from("account_companies").delete().eq("account_id", params.id),
-      db.from("account_banks").delete().eq("account_id", params.id),
-      db.from("account_warehouses").delete().eq("account_id", params.id),
-      db.from("account_customer_owners").delete().eq("account_id", params.id)
+      db.from("account_companies").delete().eq("account_id", (await params).id),
+      db.from("account_banks").delete().eq("account_id", (await params).id),
+      db.from("account_warehouses").delete().eq("account_id", (await params).id),
+      db.from("account_customer_owners").delete().eq("account_id", (await params).id)
     ]);
 
     // Then delete the account
-    const { error } = await db.from("accounts").delete().eq("id", params.id);
+    const { error } = await db.from("accounts").delete().eq("id", (await params).id);
 
     if (error) throw error;
     return apiOk({ success: true });

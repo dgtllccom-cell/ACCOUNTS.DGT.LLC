@@ -30,7 +30,12 @@ export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
     const urlLang = request.nextUrl.searchParams.get("language");
-    const language = urlLang || (await getRequestLanguage());
+    // Narrow the raw ?language= query value to a SupportedLanguage literal (no cast); otherwise
+    // fall back to the request's resolved language. Keeps `language` typed as SupportedLanguage.
+    const language =
+      urlLang === "en" || urlLang === "ur" || urlLang === "ar" || urlLang === "fa" || urlLang === "ps"
+        ? urlLang
+        : await getRequestLanguage();
     const query = querySchema.parse({
       reportScope: request.nextUrl.searchParams.get("reportScope") ?? undefined,
       q: request.nextUrl.searchParams.get("q") ?? undefined,
