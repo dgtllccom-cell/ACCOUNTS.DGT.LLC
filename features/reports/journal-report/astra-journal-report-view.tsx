@@ -28,6 +28,8 @@ import { cn } from "@/lib/utils";
 import type { RoznamchaType } from "@/lib/accounting/roznamcha-flow";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
+import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
+import { t } from "@/lib/i18n/ui";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Th } from "@/components/ui/translated-th";
 
@@ -419,20 +421,49 @@ function AstraJournalReportViewContent({ lang, scope }: { lang: SupportedLanguag
   }
 
   function openPrint(autoPrint: boolean) {
-    openA4ReportWindow({
-      title: titleFor(scope),
-      subtitle: `Generated: ${generatedAt ? new Date(generatedAt).toLocaleString() : new Date().toLocaleString()}`,
-      rows: [
-        { label: "Report Type", value: titleFor(scope) },
-        { label: "Date Range", value: `${formatDateDisplay(minDate)} to ${formatDateDisplay(maxDate)}` },
-        { label: "Total Branches", value: String(Array.from(new Set(filtered.map(r => r.branchCode))).length || 2) },
-        { label: "Total Transactions", value: String(filtered.length) },
-        { label: "Total Credit", value: fmt(summary.credit) },
-        { label: "Total Debit", value: fmt(summary.debit) },
-        { label: "Final Balance", value: fmt(summary.balance) }
-      ],
+    const tt = (key: string, fallback: string) => t(lang as never, key as never, fallback);
+    openJournalReportWindow({
+      lang,
       autoPrint,
-      lang
+      title: titleFor(scope),
+      subtitle: tt("jrn.roznamcha_journal", "Journal Report"),
+      overviewLabel: tt("jrn.overview", "Journal Overview"),
+      scopeName: titleFor(scope),
+      reportIdPrefix: "JRN",
+      reportIdValue: String(scope),
+      chips: [
+        { label: tt("jrn.date_range", "Date Range"), value: `${formatDateDisplay(minDate)} → ${formatDateDisplay(maxDate)}` },
+        { label: tt("acct.report_type", "Report Type"), value: titleFor(scope) }
+      ],
+      kpis: [
+        { label: tt("bankroz.total_debit", "Total Debit"), value: fmt(summary.debit), tone: "debit" },
+        { label: tt("bankroz.total_credit", "Total Credit"), value: fmt(summary.credit), tone: "credit" },
+        { label: tt("jrn.net_balance", "Final Balance"), value: fmt(summary.balance), tone: "current" },
+        { label: tt("jrn.entry_count", "Total Transactions"), value: String(filtered.length), tone: "open" }
+      ],
+      columns: [
+        { key: "sno", label: tt("rozrep.sno", "S.No") },
+        { key: "date", label: tt("rozrep.date", "Date") },
+        { key: "voucher", label: tt("bankroz.entry_no", "Voucher No") },
+        { key: "branch", label: tt("rozrep.branch", "Branch") },
+        { key: "account", label: tt("rozrep.account_name", "Account") },
+        { key: "narration", label: tt("rozrep.narration", "Narration / Remarks") },
+        { key: "debit", label: tt("rozrep.debit", "Debit"), num: true },
+        { key: "credit", label: tt("rozrep.credit", "Credit"), num: true },
+        { key: "balance", label: tt("rozrep.balance", "Balance"), num: true }
+      ],
+      rows: filtered.map((r: any, idx: number) => ({
+        sno: String(idx + 1),
+        date: formatDateDisplay(r.date),
+        voucher: r.voucherNo,
+        branch: r.branch || r.branchCode,
+        account: r.accountName || r.accountNumber,
+        narration: r.narration,
+        debit: r.debit ? fmt(r.debit) : "-",
+        credit: r.credit ? fmt(r.credit) : "-",
+        balance: fmt(r.balance)
+      })),
+      totals: { debit: fmt(summary.debit), credit: fmt(summary.credit) }
     });
   }
 

@@ -262,6 +262,7 @@ export type UiKey =
   | "branch.owner_name" | "branch.serial" | "branch.whatsapp"
   | "cust.report_title" | "cust.report_subtitle" | "cust.overview" | "cust.sec_customer" | "cust.sec_contact" | "cust.contact_person"
   | "prof.overview" | "prof.sec_general" | "prof.sec_registration" | "prof.summary" | "prof.owner_name" | "prof.company_report" | "prof.bank_report" | "prof.warehouse_report" | "prof.port_report" | "prof.agent_report" | "prof.shipping_report" | "prof.supplier_report" | "prof.employee_report" | "prof.user_report" | "prof.ledger_report"
+  | "sys.form_name" | "sys.route" | "sys.category"
   // Journal / voucher print engines (jrn.* / vch.*)
   | "jrn.overview" | "jrn.net_balance" | "jrn.entry_count" | "jrn.roznamcha_journal" | "jrn.date_range"
   | "vch.overview" | "vch.entry_voucher" | "vch.prepared_by" | "vch.checked_by" | "vch.approved_by"
@@ -4275,6 +4276,9 @@ const en: Dict = {
   "prof.employee_report": "Employee Profile Report",
   "prof.user_report": "User Profile Report",
   "prof.ledger_report": "Ledger Profile Report",
+  "sys.form_name": "Form Name",
+  "sys.route": "Route",
+  "sys.category": "Category",
   "jrn.overview": "Journal Overview",
   "jrn.net_balance": "Net Balance",
   "jrn.entry_count": "Entry Count",
@@ -7164,6 +7168,9 @@ const ur: Dict = {
   "prof.employee_report": "ملازم پروفائل رپورٹ",
   "prof.user_report": "صارف پروفائل رپورٹ",
   "prof.ledger_report": "کھاتہ پروفائل رپورٹ",
+  "sys.form_name": "فارم کا نام",
+  "sys.route": "روٹ",
+  "sys.category": "زمرہ",
   "jrn.overview": "جرنل کا جائزہ",
   "jrn.net_balance": "خالص بیلنس",
   "jrn.entry_count": "اندراجات کی تعداد",
@@ -9654,6 +9661,9 @@ const ar: Dict = {
   "prof.employee_report": "تقرير ملف الموظف",
   "prof.user_report": "تقرير ملف المستخدم",
   "prof.ledger_report": "تقرير ملف الحساب",
+  "sys.form_name": "اسم النموذج",
+  "sys.route": "المسار",
+  "sys.category": "الفئة",
   "jrn.overview": "نظرة عامة على اليومية",
   "jrn.net_balance": "صافي الرصيد",
   "jrn.entry_count": "عدد القيود",
@@ -12131,6 +12141,9 @@ const fa: Dict = {
   "prof.employee_report": "گزارش پروفایل کارمند",
   "prof.user_report": "گزارش پروفایل کاربر",
   "prof.ledger_report": "گزارش پروفایل دفتر کل",
+  "sys.form_name": "نام فرم",
+  "sys.route": "مسیر",
+  "sys.category": "دسته",
   "jrn.overview": "نمای کلی دفتر روزنامه",
   "jrn.net_balance": "مانده خالص",
   "jrn.entry_count": "تعداد ثبت‌ها",
@@ -14635,6 +14648,9 @@ const ps: Dict = {
   "prof.employee_report": "د کارمند پروفایل راپور",
   "prof.user_report": "د کارونکي پروفایل راپور",
   "prof.ledger_report": "د کھاتې پروفایل راپور",
+  "sys.form_name": "د فورم نوم",
+  "sys.route": "لاره",
+  "sys.category": "کټګوري",
   "jrn.overview": "د جرنل کتنه",
   "jrn.net_balance": "خالص بیلانس",
   "jrn.entry_count": "د ثبتونو شمېر",

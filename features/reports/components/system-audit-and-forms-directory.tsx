@@ -28,6 +28,8 @@ import {
 } from "lucide-react";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { getLanguageDirection } from "@/lib/i18n/languages";
+import { t } from "@/lib/i18n/ui";
+import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -524,7 +526,33 @@ export function SystemAuditAndFormsDirectoryView({ lang = "en" }: { lang?: Suppo
   }, [selectedCategory, searchQuery]);
 
   const handlePrint = () => {
-    window.print();
+    const tt = (key: string, fallback: string) => t(lang as never, key as never, fallback);
+    openJournalReportWindow({
+      lang,
+      autoPrint: true,
+      title: tt("nav.forms_directory_audit", "Forms Directory Audit"),
+      subtitle: tt("jrn.roznamcha_journal", "System Report"),
+      overviewLabel: tt("jrn.overview", "Report Overview"),
+      scopeName: tt("nav.forms_directory_audit", "Forms Directory Audit"),
+      reportIdPrefix: "SYSAUDIT",
+      reportIdValue: "forms",
+      chips: [
+        { label: tt("jrn.entry_count", "Total"), value: String(filteredForms.length) }
+      ],
+      kpis: [],
+      columns: [
+        { key: "sno", label: tt("rozrep.sno", "S.No") },
+        { key: "name", label: tt("sys.form_name", "Form Name") },
+        { key: "route", label: tt("sys.route", "Route") },
+        { key: "category", label: tt("sys.category", "Category") }
+      ],
+      rows: (filteredForms as any[]).map((item, index) => ({
+        sno: String(index + 1),
+        name: item.name,
+        route: item.route,
+        category: item.category
+      }))
+    });
   };
 
   return (

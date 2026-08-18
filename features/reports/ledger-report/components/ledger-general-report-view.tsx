@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
+import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
 import { DetailDrawer } from "@/components/ui/detail-drawer";
 import {
   getLedgerStatement,
@@ -594,26 +595,51 @@ export function LedgerReportView({
 
 
   function openPrint(autoPrint: boolean) {
-    openA4ReportWindow({
-      title: "Ledger General Report",
-      subtitle: `Generated ${generatedAt ? new Date(generatedAt).toLocaleString() : new Date().toLocaleString()}`,
-      rows: [
-        { label: "Report Scope", value: reportScope },
-        { label: "Generated Date", value: generatedAt ? new Date(generatedAt).toLocaleString() : new Date().toLocaleString() },
-        { label: "Ledgers", value: String(totalLedgers) },
-        { label: "Active", value: String(activeLedgers) },
-        { label: "Inactive", value: String(inactiveLedgers) },
-        { label: "Total Entries", value: fmtNumber(summary?.entries ?? 0) },
-        { label: "Debit", value: fmtNumber(summary?.debit ?? 0) },
-        { label: "Credit", value: fmtNumber(summary?.credit ?? 0) },
-        { label: "Balance", value: fmtNumber(summary?.balance ?? 0) },
-        { label: "Selected Ledger", value: selectedLedger?.ledgerName ?? "-" },
-        { label: "Account No", value: selectedLedger?.accountCode ?? selectedLedger?.ledgerCode ?? "-" },
-        { label: "Currency", value: selectedLedger?.ledgerCurrency ?? "-" },
-        { label: "Branch", value: selectedLedger ? buildBranchLabel(selectedLedger) : "-" }
-      ],
+    const tt = (key: string, fallback: string) => t(activeLang as never, key as never, fallback);
+    openJournalReportWindow({
+      lang: activeLang,
       autoPrint,
-      lang
+      title: tt("prof.ledger_report", "Ledger General Report"),
+      subtitle: tt("jrn.roznamcha_journal", "Ledger Report"),
+      overviewLabel: tt("jrn.overview", "Ledger Report Overview"),
+      scopeName: tt("prof.ledger_report", "Ledger General Report"),
+      reportIdPrefix: "LEDGER",
+      reportIdValue: String(reportScope || "all"),
+      chips: [
+        { label: tt("acct.report_type", "Report Scope"), value: String(reportScope) },
+        { label: tt("jrn.date_range", "Date Range"), value: `${fromDate} → ${toDate}` }
+      ],
+      kpis: [
+        { label: tt("jrn.entry_count", "Total Entries"), value: fmtNumber(summary?.entries ?? 0), tone: "open" },
+        { label: tt("bankroz.total_debit", "Total Debit"), value: fmtNumber(summary?.debit ?? 0), tone: "debit" },
+        { label: tt("bankroz.total_credit", "Total Credit"), value: fmtNumber(summary?.credit ?? 0), tone: "credit" },
+        { label: tt("acct.current_balance", "Balance"), value: fmtNumber(summary?.balance ?? 0), tone: "current" }
+      ],
+      columns: [
+        { key: "sno", label: tt("rozrep.sno", "S.No") },
+        { key: "country", label: tt("rozrep.country", "Country") },
+        { key: "branch", label: tt("rozrep.branch", "Branch") },
+        { key: "accountNo", label: tt("rozrep.account_no", "Account No") },
+        { key: "accountName", label: tt("rozrep.account_name", "Account Name") },
+        { key: "entries", label: tt("jrn.entry_count", "Entries") },
+        { key: "opening", label: tt("acct.opening_balance", "Opening"), num: true },
+        { key: "debit", label: tt("rozrep.debit", "Debit"), num: true },
+        { key: "credit", label: tt("rozrep.credit", "Credit"), num: true },
+        { key: "balance", label: tt("rozrep.balance", "Balance"), num: true }
+      ],
+      rows: (displayRows as any[]).map((row, index) => ({
+        sno: String(index + 1),
+        country: row.countryName,
+        branch: buildBranchLabel(row),
+        accountNo: row.accountCode || row.ledgerCode,
+        accountName: row.accountName || row.ledgerName,
+        entries: String(row.entries ?? 0),
+        opening: fmtNumber(row.openingBalance ?? 0),
+        debit: fmtNumber(row.debit ?? 0),
+        credit: fmtNumber(row.credit ?? 0),
+        balance: fmtNumber(row.balance ?? 0)
+      })),
+      totals: { debit: fmtNumber(summary?.debit ?? 0), credit: fmtNumber(summary?.credit ?? 0) }
     });
   }
 
