@@ -47,6 +47,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 import { cn } from "@/lib/utils";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
 
 export type BankTransactionRow = {
   id: string;
@@ -345,6 +346,61 @@ export function BankRoznamchaReportView({ lang, pageTitle }: { lang: SupportedLa
   // Print Official Journal Table
   function handlePrintReport() {
     if (typeof window === "undefined" || !data) return;
+    const s: any = (data as any).summary || summary || {};
+    openJournalReportWindow({
+      lang: activeLang,
+      autoPrint: true,
+      title: tt("nav.bank_report_roz", "Bank Roznamcha"),
+      subtitle: tt("jrn.roznamcha_journal", "Roznamcha Journal"),
+      overviewLabel: tt("jrn.overview", "Journal Overview"),
+      scopeName: tt("bankroz.title", "Bank Roznamcha / Cheque Management Report"),
+      reportIdPrefix: "BANKROZ",
+      reportIdValue: "all",
+      chips: [
+        { label: tt("jrn.date_range", "Date Range"), value: `${fromDate} → ${toDate}` },
+        { label: tt("bankroz.bank", "Bank"), value: bankName && bankName !== "all" ? bankName : undefined }
+      ],
+      kpis: [
+        { label: tt("bankroz.opening_balance", "Opening Balance"), value: fmtNumber(s.openingBalance || 0), tone: "open" },
+        { label: tt("bankroz.total_debit", "Total Debit"), value: fmtNumber(s.totalDebit || 0), tone: "debit" },
+        { label: tt("bankroz.total_credit", "Total Credit"), value: fmtNumber(s.totalCredit || 0), tone: "credit" },
+        { label: tt("bankroz.closing_balance", "Closing Balance"), value: fmtNumber(s.closingBalance || 0), tone: "current" }
+      ],
+      columns: [
+        { key: "sno", label: tt("bankroz.sr", "Sr #") },
+        { key: "entry", label: tt("bankroz.entry_no", "Entry #") },
+        { key: "date", label: tt("bankroz.date_time", "Date / Time") },
+        { key: "branch", label: tt("bankroz.branch_name", "Branch Name") },
+        { key: "user", label: tt("bankroz.user_name", "User Name") },
+        { key: "bank", label: tt("bankroz.bank_name", "Bank Name") },
+        { key: "cheque", label: tt("bankroz.check_no", "Check #") },
+        { key: "details", label: tt("bankroz.details_particulars", "Details / Particulars") },
+        { key: "due", label: tt("bankroz.due_payment_date", "Due / Payment Date") },
+        { key: "debit", label: tt("bankroz.debit", "Debit"), num: true },
+        { key: "credit", label: tt("bankroz.credit", "Credit"), num: true },
+        { key: "balance", label: tt("bankroz.balance", "Balance"), num: true },
+        { key: "status", label: tt("bankroz.status", "Status") }
+      ],
+      rows: (data.entries || []).map((r: any, idx: number) => ({
+        sno: String(idx + 1 + (page - 1) * pageSize),
+        entry: r.entry_serial_number,
+        date: `${formatShortDate(r.entry_date)} ${formatTimeOnly(r.entry_time)}`,
+        branch: r.city_branch?.name || r.country_branch?.name || "",
+        user: r.user_name,
+        bank: r.bank_name + (r.bank_code ? ` (${r.bank_code})` : ""),
+        cheque: r.cheque_no || "-",
+        details: r.particulars,
+        due: formatShortDate(r.due_date),
+        debit: r.debit ? fmtNumber(r.debit) : "-",
+        credit: r.credit ? fmtNumber(r.credit) : "-",
+        balance: fmtNumber(r.running_balance),
+        status: r.effective_status || r.status
+      })),
+      totals: { debit: fmtNumber(s.totalDebit || 0), credit: fmtNumber(s.totalCredit || 0) }
+    });
+    return;
+    // ---- legacy inline template retained below (unreachable) pending cleanup ----
+    // eslint-disable-next-line no-unreachable
     const win = window.open("", "_blank", "width=1200,height=900");
     if (!win) return;
 

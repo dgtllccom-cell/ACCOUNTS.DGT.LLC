@@ -3,6 +3,8 @@
 import { useMemo, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { printStore } from "@/lib/store/print-store";
+import { t } from "@/lib/i18n/ui";
+import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
 import type { Route } from "next";
 import { Building2, Plus, Search, Eye, PencilLine, Printer, Trash2, X, MoreVertical, Loader2, ArrowLeft, Users, FileText, Layers, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -174,6 +176,52 @@ export function CompanyRegistry() {
   }
 
   function handlePrint(c: CompanyDisplayRecord) {
+    const tt = (key: string, fallback: string) => t((lang || "en") as never, key as never, fallback);
+    const cc: any = c;
+    const reg = (n: string) => cc.registrations?.find((x: any) => String(x.type || "").toLowerCase().includes(n))?.value;
+    const con = (n: string) => cc.contacts?.find((x: any) => String(x.type || "").toLowerCase().includes(n))?.value;
+    openMasterProfileReportWindow({
+      lang: lang || "en",
+      autoPrint: true,
+      title: tt("prof.company_report", "Company Profile Report"),
+      subtitle: tt("prof.summary", "Profile Summary"),
+      overviewLabel: tt("prof.overview", "Profile Overview"),
+      name: cc.companyName,
+      status: tt("acct.registered", "Active"),
+      reportIdPrefix: "COMP",
+      reportIdValue: cc.id ? String(cc.id).slice(0, 8).toUpperCase() : cc.companyName,
+      meta: [
+        { label: tt("acct.business_type", "Business Type"), value: cc.businessName },
+        { label: tt("acct.country", "Country"), value: cc.country },
+        { label: tt("acct.city", "City"), value: cc.city },
+        { label: tt("prof.owner_name", "Owner Name"), value: cc.ownerName }
+      ],
+      sections: [
+        { title: tt("prof.sec_general", "General Information"), rows: [
+          { label: tt("acct.company_name", "Company Name"), value: cc.companyName },
+          { label: tt("acct.business_type", "Business Type"), value: cc.businessName },
+          { label: tt("prof.owner_name", "Owner Name"), value: cc.ownerName }
+        ]},
+        { title: tt("branch.sec_location", "Location & Address"), rows: [
+          { label: tt("acct.address", "Address"), value: cc.address },
+          { label: tt("acct.city", "City"), value: cc.city },
+          { label: tt("acct.country", "Country"), value: cc.country }
+        ]},
+        { title: tt("prof.sec_registration", "Registration & Tax Information"), rows: [
+          { label: tt("acct.registration_no", "Registration No."), value: reg("registration") || reg("license") || reg("trade") },
+          { label: tt("acct.tax_registration_no", "Tax Registration No."), value: reg("tax") },
+          { label: tt("acct.ntn", "NTN"), value: reg("ntn") },
+          { label: tt("acct.gst_vat", "GST / VAT No."), value: reg("gst") || reg("vat") }
+        ]},
+        { title: tt("cust.sec_contact", "Contact Information"), rows: [
+          { label: tt("acct.phone", "Phone"), value: con("phone") || con("mobile") },
+          { label: tt("acct.email", "Email"), value: con("email") }
+        ]}
+      ]
+    });
+  }
+
+  function handlePrintLegacy(c: CompanyDisplayRecord) {
     const contactsHTML = c.contacts.length > 0
       ? `<ul>` + c.contacts.map((x) => `<li><strong>${x.type}</strong><span>${x.value}</span></li>`).join("") + `</ul>`
       : `<div style="font-size: 11px; font-style: italic; color: #94a3b8; text-align: center; margin-top: 10px;">No registered contact methods</div>`;
