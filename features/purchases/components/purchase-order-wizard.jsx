@@ -2217,7 +2217,7 @@ Size: ${row.size}
 Origin: ${row.origin}
 Qty: ${row.qtyNo} ${row.qtyName}
 Price: ${row.coursePrice} ${row.currencyType}
-Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
+Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || ""}`);
   };
 
   const handleCreatePort = async (portName, countryName, transportType, side) => {
@@ -4185,13 +4185,13 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                                 <td className="px-3 py-2 text-center font-semibold">{row.brand}</td>
                                 <td className="px-3 py-2 text-center font-mono text-muted-foreground">{row.hsCode}</td>
                                 <td className="px-3 py-2 text-center font-semibold">{row.origin}</td>
-                                <td className="px-3 py-2 text-right font-mono font-bold">{row.qtyNo.toLocaleString()}</td>
+                                <td className="px-3 py-2 text-right font-mono font-bold">{Number(row.qtyNo || 0).toLocaleString()}</td>
                                 <td className="px-3 py-2 text-center font-semibold">{row.qtyName}</td>
-                                <td className="px-3 py-2 text-right font-mono font-bold text-muted-foreground">{row.coursePrice.toFixed(2)}</td>
-                                <td className="px-3 py-2 text-right font-mono font-black text-yellow-600 dark:text-yellow-450">{row.totalAmount.toLocaleString()}</td>
+                                <td className="px-3 py-2 text-right font-mono font-bold text-muted-foreground">{Number(row.coursePrice || row.price || 0).toFixed(2)}</td>
+                                <td className="px-3 py-2 text-right font-mono font-black text-yellow-600 dark:text-yellow-450">{Number(row.totalAmount || row.amount || 0).toLocaleString()}</td>
                                 <td className="px-3 py-2 text-center font-mono text-muted-foreground">{row.op || "*"} {row.exchangeRate}</td>
                                 <td className="px-3 py-2 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 bg-emerald-500/5">
-                                  {row.finalAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                  {Number(row.finalAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                 </td>
                                 <td className="px-3 py-2 text-center">
                                   <div className="flex items-center justify-center gap-1.5">
@@ -4866,7 +4866,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             type="number"
                             value={form.manualTotalAmount !== undefined && form.manualTotalAmount !== "" ? form.manualTotalAmount : currentItemTotals.totalAmount}
                             onChange={(e) => setValue("manualTotalAmount", e.target.value === "" ? "" : Number(e.target.value))}
-                            placeholder={currentItemTotals.totalAmount.toFixed(2)}
+                            placeholder={(Number(currentItemTotals?.totalAmount) || 0).toFixed(2)}
                             className="w-full bg-background border border-emerald-200 dark:border-emerald-800 rounded px-2.5 py-1.5 text-foreground outline-none focus:border-emerald-500 text-[10px] font-mono"
                           />
                         </div>
@@ -4876,7 +4876,7 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             type="number"
                             value={form.manualFinalAmount !== undefined && form.manualFinalAmount !== "" ? form.manualFinalAmount : currentItemTotals.finalAmount}
                             onChange={(e) => setValue("manualFinalAmount", e.target.value === "" ? "" : Number(e.target.value))}
-                            placeholder={currentItemTotals.finalAmount.toFixed(2)}
+                            placeholder={(Number(currentItemTotals?.finalAmount) || 0).toFixed(2)}
                             className="w-full bg-background border border-emerald-200 dark:border-emerald-800 rounded px-2.5 py-1.5 text-foreground outline-none focus:border-emerald-500 text-[10px] font-mono"
                           />
                         </div>
@@ -5342,25 +5342,25 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                         <td className="p-2.5 font-bold text-slate-900 border-r border-slate-200">{row.goodsName}</td>
                         <td className="p-2.5 border-r border-slate-200 text-slate-700">{row.brand}</td>
                         <td className="p-2.5 border-r border-slate-200 text-center text-slate-700">{row.origin}</td>
-                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-bold text-slate-900">{row.qtyNo.toLocaleString()} {row.qtyName}</td>
-                        <td className="p-2.5 text-right border-r border-slate-200 font-mono text-slate-700">{row.grossWeight.toFixed(2)}</td>
-                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-bold text-slate-800">{row.netWeight.toFixed(2)}</td>
-                        <td className="p-2.5 text-right border-r border-slate-200 font-mono text-slate-700">{row.coursePrice.toFixed(2)}</td>
-                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-bold text-slate-800">{row.totalAmount.toLocaleString()}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-bold text-slate-900">{Number(row.qtyNo || 0).toLocaleString()} {row.qtyName || ""}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 font-mono text-slate-700">{Number(row.grossWeight || (Number(row.qtyNo || 0) * Number(row.qtyKgs || 0)) || 0).toFixed(2)}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-bold text-slate-800">{Number(row.netWeight || (Number(row.qtyNo || 0) * (Number(row.qtyKgs || 0) - Number(row.emptyKgs || 0))) || 0).toFixed(2)}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 font-mono text-slate-700">{Number(row.coursePrice || row.price || 0).toFixed(2)}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-bold text-slate-800">{Number(row.totalAmount || row.amount || 0).toLocaleString()}</td>
                         <td className="p-2.5 text-right font-mono font-black text-emerald-700 bg-emerald-50/40">
-                          {row.finalAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                          {Number(row.finalAmount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                         </td>
                       </tr>
                     ))}
                     {goodsEntries.length > 0 && (
                       <tr className="bg-slate-50 font-bold border-t-2 border-slate-300 text-xs">
                         <td colSpan={3} className="p-2.5 text-right border-r border-slate-200 font-black uppercase text-slate-700">{t(lang, "purchase.totals_label", "TOTALS:")}</td>
-                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-black">{reportTotals.totalQty.toLocaleString()} {goodsEntries[0]?.qtyName || ""}</td>
-                        <td className="p-2.5 text-right border-r border-slate-200 font-mono">{reportTotals.totalGross.toFixed(2)}</td>
-                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-black">{reportTotals.totalNet.toFixed(2)}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-black">{Number(reportTotals.totalQty || 0).toLocaleString()} {goodsEntries[0]?.qtyName || ""}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 font-mono">{Number(reportTotals.totalGross || 0).toFixed(2)}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-black">{Number(reportTotals.totalNet || 0).toFixed(2)}</td>
                         <td className="p-2.5 text-right border-r border-slate-200 bg-slate-100 text-slate-400">-</td>
-                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-black text-slate-900">{reportTotals.grandPrimaryFinal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                        <td className="p-2.5 text-right font-mono font-black text-emerald-800 bg-emerald-100/70">{reportTotals.grandFinal.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                        <td className="p-2.5 text-right border-r border-slate-200 font-mono font-black text-slate-900">{Number(reportTotals.grandPrimaryFinal || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                        <td className="p-2.5 text-right font-mono font-black text-emerald-800 bg-emerald-100/70">{Number(reportTotals.grandFinal || 0).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                       </tr>
                     )}
                   </tbody>
@@ -5667,11 +5667,11 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                             <td className="border-r border-slate-200 p-1.5 font-bold">{g.goodsName} {g.brand ? `(${g.brand})` : ""}</td>
                             <td className="border-r border-slate-200 p-1.5 text-center">{g.hsCode}</td>
                             <td className="border-r border-slate-200 p-1.5 text-center">{g.origin}</td>
-                            <td className="border-r border-slate-200 p-1.5 text-right font-bold">{g.qtyNo.toLocaleString()}</td>
+                            <td className="border-r border-slate-200 p-1.5 text-right font-bold">{Number(g.qtyNo || 0).toLocaleString()}</td>
                             <td className="border-r border-slate-200 p-1.5 text-center">{g.qtyName}</td>
                             <td className="border-r border-slate-200 p-1.5 text-right">{g.coursePrice}</td>
                             <td className="border-r border-slate-200 p-1.5 text-center">{g.exchangeRate}</td>
-                            <td className="p-1.5 text-right font-bold">{g.finalAmount.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                            <td className="p-1.5 text-right font-bold">{Number(g.finalAmount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                           </tr>
                         ))
                       )}
@@ -5679,9 +5679,9 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                     <tfoot>
                       <tr className="bg-slate-50 border-t-2 border-slate-400 font-bold">
                         <td colSpan={4} className="p-1.5 text-right">{t(lang, "purchase.total_colon", "Total:")}</td>
-                        <td className="border-r border-slate-200 p-1.5 text-right">{reportTotals.totalQty.toLocaleString()}</td>
+                        <td className="border-r border-slate-200 p-1.5 text-right">{Number(reportTotals.totalQty || 0).toLocaleString()}</td>
                         <td colSpan={3} className="border-r border-slate-200 p-1.5 text-right text-[8px] text-slate-500 uppercase">{t(lang, "purchase.grand_total_colon", "Grand Total:")}</td>
-                        <td className="p-1.5 text-right">{form.secondaryCurrency || "PKR"} {reportTotals.grandFinal.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                        <td className="p-1.5 text-right">{form.secondaryCurrency || "PKR"} {Number(reportTotals.grandFinal || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                       </tr>
                     </tfoot>
                   </table>

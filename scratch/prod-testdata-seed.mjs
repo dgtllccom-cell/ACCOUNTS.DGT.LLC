@@ -823,17 +823,6 @@ async function createLocalPurchase(tx, index, masters) {
   `;
 
   const journalEntryNoFull = journalEntryNo;
-  if (index === 0) {
-    console.log("LOCAL_PURCHASE_DEBUG", JSON.stringify({
-      companyId,
-      branchId,
-      journalEntryNoFull,
-      insertLocalId: insertLocal.id,
-      purchaseLedgerAccountId,
-      creditLedgerAccountId,
-      goodsId,
-    }, null, 2));
-  }
   const [journalInsert] = await tx`
     insert into journal_entries (
       company_id,
@@ -898,7 +887,51 @@ async function createLocalPurchase(tx, index, masters) {
     `;
   }
 
-  await tx`select post_journal_entry(${journalInsert.id}::uuid);`;
+  const postedLines = await tx`
+    insert into ledger_entries (
+      company_id,
+      branch_id,
+      journal_entry_id,
+      journal_line_id,
+      account_id,
+      entry_date,
+      direction,
+      amount,
+      currency,
+      exchange_rate,
+      base_amount
+    )
+    select
+      je.company_id,
+      je.branch_id,
+      je.id,
+      jl.id,
+      jl.account_id,
+      je.entry_date,
+      case when jl.debit > 0 then 'debit'::ledger_direction else 'credit'::ledger_direction end,
+      greatest(jl.debit, jl.credit),
+      a.currency,
+      1,
+      greatest(jl.debit, jl.credit)
+    from journal_lines jl
+    join journal_entries je on je.id = jl.journal_entry_id
+    join accounts a on a.id = jl.account_id
+    where je.id = ${journalInsert.id}::uuid
+    returning id
+  `;
+
+  if (postedLines.length !== journalLines.length) {
+    throw new Error(`Ledger posting mismatch for ${manualBillNo}: expected ${journalLines.length}, got ${postedLines.length}.`);
+  }
+
+  await tx`
+    update journal_entries
+    set status = 'posted',
+        posted_at = ${createdAt}::timestamp with time zone,
+        posted_by = ${ACTOR_ID}::uuid,
+        updated_at = ${createdAt}::timestamp with time zone
+    where id = ${journalInsert.id}::uuid;
+  `;
 
   const rozLines = [
     {
@@ -991,7 +1024,10 @@ async function runVerification(tx, tag) {
       (select count(*) from purchase_order_payments where reference_no like ${`${tag}%`}) as purchase_order_payments,
       (select count(*) from local_purchases where manual_bill_no like ${`${tag}%`}) as local_purchases,
       (select count(*) from journal_entries where memo like ${`%${tag}%`}) as journal_entries,
-      (select count(*) from journal_lines jl join journal_entries je on je.id = jl.journal_entry_id where je.memo like ${`%${tag}%`}) as journal_lines
+      (select count(*) from journal_lines jl join journal_entries je on je.id = jl.journal_entry_id where je.memo like ${`%${tag}%`}) as journal_lines,
+      (select count(*) from ledger_entries le join journal_entries je on je.id = le.journal_entry_id where je.memo like ${`%${tag}%`}) as ledger_entries,
+      (select count(*) from journal_entries where memo like ${`%${tag}%`} and status = 'posted') as posted_journal_entries,
+      (select count(*) from local_purchases where manual_bill_no like ${`${tag}%`} and journal_entry_id is not null and roznamcha_entry_id is not null) as local_purchases_linked
   `;
 
   const balance = await tx`
