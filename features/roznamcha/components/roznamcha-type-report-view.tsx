@@ -217,7 +217,7 @@ function printReportTable(opts: { title: string; subtitle: string; rows: ReportR
     })
     .join("");
 
-  win.document.write(`<!doctype html><html><head><title>${opts.title}</title>
+  win.document.write(`<!doctype html><html dir="${["ur", "ar", "fa", "ps"].includes(opts.lang) ? "rtl" : "ltr"}" lang="${opts.lang}"><head><title>${opts.title}</title>
     <style>
       body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
       h1 { font-size: 18px; margin-bottom: 2px; }
@@ -233,13 +233,13 @@ function printReportTable(opts: { title: string; subtitle: string; rows: ReportR
     <p class="sub">${opts.subtitle}</p>
     <table>
       <thead><tr>
-        <th>S.No</th><th>Date</th><th>Entry Serial</th><th>Country</th><th>Branch</th><th>User</th>
-        <th>Entry Type</th><th>Roznamcha Type</th><th>Account No</th><th>Account Name</th><th>Narration / Remarks</th>
-        <th>Currency</th><th>Debit</th><th>Credit</th><th>Balance</th><th>Bill/Ref No</th><th>Status</th>
+        <th>${t(opts.lang, "rozrep.sno", "S.No")}</th><th>${t(opts.lang, "rozrep.date", "Date")}</th><th>${t(opts.lang, "rozrep.entry_serial", "Entry Serial")}</th><th>${t(opts.lang, "rozrep.country", "Country")}</th><th>${t(opts.lang, "rozrep.branch", "Branch")}</th><th>${t(opts.lang, "rozrep.user", "User")}</th>
+        <th>${t(opts.lang, "rozrep.entry_type", "Entry Type")}</th><th>${t(opts.lang, "rozrep.roznamcha_type", "Roznamcha Type")}</th><th>${t(opts.lang, "rozrep.account_no", "Account No")}</th><th>${t(opts.lang, "rozrep.account_name", "Account Name")}</th><th>${t(opts.lang, "rozrep.narration", "Narration / Remarks")}</th>
+        <th>${t(opts.lang, "rozrep.currency", "Currency")}</th><th>${t(opts.lang, "rozrep.debit", "Debit")}</th><th>${t(opts.lang, "rozrep.credit", "Credit")}</th><th>${t(opts.lang, "rozrep.balance", "Balance")}</th><th>${t(opts.lang, "rozrep.bill_ref", "Bill/Ref No")}</th><th>${t(opts.lang, "rozrep.status", "Status")}</th>
       </tr></thead>
       <tbody>${bodyRows}</tbody>
       <tfoot><tr>
-        <td colspan="12">Totals</td>
+        <td colspan="12">${t(opts.lang, "rozrep.totals", "Totals")}</td>
         <td class="num">${fmtNumber(opts.totals.debit)}</td>
         <td class="num">${fmtNumber(opts.totals.credit)}</td>
         <td class="num">${fmtNumber(opts.totals.credit - opts.totals.debit)}</td>
@@ -264,6 +264,8 @@ export function RoznamchaTypeReportView({
   const router = useRouter();
   const activeLang = useActiveLanguage();
   const currentLang = activeLang || lang;
+  // Central i18n shorthand (keys live in lib/i18n/ui.ts with all 5 languages).
+  const tt = (key: string, fallback: string) => t(currentLang, key as never, fallback);
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<ReportResponse | null>(null);
@@ -488,7 +490,7 @@ export function RoznamchaTypeReportView({
               onKeyDown={(e) => {
                 if (e.key === "Enter") applySearch();
               }}
-              placeholder="Filter entries..."
+              placeholder={tt("rozrep.filter_entries_ph", "Filter entries...")}
               className="h-7 pl-7 pr-6 text-[11px] rounded-lg border-slate-200 bg-slate-50 focus-visible:bg-white dark:border-slate-700 dark:bg-slate-800 dark:focus-visible:bg-slate-900"
             />
             {q && (
@@ -525,23 +527,23 @@ export function RoznamchaTypeReportView({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => setActionMenuOpen((v) => !v)}
+            onClick={() => setActionsMenuOpen((v: boolean) => !v)}
             className="h-7 gap-1 rounded-lg border-blue-200 bg-blue-50/50 px-2.5 text-[10px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-400"
           >
             <MoreVertical className="h-3 w-3" />
             Actions
           </Button>
-          {actionMenuOpen && (
+          {actionsMenuOpen && (
             <>
               <div
                 className="fixed inset-0 z-40"
-                onClick={() => setActionMenuOpen(false)}
+                onClick={() => setActionsMenuOpen(false)}
               />
               <div className="absolute right-0 top-full mt-1 z-50 min-w-[170px] rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl animate-in fade-in zoom-in-95 dark:border-slate-800 dark:bg-slate-900">
                 <button
                   type="button"
                   onClick={() => {
-                    setActionMenuOpen(false);
+                    setActionsMenuOpen(false);
                     printReport();
                   }}
                   className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -552,7 +554,7 @@ export function RoznamchaTypeReportView({
                 <button
                   type="button"
                   onClick={() => {
-                    setActionMenuOpen(false);
+                    setActionsMenuOpen(false);
                     exportCsv();
                   }}
                   className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
@@ -580,45 +582,45 @@ export function RoznamchaTypeReportView({
           </div>
           <div className="p-3 flex flex-col gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>COUNTRY:</span>
+              <span>{tt("rozrep.country_label", "COUNTRY:")}</span>
               <span className="font-black text-slate-800 dark:text-slate-200">
-                {session?.scopes?.summary?.countryName ?? "United Arab Emirates"}
+                {sessionInfo?.scopes?.summary?.countryName ?? "United Arab Emirates"}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span>BRANCH NAME:</span>
+              <span>{tt("rozrep.branch_name_label", "BRANCH NAME:")}</span>
               <span className="font-black text-slate-800 dark:text-slate-200">
-                {session?.scopes?.summary?.branchDisplayName ?? session?.scopes?.summary?.branchName ?? "UNITED ARAB EMIRATES MAIN BRANCH"}
+                {sessionInfo?.scopes?.summary?.branchDisplayName ?? sessionInfo?.scopes?.summary?.branchName ?? "UNITED ARAB EMIRATES MAIN BRANCH"}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span>USER ID:</span>
+              <span>{tt("rozrep.user_id_label", "USER ID:")}</span>
               <span className="font-mono text-[10px] text-slate-700 dark:text-slate-300">
-                {session?.user?.id ?? "90902409-5512-47d1-8612-3095f2285406"}
+                {sessionInfo?.user?.id ?? "90902409-5512-47d1-8612-3095f2285406"}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span>USER NAME:</span>
+              <span>{tt("rozrep.user_name_label", "USER NAME:")}</span>
               <span className="font-black text-slate-800 dark:text-slate-200">
-                {session?.user?.fullName ?? "SUPER ADMIN"}
+                {sessionInfo?.user?.fullName ?? "SUPER ADMIN"}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span>ROLE:</span>
+              <span>{tt("rozrep.role_label", "ROLE:")}</span>
               <span className="font-black text-blue-600 dark:text-blue-400 uppercase">
-                {session?.roles?.[0] ?? "SUPER ADMIN"}
+                {sessionInfo?.roles?.[0] ?? "SUPER ADMIN"}
               </span>
             </div>
             <div className="flex justify-between items-center">
-              <span>DATE & TIME:</span>
+              <span>{tt("rozrep.datetime_label", "DATE & TIME:")}</span>
               <span className="font-bold text-slate-700 dark:text-slate-300">
                 {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })},{" "}
                 {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}
               </span>
             </div>
             <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[10px]">
-              <span>STATUS:</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">ACTIVE</span>
+              <span>{tt("rozrep.status_label", "STATUS:")}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">{tt("rozrep.active", "ACTIVE")}</span>
             </div>
           </div>
         </div>
@@ -635,7 +637,7 @@ export function RoznamchaTypeReportView({
           </div>
           <div className="p-3 flex flex-col gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>TOTAL GLOBAL ENTRIES:</span>
+              <span>{tt("rozrep.total_global_entries", "TOTAL GLOBAL ENTRIES:")}</span>
               <span className="font-black text-slate-800 dark:text-slate-200">{data?.totalCount ?? 0}</span>
             </div>
             <div className="flex justify-between items-center">
@@ -665,20 +667,20 @@ export function RoznamchaTypeReportView({
           </div>
           <div className="p-3 flex flex-col gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>TOTAL BILL ENTRIES:</span>
+              <span>{tt("rozrep.total_bill_entries", "TOTAL BILL ENTRIES:")}</span>
               <span className="font-black text-slate-800 dark:text-slate-200">{data?.totalCount ?? 0}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>CLEARED ENTRIES:</span>
+              <span>{tt("rozrep.cleared_entries", "CLEARED ENTRIES:")}</span>
               <span className="font-black text-emerald-600 dark:text-emerald-400">{data?.postedCount ?? 0}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-rose-600">REMAINING ENTRIES:</span>
+              <span className="text-rose-600">{tt("rozrep.remaining_entries", "REMAINING ENTRIES:")}</span>
               <span className="font-black text-rose-600">{data?.pendingCount ?? 0}</span>
             </div>
             <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[10px]">
-              <span>SYSTEM STATUS:</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400">ONLINE & SYNCED</span>
+              <span>{tt("rozrep.system_status", "SYSTEM STATUS:")}</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">{tt("rozrep.online_synced", "ONLINE & SYNCED")}</span>
             </div>
           </div>
         </div>
@@ -776,22 +778,22 @@ export function RoznamchaTypeReportView({
           <CardContent className="p-3.5 space-y-3">
             <div className="grid gap-3 md:grid-cols-4 xl:grid-cols-6">
               <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground">From Date</Label>
+                <Label className="text-[10px] text-muted-foreground">{tt("rozrep.from_date", "From Date")}</Label>
                 <Input className="h-8 text-xs" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground">To Date</Label>
+                <Label className="text-[10px] text-muted-foreground">{tt("rozrep.to_date", "To Date")}</Label>
                 <Input className="h-8 text-xs" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} />
               </div>
               {entryCategory === "all" ? (
                 <div className="space-y-1">
-                  <Label className="text-[10px] text-muted-foreground">Entry Type</Label>
+                  <Label className="text-[10px] text-muted-foreground">{tt("rozrep.entry_type", "Entry Type")}</Label>
                   <select
                     className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
                     value={selectedCategory}
                     onChange={(e) => setSelectedCategory(e.target.value as RoznamchaEntryCategory | "all")}
                   >
-                    <option value="all">All Types</option>
+                    <option value="all">{tt("rozrep.all_types", "All Types")}</option>
                     {(["business", "bank", "cash", "invoice", "transfer"] as RoznamchaEntryCategory[]).map((value) => (
                       <option key={value} value={value}>{getCategoryLabel(value, activeLang)}</option>
                     ))}
@@ -799,41 +801,41 @@ export function RoznamchaTypeReportView({
                 </div>
               ) : null}
               <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground">Debit / Credit</Label>
+                <Label className="text-[10px] text-muted-foreground">{tt("rozrep.debit_credit", "Debit / Credit")}</Label>
                 <select
                   className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
                   value={debitCredit}
                   onChange={(e) => setDebitCredit(e.target.value)}
                 >
-                  <option value="all">All</option>
-                  <option value="debit">Debit</option>
-                  <option value="credit">Credit</option>
+                  <option value="all">{tt("rozrep.all", "All")}</option>
+                  <option value="debit">{tt("rozrep.debit", "Debit")}</option>
+                  <option value="credit">{tt("rozrep.credit", "Credit")}</option>
                 </select>
               </div>
               <SearchSelect
                 label="Currency"
                 value={currency}
-                placeholder="All"
+                placeholder={tt("rozrep.all", "All")}
                 options={[{ value: "all", label: "All" }, ...currencyOptions]}
                 onValueChange={setCurrency}
               />
               <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground">Status</Label>
+                <Label className="text-[10px] text-muted-foreground">{tt("rozrep.status", "Status")}</Label>
                 <select
                   className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs"
                   value={status}
                   onChange={(e) => setStatus(e.target.value)}
                 >
-                  <option value="all">All</option>
-                  <option value="draft">Draft</option>
-                  <option value="posted">Posted</option>
-                  <option value="transferred">Transferred</option>
-                  <option value="cancelled">Cancelled</option>
+                  <option value="all">{tt("rozrep.all", "All")}</option>
+                  <option value="draft">{tt("rozrep.draft", "Draft")}</option>
+                  <option value="posted">{tt("rozrep.posted", "Posted")}</option>
+                  <option value="transferred">{tt("rozrep.transferred", "Transferred")}</option>
+                  <option value="cancelled">{tt("rozrep.cancelled", "Cancelled")}</option>
                 </select>
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground">Reference No</Label>
-                <Input className="h-8 text-xs" value={referenceNo} onChange={(e) => setReferenceNo(e.target.value)} placeholder="Reference number" />
+                <Label className="text-[10px] text-muted-foreground">{tt("rozrep.reference_no", "Reference No")}</Label>
+                <Input className="h-8 text-xs" value={referenceNo} onChange={(e) => setReferenceNo(e.target.value)} placeholder={tt("rozrep.reference_ph", "Reference number")} />
               </div>
               <div className="space-y-1">
                 <Label className="text-[10px] text-muted-foreground">Bill No</Label>
@@ -863,28 +865,28 @@ export function RoznamchaTypeReportView({
             <table className="w-full min-w-[1400px] border-collapse text-xs">
               <thead className="bg-slate-900 text-white">
                 <tr>
-                  <ReportTh>S.No</ReportTh>
+                  <ReportTh>{tt("rozrep.sno", "S.No")}</ReportTh>
                   <th
                     className="p-2.5 text-center font-bold cursor-pointer select-none hover:bg-slate-800 whitespace-nowrap"
                     onClick={() => toggleSort("entry_date")}
                   >
-                    Date {sortBy === "entry_date" ? (sortDir === "asc" ? "↑" : "↓") : ""}
+                    {tt("rozrep.date", "Date")} {sortBy === "entry_date" ? (sortDir === "asc" ? "↑" : "↓") : ""}
                   </th>
-                  <ReportTh>Entry Serial</ReportTh>
-                  <ReportTh>Country</ReportTh>
-                  <ReportTh>Branch</ReportTh>
-                  <ReportTh>User</ReportTh>
-                  <ReportTh>Entry Type</ReportTh>
-                  <ReportTh>Roznamcha Type</ReportTh>
-                  <ReportTh>Account No</ReportTh>
-                  <ReportTh className="text-start">Account Name</ReportTh>
-                  <ReportTh className="text-start">Narration / Remarks</ReportTh>
-                  <ReportTh>Currency</ReportTh>
-                  <ReportTh className="text-right">Debit</ReportTh>
-                  <ReportTh className="text-right">Credit</ReportTh>
-                  <ReportTh className="text-right">Balance</ReportTh>
-                  <ReportTh>Bill/Ref No</ReportTh>
-                  <ReportTh>Status</ReportTh>
+                  <ReportTh>{tt("rozrep.entry_serial", "Entry Serial")}</ReportTh>
+                  <ReportTh>{tt("rozrep.country", "Country")}</ReportTh>
+                  <ReportTh>{tt("rozrep.branch", "Branch")}</ReportTh>
+                  <ReportTh>{tt("rozrep.user", "User")}</ReportTh>
+                  <ReportTh>{tt("rozrep.entry_type", "Entry Type")}</ReportTh>
+                  <ReportTh>{tt("rozrep.roznamcha_type", "Roznamcha Type")}</ReportTh>
+                  <ReportTh>{tt("rozrep.account_no", "Account No")}</ReportTh>
+                  <ReportTh className="text-start">{tt("rozrep.account_name", "Account Name")}</ReportTh>
+                  <ReportTh className="text-start">{tt("rozrep.narration", "Narration / Remarks")}</ReportTh>
+                  <ReportTh>{tt("rozrep.currency", "Currency")}</ReportTh>
+                  <ReportTh className="text-right">{tt("rozrep.debit", "Debit")}</ReportTh>
+                  <ReportTh className="text-right">{tt("rozrep.credit", "Credit")}</ReportTh>
+                  <ReportTh className="text-right">{tt("rozrep.balance", "Balance")}</ReportTh>
+                  <ReportTh>{tt("rozrep.bill_ref", "Bill/Ref No")}</ReportTh>
+                  <ReportTh>{tt("rozrep.status", "Status")}</ReportTh>
                 </tr>
               </thead>
               <tbody>
@@ -919,8 +921,8 @@ export function RoznamchaTypeReportView({
                         <ReportTd className="font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
                           {line?.ledgers?.name ?? "-"}
                         </ReportTd>
-                        <ReportTd className="text-start max-w-[240px] truncate text-slate-600 dark:text-slate-300" title={row.narration || ""}>
-                          {row.narration || "-"}
+                        <ReportTd className="text-start max-w-[240px] truncate text-slate-600 dark:text-slate-300">
+                          <span title={row.narration || ""}>{row.narration || "-"}</span>
                         </ReportTd>
                         <ReportTd className="text-center font-mono font-bold text-slate-700 dark:text-slate-300">
                           {line?.currency ?? row.countries?.currency_code ?? "-"}
