@@ -45,7 +45,7 @@ export async function GET(request: NextRequest) {
       null
     );
 
-    const admin = createSupabaseAdminClient();
+    const admin = createSupabaseAdminClient() as any;
 
     // Query country_tax_settings table
     let query = admin
@@ -117,7 +117,7 @@ export async function POST(request: NextRequest) {
       return handleApiError(new Error("You do not have permission to manage tax settings for this country."));
     }
 
-    const admin = createSupabaseAdminClient();
+    const admin = createSupabaseAdminClient() as any;
     const nameTranslations = generateLocalTranslations(parsed.taxName);
 
     // Upsert payload
@@ -207,7 +207,7 @@ export async function DELETE(request: NextRequest) {
       return handleApiError(new Error("Tax ID parameter is required"));
     }
 
-    const admin = createSupabaseAdminClient();
+    const admin = createSupabaseAdminClient() as any;
     const { error } = await admin.from("country_tax_settings").delete().eq("id", taxId);
 
     if (error) {

@@ -52,7 +52,7 @@ function money(value: number, currency = "USD") {
 }
 
 async function countRows(supabase: ReturnType<typeof createSupabaseAdminClient>, table: string, deleted = true) {
-  let query = supabase.from(table).select("id", { count: "exact", head: true });
+  let query = (supabase as any).from(table).select("id", { count: "exact", head: true });
   if (deleted) query = query.is("deleted_at", null);
   const { count, error } = await query;
   if (error) return 0;

@@ -25,7 +25,7 @@ async function authorizeRecord(requestedTable: string, recordId: string, action:
   const adapter = getTranslationRecordAdapter(requestedTable);
   if (!adapter) throw new ApiClientError("Unsupported translation record type.");
   const session = await requireErpSession();
-  const supabase = await createApiSupabaseClient();
+  const supabase = (await createApiSupabaseClient()) as any;
   const record = await requireSupabaseData(
     supabase.from(requestedTable).select("id, country_id, country_branch_id, city_branch_id").eq("id", recordId).is("deleted_at", null).maybeSingle()
   );

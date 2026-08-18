@@ -38,7 +38,7 @@ function withTimeout<T>(promise: PromiseLike<T>, fallback: T, ms = 3500): Promis
 async function safeCount(table: string, build?: (query: QueryBuilder) => QueryBuilder): Promise<number> {
   try {
     const supabase = createSupabaseAdminClient();
-    let query: QueryBuilder = supabase.from(table).select("id", { count: "exact", head: true });
+    let query: QueryBuilder = (supabase as any).from(table).select("id", { count: "exact", head: true });
     if (build) query = build(query);
     const { count, error } = await withTimeout<QueryResult<unknown>>(query, {
       count: 0,

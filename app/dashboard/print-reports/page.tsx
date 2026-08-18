@@ -166,10 +166,11 @@ export default function PrintReportsHubPage() {
     setActivityLoading(true);
     setActivityError(null);
     try {
-      const res = await fetch("/api/reports/activity-summary");
+      const res = await fetch("/api/erp/reports/activity-summary");
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const json: ActivityData = await res.json();
-      setActivityData(json);
+      const json = await res.json();
+      const data: ActivityData = (json && typeof json === "object" && "data" in json) ? json.data : json;
+      setActivityData(data);
     } catch (e: any) {
       setActivityError(e.message || "Failed to load activity summary");
     } finally {
@@ -182,20 +183,38 @@ export default function PrintReportsHubPage() {
     setLoading(true);
     try {
       const [poRes, loadRes, salesRes, rozRes, accRes, ledgRes] = await Promise.allSettled([
-        fetch("/api/erp/purchase/orders?limit=100").then(r => r.ok ? r.json() : { orders: [] }),
-        fetch("/api/erp/purchase/loading-records?limit=100").then(r => r.ok ? r.json() : { records: [] }),
+        fetch("/api/erp/purchases/orders?limit=100").then(r => r.ok ? r.json() : { orders: [] }),
+        fetch("/api/erp/purchases/loading-records?limit=100").then(r => r.ok ? r.json() : { records: [] }),
         fetch("/api/erp/sales/orders?limit=100").then(r => r.ok ? r.json() : { orders: [] }),
-        fetch("/api/erp/roznamcha/entries?limit=100").then(r => r.ok ? r.json() : { entries: [] }),
+        fetch("/api/erp/roznamcha?limit=100").then(r => r.ok ? r.json() : { entries: [] }),
         fetch("/api/erp/accounts?limit=100").then(r => r.ok ? r.json() : { accounts: [] }),
         fetch("/api/erp/ledgers?limit=100").then(r => r.ok ? r.json() : { ledgers: [] }),
       ]);
 
-      if (poRes.status === "fulfilled") setOrders(poRes.value.orders || []);
-      if (loadRes.status === "fulfilled") setLoadingRecords(loadRes.value.records || loadRes.value.data || []);
-      if (salesRes.status === "fulfilled") setSalesOrders(salesRes.value.orders || []);
-      if (rozRes.status === "fulfilled") setRoznamchaEntries(rozRes.value.entries || []);
-      if (accRes.status === "fulfilled") setAccountsList(accRes.value.accounts || []);
-      if (ledgRes.status === "fulfilled") setLedgersList(ledgRes.value.ledgers || []);
+      if (poRes.status === "fulfilled") {
+        const val = poRes.value;
+        setOrders(val.orders || val.data || (Array.isArray(val) ? val : []));
+      }
+      if (loadRes.status === "fulfilled") {
+        const val = loadRes.value;
+        setLoadingRecords(val.records || val.data || (Array.isArray(val) ? val : []));
+      }
+      if (salesRes.status === "fulfilled") {
+        const val = salesRes.value;
+        setSalesOrders(val.orders || val.data || (Array.isArray(val) ? val : []));
+      }
+      if (rozRes.status === "fulfilled") {
+        const val = rozRes.value;
+        setRoznamchaEntries(val.entries || val.data || (Array.isArray(val) ? val : []));
+      }
+      if (accRes.status === "fulfilled") {
+        const val = accRes.value;
+        setAccountsList(val.accounts || val.data || (Array.isArray(val) ? val : []));
+      }
+      if (ledgRes.status === "fulfilled") {
+        const val = ledgRes.value;
+        setLedgersList(val.ledgers || val.data || (Array.isArray(val) ? val : []));
+      }
     } catch (err) {
       console.error("Error fetching live report data:", err);
     } finally {
@@ -214,31 +233,42 @@ export default function PrintReportsHubPage() {
   
   // 1. Customer Ledger Report
   const handlePrintCustomerLedger = useCallback(() => {
-    const dataList: CustomerLedgerReportData[] = roznamchaEntries.slice(0, 10).map((r, i) => ({
-      serialNo: r.super_admin_serial_number || `SA-${202600 + i}`,
-      journalNo: r.journal_no || `J-${900 + i}`,
-      voucherNo: r.voucher_no || `V-${100 + i}`,
-      entryDate: r.entry_date || new Date().toISOString().slice(0, 10),
-      narration: r.narration || "Customer transaction settlement",
-      preparedBy: "Super Admin",
-      totalDebit: Number(r.total_debit || 50000),
-      totalCredit: Number(r.total_credit || 0),
-      currency: r.currency || "PKR",
-      drCrStatus: "Dr",
-      runningBalance: 50000 + (i * 10000),
+    const rows = roznamchaEntries.slice(0, 10).map((r, i) => ({
+      srNo: i + 1,
+      date: r.entry_date || new Date().toISOString().slice(0, 10),
+      branchEntryNo: r.super_admin_serial_number || `SA-${202600 + i}`,
+      userName: "Super Admin",
+      branchName: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
+      roznamachaNameAndNo: `Roznamcha / ${r.voucher_no || `V-${100 + i}`}`,
+      remarks: r.narration || "Customer transaction settlement",
+      debit: Number(r.total_debit || 50000),
+      credit: Number(r.total_credit || 0),
+      balance: 50000 + (i * 10000),
+      dcType: "Dr" as const,
     }));
 
     openCustomerLedgerPrintReport({
-      title: "Customer Ledger Report & Account Statement",
-      subtitle: "Enterprise Account Statement & Audit Trail",
-      customerName: "All Active Cargo & Transit Customers",
-      accountNumber: "ACT-MASTER-001",
-      openingBalance: 100000,
-      openingDrCr: "Dr",
-      openingCurrency: "PKR",
-      entries: dataList.length ? dataList : undefined,
-      selectedBranchName: selectedBranch === "All Branches" ? "Global" : selectedBranch,
-      selectedCountryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
+      report: {
+        customerName: "All Active Cargo & Transit Customers",
+        customerCode: "CUST-ALL-001",
+        openingBalance: 100000,
+        openingDcType: "Dr",
+        totalDebit: rows.reduce((s, r) => s + (r.debit || 0), 0),
+        totalCredit: rows.reduce((s, r) => s + (r.credit || 0), 0),
+        closingBalance: 150000,
+        closingDcType: "Dr",
+        country: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
+        branch: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
+        currency: "PKR",
+        salesAccount: "1010",
+        customerAccount: "2010",
+        roznamachaName: "Main Cash Roznamcha",
+        roznamachaNo: "RN-001",
+        rows
+      },
+      companyInfo: {
+        name: "DGT LLC Accounts ERP"
+      }
     });
   }, [roznamchaEntries, selectedBranch, selectedCountry]);
 
@@ -248,36 +278,39 @@ export default function PrintReportsHubPage() {
       const payload = lr.report_payload || {};
       return {
         id: lr.id || `LR-${i+1}`,
-        loadingRecordNo: lr.loading_record_no || payload.loadingRecordNo || `LR-2026-00${i+1}`,
-        poNo: lr.po_no || payload.poNo || `PO-2026-000${i+1}`,
-        contractNo: lr.contract_no || payload.contractNo || `CN-900${i+1}`,
-        supplierName: lr.supplier_name || payload.supplierName || "Al-Futtaim Trading UAE",
-        goodsName: lr.goods_name || payload.goodsName || "Almonds / Dry Fruits",
-        containerNo: lr.container_no || payload.containerNo || `CNTR-${8800 + i}`,
-        blNo: lr.bl_no || payload.blNo || `BL-9900${i}`,
+        country: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
+        branch: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
+        purchaseBookingNo: lr.po_no || payload.poNo || `PO-2026-000${i+1}`,
+        salesAccount: "1010",
+        purchaseAccount: "2010",
+        goods: lr.goods_name || payload.goodsName || "Almonds / Dry Fruits",
+        contractQty: Number(lr.contract_qty || payload.contractQty || 25000),
         grossWeight: Number(lr.gross_weight || payload.grossWeight || 25000),
         tareWeight: Number(lr.tare_weight || payload.tareWeight || 2200),
         netWeight: Number(lr.net_weight || payload.netWeight || 22800),
-        contractQty: Number(lr.contract_qty || payload.contractQty || 25000),
+        purchasePriceRate: Number(lr.fc_rate || payload.fcRate || 3.5),
+        totalPurchaseFc: Number(lr.fc_amount || payload.fcAmount || 79800),
+        advanceFc: 0,
+        remainingFc: Number(lr.fc_amount || payload.fcAmount || 79800),
+        currencyFc: lr.currency || payload.currency || "USD",
+        exchangeRate: Number(lr.lc_rate || payload.lcRate || 280),
+        finalAmountLc: Number(lr.lc_amount || payload.lcAmount || 6384000),
+        finalAdvanceLc: 0,
+        finalRemainingLc: Number(lr.lc_amount || payload.lcAmount || 6384000),
+        currencyLc: "PKR",
         loadedQty: Number(lr.loaded_qty || payload.loadedQty || 22800),
-        fcRate: Number(lr.fc_rate || payload.fcRate || 3.5),
-        lcRate: Number(lr.lc_rate || payload.lcRate || 280),
-        fcAmount: Number(lr.fc_amount || payload.fcAmount || 79800),
-        lcAmount: Number(lr.lc_amount || payload.lcAmount || 6384000),
-        currency: lr.currency || payload.currency || "USD",
-        loadingDate: lr.loading_date || payload.loadingDate || new Date().toISOString().slice(0, 10),
-        status: lr.status || payload.status || "loaded",
-        countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-        branchName: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
-        branchCode: "PK-KHI-MAIN",
+        remainingToLoad: Math.max(0, Number(lr.contract_qty || 25000) - Number(lr.loaded_qty || 22800)),
+        loadingStatus: lr.status || payload.status || "Completed"
       };
     });
 
     openLoadingRecordsPrintReport({
-      title: "Purchase Loading Records Report",
-      records: rows.length ? rows : undefined,
-      selectedBranchName: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
-      selectedCountryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
+      rows,
+      companyInfo: {
+        name: "DGT LLC Accounts ERP",
+        country: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
+        branch: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch
+      }
     });
   }, [loadingRecords, selectedBranch, selectedCountry]);
 
@@ -286,79 +319,90 @@ export default function PrintReportsHubPage() {
     const rows: FinalizedPORow[] = orders.slice(0, 10).map((o, i) => {
       const form = o.form_data?.form || {};
       return {
-        poNo: o.purchase_order_no || `PO-2026-000${i+1}`,
-        contractNo: o.purchase_contract_no || `CN-7700${i+1}`,
-        supplierName: form.supplierName || "Al-Futtaim Trading UAE",
-        goodsName: form.goodsName || form.productName || "Dry Fruits Transit",
-        containers: Number(form.containerCount || 2),
-        totalWeight: Number(form.totalWeight || 45000),
-        amountUSD: Number(o.order_total || 85000),
-        amountPKR: Number(o.order_total || 85000) * 280,
-        currency: form.currencyType || "USD",
-        orderDate: o.order_date || o.created_at?.slice(0, 10) || "2026-06-12",
+        id: o.id || `PO-${i+1}`,
+        poNumber: o.purchase_order_no || `PO-2026-000${i+1}`,
+        country: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
+        branch: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
+        supplier: form.supplierName || "Al-Futtaim Trading UAE",
+        goods: form.goodsName || form.productName || "Dry Fruits Transit",
+        contractQty: Number(form.quantity || 25000),
+        grossWeight: Number(form.totalWeight || 45000),
+        netWeight: Number(form.totalWeight || 45000),
+        purchaseRate: Number(form.purchaseRate || 3.4),
+        totalPurchaseFc: Number(o.order_total || 85000),
+        advanceFc: 0,
+        remainingFc: Number(o.order_total || 85000),
+        currencyFc: form.currencyType || "USD",
+        exchangeRate: 280,
+        finalAmountLc: Number(o.order_total || 85000) * 280,
+        finalAdvanceLc: 0,
+        finalRemainingLc: Number(o.order_total || 85000) * 280,
+        currencyLc: "PKR",
         status: o.order_status || "Finalized",
-        paymentStatus: o.payment_status || "Posted",
-        branchName: o.branchName || "Main Branch",
-        branchCode: o.branchCode || "PK-MAIN-001",
-        countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
+        createdAt: o.order_date || o.created_at?.slice(0, 10) || "2026-06-12"
       };
     });
 
     openFinalizedPOPrintReport({
-      title: "Finalized Purchase Orders Report",
-      subtitle: "Completed Purchase Contracts & Ledger Breakdown",
-      orders: rows.length ? rows : undefined,
-      selectedBranchName: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
-      selectedCountryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
+      rows,
+      companyInfo: {
+        name: "DGT LLC Accounts ERP",
+        country: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
+        branch: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch
+      }
     });
   }, [orders, selectedBranch, selectedCountry]);
 
   // 4. Transfer Payment Voucher
   const handlePrintTransferPayment = useCallback(() => {
     openTransferPaymentPrintReport({
-      title: "Purchase Transfer Payment Voucher",
-      voucherNo: "VP-2026-902",
-      transferNo: "TR-2026-0012",
-      poNo: "PO-2026-0001",
-      date: new Date().toISOString().slice(0, 10),
-      supplierName: "Al-Futtaim Trading UAE",
-      fromAccount: "1010 - Cash in Hand Vault",
-      toAccount: "2010 - Accounts Payable Supplier",
-      amountDigits: 85000,
-      amountWords: "Eighty-Five Thousand US Dollars Only",
-      currency: "USD",
-      exchangeRate: 280,
-      amountPKR: 23800000,
-      narration: "Transfer payment for cargo container shipment loading #PO-2026-0001",
-      preparedBy: "Super Admin",
-      approvedBy: "Enterprise Controller",
-      countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-      branchName: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
-      branchCode: "PK-KHI-MAIN",
+      record: {
+        id: "VP-2026-902",
+        voucherNo: "VP-2026-902",
+        billNo: "PO-2026-0001",
+        transferDate: new Date().toISOString().slice(0, 10),
+        supplierName: "Al-Futtaim Trading UAE",
+        branchName: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
+        countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
+        goodsName: "Cargo Container Shipment",
+        paymentMode: "Bank Transfer",
+        bankOrCashAccount: "1010 - Cash in Hand Vault",
+        amountFc: 85000,
+        currencyFc: "USD",
+        exchangeRate: 280,
+        amountLc: 23800000,
+        currencyLc: "PKR",
+        amountInWords: "Eighty-Five Thousand US Dollars Only",
+        purchaseAccountNo: "2010 - Accounts Payable Supplier",
+        narration: "Transfer payment for cargo container shipment loading #PO-2026-0001"
+      },
+      companyInfo: {
+        name: "DGT LLC Accounts ERP"
+      }
     });
   }, [selectedBranch, selectedCountry]);
 
   // 5. Recent Cash Entries
   const handlePrintCashEntries = useCallback(() => {
     const lines: CashEntryLine[] = roznamchaEntries.slice(0, 10).map((r, i) => ({
-      serialNo: r.super_admin_serial_number || `SA-${202600 + i}`,
-      journalNo: r.journal_no || `J-${900 + i}`,
+      id: r.id || `CASH-${i+1}`,
       voucherNo: r.voucher_no || `V-${100 + i}`,
       entryDate: r.entry_date || "2026-06-12",
+      accountCode: r.account_code || "1010",
+      accountTitle: r.account_title || "Cash in Hand Vault",
       narration: r.narration || "Daily cash entry transaction",
-      preparedBy: "Jan Ali",
+      user: "Super Admin",
+      branch: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
       debit: Number(r.total_debit || 50000),
       credit: Number(r.total_credit || 0),
       currency: r.currency || "PKR",
-      status: r.status || "posted",
     }));
 
     openRecentCashEntriesPrintReport({
-      title: "Recent Cash Entries (Roznamcha) Report",
-      subtitle: "Daily Cash Journal Sheet & Debit/Credit Audit",
-      entries: lines.length ? lines : undefined,
-      selectedBranchName: selectedBranch === "All Branches" ? "Main Branch" : selectedBranch,
-      selectedCountryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
+      entries: lines,
+      companyInfo: {
+        name: "DGT LLC Accounts ERP"
+      }
     });
   }, [roznamchaEntries, selectedBranch, selectedCountry]);
 
@@ -406,30 +450,41 @@ export default function PrintReportsHubPage() {
     const po = orders[0];
     const form = po?.form_data?.form || {};
     openPurchaseBookingOrderPrintReport({
-      title: "New Purchase Booking Order Document",
-      purchaseData: {
+      order: {
         id: po?.id || "PO-001",
-        purchaseBookingOrderNumber: po?.purchase_order_no || "PO-2026-0001",
-        purchaseDate: form.purchaseDate || "2026-06-12",
+        systemBillNo: po?.purchase_order_no || "PO-2026-0001",
         bookingDate: po?.created_at || "2026-06-12",
         supplierName: form.supplierName || "Al-Futtaim Trading UAE",
-        buyerName: form.buyerName || "DAMAN BUSINESS GROUP",
-        productName: form.goodsName || form.productName || "Almonds / Dry Fruits",
-        goodsDescription: form.goodsName || "Almonds / Dry Fruits",
-        quantity: Number(form.quantity || 25000),
-        unit: form.unit || "KGS",
-        totalWeight: Number(form.totalWeight || 25000),
-        containerCount: Number(form.containerCount || 4),
-        purchaseRate: Number(form.purchaseRate || 3.4),
-        totalPurchaseAmount: Number(po?.order_total || 85000),
-        currency: form.currencyType || "USD",
-        status: po?.order_status || "Active",
-        paymentStatus: po?.payment_status || "Pending",
-        branchName: po?.branchName || selectedBranch,
-        countryName: po?.countryName || selectedCountry,
-        createdAt: po?.created_at || new Date().toISOString(),
-        audit: { userName: "Super Admin", userId: "SA-001", branchCode: "PK-MAIN-001" },
+        purchaseAccountNo: "2010",
+        purchaseAccountName: "Supplier Account",
+        salesAccountNo: "1010",
+        salesAccountName: "Sales Customer Account",
+        countryName: po?.countryName || (selectedCountry === "All Countries" ? "Pakistan" : selectedCountry),
+        branchName: po?.branchName || (selectedBranch === "All Branches" ? "Main Branch" : selectedBranch),
+        goodsItems: [
+          {
+            srNo: 1,
+            goodsName: form.goodsName || form.productName || "Almonds / Dry Fruits",
+            quantity: Number(form.quantity || 25000),
+            grossWeight: Number(form.totalWeight || 25000),
+            netWeight: Number(form.totalWeight || 25000),
+            rateKg: Number(form.purchaseRate || 3.4),
+            amountFc: Number(po?.order_total || 85000),
+            currencyFc: form.currencyType || "USD",
+            exchangeRate: 280,
+            amountLc: Number(po?.order_total || 85000) * 280,
+            currencyLc: "PKR"
+          }
+        ],
+        totalPurchaseFc: Number(po?.order_total || 85000),
+        currencyFc: form.currencyType || "USD",
+        totalPurchaseLc: Number(po?.order_total || 85000) * 280,
+        currencyLc: "PKR",
+        status: po?.order_status || "Active"
       },
+      companyInfo: {
+        name: "DGT LLC Accounts ERP"
+      }
     });
   }, [orders, selectedBranch, selectedCountry]);
 
@@ -437,24 +492,21 @@ export default function PrintReportsHubPage() {
   const handlePrintRoznamchaVoucher = useCallback(() => {
     const r = roznamchaEntries[0];
     openRoznamchaVoucherPrintReport({
-      title: "Roznamcha Payment / Receipt Voucher",
-      voucherNo: r?.voucher_no || "V-102",
-      journalNo: r?.journal_no || "J-902",
-      serialNo: r?.super_admin_serial_number || "SA-2026-0001",
-      date: r?.entry_date || "2026-06-12",
-      voucherType: "Receipt",
-      partyName: "Mohammad Shah Custom Imports",
-      accountTitle: "1010 - Cash in Hand Vault",
-      amountDigits: Number(r?.total_debit || 500000),
-      amountWords: "Five Hundred Thousand Pakistani Rupees Only",
-      currency: r?.currency || "PKR",
-      narration: r?.narration || "Opening cash load Pakistan Main Branch",
-      preparedBy: "Jan Ali",
-      approvedBy: "Super Admin",
-      branchName: selectedBranch === "All Branches" ? "Pakistan Main Branch" : selectedBranch,
-      countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
-      branchCode: "PK-KHI-MAIN",
-      companyInfo: { name: "DIGITAL DOCK ERP" },
+      data: {
+        receiptNo: r?.voucher_no || "V-102",
+        voucherNo: r?.voucher_no || "V-102",
+        date: r?.entry_date || "2026-06-12",
+        accountNo: "1010",
+        accountName: "1010 - Cash in Hand Vault",
+        amount: Number(r?.total_debit || 500000),
+        currency: r?.currency || "PKR",
+        narration: r?.narration || "Opening cash load Pakistan Main Branch",
+        type: "receipt",
+        branchName: selectedBranch === "All Branches" ? "Pakistan Main Branch" : selectedBranch,
+        countryName: selectedCountry === "All Countries" ? "Pakistan" : selectedCountry,
+        createdByName: "Super Admin"
+      },
+      companyInfo: { name: "DIGITAL DOCK ERP" }
     });
   }, [roznamchaEntries, selectedBranch, selectedCountry]);
 

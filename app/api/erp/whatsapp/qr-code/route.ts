@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
       const { data: inserted } = await admin
         .from("whatsapp_accounts")
         .insert({
-          scope,
+          scope: scope as "super_admin" | "country" | "city_branch" | "country_branch",
           country_id: countryId,
           city_branch_id: cityBranchId,
           display_name: `${scope.toUpperCase()} WhatsApp (${phoneNumber})`,

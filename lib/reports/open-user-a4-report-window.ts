@@ -26,6 +26,9 @@ export type UserReportData = {
   employmentType?: string;
   joiningDate?: string;
   contractStartDate?: string;
+  contractEndDate?: string;
+  jobStatus?: string;
+  workingShift?: string;
   employeeCode?: string;
   phone?: string;
   email?: string;

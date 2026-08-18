@@ -4,7 +4,7 @@ import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 
 export async function GET(req: NextRequest) {
   try {
-    const supabase = createSupabaseAdminClient();
+    const supabase = createSupabaseAdminClient() as any;
     let query = supabase
       .from("shipping_agent_entries")
       .select("*")
@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   try {
-    const supabase = createSupabaseAdminClient();
+    const supabase = createSupabaseAdminClient() as any;
     const body = await req.json();
 
     const {

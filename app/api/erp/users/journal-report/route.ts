@@ -217,7 +217,10 @@ async function requireJournalSession(request: NextRequest) {
       countryIds: [],
       countryBranchIds: [],
       cityBranchIds: [],
-      isSuperAdmin: true
+      isSuperAdmin: true,
+      clearingAgentIds: [],
+      ledgerVisibility: "full",
+      isShippingScoped: false
     } satisfies ErpSession;
   }
 
@@ -236,7 +239,10 @@ function fallbackReportSession(): ErpSession {
     countryIds: [],
     countryBranchIds: [],
     cityBranchIds: [],
-    isSuperAdmin: true
+    isSuperAdmin: true,
+    clearingAgentIds: [],
+    ledgerVisibility: "full",
+    isShippingScoped: false
   };
 }
 

@@ -392,8 +392,8 @@ export async function PATCH(request: NextRequest) {
       idExpiryDate: z.string().trim().optional(),
       kycStatus: z.string().trim().optional(),
       residentialAddress: z.string().trim().optional(),
-      employeeId: optionalUuidSchema,
-      personMasterId: optionalUuidSchema,
+      employeeId: uuidSchema.nullable().optional(),
+      personMasterId: uuidSchema.nullable().optional(),
       firstName: z.string().trim().optional(),
       middleName: z.string().trim().optional(),
       lastName: z.string().trim().optional(),
@@ -408,7 +408,7 @@ export async function PATCH(request: NextRequest) {
     if (!session.isSuperAdmin) {
       if (!isCountryManager) throw new Error("Not authorized to update users.");
       // If updating scope, ensure it matches current session country.
-      if (body.countryId && !session.countryIds.includes(body.countryId)) {
+      if (body.countryId && !session.countryIds.includes(body.countryId as string)) {
         throw new Error("Country scope is not allowed.");
       }
     }
@@ -578,7 +578,7 @@ export async function PATCH(request: NextRequest) {
     await auditApiAction(request, {
       action: "users.update.api",
       entityTable: "profiles",
-      entityId: body.userId,
+      entityId: body.userId as string,
       after: {
         userId: body.userId,
         isActive: body.isActive,

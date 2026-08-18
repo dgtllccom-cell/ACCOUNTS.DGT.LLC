@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
     }
     
     const { data: accounts } = await accountQuery;
-    const account = accounts?.find(a => a.is_default) ?? accounts?.[0] ?? null;
+    const account = accounts?.find((a: any) => a.is_default) ?? accounts?.[0] ?? null;
     if (!account) {
       throw new Error("No active WhatsApp account found for your branch scope.");
     }
