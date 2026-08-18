@@ -51,6 +51,7 @@ type ReportLine = {
   debit: number | null;
   credit: number | null;
   currency: string | null;
+  account_number?: string | null;
   ledger_id: string | null;
   ledgers?: { name: string; code: string } | null;
 };
@@ -59,6 +60,10 @@ type ReportRow = {
   id: string;
   type: string;
   entry_category: RoznamchaEntryCategory | null;
+  super_admin_serial_number?: string | null;
+  entry_serial_number?: string | null;
+  country_transaction_serial_number?: string | null;
+  branch_transaction_serial_number?: string | null;
   country_id: string | null;
   countries?: { name: string; currency_code?: string } | null;
   country_branch_id: string | null;
@@ -123,6 +128,29 @@ function monthStartIso() {
   return d.toISOString().slice(0, 10);
 }
 
+function cleanDate(val: string | null | undefined): string {
+  if (!val) return "-";
+  if (val.includes("T")) return val.split("T")[0];
+  if (val.includes(" ")) return val.split(" ")[0];
+  return val;
+}
+
+function entrySerial(row: ReportRow): string {
+  return (
+    row.super_admin_serial_number ||
+    row.entry_serial_number ||
+    row.country_transaction_serial_number ||
+    row.branch_transaction_serial_number ||
+    row.voucher_no ||
+    "-"
+  );
+}
+
+function formatEntryType(val: string | null | undefined): string {
+  if (!val) return "-";
+  return val.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 function fmtNumber(value: number | string | null | undefined) {
   const n = Number(value);
   if (!Number.isFinite(n)) return "0.00";
@@ -159,53 +187,63 @@ function primaryLine(row: ReportRow): ReportLine | undefined {
 
 function printReportTable(opts: { title: string; subtitle: string; rows: ReportRow[]; totals: { debit: number; credit: number }; lang: SupportedLanguage }) {
   if (typeof window === "undefined") return;
-  const win = window.open("", "_blank", "width=1100,height=800");
+  const win = window.open("", "_blank", "width=1300,height=800");
   if (!win) return;
 
   const bodyRows = opts.rows
     .map((row, idx) => {
       const line = primaryLine(row);
+      const debit = Number(line?.debit || 0);
+      const credit = Number(line?.credit || 0);
       return `<tr>
-        <td>${idx + 1}</td>
-        <td>${row.entry_date}${row.posted_at ? " " + new Date(row.posted_at).toLocaleTimeString() : ""}</td>
-        <td>${getCategoryLabel(row.entry_category, opts.lang)}</td>
-        <td>${line?.ledgers?.name ?? "-"}</td>
-        <td>${(row.narration ?? "-").slice(0, 80)}</td>
-        <td class="num">${line?.debit ? fmtNumber(Number(line.debit)) : ""}</td>
-        <td class="num">${line?.credit ? fmtNumber(Number(line.credit)) : ""}</td>
-        <td>${line?.currency ?? "-"}</td>
+        <td style="text-align:center;">${idx + 1}</td>
+        <td style="text-align:center;">${cleanDate(row.entry_date || row.created_at)}</td>
+        <td style="text-align:center;font-weight:bold;">${entrySerial(row)}</td>
+        <td>${row.countries?.name ?? "-"}</td>
         <td>${branchName(row)}</td>
-        <td>${billNumber(row)}</td>
-        <td>${row.status}</td>
+        <td>${row.profiles?.full_name ?? "-"}</td>
+        <td>${formatEntryType(row.source_transaction_type || row.type)}</td>
+        <td>${getCategoryLabel(row.entry_category, opts.lang)}</td>
+        <td style="font-family:monospace;">${line?.account_number || line?.ledgers?.code || "-"}</td>
+        <td style="font-weight:bold;">${line?.ledgers?.name ?? "-"}</td>
+        <td>${(row.narration ?? "-").slice(0, 80)}</td>
+        <td style="text-align:center;font-weight:bold;">${line?.currency ?? row.countries?.currency_code ?? "-"}</td>
+        <td class="num">${debit ? fmtNumber(debit) : "-"}</td>
+        <td class="num">${credit ? fmtNumber(credit) : "-"}</td>
+        <td class="num">${fmtNumber(credit - debit)}</td>
+        <td style="text-align:center;font-family:monospace;">${billNumber(row)}</td>
+        <td style="text-align:center;">${row.status}</td>
       </tr>`;
     })
     .join("");
 
   win.document.write(`<!doctype html><html><head><title>${opts.title}</title>
     <style>
-      body { font-family: Arial, sans-serif; padding: 24px; color: #111; }
+      body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
       h1 { font-size: 18px; margin-bottom: 2px; }
       p.sub { color: #555; margin-top: 0; font-size: 12px; }
-      table { width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 11px; }
-      th, td { border: 1px solid #ccc; padding: 4px 6px; text-align: left; }
-      th { background: #111; color: #fff; }
-      td.num { text-align: right; }
-      tfoot td { font-weight: bold; background: #f3f3f3; }
+      table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 10px; }
+      th, td { border: 1px solid #ccc; padding: 4px 5px; text-align: left; }
+      th { background: #0f172a; color: #fff; text-align: center; font-size: 10px; }
+      td.num { text-align: right; font-family: monospace; }
+      tfoot td { font-weight: bold; background: #f1f5f9; }
     </style>
   </head><body>
     <h1>${opts.title}</h1>
     <p class="sub">${opts.subtitle}</p>
     <table>
       <thead><tr>
-        <th>#</th><th>Date</th><th>Type</th><th>Account</th><th>Narration</th>
-        <th>Debit</th><th>Credit</th><th>Currency</th><th>Branch</th><th>Bill/Ref No</th><th>Status</th>
+        <th>S.No</th><th>Date</th><th>Entry Serial</th><th>Country</th><th>Branch</th><th>User</th>
+        <th>Entry Type</th><th>Roznamcha Type</th><th>Account No</th><th>Account Name</th><th>Narration / Remarks</th>
+        <th>Currency</th><th>Debit</th><th>Credit</th><th>Balance</th><th>Bill/Ref No</th><th>Status</th>
       </tr></thead>
       <tbody>${bodyRows}</tbody>
       <tfoot><tr>
-        <td colspan="5">Totals</td>
+        <td colspan="12">Totals</td>
         <td class="num">${fmtNumber(opts.totals.debit)}</td>
         <td class="num">${fmtNumber(opts.totals.credit)}</td>
-        <td colspan="4"></td>
+        <td class="num">${fmtNumber(opts.totals.credit - opts.totals.debit)}</td>
+        <td colspan="2"></td>
       </tr></tfoot>
     </table>
   </body></html>`);
@@ -346,23 +384,44 @@ export function RoznamchaTypeReportView({
 
   function exportCsv() {
     const header = [
-      "S.No", "Date", "Entry Type", "Account", "Narration", "Debit", "Credit",
-      "Currency", "Country", "Branch", "User", "Bill/Reference No", "Posting Status"
+      "S.No",
+      "Date",
+      "Entry Serial",
+      "Country",
+      "Branch",
+      "User",
+      "Entry Type",
+      "Roznamcha Type",
+      "Account No",
+      "Account Name",
+      "Narration / Remarks",
+      "Currency",
+      "Debit",
+      "Credit",
+      "Balance",
+      "Bill/Reference No",
+      "Posting Status"
     ];
     const csvRows = rows.map((row, idx) => {
       const line = primaryLine(row);
+      const debit = Number(line?.debit || 0);
+      const credit = Number(line?.credit || 0);
       return [
         String(idx + 1 + (page - 1) * pageSize),
-        row.entry_date,
-        getCategoryLabel(row.entry_category, activeLang),
-        line?.ledgers?.name ?? "-",
-        row.narration ?? "",
-        line?.debit ? String(line.debit) : "",
-        line?.credit ? String(line.credit) : "",
-        line?.currency ?? "",
+        cleanDate(row.entry_date || row.created_at),
+        entrySerial(row),
         row.countries?.name ?? "-",
         branchName(row),
         row.profiles?.full_name ?? "-",
+        formatEntryType(row.source_transaction_type || row.type),
+        getCategoryLabel(row.entry_category, activeLang),
+        line?.account_number || line?.ledgers?.code || "-",
+        line?.ledgers?.name ?? "-",
+        row.narration ?? "",
+        line?.currency ?? row.countries?.currency_code ?? "-",
+        debit ? String(debit) : "0.00",
+        credit ? String(credit) : "0.00",
+        String(credit - debit),
         billNumber(row),
         row.status
       ];
@@ -430,96 +489,85 @@ export function RoznamchaTypeReportView({
                 if (e.key === "Enter") applySearch();
               }}
               placeholder="Filter entries..."
-              className="h-7 pl-7 pr-2 text-[11px] rounded-lg"
+              className="h-7 pl-7 pr-6 text-[11px] rounded-lg border-slate-200 bg-slate-50 focus-visible:bg-white dark:border-slate-700 dark:bg-slate-800 dark:focus-visible:bg-slate-900"
             />
             {q && (
               <button
                 type="button"
                 onClick={() => {
                   setQ("");
-                  setPage(1);
+                  setTimeout(applySearch, 50);
                 }}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
               >
                 <X className="h-3 w-3" />
               </button>
             )}
           </div>
 
-          {/* Reload Button */}
+          {/* Reload / Refresh Button */}
           <Button
             type="button"
             variant="outline"
             size="sm"
-            className="h-7 gap-1 rounded-lg px-2 text-[10px] font-bold"
-            onClick={() => void loadData()}
+            onClick={reload}
             disabled={loading}
-            title="Reload data"
+            className="h-7 gap-1 rounded-lg border-slate-200 bg-slate-50 px-2 text-[10px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
             <RefreshCcw className={cn("h-3 w-3", loading && "animate-spin")} />
-            <span className="hidden md:inline">Reload</span>
+            Reload
           </Button>
         </div>
 
-        {/* Actions Dropdown */}
-        <div className="flex items-center gap-1.5">
-          <div className="relative">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="h-7 gap-1 rounded-lg px-2.5 text-[10px] font-bold bg-blue-50/50 hover:bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-950/30 dark:text-blue-300 dark:border-blue-800"
-              onClick={() => setActionsMenuOpen((v) => !v)}
-            >
-              <MoreVertical className="h-3 w-3" />
-              Actions
-            </Button>
-            {actionsMenuOpen ? (
+        {/* Action Dropdown Menu */}
+        <div className="relative">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setActionMenuOpen((v) => !v)}
+            className="h-7 gap-1 rounded-lg border-blue-200 bg-blue-50/50 px-2.5 text-[10px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-400"
+          >
+            <MoreVertical className="h-3 w-3" />
+            Actions
+          </Button>
+          {actionMenuOpen && (
+            <>
               <div
-                className="absolute right-0 top-full z-50 mt-1.5 w-52 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl dark:border-slate-800 dark:bg-slate-900 animate-in fade-in zoom-in-95"
-                onMouseLeave={() => setActionsMenuOpen(false)}
-              >
+                className="fixed inset-0 z-40"
+                onClick={() => setActionMenuOpen(false)}
+              />
+              <div className="absolute right-0 top-full mt-1 z-50 min-w-[170px] rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl animate-in fade-in zoom-in-95 dark:border-slate-800 dark:bg-slate-900">
                 <button
                   type="button"
-                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
                   onClick={() => {
-                    setActionsMenuOpen(false);
-                    void loadData();
-                  }}
-                >
-                  <RefreshCcw className="h-3.5 w-3.5 text-blue-600" />
-                  Reload Report
-                </button>
-                <button
-                  type="button"
-                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
-                  onClick={() => {
-                    setActionsMenuOpen(false);
+                    setActionMenuOpen(false);
                     printReport();
                   }}
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                 >
                   <Printer className="h-3.5 w-3.5 text-blue-600" />
                   Print / PDF
                 </button>
                 <button
                   type="button"
-                  className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 text-left"
                   onClick={() => {
-                    setActionsMenuOpen(false);
+                    setActionMenuOpen(false);
                     exportCsv();
                   }}
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
                 >
-                  <DownloadActionIcon className="h-3.5 w-3.5 text-teal-600" />
-                  Excel / CSV Export
+                  <DownloadActionIcon className="h-3.5 w-3.5 text-emerald-600" />
+                  Export to CSV
                 </button>
               </div>
-            ) : null}
-          </div>
+            </>
+          )}
         </div>
       </div>
 
-      {/* 4 Executive KPI Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-3">
+      {/* Top 4 KPI Analytics Cards (Matches exact ERP screenshot layout) */}
+      <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
         {/* Card 1: Branch & User Details */}
         <div className="flex flex-col rounded-xl border border-slate-200 bg-white shadow-xs dark:border-slate-800 dark:bg-slate-900 overflow-hidden">
           <div className="flex items-center gap-2 px-3 py-2 border-b border-slate-100 dark:border-slate-800 bg-blue-50/60 dark:bg-blue-900/15">
@@ -533,33 +581,44 @@ export function RoznamchaTypeReportView({
           <div className="p-3 flex flex-col gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
               <span>COUNTRY:</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">{sessionInfo?.scopes?.summary?.countryName || "United Arab Emirates"}</span>
+              <span className="font-black text-slate-800 dark:text-slate-200">
+                {session?.scopes?.summary?.countryName ?? "United Arab Emirates"}
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span>BRANCH NAME:</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase truncate max-w-[180px]">
-                {sessionInfo?.scopes?.summary?.branchDisplayName || sessionInfo?.scopes?.summary?.branchName || "UNITED ARAB EMIRATES MAIN BRANCH"}
+              <span className="font-black text-slate-800 dark:text-slate-200">
+                {session?.scopes?.summary?.branchDisplayName ?? session?.scopes?.summary?.branchName ?? "UNITED ARAB EMIRATES MAIN BRANCH"}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span>USER ID:</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] font-mono">{sessionInfo?.user?.id || "9B9D24D9-5532-47A1-B612"}</span>
+              <span className="font-mono text-[10px] text-slate-700 dark:text-slate-300">
+                {session?.user?.id ?? "90902409-5512-47d1-8612-3095f2285406"}
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span>USER NAME:</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{sessionInfo?.user?.fullName || sessionInfo?.user?.email || "SUPER ADMIN"}</span>
+              <span className="font-black text-slate-800 dark:text-slate-200">
+                {session?.user?.fullName ?? "SUPER ADMIN"}
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span>ROLE:</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{(sessionInfo?.roles?.[0] || "SUPER ADMIN").replace(/_/g, " ")}</span>
+              <span className="font-black text-blue-600 dark:text-blue-400 uppercase">
+                {session?.roles?.[0] ?? "SUPER ADMIN"}
+              </span>
             </div>
             <div className="flex justify-between items-center">
               <span>DATE & TIME:</span>
-              <span className="font-bold text-slate-800 dark:text-slate-200">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}</span>
+              <span className="font-bold text-slate-700 dark:text-slate-300">
+                {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })},{" "}
+                {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}
+              </span>
             </div>
-            <div className="flex justify-between items-center mt-auto pt-1">
+            <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[10px]">
               <span>STATUS:</span>
-              <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">ACTIVE</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">ACTIVE</span>
             </div>
           </div>
         </div>
@@ -801,33 +860,36 @@ export function RoznamchaTypeReportView({
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1200px] border-collapse text-xs">
+            <table className="w-full min-w-[1400px] border-collapse text-xs">
               <thead className="bg-slate-900 text-white">
                 <tr>
                   <ReportTh>S.No</ReportTh>
                   <th
-                    className="p-2.5 text-center font-bold cursor-pointer select-none hover:bg-slate-800"
+                    className="p-2.5 text-center font-bold cursor-pointer select-none hover:bg-slate-800 whitespace-nowrap"
                     onClick={() => toggleSort("entry_date")}
                   >
-                    Date / Time {sortBy === "entry_date" ? (sortDir === "asc" ? "↑" : "↓") : ""}
+                    Date {sortBy === "entry_date" ? (sortDir === "asc" ? "↑" : "↓") : ""}
                   </th>
-                  <ReportTh>Entry Type</ReportTh>
-                  <ReportTh>Account</ReportTh>
-                  <ReportTh className="text-start">Narration</ReportTh>
-                  <ReportTh>Debit</ReportTh>
-                  <ReportTh>Credit</ReportTh>
-                  <ReportTh>Balance</ReportTh>
-                  <ReportTh>Currency</ReportTh>
+                  <ReportTh>Entry Serial</ReportTh>
                   <ReportTh>Country</ReportTh>
                   <ReportTh>Branch</ReportTh>
                   <ReportTh>User</ReportTh>
+                  <ReportTh>Entry Type</ReportTh>
+                  <ReportTh>Roznamcha Type</ReportTh>
+                  <ReportTh>Account No</ReportTh>
+                  <ReportTh className="text-start">Account Name</ReportTh>
+                  <ReportTh className="text-start">Narration / Remarks</ReportTh>
+                  <ReportTh>Currency</ReportTh>
+                  <ReportTh className="text-right">Debit</ReportTh>
+                  <ReportTh className="text-right">Credit</ReportTh>
+                  <ReportTh className="text-right">Balance</ReportTh>
                   <ReportTh>Bill/Ref No</ReportTh>
                   <ReportTh>Status</ReportTh>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={14} className="p-8 text-center text-sm text-muted-foreground">Loading Entries...</td></tr>
+                  <tr><td colSpan={17} className="p-8 text-center text-sm text-muted-foreground">Loading Entries...</td></tr>
                 ) : rows.length ? (
                   rows.map((row, idx) => {
                     const line = primaryLine(row);
@@ -835,28 +897,44 @@ export function RoznamchaTypeReportView({
                     const credit = Number(line?.credit || 0);
                     return (
                       <tr key={row.id} className={cn("border-t hover:bg-muted/40", idx % 2 ? "bg-muted/10" : "bg-background")}>
-                        <ReportTd className="text-center">{idx + 1 + (page - 1) * pageSize}</ReportTd>
-                        <ReportTd className="text-center whitespace-nowrap">
-                          {row.entry_date}
-                          {row.posted_at ? <div className="text-[10px] text-muted-foreground">{new Date(row.posted_at).toLocaleTimeString()}</div> : null}
+                        <ReportTd className="text-center font-mono">{idx + 1 + (page - 1) * pageSize}</ReportTd>
+                        <ReportTd className="text-center font-mono whitespace-nowrap font-medium">
+                          {cleanDate(row.entry_date || row.created_at)}
                         </ReportTd>
-                        <ReportTd className="text-center whitespace-nowrap">{getCategoryLabel(row.entry_category, currentLang)}</ReportTd>
-                        <ReportTd className="font-semibold">{line?.ledgers?.name ?? "-"}</ReportTd>
-                        <ReportTd className="text-start max-w-[240px] truncate">{row.narration || "-"}</ReportTd>
+                        <ReportTd className="text-center font-mono font-bold text-blue-600 dark:text-blue-400 whitespace-nowrap">
+                          {entrySerial(row)}
+                        </ReportTd>
+                        <ReportTd className="text-center whitespace-nowrap">{row.countries?.name ?? "-"}</ReportTd>
+                        <ReportTd className="text-center whitespace-nowrap">{branchName(row)}</ReportTd>
+                        <ReportTd className="text-center whitespace-nowrap">{row.profiles?.full_name ?? "-"}</ReportTd>
+                        <ReportTd className="text-center whitespace-nowrap font-medium text-[11px]">
+                          {formatEntryType(row.source_transaction_type || row.type)}
+                        </ReportTd>
+                        <ReportTd className="text-center whitespace-nowrap font-semibold">
+                          {getCategoryLabel(row.entry_category, currentLang)}
+                        </ReportTd>
+                        <ReportTd className="text-center font-mono font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                          {line?.account_number || line?.ledgers?.code || "-"}
+                        </ReportTd>
+                        <ReportTd className="font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                          {line?.ledgers?.name ?? "-"}
+                        </ReportTd>
+                        <ReportTd className="text-start max-w-[240px] truncate text-slate-600 dark:text-slate-300" title={row.narration || ""}>
+                          {row.narration || "-"}
+                        </ReportTd>
+                        <ReportTd className="text-center font-mono font-bold text-slate-700 dark:text-slate-300">
+                          {line?.currency ?? row.countries?.currency_code ?? "-"}
+                        </ReportTd>
                         <ReportTd className="text-right font-mono font-bold text-rose-600">{debit ? fmtNumber(debit) : "-"}</ReportTd>
                         <ReportTd className="text-right font-mono font-bold text-emerald-600">{credit ? fmtNumber(credit) : "-"}</ReportTd>
-                        <ReportTd className="text-right font-mono">{fmtNumber(credit - debit)}</ReportTd>
-                        <ReportTd className="text-center font-mono">{line?.currency ?? "-"}</ReportTd>
-                        <ReportTd className="text-center">{row.countries?.name ?? "-"}</ReportTd>
-                        <ReportTd className="text-center">{branchName(row)}</ReportTd>
-                        <ReportTd className="text-center">{row.profiles?.full_name ?? "-"}</ReportTd>
-                        <ReportTd className="text-center font-mono">{billNumber(row)}</ReportTd>
-                        <ReportTd className="text-center">
+                        <ReportTd className="text-right font-mono font-bold">{fmtNumber(credit - debit)}</ReportTd>
+                        <ReportTd className="text-center font-mono text-[11px] whitespace-nowrap">{billNumber(row)}</ReportTd>
+                        <ReportTd className="text-center whitespace-nowrap">
                           <span className={cn(
-                            "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase",
+                            "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider",
                             row.status === "posted"
-                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
-                              : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300"
+                              ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300/40"
+                              : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border border-amber-300/40"
                           )}>
                             {row.status}
                           </span>
@@ -865,7 +943,7 @@ export function RoznamchaTypeReportView({
                     );
                   })
                 ) : (
-                  <tr><td colSpan={14} className="p-8 text-center text-sm text-muted-foreground">No entries found for the selected filters.</td></tr>
+                  <tr><td colSpan={17} className="p-8 text-center text-sm text-muted-foreground">No entries found for the selected filters.</td></tr>
                 )}
               </tbody>
             </table>

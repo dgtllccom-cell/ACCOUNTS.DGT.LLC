@@ -12,7 +12,7 @@ export const revalidate = 0;
 export type RoznamchaEntryCategory = "business" | "bank" | "cash" | "invoice" | "transfer";
 
 const SELECT_COLUMNS =
-  "id, type, entry_category, country_id, countries(name,currency_code), country_branch_id, country_branches(name,code), city_branch_id, city_branches(name,code), journal_no, voucher_no, entry_date, posted_at, reference_no, source_reference_no, source_module, source_transaction_type, narration, status, created_by, profiles!roznamcha_entries_created_by_fkey(full_name), created_at, roznamcha_lines(id, payment_entry_type, debit, credit, currency, ledger_id, ledgers(name, code))";
+  "id, type, entry_category, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, entry_serial_number, country_id, countries(name,currency_code), country_branch_id, country_branches(name,code), city_branch_id, city_branches(name,code), journal_no, voucher_no, entry_date, posted_at, reference_no, source_reference_no, source_module, source_transaction_type, narration, status, created_by, profiles!roznamcha_entries_created_by_fkey(full_name), created_at, roznamcha_lines(id, payment_entry_type, debit, credit, currency, account_number, ledger_id, ledgers(name, code))";
 
 const DEBIT_LEAN_TYPES = new Set(["cash_receipt", "bank_deposit", "debit"]);
 
@@ -83,7 +83,8 @@ export async function GET(request: NextRequest) {
 
       const entryRows = await sql`
         select
-          e.id, e.type, e.entry_category, e.country_id, e.country_branch_id, e.city_branch_id,
+          e.id, e.type, e.entry_category, e.super_admin_serial_number, e.country_transaction_serial_number,
+          e.branch_transaction_serial_number, e.entry_serial_number, e.country_id, e.country_branch_id, e.city_branch_id,
           e.journal_no, e.voucher_no, e.entry_date, e.posted_at, e.reference_no, e.source_reference_no,
           e.source_module, e.source_transaction_type, e.narration, e.status, e.created_by, e.created_at,
           case when c.id is not null then jsonb_build_object('name', c.name, 'currency_code', c.currency_code) else null end as countries,
@@ -122,7 +123,7 @@ export async function GET(request: NextRequest) {
       const lineRows = entryIds.length
         ? await sql`
             select
-              rl.id, rl.roznamcha_entry_id, rl.payment_entry_type, rl.debit, rl.credit, rl.currency, rl.ledger_id,
+              rl.id, rl.roznamcha_entry_id, rl.payment_entry_type, rl.debit, rl.credit, rl.currency, rl.account_number, rl.ledger_id,
               case when l.id is not null then jsonb_build_object('name', l.name, 'code', l.code) else null end as ledgers
             from public.roznamcha_lines rl
             left join public.ledgers l on l.id = rl.ledger_id
