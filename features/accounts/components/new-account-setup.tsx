@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import {
   ArrowRight,
   ArrowLeft,
@@ -707,9 +708,10 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
 
   function openReport(autoPrint: boolean) {
     openAccountA4ReportWindow({
-      title: "Account Profile Report",
-      subtitle: "Account Profile Summary",
+      title: t(lang, "acct.report_title", "Account Profile Report"),
+      subtitle: t(lang, "acct.report_subtitle", "Account Profile Summary"),
       autoPrint,
+      lang,
       accountData: {
         accountName,
         accountCode: accountPreview,
@@ -749,11 +751,11 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
         
         {actionsPortal && createPortal(
           <>
-            <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/accounts/setup-report")} className="h-7 gap-1.5 rounded-lg px-2 text-[10px] font-bold">
+            <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/accounts/setup-report")} className="h-7 gap-1.5 rounded-lg border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
               <ClipboardList className="h-3.5 w-3.5 text-slate-500" /> {getLabel("liveReport", lang)}
             </Button>
-            <Button variant="default" size="sm" onClick={() => router.push("/dashboard/accounts")} className="h-7 gap-1.5 rounded-lg px-2 text-[10px] font-bold">
-              <BookOpen className="h-3.5 w-3.5" /> {getLabel("accountSummary", lang)}
+            <Button variant="outline" size="sm" onClick={() => router.push("/dashboard/accounts")} className="h-7 gap-1.5 rounded-lg border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-700 shadow-2xs hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700">
+              <BookOpen className="h-3.5 w-3.5 text-slate-500" /> {getLabel("accountSummary", lang)}
             </Button>
           </>,
           actionsPortal
