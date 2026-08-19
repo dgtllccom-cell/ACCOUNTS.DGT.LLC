@@ -92,6 +92,13 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
+    key: "all-release-entries",
+    labelKey: "nav.all_release_entries",
+    iconKey: "layout-dashboard",
+    href: "/dashboard/all-release-entries" as Route,
+    roles: ["super_admin"]
+  },
+  {
     key: "new-entry",
     labelKey: "nav.new_entry",
     iconKey: "list-plus",
