@@ -31,6 +31,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { t } from "@/lib/i18n/ui";
+import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
 import { getLanguageDirection } from "@/lib/i18n/languages";
 import { Th } from "@/components/ui/translated-th";
 
@@ -246,6 +248,44 @@ export default function KycReportsPage() {
     }
   }
 
+  function handleKycPrint() {
+    const tt = (key: string, fallback: string) => t(activeLang, key as never, fallback);
+    openJournalReportWindow({
+      lang: activeLang,
+      autoPrint: true,
+      title: tt("nav.kyc_reports", "KYC Compliance Report"),
+      subtitle: tt("jrn.roznamcha_journal", "Compliance Audit Report"),
+      overviewLabel: tt("jrn.overview", "Report Overview"),
+      scopeName: tt("nav.kyc_reports", "KYC Compliance Report"),
+      reportIdPrefix: "KYC",
+      reportIdValue: "audit",
+      chips: [{ label: tt("jrn.entry_count", "Total Records"), value: String(filteredItems.length) }],
+      kpis: [],
+      columns: [
+        { key: "sno", label: tt("rozrep.sno", "S.No") },
+        { key: "code", label: tt("acct.account_code", "Code") },
+        { key: "name", label: tt("acct.customer_name", "Name") },
+        { key: "type", label: tt("acct.account_type", "Type") },
+        { key: "country", label: tt("acct.country", "Country") },
+        { key: "owner", label: tt("prof.owner_name", "Owner") },
+        { key: "phone", label: tt("acct.phone", "Phone") },
+        { key: "email", label: tt("acct.email", "Email") },
+        { key: "status", label: tt("acct.status", "Status") }
+      ],
+      rows: (filteredItems as any[]).map((item, idx) => ({
+        sno: String(idx + 1),
+        code: item.code,
+        name: item.name,
+        type: item.typeLabel || item.type,
+        country: item.countryName,
+        owner: item.ownerName,
+        phone: item.phone,
+        email: item.email,
+        status: item.status
+      }))
+    });
+  }
+
   const filteredItems = items.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -302,6 +342,15 @@ export default function KycReportsPage() {
               </button>
             ))}
           </div>
+
+          <Button
+            onClick={handleKycPrint}
+            variant="outline"
+            className="border-border/80 bg-card hover:bg-muted text-foreground h-9 px-3 rounded-xl shadow-sm text-xs"
+          >
+            <RefreshCw className="h-4 w-4 mr-2 hidden" />
+            {t(activeLang, "bankroz.print_pdf", "Print / PDF")}
+          </Button>
 
           <Button
             onClick={fetchKycData}
