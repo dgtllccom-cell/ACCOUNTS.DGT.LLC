@@ -95,18 +95,8 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
     fa: "نرخ بدهکار",
     ps: "د ډیبیټ نرخ",
   },
-  "LAST UPDATED": {
-    ur: "آخری تجدید",
-    ar: "آخر تحديث",
-    fa: "آخرین به‌روزرسانی",
-    ps: "وروستی تازه شوی",
-  },
-  "DATE & TIME": {
-    ur: "تاریخ اور وقت",
-    ar: "التاريخ والوقت",
-    fa: "تاریخ و زمان",
-    ps: "نیټه او وخت",
-  },
+  // "LAST UPDATED" and "DATE & TIME" are defined later in this object (canonical entries);
+  // duplicates removed here to satisfy TS1117 while preserving the effective (last-wins) translation.
   "SR NO": {
     ur: "شمار",
     ar: "رقم مسلسل",
@@ -137,12 +127,7 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
     fa: "مشاهده دفتر کل",
     ps: "لیجر وګورئ",
   },
-  "VIEW STATEMENT": {
-    ur: "اسٹیٹمنٹ دیکھیں",
-    ar: "عرض كشف الحساب",
-    fa: "مشاهده صورتحساب",
-    ps: "صورت حساب وګورئ",
-  },
+  // "VIEW STATEMENT" is defined later (canonical entry); duplicate removed here for TS1117.
   "LANGUAGE": {
     ur: "زبان",
     ar: "اللغة",
@@ -179,12 +164,7 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
     fa: "مجموع کشورها:",
     ps: "ټول هیوادونه:",
   },
-  "TOTAL COUNTRIES": {
-    ur: "کل ممالک",
-    ar: "إجمالي الدول",
-    fa: "مجموع کشورها",
-    ps: "ټول هیوادونه",
-  },
+  // "TOTAL COUNTRIES" is defined later (canonical entry); duplicate removed here for TS1117.
   "CITY BRANCH SETUP": { ur: "سٹی برانچ سیٹ اپ", ar: "إعداد فرع المدينة", fa: "تنظیمات شعبه شهر", ps: "د ښار څانګې تنظیم" },
   "COUNTRY & CURRENCY": { ur: "ملک اور کرنسی", ar: "الدولة والعملة", fa: "کشور و واحد پول", ps: "هېواد او اسعار" },
   "FULL ADDRESS": { ur: "مکمل پتہ", ar: "العنوان الكامل", fa: "آدرس کامل", ps: "بشپړه پته" },

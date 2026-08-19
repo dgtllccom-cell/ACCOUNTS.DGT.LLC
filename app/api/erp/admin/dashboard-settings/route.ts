@@ -81,14 +81,14 @@ export async function POST(req: NextRequest) {
     const session = await requireErpSession();
 
     if (!session.isSuperAdmin) {
-      return apiOk({ ok: false, message: "Super Admin privileges required to update dashboard module allotments." }, 403);
+      return apiOk({ ok: false, message: "Super Admin privileges required to update dashboard module allotments." }, { status: 403 });
     }
 
     const body = await req.json();
     const { allotments } = body;
 
     if (!allotments || typeof allotments !== "object") {
-      return apiOk({ ok: false, message: "Invalid payload: allotments object required." }, 400);
+      return apiOk({ ok: false, message: "Invalid payload: allotments object required." }, { status: 400 });
     }
 
     const supabase = createSupabaseAdminClient();
