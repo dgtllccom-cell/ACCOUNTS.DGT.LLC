@@ -18,7 +18,7 @@ async function resolveOrderId(req: NextRequest, params: Promise<{ id: string }> 
   return parts[parts.length - 1] || "";
 }
 
-export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> | { id: string } }) {
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const id = await resolveOrderId(req, params);
     if (!id) {
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> | { id: string } }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const id = await resolveOrderId(req, params);
     if (!id) {
@@ -89,7 +89,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 }
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> | { id: string } }) {
+export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const id = await resolveOrderId(req, params);
     if (!id) {

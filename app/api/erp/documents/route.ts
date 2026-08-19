@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
         entityId,
         mimeType: file.type,
         sizeBytes: file.size,
-        uploadedBy: session.user.id,
+        uploadedBy: session.userId,
       }).returning();
 
       const [version] = await tx.insert(erpDocumentVersions).values({
@@ -133,12 +133,12 @@ export async function POST(request: NextRequest) {
         path: filePath,
         mimeType: file.type,
         sizeBytes: file.size,
-        uploadedBy: session.user.id,
+        uploadedBy: session.userId,
       }).returning();
 
       await tx.insert(auditLogs).values({
         companyId: session.companyId,
-        actorId: session.user.id,
+        actorId: session.userId,
         action: "upload_document",
         entityTable: "erp_documents",
         entityId: doc.id,

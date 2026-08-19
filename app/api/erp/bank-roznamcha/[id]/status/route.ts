@@ -19,8 +19,8 @@ export async function POST(
     const action = body.action as "present" | "clear" | "dishonor" | "pending";
     const notes = body.notes || "";
     const reason = body.reason || "";
-    const actorName = session.user.fullName || "User";
-    const actorId = session.user.id;
+    const actorName = session.fullName || "User";
+    const actorId = session.userId;
     const nowIso = new Date().toISOString();
 
     const result = await withLocalPg(async (sql) => {

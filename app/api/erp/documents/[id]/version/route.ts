@@ -85,12 +85,12 @@ export async function POST(
         path: filePath,
         mimeType: file.type,
         sizeBytes: file.size,
-        uploadedBy: session.user.id,
+        uploadedBy: session.userId,
       }).returning();
 
       await tx.insert(auditLogs).values({
         companyId: session.companyId,
-        actorId: session.user.id,
+        actorId: session.userId,
         action: "update_document_version",
         entityTable: "erp_documents",
         entityId: doc.id,

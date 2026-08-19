@@ -30,7 +30,7 @@ export async function DELETE(
 
     // Permission check: Must be super_admin OR the uploader
     const isSuperAdmin = session.roles?.includes("super_admin");
-    if (!isSuperAdmin && doc.uploadedBy !== session.user.id) {
+    if (!isSuperAdmin && doc.uploadedBy !== session.userId) {
       return apiError("You do not have permission to delete this document", 403);
     }
 
@@ -58,7 +58,7 @@ export async function DELETE(
       
       await tx.insert(auditLogs).values({
         companyId: session.companyId,
-        actorId: session.user.id,
+        actorId: session.userId,
         action: "delete_document",
         entityTable: "erp_documents",
         entityId: doc.id,

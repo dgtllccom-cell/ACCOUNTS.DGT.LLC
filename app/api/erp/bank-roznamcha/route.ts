@@ -270,8 +270,8 @@ export async function POST(request: NextRequest) {
       const auditTrail = [
         {
           action: "created",
-          actor: session.user.fullName || "User",
-          actor_id: session.user.id,
+          actor: session.fullName || "User",
+          actor_id: session.userId,
           timestamp: new Date().toISOString(),
           notes: body.notes || "Bank cheque transaction created"
         }
@@ -290,7 +290,7 @@ export async function POST(request: NextRequest) {
           ${body.companyId || null}, ${body.countryId || null}, ${body.countryBranchId || null}, ${body.cityBranchId || null},
           ${entrySerial}, ${body.voucherNo || null}, ${body.journalNo || null},
           ${body.entryDate || today}, now(),
-          ${session.user.id}, ${session.user.fullName || "User"}, ${body.bankId || null}, ${body.bankName}, ${body.bankCode || null},
+          ${session.userId}, ${session.fullName || "User"}, ${body.bankId || null}, ${body.bankName}, ${body.bankCode || null},
           ${body.chequeNo || null}, ${body.particulars}, ${body.chequeDate || today}, ${dueDate},
           ${debit}, ${credit}, ${body.currency || "PKR"}, ${status},
           ${body.ledgerId || null}, ${body.counterLedgerId || null}, ${body.notes || null}, ${JSON.stringify(auditTrail)}
