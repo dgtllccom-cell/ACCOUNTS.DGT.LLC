@@ -509,6 +509,65 @@ export function CashEntryForm({
   const [roznamchaBook, setRoznamchaBook] = useState("CB-001 - Main Cash Book");
   const [roznamchaNumber, setRoznamchaNumber] = useState("000123");
 
+  // Entry table date filtering state: defaults to 1 day ("day") as required
+  const [tableDateMode, setTableDateMode] = useState<"day" | "range" | "all">("day");
+  const [tableDate, setTableDate] = useState(todayIso());
+  const [tableFromDate, setTableFromDate] = useState(todayIso());
+  const [tableToDate, setTableToDate] = useState(todayIso());
+
+  const shiftTableDay = (delta: number) => {
+    const base = tableDate || entryDate || todayIso();
+    const parts = base.split("-").map(Number);
+    const d = new Date(parts[0], parts[1] - 1, parts[2]);
+    d.setDate(d.getDate() + delta);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    const nextStr = `${yyyy}-${mm}-${dd}`;
+    setTableDate(nextStr);
+    setEntryDate(nextStr);
+  };
+
+  const setTableDatePreset = (preset: "today" | "yesterday" | "this_week" | "this_month" | "last_30_days") => {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, "0");
+    const dd = String(now.getDate()).padStart(2, "0");
+    const todayStr = `${yyyy}-${mm}-${dd}`;
+
+    if (preset === "today") {
+      setTableDateMode("day");
+      setTableDate(todayStr);
+      setEntryDate(todayStr);
+    } else if (preset === "yesterday") {
+      const y = new Date(now);
+      y.setDate(y.getDate() - 1);
+      const yStr = `${y.getFullYear()}-${String(y.getMonth() + 1).padStart(2, "0")}-${String(y.getDate()).padStart(2, "0")}`;
+      setTableDateMode("day");
+      setTableDate(yStr);
+      setEntryDate(yStr);
+    } else if (preset === "this_week") {
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay());
+      const startStr = `${startOfWeek.getFullYear()}-${String(startOfWeek.getMonth() + 1).padStart(2, "0")}-${String(startOfWeek.getDate()).padStart(2, "0")}`;
+      setTableDateMode("range");
+      setTableFromDate(startStr);
+      setTableToDate(todayStr);
+    } else if (preset === "this_month") {
+      const startStr = `${yyyy}-${mm}-01`;
+      setTableDateMode("range");
+      setTableFromDate(startStr);
+      setTableToDate(todayStr);
+    } else if (preset === "last_30_days") {
+      const start30 = new Date(now);
+      start30.setDate(now.getDate() - 30);
+      const startStr = `${start30.getFullYear()}-${String(start30.getMonth() + 1).padStart(2, "0")}-${String(start30.getDate()).padStart(2, "0")}`;
+      setTableDateMode("range");
+      setTableFromDate(startStr);
+      setTableToDate(todayStr);
+    }
+  };
+
   useEffect(() => {
     setLoginTimeText(new Date().toLocaleString());
   }, []);
@@ -516,11 +575,23 @@ export function CashEntryForm({
   const fetchRecentEntries = async () => {
     try {
       setLoadingEntries(true);
-      const params = new URLSearchParams({ limit: "100" });
+      const params = new URLSearchParams({ limit: "500" });
       params.set("language", lang);
       if (countryId) params.set("countryId", countryId);
       if (countryBranchId) params.set("countryBranchId", countryBranchId);
       if (cityBranchId) params.set("cityBranchId", cityBranchId);
+
+      // Apply 1-day (default) or date-range filtering as requested
+      if (tableDateMode === "day") {
+        const targetDate = tableDate || entryDate || todayIso();
+        params.set("fromDate", targetDate);
+        params.set("toDate", targetDate);
+      } else if (tableDateMode === "range") {
+        if (tableFromDate) params.set("fromDate", tableFromDate);
+        if (tableToDate) params.set("toDate", tableToDate);
+      }
+      // "all" mode does not set fromDate/toDate
+
       const res = await apiGet<{ entries: any[] }>(`/api/erp/roznamcha?${params.toString()}`);
       setRecentEntries(res.entries || []);
     } catch (err) {
@@ -539,7 +610,8 @@ export function CashEntryForm({
       setLoadingSummary(true);
       const params = new URLSearchParams({ countryId });
       if (countryBranchId) params.set("countryBranchId", countryBranchId);
-      if (entryDate) params.set("date", entryDate);
+      const effectiveDate = tableDateMode === "day" ? (tableDate || entryDate) : entryDate;
+      if (effectiveDate) params.set("date", effectiveDate);
       const res = await apiGet<CashSummary>(`/api/erp/roznamcha/cash-summary?${params.toString()}`);
       setCashSummary(res);
     } catch (err) {
@@ -559,7 +631,8 @@ export function CashEntryForm({
       setLoadingDailyRate(true);
       const params = new URLSearchParams({ countryId });
       if (countryBranchId) params.set("countryBranchId", countryBranchId);
-      if (entryDate) params.set("date", entryDate);
+      const effectiveDate = tableDateMode === "day" ? (tableDate || entryDate) : entryDate;
+      if (effectiveDate) params.set("date", effectiveDate);
       const res = await apiGet<DailyRate>(`/api/erp/currency/daily-rate?${params.toString()}`);
       setDailyRate(res);
     } catch (err) {
@@ -575,7 +648,7 @@ export function CashEntryForm({
     fetchCashSummary();
     fetchDailyRate();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [countryId, countryBranchId, cityBranchId, entryDate]);
+  }, [countryId, countryBranchId, cityBranchId, tableDateMode, tableDate, tableFromDate, tableToDate, entryDate]);
 
   const ledgerRowsWithAccount = useMemo(
     () => ledgers.filter((row) => Boolean(row.accountId && row.ledgerId)),
@@ -2906,6 +2979,162 @@ export function CashEntryForm({
             <RefreshCw className={cn("h-3.5 w-3.5 mr-1", loadingEntries ? "animate-spin" : "")} />
             {t(lang, "common.refresh", "Refresh")}
           </Button>
+        </div>
+      </div>
+
+      {/* Date Filter & Day-by-Day Scope Toolbar */}
+      <div className="border-b border-slate-200 bg-slate-50/80 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-900/60 flex flex-wrap items-center justify-between gap-3">
+        {/* Left: Filter Mode Switcher */}
+        <div className="flex items-center gap-2">
+          <div className="inline-flex rounded-lg bg-slate-200/80 p-1 dark:bg-slate-800">
+            <button
+              type="button"
+              onClick={() => setTableDateMode("day")}
+              className={cn(
+                "px-3 py-1 text-xs font-bold rounded-md transition-all",
+                tableDateMode === "day"
+                  ? "bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-blue-300"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+              )}
+            >
+              📅 {lang === "ur" ? "ایک دن (1 دن)" : lang === "ps" ? "یوه ورځ (1 ورځ)" : lang === "ar" ? "يوم واحد" : lang === "fa" ? "یک روز" : "1 Day (Single Date)"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTableDateMode("range")}
+              className={cn(
+                "px-3 py-1 text-xs font-bold rounded-md transition-all",
+                tableDateMode === "range"
+                  ? "bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-blue-300"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+              )}
+            >
+              📆 {lang === "ur" ? "تاریخ تا تاریخ (رینج)" : lang === "ps" ? "د نیټې موده" : lang === "ar" ? "نطاق التاريخ" : lang === "fa" ? "بازه زمانی" : "Date Range (From - To)"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setTableDateMode("all")}
+              className={cn(
+                "px-3 py-1 text-xs font-bold rounded-md transition-all",
+                tableDateMode === "all"
+                  ? "bg-white text-blue-700 shadow-sm dark:bg-slate-700 dark:text-blue-300"
+                  : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
+              )}
+            >
+              🌐 {lang === "ur" ? "تمام اندراجات" : lang === "ps" ? "ټول اندراجات" : lang === "ar" ? "كل الإدخالات" : lang === "fa" ? "تمام ورودی‌ها" : "All Dates"}
+            </button>
+          </div>
+
+          {/* Active scope indicator badge */}
+          <div className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200 dark:border-blue-800 text-[11px] font-semibold">
+            <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse" />
+            <span>
+              {tableDateMode === "day"
+                ? `${lang === "ur" ? "منتخب تاریخ" : "Showing"}: ${tableDate || entryDate} (1 Day)`
+                : tableDateMode === "range"
+                ? `${tableFromDate} ➔ ${tableToDate}`
+                : lang === "ur" ? "تمام تاریخیں (مکمل ریکارڈز)" : "All Historical Entries"}
+            </span>
+          </div>
+        </div>
+
+        {/* Right: Date Pickers & Navigation Buttons based on active mode */}
+        <div className="flex flex-wrap items-center gap-2">
+          {tableDateMode === "day" && (
+            <div className="flex items-center gap-1.5 bg-white dark:bg-slate-950 p-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                onClick={() => shiftTableDay(-1)}
+                title={lang === "ur" ? "پچھلا دن" : "Previous Day"}
+              >
+                ◀ {lang === "ur" ? "پچھلا دن" : lang === "ps" ? "مخکنۍ ورځ" : lang === "ar" ? "السابق" : lang === "fa" ? "روز قبل" : "Prev Day"}
+              </Button>
+              <input
+                type="date"
+                value={tableDate}
+                onChange={(e) => {
+                  setTableDate(e.target.value);
+                  setEntryDate(e.target.value);
+                }}
+                className="h-7 px-2 text-xs font-bold bg-transparent border-x border-slate-200 dark:border-slate-800 outline-none text-slate-900 dark:text-slate-100 cursor-pointer"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className={cn(
+                  "h-7 px-2 text-xs font-bold",
+                  tableDate === todayIso() ? "text-blue-600 dark:text-blue-400 font-extrabold bg-blue-50 dark:bg-blue-950/40" : "text-slate-700 dark:text-slate-300"
+                )}
+                onClick={() => setTableDatePreset("today")}
+              >
+                📅 {lang === "ur" ? "آج" : lang === "ps" ? "نن" : lang === "ar" ? "اليوم" : lang === "fa" ? "امروز" : "Today"}
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 px-2 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800"
+                onClick={() => shiftTableDay(1)}
+                title={lang === "ur" ? "اگلا دن" : "Next Day"}
+              >
+                {lang === "ur" ? "اگلا دن" : lang === "ps" ? "بله ورځ" : lang === "ar" ? "التالي" : lang === "fa" ? "روز بعد" : "Next Day"} ▶
+              </Button>
+            </div>
+          )}
+
+          {tableDateMode === "range" && (
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1.5 bg-white dark:bg-slate-950 px-2 py-1 rounded-lg border border-slate-200 dark:border-slate-800 shadow-2xs text-xs">
+                <span className="text-[11px] font-bold text-slate-500">{lang === "ur" ? "از:" : "From:"}</span>
+                <input
+                  type="date"
+                  value={tableFromDate}
+                  onChange={(e) => setTableFromDate(e.target.value)}
+                  className="h-6 text-xs font-bold bg-transparent outline-none text-slate-900 dark:text-slate-100 cursor-pointer"
+                />
+                <span className="text-[11px] font-bold text-slate-500 ms-1">{lang === "ur" ? "تا:" : "To:"}</span>
+                <input
+                  type="date"
+                  value={tableToDate}
+                  onChange={(e) => setTableToDate(e.target.value)}
+                  className="h-6 text-xs font-bold bg-transparent outline-none text-slate-900 dark:text-slate-100 cursor-pointer"
+                />
+              </div>
+              <div className="flex items-center gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-[11px] font-semibold"
+                  onClick={() => setTableDatePreset("this_week")}
+                >
+                  {lang === "ur" ? "اس ہفتے" : "This Week"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-[11px] font-semibold"
+                  onClick={() => setTableDatePreset("this_month")}
+                >
+                  {lang === "ur" ? "اس مہینے" : "This Month"}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 px-2 text-[11px] font-semibold"
+                  onClick={() => setTableDatePreset("last_30_days")}
+                >
+                  {lang === "ur" ? "گزشتہ 30 دن" : "Last 30 Days"}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <CardContent className="p-0">
