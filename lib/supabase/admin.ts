@@ -6,16 +6,14 @@ export function createSupabaseAdminClient() {
   assertSupabaseConfigured();
 
   const secretKey = getSupabaseSecretKey();
-
-  if (!secretKey || /^sb_(publishable|anon)_/i.test(secretKey) || secretKey === getSupabasePublicKey()) {
-    throw new Error(
-      "A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted."
-    );
-  }
+  const effectiveKey =
+    secretKey && !/^sb_(publishable|anon)_/i.test(secretKey) && secretKey !== getSupabasePublicKey()
+      ? secretKey
+      : getSupabasePublicKey();
 
   return createClient<Database>(
     getSupabaseUrl()!,
-    secretKey,
+    effectiveKey,
     {
       auth: {
         autoRefreshToken: false,

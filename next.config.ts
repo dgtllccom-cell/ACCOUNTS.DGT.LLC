@@ -21,6 +21,120 @@ const nextConfig: NextConfig = {
     maxInactiveAge: 60 * 1000,
     pagesBufferLength: 5,
   },
+  async redirects() {
+    return [
+      {
+        source: "/dashboard/journal",
+        destination: "/dashboard/journal/sales-order-payment/advance",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/journal/sales-order-payment",
+        destination: "/dashboard/journal/sales-order-payment/advance",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/journal/purchase-order-payment",
+        destination: "/dashboard/journal/purchase-order-payment/advance",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/journal/purchase-order-payment/credit",
+        destination: "/dashboard/journal/purchase-order-payment/remaining",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/ledgers",
+        destination: "/dashboard/ledger",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/cash-entry",
+        destination: "/dashboard/roznamcha/cash-entry",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/daily-payment-entry",
+        destination: "/dashboard/roznamcha/cash-entry",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/roznamcha/daily-payment",
+        destination: "/dashboard/roznamcha/cash-entry",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/exchange-rates",
+        destination: "/dashboard/reports/exchange-rate",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/settings/daily-rates",
+        destination: "/dashboard/reports/exchange-rate",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/new-entry/advance",
+        destination: "/dashboard/journal/sales-order-payment/advance",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/sales/payment",
+        destination: "/dashboard/journal/sales-order-payment/advance",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/sales/reports",
+        destination: "/dashboard/reports/sales",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/containers",
+        destination: "/dashboard/shipping-line",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/banks",
+        destination: "/dashboard/settings/banks",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/users/new",
+        destination: "/dashboard/new-entry/users/registration",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/communication/whatsapp",
+        destination: "/dashboard/communication-center",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/communication/email",
+        destination: "/dashboard/communication-center",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/communication/sms",
+        destination: "/dashboard/communication-center",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/translations",
+        destination: "/dashboard/settings/translations",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/purchase/local-purchases",
+        destination: "/dashboard/purchase/local-purchase",
+        permanent: false,
+      },
+      {
+        source: "/dashboard/purchase/new-purchase-booking",
+        destination: "/dashboard/purchase",
+        permanent: false,
+      },
+    ];
+  },
   async headers() {
     return [
       {
@@ -71,13 +185,3 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
-
-// Trigger dev server restart to clear in-memory Webpack caching: 2026-07-18T17:15:00
-// import { execSync } from "child_process";
-// try {
-//   console.log("ATTEMPTING TO RESTORE FILES...");
-//   execSync("git checkout -- features/roznamcha/components/super-admin-roznamcha-report-view.tsx features/journal/components/purchase-order-payment-journal.tsx");
-//   console.log("FILES RESTORED SUCCESSFULLY!");
-// } catch (e) {
-//   console.log("RESTORE FAILED:", e);
-// }

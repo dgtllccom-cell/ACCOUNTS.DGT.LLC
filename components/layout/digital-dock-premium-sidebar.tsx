@@ -77,7 +77,7 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
   {
     title: "Quick Setup",
     items: [
-      { icon: Users, label: "New User", href: "/dashboard/users/new" },
+      { icon: Users, label: "New User", href: "/dashboard/new-entry/users/registration" },
       { icon: Globe2, label: "New Country", href: "/dashboard/new-entry/branch-entry/country-branch" },
       { icon: Building2, label: "New Branch", href: "/dashboard/new-entry/branch-entry/city-branch" },
     ],
@@ -89,8 +89,8 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
         icon: BookOpen,
         label: "Journal & Ledger",
         children: [
-          { label: "Journal", href: "/dashboard/journal", icon: NotebookPen },
-          { label: "Ledgers", href: "/dashboard/ledgers", icon: BookOpen },
+          { label: "Journal", href: "/dashboard/journal/sales-order-payment/advance", icon: NotebookPen },
+          { label: "Ledgers", href: "/dashboard/ledger", icon: BookOpen },
           { label: "Journal Report PDF ERP", href: "/dashboard/reports/handover", icon: FileText, badge: "PDF" },
         ],
       },
@@ -104,10 +104,10 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
         label: "Daily Payment",
         children: [
           { label: "Purchase Invoice Payment", href: "/dashboard/journal/purchase-order-payment/advance", icon: Receipt },
-          { label: "Sales Invoice Payment", href: "/dashboard/sales/payment", icon: CircleDollarSign },
-          { label: "Cash Payment", href: "/dashboard/cash-entry", icon: Banknote },
-          { label: "Daily Cash Entry", href: "/dashboard/daily-payment-entry", icon: Wallet },
-          { label: "Exchange Rate", href: "/dashboard/exchange-rates", icon: RefreshCw },
+          { label: "Sales Invoice Payment", href: "/dashboard/journal/sales-order-payment/advance", icon: CircleDollarSign },
+          { label: "Cash Payment", href: "/dashboard/roznamcha/cash-entry", icon: Banknote },
+          { label: "Daily Cash Entry", href: "/dashboard/roznamcha/cash-entry", icon: Wallet },
+          { label: "Exchange Rate", href: "/dashboard/reports/exchange-rate", icon: RefreshCw },
           { label: "Payment History", href: "/dashboard/journal/purchase-order-payment/history", icon: History },
         ],
       },
@@ -128,7 +128,7 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
           { label: "Purchase Booking", href: "/dashboard/purchase", active: true },
           { label: "Advance Payment", href: "/dashboard/journal/purchase-order-payment/advance" },
           { label: "Remaining Payment", href: "/dashboard/journal/purchase-order-payment/remaining" },
-          { label: "Credit Payment", href: "/dashboard/journal/purchase-order-payment/credit" },
+          { label: "Credit Payment", href: "/dashboard/journal/purchase-order-payment/remaining" },
           { label: "Payment History", href: "/dashboard/journal/purchase-order-payment/history" },
         ],
       },
@@ -142,8 +142,8 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
         label: "Sales",
         children: [
           { label: "Sales Booking", href: "/dashboard/sales" },
-          { label: "Sales Payment", href: "/dashboard/sales/payment" },
-          { label: "Sales Reports", href: "/dashboard/sales/reports" },
+          { label: "Sales Payment", href: "/dashboard/journal/sales-order-payment/advance" },
+          { label: "Sales Reports", href: "/dashboard/reports/sales" },
         ],
       },
     ],
@@ -171,7 +171,7 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
           { label: "Shipping Lines", href: "/dashboard/shipping-line" },
           { label: "Clearing Agents", href: "/dashboard/clearing-agent" },
           { label: "Loading Records", href: "/dashboard/purchase/purchase-loading-records" },
-          { label: "Containers", href: "/dashboard/containers", icon: Container },
+          { label: "Containers", href: "/dashboard/shipping-line", icon: Container },
         ],
       },
     ],
@@ -201,7 +201,7 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
           { label: "Users", href: "/dashboard/users", icon: Users },
           { label: "Countries", href: "/dashboard/country", icon: Globe2 },
           { label: "Branches", href: "/dashboard/branch-management", icon: Building2 },
-          { label: "Exchange Rates", href: "/dashboard/exchange-rates", icon: RefreshCw },
+          { label: "Exchange Rates", href: "/dashboard/reports/exchange-rate", icon: RefreshCw },
         ],
       },
     ],
@@ -217,14 +217,14 @@ export const SIDEBAR_GROUPS: NavGroup[] = [
 
 export const QUICK_FAVOURITES = [
   { icon: ShoppingCart, label: "Purchase Booking", href: "/dashboard/purchase" },
-  { icon: Wallet, label: "Daily Payment", href: "/dashboard/daily-payment-entry" },
-  { icon: CircleDollarSign, label: "Exchange Rates", href: "/dashboard/exchange-rates" },
+  { icon: Wallet, label: "Daily Payment", href: "/dashboard/roznamcha/cash-entry" },
+  { icon: CircleDollarSign, label: "Exchange Rates", href: "/dashboard/reports/exchange-rate" },
 ];
 
 export const QUICK_RECENT = [
   { icon: FileText, label: "PB-2026-6789", href: "/dashboard/purchase" },
   { icon: Package, label: "Sales Invoice", href: "/dashboard/sales" },
-  { icon: BookOpen, label: "Ledger — FAREDULLAH", href: "/dashboard/ledgers" },
+  { icon: BookOpen, label: "Ledger — FAREDULLAH", href: "/dashboard/ledger" },
 ];
 
 /* ---------------- palette tokens ---------------- */
