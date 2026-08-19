@@ -24,6 +24,7 @@ import { apiGet, apiPost, apiPatch } from "@/lib/api/client";
 import { PersonPicker } from "./person-picker";
 import { Button } from "@/components/ui/button";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 
 type EmployeeFormProps = {
@@ -33,6 +34,10 @@ type EmployeeFormProps = {
    * User Registration wizard) use it to auto-select the new row without a second lookup. */
   onSave: (newEmployeeId?: string) => void;
   onCancel: () => void;
+  /** Active language from the host page. When this form is rendered inside a modal, the shared
+   * useActiveLanguage() store can lag behind the page's resolved language, so hosts that already
+   * know the language pass it here; we reconcile (prefer a non-"en" explicit value). */
+  lang?: SupportedLanguage;
 };
 
 type LedgerOption = {
@@ -55,7 +60,7 @@ type BranchOption = {
   country_branch_id?: string | null;
 };
 
-export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps) {
+export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: EmployeeFormProps) {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeStep, setActiveStep] = useState<number>(1);
@@ -348,7 +353,9 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
   }
 
   // NOTE: hooks must run unconditionally — keep this above the `loading` early return.
-  const lang = useActiveLanguage();
+  const activeLang = useActiveLanguage();
+  // Prefer an explicit non-"en" language from the host; otherwise follow the reactive store.
+  const lang = (langProp && langProp !== "en") ? langProp : activeLang;
   // Central-dictionary labels only — no per-component machine translation.
   const CAT_KEYS: Record<string, string> = { "Manager": "hr.f_cat_manager", "Normal Staff": "hr.f_cat_normal_staff", "Employee": "hr.f_cat_employee", "Others": "hr.f_cat_others" };
   const catLabel = (c: string) => t(lang, (CAT_KEYS[c] || "hr.f_cat_employee") as never, c);
@@ -464,6 +471,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               value={personMasterId}
               onValueChange={setPersonMasterId}
               countryId={countryId}
+              lang={lang}
             />
           </div>
 

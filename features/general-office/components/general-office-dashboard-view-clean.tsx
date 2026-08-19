@@ -1225,6 +1225,7 @@ export function GeneralOfficeDashboardView() {
           className="max-w-6xl w-[95vw] max-h-[90vh] overflow-y-auto"
         >
           <EmployeeForm
+            lang={lang}
             employeeId={selectedEmployeeId}
             onSave={() => {
               setShowFormModal(false);

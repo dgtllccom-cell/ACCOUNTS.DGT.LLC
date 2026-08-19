@@ -6,6 +6,7 @@ import { SimpleModal } from "@/components/ui/simple-modal";
 import { apiGet } from "@/lib/api/client";
 import { CustomerForm } from "@/features/customers/components/customer-form";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 
 type PersonRow = {
@@ -42,7 +43,8 @@ export function PersonPicker({
   onValueChange,
   countryId,
   disabled,
-  placeholder
+  placeholder,
+  lang: langProp
 }: {
   label: string;
   value: string;
@@ -50,8 +52,10 @@ export function PersonPicker({
   countryId?: string | null;
   disabled?: boolean;
   placeholder?: string;
+  lang?: SupportedLanguage;
 }) {
-  const lang = useActiveLanguage();
+  const activeLang = useActiveLanguage();
+  const lang = (langProp && langProp !== "en") ? langProp : activeLang;
   const [loading, setLoading] = useState(false);
   const [people, setPeople] = useState<PersonRow[]>([]);
   const [openCreate, setOpenCreate] = useState(false);
