@@ -148,7 +148,7 @@ export async function POST(request: NextRequest) {
       return { doc, latestVersion: version, versionCount: 1, versions: [version] };
     });
 
-    return apiOk(result, 201);
+    return apiOk(result, { status: 201 });
   } catch (error) {
     return handleApiError(error);
   }

@@ -100,7 +100,7 @@ export async function POST(
       return { doc, latestVersion: version };
     });
 
-    return apiOk(result, 201);
+    return apiOk(result, { status: 201 });
   } catch (error) {
     return handleApiError(error);
   }
