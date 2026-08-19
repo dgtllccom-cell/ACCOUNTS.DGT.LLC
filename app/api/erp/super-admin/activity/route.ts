@@ -148,10 +148,14 @@ export async function GET(request: NextRequest) {
         order by f.ts desc nulls last
         limit ${pageSize} offset ${offset}`;
 
-      return { c, b, today, tot, total: countRow.total, rows };
+      // Filter option lists (real): all countries, and distinct currencies actually used in postings.
+      const countryOpts = await sql`select id::text id, name from countries order by name`;
+      const currencyOpts = await sql`select distinct currency from roznamcha_lines where currency is not null and currency <> '' order by currency`;
+
+      return { c, b, today, tot, total: countRow.total, rows, countryOpts, currencyOpts };
     });
 
-    if (!result) return apiOk({ summary: null, entries: [], total: 0, page, pageSize, connected: false });
+    if (!result) return apiOk({ summary: null, entries: [], total: 0, page, pageSize, connected: false, filters: { countries: [], currencies: [] } });
 
     const num = (n: any) => Number(n || 0);
     const entries = (result.rows as any[]).map((r, i) => ({
@@ -187,6 +191,10 @@ export async function GET(request: NextRequest) {
 
     return apiOk({
       summary, entries, total: result.total, page, pageSize, connected: true,
+      filters: {
+        countries: (result.countryOpts as any[]).map((r) => ({ id: r.id, name: r.name || r.id })),
+        currencies: (result.currencyOpts as any[]).map((r) => r.currency)
+      },
       connectedModules: ["Journal", "Payment", "Bank", "Purchase", "Sale", "Transfer", "Sales", "Customer", "Company", "Employee", "Warehouse", "Goods", "User"]
     });
   } catch (error) {

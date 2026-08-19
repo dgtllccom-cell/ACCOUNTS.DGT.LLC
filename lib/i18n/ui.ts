@@ -173,7 +173,7 @@ export type UiKey =
   // Sidebar navigation
   | "nav.dashboard"
   | "nav.forms_directory_audit" | "nav.all_release_entries"
-  | "sae.title" | "sae.subtitle" | "sae.refresh" | "sae.module" | "sae.all_modules" | "sae.payment" | "sae.sale" | "sae.warehouse" | "sae.expense" | "sae.total_countries" | "sae.total_branches" | "sae.today_entries" | "sae.net_movement" | "sae.all_countries" | "sae.all_offices" | "sae.all_modules_combined" | "sae.selected_view" | "sae.debit_minus_credit" | "sae.search_all" | "sae.search_ph" | "sae.latest_entries" | "sae.click_row" | "sae.entry_name" | "sae.party" | "sae.linked_bank" | "sae.final" | "sae.loading" | "sae.open_module" | "sae.entry_report" | "sae.field" | "sae.value" | "sae.txn_type" | "sae.total_records" | "sae.page" | "sae.records"
+  | "sae.title" | "sae.subtitle" | "sae.refresh" | "sae.module" | "sae.all_modules" | "sae.payment" | "sae.sale" | "sae.warehouse" | "sae.expense" | "sae.total_countries" | "sae.total_branches" | "sae.today_entries" | "sae.net_movement" | "sae.all_countries" | "sae.all_offices" | "sae.all_modules_combined" | "sae.selected_view" | "sae.debit_minus_credit" | "sae.search_all" | "sae.search_ph" | "sae.latest_entries" | "sae.click_row" | "sae.entry_name" | "sae.party" | "sae.linked_bank" | "sae.final" | "sae.loading" | "sae.open_module" | "sae.entry_report" | "sae.field" | "sae.value" | "sae.txn_type" | "sae.total_records" | "sae.page" | "sae.records" | "sae.export_csv" | "sae.all_currencies" | "sae.currency" | "sae.country"
   | "nav.toggle_submenu"
   | "dashboard.owner"
   | "dashboard.system_notifications"
@@ -4053,6 +4053,10 @@ const en: Dict = {
   "sae.total_records": "Total Records",
   "sae.page": "Page",
   "sae.records": "records",
+  "sae.export_csv": "Export CSV",
+  "sae.all_currencies": "All Currencies",
+  "sae.currency": "Currency",
+  "sae.country": "Country",
   "sae.linked_bank": "Linked Bank",
   "sae.final": "Balance / Final",
   "sae.loading": "Loading ERP activity...",
@@ -6981,6 +6985,10 @@ const ur: Dict = {
   "sae.total_records": "کل ریکارڈز",
   "sae.page": "صفحہ",
   "sae.records": "ریکارڈز",
+  "sae.export_csv": "CSV ایکسپورٹ",
+  "sae.all_currencies": "تمام کرنسیاں",
+  "sae.currency": "کرنسی",
+  "sae.country": "ملک",
   "sae.linked_bank": "منسلک بینک",
   "sae.final": "بیلنس / حتمی",
   "sae.loading": "ای آر پی سرگرمی لوڈ ہو رہی ہے...",
@@ -9510,6 +9518,10 @@ const ar: Dict = {
   "sae.total_records": "إجمالي السجلات",
   "sae.page": "صفحة",
   "sae.records": "سجلات",
+  "sae.export_csv": "تصدير CSV",
+  "sae.all_currencies": "كل العملات",
+  "sae.currency": "العملة",
+  "sae.country": "الدولة",
   "sae.linked_bank": "البنك المرتبط",
   "sae.final": "الرصيد / النهائي",
   "sae.loading": "جارٍ تحميل نشاط ERP...",
@@ -12026,6 +12038,10 @@ const fa: Dict = {
   "sae.total_records": "کل رکوردها",
   "sae.page": "صفحه",
   "sae.records": "رکورد",
+  "sae.export_csv": "خروجی CSV",
+  "sae.all_currencies": "همه ارزها",
+  "sae.currency": "ارز",
+  "sae.country": "کشور",
   "sae.linked_bank": "بانک مرتبط",
   "sae.final": "مانده / نهایی",
   "sae.loading": "در حال بارگذاری فعالیت ERP...",
@@ -14569,6 +14585,10 @@ const ps: Dict = {
   "sae.total_records": "ټول ریکارډونه",
   "sae.page": "مخ",
   "sae.records": "ریکارډونه",
+  "sae.export_csv": "CSV صادرول",
+  "sae.all_currencies": "ټولې اسعارې",
+  "sae.currency": "اسعار",
+  "sae.country": "هېواد",
   "sae.linked_bank": "تړل شوی بانک",
   "sae.final": "بیلانس / وروستی",
   "sae.loading": "د ERP فعالیت بارېږي...",

@@ -46,6 +46,7 @@ type ActivityResponse = {
   page: number;
   pageSize: number;
   connected: boolean;
+  filters?: { countries: { id: string; name: string }[]; currencies: string[] };
   connectedModules?: string[];
 };
 
@@ -72,9 +73,12 @@ export function AllReleaseEntriesView({ lang: langProp = "en" }: { lang?: string
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [moduleFilter, setModuleFilter] = useState("all");
+  const [countryId, setCountryId] = useState("");
+  const [currency, setCurrency] = useState("");
   const [status, setStatus] = useState("");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
+  const [exporting, setExporting] = useState(false);
   const [search, setSearch] = useState("");
   const [searchQ, setSearchQ] = useState(""); // debounced value actually sent to the server
   const [page, setPage] = useState(1);
@@ -87,25 +91,33 @@ export function AllReleaseEntriesView({ lang: langProp = "en" }: { lang?: string
     return () => clearTimeout(h);
   }, [search]);
   // Reset to page 1 whenever a filter changes.
-  useEffect(() => { setPage(1); }, [moduleFilter, status, dateFrom, dateTo]);
+  useEffect(() => { setPage(1); }, [moduleFilter, countryId, currency, status, dateFrom, dateTo]);
+
+  // Build the server query string from the current filter state.
+  const buildQuery = useCallback((over: Record<string, string> = {}) => {
+    const qp = new URLSearchParams({ module: moduleFilter, page: String(page), pageSize: String(pageSize) });
+    if (countryId) qp.set("countryId", countryId);
+    if (currency) qp.set("currency", currency);
+    if (status) qp.set("status", status);
+    if (dateFrom) qp.set("dateFrom", dateFrom);
+    if (dateTo) qp.set("dateTo", dateTo);
+    if (searchQ.trim()) qp.set("search", searchQ.trim());
+    Object.entries(over).forEach(([k, v]) => qp.set(k, v));
+    return qp;
+  }, [moduleFilter, countryId, currency, status, dateFrom, dateTo, searchQ, page]);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const qp = new URLSearchParams({ module: moduleFilter, page: String(page), pageSize: String(pageSize) });
-      if (status) qp.set("status", status);
-      if (dateFrom) qp.set("dateFrom", dateFrom);
-      if (dateTo) qp.set("dateTo", dateTo);
-      if (searchQ.trim()) qp.set("search", searchQ.trim());
-      const res = await apiGet<ActivityResponse>(`/api/erp/super-admin/activity?${qp.toString()}`);
+      const res = await apiGet<ActivityResponse>(`/api/erp/super-admin/activity?${buildQuery().toString()}`);
       setData(res);
     } catch (e: any) {
       setError(e?.message || "Failed to load ERP activity");
     } finally {
       setLoading(false);
     }
-  }, [moduleFilter, status, dateFrom, dateTo, searchQ, page]);
+  }, [buildQuery]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -115,7 +127,49 @@ export function AllReleaseEntriesView({ lang: langProp = "en" }: { lang?: string
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   function clearFilters() {
-    setModuleFilter("all"); setStatus(""); setDateFrom(""); setDateTo(""); setSearch(""); setSearchQ(""); setPage(1);
+    setModuleFilter("all"); setCountryId(""); setCurrency(""); setStatus(""); setDateFrom(""); setDateTo(""); setSearch(""); setSearchQ(""); setPage(1);
+  }
+
+  // CSV export of the current filtered result set (server-side filtered; capped so the browser
+  // never pulls the entire ERP history). Fetches up to EXPORT_CAP matching rows in one request.
+  const EXPORT_CAP = 5000;
+  async function exportCsv() {
+    setExporting(true);
+    try {
+      const res = await apiGet<ActivityResponse>(`/api/erp/super-admin/activity?${buildQuery({ page: "1", pageSize: String(EXPORT_CAP) }).toString()}`);
+      const cols: Array<[string, (e: FeedEntry) => string]> = [
+        [tt("rozrep.sno", "Sr #"), (e) => String(e.sr)],
+        [tt("bankroz.date_time", "Date / Time"), (e) => (e.date ? new Date(e.date).toLocaleString() : "")],
+        [tt("sae.module", "Module"), (e) => moduleLabel(e.module)],
+        [tt("sae.txn_type", "Transaction Type"), (e) => e.txnType || ""],
+        [tt("bankroz.entry_no", "Entry No"), (e) => e.entryNo || ""],
+        [tt("rozrep.country", "Country"), (e) => e.country],
+        [tt("rozrep.branch", "Branch"), (e) => e.branch],
+        [tt("sae.entry_name", "Entry Name"), (e) => e.entryName],
+        [tt("sae.party", "Party / Person"), (e) => e.party],
+        [tt("acct.reference_no", "Reference"), (e) => e.reference],
+        [tt("rozrep.currency", "Currency"), (e) => e.currency],
+        [tt("rozrep.debit", "Debit"), (e) => (e.debit ? String(e.debit) : "")],
+        [tt("rozrep.credit", "Credit"), (e) => (e.credit ? String(e.credit) : "")],
+        [tt("acct.created_by", "Created By"), (e) => e.createdBy || ""],
+        [tt("vch.approved_by", "Approved By"), (e) => e.approvedBy || ""],
+        [tt("acct.status", "Status"), (e) => e.status]
+      ];
+      const esc = (v: string) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+      const lines = [cols.map(([h]) => esc(h)).join(",")];
+      (res.entries || []).forEach((e) => lines.push(cols.map(([, f]) => esc(f(e))).join(",")));
+      const blob = new Blob(["﻿" + lines.join("\r\n")], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `all-release-entries-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e: any) {
+      setError(e?.message || "Export failed");
+    } finally {
+      setExporting(false);
+    }
   }
 
   function printJournal() {
@@ -273,6 +327,20 @@ export function AllReleaseEntriesView({ lang: langProp = "en" }: { lang?: string
           </select>
         </div>
         <div>
+          <label className="block text-[11px] font-bold text-slate-500 mb-1">{tt("sae.country", "Country")}</label>
+          <select value={countryId} onChange={(e) => setCountryId(e.target.value)} className="h-9 rounded-md border border-slate-300 bg-background px-2 text-xs font-semibold dark:border-slate-700">
+            <option value="">{tt("sae.all_countries", "All Countries")}</option>
+            {(data?.filters?.countries ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-[11px] font-bold text-slate-500 mb-1">{tt("sae.currency", "Currency")}</label>
+          <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="h-9 rounded-md border border-slate-300 bg-background px-2 text-xs font-semibold dark:border-slate-700">
+            <option value="">{tt("sae.all_currencies", "All Currencies")}</option>
+            {(data?.filters?.currencies ?? []).map((cur) => <option key={cur} value={cur}>{cur}</option>)}
+          </select>
+        </div>
+        <div>
           <label className="block text-[11px] font-bold text-slate-500 mb-1">{tt("acct.status", "Status")}</label>
           <select value={status} onChange={(e) => setStatus(e.target.value)} className="h-9 rounded-md border border-slate-300 bg-background px-2 text-xs font-semibold dark:border-slate-700">
             <option value="">{tt("rozrep.all", "All")}</option>
@@ -294,6 +362,7 @@ export function AllReleaseEntriesView({ lang: langProp = "en" }: { lang?: string
           <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={tt("sae.search_ph", "Search customer, employee, bank, purchase, sale, voucher, branch, reference...")} className="h-9 w-full rounded-md border border-slate-300 bg-background px-3 text-xs dark:border-slate-700" />
         </div>
         <button onClick={clearFilters} className="h-9 rounded-md border border-slate-300 px-3 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300">{tt("bankroz.reset_filters", "Clear Filters")}</button>
+        <button onClick={exportCsv} disabled={exporting} className="h-9 rounded-md border border-emerald-500 px-3 text-xs font-bold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50 dark:text-emerald-300 dark:hover:bg-emerald-950/30">⬇ {tt("sae.export_csv", "Export CSV")}</button>
         <button onClick={printJournal} className="h-9 rounded-md bg-blue-600 px-3 text-xs font-bold text-white hover:bg-blue-700">{tt("bankroz.print_pdf", "Print / PDF")}</button>
       </div>
 
