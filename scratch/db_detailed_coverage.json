@@ -1,0 +1,233 @@
+{
+  "recordTranslationsTotal": 9634,
+  "tableBreakdown": [
+    {
+      "record_table": "cities",
+      "total_records": 6023,
+      "en_count": 6023,
+      "ur_count": 6023,
+      "ps_count": 6023,
+      "fa_count": 6023,
+      "ar_count": 6023
+    },
+    {
+      "record_table": "districts",
+      "total_records": 1841,
+      "en_count": 1841,
+      "ur_count": 1841,
+      "ps_count": 1841,
+      "fa_count": 1841,
+      "ar_count": 1841
+    },
+    {
+      "record_table": "companies",
+      "total_records": 995,
+      "en_count": 995,
+      "ur_count": 995,
+      "ps_count": 995,
+      "fa_count": 995,
+      "ar_count": 995
+    },
+    {
+      "record_table": "customers",
+      "total_records": 323,
+      "en_count": 323,
+      "ur_count": 323,
+      "ps_count": 323,
+      "fa_count": 323,
+      "ar_count": 323
+    },
+    {
+      "record_table": "states_provinces",
+      "total_records": 177,
+      "en_count": 177,
+      "ur_count": 177,
+      "ps_count": 177,
+      "fa_count": 177,
+      "ar_count": 177
+    },
+    {
+      "record_table": "purchase_orders",
+      "total_records": 65,
+      "en_count": 65,
+      "ur_count": 22,
+      "ps_count": 22,
+      "fa_count": 22,
+      "ar_count": 22
+    },
+    {
+      "record_table": "system_dictionary",
+      "total_records": 60,
+      "en_count": 60,
+      "ur_count": 60,
+      "ps_count": 60,
+      "fa_count": 60,
+      "ar_count": 60
+    },
+    {
+      "record_table": "clearing_customer_order_parties",
+      "total_records": 45,
+      "en_count": 45,
+      "ur_count": 45,
+      "ps_count": 45,
+      "fa_count": 45,
+      "ar_count": 45
+    },
+    {
+      "record_table": "city_branches",
+      "total_records": 22,
+      "en_count": 22,
+      "ur_count": 22,
+      "ps_count": 22,
+      "fa_count": 22,
+      "ar_count": 22
+    },
+    {
+      "record_table": "areas_locations",
+      "total_records": 20,
+      "en_count": 20,
+      "ur_count": 20,
+      "ps_count": 20,
+      "fa_count": 20,
+      "ar_count": 20
+    },
+    {
+      "record_table": "clearing_customer_orders",
+      "total_records": 13,
+      "en_count": 13,
+      "ur_count": 13,
+      "ps_count": 13,
+      "fa_count": 13,
+      "ar_count": 13
+    },
+    {
+      "record_table": "goods",
+      "total_records": 7,
+      "en_count": 7,
+      "ur_count": 5,
+      "ps_count": 5,
+      "fa_count": 5,
+      "ar_count": 5
+    },
+    {
+      "record_table": "country_branches",
+      "total_records": 6,
+      "en_count": 6,
+      "ur_count": 6,
+      "ps_count": 6,
+      "fa_count": 6,
+      "ar_count": 6
+    },
+    {
+      "record_table": "profiles",
+      "total_records": 6,
+      "en_count": 6,
+      "ur_count": 6,
+      "ps_count": 6,
+      "fa_count": 6,
+      "ar_count": 6
+    },
+    {
+      "record_table": "permissions",
+      "total_records": 5,
+      "en_count": 5,
+      "ur_count": 5,
+      "ps_count": 5,
+      "fa_count": 5,
+      "ar_count": 5
+    },
+    {
+      "record_table": "countries",
+      "total_records": 5,
+      "en_count": 5,
+      "ur_count": 5,
+      "ps_count": 5,
+      "fa_count": 5,
+      "ar_count": 5
+    },
+    {
+      "record_table": "roznamcha_entries",
+      "total_records": 4,
+      "en_count": 4,
+      "ur_count": 4,
+      "ps_count": 4,
+      "fa_count": 4,
+      "ar_count": 4
+    },
+    {
+      "record_table": "shipping_line_records",
+      "total_records": 4,
+      "en_count": 4,
+      "ur_count": 4,
+      "ps_count": 4,
+      "fa_count": 4,
+      "ar_count": 4
+    },
+    {
+      "record_table": "banks",
+      "total_records": 4,
+      "en_count": 4,
+      "ur_count": 4,
+      "ps_count": 4,
+      "fa_count": 4,
+      "ar_count": 4
+    },
+    {
+      "record_table": "ledgers",
+      "total_records": 2,
+      "en_count": 2,
+      "ur_count": 2,
+      "ps_count": 2,
+      "fa_count": 2,
+      "ar_count": 2
+    },
+    {
+      "record_table": "roznamcha_lines",
+      "total_records": 2,
+      "en_count": 2,
+      "ur_count": 2,
+      "ps_count": 2,
+      "fa_count": 2,
+      "ar_count": 2
+    },
+    {
+      "record_table": "clearing_agents",
+      "total_records": 2,
+      "en_count": 2,
+      "ur_count": 2,
+      "ps_count": 2,
+      "fa_count": 2,
+      "ar_count": 2
+    },
+    {
+      "record_table": "enterprise_accounts",
+      "total_records": 1,
+      "en_count": 1,
+      "ur_count": 1,
+      "ps_count": 1,
+      "fa_count": 1,
+      "ar_count": 1
+    },
+    {
+      "record_table": "accounts",
+      "total_records": 1,
+      "en_count": 1,
+      "ur_count": 1,
+      "ps_count": 1,
+      "fa_count": 1,
+      "ar_count": 1
+    },
+    {
+      "record_table": "sales_orders",
+      "total_records": 1,
+      "en_count": 1,
+      "ur_count": 1,
+      "ps_count": 1,
+      "fa_count": 1,
+      "ar_count": 1
+    }
+  ],
+  "duplicatesCount": 0,
+  "translationKeysCount": 0,
+  "translationValuesByLanguage": []
+}

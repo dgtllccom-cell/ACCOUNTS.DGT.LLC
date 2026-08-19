@@ -1,9 +1,26 @@
 import postgres from 'postgres';
 import fs from 'fs';
-import dotenv from 'dotenv';
 
-dotenv.config({ path: '.env.local' });
-dotenv.config();
+function loadEnvFile(path) {
+  if (!fs.existsSync(path)) return;
+  const content = fs.readFileSync(path, 'utf8');
+  for (const line of content.split('\n')) {
+    const trimmed = line.trim();
+    if (!trimmed || trimmed.startsWith('#')) continue;
+    const eqIdx = trimmed.indexOf('=');
+    if (eqIdx !== -1) {
+      const key = trimmed.substring(0, eqIdx).trim();
+      let val = trimmed.substring(eqIdx + 1).trim();
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
+        val = val.slice(1, -1);
+      }
+      process.env[key] = val;
+    }
+  }
+}
+
+loadEnvFile('.env.local');
+loadEnvFile('.env');
 
 async function auditDatabaseTranslations() {
   const dbUrl = process.env.DATABASE_URL;

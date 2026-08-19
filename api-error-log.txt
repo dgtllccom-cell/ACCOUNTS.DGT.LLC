@@ -34663,3 +34663,37 @@ Error: A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for p
     at async g (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\locations\cities\route.js:1:5888)
     at async G (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\.next\server\app\api\erp\locations\cities\route.js:1:7010)
 2026-08-18T20:16:53.642Z - SERVER_ERROR - A real SUPABASE_SECRET_KEY or SUPABASE_SERVICE_ROLE_KEY is required for privileged server operations. Publishable/anon keys are not accepted. - {}
+
+[2026-08-19T11:40:08.246Z] PostgresError: column pr.person_master_id does not exist
+PostgresError: column pr.person_master_id does not exist
+    at ErrorResponse (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:830:70)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at Socket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at Socket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TCP.callbackTrampoline (node:internal/async_hooks:130:17)
+    at cachedError (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:175:23)
+    at new Query (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:41:24)
+    at sql (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:110:11)
+    at eval (webpack-internal:///(rsc)/./app/api/erp/super-admin/activity/route.ts:137:41)
+2026-08-19T11:40:08.633Z - SERVER_ERROR - column pr.person_master_id does not exist - {}
+
+[2026-08-19T11:40:21.083Z] PostgresError: column pr.person_master_id does not exist
+PostgresError: column pr.person_master_id does not exist
+    at ErrorResponse (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:830:70)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at Socket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at Socket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TCP.callbackTrampoline (node:internal/async_hooks:130:17)
+    at cachedError (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:175:23)
+    at new Query (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:41:24)
+    at sql (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:110:11)
+    at eval (webpack-internal:///(rsc)/./app/api/erp/super-admin/activity/route.ts:137:41)
+2026-08-19T11:40:21.505Z - SERVER_ERROR - column pr.person_master_id does not exist - {}
