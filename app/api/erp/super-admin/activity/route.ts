@@ -41,7 +41,7 @@ feed as (
     e.created_at ts, e.country_id, coalesce(e.city_branch_id, e.country_branch_id) branch_id,
     coalesce(e.narration, e.source_transaction_type, 'Roznamcha Entry') entry_name,
     rl.account_no party, rl.currency, rl.debit, rl.credit, e.status::text,
-    cp.full_name created_by, ap.full_name approved_by, '/dashboard/roznamcha/reports/all' href
+    cp.full_name created_by, ap.full_name approved_by, '/dashboard/all-release-entries/' || e.id::text href
   from roznamcha_entries e
   left join rl on rl.eid = e.id
   left join profiles cp on cp.id = e.created_by
