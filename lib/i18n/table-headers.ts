@@ -4,6 +4,14 @@ import { translationPendingLabel } from "@/lib/i18n/verified-record-translations
 type Row = { ur: string; ar: string; fa: string; ps: string };
 
 export const HEADER_TRANSLATIONS: Record<string, Row> = {
+  "EMPTY KGS": { ur: "خالی کلوگرام", ar: "الكيلوغرامات الفارغة", fa: "کیلوگرم خالی", ps: "خالي کیلوګرامه" },
+  "QUANTITY (NO / NAME)": { ur: "مقدار (نمبر / نام)", ar: "الكمية (رقم / اسم)", fa: "مقدار (شماره / نام)", ps: "مقدار (شمېره / نوم)" },
+  "PURCHASE CURR": { ur: "خریداری کرنسی", ar: "عملة الشراء", fa: "ارز خرید", ps: "د پیرود اسعار" },
+  "PUR CURR ADVANCE": { ur: "خریداری کرنسی ایڈوانس", ar: "مقدم عملة الشراء", fa: "پیش‌پرداخت ارز خرید", ps: "د پیرود اسعارو وړاندې" },
+  "FINAL CURR TOTAL": { ur: "حتمی کرنسی کل", ar: "إجمالي العملة النهائية", fa: "مجموع ارز نهایی", ps: "د وروستي اسعارو ټول" },
+  "FINAL CURR ADVANCE": { ur: "حتمی کرنسی ایڈوانس", ar: "مقدم العملة النهائية", fa: "پیش‌پرداخت ارز نهایی", ps: "د وروستي اسعارو وړاندې" },
+  "REM (PUR CURR)": { ur: "باقی (خریداری کرنسی)", ar: "المتبقي (عملة الشراء)", fa: "باقی‌مانده (ارز خرید)", ps: "پاتې (د پیرود اسعار)" },
+  "REM (FINAL CURR)": { ur: "باقی (حتمی کرنسی)", ar: "المتبقي (العملة النهائية)", fa: "باقی‌مانده (ارز نهایی)", ps: "پاتې (وروستی اسعار)" },
   // Daily Exchange Rate Management Keys
   "SUPER ADMIN LIVE EXCHANGE RATES TABLE": {
     ur: "سپر ایڈمن لائیو ایکسچینج ریٹ جدول",

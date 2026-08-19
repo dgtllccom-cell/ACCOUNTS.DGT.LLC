@@ -154,7 +154,7 @@ export function ReportFilterBar({
                 <span className="text-xs font-bold text-emerald-700 dark:text-emerald-400 truncate">
                   {lockedCountryName || _("report.filter_country")}
                 </span>
-                <span className="ml-auto text-[9px] font-black text-emerald-500 bg-emerald-100 px-1.5 py-0.5 rounded-full">LOCKED</span>
+                <span className="ml-auto text-[9px] font-black text-emerald-500 bg-emerald-100 px-1.5 py-0.5 rounded-full">{_("report.locked", "LOCKED")}</span>
               </div>
             ) : (
               <select
@@ -241,7 +241,7 @@ export function ReportFilterBar({
                 <span className="text-xs font-bold text-violet-700 dark:text-violet-400 truncate">
                   {lockedBranchName || _("report.filter_branch")}
                 </span>
-                <span className="ml-auto text-[9px] font-black text-violet-500 bg-violet-100 px-1.5 py-0.5 rounded-full">LOCKED</span>
+                <span className="ml-auto text-[9px] font-black text-violet-500 bg-violet-100 px-1.5 py-0.5 rounded-full">{_("report.locked", "LOCKED")}</span>
               </div>
             ) : (
               <select

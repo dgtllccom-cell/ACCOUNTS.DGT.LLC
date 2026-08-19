@@ -151,18 +151,6 @@ export default function KycReportsPage() {
 
   const tUI = (key: string) => KYC_UI[key]?.[activeLang] || KYC_UI[key]?.en || key;
 
-  function handleSystemLanguageChange(code: SupportedLanguage) {
-    setActiveLang(code);
-    try {
-      localStorage.setItem("erp_lang", code);
-      document.cookie = `erp_lang=${encodeURIComponent(code)}; Path=/; Max-Age=${60 * 60 * 24 * 365}; SameSite=Lax`;
-      window.dispatchEvent(new Event("erp_lang_changed"));
-      window.location.reload();
-    } catch (err) {
-      console.error("Failed to change global system language:", err);
-    }
-  }
-
   async function fetchKycData() {
     setLoading(true);
     try {
@@ -180,20 +168,31 @@ export default function KycReportsPage() {
   }
 
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem("erp_lang") as SupportedLanguage | null;
-      if (stored && ["en", "ur", "ps", "ar", "fa"].includes(stored)) {
-        setActiveLang(stored);
-      } else {
-        const match = document.cookie.match(/erp_lang=([^;]+)/);
-        if (match && match[1] && ["en", "ur", "ps", "ar", "fa"].includes(match[1])) {
-          setActiveLang(match[1] as SupportedLanguage);
+    function updateLang() {
+      try {
+        const stored = localStorage.getItem("erp_lang") as SupportedLanguage | null;
+        if (stored && ["en", "ur", "ps", "ar", "fa"].includes(stored)) {
+          setActiveLang(stored);
+        } else {
+          const match = document.cookie.match(/erp_lang=([^;]+)/);
+          if (match && match[1] && ["en", "ur", "ps", "ar", "fa"].includes(match[1])) {
+            setActiveLang(match[1] as SupportedLanguage);
+          }
         }
+      } catch {
+        // ignore SSR errors
       }
-    } catch {
-      // ignore SSR errors
     }
+
+    updateLang();
+    window.addEventListener("erp_lang_changed", updateLang);
+    window.addEventListener("storage", updateLang);
     fetchKycData();
+
+    return () => {
+      window.removeEventListener("erp_lang_changed", updateLang);
+      window.removeEventListener("storage", updateLang);
+    };
   }, []);
 
   function handleOpenKycModal(item: KycItem) {
@@ -300,17 +299,17 @@ export default function KycReportsPage() {
   });
 
   return (
-    <div dir={dir} className="mx-auto max-w-[1600px] space-y-6 text-foreground p-4 lg:p-6">
+    <div dir={dir} className="w-full space-y-6 text-foreground p-3 sm:p-5 lg:p-6">
       {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b border-border/60 pb-5 gap-4">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between border-b border-border/60 pb-4 gap-4">
         <div>
           <div className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-rose-500 animate-pulse" />
             <p className="text-[10px] font-bold uppercase tracking-widest text-rose-600 dark:text-rose-400">
-              Regulatory Compliance & Verification Center (5-Language Active)
+              Regulatory Compliance & Verification Center
             </p>
           </div>
-          <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight text-foreground mt-1">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold tracking-tight text-foreground mt-1">
             {tUI("title")}
           </h1>
           <p className="text-xs text-muted-foreground mt-1 max-w-3xl">
@@ -318,37 +317,13 @@ export default function KycReportsPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* 5-Language Switcher Pills */}
-          <div className="flex items-center gap-1 rounded-2xl border border-slate-200 bg-slate-50/80 p-1 dark:border-slate-800 dark:bg-slate-950">
-            {[
-              { code: "en", label: "US English" },
-              { code: "ur", label: "اردو PK" },
-              { code: "ps", label: "پښتو AF" },
-              { code: "ar", label: "العربية AE" },
-              { code: "fa", label: "فارسی IR" }
-            ].map((l) => (
-              <button
-                key={l.code}
-                type="button"
-                onClick={() => handleSystemLanguageChange(l.code as SupportedLanguage)}
-                className={`rounded-xl px-2.5 py-1 text-xs font-bold transition-all ${
-                  activeLang === l.code
-                    ? "bg-rose-600 text-white shadow-md shadow-rose-600/30"
-                    : "text-slate-600 hover:bg-slate-200/60 dark:text-slate-400 dark:hover:bg-slate-800"
-                }`}
-              >
-                {l.label}
-              </button>
-            ))}
-          </div>
-
+        <div className="flex items-center gap-2.5 shrink-0 self-start md:self-auto">
           <Button
             onClick={handleKycPrint}
             variant="outline"
-            className="border-border/80 bg-card hover:bg-muted text-foreground h-9 px-3 rounded-xl shadow-sm text-xs"
+            className="border-border/80 bg-card hover:bg-muted text-foreground h-9 px-3.5 rounded-xl shadow-xs text-xs font-bold transition-all"
           >
-            <RefreshCw className="h-4 w-4 mr-2 hidden" />
+            <FileText className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
             {t(activeLang, "bankroz.print_pdf", "Print / PDF")}
           </Button>
 
@@ -356,9 +331,9 @@ export default function KycReportsPage() {
             onClick={fetchKycData}
             disabled={loading}
             variant="outline"
-            className="border-border/80 bg-card hover:bg-muted text-foreground h-9 px-3 rounded-xl shadow-sm text-xs"
+            className="border-border/80 bg-card hover:bg-muted text-foreground h-9 px-3.5 rounded-xl shadow-xs text-xs font-bold transition-all"
           >
-            <RefreshCw className={cn("h-4 w-4 mr-2", loading ? "animate-spin text-rose-600" : "")} />
+            <RefreshCw className={cn("h-3.5 w-3.5 mr-1.5", loading ? "animate-spin text-rose-600" : "")} />
             Refresh KYC Matrix
           </Button>
         </div>
@@ -377,8 +352,8 @@ export default function KycReportsPage() {
       )}
 
       {/* 4 Summary KPI Cards */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <Card className="bg-card border-border/60 p-4 rounded-2xl shadow-sm">
+      <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+        <Card className="bg-card border-border/60 p-4 rounded-2xl shadow-sm hover:border-border transition-all">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{tUI("totalTracked")}</p>
@@ -391,7 +366,7 @@ export default function KycReportsPage() {
           </div>
         </Card>
 
-        <Card className="bg-card border-border/60 p-4 rounded-2xl shadow-sm">
+        <Card className="bg-card border-border/60 p-4 rounded-2xl shadow-sm hover:border-border transition-all">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">{tUI("actionRequired")}</p>
@@ -404,7 +379,7 @@ export default function KycReportsPage() {
           </div>
         </Card>
 
-        <Card className="bg-card border-border/60 p-4 rounded-2xl shadow-sm">
+        <Card className="bg-card border-border/60 p-4 rounded-2xl shadow-sm hover:border-border transition-all">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-rose-600 dark:text-rose-400">{tUI("nearExpiry")}</p>
@@ -417,7 +392,7 @@ export default function KycReportsPage() {
           </div>
         </Card>
 
-        <Card className="bg-card border-border/60 p-4 rounded-2xl shadow-sm">
+        <Card className="bg-card border-border/60 p-4 rounded-2xl shadow-sm hover:border-border transition-all">
           <div className="flex items-center justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">{tUI("compliant")}</p>
@@ -431,23 +406,23 @@ export default function KycReportsPage() {
         </Card>
       </div>
 
-      {/* Filter Toolbar */}
-      <Card className="bg-card border-border/60 p-4 rounded-2xl shadow-sm space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+      {/* Unified Search & Filter Strip (Picture 2 Design) */}
+      <div className="bg-card border border-border/80 rounded-2xl p-3 sm:p-4 shadow-sm space-y-3">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
           {/* Search Box */}
-          <div className="relative flex-1 max-w-md">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+          <div className="relative flex-1 min-w-[260px] max-w-xl">
+            <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search entity name, code, email, or country..."
-              className="w-full bg-background border border-border/80 rounded-xl pl-9 pr-3 py-2 text-xs focus:outline-none focus:border-rose-500 text-foreground placeholder:text-muted-foreground"
+              className="w-full bg-background border border-border/80 rounded-xl pl-10 pr-4 py-2.5 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-rose-500/20 focus:border-rose-500 text-foreground placeholder:text-muted-foreground/60 transition-all"
             />
           </div>
 
           {/* Type Filter Pills */}
-          <div className="flex flex-wrap items-center gap-1.5">
+          <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0">
             {[
               { id: "all", label: "All Entities" },
               { id: "country_branch", label: "Countries & Main Branches" },
@@ -459,9 +434,9 @@ export default function KycReportsPage() {
                 key={type.id}
                 onClick={() => setSelectedType(type.id)}
                 className={cn(
-                  "px-3 py-1.5 rounded-lg text-xs font-bold transition-all",
+                  "px-3.5 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap",
                   selectedType === type.id
-                    ? "bg-rose-600 text-white shadow-sm"
+                    ? "bg-rose-600 text-white shadow-xs"
                     : "bg-muted/40 text-muted-foreground hover:bg-muted hover:text-foreground"
                 )}
               >
@@ -472,30 +447,32 @@ export default function KycReportsPage() {
         </div>
 
         {/* Status Filter Row */}
-        <div className="flex items-center gap-2 border-t border-border/40 pt-3 overflow-x-auto">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground shrink-0">Filter Status:</span>
-          {[
-            { id: "all", label: "All Statuses" },
-            { id: "incomplete", label: "Incomplete (Red Alert)" },
-            { id: "near_expiry", label: "Near Expiry (< 5 Days)" },
-            { id: "suspended", label: "Suspended / Overdue" },
-            { id: "compliant", label: "Compliant & Verified" }
-          ].map((st) => (
-            <button
-              key={st.id}
-              onClick={() => setSelectedStatus(st.id)}
-              className={cn(
-                "px-2.5 py-1 rounded-full text-[10px] font-bold transition-all shrink-0 border",
-                selectedStatus === st.id
-                  ? "bg-foreground text-background border-foreground shadow-sm"
-                  : "bg-background border-border/60 text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {st.label}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-2 border-t border-border/50 pt-2.5">
+          <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground shrink-0 mr-1">FILTER STATUS:</span>
+          <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto">
+            {[
+              { id: "all", label: "All Statuses" },
+              { id: "incomplete", label: "Incomplete (Red Alert)" },
+              { id: "near_expiry", label: "Near Expiry (< 5 Days)" },
+              { id: "suspended", label: "Suspended / Overdue" },
+              { id: "compliant", label: "Compliant & Verified" }
+            ].map((st) => (
+              <button
+                key={st.id}
+                onClick={() => setSelectedStatus(st.id)}
+                className={cn(
+                  "px-3 py-1 rounded-full text-[10px] sm:text-xs font-bold transition-all shrink-0 border",
+                  selectedStatus === st.id
+                    ? "bg-slate-900 text-white border-slate-900 dark:bg-slate-100 dark:text-slate-900 dark:border-slate-100 shadow-xs"
+                    : "bg-background border-border/70 text-muted-foreground hover:text-foreground hover:border-border"
+                )}
+              >
+                {st.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </Card>
+      </div>
 
       {/* Main KYC Report Table */}
       <Card className="bg-card border-border/60 rounded-2xl overflow-hidden shadow-sm">

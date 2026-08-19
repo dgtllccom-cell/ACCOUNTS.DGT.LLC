@@ -453,7 +453,7 @@ export default function JournalStockReportDashboard({
             {filtersOpen && (
               <div className="absolute right-0 mt-2 w-[320px] bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl shadow-xl z-50 p-4 animate-in fade-in slide-in-from-top-2 duration-150 text-slate-800 dark:text-slate-100">
                 <div className="flex items-center justify-between pb-2.5 border-b border-slate-100 dark:border-slate-800 mb-3">
-                  <span className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">Advanced Filters</span>
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300">{t(lang, "report.advanced_filters", "Advanced Filters")}</span>
                   <button onClick={() => setFiltersOpen(false)} className="text-slate-400 hover:text-slate-650">
                     <X className="w-4 h-4" />
                   </button>
@@ -461,50 +461,50 @@ export default function JournalStockReportDashboard({
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     <div className="flex flex-col gap-1">
-                      <label className="text-[9px] font-bold uppercase text-slate-400">Date From</label>
+                      <label className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "report.filter_date_from", "Date From")}</label>
                       <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)}
                         className="h-8 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2.5 text-xs outline-none focus:border-blue-500" />
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label className="text-[9px] font-bold uppercase text-slate-400">Date To</label>
+                      <label className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "report.filter_date_to", "Date To")}</label>
                       <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)}
                         className="h-8 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2.5 text-xs outline-none focus:border-blue-500" />
                     </div>
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-[9px] font-bold uppercase text-slate-400">Country</label>
+                    <label className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "report.filter_country", "Country")}</label>
                     <select value={selectedCountryId} onChange={e => setSelectedCountryId(e.target.value)}
                       className="h-8 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2 text-xs outline-none focus:border-blue-500">
-                      <option value="all">All Countries</option>
+                      <option value="all">{t(lang, "report.filter_all_countries", "All Countries")}</option>
                       {countries.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                     </select>
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-[9px] font-bold uppercase text-slate-400">Branch</label>
+                    <label className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "report.filter_branch", "Branch")}</label>
                     <select value={selectedBranchId} onChange={e => setSelectedBranchId(e.target.value)}
                       className="h-8 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2 text-xs outline-none focus:border-blue-500">
-                      <option value="all">All Branches</option>
+                      <option value="all">{t(lang, "report.filter_all_branches", "All Branches")}</option>
                       {branches.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                     </select>
                   </div>
 
                   <div className="flex flex-col gap-1">
-                    <label className="text-[9px] font-bold uppercase text-slate-400">Salesman</label>
+                    <label className="text-[9px] font-bold uppercase text-slate-400">{t(lang, "report.salesperson", "Salesman")}</label>
                     <select value={selectedSalesmanId} onChange={e => setSelectedSalesmanId(e.target.value)}
                       className="h-8 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 px-2 text-xs outline-none focus:border-blue-500">
-                      <option value="all">All Salesmen</option>
+                      <option value="all">{t(lang, "report.filter_all_salesmen", "All Salesmen")}</option>
                       {salesmen.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
                     </select>
                   </div>
 
                   <div className="flex gap-2 pt-2">
                     <button onClick={fetchReport} className="flex-1 h-8 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-xl transition-all">
-                      Apply Filters
+                      {t(lang, "report.filter_apply", "Apply Filters")}
                     </button>
                     <button onClick={handleResetFilters} className="h-8 px-3 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl transition-all">
-                      Reset
+                      {t(lang, "report.filter_reset", "Reset")}
                     </button>
                   </div>
                 </div>
@@ -518,7 +518,7 @@ export default function JournalStockReportDashboard({
             className="flex items-center gap-1 px-2.5 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 dark:text-slate-200 rounded-lg text-xs font-bold uppercase border border-slate-200 dark:border-slate-800 disabled:opacity-50"
           >
             <Download className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">CSV Export</span>
+            <span className="hidden sm:inline">{t(lang, "report.export_csv", "CSV Export")}</span>
           </button>
 
           <button
@@ -526,7 +526,7 @@ export default function JournalStockReportDashboard({
             className="flex items-center gap-1 px-2.5 py-1 bg-[#0d2d6b] hover:bg-[#0a2456] text-white rounded-lg text-xs font-bold uppercase transition-all duration-150"
           >
             <Printer className="w-3.5 h-3.5" />
-            <span className="hidden sm:inline">Print</span>
+            <span className="hidden sm:inline">{t(lang, "report.print", "Print")}</span>
           </button>
         </div>,
         actionsSlot
@@ -928,37 +928,37 @@ export default function JournalStockReportDashboard({
               {/* Summary Cards Row */}
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
                 <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Total Bills</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "report.stat_total_bills", "Total Bills")}</span>
                   <p className="text-base font-black text-slate-850 dark:text-slate-100 mt-0.5 tabular-nums">
                     {selectedGroupDetails.billsCount} Bills
                   </p>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Total Net Weight</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "report.stat_total_net_weight", "Total Net Weight")}</span>
                   <p className="text-base font-black text-slate-850 dark:text-slate-100 mt-0.5 tabular-nums">
                     {fmtNum(selectedGroupDetails.netWeight, 0)} Kg
                   </p>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Quantity (DC)</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "report.stat_quantity_dc", "Quantity (DC)")}</span>
                   <p className="text-base font-black text-slate-850 dark:text-slate-100 mt-0.5 tabular-nums">
                     {fmtNum(selectedGroupDetails.dc, 0)} CTN
                   </p>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Final Purchase</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "report.stat_final_purchase", "Final Purchase")}</span>
                   <p className="text-base font-black text-violet-600 dark:text-violet-400 mt-0.5 tabular-nums">
                     {fmtNum(selectedGroupDetails.purchaseAmount, 2)} PKR
                   </p>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Final Advance</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "report.stat_final_advance", "Final Advance")}</span>
                   <p className="text-base font-black text-sky-600 dark:text-sky-400 mt-0.5 tabular-nums">
                     {fmtNum(selectedGroupDetails.purchasePayment, 2)} PKR
                   </p>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-950 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800">
-                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">Final Remaining</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "report.stat_final_remaining", "Final Remaining")}</span>
                   <p className="text-base font-black text-rose-600 dark:text-rose-400 mt-0.5 tabular-nums">
                     {fmtNum(selectedGroupDetails.remainingPayment, 2)} PKR
                   </p>

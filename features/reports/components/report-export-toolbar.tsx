@@ -212,14 +212,14 @@ export function ReportExportToolbar({
             onClick={() => onDensityChange("comfortable")}
             className={cn("rounded-md px-2 py-0.5 transition-colors", density === "comfortable" ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300" : "hover:bg-slate-100 dark:hover:bg-slate-800")}
           >
-            Comfortable
+            {_("report.density_comfortable", "Comfortable")}
           </button>
           <button
             type="button"
             onClick={() => onDensityChange("compact")}
             className={cn("rounded-md px-2 py-0.5 transition-colors", density === "compact" ? "bg-indigo-50 text-indigo-700 dark:bg-indigo-950/50 dark:text-indigo-300" : "hover:bg-slate-100 dark:hover:bg-slate-800")}
           >
-            Compact
+            {_("report.density_compact", "Compact")}
           </button>
         </div>
       )}
@@ -232,7 +232,7 @@ export function ReportExportToolbar({
             className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white dark:bg-slate-900 dark:border-slate-800 px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all shadow-sm"
           >
             <Columns3 className="h-3.5 w-3.5" />
-            Columns
+            {_("report.columns", "Columns")}
           </button>
           {showColumns && (
             <div className={cn("absolute z-20 mt-2 w-56 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl dark:border-slate-800 dark:bg-slate-900", isRTL ? "left-0" : "right-0")}>
@@ -250,8 +250,8 @@ export function ReportExportToolbar({
                       <span className="min-w-0 flex-1 truncate">{column.label}</span>
                       {onMoveColumn && (
                         <span className="flex items-center gap-0.5">
-                          <button type="button" disabled={index === 0} onClick={() => onMoveColumn(keyStr, -1)} className="rounded p-1 hover:bg-slate-200 disabled:opacity-25 dark:hover:bg-slate-700" aria-label={`Move ${column.label} up`}><ArrowUp className="h-3 w-3" /></button>
-                          <button type="button" disabled={index === columns.length - 1} onClick={() => onMoveColumn(keyStr, 1)} className="rounded p-1 hover:bg-slate-200 disabled:opacity-25 dark:hover:bg-slate-700" aria-label={`Move ${column.label} down`}><ArrowDown className="h-3 w-3" /></button>
+                          <button type="button" disabled={index === 0} onClick={() => onMoveColumn(keyStr, -1)} className="rounded p-1 hover:bg-slate-200 disabled:opacity-25 dark:hover:bg-slate-700" aria-label={`${_("report.move_up", "Move up")}: ${column.label}`}><ArrowUp className="h-3 w-3" /></button>
+                          <button type="button" disabled={index === columns.length - 1} onClick={() => onMoveColumn(keyStr, 1)} className="rounded p-1 hover:bg-slate-200 disabled:opacity-25 dark:hover:bg-slate-700" aria-label={`${_("report.move_down", "Move down")}: ${column.label}`}><ArrowDown className="h-3 w-3" /></button>
                         </span>
                       )}
                     </div>
