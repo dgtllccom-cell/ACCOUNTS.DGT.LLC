@@ -494,9 +494,55 @@ export const shippingBlRecordCreateSchema = scopeSchema.extend({
   debit: z.coerce.number().finite().min(0).default(0),
   credit: z.coerce.number().finite().min(0).default(0),
   currencyCode: currencyCodeSchema.default("USD"),
-});
+}).refine(
+  (data) => {
+    if (data.eta && data.etd) {
+      return new Date(data.eta).getTime() >= new Date(data.etd).getTime();
+    }
+    return true;
+  },
+  {
+    message: "ETA (Arrival Date) must be on or after ETD (Departure Date)",
+    path: ["eta"]
+  }
+);
 
-export const shippingBlRecordUpdateSchema = shippingBlRecordCreateSchema.partial();
+export const shippingBlRecordUpdateSchema = scopeSchema.extend({
+  countryId: optionalUuidSchema,
+  countryBranchId: optionalUuidSchema,
+  cityBranchId: optionalUuidSchema,
+  purchaseOrderId: optionalUuidSchema,
+  salesOrderId: optionalUuidSchema,
+  loadingRecordId: optionalUuidSchema,
+  roznamchaEntryId: optionalUuidSchema,
+  ledgerId: optionalUuidSchema,
+  clearingAgentId: optionalUuidSchema,
+  shippingLineName: z.string().trim().min(2).max(200).optional(),
+  blNumber: z.string().trim().min(2).max(120).optional(),
+  containerNumber: z.string().trim().max(120).nullable().optional(),
+  vesselName: z.string().trim().max(200).nullable().optional(),
+  voyageNumber: z.string().trim().max(120).nullable().optional(),
+  loadingPort: z.string().trim().max(200).nullable().optional(),
+  dischargePort: z.string().trim().max(200).nullable().optional(),
+  eta: z.string().date().nullable().optional(),
+  etd: z.string().date().nullable().optional(),
+  shipmentStatus: shipmentStatusSchema.optional(),
+  accountNumber: z.string().trim().max(120).nullable().optional(),
+  debit: z.coerce.number().finite().min(0).optional(),
+  credit: z.coerce.number().finite().min(0).optional(),
+  currencyCode: currencyCodeSchema.optional(),
+}).partial().refine(
+  (data) => {
+    if (data.eta && data.etd) {
+      return new Date(data.eta).getTime() >= new Date(data.etd).getTime();
+    }
+    return true;
+  },
+  {
+    message: "ETA (Arrival Date) must be on or after ETD (Departure Date)",
+    path: ["eta"]
+  }
+);
 
 // %%% Bank Master %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 export const bankCreateSchema = z.object({

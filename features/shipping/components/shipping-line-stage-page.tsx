@@ -144,9 +144,17 @@ export function ShippingLineStagePage({
     setRemarks(selectedRecord.report_payload?.carrierRemarks || "");
   }, [selectedRecord]);
 
+  // Search filter for B/L registry
+  const [searchBlQuery, setSearchBlQuery] = useState("");
+
   async function handleUpdateTracking(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedRecord) return;
+
+    if (eta && etd && new Date(eta).getTime() < new Date(etd).getTime()) {
+      setMessage("❌ ETA (Arrival Date) must be on or after ETD (Departure Date)");
+      return;
+    }
 
     setSaving(true);
     setMessage("");
@@ -191,14 +199,17 @@ export function ShippingLineStagePage({
     }
   }
 
-  // Filter options for select list
-  const blOptions: SearchSelectOption[] = useMemo(() => {
-    return records.map((r) => ({
-      value: r.id,
-      label: `${r.bl_number} — ${r.shipping_line_name}`,
-      keywords: `${r.bl_number} ${r.shipping_line_name} ${r.vessel_name || ""} ${r.container_number || ""}`
-    }));
-  }, [records]);
+  // Filtered B/L list based on real-time search input
+  const filteredRecords = useMemo(() => {
+    if (!searchBlQuery.trim()) return records;
+    const q = searchBlQuery.toLowerCase().trim();
+    return records.filter((r) =>
+      (r.bl_number || "").toLowerCase().includes(q) ||
+      (r.shipping_line_name || "").toLowerCase().includes(q) ||
+      (r.vessel_name || "").toLowerCase().includes(q) ||
+      (r.container_number || "").toLowerCase().includes(q)
+    );
+  }, [records, searchBlQuery]);
 
   // Aggregate stats
   const stats = useMemo(() => {
@@ -364,56 +375,78 @@ export function ShippingLineStagePage({
               <CardDescription className="text-xs text-muted-foreground">Choose a Bill of Lading record to edit tracking matrix.</CardDescription>
             </CardHeader>
             <CardContent className="p-4 space-y-4">
-              <SearchSelect
-                label="Search B/L Registry"
-                value={selectedRecord?.id || ""}
-                placeholder="Search B/L number..."
-                options={blOptions}
-                onValueChange={(val) => {
-                  const matched = records.find((r) => r.id === val);
-                  setSelectedRecord(matched || null);
-                }}
-              />
+              {/* Real-time Search Input with Search Icon */}
+              <div className="space-y-1.5">
+                <Label className="text-xs font-semibold text-foreground/80">Search B/L Registry</Label>
+                <div className="relative">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <Input
+                    type="text"
+                    value={searchBlQuery}
+                    onChange={(e) => setSearchBlQuery(e.target.value)}
+                    placeholder="Search B/L number, shipping line, or vessel..."
+                    className="pl-9 pr-8 text-xs bg-background rounded-xl border-border/80 text-foreground placeholder:text-muted-foreground/60 focus:ring-2 focus:ring-cyan-500/20 focus:border-cyan-500"
+                  />
+                  {searchBlQuery && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchBlQuery("")}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs p-1"
+                      title="Clear search"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
 
               <div className="pt-2">
                 <div className="flex items-center justify-between mb-2.5">
                   <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Available Registry</span>
-                  <span className="text-[10px] font-bold text-cyan-600 dark:text-cyan-400">{records.length} records</span>
+                  <span className="text-[10px] font-bold text-cyan-600 dark:text-cyan-400">
+                    {filteredRecords.length} {filteredRecords.length === records.length ? "records" : `of ${records.length} matches`}
+                  </span>
                 </div>
                 <div className="space-y-2 max-h-[440px] overflow-y-auto pr-1">
-                  {records.map((r) => {
-                    const isSelected = selectedRecord?.id === r.id;
-                    return (
-                      <button
-                        key={r.id}
-                        type="button"
-                        onClick={() => setSelectedRecord(r)}
-                        className={cn(
-                          "w-full text-left p-3 rounded-xl border text-xs transition-all relative overflow-hidden group",
-                          isSelected
-                            ? "bg-cyan-500/10 border-cyan-500/40 text-foreground font-semibold shadow-sm"
-                            : "bg-card hover:bg-muted/50 border-border/60 text-muted-foreground hover:text-foreground"
-                        )}
-                      >
-                        {isSelected && (
-                          <div className="absolute left-0 top-0 bottom-0 w-1 bg-cyan-500" />
-                        )}
-                        <div className="flex items-center justify-between">
-                          <span className="font-mono font-bold text-foreground text-xs">{r.bl_number}</span>
-                          <span className={cn(
-                            "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border",
-                            shipmentStatuses.find(st => st.value === r.shipment_status)?.color
-                          )}>
-                            {r.shipment_status.replace(/_/g, " ")}
-                          </span>
-                        </div>
-                        <div className="text-[10px] text-muted-foreground mt-1.5 flex items-center justify-between">
-                          <span className="truncate max-w-[190px]">{r.shipping_line_name}</span>
-                          {r.vessel_name && <span className="font-medium text-foreground/80 shrink-0">{r.vessel_name}</span>}
-                        </div>
-                      </button>
-                    );
-                  })}
+                  {filteredRecords.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-muted-foreground border border-dashed rounded-xl bg-muted/20">
+                      No matching B/L records found.
+                    </div>
+                  ) : (
+                    filteredRecords.map((r) => {
+                      const isSelected = selectedRecord?.id === r.id;
+                      return (
+                        <button
+                          key={r.id}
+                          type="button"
+                          onClick={() => setSelectedRecord(r)}
+                          className={cn(
+                            "w-full text-left p-3 rounded-xl border text-xs transition-all relative overflow-hidden group",
+                            isSelected
+                              ? "bg-cyan-500/10 border-cyan-500/40 text-foreground font-semibold shadow-sm"
+                              : "bg-card hover:bg-muted/50 border-border/60 text-muted-foreground hover:text-foreground"
+                          )}
+                        >
+                          {isSelected && (
+                            <div className="absolute left-0 top-0 bottom-0 w-1 bg-cyan-500" />
+                          )}
+                          <div className="flex items-center justify-between">
+                            <span className="font-mono font-bold text-foreground text-xs">{r.bl_number}</span>
+                            <span className={cn(
+                              "px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border",
+                              shipmentStatuses.find(st => st.value === r.shipment_status)?.color
+                            )}>
+                              {r.shipment_status.replace(/_/g, " ")}
+                            </span>
+                          </div>
+                          <div className="text-[10px] text-muted-foreground mt-1.5 flex items-center justify-between">
+                            <span className="truncate max-w-[190px]">{r.shipping_line_name}</span>
+                            {r.vessel_name && <span className="font-medium text-foreground/80 shrink-0">{r.vessel_name}</span>}
+                          </div>
+                        </button>
+                      );
+                    })
+                  )}
                 </div>
               </div>
             </CardContent>

@@ -105,34 +105,15 @@ const INITIAL_FORM: TruckFormData = {
   truckNumber: "",
   make: "",
   model: "",
-  year: new Date().getFullYear().toString(),
+  year: "",
   capacityTons: "",
   chassisNo: "",
   engineNo: "",
   color: "",
-  fuelType: "diesel",
+  fuelType: "",
   purchaseDate: "",
   remarks: "",
-  truckDocuments: [
-    {
-      id: "doc-1",
-      type: "Registration Book",
-      number: "REG-2024-001",
-      issueDate: "2024-01-01",
-      expiryDate: "2029-12-31",
-      fileName: "Reg_Book.pdf",
-      fileSize: "245 KB"
-    },
-    {
-      id: "doc-2",
-      type: "Insurance Policy",
-      number: "INS-2024-001",
-      issueDate: "2024-01-15",
-      expiryDate: "2025-01-14",
-      fileName: "Insurance.pdf",
-      fileSize: "182 KB"
-    }
-  ],
+  truckDocuments: [],
 
   ownerName: { en: "", ur: "", ar: "", fa: "", ps: "" },
   ownerCnicPassport: "",
@@ -1360,10 +1341,10 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                     <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full dark:bg-emerald-950">Verified</span>
                   </h4>
                   <div className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
-                    <p><strong className="text-slate-900 dark:text-white">Truck No:</strong> {formData.truckNumber || "TK-12345"}</p>
-                    <p><strong className="text-slate-900 dark:text-white">Reg No:</strong> {formData.registrationNo || "ABC-1234"}</p>
-                    <p><strong className="text-slate-900 dark:text-white">Type:</strong> {formData.truckType || "Trailer"}</p>
-                    <p><strong className="text-slate-900 dark:text-white">Make / Model:</strong> {formData.make} / {formData.model}</p>
+                    <p><strong className="text-slate-900 dark:text-white">Truck No:</strong> {formData.truckNumber || "—"}</p>
+                    <p><strong className="text-slate-900 dark:text-white">Reg No:</strong> {formData.registrationNo || "—"}</p>
+                    <p><strong className="text-slate-900 dark:text-white">Type:</strong> {formData.truckType || "—"}</p>
+                    <p><strong className="text-slate-900 dark:text-white">Make / Model:</strong> {`${formData.make || ""} ${formData.model || ""}`.trim() || "—"}</p>
                   </div>
                 </div>
 
@@ -1373,7 +1354,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                     <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full dark:bg-emerald-950">Verified</span>
                   </h4>
                   <div className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
-                    <p><strong className="text-slate-900 dark:text-white">Owner Name:</strong> {resolveActiveText(formData.ownerName, activeLang, "Owner Name")}</p>
+                    <p><strong className="text-slate-900 dark:text-white">Owner Name:</strong> {resolveActiveText(formData.ownerName, activeLang, "—")}</p>
                     <p><strong className="text-slate-900 dark:text-white">CNIC/Passport:</strong> {formData.ownerCnicPassport || "—"}</p>
                     <p><strong className="text-slate-900 dark:text-white">Mobile:</strong> {formData.ownerMobile || "—"}</p>
                     <p><strong className="text-slate-900 dark:text-white">Company:</strong> {resolveActiveText(formData.transportCompany, activeLang, "—")}</p>
@@ -1386,7 +1367,7 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
                     <span className="text-xs text-emerald-600 font-bold bg-emerald-50 px-2 py-0.5 rounded-full dark:bg-emerald-950">Verified</span>
                   </h4>
                   <div className="space-y-1 text-xs text-slate-600 dark:text-slate-300">
-                    <p><strong className="text-slate-900 dark:text-white">Driver Name:</strong> {resolveActiveText(formData.driverName, activeLang, "Driver Name")}</p>
+                    <p><strong className="text-slate-900 dark:text-white">Driver Name:</strong> {resolveActiveText(formData.driverName, activeLang, "—")}</p>
                     <p><strong className="text-slate-900 dark:text-white">License No:</strong> {formData.licenseNo || "—"}</p>
                     <p><strong className="text-slate-900 dark:text-white">Mobile:</strong> {formData.driverMobile || "—"}</p>
                   </div>
@@ -1474,22 +1455,22 @@ export function TruckRecreationWizard({ lang: initialLang = "en" }: { lang?: Sup
 
               <div className="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px] pt-1 text-slate-600 dark:text-slate-400">
                 <span className="text-slate-400 font-medium">Truck Number</span>
-                <span className="font-bold text-slate-900 dark:text-white text-end">{formData.truckNumber || "TK-12345"}</span>
+                <span className="font-bold text-slate-900 dark:text-white text-end">{formData.truckNumber || "—"}</span>
 
                 <span className="text-slate-400 font-medium">Registration No</span>
-                <span className="font-bold text-slate-900 dark:text-white text-end">{formData.registrationNo || "ABC-1234"}</span>
+                <span className="font-bold text-slate-900 dark:text-white text-end">{formData.registrationNo || "—"}</span>
 
                 <span className="text-slate-400 font-medium">Truck Type</span>
-                <span className="font-bold text-slate-900 dark:text-white text-end">{formData.truckType || "Trailer"}</span>
+                <span className="font-bold text-slate-900 dark:text-white text-end">{formData.truckType || "—"}</span>
 
                 <span className="text-slate-400 font-medium">Capacity (Tons)</span>
-                <span className="font-bold text-slate-900 dark:text-white text-end">{formData.capacityTons || "20.00"}</span>
+                <span className="font-bold text-slate-900 dark:text-white text-end">{formData.capacityTons || "—"}</span>
 
                 <span className="text-slate-400 font-medium">Make / Model</span>
-                <span className="font-bold text-slate-900 dark:text-white text-end">{formData.make || "Volvo"} / {formData.model || "FH 500"}</span>
+                <span className="font-bold text-slate-900 dark:text-white text-end">{`${formData.make || ""} ${formData.model || ""}`.trim() || "—"}</span>
 
                 <span className="text-slate-400 font-medium">Year</span>
-                <span className="font-bold text-slate-900 dark:text-white text-end">{formData.year || "2024"}</span>
+                <span className="font-bold text-slate-900 dark:text-white text-end">{formData.year || "—"}</span>
               </div>
             </div>
 

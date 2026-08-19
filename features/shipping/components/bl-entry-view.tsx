@@ -106,8 +106,8 @@ const emptyForm = {
   customerAccountNo: "CUST-1001",
   shippingType: "By Sea",
   shipmentType: "Import",
-  importer: "Pending Data",
-  exporter: "Pending Data",
+  importer: "",
+  exporter: "",
   notifyParty: "",
   bookingNo: "BK-2026-001",
   bookingCompanyType: "Shipping Line",
@@ -140,7 +140,7 @@ const emptyForm = {
   containerType: "Dry Container 20FT",
   containerName: "MSC Container",
   sealNumber: "SEAL-7788",
-  dischargeVessel: "MSC DUBAI",
+  dischargeVessel: "",
   dischargeDate: todayIso(),
   carrierRemarks: ""
 };
@@ -310,7 +310,16 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
   );
 
   function updateField(field: keyof typeof emptyForm, value: string) {
-    setForm((current) => ({ ...current, [field]: value }));
+    setForm((current) => {
+      const next = { ...current, [field]: value };
+      // Authoritative vessel synchronization across booking and discharge report
+      if (field === "vesselName") {
+        next.dischargeVessel = value;
+      } else if (field === "dischargeVessel") {
+        next.vesselName = value;
+      }
+      return next;
+    });
   }
 
   function applyCountry(value: string) {
@@ -355,6 +364,19 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
   }
 
   async function saveRecord() {
+    if (form.eta && form.etd && new Date(form.eta).getTime() < new Date(form.etd).getTime()) {
+      setMessage("ETA (Arrival Date) must be on or after ETD (Departure Date)");
+      return;
+    }
+    if (!form.importer.trim()) {
+      setMessage("Please enter or select a valid Importer.");
+      return;
+    }
+    if (!form.exporter.trim()) {
+      setMessage("Please enter or select a valid Exporter.");
+      return;
+    }
+
     setSaving(true);
     setMessage("");
     try {
@@ -523,15 +545,15 @@ export function BlEntryView({ context = "shipping" }: { context?: "shipping" | "
                     <Field label="Shipping Type *" value={form.shippingType} onChange={(v) => updateField("shippingType", v)} asSelect options={[{ value: "By Sea", label: "By Sea" }, { value: "By Road", label: "By Road" }, { value: "By Air", label: "By Air" }]} />
                     <Field label="Shipment Type *" value={form.shipmentType} onChange={(v) => updateField("shipmentType", v)} asSelect options={[{ value: "Import", label: "Import" }, { value: "Export", label: "Export" }, { value: "Transit", label: "Transit" }]} />
                   </div>
-                  <Field label="Importer *" value={form.importer} onChange={(v) => updateField("importer", v)} />
-                  <Field label="Exporter *" value={form.exporter} onChange={(v) => updateField("exporter", v)} />
-                  <Field label="Notify Party" value={form.notifyParty} onChange={(v) => updateField("notifyParty", v)} />
+                  <Field label="Importer *" value={form.importer} onChange={(v) => updateField("importer", v)} placeholder="Select / enter importer..." />
+                  <Field label="Exporter *" value={form.exporter} onChange={(v) => updateField("exporter", v)} placeholder="Select / enter exporter..." />
+                  <Field label="Notify Party" value={form.notifyParty} onChange={(v) => updateField("notifyParty", v)} placeholder="Enter notify party (optional)..." />
                   <div className="grid grid-cols-2 gap-2">
                     <Field label="Booking No *" value={form.bookingNo} onChange={(v) => updateField("bookingNo", v)} />
                     <Field label="Booking Company Type *" value={form.bookingCompanyType} onChange={(v) => updateField("bookingCompanyType", v)} asSelect options={[{ value: "Shipping Line", label: "Shipping Line" }, { value: "Transport Company", label: "Transport Company" }, { value: "Airline", label: "Airline" }]} />
                     <Field label="Booking Company Name *" value={form.bookingCompanyName} onChange={(v) => updateField("bookingCompanyName", v)} />
                     <Field label="Booking Date *" type="date" value={form.bookingDate} onChange={(v) => updateField("bookingDate", v)} />
-                    <Field label="Vessel Name *" value={form.vesselName} onChange={(v) => updateField("vesselName", v)} />
+                    <Field label="Vessel Name *" value={form.vesselName} onChange={(v) => updateField("vesselName", v)} placeholder="e.g. MSC ATHENS" />
                     <Field label="Vessel Recharge Date *" type="date" value={form.eta} onChange={(v) => updateField("eta", v)} />
                   </div>
                   <div className="grid grid-cols-2 gap-2"><button className="h-8 rounded-md bg-slate-700 text-xs font-black text-slate-100" type="button">Reset</button><button className="h-8 rounded-md bg-blue-600 text-xs font-black text-white" type="button" onClick={() => setActiveStep(2)}>Next</button></div>
@@ -801,12 +823,14 @@ function Field({
   value,
   onChange,
   type = "text",
+  placeholder,
   asSelect = false,
   options = []
 }: {
   label: string;
   value: string;
   type?: string;
+  placeholder?: string;
   asSelect?: boolean;
   options?: { value: string; label: string }[];
   onChange: (value: string) => void;
@@ -824,8 +848,9 @@ function Field({
         <Input
           type={type}
           value={value}
+          placeholder={placeholder}
           onChange={(event) => onChange(event.target.value)}
-          className="h-8 bg-background text-xs"
+          className="h-8 bg-background text-xs placeholder:text-muted-foreground/60"
         />
       )}
     </div>

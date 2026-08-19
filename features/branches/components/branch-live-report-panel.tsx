@@ -189,53 +189,53 @@ export function BranchLiveReportPanel({
             </div>
           )}
 
-          {/* KPI Cards Ribbon */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2">
-            <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 bg-slate-50/20 flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full flex items-center justify-center text-[10px] bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-200/50">✓</div>
-              <div className="flex flex-col">
-                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "branch.kpi_status", "Status")}</span>
-                <span className="text-[10px] font-black text-emerald-600 dark:text-emerald-400">{(b.branchStatus || "Active").toUpperCase()}</span>
+          {/* KPI Cards Ribbon (Responsive horizontal pills with whitespace-nowrap) */}
+          <div className="flex flex-wrap items-stretch gap-2.5">
+            <div className="flex-1 min-w-[130px] border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/40 dark:bg-slate-900/40 flex items-center gap-2.5 whitespace-nowrap shadow-xs">
+              <div className="h-7 w-7 rounded-lg flex items-center justify-center text-xs bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400 border border-emerald-200/50 shrink-0">✓</div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "branch.kpi_status", "Status")}</span>
+                <span className="text-xs font-black text-emerald-600 dark:text-emerald-400 truncate">{(b.branchStatus || "Active").toUpperCase()}</span>
               </div>
             </div>
 
-            <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 bg-slate-50/20 flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full flex items-center justify-center text-[10px] bg-blue-50 text-blue-600 dark:bg-blue-950/30 dark:text-blue-400 border border-blue-200/50">📌</div>
-              <div className="flex flex-col">
-                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "branch.kpi_code", "Code")}</span>
-                <span className="text-[10px] font-black text-slate-800 dark:text-slate-200">{b.branchCode || "-"}</span>
+            <div className="flex-1 min-w-[130px] border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/40 dark:bg-slate-900/40 flex items-center gap-2.5 whitespace-nowrap shadow-xs">
+              <div className="h-7 w-7 rounded-lg flex items-center justify-center text-xs bg-blue-50 text-blue-600 dark:bg-blue-950/40 dark:text-blue-400 border border-blue-200/50 shrink-0">📌</div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "branch.kpi_code", "Code")}</span>
+                <span className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{b.branchCode || "-"}</span>
               </div>
             </div>
 
-            <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 bg-slate-50/20 flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full flex items-center justify-center text-[10px] bg-pink-50 text-pink-600 dark:bg-pink-950/30 dark:text-pink-400 border border-pink-200/50">🏢</div>
-              <div className="flex flex-col">
-                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "branch.kpi_type", "Type")}</span>
-                <span className="text-[10px] font-black text-slate-800 dark:text-slate-200">{(b.branchType || "MAIN").toUpperCase()}</span>
+            <div className="flex-1 min-w-[140px] border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/40 dark:bg-slate-900/40 flex items-center gap-2.5 whitespace-nowrap shadow-xs">
+              <div className="h-7 w-7 rounded-lg flex items-center justify-center text-xs bg-pink-50 text-pink-600 dark:bg-pink-950/40 dark:text-pink-400 border border-pink-200/50 shrink-0">🏢</div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "branch.kpi_type", "Type")}</span>
+                <span className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{(b.branchType || "MAIN").toUpperCase()}</span>
               </div>
             </div>
 
-            <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 bg-slate-50/20 flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full flex items-center justify-center text-[10px] bg-green-50 text-green-700 dark:bg-green-950/30 dark:text-green-400 border border-green-200/50">🌍</div>
-              <div className="flex flex-col">
-                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "branch.kpi_country", "Country")}</span>
-                <span className="text-[10px] font-black text-slate-800 dark:text-slate-200">{(b.country || "-").toUpperCase()}</span>
+            <div className="flex-1 min-w-[130px] border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/40 dark:bg-slate-900/40 flex items-center gap-2.5 whitespace-nowrap shadow-xs">
+              <div className="h-7 w-7 rounded-lg flex items-center justify-center text-xs bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-400 border border-green-200/50 shrink-0">🌍</div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "branch.kpi_country", "Country")}</span>
+                <span className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{(b.country || "-").toUpperCase()}</span>
               </div>
             </div>
 
-            <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 bg-slate-50/20 flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full flex items-center justify-center text-[10px] bg-amber-50 text-amber-600 dark:bg-amber-950/30 dark:text-amber-400 border border-amber-200/50">💵</div>
-              <div className="flex flex-col">
-                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "branch.kpi_currency", "Currency")}</span>
-                <span className="text-[10px] font-black text-slate-800 dark:text-slate-200">{(b.currency || "USD").toUpperCase()}</span>
+            <div className="flex-1 min-w-[120px] border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/40 dark:bg-slate-900/40 flex items-center gap-2.5 whitespace-nowrap shadow-xs">
+              <div className="h-7 w-7 rounded-lg flex items-center justify-center text-xs bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400 border border-amber-200/50 shrink-0">💵</div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "branch.kpi_currency", "Currency")}</span>
+                <span className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{(b.currency || "USD").toUpperCase()}</span>
               </div>
             </div>
 
-            <div className="border border-slate-200 dark:border-slate-800 rounded-lg p-2.5 bg-slate-50/20 flex items-center gap-2">
-              <div className="h-6 w-6 rounded-full flex items-center justify-center text-[10px] bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200/50">#</div>
-              <div className="flex flex-col">
-                <span className="text-[7px] font-bold text-slate-400 uppercase tracking-wider">{t(lang, "branch.kpi_serial", "Serial")}</span>
-                <span className="text-[10px] font-black text-slate-800 dark:text-slate-200">{b.serialNumber || "0001"}</span>
+            <div className="flex-1 min-w-[120px] border border-slate-200 dark:border-slate-800 rounded-xl p-2.5 bg-slate-50/40 dark:bg-slate-900/40 flex items-center gap-2.5 whitespace-nowrap shadow-xs">
+              <div className="h-7 w-7 rounded-lg flex items-center justify-center text-xs bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400 border border-slate-200/50 shrink-0">#</div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[8px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">{t(lang, "branch.kpi_serial", "Serial")}</span>
+                <span className="text-xs font-black text-slate-800 dark:text-slate-200 truncate">{b.serialNumber || "0001"}</span>
               </div>
             </div>
           </div>

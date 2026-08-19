@@ -418,6 +418,13 @@ export async function PATCH(request: NextRequest) {
       carrierRemarks: remarks || reportPayload.carrierRemarks || null
     };
 
+    const effectiveEta = eta !== undefined ? eta : before.eta;
+    const effectiveEtd = etd !== undefined ? etd : before.etd;
+
+    if (effectiveEta && effectiveEtd && new Date(effectiveEta).getTime() < new Date(effectiveEtd).getTime()) {
+      return NextResponse.json({ ok: false, error: { message: "ETA (Arrival Date) must be on or after ETD (Departure Date)" } }, { status: 400 });
+    }
+
     const payload = {
       shipping_line_name: shippingLineName !== undefined ? shippingLineName : before.shipping_line_name,
       bl_number: blNumber !== undefined ? blNumber : before.bl_number,
@@ -426,8 +433,8 @@ export async function PATCH(request: NextRequest) {
       voyage_number: voyageNumber !== undefined ? voyageNumber : before.voyage_number,
       loading_port: loadingPort !== undefined ? loadingPort : before.loading_port,
       discharge_port: dischargePort !== undefined ? dischargePort : before.discharge_port,
-      eta: eta !== undefined ? eta : before.eta,
-      etd: etd !== undefined ? etd : before.etd,
+      eta: effectiveEta,
+      etd: effectiveEtd,
       shipment_status: shipmentStatus !== undefined ? shipmentStatus : before.shipment_status,
       report_payload: updatedReportPayload,
       updated_at: new Date().toISOString()

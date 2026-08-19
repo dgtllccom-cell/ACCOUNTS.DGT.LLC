@@ -553,11 +553,11 @@ export default function KycReportsPage() {
                       </div>
                     </td>
 
-                    <td className="px-5 py-4">
-                      <span className="px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-muted text-foreground border border-border/60">
+                    <td className="px-5 py-4 whitespace-nowrap">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[9px] font-extrabold uppercase bg-muted text-foreground border border-border/60 whitespace-nowrap">
                         {item.typeLabel}
                       </span>
-                      <p className="text-[11px] font-semibold text-muted-foreground mt-1">{item.countryName}</p>
+                      <p className="text-[11px] font-semibold text-muted-foreground mt-1 whitespace-nowrap">{item.countryName}</p>
                     </td>
 
                     <td className="px-5 py-4 max-w-xs">
