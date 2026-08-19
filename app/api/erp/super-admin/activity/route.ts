@@ -77,7 +77,7 @@ feed as (
   union all
   select em.id::text, 'Master', 'Employee', 'Employee', em.employee_code, em.employee_code, em.created_at,
     em.country_id, coalesce(em.city_branch_id, em.country_branch_id), coalesce(em.designation,'Employee'),
-    (select full_name from profiles pr where pr.id = em.person_master_id or pr.person_master_id = em.person_master_id limit 1),
+    (select full_name from profiles pr where pr.id = em.person_master_id limit 1),
     null, 0, 0, 'Active', null, null, '/dashboard/all-release-entries/' || em.id::text || '?module=Employee&src=Master'
   from employees em where em.deleted_at is null
   union all

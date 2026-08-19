@@ -358,7 +358,7 @@ async function master(sql: any, id: string, kind: string): Promise<Detail | null
   if (kind === "employee") {
     const [r] = await sql`
       select em.*, co.name country_name, coalesce(cib.name, cb.name) branch_name,
-        (select full_name from profiles pr where pr.id = em.person_master_id or pr.person_master_id = em.person_master_id limit 1) person_name
+        (select full_name from profiles pr where pr.id = em.person_master_id limit 1) person_name
       from employees em
       left join countries co on co.id=em.country_id
       left join city_branches cib on cib.id=em.city_branch_id
