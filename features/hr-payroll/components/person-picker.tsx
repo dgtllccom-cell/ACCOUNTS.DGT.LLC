@@ -137,7 +137,7 @@ export function PersonPicker({
       {/* View Person Modal */}
       {viewPerson ? (
         <SimpleModal
-          title={`Person / Account Details — ${viewPerson.customer_name}`}
+          title={`${t(lang, "hr.pp_view_title", "Person / Account Details")} — ${viewPerson.customer_name}`}
           onClose={() => setViewPerson(null)}
           className="w-[96vw] max-w-[700px] max-h-[85vh] overflow-y-auto rounded-2xl font-sans"
         >
@@ -145,34 +145,34 @@ export function PersonPicker({
             <div className="flex items-center justify-between bg-slate-900 text-white p-4 rounded-xl">
               <div>
                 <h3 className="text-base font-black uppercase tracking-wide">{viewPerson.customer_name}</h3>
-                <p className="text-xs text-slate-300 font-medium">Company: {viewPerson.company_name || "Independent Account"}</p>
+                <p className="text-xs text-slate-300 font-medium">{t(lang, "hr.pp_company", "Company")}: {viewPerson.company_name || t(lang, "hr.pp_independent", "Independent Account")}</p>
               </div>
               <div className="text-right">
                 <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-500 text-slate-950">
-                  Active Master
+                  {t(lang, "hr.pp_active_master", "Active Master")}
                 </span>
               </div>
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 border border-slate-200 dark:border-slate-800 rounded-xl p-3.5 bg-slate-50/50 dark:bg-slate-900/50">
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">Contact Person</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "hr.pp_contact_person", "Contact Person")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">{viewPerson.contact_person || "-"}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">Mobile Phone</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "hr.pp_mobile_phone", "Mobile Phone")}</span>
                 <span className="font-mono font-bold text-slate-800 dark:text-white">{viewPerson.mobile || "-"}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">WhatsApp</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "sed.f_whatsapp", "WhatsApp")}</span>
                 <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{viewPerson.whatsapp || viewPerson.mobile || "-"}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">Email Address</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "hr.pp_email_address", "Email Address")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">{viewPerson.email || "-"}</span>
               </div>
               <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase block">Address / Location</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase block">{t(lang, "hr.pp_address_location", "Address / Location")}</span>
                 <span className="font-bold text-slate-800 dark:text-white">{viewPerson.address || "-"}</span>
               </div>
             </div>
@@ -186,7 +186,7 @@ export function PersonPicker({
                 }}
                 className="px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 rounded-xl transition"
               >
-                Edit Master
+                {t(lang, "hr.pp_edit_master", "Edit Master")}
               </button>
               <div className="flex items-center gap-2">
                 <button
@@ -194,7 +194,7 @@ export function PersonPicker({
                   onClick={() => setViewPerson(null)}
                   className="px-3.5 py-1.5 text-xs font-bold text-slate-500 hover:text-slate-700 transition"
                 >
-                  Close
+                  {t(lang, "common.close", "Close")}
                 </button>
                 <button
                   type="button"
@@ -204,7 +204,7 @@ export function PersonPicker({
                   }}
                   className="px-4 py-1.5 text-xs font-extrabold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition shadow-xs"
                 >
-                  Select This Person
+                  {t(lang, "hr.pp_select_this_person", "Select This Person")}
                 </button>
               </div>
             </div>

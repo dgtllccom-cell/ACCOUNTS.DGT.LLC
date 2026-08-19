@@ -25,7 +25,6 @@ import { PersonPicker } from "./person-picker";
 import { Button } from "@/components/ui/button";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
-import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 
 type EmployeeFormProps = {
   employeeId?: string | null;
@@ -350,11 +349,9 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
   // NOTE: hooks must run unconditionally — keep this above the `loading` early return.
   const lang = useActiveLanguage();
-  const tr = (text: string) => {
-    if (!text) return text;
-    const res = autoTranslate5Languages(text);
-    return res[lang] || text;
-  };
+  // Central-dictionary labels only — no per-component machine translation.
+  const CAT_KEYS: Record<string, string> = { "Manager": "hr.f_cat_manager", "Normal Staff": "hr.f_cat_normal_staff", "Employee": "hr.f_cat_employee", "Others": "hr.f_cat_others" };
+  const catLabel = (c: string) => t(lang, (CAT_KEYS[c] || "hr.f_cat_employee") as never, c);
 
   if (loading) {
     return <div className="text-center py-12 text-slate-500 dark:text-slate-400 font-medium">{t(lang, "hr.f_loading_details", "Loading employee details...")}</div>;
@@ -376,16 +373,16 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
         <div>
           <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-emerald-600 dark:text-emerald-400">
             <Sparkles className="h-4 w-4 text-emerald-600" />
-            <span>{tr("Enterprise Employee Registration Wizard")}</span>
+            <span>{t(lang, "hr.f_wizard_title", "Enterprise Employee Registration Wizard")}</span>
           </div>
           <h2 className="text-xl font-black text-slate-900 dark:text-slate-100">
-            {employeeId ? tr("Edit Employee Master Setup") : tr("Register New Employee Master Record")}
+            {employeeId ? t(lang, "hr.f_edit_title", "Edit Employee Master Setup") : t(lang, "hr.f_register_title", "Register New Employee Master Record")}
           </h2>
         </div>
 
         {selectedPersonObj && (
           <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800">
-            {selectedPersonObj.customer_name || tr("Employee")} ({tr(category)})
+            {selectedPersonObj.customer_name || t(lang, "hr.f_cat_employee", "Employee")} ({catLabel(category)})
           </span>
         )}
       </div>
@@ -434,14 +431,14 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-2">
             <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
               <UserCheck className="h-4 w-4 text-emerald-600" />
-              <span>{tr("Step 1 Packet: Employee Category & Person Selection")}</span>
+              <span>{t(lang, "hr.f_step1_title", "Step 1 Packet: Employee Category & Person Selection")}</span>
             </h3>
-            <span className="text-xs font-semibold text-slate-400">{tr("Step 1 of 5")}</span>
+            <span className="text-xs font-semibold text-slate-400">{t(lang, "hr.f_step1_of5", "Step 1 of 5")}</span>
           </div>
 
           <div>
             <label className="text-xs font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider block mb-2">
-              {tr("Select Employee Category *")}
+              {t(lang, "hr.f_select_category", "Select Employee Category *")}
             </label>
             <div className="grid grid-cols-4 gap-2 bg-slate-100 dark:bg-slate-950 p-1.5 rounded-xl border border-slate-200 dark:border-slate-800">
               {(["Manager", "Normal Staff", "Employee", "Others"] as const).map((cat) => (
@@ -455,7 +452,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200 hover:bg-white/60 dark:hover:bg-slate-900"
                   }`}
                 >
-                  {tr(cat)}
+                  {catLabel(cat)}
                 </button>
               ))}
             </div>
@@ -463,16 +460,57 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
           <div>
             <PersonPicker
-              label={tr("Select or Add Employee / Person Master Name *")}
+              label={t(lang, "hr.f_select_person", "Select or Add Employee / Person Master Name *")}
               value={personMasterId}
               onValueChange={setPersonMasterId}
               countryId={countryId}
             />
           </div>
 
+          {/* Selected Employee Master Profile card — confirm the selected person at a glance (item 6). */}
+          {selectedPersonObj ? (
+            <div className="rounded-2xl border border-emerald-200 dark:border-emerald-900 bg-emerald-50/40 dark:bg-emerald-950/20 p-4">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white text-base font-black uppercase">
+                    {(selectedPersonObj.customer_name || "?").trim().charAt(0)}
+                  </div>
+                  <div className="min-w-0">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">{t(lang, "hr.f_selected_profile", "Selected Employee Master Profile")}</div>
+                    <div className="truncate text-sm font-black text-slate-900 dark:text-slate-100">{selectedPersonObj.customer_name}</div>
+                    <div className="truncate text-[11px] text-slate-500">{selectedPersonObj.company_name || t(lang, "hr.pp_independent", "Independent Account")} · {catLabel(category)}</div>
+                  </div>
+                </div>
+                <div className="flex flex-shrink-0 items-center gap-2">
+                  <button type="button" onClick={() => setPersonMasterId("")} className="rounded-lg border border-slate-300 dark:border-slate-700 px-2.5 py-1 text-[11px] font-bold text-slate-600 dark:text-slate-300 hover:bg-white dark:hover:bg-slate-800">
+                    {t(lang, "hr.f_change_selection", "Change / Clear Selection")}
+                  </button>
+                </div>
+              </div>
+              <div className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 sm:grid-cols-4">
+                {[
+                  [t(lang, "hr.pp_contact_person", "Contact Person"), selectedPersonObj.contact_person],
+                  [t(lang, "hr.pp_mobile_phone", "Mobile Phone"), selectedPersonObj.mobile],
+                  [t(lang, "sed.f_whatsapp", "WhatsApp"), selectedPersonObj.whatsapp],
+                  [t(lang, "hr.pp_email_address", "Email Address"), selectedPersonObj.email],
+                  [t(lang, "hr.pp_address_location", "Address / Location"), selectedPersonObj.address]
+                ].map(([lbl, v], i) => (
+                  <div key={i} className="min-w-0">
+                    <div className="text-[9px] font-bold uppercase tracking-wide text-slate-400">{lbl}</div>
+                    <div className="truncate text-xs font-semibold text-slate-800 dark:text-slate-200">{v || "-"}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-dashed border-slate-300 dark:border-slate-700 p-3 text-[11px] text-slate-400">
+              {t(lang, "hr.f_no_person_selected", "No person selected yet — search and select a Person / Employee Master above.")}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{tr("Designation / Position *")}</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_lbl_designation", "Designation / Position *")}</label>
               <input
                 type="text"
                 value={designation}
@@ -482,7 +520,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{tr("Department *")}</label>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_lbl_department", "Department *")}</label>
               <input
                 type="text"
                 value={department}
@@ -495,11 +533,11 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
 
           {/* Packet Summary Box */}
           <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200 dark:border-slate-800 text-xs space-y-1.5">
-            <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">{tr("STEP 1 PACKET PREVIEW")}</div>
+            <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">{t(lang, "hr.f_step1_preview", "STEP 1 PACKET PREVIEW")}</div>
             <div className="grid grid-cols-3 gap-2">
-              <div><span className="font-semibold text-slate-400">{tr("Category:")}</span> {tr(category)}</div>
-              <div><span className="font-semibold text-slate-400">{tr("Name:")}</span> {selectedPersonObj?.customer_name || tr("Not Selected")}</div>
-              <div><span className="font-semibold text-slate-400">{tr("Designation:")}</span> {designation || "-"}</div>
+              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_category", "Category:")}</span> {catLabel(category)}</div>
+              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_name", "Name:")}</span> {selectedPersonObj?.customer_name || t(lang, "hr.f_not_selected", "Not Selected")}</div>
+              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_designation_short", "Designation:")}</span> {designation || "-"}</div>
             </div>
           </div>
         </div>
@@ -904,48 +942,73 @@ export function EmployeeForm({ employeeId, onSave, onCancel }: EmployeeFormProps
               </div>
               <div className="text-right">
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-600 text-white shadow-xs">
-                  {category}
+                  {catLabel(category)}
                 </span>
               </div>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-              <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t(lang, "hr.f_assigned_country", "Assigned Country")}</span>
-                <span className="font-bold text-white text-xs">{selectedCountryObj?.name || "-"}</span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t(lang, "hr.f_main_branch", "Main Branch")}</span>
-                <span className="font-bold text-white text-xs">
-                  {selectedMainBranchObj ? `${selectedMainBranchObj.name} ${selectedMainBranchObj.code ? `(${selectedMainBranchObj.code})` : ""}` : "-"}
-                </span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t(lang, "hr.f_city_branch", "City Branch")}</span>
-                <span className="font-bold text-white text-xs">
-                  {selectedCityBranchObj ? `${selectedCityBranchObj.name} ${selectedCityBranchObj.code ? `(${selectedCityBranchObj.code})` : ""}` : "-"}
-                </span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t(lang, "hr.f_joining_date", "Joining Date")}</span>
-                <span className="font-bold text-white text-xs">{joiningDate || "-"}</span>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-xs pt-2">
-              <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t(lang, "hr.f_employment_shift", "Employment & Shift")}</span>
-                <span className="font-bold text-white text-xs">{employmentType} ({workingShift})</span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t(lang, "hr.f_basic_salary", "Basic Salary Rate")}</span>
-                <span className="font-bold text-emerald-400 text-xs">{basicSalary} {salaryCurrency}</span>
-              </div>
-              <div className="p-3 rounded-xl bg-slate-800/80 border border-slate-700 space-y-1">
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">{t(lang, "hr.f_net_payroll_estimate", "Net Payroll Estimate")}</span>
-                <span className="font-bold text-emerald-400 text-xs">{netSalary.toLocaleString()} {salaryCurrency}</span>
-              </div>
-            </div>
+            {/* Comprehensive sectioned review (item 7) — every value from the wizard's own state. */}
+            {(() => {
+              const dash = "-";
+              const sections: Array<{ title: string; rows: Array<[string, string]> }> = [
+                { title: t(lang, "hr.f_sec_identity", "Identity & Contact"), rows: [
+                  [t(lang, "hr.f_lbl_name", "Name:"), selectedPersonObj?.customer_name || dash],
+                  [t(lang, "hr.f_lbl_category", "Category:"), catLabel(category)],
+                  [t(lang, "hr.pp_contact_person", "Contact Person"), selectedPersonObj?.contact_person || dash],
+                  [t(lang, "hr.pp_mobile_phone", "Mobile Phone"), selectedPersonObj?.mobile || dash],
+                  [t(lang, "sed.f_whatsapp", "WhatsApp"), selectedPersonObj?.whatsapp || dash],
+                  [t(lang, "hr.pp_email_address", "Email Address"), selectedPersonObj?.email || dash],
+                  [t(lang, "hr.pp_address_location", "Address / Location"), selectedPersonObj?.address || dash]
+                ] },
+                { title: t(lang, "hr.f_sec_employment", "Employment & Designation"), rows: [
+                  [t(lang, "hr.f_lbl_designation_short", "Designation:"), designation || dash],
+                  [t(lang, "hr.f_lbl_department", "Department *"), department || dash],
+                  [t(lang, "hr.f_employment_type", "Employment Type"), employmentType || dash],
+                  [t(lang, "hr.f_job_status", "Job Status"), jobStatus || dash],
+                  [t(lang, "hr.f_reporting_manager", "Reporting Manager"), selectedManagerObj?.person?.customer_name || selectedManagerObj?.employee_code || dash]
+                ] },
+                { title: t(lang, "hr.f_sec_location", "Country / Main Branch / City Branch"), rows: [
+                  [t(lang, "common.country", "Country"), selectedCountryObj?.name || dash],
+                  [t(lang, "hr.f_main_branch", "Main Branch"), selectedMainBranchObj ? `${selectedMainBranchObj.name}${selectedMainBranchObj.code ? ` (${selectedMainBranchObj.code})` : ""}` : dash],
+                  [t(lang, "hr.f_city_branch", "City Branch"), selectedCityBranchObj ? `${selectedCityBranchObj.name}${selectedCityBranchObj.code ? ` (${selectedCityBranchObj.code})` : ""}` : dash]
+                ] },
+                { title: t(lang, "hr.f_sec_shift", "Shift / Timings / Attendance"), rows: [
+                  [t(lang, "hr.f_working_shift", "Working Shift"), workingShift || dash],
+                  [t(lang, "hr.f_duty_hours", "Duty Hours"), (dutyStartTime && dutyEndTime) ? `${dutyStartTime} – ${dutyEndTime}` : dash],
+                  [t(lang, "hr.f_weekly_off", "Weekly Off"), weeklyOffDay || dash],
+                  [t(lang, "hr.f_joining_date", "Joining Date"), joiningDate || dash]
+                ] },
+                { title: t(lang, "hr.f_sec_payroll", "Salary / Payroll / Currency"), rows: [
+                  [t(lang, "hr.f_salary_type", "Salary Type"), salaryType || dash],
+                  [t(lang, "hr.f_basic_salary", "Basic Salary Rate"), `${Number(basicSalary).toLocaleString()} ${salaryCurrency}`],
+                  [t(lang, "hr.f_total_allowances", "Total Allowances"), `${totalAllowances.toLocaleString()} ${salaryCurrency}`],
+                  [t(lang, "hr.f_deductions", "Deductions"), `${(Number(deduction) + Number(taxDeduction)).toLocaleString()} ${salaryCurrency}`],
+                  [t(lang, "hr.f_net_salary", "Net Salary"), `${netSalary.toLocaleString()} ${salaryCurrency}`],
+                  [t(lang, "hr.f_currency", "Currency"), salaryCurrency || dash]
+                ] },
+                { title: t(lang, "hr.f_sec_status", "Status & Audit Information"), rows: [
+                  [t(lang, "hr.f_status", "Status"), status || dash],
+                  [t(lang, "hr.f_job_status", "Job Status"), jobStatus || dash]
+                ] }
+              ];
+              return (
+                <div className="grid gap-4 md:grid-cols-2">
+                  {sections.map((sec, i) => (
+                    <div key={i} className="rounded-xl bg-slate-800/60 border border-slate-700 p-4">
+                      <div className="mb-2 border-b border-slate-700 pb-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-400">{sec.title}</div>
+                      <div className="space-y-1.5">
+                        {sec.rows.map(([lbl, val], j) => (
+                          <div key={j} className="flex items-start justify-between gap-3 text-xs">
+                            <span className="text-slate-400">{lbl}</span>
+                            <span className="text-end font-semibold text-white break-words">{val}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         </div>
       )}
