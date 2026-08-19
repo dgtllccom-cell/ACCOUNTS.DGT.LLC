@@ -441,36 +441,36 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
             <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
-              1. BRANCH & USER DETAILS
+              {tr("1. BRANCH & USER DETAILS")}
             </h4>
           </div>
           <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>COUNTRY:</span>
+              <span>{tr("COUNTRY:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{scopeCountry}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>BRANCH NAME:</span>
+              <span>{tr("BRANCH NAME:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{scopeBranch}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>USER ID:</span>
+              <span>{tr("USER ID:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase text-[9px] font-mono">{scopeUserId}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>USER NAME:</span>
+              <span>{tr("USER NAME:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{scopeUserName}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>ROLE:</span>
+              <span>{tr("ROLE:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{scopeRole}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>DATE & TIME:</span>
+              <span>{tr("DATE & TIME:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })}, {new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", hour12: true })}</span>
             </div>
             <div className="flex justify-between items-center mt-auto pt-1">
-              <span>STATUS:</span>
+              <span>{tr("STATUS:")}</span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">{scopeStatus}</span>
             </div>
           </div>
@@ -483,20 +483,20 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 2v20"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </div>
             <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
-              2. GLOBAL FINANCIAL SUMMARY
+              {tr("2. GLOBAL FINANCIAL SUMMARY")}
             </h4>
           </div>
           <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>OUTSTANDING ACCOUNTS:</span>
+              <span>{tr("OUTSTANDING ACCOUNTS:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{summary?.accounts ?? filtered.length}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>TOTAL RECEIVABLE:</span>
+              <span>{tr("TOTAL RECEIVABLE:")}</span>
               <span className="font-mono font-bold text-emerald-600 dark:text-emerald-400">AED {fmt(summary?.totalReceivable ?? 0)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>TOTAL PAYABLE:</span>
+              <span>{tr("TOTAL PAYABLE:")}</span>
               <span className="font-mono font-bold text-amber-600 dark:text-amber-400">AED {fmt(summary?.totalPayable ?? 0)}</span>
             </div>
             <div className="flex justify-between items-center">
@@ -519,20 +519,20 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
             </div>
             <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">
-              3. BILL ENTRIES SUMMARY
+              {tr("3. BILL ENTRIES SUMMARY")}
             </h4>
           </div>
           <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>TOTAL BILL ENTRIES:</span>
+              <span>{tr("TOTAL BILL ENTRIES:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{filtered.length * 2 || 0}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>CLEARED ENTRIES:</span>
+              <span>{tr("CLEARED ENTRIES:")}</span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400">{Math.floor(filtered.length * 1.5) || 0}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>REMAINING ENTRIES:</span>
+              <span>{tr("REMAINING ENTRIES:")}</span>
               <span className="font-bold text-amber-600 dark:text-amber-400">{Math.ceil(filtered.length * 0.5) || 0}</span>
             </div>
             <div className="flex justify-between items-center mt-auto border-t border-slate-100 dark:border-slate-800 pt-2">
@@ -550,7 +550,7 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
                 <Globe className="h-3.5 w-3.5" />
               </div>
               <h4 className="text-xs font-black uppercase tracking-wider text-amber-800 dark:text-amber-400">
-                4. ALL COUNTRIES REPORT
+                {tr("4. ALL COUNTRIES REPORT")}
               </h4>
             </div>
             <button
@@ -563,15 +563,15 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
           </div>
           <div className="p-4 flex flex-col gap-2 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>TOTAL COUNTRIES:</span>
+              <span>{tr("TOTAL COUNTRIES:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{countryDashboardData.length}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>TOTAL BRANCHES:</span>
+              <span>{tr("TOTAL BRANCHES:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{Array.from(new Set(countryDashboardData.flatMap((c) => Array.from(c.branches)))).length}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>ACTIVE CURRENCY:</span>
+              <span>{tr("ACTIVE CURRENCY:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">AED</span>
             </div>
             <div className="flex justify-between items-center mt-auto border-t border-slate-100 dark:border-slate-800 pt-2">

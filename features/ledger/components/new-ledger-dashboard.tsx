@@ -26,6 +26,8 @@ import {
 } from "@/features/reports/ledger-report/ledger-report-api";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type LookupResponse = {
   found: boolean;
@@ -170,6 +172,8 @@ function buildLedgerOption(row: LedgerLookupRow): SearchSelectOption {
 }
 
 export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: string }) {
+  const activeLang = useActiveLanguage();
+  const th = (label: string) => translateHeader(activeLang, label);
   const [query, setQuery] = useState(initialAccount);
   const [fromDate, setFromDate] = useState(yearStartIso());
   const [toDate, setToDate] = useState(todayIso());
@@ -598,11 +602,11 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
                   Ledger Statement
                 </h1>
                 <p className="text-xs text-muted-foreground">
-                  Status: Active | Created: {account ? fmtDate(account.createdAt || (account as any)?.createdDate || lines[0]?.createdAt || new Date().toISOString()) : "-"}
+                  {th("Status")}: {th("Active")} | {th("Created")}: {account ? fmtDate(account.createdAt || (account as any)?.createdDate || lines[0]?.createdAt || new Date().toISOString()) : "-"}
                 </p>
               </div>
               <div className="text-xs text-muted-foreground">
-                Account: <span className="font-semibold text-foreground">{safeText(account?.accountCode)}</span>
+                {th("Account")}: <span className="font-semibold text-foreground">{safeText(account?.accountCode)}</span>
               </div>
             </div>
           </div>
@@ -642,7 +646,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
               {isSuperAdmin && <InfoRow label="1 USD" value="Rate stored per posting" />}
               {account && totals.entries === 0 && (
                 <div className="mt-2 rounded-md bg-amber-50 dark:bg-amber-950/40 p-1.5 text-[10px] text-amber-800 dark:text-amber-300 font-medium text-center">
-                  No ledger entries available for this account.
+                  {th("No ledger entries available for this account.")}
                 </div>
               )}
             </InfoPanel>
@@ -680,7 +684,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
                 {loading ? (
                   <tr>
                     <td colSpan={isSuperAdmin ? 15 : 11} className="px-4 py-10 text-center text-muted-foreground">
-                      Loading ledger data...
+                      {th("Loading ledger data...")}
                     </td>
                   </tr>
                 ) : displayedLines.length ? (
@@ -748,6 +752,7 @@ function InfoPanel({
   accent: "cyan" | "blue" | "indigo" | "violet";
   children: React.ReactNode;
 }) {
+  const lang = useActiveLanguage();
   const accentClass = {
     cyan: "border-cyan-400 text-cyan-600 dark:text-cyan-300",
     blue: "border-blue-500 text-blue-600 dark:text-blue-300",
@@ -757,7 +762,9 @@ function InfoPanel({
 
   return (
     <section className="border-b p-5 lg:border-b-0 lg:border-r last:lg:border-r-0">
-      <h2 className={cn("mb-3 border-l-4 pl-3 text-xs font-bold uppercase tracking-wide", accentClass)}>{title}</h2>
+      <h2 className={cn("mb-3 border-l-4 pl-3 text-xs font-bold uppercase tracking-wide", accentClass)}>
+        {translateHeader(lang, title)}
+      </h2>
       <div className="space-y-2">{children}</div>
     </section>
   );
@@ -776,9 +783,10 @@ function InfoRow({
   success?: boolean;
   danger?: boolean;
 }) {
+  const lang = useActiveLanguage();
   return (
     <div className="grid grid-cols-[110px_1fr] gap-3 text-xs">
-      <span className="text-muted-foreground">{label}:</span>
+      <span className="text-muted-foreground">{translateHeader(lang, label)}:</span>
       <span
         dir="auto"
         className={cn(

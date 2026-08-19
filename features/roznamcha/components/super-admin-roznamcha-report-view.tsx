@@ -16,6 +16,8 @@ import { ProfessionalReportViewer, type ReportColumn } from "@/components/report
 import { CashReceiptViewer, type CashReceiptData } from "@/components/reports/cash-receipt-viewer";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 import { apiGet } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
@@ -929,36 +931,36 @@ function SuperAdminRoznamchaSummary({
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
             </div>
             <h4 className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-400">
-              {typeFilter === "branch" ? "1. BRANCH & USER DETAILS" : typeFilter === "country" ? "1. COUNTRY & USER DETAILS" : "1. BRANCH & USER DETAILS"}
+              {th(typeFilter === "branch" ? "1. BRANCH & USER DETAILS" : typeFilter === "country" ? "1. COUNTRY & USER DETAILS" : "1. BRANCH & USER DETAILS")}
             </h4>
           </div>
           <div className="p-4 flex flex-col gap-2.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>Country:</span>
+              <span>{th("Country:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-1.5">{getFlag(country)} {country}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Branch Name:</span>
+              <span>{th("Branch Name:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{branchName}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>User ID:</span>
+              <span>{th("User ID:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{userId}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>User Name:</span>
+              <span>{th("User Name:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{userName}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Role:</span>
+              <span>{th("Role:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{role}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Date & Time:</span>
+              <span>{th("Date & Time:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{dateStr}, {timeStr}</span>
             </div>
             <div className="flex justify-between items-center mt-auto">
-              <span>Scope:</span>
+              <span>{th("Scope:")}</span>
               <span className="font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-2 py-0.5 rounded text-[10px]">{scopeLabel}</span>
             </div>
           </div>
@@ -971,32 +973,32 @@ function SuperAdminRoznamchaSummary({
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8"/><path d="M12 18V6"/></svg>
             </div>
             <h4 className="text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
-              {typeFilter === "branch" ? "2. BRANCH FINANCIAL SUMMARY" : typeFilter === "country" ? "2. COUNTRY FINANCIAL SUMMARY" : "2. GLOBAL FINANCIAL SUMMARY (USD)"}
+              {th(typeFilter === "branch" ? "2. BRANCH FINANCIAL SUMMARY" : typeFilter === "country" ? "2. COUNTRY FINANCIAL SUMMARY" : "2. GLOBAL FINANCIAL SUMMARY (USD)")}
             </h4>
           </div>
           <div className="p-4 flex flex-col gap-2.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>{typeFilter === "branch" ? "Total Branch Entries:" : typeFilter === "country" ? "Total Country Entries:" : "Total Global Entries:"}</span>
+              <span>{th(typeFilter === "branch" ? "Total Branch Entries:" : typeFilter === "country" ? "Total Country Entries:" : "Total Global Entries:")}</span>
               <span className="font-black text-slate-800 dark:text-slate-200">{totalGlobalEntries}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Debit / Credit Entries:</span>
+              <span>{th("Debit / Credit Entries:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200">{debitTrxCount} / {creditTrxCount}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Posted / Pending:</span>
+              <span>{th("Posted / Pending:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200"><span className="text-emerald-600">{postedCount}</span> / <span className="text-amber-600">{pendingCount}</span></span>
             </div>
             <div className="flex justify-between items-center mt-1 pt-2 border-t border-slate-100 dark:border-slate-800">
-              <span>Total Credit:</span>
+              <span>{th("Total Credit:")}</span>
               <span className="font-black text-emerald-700 dark:text-emerald-400 font-mono">{formatMoney(totalCreditUSD)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-rose-600 dark:text-rose-500">Total Debit:</span>
+              <span className="text-rose-600 dark:text-rose-500">{th("Total Debit:")}</span>
               <span className="font-black text-rose-700 dark:text-rose-400 font-mono">{formatMoney(totalDebitUSD)}</span>
             </div>
             <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-slate-600 dark:text-slate-400 uppercase font-bold">Balance:</span>
+              <span className="text-slate-600 dark:text-slate-400 uppercase font-bold">{th("Balance:")}</span>
               <span className="font-black text-slate-900 dark:text-slate-100 font-mono text-sm">{formatMoney(Math.abs(totalBalanceUSD))}</span>
             </div>
           </div>
@@ -1008,27 +1010,27 @@ function SuperAdminRoznamchaSummary({
             <div className="bg-purple-600 p-1 rounded-full text-white">
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></svg>
             </div>
-            <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400 truncate">3. SCOPE COVERAGE SUMMARY</h4>
+            <h4 className="text-xs font-black uppercase tracking-wider text-purple-800 dark:text-purple-400 truncate">{th("3. SCOPE COVERAGE SUMMARY")}</h4>
           </div>
           <div className="p-4 flex flex-col gap-2.5 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
             <div className="flex justify-between items-center">
-              <span>Countries in Scope:</span>
+              <span>{th("Countries in Scope:")}</span>
               <span className="font-black text-slate-800 dark:text-slate-200">{activeCountriesCount}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Branches in Scope:</span>
+              <span>{th("Branches in Scope:")}</span>
               <span className="font-black text-slate-800 dark:text-slate-200">{activeBranchesCount}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Users in Scope:</span>
+              <span>{th("Users in Scope:")}</span>
               <span className="font-black text-slate-800 dark:text-slate-200">{activeUsersCount}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>Selected Currency Mode:</span>
+              <span>{th("Selected Currency Mode:")}</span>
               <span className="font-bold text-slate-800 dark:text-slate-200 uppercase">{showAllCountries ? "Expanded" : "Summary"}</span>
             </div>
             <div className="flex justify-between items-center mt-auto pt-2 border-t border-slate-100 dark:border-slate-800">
-              <span>Live Rows:</span>
+              <span>{th("Live Rows:")}</span>
               <span className="font-black text-purple-700 dark:text-purple-400">{rows.length}</span>
             </div>
           </div>
@@ -2513,7 +2515,7 @@ function BranchJournalGeneralStyleSummary({
             <div className="flex items-center gap-3">
               <div className="rounded-2xl bg-purple-50 p-3 text-purple-600 ring-1 ring-purple-100">{card.icon}</div>
               <div>
-                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{card.title}</div>
+                <div className="text-[10px] font-black uppercase tracking-[0.18em] text-slate-400">{th(card.title)}</div>
                 <div className="mt-1 text-2xl font-black text-slate-950">{card.value}</div>
                 <div className="text-[11px] font-semibold text-slate-500">{card.subtitle}</div>
               </div>
@@ -2526,22 +2528,22 @@ function BranchJournalGeneralStyleSummary({
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
           {infoCards.map((card) => (
             <div key={card.label} className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-[0_1px_0_rgba(15,23,42,0.03)]">
-              <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{card.label}</div>
+              <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-400">{th(card.label)}</div>
               <div className="mt-1 text-sm font-black text-slate-950">{card.value || "-"}</div>
             </div>
           ))}
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-3">
           <div className="rounded-xl border border-rose-100 bg-rose-50 px-4 py-3">
-            <div className="text-[10px] font-black uppercase tracking-[0.16em] text-rose-500">Total Debit</div>
+            <div className="text-[10px] font-black uppercase tracking-[0.16em] text-rose-500">{th("Total Debit")}</div>
             <div className="mt-1 text-lg font-black text-rose-700">{fmtNumber(totalDebit)}</div>
           </div>
           <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-3">
-            <div className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-600">Total Credit</div>
+            <div className="text-[10px] font-black uppercase tracking-[0.16em] text-emerald-600">{th("Total Credit")}</div>
             <div className="mt-1 text-lg font-black text-emerald-700">{fmtNumber(totalCredit)}</div>
           </div>
           <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-            <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">Balance</div>
+            <div className="text-[10px] font-black uppercase tracking-[0.16em] text-slate-500">{th("Balance")}</div>
             <div className="mt-1 text-lg font-black text-slate-950">{fmtNumber(balance)}</div>
           </div>
         </div>

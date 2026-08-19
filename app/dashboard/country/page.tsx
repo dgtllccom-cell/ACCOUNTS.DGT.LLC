@@ -1,14 +1,13 @@
 import Link from "next/link";
 import type { Route } from "next";
 import postgres from "postgres";
-import { ArrowRight, Banknote, Building, Database, GitBranch, Globe, ReceiptText, ShieldCheck, ShoppingCart, Users, Activity, ListFilter, RefreshCw } from "lucide-react";
+import { ArrowRight, Banknote, Building, Database, GitBranch, Globe, ReceiptText, ShieldCheck, ShoppingCart, Users, Activity, ListFilter, RefreshCw, CheckCircle2, ChevronRight } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatCard } from "@/components/layout/stat-card";
 import { getRequestLanguage } from "@/lib/i18n/server";
 import { t } from "@/lib/i18n/ui";
 import { getCurrentErpSession } from "@/lib/auth/session";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { CountryProductsDashboard } from "@/features/dashboard/components/country-products-dashboard";
 import { CountryDashboardOverview } from "@/features/dashboard/components/country-dashboard-overview";
 
@@ -65,8 +64,22 @@ type CountryDashboardData = {
   error: string | null;
 };
 
-function money(value: number, currency = "USD") {
-  return `${currency} ${new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value || 0)}`;
+type CountryItem = {
+  id: string;
+  name: string;
+  currency_code: string;
+};
+
+async function loadCountryList(): Promise<CountryItem[]> {
+  try {
+    const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl) return [];
+    const sql = postgres(dbUrl, { prepare: false, idle_timeout: 5, connect_timeout: 10 });
+    const rows = await sql<CountryItem[]>`SELECT id, name, currency_code FROM countries WHERE deleted_at IS NULL ORDER BY name ASC;`;
+    return rows;
+  } catch {
+    return [];
+  }
 }
 
 async function loadCountryData(countryId: string): Promise<CountryDashboardData> {
@@ -74,6 +87,8 @@ async function loadCountryData(countryId: string): Promise<CountryDashboardData>
     const dbUrl = process.env.DATABASE_URL;
     if (!dbUrl) throw new Error("DATABASE_URL is not configured");
     const sql = postgres(dbUrl, { prepare: false, idle_timeout: 5, connect_timeout: 10 });
+
+    const isAll = countryId === "all";
 
     const [
       countryRes,
@@ -87,21 +102,41 @@ async function loadCountryData(countryId: string): Promise<CountryDashboardData>
       recentRows,
       productsCountRes
     ] = await Promise.all([
-      sql`SELECT name, currency_code FROM countries WHERE id = ${countryId} LIMIT 1;`.catch(() => []),
-      sql`SELECT id, name, code, local_currency FROM country_branches WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
-      sql`SELECT id, country_branch_id, name, code, city_name, status, local_currency FROM city_branches WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
-      sql`SELECT count(*)::int as c FROM user_role_assignments WHERE country_id = ${countryId} AND is_active = true AND deleted_at IS NULL;`.catch(() => [{ c: 0 }]),
-      sql`SELECT count(*)::int as c FROM enterprise_accounts WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => [{ c: 0 }]),
-      sql`SELECT id, country_branch_id, city_branch_id, debit_total, credit_total, current_balance FROM ledgers WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
-      sql`SELECT order_total, country_branch_id, city_branch_id FROM purchase_orders WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
-      sql`SELECT order_total, country_branch_id, city_branch_id FROM sales_orders WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
-      sql`SELECT id, voucher_no, entry_date, type, status, created_at FROM roznamcha_entries WHERE country_id = ${countryId} ORDER BY created_at DESC LIMIT 5;`.catch(() => []),
-      sql`SELECT product_specifications FROM goods_registry WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => [])
+      isAll
+        ? sql`SELECT 'All Countries (Global)' as name, 'USD' as currency_code;`
+        : sql`SELECT name, currency_code FROM countries WHERE id = ${countryId} LIMIT 1;`.catch(() => []),
+      isAll
+        ? sql`SELECT id, name, code, local_currency, country_id FROM country_branches WHERE deleted_at IS NULL;`.catch(() => [])
+        : sql`SELECT id, name, code, local_currency, country_id FROM country_branches WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
+      isAll
+        ? sql`SELECT id, country_branch_id, country_id, name, code, city_name, status, local_currency FROM city_branches WHERE deleted_at IS NULL;`.catch(() => [])
+        : sql`SELECT id, country_branch_id, country_id, name, code, city_name, status, local_currency FROM city_branches WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
+      isAll
+        ? sql`SELECT count(*)::int as c FROM user_role_assignments WHERE is_active = true AND deleted_at IS NULL;`.catch(() => [{ c: 0 }])
+        : sql`SELECT count(*)::int as c FROM user_role_assignments WHERE country_id = ${countryId} AND is_active = true AND deleted_at IS NULL;`.catch(() => [{ c: 0 }]),
+      isAll
+        ? sql`SELECT count(*)::int as c FROM enterprise_accounts WHERE deleted_at IS NULL;`.catch(() => [{ c: 0 }])
+        : sql`SELECT count(*)::int as c FROM enterprise_accounts WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => [{ c: 0 }]),
+      isAll
+        ? sql`SELECT id, country_branch_id, city_branch_id, debit_total, credit_total, current_balance, currency FROM ledgers WHERE deleted_at IS NULL;`.catch(() => [])
+        : sql`SELECT id, country_branch_id, city_branch_id, debit_total, credit_total, current_balance, currency FROM ledgers WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
+      isAll
+        ? sql`SELECT order_total, country_branch_id, city_branch_id FROM purchase_orders WHERE deleted_at IS NULL;`.catch(() => [])
+        : sql`SELECT order_total, country_branch_id, city_branch_id FROM purchase_orders WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
+      isAll
+        ? sql`SELECT order_total, country_branch_id, city_branch_id FROM sales_orders WHERE deleted_at IS NULL;`.catch(() => [])
+        : sql`SELECT order_total, country_branch_id, city_branch_id FROM sales_orders WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
+      isAll
+        ? sql`SELECT id, voucher_no, entry_date, type, status, created_at FROM roznamcha_entries WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 8;`.catch(() => [])
+        : sql`SELECT id, voucher_no, entry_date, type, status, created_at FROM roznamcha_entries WHERE country_id = ${countryId} ORDER BY created_at DESC LIMIT 8;`.catch(() => []),
+      isAll
+        ? sql`SELECT product_specifications FROM goods_registry WHERE deleted_at IS NULL;`.catch(() => [])
+        : sql`SELECT product_specifications FROM goods_registry WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => [])
     ]);
 
     const countryObj = countryRes[0] || {};
-    const countryName = countryObj.name || "Country Scoped";
-    const currency = countryObj.currency_code || "USD";
+    const countryName = countryObj.name || (isAll ? "All Countries (Global)" : "Country Scoped");
+    const currency = countryObj.currency_code || (isAll ? "USD" : "USD");
     const branchesCount = (mainBranchesRes.length || 0) + (cityBranchesRes.length || 0);
     const usersCount = usersRes[0]?.c || 0;
     const accountsCount = accountsRes[0]?.c || 0;
@@ -241,26 +276,26 @@ async function loadCountryData(countryId: string): Promise<CountryDashboardData>
   }
 }
 
-
-function StatusPill({ value }: { value: string }) {
-  const tone =
-    value === "posted" || value === "approved" || value === "active"
-      ? "bg-emerald-50 text-emerald-700 border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-900"
-      : value === "draft"
-        ? "bg-amber-50 text-amber-700 border-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:border-amber-900"
-        : "bg-red-50 text-red-700 border-red-200 dark:bg-red-950/40 dark:text-red-300 dark:border-red-900";
-  return <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold ${tone}`}>{value}</span>;
-}
-
 export default async function CountryDashboardPage(props: { searchParams?: Promise<{ tab?: string; countryId?: string }> }) {
   const searchParams = props.searchParams ? await props.searchParams : {};
   const currentTab = searchParams.tab || "overview";
 
   const session = await getCurrentErpSession();
+  const isSuperAdmin = Boolean(session?.isSuperAdmin || session?.roles.includes("super_admin"));
+
+  const countries = await loadCountryList();
+
   let countryId = session?.countryIds?.[0];
 
-  if (session?.roles.includes("super_admin") && searchParams.countryId) {
-    countryId = searchParams.countryId;
+  if (isSuperAdmin) {
+    // Super Admin defaults to 'all' or selected country or the first available country
+    if (searchParams.countryId) {
+      countryId = searchParams.countryId;
+    } else if (countries.length > 0) {
+      countryId = countries[0].id;
+    } else {
+      countryId = "all";
+    }
   }
 
   if (!countryId) {
@@ -280,11 +315,48 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
 
   return (
     <div className="space-y-6">
+      {/* Super Admin Country Selector Bar */}
+      {isSuperAdmin && countries.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center gap-2">
+            <Globe className="h-5 w-5 text-primary" />
+            <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              Country Scope:
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <Button
+              asChild
+              size="sm"
+              variant={countryId === "all" ? "default" : "outline"}
+              className="h-8 rounded-lg text-xs font-bold"
+            >
+              <Link href={`/dashboard/country?countryId=all&tab=${currentTab}` as Route}>
+                All Countries (Global)
+              </Link>
+            </Button>
+            {countries.map((c) => (
+              <Button
+                key={c.id}
+                asChild
+                size="sm"
+                variant={countryId === c.id ? "default" : "outline"}
+                className="h-8 rounded-lg text-xs font-bold"
+              >
+                <Link href={`/dashboard/country?countryId=${c.id}&tab=${currentTab}` as Route}>
+                  {c.name} ({c.currency_code})
+                </Link>
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
       <section className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <div className="flex items-center gap-2">
             <span className="inline-flex h-6 items-center rounded-md bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-700 ring-1 ring-inset ring-sky-700/10 dark:bg-sky-950/40 dark:text-sky-300 dark:ring-sky-500/20">
-              Country Admin Scope
+              {isSuperAdmin ? "Global Super Admin Scope" : "Country Admin Scope"}
             </span>
           </div>
           <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
@@ -302,7 +374,7 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
             </Link>
           </Button>
           <Button asChild>
-            <Link href={`/dashboard/country?tab=${currentTab === "overview" ? "products" : "overview"}` as Route}>
+            <Link href={`/dashboard/country?countryId=${countryId}&tab=${currentTab === "overview" ? "products" : "overview"}` as Route}>
               {currentTab === "overview" ? "View Products" : "View Overview"}
             </Link>
           </Button>
@@ -313,7 +385,7 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
       <div className="border-b border-slate-200 dark:border-slate-800">
         <nav className="flex space-x-6" aria-label="Tabs">
           <Link
-            href="/dashboard/country?tab=overview"
+            href={`/dashboard/country?countryId=${countryId}&tab=overview` as Route}
             className={`border-b-2 py-2 px-1 text-sm font-semibold transition duration-150 ${
               currentTab === "overview"
                 ? "border-primary text-primary"
@@ -323,7 +395,7 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
             Overview
           </Link>
           <Link
-            href="/dashboard/country?tab=products"
+            href={`/dashboard/country?countryId=${countryId}&tab=products` as Route}
             className={`border-b-2 py-2 px-1 text-sm font-semibold transition duration-150 ${
               currentTab === "products"
                 ? "border-primary text-primary"
@@ -352,4 +424,3 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
     </div>
   );
 }
-

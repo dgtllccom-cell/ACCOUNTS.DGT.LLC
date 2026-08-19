@@ -52,6 +52,8 @@ import {
   Wallet,
   X,
 } from "lucide-react";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 /* ---------------- types ---------------- */
 type NavChild = {
@@ -237,8 +239,14 @@ const colors = {
   background: "#F8FAFC",
 };
 
+function useTr() {
+  const lang = useActiveLanguage();
+  return (s: string) => translateHeader(lang, s);
+}
+
 /* ---------------- internal components ---------------- */
 function SidebarNavItem({ item, query }: { item: NavItem; query: string }) {
+  const tr = useTr();
   const Icon = item.icon;
   const hasChildren = !!item.children?.length;
   const [open, setOpen] = useState<boolean>(
@@ -269,7 +277,7 @@ function SidebarNavItem({ item, query }: { item: NavItem; query: string }) {
         }`}
       >
         <Icon className={`h-[17px] w-[17px] shrink-0 ${isTopActive ? "text-white" : "text-slate-500 group-hover:text-[#2563EB]"}`} />
-        <span className="truncate">{item.label}</span>
+        <span className="truncate">{tr(item.label)}</span>
         {item.badge && (
           <span className="ml-auto rounded-full bg-[#EF4444] px-1.5 py-0.5 text-[9px] font-bold text-white">{item.badge}</span>
         )}
@@ -293,7 +301,7 @@ function SidebarNavItem({ item, query }: { item: NavItem; query: string }) {
         }`}
       >
         <Icon className={`h-[17px] w-[17px] shrink-0 ${item.highlighted || activeChild ? "text-[#2563EB]" : "text-slate-500 group-hover:text-[#2563EB]"}`} />
-        <span className="flex-1 truncate text-left">{item.label}</span>
+        <span className="flex-1 truncate text-left">{tr(item.label)}</span>
         {item.highlighted && (
           <span className="rounded-full bg-[#2563EB] px-1.5 py-0.5 text-[9px] font-bold text-white shadow-sm">NEW</span>
         )}
@@ -322,7 +330,7 @@ function SidebarNavItem({ item, query }: { item: NavItem; query: string }) {
                   ) : (
                     <span className={`h-1.5 w-1.5 rounded-full ${c.active ? "bg-white" : "bg-slate-300"}`} />
                   )}
-                  <span className="truncate">{c.label}</span>
+                  <span className="truncate">{tr(c.label)}</span>
                   {c.badge && (
                     <span className="ml-auto rounded-full bg-[#F59E0B]/15 px-1.5 py-0.5 text-[9px] font-bold text-[#F59E0B]">{c.badge}</span>
                   )}
@@ -345,11 +353,12 @@ function QuickList({
   icon: ComponentType<{ className?: string }>;
   items: { icon: ComponentType<{ className?: string }>; label: string; href?: string }[];
 }) {
+  const tr = useTr();
   return (
     <div className="mb-4">
       <div className="mb-1.5 flex items-center gap-1.5 px-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">
         <Icon className="h-3 w-3" />
-        {title}
+        {tr(title)}
       </div>
       <div className="space-y-0.5">
         {items.map((it) => {
@@ -361,7 +370,7 @@ function QuickList({
               className="group flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-[12px] text-slate-600 transition-all hover:bg-slate-100/80 hover:text-slate-900"
             >
               <I className="h-3.5 w-3.5 text-slate-400 group-hover:text-[#2563EB]" />
-              <span className="truncate">{it.label}</span>
+              <span className="truncate">{tr(it.label)}</span>
             </a>
           );
         })}
@@ -377,6 +386,7 @@ export interface DigitalDockPremiumSidebarProps {
 }
 
 export function DigitalDockPremiumSidebar({ searchQuery: externalQuery, onSearchQueryChange }: DigitalDockPremiumSidebarProps = {}) {
+  const tr = useTr();
   const [internalQuery, setInternalQuery] = useState("");
   const query = externalQuery !== undefined ? externalQuery : internalQuery;
   const setQuery = (v: string) => {
@@ -404,7 +414,7 @@ export function DigitalDockPremiumSidebar({ searchQuery: externalQuery, onSearch
               <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#10B981] opacity-75" />
               <span className="relative inline-flex h-2 w-2 rounded-full bg-[#10B981]" />
             </span>
-            <span className="text-[10.5px] font-semibold text-[#059669]">Online</span>
+            <span className="text-[10.5px] font-semibold text-[#059669]">{tr("Online")}</span>
           </div>
           <span className="text-[9.5px] font-medium text-slate-400">v2.6.1</span>
         </div>
@@ -418,7 +428,7 @@ export function DigitalDockPremiumSidebar({ searchQuery: externalQuery, onSearch
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search menu…"
+            placeholder={tr("Search menu…")}
             className="h-9 w-full rounded-xl border border-slate-200 bg-slate-50/60 pl-9 pr-8 text-[12.5px] text-slate-700 placeholder:text-slate-400 outline-none transition-all focus:border-[#2563EB]/40 focus:bg-white focus:ring-2 focus:ring-[#2563EB]/10"
           />
           <kbd className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 rounded-md border border-slate-200 bg-white px-1.5 py-0.5 text-[9px] font-semibold text-slate-400">⌘K</kbd>
@@ -435,7 +445,7 @@ export function DigitalDockPremiumSidebar({ searchQuery: externalQuery, onSearch
         )}
         {SIDEBAR_GROUPS.map((group) => (
           <div key={group.title} className="mb-4">
-            <div className="mb-1.5 px-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">{group.title}</div>
+            <div className="mb-1.5 px-2 text-[10px] font-bold uppercase tracking-[0.16em] text-slate-400">{tr(group.title)}</div>
             <div className="space-y-1">
               {group.items.map((it) => (
                 <SidebarNavItem key={it.label} item={it} query={query} />

@@ -13,6 +13,8 @@ import { Label } from "@/components/ui/label";
 import { apiGet, apiPost } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
 import { openGenericErpReport } from "@/lib/reports/open-generic-erp-report";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type CountryRate = {
   id: string;
@@ -88,6 +90,8 @@ function getFlag(iso2: string | null | undefined) {
 }
 
 export function DailyExchangeRateManager() {
+  const lang = useActiveLanguage();
+  const th = (label: string) => translateHeader(lang, label);
   const [rates, setRates] = useState<CountryRate[]>([]);
   const [countries, setCountries] = useState<CountryOption[]>([]);
   const [loading, setLoading] = useState(true);
@@ -360,7 +364,7 @@ export function DailyExchangeRateManager() {
         <div className="flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           <h1 className="text-sm font-black uppercase tracking-tight text-slate-900 dark:text-white">
-            DAILY EXCHANGE RATE MANAGEMENT
+            {th("DAILY EXCHANGE RATE MANAGEMENT")}
           </h1>
         </div>,
         titleSlot
@@ -375,7 +379,7 @@ export function DailyExchangeRateManager() {
             className="h-8 text-[11px] font-black uppercase bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-xs"
           >
             <Printer className="w-3.5 h-3.5 mr-1.5 text-blue-600" />
-            Print Rate Table
+            {th("Print Rate Table")}
           </Button>
           <Button
             onClick={loadData}
@@ -383,7 +387,7 @@ export function DailyExchangeRateManager() {
             className="h-8 text-[11px] font-black uppercase bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 shadow-xs"
           >
             <RefreshCw className="w-3.5 h-3.5 mr-1.5 text-emerald-600" />
-            Refresh Rates
+            {th("Refresh Rates")}
           </Button>
         </div>,
         actionsSlot
@@ -397,10 +401,10 @@ export function DailyExchangeRateManager() {
           <div className="border-b border-slate-150 dark:border-slate-800 pb-3 flex items-center justify-between">
             <h3 className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white flex items-center gap-2">
               <Globe className="w-4 h-4 text-blue-600" />
-              EXCHANGE RATE ENTRY FORM
+              {th("EXCHANGE RATE ENTRY FORM")}
             </h3>
             <span className="text-[9px] font-black uppercase bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300 px-2 py-0.5 rounded-md border border-blue-200 dark:border-blue-800">
-              INTRA-DAY LIVE ENTRY
+              {th("INTRA-DAY LIVE ENTRY")}
             </span>
           </div>
 
@@ -409,7 +413,7 @@ export function DailyExchangeRateManager() {
             {/* 1. Country Selection */}
             <div className="space-y-1">
               <Label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400">
-                1. COUNTRY NAME
+                {th("1. COUNTRY NAME")}
               </Label>
               <select
                 value={selectedCountryId}
@@ -429,7 +433,7 @@ export function DailyExchangeRateManager() {
             <div className="grid grid-cols-2 gap-2.5">
               <div className="space-y-1">
                 <Label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400">
-                  2. DATE
+                  {th("2. DATE")}
                 </Label>
                 <Input
                   type="date"
@@ -441,7 +445,7 @@ export function DailyExchangeRateManager() {
 
               <div className="space-y-1">
                 <Label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400">
-                  3. TIME
+                  {th("3. TIME")}
                 </Label>
                 <Input
                   type="text"
@@ -458,7 +462,7 @@ export function DailyExchangeRateManager() {
               <div className="space-y-1">
                 <Label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 flex items-center gap-1">
                   <User className="w-3 h-3 text-slate-400" />
-                  OPERATOR USER
+                  {th("OPERATOR USER")}
                 </Label>
                 <Input
                   type="text"
@@ -471,7 +475,7 @@ export function DailyExchangeRateManager() {
               <div className="space-y-1">
                 <Label className="text-[11px] font-black uppercase text-slate-600 dark:text-slate-400 flex items-center gap-1">
                   <Building2 className="w-3 h-3 text-slate-400" />
-                  BRANCH NAME
+                  {th("BRANCH NAME")}
                 </Label>
                 <Input
                   type="text"
@@ -486,7 +490,7 @@ export function DailyExchangeRateManager() {
             <div className="space-y-1">
               <Label className="text-[11px] font-black uppercase text-emerald-700 dark:text-emerald-400 flex items-center gap-1">
                 <ArrowUpRight className="w-3.5 h-3.5" />
-                4. CREDIT DOLLAR PRICE ($)
+                {th("4. CREDIT DOLLAR PRICE ($)")}
               </Label>
               <div className="relative">
                 <Input
@@ -508,7 +512,7 @@ export function DailyExchangeRateManager() {
             <div className="space-y-1">
               <Label className="text-[11px] font-black uppercase text-blue-700 dark:text-blue-400 flex items-center gap-1">
                 <ArrowDownLeft className="w-3.5 h-3.5" />
-                5. DEBIT DOLLAR PRICE ($)
+                {th("5. DEBIT DOLLAR PRICE ($)")}
               </Label>
               <div className="relative">
                 <Input
@@ -533,7 +537,7 @@ export function DailyExchangeRateManager() {
               className="w-full h-10 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-md transition-all flex items-center justify-center gap-2 pt-1"
             >
               {saving ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-              {saving ? "SAVING EXCHANGE RATE..." : "SAVE EXCHANGE RATE"}
+              {saving ? th("SAVING EXCHANGE RATE...") : th("SAVE EXCHANGE RATE")}
             </Button>
           </form>
 
@@ -563,14 +567,14 @@ export function DailyExchangeRateManager() {
               <div>
                 <h3 className="text-xs font-black uppercase tracking-wide flex items-center gap-2 text-emerald-400">
                   <Clock className="w-4 h-4" />
-                  SUPER ADMIN LIVE EXCHANGE RATES TABLE
+                  {th("SUPER ADMIN LIVE EXCHANGE RATES TABLE")}
                 </h3>
                 <p className="text-[10px] text-slate-400 font-medium">
                   Audited intra-day exchange rates recorded by users and branch terminals worldwide.
                 </p>
               </div>
               <span className="text-[10px] font-mono font-black bg-slate-800 text-emerald-400 px-2.5 py-1 rounded-lg border border-slate-700 shadow-xs">
-                TOTAL ENTRIES: {rates.length}
+                {th("TOTAL ENTRIES:")} {rates.length}
               </span>
             </div>
 
@@ -584,7 +588,7 @@ export function DailyExchangeRateManager() {
                   onChange={(e) => setFilterCountryId(e.target.value)}
                   className="w-full h-8 px-2 rounded-lg bg-slate-800 text-slate-100 border border-slate-700 text-[11px] font-bold outline-none uppercase"
                 >
-                  <option value="all">ALL COUNTRIES</option>
+                  <option value="all">{th("ALL COUNTRIES")}</option>
                   {countries.map((c) => (
                     <option key={c.id} value={c.id}>
                       {c.name} ({c.currency_code})
@@ -600,7 +604,7 @@ export function DailyExchangeRateManager() {
                   onChange={(e) => setFilterBranch(e.target.value)}
                   className="w-full h-8 px-2 rounded-lg bg-slate-800 text-slate-100 border border-slate-700 text-[11px] font-bold outline-none uppercase"
                 >
-                  <option value="all">ALL BRANCHES</option>
+                  <option value="all">{th("ALL BRANCHES")}</option>
                   {branchOptions.map((branchName) => (
                     <option key={branchName} value={branchName}>{branchName}</option>
                   ))}
@@ -623,7 +627,7 @@ export function DailyExchangeRateManager() {
                 <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400" />
                 <Input
                   type="text"
-                  placeholder="Search user, branch..."
+                  placeholder={th("Search user, branch...")}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="h-8 text-[11px] font-bold pl-8 bg-slate-800 text-slate-100 border-slate-700 rounded-lg placeholder:text-slate-500"
@@ -639,15 +643,15 @@ export function DailyExchangeRateManager() {
               <table className="w-full text-xs text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 font-black uppercase text-[9px] border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
-                    <th className="py-2.5 px-3 text-center">SR NO</th>
-                    <th className="py-2.5 px-3">COUNTRY NAME</th>
-                    <th className="py-2.5 px-3">BRANCH NAME</th>
-                    <th className="py-2.5 px-3">USER NAME</th>
-                    <th className="py-2.5 px-3 text-center">CURRENCY</th>
-                    <th className="py-2.5 px-3">DATE & TIME</th>
-                    <th className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400">CREDIT RATE ($)</th>
-                    <th className="py-2.5 px-3 text-right text-blue-600 dark:text-blue-400">DEBIT RATE ($)</th>
-                    <th className="py-2.5 px-3 text-right">LAST UPDATED</th>
+                    <th className="py-2.5 px-3 text-center">{th("SR NO")}</th>
+                    <th className="py-2.5 px-3">{th("COUNTRY NAME")}</th>
+                    <th className="py-2.5 px-3">{th("BRANCH NAME")}</th>
+                    <th className="py-2.5 px-3">{th("USER NAME")}</th>
+                    <th className="py-2.5 px-3 text-center">{th("CURRENCY")}</th>
+                    <th className="py-2.5 px-3">{th("DATE & TIME")}</th>
+                    <th className="py-2.5 px-3 text-right text-emerald-600 dark:text-emerald-400">{th("CREDIT RATE ($)")}</th>
+                    <th className="py-2.5 px-3 text-right text-blue-600 dark:text-blue-400">{th("DEBIT RATE ($)")}</th>
+                    <th className="py-2.5 px-3 text-right">{th("LAST UPDATED")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-150 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-200">
@@ -704,7 +708,7 @@ export function DailyExchangeRateManager() {
                   {rates.length === 0 && (
                     <tr>
                       <td colSpan={9} className="py-8 text-center text-slate-400 font-medium">
-                        No exchange rates recorded matching your search criteria.
+                        {th("NO EXCHANGE RATES RECORDED MATCHING YOUR SEARCH CRITERIA.")}
                       </td>
                     </tr>
                   )}

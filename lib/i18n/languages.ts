@@ -71,3 +71,5 @@ export function normalizeSupportedLanguage(value: string | null | undefined, fal
   return isSupportedLanguage(value) ? value : fallback;
 }
 
+export const normalizeLanguage = normalizeSupportedLanguage;
+

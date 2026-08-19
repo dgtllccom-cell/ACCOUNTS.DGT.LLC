@@ -1,7 +1,11 @@
+import Link from "next/link";
+import type { Route } from "next";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { getCurrentErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { BranchAdminDashboardOverview } from "@/features/dashboard/components/branch-admin-dashboard-overview";
+import { Building, GitBranch, MapPin } from "lucide-react";
 
 type CustomerRow = {
   id: string;
@@ -51,6 +55,61 @@ type BranchDashboardData = {
   databaseReady: boolean;
   error: string | null;
 };
+
+type BranchOption = {
+  id: string;
+  name: string;
+  code: string;
+  type: "country" | "city";
+  cityName?: string;
+  countryName?: string;
+  currency: string;
+};
+
+async function loadAllBranchesList(): Promise<BranchOption[]> {
+  try {
+    const supabase = createSupabaseAdminClient() as any;
+    const [countryBranchesRes, cityBranchesRes, countriesRes] = await Promise.all([
+      supabase.from("country_branches").select("id, name, code, country_id, local_currency").is("deleted_at", null),
+      supabase.from("city_branches").select("id, name, code, city_name, country_id, local_currency").is("deleted_at", null),
+      supabase.from("countries").select("id, name").is("deleted_at", null)
+    ]);
+
+    const countryMap = new Map<string, string>();
+    for (const c of (countriesRes.data ?? [])) {
+      countryMap.set(c.id, c.name);
+    }
+
+    const options: BranchOption[] = [];
+
+    for (const cb of (countryBranchesRes.data ?? [])) {
+      options.push({
+        id: cb.id,
+        name: cb.name || "Main Branch",
+        code: cb.code || "MBR",
+        type: "country",
+        countryName: countryMap.get(cb.country_id) || "Global",
+        currency: cb.local_currency || "USD"
+      });
+    }
+
+    for (const ctb of (cityBranchesRes.data ?? [])) {
+      options.push({
+        id: ctb.id,
+        name: ctb.name || ctb.city_name || "City Branch",
+        code: ctb.code || "CBR",
+        type: "city",
+        cityName: ctb.city_name,
+        countryName: countryMap.get(ctb.country_id) || "Global",
+        currency: ctb.local_currency || "USD"
+      });
+    }
+
+    return options;
+  } catch {
+    return [];
+  }
+}
 
 async function loadBranchDashboardData(
   sessionCountryBranchId: string | null,
@@ -208,11 +267,41 @@ async function loadBranchDashboardData(
   }
 }
 
-export default async function CityDashboardPage() {
+export default async function CityDashboardPage(props: { searchParams?: Promise<{ branchId?: string; type?: string }> }) {
+  const searchParams = props.searchParams ? await props.searchParams : {};
   const session = await getCurrentErpSession();
+  const isSuperAdmin = Boolean(session?.isSuperAdmin || session?.roles.includes("super_admin"));
 
-  const cityBranchId = session?.cityBranchIds?.[0] || null;
-  const countryBranchId = session?.countryBranchIds?.[0] || null;
+  const allBranches = await loadAllBranchesList();
+
+  let cityBranchId = session?.cityBranchIds?.[0] || null;
+  let countryBranchId = session?.countryBranchIds?.[0] || null;
+
+  if (isSuperAdmin) {
+    if (searchParams.branchId) {
+      const selected = allBranches.find((b) => b.id === searchParams.branchId);
+      if (selected?.type === "city") {
+        cityBranchId = selected.id;
+        countryBranchId = null;
+      } else if (selected?.type === "country") {
+        countryBranchId = selected.id;
+        cityBranchId = null;
+      } else {
+        // Fallback default
+        cityBranchId = searchParams.branchId;
+        countryBranchId = null;
+      }
+    } else if (allBranches.length > 0) {
+      const first = allBranches[0];
+      if (first.type === "city") {
+        cityBranchId = first.id;
+        countryBranchId = null;
+      } else {
+        countryBranchId = first.id;
+        cityBranchId = null;
+      }
+    }
+  }
 
   if (!cityBranchId && !countryBranchId) {
     return (
@@ -228,9 +317,37 @@ export default async function CityDashboardPage() {
   }
 
   const data = await loadBranchDashboardData(countryBranchId, cityBranchId);
+  const activeBranchId = cityBranchId || countryBranchId;
 
   return (
     <div className="space-y-6">
+      {/* Super Admin Branch Switcher Bar */}
+      {isSuperAdmin && allBranches.length > 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-slate-200 bg-white p-3 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center gap-2">
+            <MapPin className="h-5 w-5 text-primary" />
+            <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              City / Branch Scope:
+            </span>
+          </div>
+          <div className="flex flex-wrap items-center gap-1.5">
+            {allBranches.map((b) => (
+              <Button
+                key={b.id}
+                asChild
+                size="sm"
+                variant={activeBranchId === b.id ? "default" : "outline"}
+                className="h-8 rounded-lg text-xs font-bold"
+              >
+                <Link href={`/dashboard/city?branchId=${b.id}&type=${b.type}` as Route}>
+                  {b.name} ({b.countryName || b.currency})
+                </Link>
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {!data.databaseReady ? (
         <Card className="border-red-200 bg-red-50 text-red-900 dark:border-red-950/40 dark:bg-red-950/20 dark:text-red-300">
           <CardContent className="p-4 text-sm font-semibold">

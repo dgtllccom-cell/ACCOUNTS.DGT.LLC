@@ -32,8 +32,16 @@ function readLang(): SupportedLanguage {
   return (LANGS as readonly string[]).includes(raw) ? (raw as SupportedLanguage) : "en";
 }
 
+function applyHtmlAttributes(lang: SupportedLanguage) {
+  if (typeof document === "undefined" || !document.documentElement) return;
+  const isRtl = lang === "ur" || lang === "ar" || lang === "fa" || lang === "ps";
+  document.documentElement.lang = lang;
+  document.documentElement.dir = isRtl ? "rtl" : "ltr";
+}
+
 function emit() {
   const next = readLang();
+  applyHtmlAttributes(next);
   if (next !== currentLang) {
     currentLang = next;
     listeners.forEach((l) => l());
@@ -44,6 +52,7 @@ function ensureInit() {
   if (initialized || typeof window === "undefined") return;
   initialized = true;
   const initial = readLang();
+  applyHtmlAttributes(initial);
   if (initial !== currentLang) {
     currentLang = initial;
     // Notify synchronously-mounted subscribers once the real language is known —

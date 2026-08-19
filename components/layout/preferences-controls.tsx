@@ -122,6 +122,8 @@ export function PreferencesControls() {
     setTheme(getInitialTheme());
     const initialLang = getInitialLanguage();
     setLanguage(initialLang);
+    document.documentElement.lang = getHtmlLanguage(initialLang);
+    document.documentElement.dir = rtlLanguages.includes(initialLang) ? "rtl" : "ltr";
     injectWebFonts(initialLang);
 
     const onStorage = (event: StorageEvent) => {
