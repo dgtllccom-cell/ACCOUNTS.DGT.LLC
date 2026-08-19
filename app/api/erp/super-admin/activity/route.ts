@@ -41,7 +41,7 @@ feed as (
     e.created_at ts, e.country_id, coalesce(e.city_branch_id, e.country_branch_id) branch_id,
     coalesce(e.narration, e.source_transaction_type, 'Roznamcha Entry') entry_name,
     rl.account_no party, rl.currency, rl.debit, rl.credit, e.status::text,
-    cp.full_name created_by, ap.full_name approved_by, '/dashboard/all-release-entries/' || e.id::text href
+    cp.full_name created_by, ap.full_name approved_by, '/dashboard/all-release-entries/' || e.id::text || '?module=Roznamcha&src=Roznamcha' href
   from roznamcha_entries e
   left join rl on rl.eid = e.id
   left join profiles cp on cp.id = e.created_by
@@ -52,47 +52,47 @@ feed as (
   select po.id::text, 'Purchase', 'Purchase', 'Purchase Order', po.purchase_order_no, po.purchase_order_no,
     po.created_at, po.country_id, coalesce(po.city_branch_id, po.country_branch_id), 'Purchase Order',
     comp.name, po.currency_code, coalesce(po.order_total,0), 0, coalesce(po.payment_status::text,'-'),
-    null, null, '/dashboard/purchase/purchase-booking-journal-report'
+    null, null, '/dashboard/all-release-entries/' || po.id::text || '?module=Purchase&src=Purchase'
   from purchase_orders po left join companies comp on comp.id = po.supplier_company_id where po.deleted_at is null
   union all
   -- Sales orders
   select so.id::text, 'Sales', 'Sale', 'Sales Order', so.sales_order_no, so.sales_order_no,
     so.created_at, so.country_id, coalesce(so.city_branch_id, so.country_branch_id), 'Sales Order',
-    so.customer_name, null, 0, 0, '-', null, null, '/dashboard/sales'
+    so.customer_name, null, 0, 0, '-', null, null, '/dashboard/all-release-entries/' || so.id::text || '?module=Sale&src=Sales'
   from sales_orders so where so.deleted_at is null
   union all
   select c.id::text, 'Master', 'Customer', 'Customer', null, null, c.created_at, c.country_id, null,
     'Customer Added', coalesce(c.customer_name, c.company_name), null, 0, 0, 'Active', null, null,
-    '/dashboard/settings/customers/' || c.id
+    '/dashboard/all-release-entries/' || c.id::text || '?module=Customer&src=Master'
   from customers c where c.deleted_at is null
   union all
   select co.id::text, 'Master', 'Company', 'Company', null, null, co.created_at, co.country_id, null,
-    'Company Added', co.name, null, 0, 0, 'Active', null, null, '/dashboard/settings/companies'
+    'Company Added', co.name, null, 0, 0, 'Active', null, null, '/dashboard/all-release-entries/' || co.id::text || '?module=Company&src=Master'
   from companies co where co.deleted_at is null
   union all
   select b.id::text, 'Master', 'Bank', 'Bank Account', b.account_number, b.account_number, b.created_at,
     b.country_id, null, 'Bank / Account Added', b.bank_name, null, 0, 0, coalesce(b.account_status::text,'Active'),
-    null, null, '/dashboard/settings/banks'
+    null, null, '/dashboard/all-release-entries/' || b.id::text || '?module=Bank&src=Master'
   from banks b where b.deleted_at is null
   union all
   select em.id::text, 'Master', 'Employee', 'Employee', em.employee_code, em.employee_code, em.created_at,
     em.country_id, coalesce(em.city_branch_id, em.country_branch_id), coalesce(em.designation,'Employee'),
     (select full_name from profiles pr where pr.id = em.person_master_id or pr.person_master_id = em.person_master_id limit 1),
-    null, 0, 0, 'Active', null, null, '/dashboard/settings/employees'
+    null, 0, 0, 'Active', null, null, '/dashboard/all-release-entries/' || em.id::text || '?module=Employee&src=Master'
   from employees em where em.deleted_at is null
   union all
   select w.id::text, 'Master', 'Warehouse', 'Warehouse', w.warehouse_code, w.warehouse_code, w.created_at,
     w.country_id, null, 'Warehouse', w.warehouse_name, null, 0, 0, coalesce(w.status::text,'Active'), null, null,
-    '/dashboard/settings/warehouses'
+    '/dashboard/all-release-entries/' || w.id::text || '?module=Warehouse&src=Master'
   from warehouses w where w.deleted_at is null
   union all
   select g.id::text, 'Master', 'Goods', 'Goods', g.chs_code, g.chs_code, g.created_at, g.origin_country_id, null,
     'Goods / Stock Item', g.goods_name, null, 0, 0, case when g.is_active then 'Active' else 'Inactive' end,
-    null, null, '/dashboard/settings/goods'
+    null, null, '/dashboard/all-release-entries/' || g.id::text || '?module=Goods&src=Master'
   from goods g where g.deleted_at is null
   union all
   select u.id::text, 'Master', 'User', 'User', u.user_code, u.user_code, u.created_at, null, null,
-    'User / Login', u.full_name, null, 0, 0, 'Active', null, null, '/dashboard/new-entry/users/all'
+    'User / Login', u.full_name, null, 0, 0, 'Active', null, null, '/dashboard/all-release-entries/' || u.id::text || '?module=User&src=Master'
   from profiles u where u.deleted_at is null
 )`;
 
