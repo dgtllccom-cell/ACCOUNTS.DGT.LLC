@@ -19,11 +19,11 @@ export type GenericReportColumn = {
   render?: (value: unknown, row: Record<string, unknown>) => string;
 };
 
-function getRowValue(row: Record<string, unknown>, key: GenericReportColumn["key"]) {
+export function getRowValue(row: Record<string, unknown>, key: GenericReportColumn["key"]) {
   return typeof key === "function" ? key(row) : row[key];
 }
 
-function formatCellValue(value: unknown, column: GenericReportColumn, lang: string): string {
+export function formatCellValue(value: unknown, column: GenericReportColumn, lang: string): string {
   if (value === null || value === undefined || value === "") return "—";
 
   if (column.render) {

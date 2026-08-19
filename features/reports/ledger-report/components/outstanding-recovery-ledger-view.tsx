@@ -22,7 +22,8 @@ import {
 import { apiGet } from "@/lib/api/client";
 import { Th } from "@/components/ui/translated-th";
 import { cn } from "@/lib/utils";
-import { openGenericErpReport, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
+import { openGenericErpReport, formatCellValue, getRowValue, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
+import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { translateValue } from "@/lib/i18n/table-values";
@@ -277,42 +278,54 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
     const totalDebit = previewRows.reduce((acc, r) => acc + (r.debit || 0), 0);
     const totalBalance = previewRows.reduce((acc, r) => acc + (r.balance || 0), 0);
 
-    openGenericErpReport({
-      title: pageTitle,
-      subtitle: `${filtered.length} account(s) • ${tab.toUpperCase()} scope`,
+    // Consolidated onto the unified journal engine. Cell FORMATTING is preserved exactly by reusing
+    // formatCellValue (same date/currency/number/status logic as the generic engine); column headers
+    // and KPI/chip labels are translated via translateHeader (existing central header dictionary).
+    const money = (n: any) => Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const jcols = previewColumns.map((c) => ({
+      key: typeof c.key === "string" ? c.key : c.label,
+      label: translateHeader(lang, c.label),
+      num: c.align === "right" || c.format === "number" || c.format === "currency"
+    }));
+    const jrows = previewRows.map((r) => {
+      const o: Record<string, string> = {};
+      for (const c of previewColumns) {
+        const k = typeof c.key === "string" ? c.key : c.label;
+        o[k] = formatCellValue(getRowValue(r as any, c.key), c, lang);
+      }
+      return o;
+    });
+    const jtotals: Record<string, string> = {};
+    for (const c of previewColumns) {
+      const k = typeof c.key === "string" ? c.key : c.label;
+      if (k === "credit") jtotals[k] = money(totalCredit);
+      else if (k === "debit") jtotals[k] = money(totalDebit);
+      else if (k === "balance") jtotals[k] = money(totalBalance);
+    }
+    openJournalReportWindow({
       lang,
-      columns: previewColumns,
-      rows: previewRows,
-      summary: {
-        totalAccounts: summary?.accounts ?? rows.length,
-        totalReceivable: summary?.totalReceivable ?? totalCredit,
-        totalPayable: summary?.totalPayable ?? totalDebit,
-        netOutstanding: (summary?.totalReceivable ?? totalCredit) - (summary?.totalPayable ?? totalDebit),
-      },
-      totalsRow: {
-        code: "",
-        name: "",
-        credit: totalCredit,
-        debit: totalDebit,
-        balance: totalBalance,
-      },
-      filters: [
-        { label: "Country", value: scopeCountry },
-        { label: "Branch", value: scopeBranch },
-        { label: "Viewer", value: scopeUserName },
-        { label: "Role", value: scopeRole },
-        { label: "Tab", value: tab },
-        { label: "Search", value: q.trim() || "All Accounts" },
+      autoPrint,
+      title: pageTitle,
+      subtitle: `${String(tab).toUpperCase()} • ${translateHeader(lang, "Report")}`,
+      overviewLabel: translateHeader(lang, "Report Overview"),
+      scopeName: pageTitle,
+      reportIdPrefix: "OSREC",
+      reportIdValue: String(tab),
+      chips: [
+        { label: translateHeader(lang, "Country"), value: scopeCountry },
+        { label: translateHeader(lang, "Branch"), value: scopeBranch },
+        { label: translateHeader(lang, "Viewer"), value: scopeUserName },
+        { label: translateHeader(lang, "Search"), value: q.trim() || undefined }
       ],
-      companyInfo: {
-        country: scopeCountry,
-        branch: scopeBranch,
-        printedBy: scopeUserName,
-        reportPeriod: `Aging threshold ${overdueDays} days`,
-        currency: filtered[0]?.currency || rows[0]?.currency || "AED",
-      },
-      orientation: "landscape",
-      footerNotesHtml: `<p>Outstanding ledger report generated based on active ledger balances and transaction history.</p>`,
+      kpis: [
+        { label: translateHeader(lang, "Total Accounts"), value: String(summary?.accounts ?? rows.length), tone: "open" },
+        { label: translateHeader(lang, "Total Receivable"), value: money(summary?.totalReceivable ?? totalCredit), tone: "credit" },
+        { label: translateHeader(lang, "Total Payable"), value: money(summary?.totalPayable ?? totalDebit), tone: "debit" },
+        { label: translateHeader(lang, "Net Outstanding"), value: money((summary?.totalReceivable ?? totalCredit) - (summary?.totalPayable ?? totalDebit)), tone: "current" }
+      ],
+      columns: jcols,
+      rows: jrows,
+      totals: Object.keys(jtotals).length ? jtotals : undefined
     });
   }
 

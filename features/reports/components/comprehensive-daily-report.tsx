@@ -11,7 +11,9 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { t } from "@/lib/i18n/ui";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { Th } from "@/components/ui/translated-th";
-import { openGenericErpReport, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
+import { openGenericErpReport, formatCellValue, getRowValue, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
+import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
+import { translateHeader } from "@/lib/i18n/table-headers";
 
 type TabType = "summary" | "branch" | "user";
 
@@ -225,34 +227,55 @@ export function ComprehensiveDailyReportView() {
       rows = userSummary;
     }
 
-    openGenericErpReport({
-      title: t(lang, "report.comprehensive_daily", "Comprehensive Daily Report"),
-      subtitle: `${activeTab.toUpperCase()} • ${rows.length} row(s)`,
+    // Consolidated onto the unified journal engine; cell formatting preserved via formatCellValue,
+    // headers translated via translateHeader (central header dictionary).
+    const money = (n: any) => Number(n || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const totalDebit = rows.reduce((a, r: any) => a + (Number(r.debit) || 0), 0);
+    const totalCredit = rows.reduce((a, r: any) => a + (Number(r.credit) || 0), 0);
+    const jcols = columns.map((c) => ({
+      key: typeof c.key === "string" ? c.key : c.label,
+      label: translateHeader(lang, c.label),
+      num: c.align === "right" || c.format === "number" || c.format === "currency"
+    }));
+    const jrows = rows.map((r) => {
+      const o: Record<string, string> = {};
+      for (const c of columns) {
+        const k = typeof c.key === "string" ? c.key : c.label;
+        o[k] = formatCellValue(getRowValue(r, c.key), c, lang);
+      }
+      return o;
+    });
+    const jtotals: Record<string, string> = {};
+    for (const c of columns) {
+      const k = typeof c.key === "string" ? c.key : c.label;
+      if (k === "debit") jtotals[k] = money(totalDebit);
+      else if (k === "credit") jtotals[k] = money(totalCredit);
+    }
+    openJournalReportWindow({
       lang,
-      columns,
-      rows,
-      summary: {
-        totalEntries: filteredEntries.length,
-        totalRows: rows.length,
-      },
-      filters: [
-        { label: "From", value: fromDate || "-" },
-        { label: "To", value: toDate || "-" },
-        { label: "Country", value: selectedCountryName },
-        { label: "Branch", value: selectedBranchName },
-        { label: "User", value: selectedUserName },
-        { label: "Voucher", value: voucherType === "all" ? "All" : voucherType.toUpperCase() },
-        { label: "Currency", value: targetCurrency },
+      autoPrint: true,
+      title: t(lang, "report.comprehensive_daily", "Comprehensive Daily Report"),
+      subtitle: `${activeTab.toUpperCase()} • ${rows.length}`,
+      overviewLabel: translateHeader(lang, "Report Overview"),
+      scopeName: t(lang, "report.comprehensive_daily", "Comprehensive Daily Report"),
+      reportIdPrefix: "CDR",
+      reportIdValue: activeTab,
+      chips: [
+        { label: translateHeader(lang, "From"), value: fromDate || undefined },
+        { label: translateHeader(lang, "To"), value: toDate || undefined },
+        { label: translateHeader(lang, "Country"), value: selectedCountryName },
+        { label: translateHeader(lang, "Branch"), value: selectedBranchName },
+        { label: translateHeader(lang, "Currency"), value: targetCurrency }
       ],
-      companyInfo: {
-        country: selectedCountryName,
-        branch: selectedBranchName,
-        printedBy: sessionInfo?.user?.fullName || sessionInfo?.user?.email || "ERP User",
-        reportPeriod: `${fromDate || "-"} to ${toDate || "-"}`,
-        currency: targetCurrency === "USD" ? "USD" : undefined,
-      },
-      orientation: activeTab === "user" ? "portrait" : "landscape",
-      footerNotesHtml: `<p>Comprehensive daily report preview follows the active screen scope, date range, voucher filter, and currency mode.</p>`,
+      kpis: [
+        { label: translateHeader(lang, "Total Debit"), value: money(totalDebit), tone: "debit" },
+        { label: translateHeader(lang, "Total Credit"), value: money(totalCredit), tone: "credit" },
+        { label: translateHeader(lang, "Entries"), value: String(filteredEntries.length), tone: "open" },
+        { label: translateHeader(lang, "Rows"), value: String(rows.length), tone: "current" }
+      ],
+      columns: jcols,
+      rows: jrows,
+      totals: Object.keys(jtotals).length ? jtotals : undefined
     });
   }
 
