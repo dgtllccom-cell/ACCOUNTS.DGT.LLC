@@ -173,7 +173,7 @@ export type UiKey =
   // Sidebar navigation
   | "nav.dashboard"
   | "nav.forms_directory_audit" | "nav.all_release_entries"
-  | "sae.title" | "sae.subtitle" | "sae.refresh" | "sae.module" | "sae.all_modules" | "sae.payment" | "sae.sale" | "sae.warehouse" | "sae.expense" | "sae.total_countries" | "sae.total_branches" | "sae.today_entries" | "sae.net_movement" | "sae.all_countries" | "sae.all_offices" | "sae.all_modules_combined" | "sae.selected_view" | "sae.debit_minus_credit" | "sae.search_all" | "sae.search_ph" | "sae.latest_entries" | "sae.click_row" | "sae.entry_name" | "sae.party" | "sae.linked_bank" | "sae.final" | "sae.loading" | "sae.open_module" | "sae.entry_report" | "sae.field" | "sae.value"
+  | "sae.title" | "sae.subtitle" | "sae.refresh" | "sae.module" | "sae.all_modules" | "sae.payment" | "sae.sale" | "sae.warehouse" | "sae.expense" | "sae.total_countries" | "sae.total_branches" | "sae.today_entries" | "sae.net_movement" | "sae.all_countries" | "sae.all_offices" | "sae.all_modules_combined" | "sae.selected_view" | "sae.debit_minus_credit" | "sae.search_all" | "sae.search_ph" | "sae.latest_entries" | "sae.click_row" | "sae.entry_name" | "sae.party" | "sae.linked_bank" | "sae.final" | "sae.loading" | "sae.open_module" | "sae.entry_report" | "sae.field" | "sae.value" | "sae.txn_type" | "sae.total_records" | "sae.page" | "sae.records"
   | "nav.toggle_submenu"
   | "dashboard.owner"
   | "dashboard.system_notifications"
@@ -4049,6 +4049,10 @@ const en: Dict = {
   "sae.click_row": "Click any row to open full detail",
   "sae.entry_name": "Entry Name",
   "sae.party": "Party / Person",
+  "sae.txn_type": "Transaction Type",
+  "sae.total_records": "Total Records",
+  "sae.page": "Page",
+  "sae.records": "records",
   "sae.linked_bank": "Linked Bank",
   "sae.final": "Balance / Final",
   "sae.loading": "Loading ERP activity...",
@@ -6973,6 +6977,10 @@ const ur: Dict = {
   "sae.click_row": "مکمل تفصیل کے لیے کسی بھی قطار پر کلک کریں",
   "sae.entry_name": "اندراج کا نام",
   "sae.party": "فریق / فرد",
+  "sae.txn_type": "لین دین کی قسم",
+  "sae.total_records": "کل ریکارڈز",
+  "sae.page": "صفحہ",
+  "sae.records": "ریکارڈز",
   "sae.linked_bank": "منسلک بینک",
   "sae.final": "بیلنس / حتمی",
   "sae.loading": "ای آر پی سرگرمی لوڈ ہو رہی ہے...",
@@ -9498,6 +9506,10 @@ const ar: Dict = {
   "sae.click_row": "انقر على أي صف لفتح التفاصيل الكاملة",
   "sae.entry_name": "اسم القيد",
   "sae.party": "الطرف / الشخص",
+  "sae.txn_type": "نوع المعاملة",
+  "sae.total_records": "إجمالي السجلات",
+  "sae.page": "صفحة",
+  "sae.records": "سجلات",
   "sae.linked_bank": "البنك المرتبط",
   "sae.final": "الرصيد / النهائي",
   "sae.loading": "جارٍ تحميل نشاط ERP...",
@@ -12010,6 +12022,10 @@ const fa: Dict = {
   "sae.click_row": "برای جزئیات کامل روی هر ردیف کلیک کنید",
   "sae.entry_name": "نام ثبت",
   "sae.party": "طرف / شخص",
+  "sae.txn_type": "نوع تراکنش",
+  "sae.total_records": "کل رکوردها",
+  "sae.page": "صفحه",
+  "sae.records": "رکورد",
   "sae.linked_bank": "بانک مرتبط",
   "sae.final": "مانده / نهایی",
   "sae.loading": "در حال بارگذاری فعالیت ERP...",
@@ -14549,6 +14565,10 @@ const ps: Dict = {
   "sae.click_row": "د بشپړ تفصیل لپاره په هره کتار کلیک وکړئ",
   "sae.entry_name": "د ثبت نوم",
   "sae.party": "اړخ / کس",
+  "sae.txn_type": "د راکړې ورکړې ډول",
+  "sae.total_records": "ټول ریکارډونه",
+  "sae.page": "مخ",
+  "sae.records": "ریکارډونه",
   "sae.linked_bank": "تړل شوی بانک",
   "sae.final": "بیلانس / وروستی",
   "sae.loading": "د ERP فعالیت بارېږي...",
