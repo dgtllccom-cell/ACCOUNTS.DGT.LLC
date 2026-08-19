@@ -562,7 +562,7 @@ export default function JournalStockReportDashboard({
               </div>
               <div className="flex justify-between items-center">
                 <span>{t(lang, "form.role", "ROLE")}:</span>
-                <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">SUPER ADMIN</span>
+                <span className="font-extrabold text-slate-800 dark:text-slate-200 uppercase">{t(lang, "report.badge_super_admin", "Super Admin")}</span>
               </div>
               <div className="flex justify-between items-center">
                 <span>{t(lang, "ledger.col_date", "DATE & TIME")}:</span>
@@ -707,17 +707,17 @@ export default function JournalStockReportDashboard({
 
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-[9px] font-black uppercase tracking-wider text-slate-400">
-                    <span>BRANCH BREAKDOWN</span>
-                    <span className="text-blue-600 dark:text-blue-400">ALL</span>
+                    <span>{t(lang, "report.branch_breakdown", "Branch Breakdown")}</span>
+                    <span className="text-blue-600 dark:text-blue-400">{t(lang, "report.all_label", "All")}</span>
                   </div>
                   {c.branches.map((b, bIdx) => (
                     <div key={bIdx} className="flex items-center justify-between p-2.5 bg-slate-50/30 dark:bg-slate-900/30 rounded-xl border border-slate-200/60 dark:border-slate-800 text-[10px] font-bold">
                       <span className="text-slate-800 dark:text-slate-200 uppercase">{b.branch}</span>
                       <div className="flex items-center gap-3 font-mono text-[9.5px]">
                         <span className="text-rose-600">{fmtNum(b.purchase, 2)}</span>
-                        <span className="text-slate-400 text-[8px]">PAID ADV</span>
+                        <span className="text-slate-400 text-[8px]">{t(lang, "report.paid_adv", "Paid Adv")}</span>
                         <span className="text-emerald-600">{fmtNum(b.transferred, 2)}</span>
-                        <span className="text-slate-400 text-[8px]">REM. BAL</span>
+                        <span className="text-slate-400 text-[8px]">{t(lang, "report.rem_bal", "Rem. Bal")}</span>
                         <span className="text-slate-800 dark:text-white">{fmtNum(b.remaining, 2)}</span>
                       </div>
                     </div>
@@ -823,7 +823,7 @@ export default function JournalStockReportDashboard({
             {!loading && groupedData.length > 0 && (
               <tfoot className="bg-slate-100 dark:bg-slate-850 font-black text-slate-900 dark:text-slate-100 text-[10px]">
                 <tr className="border-t border-slate-300 dark:border-slate-750">
-                  <td className="p-3 text-left border-r border-slate-250 dark:border-slate-750">TOTAL</td>
+                  <td className="p-3 text-left border-r border-slate-250 dark:border-slate-750">{t(lang, "report.total_label", "Total")}</td>
                   <td className="p-3 text-center border-r border-slate-250 dark:border-slate-750 tabular-nums">
                     {groupedData.reduce((sum, r) => sum + r.billsCount, 0)}
                   </td>
@@ -915,7 +915,7 @@ export default function JournalStockReportDashboard({
                 <button
                   onClick={() => setSelectedEntity(null)}
                   className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-full transition-colors"
-                  title="Close Overlay"
+                  title={t(lang, "report.close_overlay", "Close Overlay")}
                 >
                   <X className="w-6 h-6" />
                 </button>

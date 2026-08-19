@@ -52,10 +52,11 @@ export async function POST(req: NextRequest) {
     } = body;
 
     const year = new Date().getFullYear();
-    const { count } = await supabase
-      .from("clearing_agent_custom_entries")
-      .select("*", { count: "exact", head: true })
-      .catch(() => ({ count: 0 }));
+    const { count } = await Promise.resolve(
+      supabase
+        .from("clearing_agent_custom_entries")
+        .select("*", { count: "exact", head: true })
+    ).catch(() => ({ count: 0 }));
 
     const serial = String((count || 0) + 1).padStart(4, "0");
     const auto_entry_no = entry_no || `CUST-DEC-${year}-${serial}`;

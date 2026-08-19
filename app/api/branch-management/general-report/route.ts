@@ -314,8 +314,8 @@ export async function GET() {
 
     // Fetch enterprise accounts + ledgers for account counts
     const [enterpriseAccountsRes, ledgersRes] = await Promise.all([
-      admin.from("enterprise_accounts").select("id, scope, country_id, code").is("deleted_at", null).then(r => r.data ?? []).catch(() => []),
-      admin.from("ledgers").select("id, scope, country_id, country_branch_id, city_branch_id, code").is("deleted_at", null).then(r => r.data ?? []).catch(() => [])
+      Promise.resolve(admin.from("enterprise_accounts").select("id, scope, country_id, code").is("deleted_at", null).then(r => r.data ?? [])).catch(() => []),
+      Promise.resolve(admin.from("ledgers").select("id, scope, country_id, country_branch_id, city_branch_id, code").is("deleted_at", null).then(r => r.data ?? [])).catch(() => [])
     ]);
     const totalMainAccounts = (enterpriseAccountsRes as any[]).length;
 

@@ -63,10 +63,11 @@ export async function POST(req: NextRequest) {
       Number(other_charges || 0);
 
     const year = new Date().getFullYear();
-    const { count } = await supabase
-      .from("clearing_payment_bills")
-      .select("*", { count: "exact", head: true })
-      .catch(() => ({ count: 0 }));
+    const { count } = await Promise.resolve(
+      supabase
+        .from("clearing_payment_bills")
+        .select("*", { count: "exact", head: true })
+    ).catch(() => ({ count: 0 }));
 
     const serial = String((count || 0) + 1).padStart(4, "0");
     const auto_bill_no = bill_no || `CL-BILL-${year}-${serial}`;

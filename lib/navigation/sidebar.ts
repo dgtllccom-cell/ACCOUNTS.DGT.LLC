@@ -99,112 +99,23 @@ export const sidebarTree: SidebarNode[] = [
     roles: ["super_admin"]
   },
   {
-    key: "new-entry",
-    labelKey: "nav.new_entry",
-    iconKey: "list-plus",
-    href: "/dashboard/new-entry" as Route,
-    children: [
-      {
-        key: "user-entry",
-        labelKey: "nav.user_entry",
-        iconKey: "users",
-        children: [
-          {
-            key: "user-super-admin-all-directory",
-            labelKey: "nav.super_admin_all_users_directory",
-            href: "/dashboard/new-entry/users/all" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin"]
-          },
-          {
-            key: "user-registration",
-            labelKey: "nav.user_form",
-            href: "/dashboard/new-entry/users/registration" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin"]
-          },
-          {
-            key: "user-journal-report",
-            labelKey: "nav.user_journal_report",
-            href: "/dashboard/new-entry/users/journal-report" as Route,
-            roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "auditor_viewer"]
-          }
-        ]
-      },
-      {
-        key: "branch",
-        labelKey: "nav.branch_menu",
-        iconKey: "building-2",
-        children: [
-          {
-            key: "branch-super-admin-entry",
-            labelKey: "nav.super_admin_branch",
-            href: "/dashboard/new-entry/branches/super-admin" as Route,
-            roles: ["super_admin"]
-          },
-          {
-            key: "branch-country-entry",
-            labelKey: "nav.country_branch",
-            href: "/dashboard/new-entry/branch-entry/country-branch" as Route,
-            roles: ["super_admin", "country_admin", "country_user"]
-          },
-          {
-            key: "branch-city-entry",
-            labelKey: "nav.city_branch",
-            href: "/dashboard/new-entry/branch-entry/city-branch" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin"]
-          },
-          {
-            key: "branch-general-report",
-            labelKey: "nav.branch_general_report",
-            href: "/dashboard/branch-management/general-report" as Route,
-            roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-          },
-          {
-            key: "branch-org-chart",
-            labelKey: "nav.branch_org_chart",
-            href: "/dashboard/branch-management/org-chart" as Route,
-            roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "cashier"]
-          }
-        ]
-      },
-      {
-        key: "accounts",
-        labelKey: "nav.accounts",
-        iconKey: "book-open",
-        href: "/dashboard/accounts" as Route,
-        children: [
-          {
-            key: "accounts-general-report",
-            labelKey: "nav.new_account_general_report",
-            href: "/dashboard/accounts" as Route,
-            roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"]
-          },
-          {
-            key: "accounts-setup-report",
-            labelKey: "nav.account_setup_report",
-            href: "/dashboard/accounts/setup-report" as Route,
-            roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"]
-          },
-          {
-            key: "accounts-new",
-            labelKey: "nav.new_account",
-            href: "/dashboard/accounts/setup" as Route,
-            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-          }
-        ]
-      }
-    ]
-  },
-  {
-    key: "general-office-form",
-    labelKey: "nav.general_office_menu",
+    key: "general-office",
+    labelKey: "nav.general_office_management",
     iconKey: "users",
+    href: "/dashboard/general-office/employees" as Route,
+    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"],
     children: [
-      {
-        key: "employee-general-office-form",
-        labelKey: "nav.general_office_employee_mgmt",
-        href: "/dashboard/employees" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      }
+      { key: "go-master-setup", labelKey: "nav.employee_master_setup", iconKey: "users", href: "/dashboard/general-office/employees?tab=master-setup" as Route },
+      { key: "go-emp-mgmt", labelKey: "nav.employee_management", iconKey: "users", href: "/dashboard/general-office/employees?tab=management" as Route },
+      { key: "go-departments", labelKey: "nav.departments", iconKey: "building-2", href: "/dashboard/general-office/employees?tab=departments" as Route },
+      { key: "go-designations", labelKey: "nav.designations", iconKey: "scroll-text", href: "/dashboard/general-office/employees?tab=designations" as Route },
+      { key: "go-attendance", labelKey: "nav.attendance", iconKey: "clock", href: "/dashboard/general-office/employees?tab=attendance" as Route },
+      { key: "go-leave", labelKey: "nav.leave_management", iconKey: "calendar", href: "/dashboard/general-office/employees?tab=leave" as Route },
+      { key: "go-payroll", labelKey: "nav.payroll_salary", iconKey: "banknote", href: "/dashboard/general-office/employees?tab=payroll" as Route },
+      { key: "go-assets", labelKey: "nav.office_assets", iconKey: "clipboard-list", href: "/dashboard/general-office/employees?tab=assets" as Route },
+      { key: "go-documents", labelKey: "nav.office_documents", iconKey: "file-text", href: "/dashboard/general-office/employees?tab=documents" as Route },
+      { key: "go-id-cards", labelKey: "nav.employee_id_cards", iconKey: "badge", href: "/dashboard/general-office/employees?tab=id-cards" as Route },
+      { key: "go-reports", labelKey: "nav.employee_reports", iconKey: "bar-chart", href: "/dashboard/general-office/employees?tab=reports" as Route }
     ]
   },
   {
@@ -212,12 +123,6 @@ export const sidebarTree: SidebarNode[] = [
     labelKey: "nav.ledgers",
     iconKey: "book-open",
     children: [
-      {
-        key: "ledgers-journal-report-pdf",
-        labelKey: "nav.journal_report_pdf_erp",
-        iconKey: "file-text",
-        href: "/dashboard/reports/handover" as Route
-      },
       {
         key: "ledgers-new",
         labelKey: "nav.new_ledger",
@@ -602,26 +507,6 @@ export const sidebarTree: SidebarNode[] = [
           }
         ]
       }
-    ]
-  },
-  {
-    key: "general-office",
-    labelKey: "nav.general_office_management",
-    iconKey: "users",
-    href: "/dashboard/general-office/employees" as Route,
-    roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"],
-    children: [
-      { key: "go-master-setup", labelKey: "nav.employee_master_setup", iconKey: "users", href: "/dashboard/general-office/employees?tab=master-setup" as Route },
-      { key: "go-emp-mgmt", labelKey: "nav.employee_management", iconKey: "users", href: "/dashboard/general-office/employees?tab=management" as Route },
-      { key: "go-departments", labelKey: "nav.departments", iconKey: "building-2", href: "/dashboard/general-office/employees?tab=departments" as Route },
-      { key: "go-designations", labelKey: "nav.designations", iconKey: "scroll-text", href: "/dashboard/general-office/employees?tab=designations" as Route },
-      { key: "go-attendance", labelKey: "nav.attendance", iconKey: "clock", href: "/dashboard/general-office/employees?tab=attendance" as Route },
-      { key: "go-leave", labelKey: "nav.leave_management", iconKey: "calendar", href: "/dashboard/general-office/employees?tab=leave" as Route },
-      { key: "go-payroll", labelKey: "nav.payroll_salary", iconKey: "banknote", href: "/dashboard/general-office/employees?tab=payroll" as Route },
-      { key: "go-assets", labelKey: "nav.office_assets", iconKey: "clipboard-list", href: "/dashboard/general-office/employees?tab=assets" as Route },
-      { key: "go-documents", labelKey: "nav.office_documents", iconKey: "file-text", href: "/dashboard/general-office/employees?tab=documents" as Route },
-      { key: "go-id-cards", labelKey: "nav.employee_id_cards", iconKey: "badge", href: "/dashboard/general-office/employees?tab=id-cards" as Route },
-      { key: "go-reports", labelKey: "nav.employee_reports", iconKey: "bar-chart", href: "/dashboard/general-office/employees?tab=reports" as Route }
     ]
   },
   {
@@ -1480,12 +1365,6 @@ export const sidebarTree: SidebarNode[] = [
         ]
       }
     ]
-  },
-  {
-    key: "handover-report",
-    labelKey: "nav.journal_report_pdf_erp",
-    iconKey: "file-text",
-    href: "/dashboard/reports/handover" as Route
   },
   {
     key: "walkthrough-video",

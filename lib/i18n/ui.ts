@@ -2419,11 +2419,12 @@ export type UiKey =
   | "orgchart.city_locations"
   | "orgchart.branches"
   | "orgchart.staff"
-  | "form.actions" | "form.role" | "form.user_id" | "form.user_name" | "hr.p_due" | "hr.p_generate_err" | "hr.p_generate_register" | "hr.p_generated_msg" | "hr.p_generating" | "ledger.no_entries_found" | "nav.bank_management" | "report.active_types" | "report.activity_history" | "report.all_categories" | "report.balance_pkr" | "report.bill_entries_summary" | "report.branch" | "report.branch_name" | "report.branch_summary" | "report.cleared_entries" | "report.comprehensive_daily" | "report.consolidated" | "report.country" | "report.country_name" | "report.country_summary" | "report.current_filter" | "report.dc_cartons" | "report.edit_history" | "report.explore" | "report.filter_all_projects" | "report.filter_project" | "report.global_financial_summary" | "report.hide_details" | "report.hide_report_details" | "report.invoice_payment_pkr" | "report.net_weight_kg" | "report.no_history" | "report.no_of_bills" | "report.performance_overview" | "report.purchase_payment_pkr" | "report.record_details" | "report.records_found" | "report.remaining_entries" | "report.remaining_payment_pkr" | "report.role" | "report.salesman_name" | "report.salesman_summary" | "report.salesperson" | "report.scope_city_branch" | "report.scope_entire_country" | "report.scope_main_branch" | "report.show_details" | "report.show_report_details" | "report.system_status" | "report.total_bill_entries" | "report.total_global_entries" | "report.total_purchase_pkr" | "report.total_transferred_pkr" | "roz.edit_payment_entry" | "roz.journal_roznamcha_entry_table" | "status.active" | "status.online_synced" | "report.density_comfortable" | "report.density_compact" | "report.columns" | "report.move_up" | "report.move_down" | "report.locked" | "report.advanced_filters" | "report.filter_all_salesmen" | "report.stat_total_bills" | "report.stat_total_net_weight" | "report.stat_quantity_dc" | "report.stat_final_purchase" | "report.stat_final_advance" | "report.stat_final_remaining" | "report.badge_super_admin" | "report.branch_breakdown" | "report.paid_adv" | "report.rem_bal" | "report.total_label" | "report.all_label";
+  | "form.actions" | "form.role" | "form.user_id" | "form.user_name" | "hr.p_due" | "hr.p_generate_err" | "hr.p_generate_register" | "hr.p_generated_msg" | "hr.p_generating" | "ledger.no_entries_found" | "nav.bank_management" | "report.active_types" | "report.activity_history" | "report.all_categories" | "report.balance_pkr" | "report.bill_entries_summary" | "report.branch" | "report.branch_name" | "report.branch_summary" | "report.cleared_entries" | "report.comprehensive_daily" | "report.consolidated" | "report.country" | "report.country_name" | "report.country_summary" | "report.current_filter" | "report.dc_cartons" | "report.edit_history" | "report.explore" | "report.filter_all_projects" | "report.filter_project" | "report.global_financial_summary" | "report.hide_details" | "report.hide_report_details" | "report.invoice_payment_pkr" | "report.net_weight_kg" | "report.no_history" | "report.no_of_bills" | "report.performance_overview" | "report.purchase_payment_pkr" | "report.record_details" | "report.records_found" | "report.remaining_entries" | "report.remaining_payment_pkr" | "report.role" | "report.salesman_name" | "report.salesman_summary" | "report.salesperson" | "report.scope_city_branch" | "report.scope_entire_country" | "report.scope_main_branch" | "report.show_details" | "report.show_report_details" | "report.system_status" | "report.total_bill_entries" | "report.total_global_entries" | "report.total_purchase_pkr" | "report.total_transferred_pkr" | "roz.edit_payment_entry" | "roz.journal_roznamcha_entry_table" | "status.active" | "status.online_synced" | "report.density_comfortable" | "report.density_compact" | "report.columns" | "report.move_up" | "report.move_down" | "report.locked" | "report.advanced_filters" | "report.filter_all_salesmen" | "report.stat_total_bills" | "report.stat_total_net_weight" | "report.stat_quantity_dc" | "report.stat_final_purchase" | "report.stat_final_advance" | "report.stat_final_remaining" | "report.badge_super_admin" | "report.branch_breakdown" | "report.paid_adv" | "report.rem_bal" | "report.total_label" | "report.all_label" | "report.close_overlay";
 
 type Dict = Record<UiKey, string>;
 
 const en: Dict = {
+  "report.close_overlay": "Close Overlay",
   "report.advanced_filters": "Advanced Filters",
   "report.filter_all_salesmen": "All Salesmen",
   "report.stat_total_bills": "Total Bills",
@@ -5153,6 +5154,7 @@ const en: Dict = {
 };
 
 const ur: Dict = {
+  "report.close_overlay": "اوورلے بند کریں",
   "report.advanced_filters": "اعلیٰ فلٹرز",
   "report.filter_all_salesmen": "تمام سیلز مین",
   "report.stat_total_bills": "کل بل",
@@ -7873,6 +7875,7 @@ const ur: Dict = {
 };
 
 const ar: Dict = {
+  "report.close_overlay": "إغلاق التراكب",
   "report.advanced_filters": "عوامل تصفية متقدمة",
   "report.filter_all_salesmen": "كل البائعين",
   "report.stat_total_bills": "إجمالي الفواتير",
@@ -10592,6 +10595,7 @@ const ar: Dict = {
 };
 
 const fa: Dict = {
+  "report.close_overlay": "بستن پوشش",
   "report.advanced_filters": "فیلترهای پیشرفته",
   "report.filter_all_salesmen": "همه فروشندگان",
   "report.stat_total_bills": "مجموع صورتحساب‌ها",
@@ -13310,6 +13314,7 @@ const fa: Dict = {
 };
 
 const ps: Dict = {
+  "report.close_overlay": "اوورلی بندول",
   "report.advanced_filters": "پرمختللي فلټرونه",
   "report.filter_all_salesmen": "ټول پلورونکي",
   "report.stat_total_bills": "ټول بلونه",
