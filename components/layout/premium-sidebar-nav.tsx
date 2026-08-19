@@ -140,7 +140,7 @@ function PremiumNodeItem({
               "me-2 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors",
               isActive ? "text-white/90 hover:bg-white/20" : "text-slate-400 hover:bg-slate-200/70 hover:text-slate-600 dark:hover:bg-slate-700/60"
             )}
-            aria-label="Toggle submenu"
+            aria-label={t(lang, "nav.toggle_submenu", "Toggle submenu")}
             aria-expanded={isOpen}
           >
             <ChevronRight className={cn("h-4 w-4 transition-transform duration-200", isOpen ? "rotate-90" : "rotate-0")} />

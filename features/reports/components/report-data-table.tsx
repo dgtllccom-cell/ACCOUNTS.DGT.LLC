@@ -255,8 +255,8 @@ export function ReportDataTable({
                       value={columnFilters[column.key] ?? ""}
                       onChange={(event) => setColumnFilters((current) => ({ ...current, [column.key]: event.target.value }))}
                       onClick={(event) => event.stopPropagation()}
-                      placeholder={_("report.search", "Filter")}
-                      aria-label={`${_("report.search", "Filter")} ${column.label}`}
+                      placeholder={_("report.search")}
+                      aria-label={`${_("report.search")} ${column.label}`}
                       className="w-full min-w-[70px] rounded-md border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-2 py-1 text-[10px] font-medium text-slate-800 dark:text-slate-200 outline-none placeholder:text-slate-400 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 shadow-2xs transition-all"
                     />
                   </th>
@@ -302,7 +302,7 @@ export function ReportDataTable({
       {totalPages > 1 && (
         <div className={cn("flex items-center justify-between text-xs", isRTL && "flex-row-reverse")}>
           <span className="text-slate-500 dark:text-slate-400">
-            {sorted.length.toLocaleString()} records — Page {page} / {totalPages}
+            {sorted.length.toLocaleString()} {_("report.records", "records")} — {_("report.page", "Page")} {page} / {totalPages}
           </span>
           <div className="flex items-center gap-1">
             <button

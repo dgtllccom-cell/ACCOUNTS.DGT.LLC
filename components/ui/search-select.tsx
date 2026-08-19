@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import { Label } from "@/components/ui/label";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t as uiText } from "@/lib/i18n/ui";
 
 export type SearchSelectOption = {
   value: string;
@@ -17,24 +19,22 @@ export type SearchSelectOption = {
 export function SearchSelect({
   label,
   value,
-  placeholder = "Select...",
+  placeholder,
   options = [],
   disabled,
   loading = false,
   onValueChange,
   onOpenChange,
   onSearchValueChange,
-  createLabel = "+ New",
+  createLabel,
   onCreateNew,
   createButtonPlacement = "below",
   triggerClassName,
   className,
-  // Localizable strings for the search popover itself — default to the pre-existing English so
-  // every other caller of this shared component keeps working unchanged; pass these to localize.
-  searchPlaceholder = "Search...",
-  emptyLabel = "No matches found.",
-  viewTitle = "View Details",
-  editTitle = "Edit",
+  searchPlaceholder,
+  emptyLabel,
+  viewTitle,
+  editTitle,
   // Per-option View/Edit actions (e.g. Master pickers: view/edit the underlying record directly from the dropdown)
   onViewOption,
   onEditOption
@@ -60,7 +60,14 @@ export function SearchSelect({
   onViewOption?: (value: string) => void;
   onEditOption?: (value: string) => void;
 }) {
+  const language = useActiveLanguage();
   const [open, setOpen] = React.useState(false);
+  const resolvedPlaceholder = placeholder ?? uiText(language, "common.select");
+  const resolvedSearchPlaceholder = searchPlaceholder ?? uiText(language, "common.search");
+  const resolvedEmptyLabel = emptyLabel ?? uiText(language, "common.no_matches_found");
+  const resolvedViewTitle = viewTitle ?? uiText(language, "common.view");
+  const resolvedEditTitle = editTitle ?? uiText(language, "common.edit");
+  const resolvedCreateLabel = (createLabel ?? uiText(language, "common.new")).replace(/^\+\s*/, "");
 
   // Deduplicate options by value
   const uniqueOptions = React.useMemo(() => {
@@ -77,11 +84,6 @@ export function SearchSelect({
     return match?.label ?? "";
   }, [uniqueOptions, value]);
 
-  const displayCreateLabel = React.useMemo(() => {
-    if (!createLabel) return "";
-    return createLabel.replace(/^\+\s*/, "");
-  }, [createLabel]);
-
   function setOpenSafe(next: boolean) {
     setOpen(next);
     onOpenChange?.(next);
@@ -95,15 +97,15 @@ export function SearchSelect({
           <button
             type="button"
             disabled={disabled}
-            title={selectedLabel || placeholder}
+            title={selectedLabel || resolvedPlaceholder}
             className={cn(
               "group flex h-10 w-full items-center justify-between rounded-lg border border-input bg-background py-2 ps-3 pe-1.5 text-xs shadow-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50",
               !selectedLabel && "text-muted-foreground",
               triggerClassName
             )}
           >
-            <span className="truncate flex-1 text-left me-2 font-medium" title={selectedLabel || placeholder}>
-              {selectedLabel || placeholder}
+            <span className="truncate flex-1 text-left me-2 font-medium" title={selectedLabel || resolvedPlaceholder}>
+              {selectedLabel || resolvedPlaceholder}
             </span>
             <div className="flex items-center gap-1 shrink-0">
               {value && !disabled && (
@@ -121,7 +123,7 @@ export function SearchSelect({
                     }
                   }}
                   className="p-0.5 rounded-full hover:bg-slate-200 dark:hover:bg-slate-800 text-muted-foreground hover:text-foreground cursor-pointer transition"
-                  title="Clear selection"
+                  title={uiText(language, "common.clear_selection")}
                 >
                   <X className="h-3 w-3" />
                 </span>
@@ -158,12 +160,12 @@ export function SearchSelect({
             }}
           >
             <CommandInput
-              placeholder={searchPlaceholder}
+              placeholder={resolvedSearchPlaceholder}
               onValueChange={onSearchValueChange}
               className="bg-slate-50 dark:bg-slate-900"
             />
             <CommandList className="bg-white dark:bg-slate-950 opacity-100 max-h-[300px] overflow-y-auto">
-              <CommandEmpty>{emptyLabel}</CommandEmpty>
+              <CommandEmpty>{resolvedEmptyLabel}</CommandEmpty>
               <CommandGroup className="bg-white dark:bg-slate-950 opacity-100">
                 {uniqueOptions.map((opt) => (
                   <CommandItem
@@ -189,7 +191,7 @@ export function SearchSelect({
                         <span
                           role="button"
                           tabIndex={0}
-                          title={viewTitle}
+                          title={resolvedViewTitle}
                           onClick={(e) => {
                             e.stopPropagation();
                             setOpenSafe(false);
@@ -211,7 +213,7 @@ export function SearchSelect({
                         <span
                           role="button"
                           tabIndex={0}
-                          title={editTitle}
+                          title={resolvedEditTitle}
                           onClick={(e) => {
                             e.stopPropagation();
                             setOpenSafe(false);
@@ -245,7 +247,7 @@ export function SearchSelect({
                       className="text-xs font-bold text-primary flex items-center gap-2 py-2"
                     >
                       <span className="text-sm font-bold">+</span>
-                      <span>{displayCreateLabel}</span>
+                      <span>{resolvedCreateLabel}</span>
                     </CommandItem>
                   </CommandGroup>
                 </>
@@ -268,7 +270,7 @@ export function SearchSelect({
             className="inline-flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 hover:underline cursor-pointer disabled:opacity-50 transition"
           >
             <span className="text-sm font-black">+</span>
-            <span>{displayCreateLabel}</span>
+            <span>{resolvedCreateLabel}</span>
           </button>
         </div>
       )}

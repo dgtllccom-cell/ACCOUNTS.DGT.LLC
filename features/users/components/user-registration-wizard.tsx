@@ -147,7 +147,16 @@ const userWizardTranslations: Record<string, Record<SupportedLanguage, string>> 
   addNewEmployee: { en: "Add New Employee", ur: "نیا ملازم شامل کریں", ar: "إضافة موظف جديد", fa: "افزودن پرسنل جدید", ps: "نوی کارمند اضافه کړئ" },
   newEmployeeModalTitle: { en: "New Employee Registration", ur: "نیا ملازم رجسٹریشن", ar: "تسجيل موظف جديد", fa: "ثبت پرسنل جدید", ps: "د نوي کارمند ثبت" },
   employeeSearchPlaceholder: { en: "Search employee by code, name, designation...", ur: "کوڈ، نام یا عہدہ سے ملازم تلاش کریں...", ar: "ابحث عن الموظف بالرمز أو الاسم أو المسمى الوظيفي...", fa: "جستجوی پرسنل با کد، نام یا عنوان شغلی...", ps: "کارمند د کوډ، نوم یا دندې له مخې پلټئ..." },
-  noEmployeesFound: { en: "No matching employees found.", ur: "کوئی مماثل ملازم نہیں ملا۔", ar: "لم يتم العثور على موظفين مطابقين.", fa: "هیچ پرسنلی مطابقت پیدا نشد.", ps: "هیڅ ورته کارمند ونه موندل شو." }
+  noEmployeesFound: { en: "No matching employees found.", ur: "کوئی مماثل ملازم نہیں ملا۔", ar: "لم يتم العثور على موظفين مطابقين.", fa: "هیچ پرسنلی مطابقت پیدا نشد.", ps: "هیڅ ورته کارمند ونه موندل شو." },
+  genderFilterLabel: { en: "Gender / Staff Filter", ur: "جنس / عملہ فلٹر", ar: "تصفية الجنس / الموظفين", fa: "فیلتر جنسیت / پرسنل", ps: "د جنسیت / کارکوونکو فلټر" },
+  genderAll: { en: "All Staff", ur: "تمام عملہ", ar: "جميع الموظفين", fa: "همه پرسنل", ps: "ټول کارکوونکي" },
+  genderMale: { en: "Male", ur: "مرد", ar: "ذكر", fa: "مرد", ps: "نارینه" },
+  genderFemale: { en: "Female", ur: "خاتون", ar: "أنثى", fa: "زن", ps: "ښځینه" },
+  firstNameLabel: { en: "First Name *", ur: "پہلا نام *", ar: "الاسم الأول *", fa: "نام کوچک *", ps: "لومړی نوم *" },
+  lastNameLabel: { en: "Surname / Last Name *", ur: "خاندانی / آخری نام *", ar: "اسم العائلة / اللقب *", fa: "نام خانوادگی *", ps: "تخلص / وروستی نوم *" },
+  selectedEmployeeBanner: { en: "Selected Employee Master Profile", ur: "منتخب کردہ ملازم کا ماسٹر پروفائل", ar: "الملف التعريفي للموظف المختار", fa: "پروفایل پرسنل انتخاب شده", ps: "ټاکل شوی کارمند پروفایل" },
+  changeSelection: { en: "Change / Clear", ur: "تبدیل / صاف کریں", ar: "تغيير / مسح", fa: "تغییر / حذف", ps: "بدلول / پاکول" },
+  viewMasterRecord: { en: "View Full Master Record", ur: "مکمل ماسٹر ریکارڈ دیکھیں", ar: "عرض السجل الرئيسي الكامل", fa: "مشاهده کامل پرونده", ps: "بشپړ ریکارډ کتل" }
 };
 
 function makeAutoUserCode() {
@@ -191,6 +200,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   const [hrEmployeesLoading, setHrEmployeesLoading] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string>("");
   const [employeeCode, setEmployeeCode] = useState<string>("");
+  const [genderFilter, setGenderFilter] = useState<"all" | "male" | "female">("all");
 
   // Complete Detailed Employee Master Profile State
   const [employeeProfile, setEmployeeProfile] = useState<{
@@ -228,6 +238,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
   useEffect(() => {
     setUserCode((current) => current || makeAutoUserCode());
   }, []);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [fullName, setFullName] = useState("");
   const [loginUsername, setLoginUsername] = useState("");
   const [contactPhone, setContactPhone] = useState("");
@@ -571,19 +583,37 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
     []
   );
 
+  const filteredHrEmployees = useMemo(() => {
+    if (genderFilter === "all") return hrEmployees;
+    return hrEmployees.filter((e) => {
+      const g = (e.gender || e.person?.gender || "").toLowerCase();
+      if (genderFilter === "male") return g.startsWith("m") || g === "male" || g === "مرد" || !g;
+      if (genderFilter === "female") return g.startsWith("f") || g === "female" || g === "خاتون" || g === "زن";
+      return true;
+    });
+  }, [hrEmployees, genderFilter]);
+
   const employeeOptions = useMemo(
     () =>
-      hrEmployees.map((e) => {
+      filteredHrEmployees.map((e) => {
         const empName = e.person?.customer_name || e.name || e.full_name || "Employee";
         const empCode = e.employee_code || e.code || "EMP";
-        const desig = e.designation ? ` - ${e.designation}` : "";
+        const desig = e.designation ? ` • ${e.designation}` : "";
+        const branch = e.country_branch?.name || e.city_branch?.name ? ` • ${e.country_branch?.name || e.city_branch?.name}` : "";
+        const isFemale = (e.gender || e.person?.gender || "").toLowerCase().startsWith("f");
+        const genderBadge = isFemale ? " [♀ Female]" : " [♂ Male]";
+
+        const pNames = empName.trim().split(" ");
+        const fName = e.first_name || e.person?.first_name || pNames[0] || "";
+        const lName = e.last_name || e.person?.last_name || (pNames.length > 1 ? pNames.slice(1).join(" ") : "");
+
         return {
           value: e.id,
-          label: `${empName} (${empCode}${desig})`,
-          keywords: `${empName} ${empCode} ${e.designation ?? ""}`
+          label: `${fName} ${lName ? lName + " " : ""}(${empCode}${desig}${branch})${genderBadge}`,
+          keywords: `${empName} ${fName} ${lName} ${empCode} ${e.designation ?? ""} ${e.gender ?? ""}`
         };
       }),
-    [hrEmployees]
+    [filteredHrEmployees]
   );
 
   const selectedCountry = useMemo(() => countries.find((c) => c.id === countryId) ?? null, [countries, countryId]);
@@ -996,6 +1026,54 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               {/* STEP 1: Employee Master Profile Information */}
               {step === 1 && (
                 <div className="space-y-4">
+                  {/* Gender / Category Filter Tabs */}
+                  <div className="space-y-1.5">
+                    <Label className="text-xs font-bold text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                      <span className="flex items-center gap-1.5">
+                        <Users className="h-3.5 w-3.5 text-blue-600" />
+                        <span>{tr("genderFilterLabel")}</span>
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-normal">Filter registered profiles</span>
+                    </Label>
+                    <div className="inline-flex rounded-lg border border-slate-200 dark:border-slate-800 bg-slate-100/80 dark:bg-slate-900 p-0.5 gap-1">
+                      <button
+                        type="button"
+                        onClick={() => setGenderFilter("all")}
+                        className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                          genderFilter === "all"
+                            ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm border border-slate-200/80 dark:border-slate-700"
+                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                        }`}
+                      >
+                        {tr("genderAll")}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setGenderFilter("male")}
+                        className={`px-3 py-1 text-xs font-bold rounded-md transition-all flex items-center gap-1 ${
+                          genderFilter === "male"
+                            ? "bg-blue-600 text-white shadow-sm"
+                            : "text-slate-600 dark:text-slate-400 hover:text-blue-600"
+                        }`}
+                      >
+                        <span>♂</span>
+                        <span>{tr("genderMale")}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setGenderFilter("female")}
+                        className={`px-3 py-1 text-xs font-bold rounded-md transition-all flex items-center gap-1 ${
+                          genderFilter === "female"
+                            ? "bg-pink-600 text-white shadow-sm"
+                            : "text-slate-600 dark:text-slate-400 hover:text-pink-600"
+                        }`}
+                      >
+                        <span>♀</span>
+                        <span>{tr("genderFemale")}</span>
+                      </button>
+                    </div>
+                  </div>
+
                   <SearchSelect
                     label={hrEmployeesLoading ? `${tr("selectEmployee")} (...)` : tr("selectEmployee")}
                     value={selectedEmployeeId}
@@ -1011,6 +1089,74 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     onViewOption={(empId) => setViewEmployeeId(empId)}
                     onEditOption={(empId) => setEditEmployeeId(empId)}
                   />
+
+                  {/* Selected Employee Master Profile Banner */}
+                  {selectedEmployeeId && employeeProfile.fullName && (
+                    <div className="rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50/80 to-slate-50 p-3.5 space-y-2.5 dark:border-blue-900/50 dark:from-blue-950/30 dark:to-slate-900 shadow-sm">
+                      <div className="flex items-center justify-between border-b border-blue-100 dark:border-blue-900/50 pb-2">
+                        <div className="flex items-center gap-2.5">
+                          <div className="h-9 w-9 rounded-lg bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-sm overflow-hidden shrink-0">
+                            {employeeProfile.photoUrl ? (
+                              <img src={employeeProfile.photoUrl} alt="Employee" className="h-full w-full object-cover" />
+                            ) : (
+                              <span>{employeeProfile.gender?.toLowerCase().startsWith("f") ? "♀" : "♂"}</span>
+                            )}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-xs text-slate-900 dark:text-slate-100">
+                                {employeeProfile.fullName}
+                              </span>
+                              <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border ${
+                                employeeProfile.gender?.toLowerCase().startsWith("f")
+                                  ? "bg-pink-50 text-pink-700 border-pink-200"
+                                  : "bg-blue-50 text-blue-700 border-blue-200"
+                              }`}>
+                                {employeeProfile.gender || "Staff"}
+                              </span>
+                            </div>
+                            <div className="text-[11px] text-slate-500 font-mono">
+                              {employeeProfile.employeeCode} • {employeeProfile.designation} • {employeeProfile.department}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-1.5">
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => setViewEmployeeId(selectedEmployeeId)}
+                            className="h-7 px-2 text-[11px] font-semibold text-blue-700 hover:text-blue-800 hover:bg-blue-100/50 dark:text-blue-300"
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
+                            {tr("viewMasterRecord")}
+                          </Button>
+                          <Button
+                            type="button"
+                            size="sm"
+                            variant="outline"
+                            onClick={() => {
+                              setSelectedEmployeeId("");
+                              setEmployeeCode("");
+                              setEmployeeProfile({});
+                            }}
+                            className="h-7 px-2 text-[11px] font-semibold text-slate-600 hover:text-red-600 border-slate-200 hover:border-red-200"
+                          >
+                            <RotateCcw className="h-3 w-3 mr-1" />
+                            {tr("changeSelection")}
+                          </Button>
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2 text-[11px] text-slate-600 dark:text-slate-300">
+                        <div><span className="text-slate-400">Branch:</span> <span className="font-semibold">{employeeProfile.cityName || "Main Branch"}</span></div>
+                        <div><span className="text-slate-400">Employment:</span> <span className="font-semibold">{employeeProfile.employmentType || "Full-Time"}</span></div>
+                        <div><span className="text-slate-400">Phone:</span> <span className="font-mono">{employeeProfile.phone || contactPhone || "-"}</span></div>
+                        <div><span className="text-slate-400">Shift:</span> <span>{employeeProfile.workingShift || "General Shift"}</span></div>
+                      </div>
+                    </div>
+                  )}
 
                   {showEmployeeModal ? (
                     <SimpleModal
@@ -1063,15 +1209,57 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     />
                   ) : null}
 
-                  {/* Core Identity Fields */}
+                  {/* Core Identity Fields with First Name & Surname Split */}
                   <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="space-y-1">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("firstNameLabel")}</Label>
+                      <Input
+                        value={firstName}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFirstName(val);
+                          const combined = `${val} ${lastName}`.trim();
+                          setFullName(combined);
+                          if (!loginUsername || loginUsername.includes(".")) {
+                            setLoginUsername(`${val}.${lastName}`.toLowerCase().replace(/[^a-z0-9]/g, "."));
+                          }
+                        }}
+                        placeholder="e.g. Muhammad"
+                        className="h-9 text-xs font-medium"
+                      />
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("lastNameLabel")}</Label>
+                      <Input
+                        value={lastName}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setLastName(val);
+                          const combined = `${firstName} ${val}`.trim();
+                          setFullName(combined);
+                          if (!loginUsername || loginUsername.includes(".")) {
+                            setLoginUsername(`${firstName}.${val}`.toLowerCase().replace(/[^a-z0-9]/g, "."));
+                          }
+                        }}
+                        placeholder="e.g. Ali Shah"
+                        className="h-9 text-xs font-medium"
+                      />
+                    </div>
+
                     <div className="space-y-1">
                       <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("fullName")}</Label>
                       <Input
                         value={fullName}
-                        onChange={(e) => setFullName(e.target.value)}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFullName(val);
+                          const parts = val.trim().split(" ");
+                          setFirstName(parts[0] || "");
+                          setLastName(parts.length > 1 ? parts.slice(1).join(" ") : "");
+                        }}
                         placeholder="e.g. Muhammad Ali Shah"
-                        className="h-9 text-xs font-medium"
+                        className="h-9 text-xs font-medium bg-slate-50/50 dark:bg-slate-900/50"
                       />
                     </div>
 
@@ -1080,7 +1268,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       <Input
                         value={loginUsername}
                         onChange={(e) => setLoginUsername(e.target.value)}
-                        placeholder="e.g. ali.shah"
+                        placeholder="e.g. muhammad.ali"
                         className="h-9 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400"
                       />
                     </div>
@@ -1097,12 +1285,12 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
 
                     <div className="space-y-1">
                       <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("phone")}</Label>
-                      <Input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="+92 300 1234567" className="h-9 text-xs" />
+                      <Input value={contactPhone} onChange={(e) => setContactPhone(e.target.value)} placeholder="+92 300 1234567" className="h-9 text-xs font-mono" />
                     </div>
 
                     <div className="space-y-1">
                       <Label className="text-xs font-bold text-slate-800 dark:text-slate-200">{tr("email")}</Label>
-                      <Input value={personalEmail} onChange={(e) => setPersonalEmail(e.target.value)} placeholder="user@dgt.llc" className="h-9 text-xs" />
+                      <Input value={personalEmail} onChange={(e) => setPersonalEmail(e.target.value)} placeholder="user@dgt.llc" className="h-9 text-xs font-mono" />
                     </div>
                   </div>
 
@@ -1508,13 +1696,22 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                   {employeeProfile.photoUrl ? (
                     <img src={employeeProfile.photoUrl} alt="Employee" className="h-full w-full object-cover" />
                   ) : (
-                    <User className="h-6 w-6 text-emerald-400" />
+                    <span className="text-xl">
+                      {employeeProfile.gender?.toLowerCase().startsWith("f") ? "♀" : "♂"}
+                    </span>
                   )}
                 </div>
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-sm text-slate-900 dark:text-slate-100 truncate block">
-                      {fullName || "Employee Name"}
+                      {fullName || (firstName ? `${firstName} ${lastName}`.trim() : "Employee Name")}
+                    </span>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.2 rounded border shrink-0 ${
+                      employeeProfile.gender?.toLowerCase().startsWith("f")
+                        ? "bg-pink-50 text-pink-700 border-pink-200"
+                        : "bg-blue-50 text-blue-700 border-blue-200"
+                    }`}>
+                      {employeeProfile.gender || (genderFilter === "female" ? "Female" : genderFilter === "male" ? "Male" : "General Staff")}
                     </span>
                   </div>
                   <div className="text-[11px] text-slate-500 flex items-center gap-1.5">
@@ -1539,6 +1736,8 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                 <span>1. Employee Master & Employment</span>
               </div>
               <div className="grid grid-cols-2 gap-x-2 gap-y-1 pl-1 text-[11px] text-slate-600 dark:text-slate-300">
+                <div><span className="text-slate-400">First Name:</span> <span className="font-semibold">{firstName || "-"}</span></div>
+                <div><span className="text-slate-400">Surname / Last:</span> <span className="font-semibold">{lastName || "-"}</span></div>
                 <div><span className="text-slate-400">Department:</span> <span className="font-semibold">{department}</span></div>
                 <div><span className="text-slate-400">Employment:</span> <span>{employeeProfile.employmentType || "Full-Time"}</span></div>
                 <div><span className="text-slate-400">Shift:</span> <span>{employeeProfile.workingShift || "Day Shift"}</span></div>

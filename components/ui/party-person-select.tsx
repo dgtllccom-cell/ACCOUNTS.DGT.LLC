@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t as uiText } from "@/lib/i18n/ui";
 import { Search, User, Truck, Briefcase, Building, ShieldCheck, ChevronDown, Check, X, Loader2 } from "lucide-react";
 
 export type PartyType =
@@ -60,7 +61,7 @@ export function PartyPersonSelect({
   value,
   partyType: defaultPartyType = "all",
   onSelect,
-  placeholder = "Search by First Name, Surname, or Code...",
+  placeholder,
   className,
   allowChangePartyType = true
 }: PartyPersonSelectProps) {
@@ -71,6 +72,11 @@ export function PartyPersonSelect({
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState<PersonRecord[]>([]);
   const [selectedPerson, setSelectedPerson] = useState<PersonRecord | null>(null);
+  const resolvedPlaceholder = placeholder ?? uiText(language, "party.search_placeholder");
+  const resolvedSearching = uiText(language, "party.searching");
+  const resolvedNoMatches = uiText(language, "party.no_matches_found");
+  const resolvedClearSelection = uiText(language, "party.clear_selection");
+  const resolvedSelect = uiText(language, "common.select");
 
   const containerRef = useRef<HTMLDivElement>(null);
 
@@ -221,6 +227,8 @@ export function PartyPersonSelect({
               type="button"
               onClick={handleClear}
               className="p-1 text-slate-400 hover:text-rose-500 rounded-full transition-colors"
+              title={resolvedClearSelection}
+              aria-label={resolvedClearSelection}
             >
               <X className="w-4 h-4" />
             </button>
@@ -236,7 +244,7 @@ export function PartyPersonSelect({
                 setIsOpen(true);
               }}
               onFocus={() => setIsOpen(true)}
-              placeholder={placeholder}
+              placeholder={resolvedPlaceholder}
               className="w-full py-2 text-sm bg-transparent border-none outline-none text-slate-900 dark:text-slate-100 placeholder-slate-400"
             />
             {loading ? (
@@ -259,7 +267,7 @@ export function PartyPersonSelect({
         <div className="absolute top-full left-0 right-0 mt-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl shadow-xl z-50 max-h-64 overflow-y-auto divide-y divide-slate-100 dark:divide-slate-800/60 animate-in fade-in duration-100">
           {results.length === 0 ? (
             <div className="p-4 text-center text-xs text-slate-500 dark:text-slate-400">
-              {loading ? "Searching..." : "No matching persons or entities found"}
+              {loading ? resolvedSearching : resolvedNoMatches}
             </div>
           ) : (
             results.map((person) => (
@@ -289,7 +297,7 @@ export function PartyPersonSelect({
                   </div>
                 </div>
                 <Button size="sm" variant="ghost" className="h-7 px-2 text-xs text-emerald-600 dark:text-emerald-400">
-                  Select
+                  {resolvedSelect}
                 </Button>
               </div>
             ))

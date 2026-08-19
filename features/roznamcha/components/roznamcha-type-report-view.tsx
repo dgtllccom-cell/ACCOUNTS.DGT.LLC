@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -45,7 +45,6 @@ function getCategoryLabel(cat: RoznamchaEntryCategory | null, lang: SupportedLan
     default: return cat;
   }
 }
-
 type ReportLine = {
   id: string;
   payment_entry_type: string | null;
@@ -466,7 +465,7 @@ export function RoznamchaTypeReportView({
       reportIdPrefix: "ROZ",
       reportIdValue: entryCategory,
       chips: [
-        { label: tt("jrn.date_range", "Date Range"), value: `${fromDate} → ${toDate}` },
+        { label: tt("jrn.date_range", "Date Range"), value: `${fromDate} â†’ ${toDate}` },
         { label: tt("rozrep.country", "Country"), value: scope?.countryName },
         { label: tt("rozrep.branch", "Branch"), value: scope?.branchDisplayName || scope?.branchName }
       ],
@@ -695,15 +694,15 @@ export function RoznamchaTypeReportView({
               <span className="font-black text-slate-800 dark:text-slate-200">{data?.totalCount ?? 0}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span>TOTAL CREDIT (AED):</span>
+              <span>{tt("bankroz.total_credit", "Total Credit")} (AED):</span>
               <span className="font-black text-emerald-600 dark:text-emerald-400 font-mono">{fmtNumber(data?.totalCredit ?? 0)}</span>
             </div>
             <div className="flex justify-between items-center">
-              <span className="text-rose-600 dark:text-rose-400">TOTAL DEBIT (AED):</span>
+              <span className="text-rose-600 dark:text-rose-400">{tt("bankroz.total_debit", "Total Debit")} (AED):</span>
               <span className="font-black text-rose-600 dark:text-rose-400 font-mono">{fmtNumber(data?.totalDebit ?? 0)}</span>
             </div>
             <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800">
-              <span className="text-slate-700 dark:text-slate-300 font-bold">BALANCE (AED):</span>
+              <span className="text-slate-700 dark:text-slate-300 font-bold">{tt("jrn.net_balance", "Net Balance")} (AED):</span>
               <span className="font-black text-blue-600 dark:text-blue-400 font-mono text-sm">{fmtNumber(data?.netBalance ?? 0)}</span>
             </div>
           </div>
@@ -761,7 +760,7 @@ export function RoznamchaTypeReportView({
                 <Globe2 className="h-3 w-3" />
               </div>
               <h4 className="text-[11px] font-black uppercase tracking-wider text-orange-800 dark:text-orange-400">
-                4. ALL COUNTRIES REPORT
+                4. {tt("report.all_countries_report", "ALL COUNTRIES REPORT")}
               </h4>
             </div>
             <ChevronDown className={cn("h-3.5 w-3.5 text-orange-600 transition-transform duration-200", showAllCategories ? "rotate-180" : "")} />
@@ -769,18 +768,18 @@ export function RoznamchaTypeReportView({
           <div className="p-3 flex flex-col justify-between h-full w-full">
             <div className="space-y-1">
               <div className="text-[11px] font-bold text-slate-700 dark:text-slate-300">
-                Active Types: <span className="font-extrabold text-orange-600">5 Categories</span>
+                {tt("report.active_types", "Active Types")}: <span className="font-extrabold text-orange-600">{tt("report.all_categories", "All Categories")}</span>
               </div>
               <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                Current Filter: <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedCategory === "all" ? "All Categories" : getCategoryLabel(selectedCategory, activeLang)}</span>
+                {tt("report.current_filter", "Current Filter")}: <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedCategory === "all" ? tt("report.all_categories", "All Categories") : getCategoryLabel(selectedCategory, activeLang)}</span>
               </div>
             </div>
             <div className="mt-2.5 flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-800">
               <span className="text-[10px] font-bold text-orange-600 group-hover:underline">
-                {showAllCategories ? "Hide Details" : "Show Details"}
+                {showAllCategories ? tt("report.hide_details", "Hide Details") : tt("report.show_details", "Show Details")}
               </span>
               <span className="text-[9px] font-bold text-orange-600 bg-orange-100/80 dark:bg-orange-950/60 px-1.5 py-0.5 rounded">
-                EXPLORE →
+                {tt("report.explore", "EXPLORE")} →
               </span>
             </div>
           </div>
@@ -924,7 +923,7 @@ export function RoznamchaTypeReportView({
                     className="p-2.5 text-center font-bold cursor-pointer select-none hover:bg-slate-800 whitespace-nowrap"
                     onClick={() => toggleSort("entry_date")}
                   >
-                    {tt("rozrep.date", "Date")} {sortBy === "entry_date" ? (sortDir === "asc" ? "↑" : "↓") : ""}
+                    {tt("rozrep.date", "Date")} {sortBy === "entry_date" ? (sortDir === "asc" ? "â†‘" : "â†“") : ""}
                   </th>
                   <ReportTh>{tt("rozrep.entry_serial", "Entry Serial")}</ReportTh>
                   <ReportTh>{tt("rozrep.country", "Country")}</ReportTh>

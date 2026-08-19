@@ -1,4 +1,5 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
+import { translationPendingLabel } from "@/lib/i18n/verified-record-translations";
 
 type Row = { ur: string; ar: string; fa: string; ps: string };
 
@@ -937,9 +938,9 @@ export function translateHeader(
   const code = (lang || "en") as string;
   if (code === "en") return original;
   const row = HEADER_TRANSLATIONS[normalize(original)];
-  if (!row) return original;
+  if (!row) return translationPendingLabel(code as SupportedLanguage);
   const value = row[code as keyof Row];
-  return value || original;
+  return value || translationPendingLabel(code as SupportedLanguage);
 }
 
 /** True when a header has a translation registered (useful for coverage checks). */

@@ -1,8 +1,11 @@
 "use client";
 
+import React from "react";
 import { Printer, FileDown, FileSpreadsheet } from "lucide-react";
 import { fetchBranding, brandingFooter, brandingName, type Branding } from "@/lib/branding/client";
 import { Th } from "@/components/ui/translated-th";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t as uiText } from "@/lib/i18n/ui";
 
 /**
  * Universal report actions — Print, PDF (print-to-PDF), Excel (CSV) — drop into
@@ -51,7 +54,7 @@ function brandHeader(b: Branding | null, title: string, lang: string, subtitle?:
   const scope = [b?.countryName, b?.reportHeader].filter(Boolean).map((x) => esc(String(x))).join(" — ");
   return `<div class="hdr">
       <div class="left">${logo}<div><h1>${esc(title)}</h1>${subtitle ? `<div class="meta">${esc(subtitle)}</div>` : ""}${scope ? `<div class="meta">${scope}</div>` : ""}</div></div>
-      <div class="brand">${esc(name)}<div class="meta">Printed: ${now.toLocaleString()}</div>${extraMeta ? `<div class="meta">${esc(extraMeta)}</div>` : ""}</div>
+      <div class="brand">${esc(name)}<div class="meta">${esc(uiText(lang, "report.generated_at"))}: ${now.toLocaleString()}</div>${extraMeta ? `<div class="meta">${esc(extraMeta)}</div>` : ""}</div>
     </div>`;
 }
 
@@ -100,7 +103,7 @@ export function ReportActions({
   filename,
   subtitle,
   countryId,
-  lang = "en",
+  lang,
 }: {
   title: string;
   rows: Record<string, any>[];
@@ -110,6 +113,8 @@ export function ReportActions({
   countryId?: string | null;
   lang?: string;
 }) {
+  const activeLanguage = useActiveLanguage();
+  const resolvedLang = lang ?? activeLanguage ?? "en";
   const base = (filename || title).replace(/[^a-zA-Z0-9]+/g, "_");
 
   function exportCsv() {
@@ -129,7 +134,7 @@ export function ReportActions({
     openGenericErpReport({
       title,
       subtitle: subtitle || `Total ${rows.length} records`,
-      lang,
+      lang: resolvedLang,
       columns: columns.map((c) => ({ key: c.key, label: c.label })),
       rows: rows as Record<string, unknown>[],
       summary: { TotalRecords: rows.length },
@@ -140,9 +145,9 @@ export function ReportActions({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <button type="button" onClick={printDoc} className={btn} title="Print"><Printer className="h-4 w-4" /> Print</button>
-      <button type="button" onClick={printDoc} className={btn} title="Save as PDF"><FileDown className="h-4 w-4" /> PDF</button>
-      <button type="button" onClick={exportCsv} className={btn} title="Export Excel (CSV)"><FileSpreadsheet className="h-4 w-4" /> Excel</button>
+      <button type="button" onClick={printDoc} className={btn} title={uiText(resolvedLang, "report.print")}><Printer className="h-4 w-4" /> {uiText(resolvedLang, "report.print")}</button>
+      <button type="button" onClick={printDoc} className={btn} title={uiText(resolvedLang, "report.export_pdf")}><FileDown className="h-4 w-4" /> {uiText(resolvedLang, "report.export_pdf")}</button>
+      <button type="button" onClick={exportCsv} className={btn} title={uiText(resolvedLang, "report.export_excel")}><FileSpreadsheet className="h-4 w-4" /> {uiText(resolvedLang, "report.export_excel")}</button>
     </div>
   );
 }

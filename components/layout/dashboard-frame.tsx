@@ -378,7 +378,7 @@ export function DashboardFrame({
       case "month":
         return t(lang, "ledger.preset_this_month", "This Month");
       case "year":
-        return `This Year (${currentYear})`;
+        return `${t(lang, "dashboard.this_year", "This Year")} (${currentYear})`;
       case "custom":
         return t(lang, "ledger.preset_custom", "Custom Date Range");
       case "all":
@@ -408,7 +408,7 @@ export function DashboardFrame({
                   <div className="min-w-0 flex-1">
                     <p className="text-base font-black tracking-tight text-foreground leading-tight truncate">DAMAAN BUSINESS GROUP</p>
                     <p className="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 truncate">
-                      Owner: Asmat Abdullah
+                      {t(lang, "dashboard.owner", "Owner")}: Asmat Abdullah
                     </p>
                   </div>
                 </div>
@@ -496,7 +496,7 @@ export function DashboardFrame({
                       { id: "today", label: t(lang, "ledger.preset_today", "Today") },
                       { id: "week", label: t(lang, "ledger.preset_this_week", "This Week") },
                       { id: "month", label: t(lang, "ledger.preset_this_month", "This Month") },
-                      { id: "year", label: `This Year (${new Date().getFullYear()})` },
+                      { id: "year", label: `${t(lang, "dashboard.this_year", "This Year")} (${new Date().getFullYear()})` },
                       { id: "custom", label: t(lang, "ledger.preset_custom", "Custom Date Range") }
                     ].map((opt) => (
                       <button
@@ -529,7 +529,7 @@ export function DashboardFrame({
                       <div className="mt-2 pt-2 border-t border-border/80 px-2 pb-1">
                         <div className="grid grid-cols-2 gap-2 text-[10px]">
                           <div>
-                            <label className="text-muted-foreground font-bold block mb-1">From</label>
+                            <label className="text-muted-foreground font-bold block mb-1">{t(lang, "dashboard.from", "From")}</label>
                             <input
                               type="date"
                               value={customDateFrom}
@@ -538,7 +538,7 @@ export function DashboardFrame({
                             />
                           </div>
                           <div>
-                            <label className="text-muted-foreground font-bold block mb-1">To</label>
+                            <label className="text-muted-foreground font-bold block mb-1">{t(lang, "dashboard.to", "To")}</label>
                             <input
                               type="date"
                               value={customDateTo}
@@ -552,7 +552,7 @@ export function DashboardFrame({
                           onClick={() => setDateMenuOpen(false)}
                           className="mt-2 w-full rounded bg-primary text-primary-foreground py-1 text-xs font-bold hover:bg-primary/90 transition-colors"
                         >
-                          Apply Filter
+                          {t(lang, "dashboard.apply_filter", "Apply Filter")}
                         </button>
                       </div>
                     )}
@@ -564,7 +564,7 @@ export function DashboardFrame({
                 <button
                   type="button"
                   onClick={() => setNotificationsOpen(!notificationsOpen)}
-                  aria-label="View notifications"
+                  aria-label={t(lang, "dashboard.view_notifications", "View notifications")}
                   className="relative p-1.5 rounded-full hover:bg-muted text-muted-foreground transition-colors focus:outline-none focus:ring-1 focus:ring-primary"
                 >
                   <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
@@ -574,23 +574,23 @@ export function DashboardFrame({
                 {notificationsOpen && (
                   <div className="absolute top-full right-0 mt-2 w-80 rounded-xl border border-border bg-popover text-popover-foreground shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150 z-50">
                     <div className="p-3 border-b border-border flex items-center justify-between bg-muted/40">
-                      <span className="font-bold text-xs">System Notifications</span>
-                      <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">Live</span>
+                      <span className="font-bold text-xs">{t(lang, "dashboard.system_notifications", "System Notifications")}</span>
+                      <span className="text-[10px] bg-primary/10 text-primary font-bold px-2 py-0.5 rounded-full">{t(lang, "dashboard.live", "Live")}</span>
                     </div>
                     <div className="divide-y divide-border/60 max-h-64 overflow-y-auto text-xs">
                       <div className="p-3 hover:bg-muted/50 transition-colors cursor-pointer">
                         <div className="font-semibold text-foreground flex items-center justify-between">
-                          <span>Roznamcha Cash Active</span>
-                          <span className="text-[10px] text-muted-foreground">Just now</span>
+                           <span>{t(lang, "dashboard.roznamcha_cash_active", "Roznamcha Cash Active")}</span>
+                           <span className="text-[10px] text-muted-foreground">{t(lang, "dashboard.just_now", "Just now")}</span>
                         </div>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">Real-time balances and ledger sync operational.</p>
+                         <p className="text-[11px] text-muted-foreground mt-0.5">{t(lang, "dashboard.real_time_balances_and_ledger_sync_operational", "Real-time balances and ledger sync operational.")}</p>
                       </div>
                       <div className="p-3 hover:bg-muted/50 transition-colors cursor-pointer">
                         <div className="font-semibold text-foreground flex items-center justify-between">
-                          <span>Exchange Rates Synced</span>
-                          <span className="text-[10px] text-muted-foreground">Today</span>
+                           <span>{t(lang, "dashboard.exchange_rates_synced", "Exchange Rates Synced")}</span>
+                           <span className="text-[10px] text-muted-foreground">{t(lang, "dashboard.today", "Today")}</span>
                         </div>
-                        <p className="text-[11px] text-muted-foreground mt-0.5">Intra-day multi-currency exchange tables updated.</p>
+                         <p className="text-[11px] text-muted-foreground mt-0.5">{t(lang, "dashboard.intra_day_multi_currency_exchange_tables_updated", "Intra-day multi-currency exchange tables updated.")}</p>
                       </div>
                     </div>
                   </div>
@@ -650,7 +650,7 @@ export function DashboardFrame({
                         className="px-3 py-2 text-xs font-semibold rounded-lg hover:bg-muted text-foreground flex items-center justify-between transition-colors"
                       >
                         <span>{label}</span>
-                        <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded", tone)}>Access</span>
+                          <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded", tone)}>{t(lang, "dashboard.access", "Access")}</span>
                       </Link>
                     ))}
                   </div>
@@ -702,7 +702,7 @@ export function DashboardFrame({
                   : "bg-muted text-foreground/70 hover:bg-muted/80 hover:text-foreground"
               )}
             >
-              {cat === "All" ? "All Categories" : t(lang, `cmd.cat_${cat.toLowerCase()}` as any, cat)}
+              {cat === "All" ? t(lang, "common.all_categories", "All Categories") : t(lang, `cmd.cat_${cat.toLowerCase()}` as any, cat)}
             </button>
           ))}
         </div>
@@ -742,7 +742,7 @@ export function DashboardFrame({
                     </div>
                   </div>
                   <span className="shrink-0 ml-2 rounded bg-indigo-50 dark:bg-indigo-950/50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase text-indigo-700 dark:text-indigo-300 ring-1 ring-indigo-200/60 dark:ring-indigo-800">
-                    Navigation
+                    {t(lang, "dashboard.navigation", "Navigation")}
                   </span>
                 </CommandItem>
               ))}
@@ -780,7 +780,7 @@ export function DashboardFrame({
                     </div>
                   </div>
                   <span className="shrink-0 ml-2 rounded bg-sky-50 dark:bg-sky-950/50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase text-sky-700 dark:text-sky-300 ring-1 ring-sky-200/60 dark:ring-sky-800">
-                    Module
+                     {t(lang, "dashboard.module", "Module")}
                   </span>
                 </CommandItem>
               ))}
@@ -806,7 +806,7 @@ export function DashboardFrame({
                     </div>
                   </div>
                   <span className="shrink-0 ml-2 rounded bg-emerald-50 dark:bg-emerald-950/50 px-1.5 py-0.5 text-[9px] font-extrabold uppercase text-emerald-700 dark:text-emerald-300 ring-1 ring-emerald-200/60 dark:ring-emerald-800">
-                    Action
+                     {t(lang, "dashboard.action", "Action")}
                   </span>
                 </CommandItem>
               ))}
@@ -832,7 +832,7 @@ export function DashboardFrame({
                     </div>
                   </div>
                   <span className="shrink-0 ml-2 rounded bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 text-[9px] font-extrabold uppercase text-slate-700 dark:text-slate-300 ring-1 ring-slate-200/60 dark:ring-slate-700">
-                    Settings
+                     {t(lang, "dashboard.settings", "Settings")}
                   </span>
                 </CommandItem>
               ))}

@@ -18,6 +18,7 @@ import {
   Clock
 } from "lucide-react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t as uiText } from "@/lib/i18n/ui";
 import { rtlLanguages } from "@/lib/i18n/languages";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { translateValue } from "@/lib/i18n/table-values";
@@ -85,7 +86,7 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
   const currentLanguage = useActiveLanguage();
   const isRtl = rtlLanguages.includes(currentLanguage as any);
   const dir = isRtl ? "rtl" : "ltr";
-  const t = (label: string) => translateHeader(currentLanguage, label);
+  const th = (label: string) => translateHeader(currentLanguage, label);
   const tv = (value: unknown) => translateValue(currentLanguage, String(value ?? ""));
   const printRef = useRef<HTMLDivElement>(null);
   const [viewMode, setViewMode] = useState<"preview" | "print">("preview");
@@ -186,7 +187,7 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
               <h2 className="text-base font-bold text-slate-10 text-white flex items-center gap-2">
                 {title}
                 <span className="text-xs px-2.5 py-0.5 rounded-full bg-cyan-500/10 text-cyan-400 border border-cyan-500/20 font-mono">
-                  {data.length} {t("Records")}
+                  {data.length} {uiText(currentLanguage, "report.records")}
                 </span>
               </h2>
               <p className="text-xs text-slate-400">{companyName} • {branchName}</p>
@@ -199,28 +200,28 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
               className="flex items-center gap-1.5 rounded-lg bg-cyan-500 hover:bg-cyan-400 px-3.5 py-2 text-xs font-semibold text-slate-950 transition-colors shadow-lg shadow-cyan-500/20"
             >
               <Printer className="h-3.5 w-3.5" />
-              {t("Print")}
+              {uiText(currentLanguage, "report.print")}
             </button>
             <button
               onClick={handleExportPDF}
               className="flex items-center gap-1.5 rounded-lg bg-rose-600/90 hover:bg-rose-500 px-3.5 py-2 text-xs font-semibold text-white transition-colors"
             >
               <Download className="h-3.5 w-3.5" />
-              {t("PDF")}
+              {uiText(currentLanguage, "report.export_pdf")}
             </button>
             <button
               onClick={handleExportExcel}
               className="flex items-center gap-1.5 rounded-lg bg-emerald-600/90 hover:bg-emerald-500 px-3.5 py-2 text-xs font-semibold text-white transition-colors"
             >
               <FileSpreadsheet className="h-3.5 w-3.5" />
-              {t("Excel")}
+              {uiText(currentLanguage, "report.export_excel")}
             </button>
             <button
               onClick={handleExportCSV}
               className="flex items-center gap-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 px-3 py-2 text-xs font-semibold text-slate-200 transition-colors border border-slate-700"
             >
               <FileText className="h-3.5 w-3.5 text-slate-400" />
-              {t("CSV")}
+              {uiText(currentLanguage, "report.export_csv")}
             </button>
             <button
               onClick={onClose}
@@ -286,14 +287,14 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
             {filters.length > 0 && (
               <div className="mt-4 pt-3 border-t border-slate-800/80 flex flex-wrap items-center gap-2 print:border-slate-300">
                 <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1 print:text-slate-600">
-                  <Filter className="h-3 w-3" /> {t("Filters")}:
+                  <Filter className="h-3 w-3" /> {uiText(currentLanguage, "report.filters")}:
                 </span>
                 {filters.map((f, idx) => (
                   <span
                     key={idx}
                     className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-slate-800 text-cyan-300 border border-slate-700 print:bg-slate-200 print:text-slate-800 print:border-slate-300"
                   >
-                    <span className="text-slate-400">{t(f.label)}:</span>
+                    <span className="text-slate-400">{th(f.label)}:</span>
                     <span className="font-semibold">{tv(f.value)}</span>
                   </span>
                 ))}
@@ -315,7 +316,7 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
                           col.align === "right" || col.isNumeric ? "text-right" : col.align === "center" ? "text-center" : "text-left"
                         }`}
                       >
-                        {t(col.label)}
+                        {th(col.label)}
                       </th>
                     ))}
                   </tr>
@@ -324,7 +325,7 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
                   {data.length === 0 ? (
                     <tr>
                       <td colSpan={columns.length + 1} className="px-4 py-8 text-center text-slate-500 print:text-slate-400">
-                        {t("No records found for the selected criteria.")}
+                        {uiText(currentLanguage, "report.no_records_selected_criteria")}
                       </td>
                     </tr>
                   ) : (
@@ -352,7 +353,7 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
                   <tfoot className="bg-slate-900 font-bold border-t-2 border-slate-700 text-white print:bg-slate-100 print:text-slate-900 print:border-slate-400">
                     <tr>
                       <td colSpan={2} className="px-4 py-3 uppercase text-xs tracking-wider text-cyan-400 print:text-slate-800">
-                        {t("Totals")} ({data.length} {t("items")})
+                        {uiText(currentLanguage, "report.totals")} ({data.length} {uiText(currentLanguage, "report.items")})
                       </td>
                       {columns.slice(1).map(col => {
                         let totalVal: React.ReactNode = null;
@@ -390,10 +391,10 @@ export function UniversalReportModal<T extends Record<string, any> = Record<stri
           <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-4 border-t border-slate-800 text-[11px] text-slate-500 print:border-slate-300 print:text-slate-600">
             <div className="flex items-center gap-1.5">
               <CheckCircle className="h-3.5 w-3.5 text-emerald-500 print:text-slate-600" />
-              <span>{t("Official System Verified Document")} • {projectName}</span>
+              <span>{uiText(currentLanguage, "report.official_system_verified_document")} • {projectName}</span>
             </div>
             <div>
-              <span>{t("Generated by")} {userName} {t("on")} {nowString}</span>
+              <span>{uiText(currentLanguage, "report.generated_by")} {userName} • {uiText(currentLanguage, "report.generated_at")} {nowString}</span>
             </div>
           </div>
         </div>

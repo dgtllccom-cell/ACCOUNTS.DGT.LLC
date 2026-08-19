@@ -107,7 +107,7 @@ function SidebarNodeItem({
             <span className="truncate text-start">{t(lang, node.labelKey)}</span>
             {isChanged && !isActive && (
               <span className="ms-1 shrink-0 rounded bg-amber-400 text-amber-950 px-1.5 py-0.5 text-[8.5px] font-black uppercase leading-none shadow-xs">
-                NEW
+                {t(lang, "common.new", "New")}
               </span>
             )}
           </Link>
@@ -122,7 +122,7 @@ function SidebarNodeItem({
             <span className="truncate">{t(lang, node.labelKey)}</span>
             {isChanged && (
               <span className="ms-1 shrink-0 rounded bg-amber-400 text-amber-950 px-1.5 py-0.5 text-[8.5px] font-black uppercase leading-none shadow-xs">
-                NEW
+                {t(lang, "common.new", "New")}
               </span>
             )}
           </button>
@@ -133,7 +133,7 @@ function SidebarNodeItem({
             type="button"
             onClick={() => onToggle(node.key)}
             className="me-2 inline-flex h-6 w-6 items-center justify-center rounded-md text-muted-foreground hover:bg-slate-200 dark:hover:bg-slate-700/60 hover:text-foreground transition-colors"
-            aria-label="Toggle submenu"
+            aria-label={t(lang, "nav.toggle_submenu", "Toggle submenu")}
             aria-expanded={isOpen}
           >
             <ChevronDown className={cn("h-3.5 w-3.5 transition-transform duration-200", isOpen ? "rotate-180" : "rotate-0")} />
