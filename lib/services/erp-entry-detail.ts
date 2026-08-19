@@ -15,7 +15,8 @@
 export type DetailField = { key: string; label: string; value: string; strong?: boolean };
 export type PartyCard = { linked: boolean; titleKey: string; titleLabel: string; fields: DetailField[]; noteKey?: string; noteLabel?: string; viaKey?: string; viaLabel?: string; via?: string };
 export type LinesBlock = {
-  columns: Array<{ key: string; label: string; num?: boolean }>;
+  // `key` is the row-data key; `labelKey` is the i18n key for the header (must be a real UiKey).
+  columns: Array<{ key: string; labelKey: string; label: string; num?: boolean }>;
   rows: Array<Record<string, string>>;
   totals?: Record<string, string>;
 };
@@ -167,8 +168,12 @@ async function roznamcha(sql: any, id: string): Promise<Detail | null> {
     ],
     lines: {
       columns: [
-        { key: "code", label: "Account Code" }, { key: "name", label: "Account Name" }, { key: "desc", label: "Description" },
-        { key: "debit", label: "Debit", num: true }, { key: "credit", label: "Credit", num: true }, { key: "usd", label: "USD", num: true }
+        { key: "code", labelKey: "sed.account_code", label: "Account Code" },
+        { key: "name", labelKey: "sed.account_name", label: "Account Name" },
+        { key: "desc", labelKey: "sed.description", label: "Description" },
+        { key: "debit", labelKey: "rozrep.debit", label: "Debit", num: true },
+        { key: "credit", labelKey: "rozrep.credit", label: "Credit", num: true },
+        { key: "usd", labelKey: "sed.total_usd", label: "USD", num: true }
       ],
       rows: (lines as any[]).map((l) => ({
         code: l.account_number || l.ledger_code || "-", name: l.ledger_name || l.account_number || "-", desc: l.description || "-",

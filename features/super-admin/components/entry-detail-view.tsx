@@ -9,7 +9,7 @@ import { openJournalReportWindow } from "@/lib/reports/open-journal-report-windo
 
 type Field = { key: string; label: string; value: string; strong?: boolean };
 type PartyCard = { linked: boolean; titleKey: string; titleLabel: string; fields: Field[]; noteKey?: string; noteLabel?: string; viaKey?: string; viaLabel?: string; via?: string };
-type LinesBlock = { columns: Array<{ key: string; label: string; num?: boolean }>; rows: Array<Record<string, string>>; totals?: Record<string, string> };
+type LinesBlock = { columns: Array<{ key: string; labelKey: string; label: string; num?: boolean }>; rows: Array<Record<string, string>>; totals?: Record<string, string> };
 type Detail = {
   found: boolean;
   module: string;
@@ -40,6 +40,8 @@ export function EntryDetailView({ id, module = "Roznamcha", src = "Roznamcha", l
   const tt = useCallback((key: string, fallback: string) => t(lang, key as never, fallback), [lang]);
   // A field/column carries its own i18n key + English fallback → translate reactively, keep data verbatim.
   const tf = useCallback((x: { key: string; label: string }) => t(lang, x.key as never, x.label), [lang]);
+  // Line-table column headers carry a dedicated i18n key (labelKey) distinct from the row-data key.
+  const tfc = useCallback((c: { labelKey: string; label: string }) => t(lang, c.labelKey as never, c.label), [lang]);
 
   const [data, setData] = useState<Detail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -89,7 +91,7 @@ export function EntryDetailView({ id, module = "Roznamcha", src = "Roznamcha", l
       reportIdPrefix: "ERP", reportIdValue: data.header.entryNo,
       chips, kpis,
       columns: useLines
-        ? data.lines!.columns.map((c) => ({ key: c.key, label: tf(c), num: c.num }))
+        ? data.lines!.columns.map((c) => ({ key: c.key, label: tfc(c), num: c.num }))
         : [{ key: "field", label: tt("sae.field", "Field") }, { key: "value", label: tt("sae.value", "Value") }],
       rows: useLines
         ? data.lines!.rows
@@ -105,7 +107,7 @@ export function EntryDetailView({ id, module = "Roznamcha", src = "Roznamcha", l
     let rows: string[];
     if (useLines) {
       const cols = data.lines!.columns;
-      rows = [cols.map((c) => esc(tf(c))).join(",")];
+      rows = [cols.map((c) => esc(tfc(c))).join(",")];
       data.lines!.rows.forEach((r) => rows.push(cols.map((c) => esc(r[c.key] ?? "")).join(",")));
     } else {
       rows = [[esc(tt("sae.field", "Field")), esc(tt("sae.value", "Value"))].join(",")];
@@ -219,7 +221,7 @@ export function EntryDetailView({ id, module = "Roznamcha", src = "Roznamcha", l
               <thead className="bg-slate-50 text-[10px] uppercase text-slate-500 dark:bg-slate-950/50">
                 <tr>
                   <th className="p-2 text-start">#</th>
-                  {d.lines.columns.map((c) => <th key={c.key} className={`p-2 ${c.num ? "text-end" : "text-start"}`}>{tf(c)}</th>)}
+                  {d.lines.columns.map((c) => <th key={c.key} className={`p-2 ${c.num ? "text-end" : "text-start"}`}>{tfc(c)}</th>)}
                 </tr>
               </thead>
               <tbody>
