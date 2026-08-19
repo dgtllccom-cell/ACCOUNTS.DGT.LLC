@@ -29,7 +29,8 @@ const listeners = new Set<() => void>();
 function readLang(): SupportedLanguage {
   if (typeof document === "undefined") return "en";
   const raw = (localStorage.getItem("erp_lang") || document.documentElement.lang || "en").trim();
-  return (LANGS as readonly string[]).includes(raw) ? (raw as SupportedLanguage) : "en";
+  const base = raw.split("-")[0].toLowerCase();
+  return (LANGS as readonly string[]).includes(base) ? (base as SupportedLanguage) : "en";
 }
 
 function applyHtmlAttributes(lang: SupportedLanguage) {

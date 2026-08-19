@@ -13,7 +13,6 @@ import { translateHeader } from "@/lib/i18n/table-headers";
 import { Th } from "@/components/ui/translated-th";
 import { openGenericErpReport, formatCellValue, getRowValue, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
 import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
-import { translateHeader } from "@/lib/i18n/table-headers";
 
 type TabType = "summary" | "branch" | "user";
 

@@ -43,6 +43,10 @@
     "android",
     "ios",
     "scripts",
+    ".tmp",
+    "tmp",
+    "backups",
+    ".codex-worktree-merge-backup",
     "fix-broken-transfers.ts",
     "check-superadmins.ts",
     "check_roznamcha.ts"

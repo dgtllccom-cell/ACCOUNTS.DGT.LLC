@@ -909,6 +909,8 @@ function SuperAdminRoznamchaSummary({
 
   const countryDashboardRows = Array.from(countryDashboardMap.values()).sort((a, b) => a.name.localeCompare(b.name));
 
+  const lang = useActiveLanguage();
+  const th = (label: string) => translateHeader(lang, label);
   const formatMoney = (val: number) => val.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const getFlag = (cName: string) => {
     if (cName.toLowerCase().includes('pakistan')) return '🇵🇰';
@@ -2470,6 +2472,8 @@ function BranchJournalGeneralStyleSummary({
   onPdf: () => void;
   onRefresh: () => void;
 }) {
+  const lang = useActiveLanguage();
+  const th = (label: string) => translateHeader(lang, label);
   const uniqueCountries = new Set(rows.map((row) => row.countryId || row.countryName).filter(Boolean));
   const uniqueMainBranches = new Set(rows.map((row) => row.countryBranchId || row.countryBranchName).filter(Boolean));
   const uniqueCityBranches = new Set(rows.map((row) => row.cityBranchId || row.cityBranchName).filter(Boolean));

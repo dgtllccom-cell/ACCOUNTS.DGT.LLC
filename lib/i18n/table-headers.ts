@@ -1,7 +1,10 @@
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { translationPendingLabel } from "@/lib/i18n/verified-record-translations";
 
-type Row = { ur: string; ar: string; fa: string; ps: string   // Daily Exchange Rate Management Keys
+type Row = { ur: string; ar: string; fa: string; ps: string };
+
+export const HEADER_TRANSLATIONS: Record<string, Row> = {
+  // Daily Exchange Rate Management Keys
   "SUPER ADMIN LIVE EXCHANGE RATES TABLE": {
     ur: "سپر ایڈمن لائیو ایکسچینج ریٹ جدول",
     ar: "جدول أسعار الصرف الحية للمشرف العام",
@@ -182,12 +185,6 @@ type Row = { ur: string; ar: string; fa: string; ps: string   // Daily Exchange 
     fa: "مجموع کشورها",
     ps: "ټول هیوادونه",
   },
-};
-
-
-
-
-export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "CITY BRANCH SETUP": { ur: "سٹی برانچ سیٹ اپ", ar: "إعداد فرع المدينة", fa: "تنظیمات شعبه شهر", ps: "د ښار څانګې تنظیم" },
   "COUNTRY & CURRENCY": { ur: "ملک اور کرنسی", ar: "الدولة والعملة", fa: "کشور و واحد پول", ps: "هېواد او اسعار" },
   "FULL ADDRESS": { ur: "مکمل پتہ", ar: "العنوان الكامل", fa: "آدرس کامل", ps: "بشپړه پته" },
@@ -1080,6 +1077,8 @@ export const HEADER_TRANSLATIONS: Record<string, Row> = {
   "NO LEDGER ENTRIES AVAILABLE FOR THIS ACCOUNT.": { ur: "اس اکاؤنٹ کے لیے کوئی لیجر اندراجات دستیاب نہیں ہیں۔", ar: "لا توجد قيود دفتر أستاذ متاحة لهذا الحساب.", fa: "هیچ سند دفتر کل برای این حساب در دسترس نیست.", ps: "د دې حساب لپاره هېڅ لېجر ثبتونه شتون نلري." },
   "LOADING LEDGER DATA...": { ur: "لیجر ڈیٹا لوڈ ہو رہا ہے...", ar: "جارٍ تحميل بيانات دفتر الأستاذ...", fa: "در حال بارگذاری داده‌های دفتر کل...", ps: "د لېجر ډاټا لوډېږي..." },
   "NOT ASSIGNED": { ur: "غیر متعین", ar: "غير محدد", fa: "تعیین‌نشده", ps: "نه دی ټاکل شوی" },
+  "REPORT ACTIONS": { ur: "رپورٹ اقدامات", ar: "إجراءات التقرير", fa: "اقدامات گزارش", ps: "د راپور کړنې" },
+  "BILL ITEMS BREAKDOWN": { ur: "بل آئٹمز تفصیل", ar: "تفصيل بنود الفاتورة", fa: "تفکیک اقلام صورتحساب", ps: "د بل د توکو تفصيل" },
 };
 
 /** Normalize an English header for lookup: trim, collapse whitespace, uppercase. */

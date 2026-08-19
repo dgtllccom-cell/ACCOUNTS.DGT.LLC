@@ -1,0 +1,62 @@
+form.actions	Actions
+form.role	ROLE
+form.user_id	USER ID
+form.user_name	USER NAME
+hr.p_due	Due
+hr.p_generate_err	Error generating register: 
+hr.p_generate_register	Generate Due Register
+hr.p_generated_msg	Salary due register generated.
+hr.p_generating	Generating...
+ledger.no_entries_found	__NO_FALLBACK__
+nav.bank_management	Bank Management
+report.active_types	Active Types
+report.activity_history	__NO_FALLBACK__
+report.all_categories	All Categories
+report.balance_pkr	BALANCE (PKR)
+report.bill_entries_summary	BILL ENTRIES SUMMARY
+report.branch	Branch
+report.branch_name	Branch Name
+report.branch_summary	Branch Summary
+report.cleared_entries	CLEARED ENTRIES
+report.comprehensive_daily	Comprehensive Daily Report
+report.consolidated	Consolidated
+report.country	Country
+report.country_name	Country Name
+report.country_summary	Country Summary
+report.current_filter	Current Filter
+report.dc_cartons	DC (Cartons)
+report.edit_history	__NO_FALLBACK__
+report.explore	EXPLORE
+report.filter_all_projects	__NO_FALLBACK__
+report.filter_project	__NO_FALLBACK__
+report.global_financial_summary	GLOBAL FINANCIAL SUMMARY
+report.hide_details	HIDE DETAILS
+report.hide_report_details	HIDE REPORT DETAILS
+report.invoice_payment_pkr	Invoice Payment (PKR)
+report.net_weight_kg	Net Weight (Kg)
+report.no_history	__NO_FALLBACK__
+report.no_of_bills	No. of Bills
+report.performance_overview	Performance Overview
+report.purchase_payment_pkr	Purchase Payment (PKR)
+report.record_details	__NO_FALLBACK__
+report.records_found	Records Found
+report.remaining_entries	REMAINING ENTRIES
+report.remaining_payment_pkr	Remaining Payment (PKR)
+report.role	__NO_FALLBACK__
+report.salesman_name	Salesman Name
+report.salesman_summary	Salesman Summary
+report.salesperson	Salesperson
+report.scope_city_branch	__NO_FALLBACK__
+report.scope_entire_country	__NO_FALLBACK__
+report.scope_main_branch	__NO_FALLBACK__
+report.show_details	SHOW DETAILS
+report.show_report_details	SHOW REPORT DETAILS
+report.system_status	SYSTEM STATUS
+report.total_bill_entries	TOTAL BILL ENTRIES
+report.total_global_entries	TOTAL GLOBAL ENTRIES
+report.total_purchase_pkr	TOTAL PURCHASE (PKR)
+report.total_transferred_pkr	TOTAL TRANSFERRED (PKR)
+roz.edit_payment_entry	Edit Payment Entry
+roz.journal_roznamcha_entry_table	JOURNAL ROZNAMCHA — ENTRY TABLE
+status.active	ACTIVE
+status.online_synced	ONLINE & SYNCED
