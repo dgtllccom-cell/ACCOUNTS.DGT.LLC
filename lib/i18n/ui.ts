@@ -5782,6 +5782,7 @@ const en: Dict = {
 
 const ur: Dict = {
   ...en,
+  "nav.branch_setup_network": "برانچ سیٹ اپ / نیٹ ورک",
   "bdash.title": "برانچ ایڈمن ڈیش بورڈ",
   "bdash.subtitle": "برانچ لین دین، مقامی بیلنس شیٹ، نقد سطح اور اسٹاک میٹرکس کے لیے روزانہ آپریشنل منظر۔",
   "bdash.branch_code": "برانچ کوڈ",
@@ -8777,6 +8778,7 @@ const ur: Dict = {
 
 const ar: Dict = {
   ...en,
+  "nav.branch_setup_network": "إعداد الفرع / الشبكة",
   "bdash.title": "لوحة مدير الفرع",
   "bdash.subtitle": "عرض تشغيلي يومي لمعاملات الفرع والميزانية المحلية ومستويات النقد ومقاييس المخزون.",
   "bdash.branch_code": "رمز الفرع",
@@ -11771,6 +11773,8 @@ const ar: Dict = {
 
 const fa: Dict = {
   ...en,
+  "nav.branch_setup_network": "راه‌اندازی شعبه / شبکه",
+  "purchase.pending_transfer_badge": "انتقال در انتظار",
   "bdash.title": "داشبورد مدیر شعبه",
   "bdash.subtitle": "نمای عملیاتی روزانه برای تراکنش‌های شعبه، ترازنامه محلی، سطوح نقدی و معیارهای موجودی.",
   "bdash.branch_code": "کد شعبه",
@@ -14763,6 +14767,7 @@ const fa: Dict = {
 
 const ps: Dict = {
   ...en,
+  "nav.branch_setup_network": "د څانګې تنظیم / شبکه",
   "bdash.title": "د څانګې مدیر ډشبورډ",
   "bdash.subtitle": "د څانګې د راکړې ورکړې، محلي بیلانس شیټ، نقدي کچې او د ذخیرې معیارونو لپاره ورځنی عملیاتي لید.",
   "bdash.branch_code": "د څانګې کوډ",
