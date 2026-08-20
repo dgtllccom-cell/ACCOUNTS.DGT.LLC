@@ -366,20 +366,20 @@ export function PurchaseModuleWorkspace({
               title={title}
               subtitle={description}
               columns={[
-                { key: "poNumber", label: "PO Number" },
-                { key: "soNumber", label: "SO / Bill No" },
-                { key: "createdAt", label: "Date", format: "date" },
-                { key: "country", label: "Country" },
-                { key: "branch", label: "Branch" },
-                { key: "supplier", label: "Supplier" },
-                { key: "goods", label: "Goods" },
-                { key: "quantity", label: "Quantity", align: "right", format: "number" },
-                { key: "weight", label: "Net Weight", align: "right", format: "number" },
-                { key: "currency", label: "Currency" },
-                { key: "amount", label: "Amount", align: "right", format: "currency" },
-                { key: "advance", label: "Advance Paid", align: "right", format: "currency" },
-                { key: "remaining", label: "Remaining Balance", align: "right", format: "currency" },
-                { key: "status", label: "Status", format: "status" }
+                { key: "poNumber", label: t(lang, "purchase.pmw_col_po_number", "PO Number") },
+                { key: "soNumber", label: t(lang, "purchase.pmw_col_so_bill", "SO / Bill No") },
+                { key: "createdAt", label: t(lang, "common.date", "Date"), format: "date" },
+                { key: "country", label: t(lang, "purchase.pmw_col_country", "Country") },
+                { key: "branch", label: t(lang, "common.branch", "Branch") },
+                { key: "supplier", label: t(lang, "common.supplier", "Supplier") },
+                { key: "goods", label: t(lang, "purchase.pmw_col_goods", "Goods") },
+                { key: "quantity", label: t(lang, "purchase.pmw_col_quantity", "Quantity"), align: "right", format: "number" },
+                { key: "weight", label: t(lang, "purchase.pmw_col_net_weight", "Net Weight"), align: "right", format: "number" },
+                { key: "currency", label: t(lang, "purchase.pmw_col_currency", "Currency") },
+                { key: "amount", label: t(lang, "purchase.pmw_col_amount", "Amount"), align: "right", format: "currency" },
+                { key: "advance", label: t(lang, "purchase.pmw_col_advance_paid", "Advance Paid"), align: "right", format: "currency" },
+                { key: "remaining", label: t(lang, "purchase.pmw_col_remaining", "Remaining Balance"), align: "right", format: "currency" },
+                { key: "status", label: t(lang, "common.status", "Status"), format: "status" }
               ]}
               rows={rows.map((r) => ({
                 poNumber: poNumber(r),
@@ -398,8 +398,8 @@ export function PurchaseModuleWorkspace({
                 status: status(r)
               }))}
               filters={[
-                ...(countryFilter ? [{ label: "Country", value: countryFilter }] : []),
-                ...(statusFilter ? [{ label: "Status", value: statusFilter }] : [])
+                ...(countryFilter ? [{ label: t(lang, "purchase.pmw_col_country", "Country"), value: countryFilter }] : []),
+                ...(statusFilter ? [{ label: t(lang, "common.status", "Status"), value: statusFilter }] : [])
               ]}
               summary={{
                 TotalOrders: totals.orders,
@@ -550,8 +550,23 @@ export function PurchaseModuleWorkspace({
           <table className="w-full min-w-[1320px] border-collapse text-xs">
             <thead className="sticky top-0 z-10 bg-slate-50 text-[10px] uppercase tracking-wide text-slate-600">
               <tr>
-                {["Order ID", "Super S/N", "Cty S/N", "Br. S/N", "Bill & Date", "Branch & Country", "Purchase Account", "Sales Account", "Goods & Brand", "Weights & Qty", "Total & Exchange", "Advance Details", "Remaining Balance", "Action"].map((head) => (
-                  <Th key={head} className="border-b px-3 py-3 text-left font-black">{head}</Th>
+                {[
+                  [t(lang, "purchase.pmw_col_order_id", "Order ID"), "Order ID"],
+                  [t(lang, "purchase.pmw_col_super_sn", "Super S/N"), "Super S/N"],
+                  [t(lang, "purchase.pmw_col_cty_sn", "Cty S/N"), "Cty S/N"],
+                  [t(lang, "purchase.pmw_col_br_sn", "Br. S/N"), "Br. S/N"],
+                  [t(lang, "purchase.pmw_col_bill_date", "Bill & Date"), "Bill & Date"],
+                  [t(lang, "purchase.pmw_col_branch_cty", "Branch & Country"), "Branch & Country"],
+                  [t(lang, "purchase.pmw_col_pur_acct", "Purchase Account"), "Purchase Account"],
+                  [t(lang, "purchase.pmw_col_sal_acct", "Sales Account"), "Sales Account"],
+                  [t(lang, "purchase.pmw_col_goods_brand", "Goods & Brand"), "Goods & Brand"],
+                  [t(lang, "purchase.pmw_col_wt_qty", "Weights & Qty"), "Weights & Qty"],
+                  [t(lang, "purchase.pmw_col_total_ex", "Total & Exchange"), "Total & Exchange"],
+                  [t(lang, "purchase.pmw_col_adv_detail", "Advance Details"), "Advance Details"],
+                  [t(lang, "purchase.pmw_col_remaining", "Remaining Balance"), "Remaining Balance"],
+                  [t(lang, "common.actions", "Action"), "Action"],
+                ].map(([label, key]) => (
+                  <Th key={key} className="border-b px-3 py-3 text-left font-black">{label}</Th>
                 ))}
               </tr>
             </thead>
@@ -569,8 +584,8 @@ export function PurchaseModuleWorkspace({
                   <td className="px-3 py-3"><b>{form(row).purchaseAccountName || supplier(row)}</b><br /><span className="text-muted-foreground">{form(row).purchaseAccountNo || "-"}</span></td>
                   <td className="px-3 py-3"><b>{form(row).salesAccountName || "-"}</b><br /><span className="text-muted-foreground">{form(row).salesAccountNo || "-"}</span></td>
                   <td className="px-3 py-3"><b>{product(row)}</b><br /><span className="text-muted-foreground">{goods(row)[0]?.brand || "-"}</span></td>
-                  <td className="px-3 py-3">Qty: <b>{quantity(row).toLocaleString()}</b><br />Net: <b>{weight(row).toLocaleString()} KG</b></td>
-                  <td className="px-3 py-3"><b>{money(amount(row), currency(row))}</b><br /><span className="text-muted-foreground">Rate: {Number(row.exchange_rate || form(row).exchangeRate || 1)}</span></td>
+                  <td className="px-3 py-3">{t(lang, "purchase.pmw_qty_label", "Qty:")} <b>{quantity(row).toLocaleString()}</b><br />{t(lang, "purchase.pmw_net_label", "Net:")} <b>{weight(row).toLocaleString()} KG</b></td>
+                  <td className="px-3 py-3"><b>{money(amount(row), currency(row))}</b><br /><span className="text-muted-foreground">{t(lang, "purchase.pmw_rate_label", "Rate:")} {Number(row.exchange_rate || form(row).exchangeRate || 1)}</span></td>
                   <td className="px-3 py-3"><b>{money(advance(row), currency(row))}</b><br /><span className={cn("inline-flex rounded-full border px-2 py-0.5 text-[10px] font-bold", statusClass(status(row)))}>{status(row)}</span></td>
                   <td className="px-3 py-3 font-black text-blue-700">{money(remaining(row), currency(row))}</td>
                   <td className="px-3 py-3"><Button type="button" variant="outline" size="icon" className="h-8 w-8" title={t(lang, "common.view", "View")}><Eye className="h-3.5 w-3.5" /></Button></td>
