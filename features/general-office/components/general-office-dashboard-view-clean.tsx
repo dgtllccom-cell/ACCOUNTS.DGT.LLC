@@ -375,7 +375,10 @@ const generalOfficeLabels: Record<string, Partial<Record<SupportedLanguage, stri
   "No designations yet — they appear here from registered employees.": { ur: "ابھی کوئی عہدہ نہیں — یہ رجسٹرڈ ملازمین سے ظاہر ہوں گے۔", ar: "لا مسميات بعد — تظهر من الموظفين المسجلين.", fa: "هنوز عنوانی نیست — از کارکنان ثبت‌شده ظاهر می‌شوند.", ps: "تر اوسه هیڅ دنده نشته — له ثبت شویو کارمندانو څخه ښکاره کیږي." },
   "No attendance records — the attendance module requires a dedicated attendance table.": { ur: "حاضری کا کوئی ریکارڈ نہیں — حاضری ماڈیول کے لیے علیحدہ ٹیبل درکار ہے۔", ar: "لا سجلات حضور — يتطلب نظام الحضور جدولاً مخصصاً.", fa: "هیچ رکورد حضوری نیست — ماژول حضور به جدول اختصاصی نیاز دارد.", ps: "د حاضرۍ هیڅ ریکارډ نشته — د حاضرۍ ماډل لپاره جلا جدول ته اړتیا ده." },
   "No leave requests — the leave module requires a dedicated leave table.": { ur: "چھٹی کی کوئی درخواست نہیں — چھٹی ماڈیول کے لیے علیحدہ ٹیبل درکار ہے۔", ar: "لا طلبات إجازة — يتطلب نظام الإجازات جدولاً مخصصاً.", fa: "هیچ درخواست مرخصی نیست — ماژول مرخصی به جدول اختصاصی نیاز دارد.", ps: "د رخصتۍ هیڅ غوښتنه نشته — د رخصتۍ ماډل لپاره جلا جدول ته اړتیا ده." },
-  "No office assets — the assets module requires a dedicated assets table.": { ur: "کوئی دفتری اثاثہ نہیں — اثاثہ ماڈیول کے لیے علیحدہ ٹیبل درکار ہے۔", ar: "لا أصول مكتبية — يتطلب نظام الأصول جدولاً مخصصاً.", fa: "هیچ دارایی اداری نیست — ماژول دارایی به جدول اختصاصی نیاز دارد.", ps: "هیڅ دفتري شتمنی نشته — د شتمنیو ماډل لپاره جلا جدول ته اړتیا ده." }
+  "No office assets — the assets module requires a dedicated assets table.": { ur: "کوئی دفتری اثاثہ نہیں — اثاثہ ماڈیول کے لیے علیحدہ ٹیبل درکار ہے۔", ar: "لا أصول مكتبية — يتطلب نظام الأصول جدولاً مخصصاً.", fa: "هیچ دارایی اداری نیست — ماژول دارایی به جدول اختصاصی نیاز دارد.", ps: "هیڅ دفتري شتمنی نشته — د شتمنیو ماډل لپاره جلا جدول ته اړتیا ده." },
+  "New Employees": { ur: "نئے ملازمین", ar: "موظفون جدد", fa: "کارکنان جدید", ps: "نوي کارمندان" },
+  "Updated Employees": { ur: "اپ ڈیٹ شدہ ملازمین", ar: "موظفون محدثون", fa: "کارکنان به‌روزشده", ps: "تازه شوي کارمندان" },
+  "In Selected Range": { ur: "منتخب مدت میں", ar: "في الفترة المحددة", fa: "در بازه انتخابی", ps: "په ټاکلې موده کې" }
 };
 
 function translateGeneralOffice(label: string, lang: SupportedLanguage) {
@@ -803,15 +806,15 @@ export function GeneralOfficeDashboardView() {
               <EmployeeDateToolbar lang={lang} value={dateRange} onChange={setDateRange} />
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 {[
-                  { k: ct(lang, "god.new_employees", "New Employees"), v: dailyCounts.newC, c: "text-emerald-600" },
-                  { k: ct(lang, "god.updated_employees", "Updated Employees"), v: dailyCounts.updC, c: "text-blue-600" },
-                  { k: ct(lang, "god.active", "Active"), v: dailyCounts.activeC, c: "text-emerald-600" },
-                  { k: ct(lang, "god.inactive", "Inactive"), v: dailyCounts.inactiveC, c: "text-slate-500" }
+                  { k: tr("New Employees"), v: dailyCounts.newC, c: "text-emerald-600" },
+                  { k: tr("Updated Employees"), v: dailyCounts.updC, c: "text-blue-600" },
+                  { k: tr("Active"), v: dailyCounts.activeC, c: "text-emerald-600" },
+                  { k: tr("Inactive"), v: dailyCounts.inactiveC, c: "text-slate-500" }
                 ].map((card, i) => (
                   <div key={i} className="rounded-2xl border bg-card p-3 shadow-sm">
                     <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{card.k}</div>
                     <div className={`mt-1 text-2xl font-black ${card.c}`}>{card.v}</div>
-                    <div className="text-[10px] text-muted-foreground">{ct(lang, "god.in_range", "In Selected Range")}</div>
+                    <div className="text-[10px] text-muted-foreground">{tr("In Selected Range")}</div>
                   </div>
                 ))}
               </div>
@@ -881,7 +884,7 @@ export function GeneralOfficeDashboardView() {
                       </tr>
                     ) : employeesByDate.length === 0 ? (
                       <tr>
-                        <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">No employee records found. Click "Register New Employee" above.</td>
+                        <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">{tr("No employee records found. Click Register New Employee above.")}</td>
                       </tr>
                     ) : (
                       employeesByDate.map((emp) => (
@@ -1046,12 +1049,12 @@ export function GeneralOfficeDashboardView() {
                 <table className="min-w-full text-xs text-left">
                   <thead className="bg-muted font-bold border-b">
                     <tr>
-                      <Th className="px-4 py-3">Emp Code</Th>
-                      <Th className="px-4 py-3">Employee Name</Th>
+                      <Th className="px-4 py-3">{t.colEmpCode}</Th>
+                      <Th className="px-4 py-3">{t.colName}</Th>
                       <Th className="px-4 py-3">{tr("Time In")}</Th>
                       <Th className="px-4 py-3">{tr("Time Out")}</Th>
                       <Th className="px-4 py-3">{tr("Duration")}</Th>
-                      <Th className="px-4 py-3">Status</Th>
+                      <Th className="px-4 py-3">{t.colStatus}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -1095,12 +1098,12 @@ export function GeneralOfficeDashboardView() {
                 <table className="min-w-full text-xs text-left">
                   <thead className="bg-muted font-bold border-b">
                     <tr>
-                      <Th className="px-4 py-3">Emp Code</Th>
-                      <Th className="px-4 py-3">Employee Name</Th>
+                      <Th className="px-4 py-3">{t.colEmpCode}</Th>
+                      <Th className="px-4 py-3">{t.colName}</Th>
                       <Th className="px-4 py-3">{tr("Leave Type")}</Th>
                       <Th className="px-4 py-3">{tr("Duration")}</Th>
-                      <Th className="px-4 py-3">Days</Th>
-                      <Th className="px-4 py-3">Status</Th>
+                      <Th className="px-4 py-3">{tr("Days")}</Th>
+                      <Th className="px-4 py-3">{t.colStatus}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
@@ -1170,10 +1173,10 @@ export function GeneralOfficeDashboardView() {
                     <tr>
                       <Th className="px-4 py-3">{tr("Asset Tag")}</Th>
                       <Th className="px-4 py-3">{tr("Item Description")}</Th>
-                      <Th className="px-4 py-3">Category</Th>
+                      <Th className="px-4 py-3">{t.colCategory}</Th>
                       <Th className="px-4 py-3">{tr("Assigned To")}</Th>
                       <Th className="px-4 py-3">{tr("Serial No")}</Th>
-                      <Th className="px-4 py-3">Status</Th>
+                      <Th className="px-4 py-3">{t.colStatus}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
