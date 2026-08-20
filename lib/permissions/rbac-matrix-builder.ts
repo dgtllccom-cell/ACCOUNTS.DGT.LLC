@@ -331,6 +331,7 @@ export function buildRbacRoleSummary(role: EnterpriseRole, customPermissions?: s
 
   const roleTitles: Record<EnterpriseRole, string> = {
     super_admin: "Super Administrator (Enterprise Root)",
+    super_admin_reports: "Super Admin Reports Auditor",
     country_admin: "Country General Manager / Administrator",
     country_user: "Country Operations Officer",
     main_branch_admin: "Main Branch Director / Admin",

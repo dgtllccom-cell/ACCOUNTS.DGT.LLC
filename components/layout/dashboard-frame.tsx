@@ -284,6 +284,7 @@ export function DashboardFrame({
 
     const labels: Record<EnterpriseRole, string> = {
       super_admin: t(lang, "role.super_admin", "Super Admin"),
+      super_admin_reports: t(lang, "role.super_admin_reports", "Super Admin Reports Auditor"),
       country_admin: t(lang, "role.country_admin", "Country Admin"),
       country_user: t(lang, "role.country_user", "Country User"),
       main_branch_admin: t(lang, "role.main_branch_admin", "Main Branch Admin"),

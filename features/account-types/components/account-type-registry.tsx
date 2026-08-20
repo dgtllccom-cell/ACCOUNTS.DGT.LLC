@@ -14,6 +14,8 @@ import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 type AccountTypeRecord = { id: string; code: string; name: string; ledger_group: string; description: string | null; is_active: boolean; created_at: string };
 
 export function AccountTypeRegistry() {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fb: string) => t(lang, key as any, fb);
   const [types, setTypes] = useState<AccountTypeRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");

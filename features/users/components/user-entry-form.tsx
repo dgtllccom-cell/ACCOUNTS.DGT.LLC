@@ -603,7 +603,7 @@ export function UserEntryForm({ kind }: { kind: UserEntryKind }) {
         <div className="p-4 max-h-[80vh] overflow-y-auto">
           <EmployeeForm
             lang="en"
-            onSuccess={() => {
+            onSave={() => {
               setShowNewEmployeeModal(false);
               fetchEmployees();
             }}

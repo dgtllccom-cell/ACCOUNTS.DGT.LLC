@@ -26,9 +26,9 @@ export type MasterProfileConfig = {
   autoPrint?: boolean;
   title: string;            // translated report title, e.g. t(lang,"branch.report_title")
   subtitle?: string;        // translated subtitle
-  overviewLabel: string;    // translated "… Profile Overview"
+  overviewLabel?: string;   // translated "… Profile Overview"
   reportTypeLabel?: string; // translated report-type value (defaults to subtitle)
-  name: string;             // main record name (record data)
+  name?: string;            // main record name (record data)
   status?: string;          // record status (record data)
   meta: MProfileMeta[];      // up to 4 header banner cells (label translated, value = data)
   kpis?: MProfileKpi[];     // 0 or 4 KPI cards (label translated, value formatted data)
@@ -186,8 +186,8 @@ export function openMasterProfileReportWindow(config: MasterProfileConfig) {
         <div class="overview-banner">
           <div class="overview-top">
             <div>
-              <div class="overview-title">${escapeHtml(config.overviewLabel)}</div>
-              <div class="overview-name">${v(config.name)}</div>
+              <div class="overview-title">${escapeHtml(config.overviewLabel || title)}</div>
+              <div class="overview-name">${v(config.name || subtitle || "-")}</div>
             </div>
             ${config.status ? `<span class="overview-status">${v(config.status)}</span>` : ""}
           </div>

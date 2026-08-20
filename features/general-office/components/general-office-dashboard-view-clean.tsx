@@ -7,7 +7,7 @@ import {
   ClipboardList, FileText, Badge as IdBadgeIcon, BarChart3,
   Search, Filter, Plus, Printer, Download, Mail, MessageSquare,
   Eye, Edit3, Trash2, CheckCircle2, AlertCircle, XCircle, ChevronRight,
-  ShieldCheck, RefreshCcw, FileSpreadsheet, Send, PhoneCall, Check, UserPlus
+  ShieldCheck, RefreshCcw, FileSpreadsheet, Send, PhoneCall, Check, UserPlus, MoreVertical
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +26,13 @@ import { EmployeeLedgerPanel } from "@/features/hr-payroll/components/employee-l
 import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
 import { Th } from "@/components/ui/translated-th";
 import { translateHeader } from "@/lib/i18n/table-headers";
+
+const iso = (d: Date) => d.toISOString().slice(0, 10);
+const addDays = (s: string, n: number) => {
+  const d = new Date(s);
+  d.setDate(d.getDate() + n);
+  return iso(d);
+};
 
 /* ──────────────────────────────────────────────────────────────
    5-LANGUAGE DICTIONARY FOR GENERAL OFFICE MANAGEMENT

@@ -3458,7 +3458,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       // 2. Resolve credit ledger ID (Customer / Receivable Account)
       let creditLedgerId = "";
       const candidateCreditIds = [
-        selected.customer_ledger_id,
+        (selected as any).customer_ledger_id,
         (selected as any).customerLedgerId,
         form.customerAccountLedgerId,
         form.customerAccountId,

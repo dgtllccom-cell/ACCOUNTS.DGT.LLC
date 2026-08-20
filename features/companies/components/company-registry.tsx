@@ -227,9 +227,15 @@ export function CompanyRegistry() {
   const loadCompaniesFromDb = async () => {
     setLoading(true);
     try {
-      const res = await apiGet<{ companies: CompanyRow[] }>("/api/erp/companies");
-      if (res.ok && Array.isArray(res.data?.companies) && res.data.companies.length > 0) {
-        const mapped: CompanyRegistryItem[] = res.data.companies.map((c, i) => ({
+      const res: any = await apiGet("/api/erp/companies");
+      const rawList: any[] = Array.isArray(res?.companies) 
+        ? res.companies 
+        : Array.isArray(res?.data?.companies) 
+        ? res.data.companies 
+        : [];
+
+      if (rawList.length > 0) {
+        const mapped: CompanyRegistryItem[] = rawList.map((c: any, i: number) => ({
           id: c.id,
           accountNo: `10010${String(i + 1).padStart(2, "0")}`,
           consortium: c.owner_name ? `${c.owner_name} Group` : "Standard Consortium",

@@ -3615,7 +3615,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
       // 1. Resolve debit ledger ID (Supplier / Trade Payable / Purchase party)
       let debitLedgerId = "";
       const candidateDebitIds = [
-        selected.supplier_ledger_id,
+        (selected as any).supplier_ledger_id,
         (selected as any).supplierLedgerId,
         form.supplierAccountId,
         form.supplier_ledger_id,
