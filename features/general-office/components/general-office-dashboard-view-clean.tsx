@@ -17,6 +17,8 @@ import { cn } from "@/lib/utils";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { EmployeeForm } from "@/features/hr-payroll/components/employee-form";
 import { EmployeeDateToolbar, computeRange, inRange, type DateRange } from "@/features/general-office/components/employee-date-toolbar";
+import { OfficeHrModule } from "@/features/general-office/components/office-hr-module";
+import { ATTENDANCE_CONFIG, LEAVE_CONFIG, ASSETS_CONFIG } from "@/features/general-office/components/office-hr-configs";
 import { personFullName } from "@/features/hr-payroll/components/person-picker";
 import { t as ct } from "@/lib/i18n/ui";
 import { AdvanceLoanModal } from "@/features/hr-payroll/components/advance-loan-modal";
@@ -447,6 +449,14 @@ export function GeneralOfficeDashboardView() {
       inactiveC: employeesByDate.filter((e) => !isActive(e)).length
     };
   }, [employees, dateRange, employeesByDate]);
+  // Employee options for the Attendance/Leave/Assets modules (real employees).
+  const employeeOpts = useMemo(() => employees.map((e) => ({
+    id: e.id,
+    employee_code: e.employee_code,
+    name: personFullName(e.person || {}) || e.employee_code,
+    country_id: e.country_id ?? null,
+    city_branch_id: e.city_branch_id ?? null
+  })), [employees]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -539,38 +549,32 @@ export function GeneralOfficeDashboardView() {
   }, [initialTab]);
 
   // Fetch employees from API
-  const loadEmployeesRequestSeq = useRef(0);
+  // Root-cause fix for the intermittent empty list: `lang` is corrected en→active right after
+  // mount, which fires a second load. Previously a request-sequence guard DROPPED the superseded
+  // response, so if the newer request was slow/failed on a slow server the table stayed empty even
+  // though the API had data. We now abort the superseded request and always apply the LATEST
+  // non-aborted response — the UI can never be left empty while the API is returning rows.
+  const loadAbortRef = useRef<AbortController | null>(null);
   const loadEmployees = useCallback(async () => {
-    // `lang` starts at "en" and is corrected to the real active language by the syncLang
-    // effect immediately after mount (see below) — that correction fires a second call to
-    // this function with the right lang. Guard against the stale "en" request's response
-    // arriving *after* the corrected one and clobbering it (a real race observed here: the
-    // slower request would silently win and re-leak the source-language name).
-    const requestSeq = ++loadEmployeesRequestSeq.current;
+    loadAbortRef.current?.abort();
+    const ac = new AbortController();
+    loadAbortRef.current = ac;
     setLoading(true);
     try {
       const qp = new URLSearchParams();
       if (search) qp.set("search", search);
       if (categoryFilter) qp.set("category", categoryFilter);
       if (statusFilter) qp.set("status", statusFilter);
-      // Resolve the employee's linked Person Master name into the active language server-side —
-      // without this the Employee Name column always showed whatever script the underlying
-      // customer record happened to be typed in, regardless of the selected UI language.
       qp.set("lang", lang);
-
-      const res = await fetch(`/api/erp/hr-payroll/employees?${qp.toString()}`);
+      const res = await fetch(`/api/erp/hr-payroll/employees?${qp.toString()}`, { signal: ac.signal });
       if (res.ok) {
         const json = await res.json();
-        if (requestSeq === loadEmployeesRequestSeq.current) {
-          setEmployees(json.employees || []);
-        }
+        if (!ac.signal.aborted) setEmployees(Array.isArray(json.employees) ? json.employees : []);
       }
     } catch (err) {
-      console.error("Error loading employees:", err);
+      if (!(err instanceof DOMException && err.name === "AbortError")) console.error("Error loading employees:", err);
     } finally {
-      if (requestSeq === loadEmployeesRequestSeq.current) {
-        setLoading(false);
-      }
+      if (!ac.signal.aborted) setLoading(false);
     }
   }, [search, categoryFilter, statusFilter, lang]);
 
@@ -1029,101 +1033,17 @@ export function GeneralOfficeDashboardView() {
 
           {/* TAB 5: ATTENDANCE */}
           {activeTab === "attendance" && (
-            <div className="rounded-2xl border bg-card p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b pb-4">
-                <div>
-                  <h2 className="text-lg font-bold">{t.attendance}</h2>
-                  <p className="text-xs text-muted-foreground">{tr("Daily office attendance log, biometric check-in, and work duration tracking.")}</p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button size="sm" variant="outline" className="text-xs">
-                    <Printer className="h-3.5 w-3.5 mr-1" /> {t.print}
-                  </Button>
-                  <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold">
-                    {tr("Mark Biometric Entry")}
-                  </Button>
-                </div>
-              </div>
-
-              <div className="overflow-x-auto rounded-xl border">
-                <table className="min-w-full text-xs text-left">
-                  <thead className="bg-muted font-bold border-b">
-                    <tr>
-                      <Th className="px-4 py-3">{t.colEmpCode}</Th>
-                      <Th className="px-4 py-3">{t.colName}</Th>
-                      <Th className="px-4 py-3">{tr("Time In")}</Th>
-                      <Th className="px-4 py-3">{tr("Time Out")}</Th>
-                      <Th className="px-4 py-3">{tr("Duration")}</Th>
-                      <Th className="px-4 py-3">{t.colStatus}</Th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {attendanceList.length === 0 ? (<tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">{tr("No attendance records — the attendance module requires a dedicated attendance table.")}</td></tr>) : attendanceList.map((att, i) => (
-                      <tr key={i}>
-                        <td className="px-4 py-3 font-mono font-bold">{att.empCode}</td>
-                        <td className="px-4 py-3 font-semibold">{att.name}</td>
-                        <td className="px-4 py-3 font-mono">{att.timeIn}</td>
-                        <td className="px-4 py-3 font-mono">{att.timeOut}</td>
-                        <td className="px-4 py-3 font-mono">{att.hours}</td>
-                        <td className="px-4 py-3">
-                          <Badge className={cn(
-                            att.status === "Present" ? "bg-emerald-100 text-emerald-800" :
-                            att.status === "Late" ? "bg-amber-100 text-amber-800" : "bg-slate-100 text-slate-700"
-                          )}>
-                            {att.status}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <div className="space-y-4">
+              <EmployeeDateToolbar lang={lang} value={dateRange} onChange={setDateRange} />
+              <OfficeHrModule config={ATTENDANCE_CONFIG} lang={lang} dateRange={dateRange} employees={employeeOpts} canWrite={true} />
             </div>
           )}
 
           {/* TAB 6: LEAVE MANAGEMENT */}
           {activeTab === "leave" && (
-            <div className="rounded-2xl border bg-card p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b pb-4">
-                <div>
-                  <h2 className="text-lg font-bold">{t.leave}</h2>
-                  <p className="text-xs text-muted-foreground">{tr("Manage employee leave requests, annual allocations, and approvals.")}</p>
-                </div>
-                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold">
-                  + {tr("Apply Leave")}
-                </Button>
-              </div>
-
-              <div className="overflow-x-auto rounded-xl border">
-                <table className="min-w-full text-xs text-left">
-                  <thead className="bg-muted font-bold border-b">
-                    <tr>
-                      <Th className="px-4 py-3">{t.colEmpCode}</Th>
-                      <Th className="px-4 py-3">{t.colName}</Th>
-                      <Th className="px-4 py-3">{tr("Leave Type")}</Th>
-                      <Th className="px-4 py-3">{tr("Duration")}</Th>
-                      <Th className="px-4 py-3">{tr("Days")}</Th>
-                      <Th className="px-4 py-3">{t.colStatus}</Th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {leaveList.length === 0 ? (<tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">{tr("No leave requests — the leave module requires a dedicated leave table.")}</td></tr>) : leaveList.map((lv, i) => (
-                      <tr key={i}>
-                        <td className="px-4 py-3 font-mono font-bold">{lv.empCode}</td>
-                        <td className="px-4 py-3 font-semibold">{lv.name}</td>
-                        <td className="px-4 py-3">{lv.type}</td>
-                        <td className="px-4 py-3 text-muted-foreground">{lv.from} to {lv.to}</td>
-                        <td className="px-4 py-3 font-mono font-bold">{lv.days} {tr("Days")}</td>
-                        <td className="px-4 py-3">
-                          <Badge className={lv.status === "Approved" ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}>
-                            {lv.status}
-                          </Badge>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <div className="space-y-4">
+              <EmployeeDateToolbar lang={lang} value={dateRange} onChange={setDateRange} />
+              <OfficeHrModule config={LEAVE_CONFIG} lang={lang} dateRange={dateRange} employees={employeeOpts} canWrite={true} />
             </div>
           )}
 
@@ -1156,43 +1076,9 @@ export function GeneralOfficeDashboardView() {
 
           {/* TAB 8: OFFICE ASSETS */}
           {activeTab === "assets" && (
-            <div className="rounded-2xl border bg-card p-6 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b pb-4">
-                <div>
-                  <h2 className="text-lg font-bold">{t.officeAssets}</h2>
-                  <p className="text-xs text-muted-foreground">{tr("Register corporate laptops, vehicles, and equipment assigned to staff.")}</p>
-                </div>
-                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold">
-                  + {tr("Assign Asset")}
-                </Button>
-              </div>
-
-              <div className="overflow-x-auto rounded-xl border">
-                <table className="min-w-full text-xs text-left">
-                  <thead className="bg-muted font-bold border-b">
-                    <tr>
-                      <Th className="px-4 py-3">{tr("Asset Tag")}</Th>
-                      <Th className="px-4 py-3">{tr("Item Description")}</Th>
-                      <Th className="px-4 py-3">{t.colCategory}</Th>
-                      <Th className="px-4 py-3">{tr("Assigned To")}</Th>
-                      <Th className="px-4 py-3">{tr("Serial No")}</Th>
-                      <Th className="px-4 py-3">{t.colStatus}</Th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {assetList.length === 0 ? (<tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">{tr("No office assets — the assets module requires a dedicated assets table.")}</td></tr>) : assetList.map((ast, i) => (
-                      <tr key={i}>
-                        <td className="px-4 py-3 font-mono font-bold text-blue-600">{ast.tag}</td>
-                        <td className="px-4 py-3 font-bold">{ast.name}</td>
-                        <td className="px-4 py-3">{ast.category}</td>
-                        <td className="px-4 py-3 text-emerald-600 font-semibold">{ast.assignedTo}</td>
-                        <td className="px-4 py-3 font-mono text-muted-foreground">{ast.serial}</td>
-                        <td className="px-4 py-3"><Badge className="bg-emerald-100 text-emerald-800">{ast.status}</Badge></td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+            <div className="space-y-4">
+              <EmployeeDateToolbar lang={lang} value={dateRange} onChange={setDateRange} />
+              <OfficeHrModule config={ASSETS_CONFIG} lang={lang} dateRange={dateRange} employees={employeeOpts} canWrite={true} />
             </div>
           )}
 

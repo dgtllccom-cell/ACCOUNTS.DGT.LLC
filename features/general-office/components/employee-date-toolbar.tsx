@@ -40,22 +40,10 @@ export function inRange(dateStr: string | null | undefined, range: DateRange): b
   return true;
 }
 
-const dateToolbarDict: Record<string, Record<SupportedLanguage, string>> = {
-  "god.prev_day": { en: "Previous Day", ur: "پچھلا دن", ps: "پخوانۍ ورځ", fa: "روز قبل", ar: "اليوم السابق" },
-  "god.next_day": { en: "Next Day", ur: "اگلا دن", ps: "بله ورځ", fa: "روز بعد", ar: "اليوم التالي" },
-  "god.today": { en: "Today", ur: "آج", ps: "نن", fa: "امروز", ar: "اليوم" },
-  "god.this_week": { en: "This Week", ur: "اس ہفتے", ps: "دا اونۍ", fa: "این هفته", ar: "هذا الأسبوع" },
-  "god.this_month": { en: "This Month", ur: "اس مہینے", ps: "دا میاشت", fa: "این ماه", ar: "هذا الشهر" },
-  "god.last_30": { en: "Last 30 Days", ur: "گزشتہ 30 دن", ps: "وروستۍ ۳۰ ورځې", fa: "۳۰ روز گذشته", ar: "آخر ۳۰ يوماً" },
-  "god.all_dates": { en: "All Dates", ur: "تمام تاریخیں", ps: "ټولې نېټې", fa: "همه تاریخ‌ها", ar: "كل التواريخ" },
-  "god.from_date": { en: "From", ur: "از", ps: "له", fa: "از", ar: "من" },
-  "god.to_date": { en: "To", ur: "تا", ps: "تر", fa: "تا", ar: "إلى" },
-  "god.apply": { en: "Apply", ur: "لاگو کریں", ps: "تطبیق کړئ", fa: "اعمال", ar: "تطبيق" },
-};
-
 export function EmployeeDateToolbar({ lang, value, onChange }: { lang: SupportedLanguage; value: DateRange; onChange: (r: DateRange) => void }) {
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
-  const tt = (k: string, f: string) => dateToolbarDict[k]?.[lang] || t(lang, k as never, f);
+  // Central dictionary only — no per-component translation table (all god.* keys live in ui.ts).
+  const tt = (k: string, f: string) => t(lang, k as never, f);
   const today = useMemo(() => iso(new Date()), []);
   const [customFrom, setCustomFrom] = useState(value.from || today);
   const [customTo, setCustomTo] = useState(value.to || today);
