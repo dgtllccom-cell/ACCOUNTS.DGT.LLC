@@ -369,7 +369,13 @@ const generalOfficeLabels: Record<string, Partial<Record<SupportedLanguage, stri
   "Global Branches": { ur: "عالمی برانچز", ar: "الفروع العالمية", fa: "شعب جهانی", ps: "نړیوالې څانګې" },
   "Executive Manager": { ur: "ایگزیکٹو مینیجر", ar: "مدير تنفيذي", fa: "مدیر اجرایی", ps: "اجرایوي مدیر" },
   "Full Access": { ur: "مکمل رسائی", ar: "وصول كامل", fa: "دسترسی کامل", ps: "بشپړ لاسرسی" },
-  "Printed Employee Master": { ur: "ملازم ماسٹر پرنٹ کیا", ar: "تمت طباعة سجل الموظفين الرئيسي", fa: "گزارش اصلی کارکنان چاپ شد", ps: "د کارمندانو اصلي راپور چاپ شو" }
+  "Printed Employee Master": { ur: "ملازم ماسٹر پرنٹ کیا", ar: "تمت طباعة سجل الموظفين الرئيسي", fa: "گزارش اصلی کارکنان چاپ شد", ps: "د کارمندانو اصلي راپور چاپ شو" },
+  "No documents uploaded — the document management module requires a dedicated documents table.": { ur: "کوئی دستاویز اپ لوڈ نہیں ہوئی — دستاویزات ماڈیول کے لیے علیحدہ ٹیبل درکار ہے۔", ar: "لا توجد مستندات — يتطلب نظام المستندات جدول بيانات مخصص.", fa: "هیچ سندی بارگذاری نشده — ماژول مدیریت اسناد به جدول اختصاصی نیاز دارد.", ps: "هیڅ سند پورته نه دی شوی — د اسنادو ماډل لپاره جلا جدول ته اړتیا ده." },
+  "No departments yet — departments appear here from registered employees.": { ur: "ابھی کوئی شعبہ نہیں — شعبے رجسٹرڈ ملازمین سے یہاں نظر آئیں گے۔", ar: "لا أقسام بعد — تظهر الأقسام من الموظفين المسجلين.", fa: "هنوز دپارتمانی نیست — دپارتمان‌ها از کارکنان ثبت‌شده ظاهر می‌شوند.", ps: "تر اوسه هیڅ څانګه نشته — څانګې له ثبت شویو کارمندانو څخه ښکاره کیږي." },
+  "No designations yet — they appear here from registered employees.": { ur: "ابھی کوئی عہدہ نہیں — یہ رجسٹرڈ ملازمین سے ظاہر ہوں گے۔", ar: "لا مسميات بعد — تظهر من الموظفين المسجلين.", fa: "هنوز عنوانی نیست — از کارکنان ثبت‌شده ظاهر می‌شوند.", ps: "تر اوسه هیڅ دنده نشته — له ثبت شویو کارمندانو څخه ښکاره کیږي." },
+  "No attendance records — the attendance module requires a dedicated attendance table.": { ur: "حاضری کا کوئی ریکارڈ نہیں — حاضری ماڈیول کے لیے علیحدہ ٹیبل درکار ہے۔", ar: "لا سجلات حضور — يتطلب نظام الحضور جدولاً مخصصاً.", fa: "هیچ رکورد حضوری نیست — ماژول حضور به جدول اختصاصی نیاز دارد.", ps: "د حاضرۍ هیڅ ریکارډ نشته — د حاضرۍ ماډل لپاره جلا جدول ته اړتیا ده." },
+  "No leave requests — the leave module requires a dedicated leave table.": { ur: "چھٹی کی کوئی درخواست نہیں — چھٹی ماڈیول کے لیے علیحدہ ٹیبل درکار ہے۔", ar: "لا طلبات إجازة — يتطلب نظام الإجازات جدولاً مخصصاً.", fa: "هیچ درخواست مرخصی نیست — ماژول مرخصی به جدول اختصاصی نیاز دارد.", ps: "د رخصتۍ هیڅ غوښتنه نشته — د رخصتۍ ماډل لپاره جلا جدول ته اړتیا ده." },
+  "No office assets — the assets module requires a dedicated assets table.": { ur: "کوئی دفتری اثاثہ نہیں — اثاثہ ماڈیول کے لیے علیحدہ ٹیبل درکار ہے۔", ar: "لا أصول مكتبية — يتطلب نظام الأصول جدولاً مخصصاً.", fa: "هیچ دارایی اداری نیست — ماژول دارایی به جدول اختصاصی نیاز دارد.", ps: "هیڅ دفتري شتمنی نشته — د شتمنیو ماډل لپاره جلا جدول ته اړتیا ده." }
 };
 
 function translateGeneralOffice(label: string, lang: SupportedLanguage) {
@@ -443,18 +449,69 @@ export function GeneralOfficeDashboardView() {
   const [categoryFilter, setCategoryFilter] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
 
+  // Session context — fetched once from /api/erp/auth/session to populate summary cards with
+  // real user/country/branch data instead of hardcoded placeholders.
+  const [sessionCtx, setSessionCtx] = useState<{
+    userName: string; userEmail: string; userId: string;
+    countryName: string; branchName: string; isSuperAdmin: boolean;
+    roles: string[];
+  } | null>(null);
+  useEffect(() => {
+    let active = true;
+    fetch("/api/erp/auth/session", { credentials: "include" })
+      .then((r) => r.json())
+      .then((json: any) => {
+        if (!active || !json?.user) return;
+        setSessionCtx({
+          userName: json.user.fullName || json.user.email || "User",
+          userEmail: json.user.email || "",
+          userId: json.user.id || "",
+          countryName: json.scopes?.summary?.countryName || "",
+          branchName: json.scopes?.summary?.branchDisplayName || "",
+          isSuperAdmin: !!json.scopes?.isSuperAdmin,
+          roles: json.roles || []
+        });
+      })
+      .catch(console.error);
+    return () => { active = false; };
+  }, []);
+
+  // Real computed summary values from employee data
+  const summaryStats = useMemo(() => {
+    const total = employees.length;
+    const active = employees.filter((e) => String(e.status ?? "").toLowerCase() === "active").length;
+    // Group payroll by currency
+    const payrollByCurrency = new Map<string, number>();
+    employees.forEach((e) => {
+      const cur = e.salary_currency || "USD";
+      payrollByCurrency.set(cur, (payrollByCurrency.get(cur) || 0) + (Number(e.net_salary) || 0));
+    });
+    const payrollLabel = [...payrollByCurrency.entries()]
+      .filter(([, v]) => v > 0)
+      .map(([cur, v]) => `${cur} ${v >= 1000 ? `${(v / 1000).toFixed(0)}K` : v.toLocaleString()}`)
+      .join(" / ") || "—";
+    // Unique departments and unique branches
+    const deptSet = new Set(employees.map((e) => e.department).filter(Boolean));
+    const branchSet = new Set(
+      employees.map((e) => e.country_branch?.name || e.city_branch?.name).filter(Boolean)
+    );
+    return { total, active, payrollLabel, departments: deptSet.size, branches: branchSet.size };
+  }, [employees]);
+
   // Modals State
   const [showFormModal, setShowFormModal] = useState(false);
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null);
   const [selectedEmployeeForLoan, setSelectedEmployeeForLoan] = useState<any | null>(null);
   const [selectedEmployeeForHistory, setSelectedEmployeeForHistory] = useState<any | null>(null);
 
-  // Sync active language from HTML tag / localStorage
+  // Sync active language. Read localStorage FIRST (the canonical client store) and fall back to
+  // the html tag — reading only the html tag raced on load and left this whole page (and the
+  // embedded Employee wizard it feeds `lang` to) stuck on English while the store was already ur.
   useEffect(() => {
     function syncLang() {
       if (typeof document === "undefined") return;
-      const htmlLang = document.documentElement.lang || "en";
-      const l = (htmlLang.split("-")[0] as SupportedLanguage) || "en";
+      const raw = ((typeof localStorage !== "undefined" && localStorage.getItem("erp_lang")) || document.documentElement.lang || "en").trim();
+      const l = (raw.split("-")[0] as SupportedLanguage) || "en";
       const validLang = ["en", "ur", "ps", "fa", "ar"].includes(l) ? (l as SupportedLanguage) : "en";
       setLang(validLang);
       setIsRtl(["ur", "ps", "fa", "ar"].includes(validLang));
@@ -462,7 +519,13 @@ export function GeneralOfficeDashboardView() {
     syncLang();
     const observer = new MutationObserver(syncLang);
     observer.observe(document.documentElement, { attributes: true, attributeFilter: ["lang"] });
-    return () => observer.disconnect();
+    window.addEventListener("storage", syncLang);
+    window.addEventListener("erp_language_changed", syncLang);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("storage", syncLang);
+      window.removeEventListener("erp_language_changed", syncLang);
+    };
   }, []);
 
   // Automatically trigger form modal if navigated directly to master-setup
@@ -617,7 +680,7 @@ export function GeneralOfficeDashboardView() {
 
       {/* ── STANDARDIZED 5 KPI SUMMARY CARDS GRID ── */}
       <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
-        {/* MANDATORY Card 1: BRANCH & USER DETAILS */}
+        {/* MANDATORY Card 1: BRANCH & USER DETAILS — from session context */}
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Users className="h-4 w-4 text-blue-600" />
@@ -626,24 +689,24 @@ export function GeneralOfficeDashboardView() {
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             <div className="flex justify-between">
               <span>{tr("Country")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">{tr("Pakistan / UAE")}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{sessionCtx?.countryName || "—"}</span>
             </div>
             <div className="flex justify-between">
               <span>{tr("Branch Name")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100 uppercase">{tr("Karachi Main")}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 uppercase">{sessionCtx?.branchName || "—"}</span>
             </div>
             <div className="flex justify-between">
               <span>{tr("User ID / Name")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]" title={`USR-001 (${tr("Admin User")})`}>USR-001 ({tr("Admin")})</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]" title={sessionCtx?.userName || ""}>{sessionCtx?.userName || "—"}</span>
             </div>
             <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
               <span>{tr("Status")}:</span>
-              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px]">Active Session</span>
+              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px]">{tr("Active Session")}</span>
             </div>
           </div>
         </div>
 
-        {/* Card 2: EMPLOYEES & STAFF SUMMARY */}
+        {/* Card 2: EMPLOYEES & STAFF SUMMARY — real computed */}
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <ClipboardList className="h-4 w-4 text-emerald-600" />
@@ -652,20 +715,20 @@ export function GeneralOfficeDashboardView() {
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
               <span>{t.totalEmployees}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">{employees.length || 142}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{summaryStats.total}</span>
             </div>
             <div className="flex justify-between text-emerald-600 font-bold">
               <span>{t.activeStaff}:</span>
-              <span>{employees.filter((e: any) => e.status === "Active").length || 138}</span>
+              <span>{summaryStats.active}</span>
             </div>
             <div className="flex justify-between text-blue-600 font-bold">
-              <span>{t.attendanceRate}:</span>
-              <span>98.4%</span>
+              <span>{tr("Departments")}:</span>
+              <span>{summaryStats.departments}</span>
             </div>
           </div>
         </div>
 
-        {/* Card 3: PAYROLL & ASSETS SUMMARY */}
+        {/* Card 3: PAYROLL & ASSETS SUMMARY — real computed */}
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Banknote className="h-4 w-4 text-purple-600" />
@@ -674,20 +737,20 @@ export function GeneralOfficeDashboardView() {
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
               <span>{t.monthlyPayroll}:</span>
-              <span className="font-bold font-mono text-slate-900 dark:text-slate-100">AED 450K</span>
+              <span className="font-bold font-mono text-slate-900 dark:text-slate-100">{summaryStats.payrollLabel}</span>
             </div>
             <div className="flex justify-between text-amber-600 font-bold">
               <span>{t.pendingLeaves}:</span>
-              <span>12</span>
+              <span>0</span>
             </div>
             <div className="flex justify-between text-indigo-600 font-bold">
               <span>{t.assetsTracked}:</span>
-              <span>480</span>
+              <span>0</span>
             </div>
           </div>
         </div>
 
-        {/* Card 4: BRANCHES */}
+        {/* Card 4: BRANCHES — real computed from employee data */}
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Building2 className="h-4 w-4 text-indigo-600" />
@@ -696,16 +759,16 @@ export function GeneralOfficeDashboardView() {
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
               <span>{tr("Total Branches")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">12</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{summaryStats.branches || "—"}</span>
             </div>
             <div className="flex justify-between text-emerald-600 font-bold">
               <span>{tr("Active Branches")}:</span>
-              <span>10</span>
+              <span>{summaryStats.branches || "—"}</span>
             </div>
           </div>
         </div>
 
-        {/* Card 5: QUICK INFO */}
+        {/* Card 5: QUICK INFO — from session context */}
         <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <FileText className="h-4 w-4 text-amber-500" />
@@ -714,15 +777,15 @@ export function GeneralOfficeDashboardView() {
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             <div className="flex justify-between">
               <span>{tr("Currency")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">AED / USD</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{summaryStats.payrollLabel !== "—" ? [...new Set(employees.map(e => e.salary_currency).filter(Boolean))].join(" / ") || "—" : "—"}</span>
             </div>
             <div className="flex justify-between">
               <span>{tr("Company")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]">DGT LLC</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]">{sessionCtx?.isSuperAdmin ? "DGT LLC" : (sessionCtx?.branchName || "—")}</span>
             </div>
             <div className="flex justify-between">
               <span>{tr("Financial Year")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">2025-26</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{`${new Date().getFullYear()}-${String(new Date().getFullYear() + 1).slice(2)}`}</span>
             </div>
           </div>
         </div>
@@ -1081,8 +1144,8 @@ export function GeneralOfficeDashboardView() {
 
               <div className="rounded-xl border p-4 bg-muted/30">
                 <div className="flex items-center justify-between font-bold text-xs">
-                  <span>{tr("Current Payroll Month")}: July 2026</span>
-                  <span className="text-emerald-600 font-mono">{tr("Total Disbursed")}: AED 450,000 / PKR 34,200,000</span>
+                  <span>{tr("Current Payroll Month")}: {new Date().toLocaleString("en", { month: "long", year: "numeric" })}</span>
+                  <span className="text-emerald-600 font-mono">{tr("Total Disbursed")}: {summaryStats.payrollLabel}</span>
                 </div>
               </div>
             </div>
@@ -1143,17 +1206,8 @@ export function GeneralOfficeDashboardView() {
                 </Button>
               </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div className="rounded-xl border p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <FileText className="h-8 w-8 text-blue-600" />
-                    <div>
-                      <div className="font-bold text-xs">Asmatullah_Passport_Visa.pdf</div>
-                      <div className="text-[10px] text-muted-foreground">{tr("Uploaded on")} 2026-06-15 • 2.4 MB</div>
-                    </div>
-                  </div>
-                  <Button size="sm" variant="outline" className="text-[10px] h-7">{t.pdf}</Button>
-                </div>
+              <div className="rounded-xl border border-dashed p-8 text-center text-xs text-muted-foreground">
+                {tr("No documents uploaded — the document management module requires a dedicated documents table.")}
               </div>
             </div>
           )}
@@ -1186,7 +1240,7 @@ export function GeneralOfficeDashboardView() {
                         {emp.person?.customer_name?.slice(0, 2)?.toUpperCase() || "EM"}
                       </div>
                       <div>
-                        <div className="font-bold text-sm text-white">{emp.person?.customer_name}</div>
+                        <div className="font-bold text-sm text-slate-900 dark:text-white">{personFullName(emp.person || {})}</div>
                         <div className="text-xs text-blue-300 font-semibold">{emp.designation ? tr(emp.designation) : tr("Staff Member")}</div>
                         <div className="text-[10px] text-slate-400 font-mono mt-0.5">{emp.employee_code} • {emp.department ? tr(emp.department) : tr("General")}</div>
                       </div>
@@ -1224,20 +1278,21 @@ export function GeneralOfficeDashboardView() {
                     variant="outline"
                     onClick={() => openUserA4ReportWindow({
                       title: t.reports,
+                      subtitle: `${summaryStats.total} ${tr("Employees")} • ${summaryStats.active} ${t.activeStaff}`,
                       userData: {
-                        userId: "SA-001",
+                        userId: sessionCtx?.userId || "",
                         userCode: "GO-MASTER",
-                        fullName: tr("General Office Master Audit"),
-                        countryName: tr("Pakistan & UAE"),
-                        branchName: tr("Global Branches"),
-                        branchType: "super_admin",
-                        role: tr("Executive Manager"),
-                        registrationDate: "2026-01-01",
+                        fullName: sessionCtx?.userName || tr("General Office Master Audit"),
+                        countryName: sessionCtx?.countryName || "",
+                        branchName: sessionCtx?.branchName || "",
+                        branchType: sessionCtx?.isSuperAdmin ? "super_admin" : "main_branch",
+                        role: sessionCtx?.roles?.[0] || "",
+                        registrationDate: "",
                         status: t.active,
-                        permissions: [tr("Full Access")],
+                        permissions: sessionCtx?.roles || [],
                         lastActivity: new Date().toISOString(),
                         lastActivityAction: tr("Printed Employee Master"),
-                        activityCounts: { logins: 50, transactions: 120, purchases: 45, payments: 30, accounts: 10, edits: 5 }
+                        activityCounts: { logins: 0, transactions: summaryStats.total, purchases: 0, payments: 0, accounts: summaryStats.departments, edits: 0 }
                       }
                     })}
                     className="text-xs font-semibold"
