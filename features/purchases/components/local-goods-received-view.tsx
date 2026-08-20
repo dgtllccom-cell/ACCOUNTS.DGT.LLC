@@ -303,9 +303,9 @@ export function LocalGoodsReceivedView({
             onChange={e => setGoodsReceivedTab(e.target.value as LocalGoodsReceiptType)}
             className="h-8 rounded-lg border border-slate-200 dark:border-slate-700 bg-emerald-50 dark:bg-emerald-950/60 text-emerald-800 dark:text-emerald-300 px-2 text-[11px] font-black outline-none uppercase"
           >
-            <option value="warehouse">WAREHOUSE ({localGoodsReceivedDashboard.warehouse?.length || 0})</option>
-            <option value="export">EXPORT ({localGoodsReceivedDashboard.export?.length || 0})</option>
-            <option value="loading">LOADING ({localGoodsReceivedDashboard.loading?.length || 0})</option>
+            <option value="warehouse">{localGoodsReceiptLabel("warehouse", lang)} ({localGoodsReceivedDashboard.warehouse?.length || 0})</option>
+            <option value="export">{localGoodsReceiptLabel("export", lang)} ({localGoodsReceivedDashboard.export?.length || 0})</option>
+            <option value="loading">{localGoodsReceiptLabel("loading", lang)} ({localGoodsReceivedDashboard.loading?.length || 0})</option>
           </select>
 
           {/* 6. Search Input */}
@@ -379,14 +379,14 @@ export function LocalGoodsReceivedView({
               <table className="w-full text-xs text-left border-collapse">
                 <thead>
                   <tr className="bg-slate-100/80 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 font-black uppercase text-[9px] border-b border-slate-200 dark:border-slate-700 whitespace-nowrap">
-                    <Th className="py-2.5 px-3">PURCHASE BILL</Th>
-                    <Th className="py-2.5 px-3">SUPPLIER</Th>
-                    <Th className="py-2.5 px-3">GOODS / ITEM</Th>
-                    <Th className="py-2.5 px-3 text-right">QUANTITY</Th>
-                    <Th className="py-2.5 px-3 text-right">TOTAL AMOUNT</Th>
-                    <Th className="py-2.5 px-3">SHIPMENT / TRUCK</Th>
-                    <Th className="py-2.5 px-3 text-center">STATUS</Th>
-                    <Th className="py-2.5 px-3 text-center">ACTION</Th>
+                    <Th className="py-2.5 px-3">{t(lang, "cpb.po_no", "Purchase Bill")}</Th>
+                    <Th className="py-2.5 px-3">{t(lang, "common.supplier", "Supplier")}</Th>
+                    <Th className="py-2.5 px-3">{t(lang, "purchase.lgr_general_goods", "Goods / Item")}</Th>
+                    <Th className="py-2.5 px-3 text-right">{t(lang, "plr.qty_name", "Quantity")}</Th>
+                    <Th className="py-2.5 px-3 text-right">{t(lang, "cpb.purchase_amount", "Total Amount")}</Th>
+                    <Th className="py-2.5 px-3">{t(lang, "purchase.lgr_truck_hash", "Shipment / Truck")}</Th>
+                    <Th className="py-2.5 px-3 text-center">{t(lang, "common.status", "Status")}</Th>
+                    <Th className="py-2.5 px-3 text-center">{t(lang, "common.actions", "Action")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-150 dark:divide-slate-800 font-semibold text-slate-800 dark:text-slate-200">
