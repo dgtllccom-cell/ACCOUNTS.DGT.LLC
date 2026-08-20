@@ -2438,11 +2438,14 @@ export type UiKey =
   | "orgchart.city_locations"
   | "orgchart.branches"
   | "orgchart.staff"
-  | "form.actions" | "form.role" | "form.user_id" | "form.user_name" | "hr.p_due" | "hr.p_generate_err" | "hr.p_generate_register" | "hr.p_generated_msg" | "hr.p_generating" | "ledger.no_entries_found" | "nav.bank_management" | "report.active_types" | "report.activity_history" | "report.all_categories" | "report.balance_pkr" | "report.bill_entries_summary" | "report.branch" | "report.branch_name" | "report.branch_summary" | "report.cleared_entries" | "report.comprehensive_daily" | "report.consolidated" | "report.country" | "report.country_name" | "report.country_summary" | "report.current_filter" | "report.dc_cartons" | "report.edit_history" | "report.explore" | "report.filter_all_projects" | "report.filter_project" | "report.global_financial_summary" | "report.hide_details" | "report.hide_report_details" | "report.invoice_payment_pkr" | "report.net_weight_kg" | "report.no_history" | "report.no_of_bills" | "report.performance_overview" | "report.purchase_payment_pkr" | "report.record_details" | "report.records_found" | "report.remaining_entries" | "report.remaining_payment_pkr" | "report.role" | "report.salesman_name" | "report.salesman_summary" | "report.salesperson" | "report.scope_city_branch" | "report.scope_entire_country" | "report.scope_main_branch" | "report.show_details" | "report.show_report_details" | "report.system_status" | "report.total_bill_entries" | "report.total_global_entries" | "report.total_purchase_pkr" | "report.total_transferred_pkr" | "roz.edit_payment_entry" | "roz.journal_roznamcha_entry_table" | "status.active" | "status.online_synced" | "report.density_comfortable" | "report.density_compact" | "report.columns" | "report.move_up" | "report.move_down" | "report.locked" | "report.advanced_filters" | "report.filter_all_salesmen" | "report.stat_total_bills" | "report.stat_total_net_weight" | "report.stat_quantity_dc" | "report.stat_final_purchase" | "report.stat_final_advance" | "report.stat_final_remaining" | "report.badge_super_admin" | "report.branch_breakdown" | "report.paid_adv" | "report.rem_bal" | "report.total_label" | "report.all_label" | "report.close_overlay" | "hr.f_wizard_title" | "god.prev_day" | "god.next_day" | "god.today" | "god.att_desc" | "god.att_add" | "god.att_in" | "god.att_out" | "god.att_hours" | "god.att_present" | "god.att_absent" | "god.att_late" | "god.att_half" | "god.att_onleave" | "god.leave_desc" | "god.leave_add" | "god.leave_type" | "god.leave_reason" | "god.leave_pending" | "god.leave_approved" | "god.leave_rejected" | "god.lt_annual" | "god.lt_sick" | "god.lt_casual" | "god.lt_unpaid" | "god.lt_other" | "god.asset_desc" | "god.asset_add" | "god.asset_name" | "god.asset_tag" | "god.asset_category" | "god.asset_serial" | "god.asset_assigned" | "god.asset_purchase" | "god.asset_value" | "god.as_available" | "god.as_inuse" | "god.as_repair" | "god.as_retired" | "god.this_week" | "god.this_month" | "god.last_30" | "god.all_dates" | "god.from_date" | "god.to_date" | "god.apply" | "god.daily_activity" | "god.new_employees" | "god.updated_employees" | "god.active" | "god.inactive" | "god.in_range" | "hr.f_first_name" | "hr.f_last_name" | "hr.f_full_name" | "hr.f_gender" | "hr.f_gender_select" | "hr.f_gender_male" | "hr.f_gender_female" | "hr.f_gender_other" | "hr.f_ph_first_name" | "hr.f_ph_last_name" | "hr.f_job_status" | "hr.f_working_shift" | "hr.f_status" | "hr.f_currency" | "hr.f_net_salary" | "hr.f_total_allowances" | "hr.f_deductions" | "hr.f_salary_type" | "hr.f_duty_hours" | "hr.f_weekly_off" | "hr.f_register_title" | "hr.f_edit_title" | "hr.f_step1_title" | "hr.f_step1_of5" | "hr.f_step1_preview" | "hr.f_select_category" | "hr.f_select_person" | "hr.f_lbl_designation" | "hr.f_lbl_department" | "hr.f_lbl_category" | "hr.f_lbl_name" | "hr.f_lbl_designation_short" | "hr.f_not_selected" | "hr.f_cat_manager" | "hr.f_cat_normal_staff" | "hr.f_cat_employee" | "hr.f_cat_others" | "hr.f_selected_profile" | "hr.f_view_master" | "hr.f_change_selection" | "hr.f_no_person_selected" | "hr.f_sec_identity" | "hr.f_sec_employment" | "hr.f_sec_location" | "hr.f_sec_shift" | "hr.f_sec_payroll" | "hr.f_sec_status" | "hr.pp_view_title" | "hr.pp_company" | "hr.pp_independent" | "hr.pp_active_master" | "hr.pp_contact_person" | "hr.pp_mobile_phone" | "hr.pp_email_address" | "hr.pp_address_location" | "hr.pp_edit_master" | "hr.pp_select_this_person";
+  | "form.actions" | "form.role" | "form.user_id" | "form.user_name" | "hr.p_due" | "hr.p_generate_err" | "hr.p_generate_register" | "hr.p_generated_msg" | "hr.p_generating" | "ledger.no_entries_found" | "nav.bank_management" | "report.active_types" | "report.activity_history" | "report.all_categories" | "report.balance_pkr" | "report.bill_entries_summary" | "report.branch" | "report.branch_name" | "report.branch_summary" | "report.cleared_entries" | "report.comprehensive_daily" | "report.consolidated" | "report.country" | "report.country_name" | "report.country_summary" | "report.current_filter" | "report.dc_cartons" | "report.edit_history" | "report.explore" | "report.filter_all_projects" | "report.filter_project" | "report.global_financial_summary" | "report.hide_details" | "report.hide_report_details" | "report.invoice_payment_pkr" | "report.net_weight_kg" | "report.no_history" | "report.no_of_bills" | "report.performance_overview" | "report.purchase_payment_pkr" | "report.record_details" | "report.records_found" | "report.remaining_entries" | "report.remaining_payment_pkr" | "report.role" | "report.salesman_name" | "report.salesman_summary" | "report.salesperson" | "report.scope_city_branch" | "report.scope_entire_country" | "report.scope_main_branch" | "report.show_details" | "report.show_report_details" | "report.system_status" | "report.total_bill_entries" | "report.total_global_entries" | "report.total_purchase_pkr" | "report.total_transferred_pkr" | "roz.edit_payment_entry" | "roz.journal_roznamcha_entry_table" | "status.active" | "status.online_synced" | "report.density_comfortable" | "report.density_compact" | "report.columns" | "report.move_up" | "report.move_down" | "report.locked" | "report.advanced_filters" | "report.filter_all_salesmen" | "report.stat_total_bills" | "report.stat_total_net_weight" | "report.stat_quantity_dc" | "report.stat_final_purchase" | "report.stat_final_advance" | "report.stat_final_remaining" | "report.badge_super_admin" | "report.branch_breakdown" | "report.paid_adv" | "report.rem_bal" | "report.total_label" | "report.all_label" | "report.close_overlay" | "hr.f_wizard_title" | "hr.f_sec_user" | "hr.f_sec_kyc" | "hr.f_role_scope" | "god.prev_day" | "god.next_day" | "god.today" | "god.att_desc" | "god.att_add" | "god.att_in" | "god.att_out" | "god.att_hours" | "god.att_present" | "god.att_absent" | "god.att_late" | "god.att_half" | "god.att_onleave" | "god.leave_desc" | "god.leave_add" | "god.leave_type" | "god.leave_reason" | "god.leave_pending" | "god.leave_approved" | "god.leave_rejected" | "god.lt_annual" | "god.lt_sick" | "god.lt_casual" | "god.lt_unpaid" | "god.lt_other" | "god.asset_desc" | "god.asset_add" | "god.asset_name" | "god.asset_tag" | "god.asset_category" | "god.asset_serial" | "god.asset_assigned" | "god.asset_purchase" | "god.asset_value" | "god.as_available" | "god.as_inuse" | "god.as_repair" | "god.as_retired" | "god.this_week" | "god.this_month" | "god.last_30" | "god.all_dates" | "god.from_date" | "god.to_date" | "god.apply" | "god.daily_activity" | "god.new_employees" | "god.updated_employees" | "god.active" | "god.inactive" | "god.in_range" | "hr.f_first_name" | "hr.f_last_name" | "hr.f_full_name" | "hr.f_gender" | "hr.f_gender_select" | "hr.f_gender_male" | "hr.f_gender_female" | "hr.f_gender_other" | "hr.f_ph_first_name" | "hr.f_ph_last_name" | "hr.f_job_status" | "hr.f_working_shift" | "hr.f_status" | "hr.f_currency" | "hr.f_net_salary" | "hr.f_total_allowances" | "hr.f_deductions" | "hr.f_salary_type" | "hr.f_duty_hours" | "hr.f_weekly_off" | "hr.f_register_title" | "hr.f_edit_title" | "hr.f_step1_title" | "hr.f_step1_of5" | "hr.f_step1_preview" | "hr.f_select_category" | "hr.f_select_person" | "hr.f_lbl_designation" | "hr.f_lbl_department" | "hr.f_lbl_category" | "hr.f_lbl_name" | "hr.f_lbl_designation_short" | "hr.f_not_selected" | "hr.f_cat_manager" | "hr.f_cat_normal_staff" | "hr.f_cat_employee" | "hr.f_cat_others" | "hr.f_selected_profile" | "hr.f_view_master" | "hr.f_change_selection" | "hr.f_no_person_selected" | "hr.f_sec_identity" | "hr.f_sec_employment" | "hr.f_sec_location" | "hr.f_sec_shift" | "hr.f_sec_payroll" | "hr.f_sec_status" | "hr.pp_view_title" | "hr.pp_company" | "hr.pp_independent" | "hr.pp_active_master" | "hr.pp_contact_person" | "hr.pp_mobile_phone" | "hr.pp_email_address" | "hr.pp_address_location" | "hr.pp_edit_master" | "hr.pp_select_this_person";
 
 type Dict = Record<UiKey, string>;
 
 const en: Dict = {
+  "hr.f_sec_user": "User / Role / Permissions",
+  "hr.f_sec_kyc": "KYC & Documents",
+  "hr.f_role_scope": "Access Scope",
   "god.att_desc": "Daily office attendance — check-in / check-out and work duration.",
   "god.att_add": "Mark Attendance",
   "god.att_in": "Time In",
@@ -3814,7 +3817,6 @@ const en: Dict = {
   "nav.agent_dashboard": "Agent Dashboard",
   "nav.shipping_line_dashboard": "Shipping Line Dashboard",
   "nav.clearing_agent_dashboard": "Clearing Agent Dashboard",
-  "nav.new_entry": "New Entries",
   "nav.branch_entry": "Branch",
   "nav.branch_menu": "Branch",
   "nav.super_admin_branch": "Super Admin Branch",
@@ -3826,7 +3828,6 @@ const en: Dict = {
   "nav.user_journal_report": "User & Employee Master Report",
   "nav.user_login_management": "User Login Management",
   "nav.accounts": "Accounts",
-  "nav.new_account": "New Account Setup",
   "nav.new_account_general_report": "Account General Report",
   "nav.account_setup_report": "Account Setup Report",
   "nav.super_admin_account_entry": "Super Admin Account Entry",
@@ -4236,12 +4237,6 @@ const en: Dict = {
   "nav.filter_by_date_range": "Filter by date range",
   "nav.all_dates": "All Dates",
   "nav.dashboard": "Dashboard",
-  "nav.new_entry": "New Entry",
-  "nav.new_account": "New Account / Ledger",
-  "nav.new_branch": "Branch Setup / Network",
-  "nav.new_user": "New User Registration",
-  "nav.register_employee": "Register Employee",
-  "nav.entry_reports": "Entry & Release Reports",
   "nav.new_entry": "New Entry",
   "nav.new_account": "New Account / Ledger",
   "nav.new_branch": "Branch Setup / Network",
@@ -5324,6 +5319,9 @@ const en: Dict = {
 };
 
 const ur: Dict = {
+  "hr.f_sec_user": "صارف / کردار / اجازتیں",
+  "hr.f_sec_kyc": "کے وائی سی اور دستاویزات",
+  "hr.f_role_scope": "رسائی کا دائرہ",
   "god.att_desc": "روزانہ دفتری حاضری — چیک اِن / چیک آؤٹ اور کام کا دورانیہ۔",
   "god.att_add": "حاضری درج کریں",
   "god.att_in": "آمد کا وقت",
@@ -6726,7 +6724,6 @@ const ur: Dict = {
   "nav.agent_dashboard": "ایجنٹ ڈیش بورڈ",
   "nav.shipping_line_dashboard": "شپنگ لائن ڈیش بورڈ",
   "nav.clearing_agent_dashboard": "کلیئرنگ ایجنٹ ڈیش بورڈ",
-  "nav.new_entry": "نئی انٹریز",
   "nav.branch_entry": "برانچ",
   "nav.branch_menu": "برانچ",
   "nav.super_admin_branch": "سپر ایڈمن برانچ",
@@ -6738,7 +6735,6 @@ const ur: Dict = {
   "nav.user_journal_report": "یوزر جرنل رپورٹ",
   "nav.user_login_management": "یوزر لاگ ان مینجمنٹ",
   "nav.accounts": "اکاؤنٹس",
-  "nav.new_account": "نیا اکاؤنٹ سیٹ اپ",
   "nav.new_account_general_report": "اکاؤنٹ جنرل رپورٹ",
   "nav.account_setup_report": "اکاؤنٹ سیٹ اپ رپورٹ",
   "nav.super_admin_account_entry": "سپر ایڈمن اکاؤنٹ انٹری",
@@ -7036,20 +7032,12 @@ const ur: Dict = {
   "nav.template_purple": "پرپل",
   "nav.template_blue": "بلیو",
   "nav.template_green": "گرین",
-  "nav.dashboard": "ڈیش بورڈ",
   "nav.new_entry": "نیا اندراج",
   "nav.new_account": "نیا کھاتہ / لیجر",
   "nav.new_branch": "برانچ نیٹ ورک و سیٹ اپ",
   "nav.new_user": "نئے صارف کا اندراج",
   "nav.register_employee": "ملازم کا اندراج",
   "nav.entry_reports": "اندراج رپورٹس",
-  "nav.new_entry": "نیا اندراج",
-  "nav.new_account": "نیا کھاتہ / لیجر",
-  "nav.new_branch": "برانچ نیٹ ورک و سیٹ اپ",
-  "nav.new_user": "نئے صارف کا اندراج",
-  "nav.register_employee": "ملازم کا اندراج",
-  "nav.entry_reports": "اندراج رپورٹس",
-  "nav.all_release_entries": "تمام ریلیز اندراجات",
   "nav.template_gold": "گولڈ",
   "nav.template_cyan": "سایان",
   "nav.pakistan": "پاکستان",
@@ -8198,6 +8186,9 @@ const ur: Dict = {
 };
 
 const ar: Dict = {
+  "hr.f_sec_user": "المستخدم / الدور / الصلاحيات",
+  "hr.f_sec_kyc": "اعرف عميلك والمستندات",
+  "hr.f_role_scope": "نطاق الوصول",
   "god.att_desc": "الحضور اليومي — تسجيل الدخول/الخروج ومدة العمل.",
   "god.att_add": "تسجيل الحضور",
   "god.att_in": "وقت الدخول",
@@ -9245,20 +9236,10 @@ const ar: Dict = {
   "company_form.step_contacts_ids": "٣. جهات الاتصال والهويات",
   "company_form.step_review_save": "٤. المراجعة والحفظ",
   "company_form.section_company_details": "تفاصيل الشركة",
-  "nav.dashboard": "لوحة التحكم",
-  "nav.new_entry": "إدخال جديد",
-  "nav.new_account": "حساب جديد / دفتر الأستاذ",
   "nav.new_branch": "إعداد الفروع والشبكة",
   "nav.new_user": "تسجيل مستخدم جديد",
   "nav.register_employee": "تسجيل موظف",
   "nav.entry_reports": "تقارير الإدخالات",
-  "nav.new_entry": "إدخال جديد",
-  "nav.new_account": "حساب جديد / دفتر الأستاذ",
-  "nav.new_branch": "إعداد الفروع والشبكة",
-  "nav.new_user": "تسجيل مستخدم جديد",
-  "nav.register_employee": "تسجيل موظف",
-  "nav.entry_reports": "تقارير الإدخالات",
-  "nav.all_release_entries": "جميع القيود الصادرة",
   "company_form.owner_name": "اسم مالك الشركة",
   "company_form.enter_owner_name": "أدخل اسم المالك",
   "company_form.company_name": "اسم الشركة",
@@ -11071,6 +11052,9 @@ const ar: Dict = {
 };
 
 const fa: Dict = {
+  "hr.f_sec_user": "کاربر / نقش / مجوزها",
+  "hr.f_sec_kyc": "احراز هویت و اسناد",
+  "hr.f_role_scope": "محدوده دسترسی",
   "god.att_desc": "حضور روزانه دفتر — ورود/خروج و مدت کار.",
   "god.att_add": "ثبت حضور",
   "god.att_in": "زمان ورود",
@@ -11515,20 +11499,10 @@ const fa: Dict = {
   "purchase.tier4_city_entry_serial": "4. سریال شهر / ثبت",
   "purchase.transfer_destination_roznamcha_serials": "مقصد انتقال و سریال‌های روزنامچه تجاری",
   "purchase.transfer_locked_completed": "انتقال قفل و تکمیل شد",
-  "nav.dashboard": "داشبورد",
-  "nav.new_entry": "ثبت جدید",
-  "nav.new_account": "حساب جدید / دفتر کل",
   "nav.new_branch": "تنظیم شعبات و شبکه",
   "nav.new_user": "ثبت کاربر جدید",
   "nav.register_employee": "ثبت کارمند",
   "nav.entry_reports": "گزارش‌های ثبت و ترخیص",
-  "nav.new_entry": "ثبت جدید",
-  "nav.new_account": "حساب جدید / دفتر کل",
-  "nav.new_branch": "تنظیم شعبات و شبکه",
-  "nav.new_user": "ثبت کاربر جدید",
-  "nav.register_employee": "ثبت کارمند",
-  "nav.entry_reports": "گزارش‌های ثبت و ترخیص",
-  "nav.all_release_entries": "تمام ثبت‌های منتشرشده",
   "purchase.transfer_destination_module": "ماژول مقصد انتقال",
   "purchase.transfer_destination_completed_text": "ماژول پیش‌پرداخت خرید و روزنامچه تجاری",
   "purchase.transfer_destination_ready_text": "آماده انتقال به سوابق پرداخت",
@@ -13942,6 +13916,9 @@ const fa: Dict = {
 };
 
 const ps: Dict = {
+  "hr.f_sec_user": "کارن / دنده / اجازې",
+  "hr.f_sec_kyc": "KYC او اسناد",
+  "hr.f_role_scope": "د لاسرسي ساحه",
   "god.att_desc": "ورځنۍ حاضري — ننوتل/وتل او د کار موده.",
   "god.att_add": "حاضري ثبتول",
   "god.att_in": "د ننوتلو وخت",
@@ -15344,7 +15321,6 @@ const ps: Dict = {
   "nav.agent_dashboard": "د ایجنټ ډشبورډ",
   "nav.shipping_line_dashboard": "د شپنګ ډشبورډ",
   "nav.clearing_agent_dashboard": "د کلیئرنګ ډشبورډ",
-  "nav.new_entry": "نوې انټري",
   "nav.branch_entry": "برانچ",
   "nav.branch_menu": "برانچ",
   "nav.branch_general_report": "د څانګو عمومي راپور",
@@ -15358,7 +15334,6 @@ const ps: Dict = {
   "nav.user_journal_report": "د کاروونکي ژورنال راپور",
   "nav.user_login_management": "د کاروونکي د ننوتلو مدیریت",
   "nav.accounts": "اکاونټونه",
-  "nav.new_account": "نوی اکاونټ",
   "nav.new_account_general_report": "د نوي اکاونټ عمومي راپور",
   "nav.super_admin_account_entry": "د سوپر اډمین اکاونټ داخلول",
   "nav.daily_payment_entry": "ورځنۍ تادیه",

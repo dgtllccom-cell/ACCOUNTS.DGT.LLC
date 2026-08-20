@@ -283,6 +283,17 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
   const selectedCityBranchObj = useMemo(() => cityBranches.find((b) => b.id === cityBranchId) ?? null, [cityBranches, cityBranchId]);
   const selectedManagerObj = useMemo(() => managers.find((m) => m.id === reportingManagerId) ?? null, [managers, reportingManagerId]);
 
+  // Real linked User / Role / Permissions + Documents for the selected person (Step 5 sections).
+  const [personDetail, setPersonDetail] = useState<any>(null);
+  useEffect(() => {
+    if (!personMasterId) { setPersonDetail(null); return; }
+    let alive = true;
+    apiGet<any>(`/api/erp/general-office/person-detail?id=${encodeURIComponent(personMasterId)}`)
+      .then((r) => { if (alive) setPersonDetail(r); })
+      .catch(() => { if (alive) setPersonDetail(null); });
+    return () => { alive = false; };
+  }, [personMasterId]);
+
   // When the selected person changes, load their structured identity from the master; clear when
   // deselected so no stale values from a previously selected person are ever retained (item 5).
   useEffect(() => {
@@ -1143,6 +1154,14 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
                   [t(lang, "hr.f_deductions", "Deductions"), `${(Number(deduction) + Number(taxDeduction)).toLocaleString()} ${salaryCurrency}`],
                   [t(lang, "hr.f_net_salary", "Net Salary"), `${netSalary.toLocaleString()} ${salaryCurrency}`],
                   [t(lang, "hr.f_currency", "Currency"), salaryCurrency || dash]
+                ] },
+                { title: t(lang, "hr.f_sec_user", "User / Role / Permissions"), rows: [
+                  [t(lang, "sed.f_user_code", "User Code"), personDetail?.user?.userCode || t(lang, "sed.state_not_linked", "Not linked")],
+                  [t(lang, "report.role", "Role"), (personDetail?.roles || []).map((r: any) => r.role).join(", ") || t(lang, "sed.state_not_linked", "Not linked")],
+                  [t(lang, "hr.f_role_scope", "Access Scope"), (personDetail?.roles || []).map((r: any) => r.scope).filter(Boolean).join("; ") || dash]
+                ] },
+                { title: t(lang, "hr.f_sec_kyc", "KYC & Documents"), rows: [
+                  [t(lang, "sed.attachments", "Documents"), (personDetail?.documents?.length ? personDetail.documents.map((d: any) => d.name).join(", ") : t(lang, "sed.no_attachments", "No documents attached"))]
                 ] },
                 { title: t(lang, "hr.f_sec_status", "Status & Audit Information"), rows: [
                   [t(lang, "hr.f_status", "Status"), status || dash],
