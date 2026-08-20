@@ -16,6 +16,9 @@ import { SimpleModal } from "@/components/ui/simple-modal";
 import { cn } from "@/lib/utils";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { EmployeeForm } from "@/features/hr-payroll/components/employee-form";
+import { EmployeeDateToolbar, computeRange, inRange, type DateRange } from "@/features/general-office/components/employee-date-toolbar";
+import { personFullName } from "@/features/hr-payroll/components/person-picker";
+import { t as ct } from "@/lib/i18n/ui";
 import { AdvanceLoanModal } from "@/features/hr-payroll/components/advance-loan-modal";
 import { EmployeeLedgerPanel } from "@/features/hr-payroll/components/employee-ledger-panel";
 import { openUserA4ReportWindow } from "@/lib/reports/open-user-a4-report-window";
@@ -419,6 +422,22 @@ export function GeneralOfficeDashboardView() {
 
   // Employees State
   const [employees, setEmployees] = useState<any[]>([]);
+  // Date-wise employee activity (Priority 3). Defaults to Today; filters the table + drives the
+  // daily-count cards off the real created_at/updated_at timestamps.
+  const [dateRange, setDateRange] = useState<DateRange>(() => computeRange("day", new Date().toISOString().slice(0, 10)));
+  const employeesByDate = useMemo(
+    () => employees.filter((e) => dateRange.mode === "all" || inRange(e.created_at, dateRange) || inRange(e.updated_at, dateRange)),
+    [employees, dateRange]
+  );
+  const dailyCounts = useMemo(() => {
+    const isActive = (e: any) => String(e.status ?? "").toLowerCase() === "active";
+    return {
+      newC: employees.filter((e) => inRange(e.created_at, dateRange)).length,
+      updC: employees.filter((e) => inRange(e.updated_at, dateRange) && !inRange(e.created_at, dateRange)).length,
+      activeC: employeesByDate.filter(isActive).length,
+      inactiveC: employeesByDate.filter((e) => !isActive(e)).length
+    };
+  }, [employees, dateRange, employeesByDate]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("");
@@ -705,6 +724,23 @@ export function GeneralOfficeDashboardView() {
           {/* TAB 1 & 2: EMPLOYEE MASTER SETUP & MANAGEMENT TABLE DIRECTORY */}
           {(activeTab === "master-setup" || activeTab === "management") && (
             <div className="space-y-4">
+              {/* Date-wise employee activity (Priority 3) */}
+              <EmployeeDateToolbar lang={lang} value={dateRange} onChange={setDateRange} />
+              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+                {[
+                  { k: ct(lang, "god.new_employees", "New Employees"), v: dailyCounts.newC, c: "text-emerald-600" },
+                  { k: ct(lang, "god.updated_employees", "Updated Employees"), v: dailyCounts.updC, c: "text-blue-600" },
+                  { k: ct(lang, "god.active", "Active"), v: dailyCounts.activeC, c: "text-emerald-600" },
+                  { k: ct(lang, "god.inactive", "Inactive"), v: dailyCounts.inactiveC, c: "text-slate-500" }
+                ].map((card, i) => (
+                  <div key={i} className="rounded-2xl border bg-card p-3 shadow-sm">
+                    <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{card.k}</div>
+                    <div className={`mt-1 text-2xl font-black ${card.c}`}>{card.v}</div>
+                    <div className="text-[10px] text-muted-foreground">{ct(lang, "god.in_range", "In Selected Range")}</div>
+                  </div>
+                ))}
+              </div>
+
               {/* Search & Filter Toolbar */}
               <div className="rounded-2xl border bg-card p-4 shadow-sm flex flex-wrap items-center gap-3">
                 <div className="relative flex-1 min-w-[200px]">
@@ -768,16 +804,16 @@ export function GeneralOfficeDashboardView() {
                       <tr>
                         <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">{tr("Loading registered employees...")}</td>
                       </tr>
-                    ) : employees.length === 0 ? (
+                    ) : employeesByDate.length === 0 ? (
                       <tr>
                         <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">No employee records found. Click "Register New Employee" above.</td>
                       </tr>
                     ) : (
-                      employees.map((emp) => (
+                      employeesByDate.map((emp) => (
                         <tr key={emp.id} className="hover:bg-muted/50 transition-colors">
                           <td className="px-4 py-3.5 font-mono font-bold">{emp.employee_code}</td>
                           <td className="px-4 py-3.5">
-                            <div className="font-bold">{emp.person?.customer_name}</div>
+                            <div className="font-bold">{personFullName(emp.person || {})}</div>
                             <div className="text-[10px] text-muted-foreground font-mono">{emp.person?.mobile || "-"}</div>
                           </td>
                           <td className="px-4 py-3.5">
