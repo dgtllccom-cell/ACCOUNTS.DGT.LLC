@@ -725,6 +725,12 @@ export type UiKey =
   | "nav.filter_by_date_range"
   | "nav.all_dates"
   | "nav.dashboard"
+  | "nav.new_entry"
+  | "nav.new_account"
+  | "nav.new_branch"
+  | "nav.new_user"
+  | "nav.register_employee"
+  | "nav.entry_reports"
   | "nav.open_navigation"
   | "nav.close_navigation"
   | "nav.expand_sidebar"
@@ -4224,6 +4230,12 @@ const en: Dict = {
   "nav.filter_by_date_range": "Filter by date range",
   "nav.all_dates": "All Dates",
   "nav.dashboard": "Dashboard",
+  "nav.new_entry": "New Entry",
+  "nav.new_account": "New Account / Ledger",
+  "nav.new_branch": "Branch Setup / Network",
+  "nav.new_user": "New User Registration",
+  "nav.register_employee": "Register Employee",
+  "nav.entry_reports": "Entry & Release Reports",
   "nav.all_release_entries": "All Release Entries",
   "sae.title": "Super Admin — All Release Entries",
   "sae.subtitle": "One live control center for all ERP modules, all countries, all branches — latest activity, debit/credit movement and full entry drill-down.",
@@ -7012,6 +7024,14 @@ const ur: Dict = {
   "nav.template_purple": "پرپل",
   "nav.template_blue": "بلیو",
   "nav.template_green": "گرین",
+  "nav.dashboard": "ڈیش بورڈ",
+  "nav.new_entry": "نیا اندراج",
+  "nav.new_account": "نیا کھاتہ / لیجر",
+  "nav.new_branch": "برانچ نیٹ ورک و سیٹ اپ",
+  "nav.new_user": "نئے صارف کا اندراج",
+  "nav.register_employee": "ملازم کا اندراج",
+  "nav.entry_reports": "اندراج رپورٹس",
+  "nav.all_release_entries": "تمام ریلیز اندراجات",
   "nav.template_gold": "گولڈ",
   "nav.template_cyan": "سایان",
   "nav.pakistan": "پاکستان",
@@ -9207,6 +9227,14 @@ const ar: Dict = {
   "company_form.step_contacts_ids": "٣. جهات الاتصال والهويات",
   "company_form.step_review_save": "٤. المراجعة والحفظ",
   "company_form.section_company_details": "تفاصيل الشركة",
+  "nav.dashboard": "لوحة التحكم",
+  "nav.new_entry": "إدخال جديد",
+  "nav.new_account": "حساب جديد / دفتر الأستاذ",
+  "nav.new_branch": "إعداد الفروع والشبكة",
+  "nav.new_user": "تسجيل مستخدم جديد",
+  "nav.register_employee": "تسجيل موظف",
+  "nav.entry_reports": "تقارير الإدخالات",
+  "nav.all_release_entries": "جميع القيود الصادرة",
   "company_form.owner_name": "اسم مالك الشركة",
   "company_form.enter_owner_name": "أدخل اسم المالك",
   "company_form.company_name": "اسم الشركة",
@@ -11463,7 +11491,14 @@ const fa: Dict = {
   "purchase.tier4_city_entry_serial": "4. سریال شهر / ثبت",
   "purchase.transfer_destination_roznamcha_serials": "مقصد انتقال و سریال‌های روزنامچه تجاری",
   "purchase.transfer_locked_completed": "انتقال قفل و تکمیل شد",
-  "purchase.pending_transfer_badge": "انتقال در انتظار",
+  "nav.dashboard": "داشبورد",
+  "nav.new_entry": "ثبت جدید",
+  "nav.new_account": "حساب جدید / دفتر کل",
+  "nav.new_branch": "تنظیم شعبات و شبکه",
+  "nav.new_user": "ثبت کاربر جدید",
+  "nav.register_employee": "ثبت کارمند",
+  "nav.entry_reports": "گزارش‌های ثبت و ترخیص",
+  "nav.all_release_entries": "تمام ثبت‌های منتشرشده",
   "purchase.transfer_destination_module": "ماژول مقصد انتقال",
   "purchase.transfer_destination_completed_text": "ماژول پیش‌پرداخت خرید و روزنامچه تجاری",
   "purchase.transfer_destination_ready_text": "آماده انتقال به سوابق پرداخت",
