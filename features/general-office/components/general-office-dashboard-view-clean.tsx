@@ -513,56 +513,68 @@ export function GeneralOfficeDashboardView() {
   }, [loadEmployees]);
 
   // Sample static data for sub-modules
-  const departmentsList = [
-    { id: "1", name: "Executive Headquarters", code: "EXEC", head: "Super Admin", employees: 12, budget: "AED 120,000" },
-    { id: "2", name: "Accounts & Finance", code: "FIN", head: "Asmatullah Khan", employees: 28, budget: "AED 250,000" },
-    { id: "3", name: "Customs & Clearing Operations", code: "CLR", head: "Jan Ali", employees: 45, budget: "AED 380,000" },
-    { id: "4", name: "Logistics & Fleet Transport", code: "LOG", head: "Mohammad Shah", employees: 64, budget: "AED 420,000" },
-  ];
+  // Departments & Designations are REAL — aggregated from the actual registered employees'
+  // department/designation fields (no fabricated rows).
+  const departmentsList = useMemo(() => {
+    const map = new Map<string, { count: number; heads: Set<string> }>();
+    employees.forEach((e) => {
+      const d = String(e.department || "").trim();
+      if (!d) return;
+      const cur = map.get(d) || { count: 0, heads: new Set<string>() };
+      cur.count += 1;
+      if (String(e.category) === "Manager") cur.heads.add(personFullName(e.person || {}));
+      map.set(d, cur);
+    });
+    return [...map.entries()].sort((a, b) => b[1].count - a[1].count)
+      .map(([name, v], i) => ({ id: String(i), name, code: name.slice(0, 3).toUpperCase(), head: [...v.heads][0] || "-", employees: v.count }));
+  }, [employees]);
 
-  const designationsList = [
-    { id: "1", title: "General Manager", dept: "Executive Headquarters", grade: "M-1", minSalary: "AED 25,000" },
-    { id: "2", title: "Senior Accountant", dept: "Accounts & Finance", grade: "A-2", minSalary: "AED 12,000" },
-    { id: "3", title: "Clearing Agent Specialist", dept: "Customs & Clearing", grade: "O-3", minSalary: "AED 8,500" },
-    { id: "4", title: "Branch Cashier", dept: "Accounts & Finance", grade: "C-1", minSalary: "PKR 95,000" },
-  ];
+  const designationsList = useMemo(() => {
+    const map = new Map<string, { count: number; depts: Set<string>; salaries: number[]; currency: string }>();
+    employees.forEach((e) => {
+      const title = String(e.designation || "").trim();
+      if (!title) return;
+      const cur = map.get(title) || { count: 0, depts: new Set<string>(), salaries: [] as number[], currency: e.salary_currency || "" };
+      cur.count += 1;
+      if (e.department) cur.depts.add(e.department);
+      if (Number(e.net_salary)) cur.salaries.push(Number(e.net_salary));
+      if (!cur.currency && e.salary_currency) cur.currency = e.salary_currency;
+      map.set(title, cur);
+    });
+    return [...map.entries()].sort((a, b) => b[1].count - a[1].count)
+      .map(([title, v], i) => ({
+        id: String(i), title, dept: [...v.depts][0] || "-", count: v.count,
+        minSalary: v.salaries.length ? `${Math.min(...v.salaries).toLocaleString()} ${v.currency}` : "-"
+      }));
+  }, [employees]);
 
-  const attendanceList = [
-    { empCode: "EMP-001", name: "Asmatullah Khan", timeIn: "08:30 AM", timeOut: "05:30 PM", status: "Present", hours: "9.0 hrs" },
-    { empCode: "EMP-002", name: "Jan Ali", timeIn: "08:45 AM", timeOut: "05:45 PM", status: "Present", hours: "9.0 hrs" },
-    { empCode: "EMP-003", name: "Mohammad Shah", timeIn: "09:15 AM", timeOut: "05:30 PM", status: "Late", hours: "8.25 hrs" },
-    { empCode: "EMP-004", name: "Tariq Ahmad", timeIn: "—", timeOut: "—", status: "On Leave", hours: "0 hrs" },
-  ];
-
-  const leaveList = [
-    { empCode: "EMP-004", name: "Tariq Ahmad", type: "Annual Leave", from: "2026-07-28", to: "2026-08-05", days: 8, status: "Approved" },
-    { empCode: "EMP-008", name: "Gul Mohammad", type: "Medical Leave", from: "2026-07-30", to: "2026-08-01", days: 2, status: "Pending" },
-  ];
-
-  const assetList = [
-    { tag: "AST-DXB-001", name: "MacBook Pro M3 Max", category: "IT Hardware", assignedTo: "Asmatullah Khan", serial: "C02G8009MD6R", status: "In Use" },
-    { tag: "AST-DXB-002", name: "Toyota Land Cruiser", category: "Vehicle", assignedTo: "Jan Ali", serial: "DXB-99081", status: "In Use" },
-  ];
+  // The following HR sub-systems have no backing tables in the schema yet — show honest empty
+  // states (never fabricated rows). Building each (attendance/leave/assets) is a dedicated module.
+  const attendanceList: any[] = [];
+  const leaveList: any[] = [];
+  const assetList: any[] = [];
 
   // Printable ID Card handler
   const handlePrintIdCard = (emp: any) => {
+    // Real employee data only — no fabricated identity/activity values.
+    const name = personFullName(emp.person || {}) || emp.employee_code;
     openUserA4ReportWindow({
-      title: `Official Employee ID Card — ${emp.person?.customer_name || emp.employee_code}`,
-      subtitle: "Digital Dock Corporate Identity Verification",
+      title: `${ct(lang, "nav.employee_id_cards", "Employee ID Card")} — ${name}`,
+      subtitle: emp.designation || ct(lang, "hr.f_cat_employee", "Employee"),
       userData: {
-        userId: emp.id || "EMP-001",
-        userCode: emp.employee_code || "EMP-001",
-        fullName: emp.person?.customer_name || "Employee Name",
-        countryName: "UAE & Pakistan",
-        branchName: "Dubai Main HQ",
-        branchType: "main_branch",
-        role: emp.designation || "Staff Member",
-        registrationDate: emp.joining_date || "2026-01-01",
-        status: emp.status || "Active",
-        permissions: ["Employee Identity Badge", "Official Access Pass"],
-        lastActivity: new Date().toISOString(),
-        lastActivityAction: "Generated ID Card",
-        activityCounts: { logins: 12, transactions: 45, purchases: 8, payments: 15, accounts: 2, edits: 3 }
+        userId: emp.id || "",
+        userCode: emp.employee_code || "",
+        fullName: name,
+        countryName: emp.country?.name || "",
+        branchName: emp.city_branch?.name || emp.country_branch?.name || "",
+        branchType: emp.city_branch ? "city_branch" : "main_branch",
+        role: emp.designation || "",
+        registrationDate: emp.joining_date || "",
+        status: emp.status || "",
+        permissions: emp.department ? [emp.department] : [],
+        lastActivity: emp.updated_at || emp.created_at || "",
+        lastActivityAction: ct(lang, "nav.employee_id_cards", "Employee ID Card"),
+        activityCounts: { logins: 0, transactions: 0, purchases: 0, payments: 0, accounts: 0, edits: 0 }
       }
     });
   };
@@ -888,21 +900,24 @@ export function GeneralOfficeDashboardView() {
                 </Button>
               </div>
 
-              <div className="grid gap-4 sm:grid-cols-2">
-                {departmentsList.map((dept) => (
-                  <div key={dept.id} className="rounded-xl border p-4 hover:border-emerald-500 transition">
-                    <div className="flex items-center justify-between">
-                      <div className="font-bold text-sm">{dept.name}</div>
-                      <Badge variant="outline" className="font-mono text-[10px]">{dept.code}</Badge>
+              {departmentsList.length === 0 ? (
+                <div className="rounded-xl border border-dashed p-8 text-center text-xs text-muted-foreground">{tr("No departments yet — departments appear here from registered employees.")}</div>
+              ) : (
+                <div className="grid gap-4 sm:grid-cols-2">
+                  {departmentsList.map((dept) => (
+                    <div key={dept.id} className="rounded-xl border p-4 hover:border-emerald-500 transition">
+                      <div className="flex items-center justify-between">
+                        <div className="font-bold text-sm">{dept.name}</div>
+                        <Badge variant="outline" className="font-mono text-[10px]">{dept.code}</Badge>
+                      </div>
+                      <div className="mt-3 text-xs space-y-1 text-muted-foreground">
+                        <div><strong className="text-foreground">{tr("Head of Dept")}:</strong> {dept.head}</div>
+                        <div><strong className="text-foreground">{tr("Active Employees")}:</strong> {dept.employees} {tr("Members")}</div>
+                      </div>
                     </div>
-                    <div className="mt-3 text-xs space-y-1 text-muted-foreground">
-                      <div><strong className="text-foreground">{tr("Head of Dept")}:</strong> {dept.head}</div>
-                      <div><strong className="text-foreground">{tr("Active Employees")}:</strong> {dept.employees} {tr("Members")}</div>
-                      <div><strong className="text-foreground">{tr("Monthly Budget")}:</strong> {dept.budget}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
@@ -924,17 +939,19 @@ export function GeneralOfficeDashboardView() {
                   <thead className="bg-muted font-bold border-b">
                     <tr>
                       <Th className="px-4 py-3">{tr("Designation Title")}</Th>
-                      <Th className="px-4 py-3">Department</Th>
-                      <Th className="px-4 py-3">{tr("Pay Grade")}</Th>
+                      <Th className="px-4 py-3">{tr("Department")}</Th>
+                      <Th className="px-4 py-3">{tr("Active Employees")}</Th>
                       <Th className="px-4 py-3">{tr("Min Base Scale")}</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {designationsList.map((desig) => (
+                    {designationsList.length === 0 ? (
+                      <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">{tr("No designations yet — they appear here from registered employees.")}</td></tr>
+                    ) : designationsList.map((desig) => (
                       <tr key={desig.id}>
                         <td className="px-4 py-3 font-bold">{desig.title}</td>
                         <td className="px-4 py-3 text-muted-foreground">{desig.dept}</td>
-                        <td className="px-4 py-3"><Badge variant="secondary">{desig.grade}</Badge></td>
+                        <td className="px-4 py-3"><Badge variant="secondary">{desig.count}</Badge></td>
                         <td className="px-4 py-3 font-mono font-bold text-emerald-600">{desig.minSalary}</td>
                       </tr>
                     ))}
@@ -975,7 +992,7 @@ export function GeneralOfficeDashboardView() {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {attendanceList.map((att, i) => (
+                    {attendanceList.length === 0 ? (<tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">{tr("No attendance records — the attendance module requires a dedicated attendance table.")}</td></tr>) : attendanceList.map((att, i) => (
                       <tr key={i}>
                         <td className="px-4 py-3 font-mono font-bold">{att.empCode}</td>
                         <td className="px-4 py-3 font-semibold">{att.name}</td>
@@ -1024,7 +1041,7 @@ export function GeneralOfficeDashboardView() {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {leaveList.map((lv, i) => (
+                    {leaveList.length === 0 ? (<tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">{tr("No leave requests — the leave module requires a dedicated leave table.")}</td></tr>) : leaveList.map((lv, i) => (
                       <tr key={i}>
                         <td className="px-4 py-3 font-mono font-bold">{lv.empCode}</td>
                         <td className="px-4 py-3 font-semibold">{lv.name}</td>
@@ -1097,7 +1114,7 @@ export function GeneralOfficeDashboardView() {
                     </tr>
                   </thead>
                   <tbody className="divide-y">
-                    {assetList.map((ast, i) => (
+                    {assetList.length === 0 ? (<tr><td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">{tr("No office assets — the assets module requires a dedicated assets table.")}</td></tr>) : assetList.map((ast, i) => (
                       <tr key={i}>
                         <td className="px-4 py-3 font-mono font-bold text-blue-600">{ast.tag}</td>
                         <td className="px-4 py-3 font-bold">{ast.name}</td>
