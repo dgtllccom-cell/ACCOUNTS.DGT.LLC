@@ -2,6 +2,15 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { translationPendingLabel } from "@/lib/i18n/verified-record-translations";
 
 export type UiKey =
+  | "nav.export_pdf_center"
+  | "nav.audit_logs"
+  | "nav.security_events"
+  | "nav.daily_branch_activity"
+  | "nav.user_activity_productivity"
+  | "nav.deleted_records_vault"
+  | "nav.edit_version_history"
+  | "nav.enterprise_audit_monitoring"
+  | "nav.entry_register"
   | "bankroz.title"
   | "report.builder_export_csv"
   | "report.builder_classic_view"
@@ -2821,6 +2830,18 @@ export type UiKey =
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "nav.entry_register": "Entry Register",
+  "nav.enterprise_audit_monitoring": "Enterprise Audit & Monitoring",
+  "nav.edit_version_history": "Edit / Version History",
+  "nav.deleted_records_vault": "Deleted Records",
+  "nav.user_activity_productivity": "User Activity",
+  "nav.daily_branch_activity": "Daily Activity Reports",
+  "nav.security_events": "Security Events",
+  "nav.audit_logs": "Audit Logs",
+  "nav.export_pdf_center": "Export / PDF Center",
+
+
+
   "common.code": "Code",
   "common.total": "Total",
   "acct.title": "Account Types",
@@ -5887,7 +5908,19 @@ const en: Dict = {
 };
 
 const ur: Dict = {
+
+
   ...en,
+  "nav.entry_register": "اندراج رجسٹر",
+  "nav.enterprise_audit_monitoring": "انٹرپرائز آڈٹ اور مانیٹرنگ",
+  "nav.edit_version_history": "ترمیم و ورژن ہسٹری",
+  "nav.deleted_records_vault": "ڈیلیٹ شدہ ریکارڈز",
+  "nav.user_activity_productivity": "صارف کی سرگرمی",
+  "nav.daily_branch_activity": "روزانہ سرگرمی کی رپورٹس",
+  "nav.security_events": "سیکیورٹی ایونٹس",
+  "nav.audit_logs": "آڈٹ لاگز",
+  "nav.export_pdf_center": "ایکسپورٹ و پی ڈی ایف سینٹر",
+
   "common.code": "کوڈ",
   "common.total": "کل",
   "acct.title": "اکاؤنٹ کی اقسام",
@@ -8936,7 +8969,19 @@ const ur: Dict = {
 };
 
 const ar: Dict = {
+
+
   ...en,
+  "nav.entry_register": "سجل القيود",
+  "nav.enterprise_audit_monitoring": "تدقيق ومراقبة المؤسسة",
+  "nav.edit_version_history": "سجل التعديلات والنسخ",
+  "nav.deleted_records_vault": "السجلات المحذوفة",
+  "nav.user_activity_productivity": "نشاط المستخدمين",
+  "nav.daily_branch_activity": "تقارير النشاط اليومي",
+  "nav.security_events": "أحداث الأمان",
+  "nav.audit_logs": "سجلات التدقيق",
+  "nav.export_pdf_center": "مركز التصدير وملفات PDF",
+
   "common.code": "الرمز",
   "common.total": "الإجمالي",
   "acct.title": "أنواع الحسابات",
@@ -11984,7 +12029,19 @@ const ar: Dict = {
 };
 
 const fa: Dict = {
+
+
   ...en,
+  "nav.entry_register": "دفتر ثبت ورودی‌ها",
+  "nav.enterprise_audit_monitoring": "حسابرسی و نظارت سازمانی",
+  "nav.edit_version_history": "تاریخچه ویرایش و نسخه‌ها",
+  "nav.deleted_records_vault": "سوابق حذف شده",
+  "nav.user_activity_productivity": "فعالیت کاربر",
+  "nav.daily_branch_activity": "گزارش‌های فعالیت روزانه",
+  "nav.security_events": "رویدادهای امنیتی",
+  "nav.audit_logs": "گزارش‌های حسابرسی",
+  "nav.export_pdf_center": "مرکز صادرات و PDF",
+
   "common.code": "کد",
   "common.total": "کل",
   "acct.title": "انواع حساب",
@@ -15031,7 +15088,19 @@ const fa: Dict = {
 };
 
 const ps: Dict = {
+
+
   ...en,
+  "nav.entry_register": "د ننوتلو راجستر",
+  "nav.enterprise_audit_monitoring": "د تصدۍ پلټنه او څارنه",
+  "nav.edit_version_history": "د ترمیم او نسخې تاریخ",
+  "nav.deleted_records_vault": "حذف شوي ریکارډونه",
+  "nav.user_activity_productivity": "د کارونکي فعالیت",
+  "nav.daily_branch_activity": "ورځني فعالیت راپورونه",
+  "nav.security_events": "امنیتي پېښې",
+  "nav.audit_logs": "د پلټنې لاګونه",
+  "nav.export_pdf_center": "د صادراتو او PDF مرکز",
+
   "common.code": "کوډ",
   "common.total": "ټول",
   "acct.title": "د حساب ډولونه",

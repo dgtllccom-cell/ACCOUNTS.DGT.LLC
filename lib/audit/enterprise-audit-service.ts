@@ -148,7 +148,7 @@ export async function recordAuditEvent(input: {
         ${input.reason || null},
         ${JSON.stringify(input.metadata || {})},
         ${isDeleted},
-        ${isDeleted ? sql`NOW()` : null},
+        ${isDeleted ? new Date().toISOString() : null},
         ${isDeleted ? userId : null},
         NOW()
       )

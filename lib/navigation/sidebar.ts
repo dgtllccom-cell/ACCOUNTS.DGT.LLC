@@ -92,13 +92,6 @@ export const sidebarTree: SidebarNode[] = [
     ]
   },
   {
-    key: "all-release-entries",
-    labelKey: "nav.all_release_entries",
-    iconKey: "layout-dashboard",
-    href: "/dashboard/all-release-entries" as Route,
-    roles: ["super_admin"]
-  },
-  {
     key: "new-entry",
     labelKey: "nav.new_entry" as any,
     iconKey: "list-plus",
@@ -219,13 +212,6 @@ export const sidebarTree: SidebarNode[] = [
         iconKey: "gantt",
         href: "/dashboard/new-entry" as Route,
         roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      },
-      {
-        key: "new-entry-reports",
-        labelKey: "nav.entry_reports" as any,
-        iconKey: "file-text",
-        href: "/dashboard/all-release-entries" as Route,
-        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"]
       }
     ]
   },
@@ -846,7 +832,92 @@ export const sidebarTree: SidebarNode[] = [
     labelKey: "nav.reports",
     iconKey: "bar-chart",
     href: "/dashboard/reports" as Route,
+    roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"],
     children: [
+      {
+        key: "rep-all-release-entries",
+        labelKey: "nav.all_release_entries",
+        iconKey: "list-plus",
+        href: "/dashboard/all-release-entries" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"]
+      },
+      {
+        key: "rep-entry-register",
+        labelKey: "nav.entry_register" as any,
+        iconKey: "scroll-text",
+        href: "/dashboard/new-entry" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "rep-enterprise-audit",
+        labelKey: "nav.enterprise_audit_monitoring" as any,
+        iconKey: "shield-check",
+        href: "/dashboard/audit-monitoring" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin"]
+      },
+      {
+        key: "rep-edit-version-history",
+        labelKey: "nav.edit_version_history" as any,
+        iconKey: "clock",
+        href: "/dashboard/audit-monitoring?tab=edits" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin"]
+      },
+      {
+        key: "rep-deleted-records",
+        labelKey: "nav.deleted_records_vault" as any,
+        iconKey: "clipboard-list",
+        href: "/dashboard/audit-monitoring?tab=deleted" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin"]
+      },
+      {
+        key: "rep-user-activity",
+        labelKey: "nav.user_activity_productivity" as any,
+        iconKey: "users",
+        href: "/dashboard/audit-monitoring?tab=users" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin"]
+      },
+      {
+        key: "rep-country-activity",
+        labelKey: "nav.country_reports",
+        iconKey: "globe",
+        href: "/dashboard/reports/country" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin"]
+      },
+      {
+        key: "rep-branch-activity",
+        labelKey: "nav.branch_reports",
+        iconKey: "building-2",
+        href: "/dashboard/reports/branch" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "main_branch_admin", "city_branch_admin"]
+      },
+      {
+        key: "rep-daily-branch-activity",
+        labelKey: "nav.daily_branch_activity" as any,
+        iconKey: "calendar",
+        href: "/dashboard/audit-monitoring?tab=daily" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "main_branch_admin", "city_branch_admin"]
+      },
+      {
+        key: "rep-security-events",
+        labelKey: "nav.security_events" as any,
+        iconKey: "shield",
+        href: "/dashboard/settings/security-events" as Route,
+        roles: ["super_admin", "super_admin_reports"]
+      },
+      {
+        key: "rep-audit-logs",
+        labelKey: "nav.audit_logs" as any,
+        iconKey: "file-text",
+        href: "/dashboard/settings/audit-logs" as Route,
+        roles: ["super_admin", "super_admin_reports"]
+      },
+      {
+        key: "rep-export-pdf-center",
+        labelKey: "nav.export_pdf_center" as any,
+        iconKey: "file-spreadsheet",
+        href: "/dashboard/print-reports" as Route,
+        roles: ["super_admin", "super_admin_reports", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"]
+      },
       {
         key: "reports-forms-directory",
         labelKey: "nav.forms_directory_audit" as any,
@@ -859,29 +930,12 @@ export const sidebarTree: SidebarNode[] = [
         iconKey: "file-text",
         href: "/dashboard/reports/handover" as Route
       },
-      // ─── NEW: Dynamic Role-Based Report Panels ──────────────────────
       {
         key: "reports-super-admin-panel",
         labelKey: "nav.super_admin_reports",
         iconKey: "bar-chart",
         href: "/dashboard/reports/super-admin" as Route,
-        roles: ["super_admin"],
-        permission: { resource: "reports", action: "read" }
-      },
-      {
-        key: "reports-country-panel",
-        labelKey: "nav.country_reports",
-        iconKey: "bar-chart",
-        href: "/dashboard/reports/country" as Route,
-        roles: ["country_admin", "country_user", "main_branch_admin"],
-        permission: { resource: "reports", action: "read" }
-      },
-      {
-        key: "reports-branch-panel",
-        labelKey: "nav.branch_reports",
-        iconKey: "bar-chart",
-        href: "/dashboard/reports/branch" as Route,
-        roles: ["city_branch_admin", "accountant", "cashier", "staff_user", "auditor_viewer"],
+        roles: ["super_admin", "super_admin_reports"],
         permission: { resource: "reports", action: "read" }
       },
       // ─── Legacy: Enterprise Reporting Hub ───────────────────────────

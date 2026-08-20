@@ -17,8 +17,8 @@ const dbUrl = getDbUrl();
 const sql = postgres(dbUrl, { max: 2, prepare: false });
 
 async function checkCols() {
-  const cols = await sql`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'translations_english'`;
-  console.log('Columns:', cols);
+  const cols = await sql`SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'roznamcha_lines'`;
+  console.log('Columns:', cols.map(c => c.column_name));
   await sql.end();
 }
 
