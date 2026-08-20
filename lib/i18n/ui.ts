@@ -5645,6 +5645,7 @@ const en: Dict = {
 };
 
 const ur: Dict = {
+  ...en,
   "log.command_center": "لاجسٹکس کمانڈ سینٹر",
   "log.dashboard_title": "شپنگ اور کلیئرنس ڈیش بورڈ",
   "log.dashboard_subtitle": "لائیو ترسیلات، کسٹمز کلیئرنگ، بی ایل ٹاسکس اور کنٹینر مقامات کی نگرانی کرنے والا آپریشنل ڈیش بورڈ۔",
@@ -5705,7 +5706,6 @@ const ur: Dict = {
   "log.not_scheduled": "شیڈول نہیں",
   "log.assignment": "تفویض",
   "log.pending_task_fallback": "زیر التواء لاجسٹکس ٹاسک",
-  ...en,
   "hr.f_sec_user": "صارف / کردار / اجازتیں",
   "hr.f_sec_kyc": "کے وائی سی اور دستاویزات",
   "hr.f_role_scope": "رسائی کا دائرہ",
@@ -8572,6 +8572,7 @@ const ur: Dict = {
 };
 
 const ar: Dict = {
+  ...en,
   "log.command_center": "مركز قيادة اللوجستيات",
   "log.dashboard_title": "لوحة الشحن والتخليص",
   "log.dashboard_subtitle": "لوحة تشغيلية لتتبع الشحنات الحية والتخليص الجمركي ومهام بوليصة الشحن ومواقع الحاويات.",
@@ -8632,7 +8633,6 @@ const ar: Dict = {
   "log.not_scheduled": "غير مجدول",
   "log.assignment": "مهمة",
   "log.pending_task_fallback": "مهمة لوجستية معلقة",
-  ...en,
   "hr.f_sec_user": "المستخدم / الدور / الصلاحيات",
   "hr.f_sec_kyc": "اعرف عميلك والمستندات",
   "hr.f_role_scope": "نطاق الوصول",
@@ -11498,6 +11498,7 @@ const ar: Dict = {
 };
 
 const fa: Dict = {
+  ...en,
   "log.command_center": "مرکز فرماندهی لجستیک",
   "log.dashboard_title": "داشبورد حمل‌ونقل و ترخیص",
   "log.dashboard_subtitle": "داشبورد عملیاتی برای ردیابی محموله‌های زنده، ترخیص گمرکی، وظایف بارنامه و موقعیت کانتینرها.",
@@ -11558,7 +11559,6 @@ const fa: Dict = {
   "log.not_scheduled": "زمان‌بندی‌نشده",
   "log.assignment": "واگذاری",
   "log.pending_task_fallback": "وظیفه لجستیکی در انتظار",
-  ...en,
   "hr.f_sec_user": "کاربر / نقش / مجوزها",
   "hr.f_sec_kyc": "احراز هویت و اسناد",
   "hr.f_role_scope": "محدوده دسترسی",
@@ -14422,6 +14422,7 @@ const fa: Dict = {
 };
 
 const ps: Dict = {
+  ...en,
   "log.command_center": "د لوژستیک قوماندې مرکز",
   "log.dashboard_title": "د لېږد او ترخیص ډشبورډ",
   "log.dashboard_subtitle": "عملیاتي ډشبورډ چې ژوندي بارونه، ګمرکي ترخیص، د بار لیک دندې او د کانټینر ځایونه څاري.",
@@ -14482,7 +14483,6 @@ const ps: Dict = {
   "log.not_scheduled": "مهال نه دی ټاکل شوی",
   "log.assignment": "دنده",
   "log.pending_task_fallback": "پاتې لوژستیکي دنده",
-  ...en,
   "hr.f_sec_user": "کارن / دنده / اجازې",
   "hr.f_sec_kyc": "KYC او اسناد",
   "hr.f_role_scope": "د لاسرسي ساحه",
