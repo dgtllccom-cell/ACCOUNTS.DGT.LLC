@@ -1992,6 +1992,28 @@ export type UiKey =
   | "log.not_scheduled"
   | "log.assignment"
   | "log.pending_task_fallback"
+  | "common.no_data"
+  | "cdash.total_accounts"
+  | "cdash.total_products"
+  | "cdash.total_stock_value"
+  | "cdash.total_purchases"
+  | "cdash.view_details"
+  | "cdash.purchase_overview"
+  | "cdash.sales_by_branch"
+  | "cdash.purchases_by_branch"
+  | "cdash.real_branch_figures"
+  | "cdash.top_branches"
+  | "cdash.sales_distribution"
+  | "cdash.sub_branch_performance"
+  | "cdash.no_branches"
+  | "cdash.no_registered_branches"
+  | "cdash.col_branch_name"
+  | "cdash.col_code"
+  | "cdash.col_sales"
+  | "cdash.col_purchases"
+  | "cdash.col_debit"
+  | "cdash.col_credit"
+  | "cdash.col_balance"
   | "common.no_records"
   | "common.select"
   | "common.clear_selection"
@@ -2700,6 +2722,28 @@ export type UiKey =
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "common.no_data": "No data available",
+  "cdash.total_accounts": "Total Accounts",
+  "cdash.total_products": "Total Products",
+  "cdash.total_stock_value": "Total Stock Value",
+  "cdash.total_purchases": "Total Purchases",
+  "cdash.view_details": "View Details",
+  "cdash.purchase_overview": "Purchase Overview",
+  "cdash.sales_by_branch": "Sales by Branch",
+  "cdash.purchases_by_branch": "Purchases by Branch",
+  "cdash.real_branch_figures": "Real per-branch figures",
+  "cdash.top_branches": "Top Branches by Sales",
+  "cdash.sales_distribution": "Sales distribution",
+  "cdash.sub_branch_performance": "Sub-Branch Performance",
+  "cdash.no_branches": "No Branches",
+  "cdash.no_registered_branches": "No registered branches found.",
+  "cdash.col_branch_name": "Branch Name",
+  "cdash.col_code": "Code",
+  "cdash.col_sales": "Sales",
+  "cdash.col_purchases": "Purchases",
+  "cdash.col_debit": "Debit",
+  "cdash.col_credit": "Credit",
+  "cdash.col_balance": "Balance",
   "log.command_center": "Logistics Command Center",
   "log.dashboard_title": "Shipping & Clearance Dashboard",
   "log.dashboard_subtitle": "Operational dashboard tracking live shipments, customs clearing, BL tasks and container locations.",
@@ -5646,6 +5690,28 @@ const en: Dict = {
 
 const ur: Dict = {
   ...en,
+  "common.no_data": "کوئی ڈیٹا دستیاب نہیں",
+  "cdash.total_accounts": "کل اکاؤنٹس",
+  "cdash.total_products": "کل مصنوعات",
+  "cdash.total_stock_value": "کل اسٹاک ویلیو",
+  "cdash.total_purchases": "کل خریداری",
+  "cdash.view_details": "تفصیلات دیکھیں",
+  "cdash.purchase_overview": "خریداری کا جائزہ",
+  "cdash.sales_by_branch": "برانچ کے لحاظ سے فروخت",
+  "cdash.purchases_by_branch": "برانچ کے لحاظ سے خریداری",
+  "cdash.real_branch_figures": "حقیقی فی برانچ اعداد",
+  "cdash.top_branches": "فروخت کے لحاظ سے سرفہرست برانچیں",
+  "cdash.sales_distribution": "فروخت کی تقسیم",
+  "cdash.sub_branch_performance": "ذیلی برانچ کارکردگی",
+  "cdash.no_branches": "کوئی برانچ نہیں",
+  "cdash.no_registered_branches": "کوئی رجسٹرڈ برانچ نہیں ملی۔",
+  "cdash.col_branch_name": "برانچ کا نام",
+  "cdash.col_code": "کوڈ",
+  "cdash.col_sales": "فروخت",
+  "cdash.col_purchases": "خریداری",
+  "cdash.col_debit": "ڈیبٹ",
+  "cdash.col_credit": "کریڈٹ",
+  "cdash.col_balance": "بیلنس",
   "log.command_center": "لاجسٹکس کمانڈ سینٹر",
   "log.dashboard_title": "شپنگ اور کلیئرنس ڈیش بورڈ",
   "log.dashboard_subtitle": "لائیو ترسیلات، کسٹمز کلیئرنگ، بی ایل ٹاسکس اور کنٹینر مقامات کی نگرانی کرنے والا آپریشنل ڈیش بورڈ۔",
@@ -8573,6 +8639,28 @@ const ur: Dict = {
 
 const ar: Dict = {
   ...en,
+  "common.no_data": "لا توجد بيانات متاحة",
+  "cdash.total_accounts": "إجمالي الحسابات",
+  "cdash.total_products": "إجمالي المنتجات",
+  "cdash.total_stock_value": "إجمالي قيمة المخزون",
+  "cdash.total_purchases": "إجمالي المشتريات",
+  "cdash.view_details": "عرض التفاصيل",
+  "cdash.purchase_overview": "نظرة عامة على المشتريات",
+  "cdash.sales_by_branch": "المبيعات حسب الفرع",
+  "cdash.purchases_by_branch": "المشتريات حسب الفرع",
+  "cdash.real_branch_figures": "أرقام فعلية لكل فرع",
+  "cdash.top_branches": "أفضل الفروع حسب المبيعات",
+  "cdash.sales_distribution": "توزيع المبيعات",
+  "cdash.sub_branch_performance": "أداء الفروع الفرعية",
+  "cdash.no_branches": "لا توجد فروع",
+  "cdash.no_registered_branches": "لم يتم العثور على فروع مسجلة.",
+  "cdash.col_branch_name": "اسم الفرع",
+  "cdash.col_code": "الرمز",
+  "cdash.col_sales": "المبيعات",
+  "cdash.col_purchases": "المشتريات",
+  "cdash.col_debit": "مدين",
+  "cdash.col_credit": "دائن",
+  "cdash.col_balance": "الرصيد",
   "log.command_center": "مركز قيادة اللوجستيات",
   "log.dashboard_title": "لوحة الشحن والتخليص",
   "log.dashboard_subtitle": "لوحة تشغيلية لتتبع الشحنات الحية والتخليص الجمركي ومهام بوليصة الشحن ومواقع الحاويات.",
@@ -11499,6 +11587,28 @@ const ar: Dict = {
 
 const fa: Dict = {
   ...en,
+  "common.no_data": "داده‌ای موجود نیست",
+  "cdash.total_accounts": "کل حساب‌ها",
+  "cdash.total_products": "کل محصولات",
+  "cdash.total_stock_value": "کل ارزش موجودی",
+  "cdash.total_purchases": "کل خریدها",
+  "cdash.view_details": "مشاهده جزئیات",
+  "cdash.purchase_overview": "نمای کلی خرید",
+  "cdash.sales_by_branch": "فروش بر اساس شعبه",
+  "cdash.purchases_by_branch": "خرید بر اساس شعبه",
+  "cdash.real_branch_figures": "ارقام واقعی هر شعبه",
+  "cdash.top_branches": "برترین شعب بر اساس فروش",
+  "cdash.sales_distribution": "توزیع فروش",
+  "cdash.sub_branch_performance": "عملکرد شعب فرعی",
+  "cdash.no_branches": "بدون شعبه",
+  "cdash.no_registered_branches": "شعبه ثبت‌شده‌ای یافت نشد.",
+  "cdash.col_branch_name": "نام شعبه",
+  "cdash.col_code": "کد",
+  "cdash.col_sales": "فروش",
+  "cdash.col_purchases": "خریدها",
+  "cdash.col_debit": "بدهکار",
+  "cdash.col_credit": "بستانکار",
+  "cdash.col_balance": "مانده",
   "log.command_center": "مرکز فرماندهی لجستیک",
   "log.dashboard_title": "داشبورد حمل‌ونقل و ترخیص",
   "log.dashboard_subtitle": "داشبورد عملیاتی برای ردیابی محموله‌های زنده، ترخیص گمرکی، وظایف بارنامه و موقعیت کانتینرها.",
@@ -14423,6 +14533,28 @@ const fa: Dict = {
 
 const ps: Dict = {
   ...en,
+  "common.no_data": "هېڅ ډیټا شتون نلري",
+  "cdash.total_accounts": "ټول حسابونه",
+  "cdash.total_products": "ټول محصولات",
+  "cdash.total_stock_value": "د ذخیرې ټوله ارزښت",
+  "cdash.total_purchases": "ټولې پیرودنې",
+  "cdash.view_details": "جزئیات وګورئ",
+  "cdash.purchase_overview": "د پیرودنې کتنه",
+  "cdash.sales_by_branch": "د څانګې له مخې پلور",
+  "cdash.purchases_by_branch": "د څانګې له مخې پیرودنه",
+  "cdash.real_branch_figures": "د هرې څانګې ریښتیني ارقام",
+  "cdash.top_branches": "د پلور له مخې غوره څانګې",
+  "cdash.sales_distribution": "د پلور وېش",
+  "cdash.sub_branch_performance": "د فرعي څانګو فعالیت",
+  "cdash.no_branches": "هېڅ څانګه نشته",
+  "cdash.no_registered_branches": "هېڅ ثبت شوې څانګه ونه موندل شوه.",
+  "cdash.col_branch_name": "د څانګې نوم",
+  "cdash.col_code": "کوډ",
+  "cdash.col_sales": "پلور",
+  "cdash.col_purchases": "پیرودنې",
+  "cdash.col_debit": "ډیبټ",
+  "cdash.col_credit": "کریډټ",
+  "cdash.col_balance": "بیلانس",
   "log.command_center": "د لوژستیک قوماندې مرکز",
   "log.dashboard_title": "د لېږد او ترخیص ډشبورډ",
   "log.dashboard_subtitle": "عملیاتي ډشبورډ چې ژوندي بارونه، ګمرکي ترخیص، د بار لیک دندې او د کانټینر ځایونه څاري.",
