@@ -26,6 +26,8 @@ import {
   Printer
 } from "lucide-react";
 import { EntityVersionTimelineDialog } from "./entity-version-timeline-dialog";
+import { DeletedRecordDetailDialog } from "./deleted-record-detail-dialog";
+import { SecurityPinAuthDialog } from "./security-pin-auth-dialog";
 
 export function EnterpriseAuditMonitoringDashboard() {
   const [activeTab, setActiveTab] = useState("edits");
@@ -50,6 +52,17 @@ export function EnterpriseAuditMonitoringDashboard() {
 
   // Active timeline dialog
   const [timelineTarget, setTimelineTarget] = useState<{ entityType: string; entityId: string; ref?: string } | null>(null);
+
+  // Active view record dialog
+  const [viewRecord, setViewRecord] = useState<any | null>(null);
+
+  // Active security pin dialog
+  const [securityAuthTarget, setSecurityAuthTarget] = useState<{
+    actionType: "RESTORE" | "PERMANENT_DELETE";
+    entityType: string;
+    entityId: string;
+    referenceNo?: string;
+  } | null>(null);
 
   // Notification state
   const [actionMessage, setActionMessage] = useState<string | null>(null);
@@ -113,46 +126,60 @@ export function EnterpriseAuditMonitoringDashboard() {
     }
   };
 
-  const handleRestore = async (entityType: string, entityId: string, referenceNo?: string) => {
-    if (!confirm(`Are you sure you want to restore ${entityType} #${entityId}?`)) return;
-    try {
+  const handleOpenRestoreAuth = (entityType: string, entityId: string, referenceNo?: string) => {
+    setSecurityAuthTarget({
+      actionType: "RESTORE",
+      entityType,
+      entityId,
+      referenceNo
+    });
+  };
+
+  const handleOpenPermanentDeleteAuth = (entityType: string, entityId: string, referenceNo?: string) => {
+    setSecurityAuthTarget({
+      actionType: "PERMANENT_DELETE",
+      entityType,
+      entityId,
+      referenceNo
+    });
+  };
+
+  const handleExecuteSecurityAuth = async (code: string, reason: string) => {
+    if (!securityAuthTarget) return;
+    const { actionType, entityType, entityId, referenceNo } = securityAuthTarget;
+
+    if (actionType === "RESTORE") {
       const res = await fetch("/api/erp/audit/deleted-records/restore", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ entityType, entityId, referenceNo, reason: "Restored via Audit Dashboard" })
+        body: JSON.stringify({ entityType, entityId, referenceNo, reason, securityCode: code })
       });
       const data = await res.json();
       if (data.success) {
-        setActionMessage(`Record #${referenceNo || entityId} successfully restored.`);
+        setActionMessage(`✓ Record #${referenceNo || entityId} successfully restored to active operations.`);
         fetchDeletedRecords();
-        setTimeout(() => setActionMessage(null), 4000);
+        fetchMonthlyEdits();
+        if (viewRecord?.entity_id === entityId) setViewRecord(null);
+        setTimeout(() => setActionMessage(null), 5000);
       } else {
-        alert(data.error || "Failed to restore");
+        throw new Error(data.error || "Failed to restore");
       }
-    } catch (e: any) {
-      alert(e.message);
-    }
-  };
-
-  const handlePermanentDelete = async (entityType: string, entityId: string, referenceNo?: string) => {
-    const reason = prompt("Super Admin Security Confirmation: Enter reason for permanent deletion:");
-    if (!reason) return;
-    try {
+    } else {
       const res = await fetch("/api/erp/audit/deleted-records/permanent", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ entityType, entityId, referenceNo, reason })
+        body: JSON.stringify({ entityType, entityId, referenceNo, reason, securityCode: code })
       });
       const data = await res.json();
       if (data.success) {
-        setActionMessage(`Permanent deletion executed and permanently logged.`);
+        setActionMessage(`✓ Permanent deletion executed with Super Admin PIN 3636.`);
         fetchDeletedRecords();
-        setTimeout(() => setActionMessage(null), 4000);
+        fetchMonthlyEdits();
+        if (viewRecord?.entity_id === entityId) setViewRecord(null);
+        setTimeout(() => setActionMessage(null), 5000);
       } else {
-        alert(data.error || "Permanent delete rejected");
+        throw new Error(data.error || "Permanent delete rejected");
       }
-    } catch (e: any) {
-      alert(e.message);
     }
   };
 
@@ -449,8 +476,17 @@ export function EnterpriseAuditMonitoringDashboard() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleRestore(del.entity_type, del.entity_id, del.reference_no)}
-                                className="h-7 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+                                onClick={() => setViewRecord(del)}
+                                className="h-7 text-xs text-sky-600 hover:text-sky-700 hover:bg-sky-50 border-sky-200"
+                              >
+                                <Eye className="h-3 w-3 mr-1" />
+                                View
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => handleOpenRestoreAuth(del.entity_type, del.entity_id, del.reference_no)}
+                                className="h-7 text-xs text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 border-emerald-200"
                               >
                                 <RotateCcw className="h-3 w-3 mr-1" />
                                 Restore
@@ -458,8 +494,8 @@ export function EnterpriseAuditMonitoringDashboard() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handlePermanentDelete(del.entity_type, del.entity_id, del.reference_no)}
-                                className="h-7 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50"
+                                onClick={() => handleOpenPermanentDeleteAuth(del.entity_type, del.entity_id, del.reference_no)}
+                                className="h-7 text-xs text-rose-600 hover:text-rose-700 hover:bg-rose-50 border-rose-200"
                               >
                                 <Trash2 className="h-3 w-3 mr-1" />
                                 Hard Delete
@@ -665,6 +701,37 @@ export function EnterpriseAuditMonitoringDashboard() {
           entityType={timelineTarget.entityType}
           entityId={timelineTarget.entityId}
           referenceNo={timelineTarget.ref}
+        />
+      )}
+
+      {/* Full-Size Deleted Record Detail View Dialog */}
+      {viewRecord && (
+        <DeletedRecordDetailDialog
+          record={viewRecord}
+          isOpen={Boolean(viewRecord)}
+          onClose={() => setViewRecord(null)}
+          onRestore={(entityType, entityId, referenceNo) => {
+            handleOpenRestoreAuth(entityType, entityId, referenceNo);
+          }}
+          onPermanentDelete={(entityType, entityId, referenceNo) => {
+            handleOpenPermanentDeleteAuth(entityType, entityId, referenceNo);
+          }}
+          onOpenTimeline={(entityType, entityId, referenceNo) => {
+            setTimelineTarget({ entityType, entityId, ref: referenceNo });
+          }}
+        />
+      )}
+
+      {/* Security PIN Authorization Dialog (Codes: 3636 / 9999) */}
+      {securityAuthTarget && (
+        <SecurityPinAuthDialog
+          isOpen={Boolean(securityAuthTarget)}
+          onClose={() => setSecurityAuthTarget(null)}
+          actionType={securityAuthTarget.actionType}
+          entityType={securityAuthTarget.entityType}
+          entityId={securityAuthTarget.entityId}
+          referenceNo={securityAuthTarget.referenceNo}
+          onConfirm={handleExecuteSecurityAuth}
         />
       )}
     </div>

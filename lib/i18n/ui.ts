@@ -2,6 +2,7 @@ import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { translationPendingLabel } from "@/lib/i18n/verified-record-translations";
 
 export type UiKey =
+  | "nav.super_admin_menu"
   | "nav.export_pdf_center"
   | "nav.audit_logs"
   | "nav.security_events"
@@ -2830,6 +2831,7 @@ export type UiKey =
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "nav.super_admin_menu": "Super Admin",
   "nav.entry_register": "Entry Register",
   "nav.enterprise_audit_monitoring": "Enterprise Audit & Monitoring",
   "nav.edit_version_history": "Edit / Version History",
@@ -2839,6 +2841,7 @@ const en: Dict = {
   "nav.security_events": "Security Events",
   "nav.audit_logs": "Audit Logs",
   "nav.export_pdf_center": "Export / PDF Center",
+
 
 
 
@@ -5911,6 +5914,7 @@ const ur: Dict = {
 
 
   ...en,
+  "nav.super_admin_menu": "سپر ایڈمن",
   "nav.entry_register": "اندراج رجسٹر",
   "nav.enterprise_audit_monitoring": "انٹرپرائز آڈٹ اور مانیٹرنگ",
   "nav.edit_version_history": "ترمیم و ورژن ہسٹری",
@@ -5920,6 +5924,7 @@ const ur: Dict = {
   "nav.security_events": "سیکیورٹی ایونٹس",
   "nav.audit_logs": "آڈٹ لاگز",
   "nav.export_pdf_center": "ایکسپورٹ و پی ڈی ایف سینٹر",
+
 
   "common.code": "کوڈ",
   "common.total": "کل",
@@ -8972,6 +8977,7 @@ const ar: Dict = {
 
 
   ...en,
+  "nav.super_admin_menu": "المسؤول الأعلى",
   "nav.entry_register": "سجل القيود",
   "nav.enterprise_audit_monitoring": "تدقيق ومراقبة المؤسسة",
   "nav.edit_version_history": "سجل التعديلات والنسخ",
@@ -8981,6 +8987,7 @@ const ar: Dict = {
   "nav.security_events": "أحداث الأمان",
   "nav.audit_logs": "سجلات التدقيق",
   "nav.export_pdf_center": "مركز التصدير وملفات PDF",
+
 
   "common.code": "الرمز",
   "common.total": "الإجمالي",
@@ -12032,6 +12039,7 @@ const fa: Dict = {
 
 
   ...en,
+  "nav.super_admin_menu": "سوپر ادمین",
   "nav.entry_register": "دفتر ثبت ورودی‌ها",
   "nav.enterprise_audit_monitoring": "حسابرسی و نظارت سازمانی",
   "nav.edit_version_history": "تاریخچه ویرایش و نسخه‌ها",
@@ -12041,6 +12049,7 @@ const fa: Dict = {
   "nav.security_events": "رویدادهای امنیتی",
   "nav.audit_logs": "گزارش‌های حسابرسی",
   "nav.export_pdf_center": "مرکز صادرات و PDF",
+
 
   "common.code": "کد",
   "common.total": "کل",
@@ -15091,6 +15100,7 @@ const ps: Dict = {
 
 
   ...en,
+  "nav.super_admin_menu": "سوپر اډمین",
   "nav.entry_register": "د ننوتلو راجستر",
   "nav.enterprise_audit_monitoring": "د تصدۍ پلټنه او څارنه",
   "nav.edit_version_history": "د ترمیم او نسخې تاریخ",
@@ -15100,6 +15110,7 @@ const ps: Dict = {
   "nav.security_events": "امنیتي پېښې",
   "nav.audit_logs": "د پلټنې لاګونه",
   "nav.export_pdf_center": "د صادراتو او PDF مرکز",
+
 
   "common.code": "کوډ",
   "common.total": "ټول",
