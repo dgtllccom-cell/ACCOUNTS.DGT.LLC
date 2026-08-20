@@ -25,6 +25,7 @@ function asFiniteNumber(value: unknown, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+const tt = (key: string, fb: string) => t("en", key as any, fb);
 
 function CustomDropdown({ record, onLoadDetails }: { record: LoadingRecord, onLoadDetails: (r: LoadingRecord) => void }) {
   return (
@@ -1091,14 +1092,14 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           onClick={() => setFormStep(2)}
                           className="w-full h-10 rounded-lg bg-emerald-600 px-4 text-[11px] font-black uppercase tracking-widest text-white hover:bg-emerald-700"
                         >
-                          Next Step
+                          {tt("common.next_step", "Next Step")}
                         </Button>
                       </div>
                     </>
                   ) : formStep === 2 ? (
                     <div className="flex flex-col h-full pr-1 pt-2 pb-4">
                       <div className="mb-2 flex items-center justify-between">
-                        <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-800 dark:text-slate-200">GOODS ENTRY</h4>
+                        <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-800 dark:text-slate-200">{tt("plr.goods_entry", "Goods Entry")}</h4>
                       </div>
 
                       <div className="mb-3 flex items-center justify-between rounded-lg bg-blue-50 p-2.5 border border-blue-200 dark:bg-blue-950/40 dark:border-blue-800">
@@ -1173,12 +1174,12 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
 
                       <div className="grid grid-cols-2 gap-3 mb-4">
                         <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 col-span-2">
-                          Origin Country
+                          {tt("plr.origin_country", "Origin Country")}
                           <input value={originCountry} onChange={(e) => setOriginCountry(e.target.value)} placeholder="India" className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
                         
                         <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 col-span-2">
-                          Goods Name*
+                          {tt("plr.goods_name", "Goods Name")}
                           <select
                             value={goodsName}
                             onChange={(e) => {
@@ -1202,7 +1203,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                             }}
                             className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
                           >
-                            <option value="">Select Goods</option>
+                            <option value="">{tt("plr.select_goods", "Select Goods")}</option>
                             {goods.map((g: any, i: number) => {
                               const name = g.itemName || g.goodsName || g.item;
                               if (!name) return null;
@@ -1212,32 +1213,32 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                         </label>
 
                         <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                          HS Code
+                          {tt("plr.hs_code", "HS Code")}
                           <input value={hsCode} onChange={(e) => setHsCode(e.target.value)} placeholder="0000" className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
                         
                         <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                          Allot Name / ID
+                          {tt("plr.allot_name", "Allot Name / ID")}
                           <input value={allotName} onChange={(e) => setAllotName(e.target.value)} placeholder="ALT-4733" className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
 
                         <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                          Brand
+                          {tt("plr.brand_label", "Brand")}
                           <input value={brand} onChange={(e) => setBrand(e.target.value)} placeholder="Select Brand" className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
                         
                         <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                          Size Specification
+                          {tt("plr.size_spec", "Size Specification")}
                           <input value={sizeSpec} onChange={(e) => setSizeSpec(e.target.value)} placeholder="Select Size" className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
 
                         <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                          Qty Name
+                          {tt("plr.qty_name", "Qty Name")}
                           <input value={qtyName} onChange={(e) => setQtyName(e.target.value)} placeholder="BAGS" className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
                         
                         <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                          Quantity No *
+                          {tt("plr.qty_number", "Quantity No")}
                           <input value={quantityNo} onChange={(e) => {
                             setQuantityNo(e.target.value);
                             setNewLoadingQuantity(e.target.value);
@@ -1245,63 +1246,63 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                         </label>
 
                         <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                          1 Qty KGS
+                          {tt("plr.gross_per_unit", "Gross Wt / Unit (KGS)")}
                           <input value={oneQtyKgs} onChange={(e) => setOneQtyKgs(e.target.value)} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
                         
                         <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                          1 Empty KGS
+                          {tt("plr.empty_per_unit", "Empty Wt / Unit (KGS)")}
                           <input value={oneEmptyKgs} onChange={(e) => setOneEmptyKgs(e.target.value)} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
 
                         <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                          Divide Type
+                          {tt("plr.divide_type", "Divide Type")}
                           <input value={divideType} onChange={(e) => setDivideType(e.target.value)} placeholder="D/KGs" className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
                         
                         <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                          Divide Weight / Value
+                          {tt("plr.divide_weight", "Divide Wt / Value")}
                           <input value={divideWeightValue} onChange={(e) => setDivideWeightValue(e.target.value)} placeholder="1" className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
 
                         <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                          Price Type
+                          {tt("plr.price_type", "Price Type")}
                           <input value={priceType} onChange={(e) => setPriceType(e.target.value)} placeholder="P/KGs" className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
                         
                         <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                          Price Rate (C1)
+                          {tt("plr.price_rate", "Price Rate (C1)")}
                           <input value={priceRateC1} onChange={(e) => setPriceRateC1(e.target.value)} className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
 
                         <label className="space-y-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 col-span-2">
-                          Quality Report Reference
+                          {tt("plr.quality_ref", "Quality Report Ref")}
                           <input value={qualityReportRef} onChange={(e) => setQualityReportRef(e.target.value)} placeholder="Passed" className="h-9 w-full rounded-md border border-slate-300 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200" />
                         </label>
                       </div>
 
                       <div className="rounded-xl border border-emerald-100 bg-emerald-50/50 p-4 mb-6 dark:border-emerald-900/30 dark:bg-emerald-950/20">
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-teal-700 dark:text-teal-400 mb-3">PURCHASE CURRENCY & CONVERSION</h4>
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-teal-700 dark:text-teal-400 mb-3">{tt("plr.purchase_currency_section", "Purchase Currency & Conversion")}</h4>
                         
                         <div className="flex flex-col gap-3">
                           <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
-                            Pricing Currency
+                            {tt("plr.pricing_currency", "Pricing Currency")}
                             <input value={pricingCurrency} onChange={(e) => setPricingCurrency(e.target.value)} placeholder="USD" className="h-9 w-full rounded-md border border-emerald-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
                           </label>
                           <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
-                            Exchange Rate to {localCurrency}
+                            {tt("plr.exchange_rate", "Exchange Rate")} to {localCurrency}
                             <input value={exchangeRatePKR} onChange={(e) => setExchangeRatePKR(e.target.value)} placeholder={defaultExRate} className="h-9 w-full rounded-md border border-emerald-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
                           </label>
                           <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
-                            Container Number *
+                            {tt("plr.container_no", "Container No.")}
                             <input value={containerNumberInput} onChange={(e) => setContainerNumberInput(e.target.value)} placeholder="e.g. MSCU1234567" className="h-9 w-full rounded-md border border-emerald-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
                           </label>
                           <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
-                            Seal Number *
+                            {tt("plr.seal_no", "Seal No.")}
                             <input value={sealNumberInput} onChange={(e) => setSealNumberInput(e.target.value)} placeholder="e.g. SL998877" className="h-9 w-full rounded-md border border-emerald-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
                           </label>
                           <label className="space-y-1 text-[10px] font-bold text-teal-700 dark:text-teal-500">
-                            Loading Note
+                            {tt("plr.loading_note", "Loading Note")}
                             <input value={newLoadingNote} onChange={(e) => setNewLoadingNote(e.target.value)} placeholder="e.g. Checking / brand remarks" className="h-9 w-full rounded-md border border-emerald-200 bg-white px-3 text-sm font-semibold text-slate-800 outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-emerald-800 dark:bg-slate-900 dark:text-slate-200" />
                           </label>
                         </div>
@@ -1309,16 +1310,16 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
 
                       {/* PO Items Status Summary Table */}
                       <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-4 mb-4 dark:border-slate-800 dark:bg-slate-900/30">
-                        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">PO ITEMS STATUS SUMMARY</h4>
+                        <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">{tt("plr.po_items_status", "PO Items Status")}</h4>
                         <div className="overflow-x-auto">
                           <table className="w-full text-left text-[9px] border-collapse bg-white dark:bg-slate-950 rounded-lg overflow-hidden border dark:border-slate-850">
                             <thead>
                               <tr className="border-b text-slate-400 font-bold uppercase tracking-wider bg-slate-50/80 dark:bg-slate-900/50">
-                                <Th className="px-2 py-1.5">Item</Th>
-                                <Th className="px-2 py-1.5 text-right">PO Qty</Th>
-                                <Th className="px-2 py-1.5 text-right">Loaded</Th>
-                                <Th className="px-2 py-1.5 text-right">Balance</Th>
-                                <Th className="px-2 py-1.5 text-right">Rate</Th>
+                                <Th className="px-2 py-1.5">{tt("plr.col_item", "Item")}</Th>
+                                <Th className="px-2 py-1.5 text-right">{tt("plr.col_po_qty", "PO Qty")}</Th>
+                                <Th className="px-2 py-1.5 text-right">{tt("plr.status_loaded", "Loaded")}</Th>
+                                <Th className="px-2 py-1.5 text-right">{tt("plr.col_balance_short", "Balance")}</Th>
+                                <Th className="px-2 py-1.5 text-right">{tt("plr.col_rate", "Rate")}</Th>
                               </tr>
                             </thead>
                             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1345,10 +1346,10 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
 
                       <div className="mt-auto pt-4 flex items-center justify-between gap-2 border-t border-slate-200 dark:border-slate-800">
                         <Button type="button" variant="outline" onClick={() => setFormStep(1)} className="rounded-full h-9 px-4 text-xs font-bold">
-                          Back
+                          {tt("plr.back", "Back")}
                         </Button>
                         <Button type="button" onClick={() => void saveNewLoading()} disabled={savingNewLoading || !newQuantity || !containerNumberInput} className="rounded-full h-9 bg-emerald-600 px-4 text-xs font-bold text-white hover:bg-emerald-700 shadow-sm transition active:scale-[0.98] disabled:opacity-50">
-                          {savingNewLoading ? "Saving..." : (Number(containerCount) > 1 && (currentContainerIndex < Number(containerCount))) ? "Save & Next Container (" + String(currentContainerIndex + 1) + "/" + String(containerCount) + ")" : "Save Loading"}
+                          {savingNewLoading ? tt("plr.saving", "Saving...") : (Number(containerCount) > 1 && (currentContainerIndex < Number(containerCount))) ? tt("plr.save_next", "Save & Next Container") + " (" + String(currentContainerIndex + 1) + "/" + String(containerCount) + ")" : tt("plr.save_loading", "Save Loading")}
                         </Button>
                       </div>
 
@@ -1366,56 +1367,56 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                 <div className="rounded-md bg-indigo-50 p-2 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400">
                   <Building2 className="h-4 w-4" />
                 </div>
-                <h3 className="font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300 text-[10px]">Branch & Bill Details</h3>
+                <h3 className="font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300 text-[10px]">{tt("plr.branch_bill_details", "Branch & Bill Details")}</h3>
               </div>
               <div className="space-y-3">
                 <div>
-                  <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">Branch / Bill No.</div>
+                  <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">{tt("plr.branch_bill_no", "Branch / Bill No.")}</div>
                   <div className="text-sm font-bold text-blue-600 dark:text-blue-400">{branchLabel}</div>
                 </div>
                 <div className="space-y-2 pt-2">
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500">User Admin:</span>
+                    <span className="text-slate-500">{tt("plr.user_admin", "User Admin")}:</span>
                     <span className="font-bold text-emerald-600 uppercase bg-emerald-50 px-2 py-0.5 rounded text-[10px] dark:bg-emerald-950/50">{adminLabel}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500">User ID:</span>
+                    <span className="text-slate-500">{tt("common.user", "User")} ID:</span>
                     <span className="font-mono font-bold text-slate-700 dark:text-slate-300">{form.userId || form.userCode || "ADM-001"}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500">Session Timestamp:</span>
+                    <span className="text-slate-500">{tt("plr.session_timestamp", "Session Timestamp")}:</span>
                     <span className="font-mono font-semibold text-slate-700 dark:text-slate-300">{new Date().toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500">Location:</span>
+                    <span className="text-slate-500">{tt("common.location", "Location")}:</span>
                     <span className="font-semibold text-slate-700 dark:text-slate-300 text-right truncate pl-2" title={countryLabel}>{countryLabel}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500">Booking Date:</span>
+                    <span className="text-slate-500">{tt("plr.booking_date", "Booking Date")}:</span>
                     <span className="font-semibold text-slate-800 dark:text-slate-200">{new Date(record.created_at || Date.now()).toLocaleDateString()}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500">Status:</span>
+                    <span className="text-slate-500">{tt("common.status", "Status")}:</span>
                     <span className="font-bold text-amber-600 uppercase text-[10px]">{record.loading_status || "PENDING"}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500">System Serial:</span>
+                    <span className="text-slate-500">{tt("plr.system_serial", "System Serial")}:</span>
                     <span className="font-bold text-slate-700 dark:text-slate-300">{record.purchase_order_no || "-"}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="font-bold text-blue-600 dark:text-blue-400">Branch Serial:</span>
+                    <span className="font-bold text-blue-600 dark:text-blue-400">{tt("plr.branch_serial", "Branch Serial")}:</span>
                     <span className="font-bold text-blue-600 dark:text-blue-400">{record.loading_record_no}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500">Branch Mobile:</span>
+                    <span className="text-slate-500">{tt("plr.branch_mobile", "Branch Mobile")}:</span>
                     <span className="font-mono font-bold text-blue-600">{form.branchMobile || "+92-300-1234567"}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500">Loading Mode:</span>
+                    <span className="text-slate-500">{tt("plr.loading_mode", "Loading Mode")}:</span>
                     <span className="font-semibold text-slate-700 dark:text-slate-300">By Sea</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500">Origin Country:</span>
+                    <span className="text-slate-500">{tt("plr.origin_country", "Origin Country")}:</span>
                     <span className="font-semibold text-slate-700 dark:text-slate-300">{loadingCountry}</span>
                   </div>
                 </div>
@@ -1428,27 +1429,27 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                 <div className="rounded-md bg-purple-50 p-2 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400">
                   <ArrowDownLeft className="h-4 w-4" />
                 </div>
-                <h3 className="font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300 text-[10px]">Purchase Account Details</h3>
+                <h3 className="font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300 text-[10px]">{tt("plr.purchase_account_details", "Purchase Account Details")}</h3>
               </div>
               <div className="space-y-2 pt-1">
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500">Account Code:</span>
+                    <span className="text-slate-500">{tt("plr.account_code", "Account Code")}:</span>
                     <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{form.purchaseAccountNumber || form.purchaseAccountNo || "-"}</span>
                   </div>
                   <div className="pt-2 pb-1">
-                    <div className="text-[10px] text-slate-400 mb-0.5">Account Name:</div>
+                    <div className="text-[10px] text-slate-400 mb-0.5">{tt("plr.account_name", "Account Name")}:</div>
                     <div className="text-sm font-bold text-blue-600 dark:text-blue-400 leading-snug">{form.purchaseAccountName || "Purchase Account"}</div>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500">Branch:</span>
+                    <span className="text-slate-500">{tt("common.branch", "Branch")}:</span>
                     <span className="font-semibold text-slate-800 dark:text-slate-200">PAKPKB</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500">Currency:</span>
+                    <span className="text-slate-500">{tt("common.currency", "Currency")}:</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">{form.currency || "PKR"}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500">Company:</span>
+                    <span className="text-slate-500">{tt("common.company", "Company")}:</span>
                     <span className="font-mono font-semibold text-slate-800 dark:text-slate-200 truncate pl-4" title={form.purchaseAccountName}>{form.purchaseAccountName || "NAJEEB AND COMPANY"}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-4 pt-1">
@@ -1508,27 +1509,27 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                 <div className="rounded-md bg-blue-50 p-2 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400">
                   <ArrowUpRight className="h-4 w-4" />
                 </div>
-                <h3 className="font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300 text-[10px]">Sales Account (CR)</h3>
+                <h3 className="font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300 text-[10px]">{tt("plr.sales_account_cr", "Sales Account (CR)")}</h3>
               </div>
               <div className="space-y-2 pt-1">
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500">Account Code:</span>
+                    <span className="text-slate-500">{tt("plr.account_code", "Account Code")}:</span>
                     <span className="font-mono font-semibold text-slate-800 dark:text-slate-200">{form.salesAccountNumber || form.salesAccountNo || "-"}</span>
                   </div>
                   <div className="pt-2 pb-1">
-                    <div className="text-[10px] text-slate-400 mb-0.5">Account Name:</div>
+                    <div className="text-[10px] text-slate-400 mb-0.5">{tt("plr.account_name", "Account Name")}:</div>
                     <div className="text-sm font-bold text-blue-600 dark:text-blue-400 leading-snug">{form.salesAccountName || "Sales Account"}</div>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500">Branch:</span>
+                    <span className="text-slate-500">{tt("common.branch", "Branch")}:</span>
                     <span className="font-semibold text-slate-800 dark:text-slate-200">PAK-PKBA-001</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500">Currency:</span>
+                    <span className="text-slate-500">{tt("common.currency", "Currency")}:</span>
                     <span className="font-bold text-slate-800 dark:text-slate-200">{form.currency || "PKR"}</span>
                   </div>
                   <div className="flex justify-between items-center text-[11px]">
-                    <span className="text-slate-500">Company:</span>
+                    <span className="text-slate-500">{tt("common.company", "Company")}:</span>
                     <span className="font-mono font-semibold text-slate-800 dark:text-slate-200 truncate pl-4" title={form.salesAccountName}>{form.salesAccountName || "ABC Trading LLC"}</span>
                   </div>
                   <div className="grid grid-cols-2 gap-4 pt-1">
@@ -1584,7 +1585,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   <div className="rounded-md bg-emerald-50 p-2 text-emerald-600 dark:bg-emerald-900/30 dark:text-emerald-400">
                     <Ship className="h-4 w-4" />
                   </div>
-                  <h3 className="font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300 text-[10px]">Loading Summary Report</h3>
+                  <h3 className="font-bold uppercase tracking-widest text-slate-700 dark:text-slate-300 text-[10px]">{tt("plr.loading_summary_report", "Loading Summary Report")}</h3>
                 </div>
                 <span className="text-[10px] font-mono font-black text-emerald-600 bg-emerald-50 px-2.5 py-0.5 rounded-full dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-900">
                   {loadingProgress.toFixed(1)}% Loaded
@@ -1592,35 +1593,35 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
               </div>
               <div className="space-y-2 text-xs font-semibold">
                 <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Total Contract Quantity</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.total_contract_qty", "Total Contract Qty")}</span>
                   <span className="font-mono font-black text-slate-800 dark:text-slate-100">{totalQuantity.toLocaleString()} {unitLabel}</span>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Contract Gross Weight</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.contract_gross_weight", "Contract Gross Weight")}</span>
                   <span className="font-mono font-black text-slate-800 dark:text-slate-100">{contractGrossWeight.toLocaleString()} kg</span>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Contract Net Weight</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.contract_net_weight", "Contract Net Weight")}</span>
                   <span className="font-mono font-black text-slate-800 dark:text-slate-100">{contractNetWeight.toLocaleString()} kg</span>
                 </div>
                 <div className="bg-slate-50 dark:bg-slate-900/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800 flex justify-between items-center">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">Contract Purchase Amount</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500">{tt("plr.contract_purchase_amount", "Contract Purchase Amt")}</span>
                   <span className="font-mono font-black text-slate-800 dark:text-slate-100">{contractPurchaseAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {contractPurchaseCurrency}</span>
                 </div>
                 <div className="bg-emerald-50/50 dark:bg-emerald-900/10 p-3 rounded-lg border border-emerald-100 dark:border-emerald-900/30 flex justify-between items-center">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">Previously Loaded</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">{tt("plr.previously_loaded", "Previously Loaded")}</span>
                   <span className="font-mono font-black text-emerald-700 dark:text-emerald-400">{previousLoadedQuantity.toLocaleString()} {unitLabel}</span>
                 </div>
                 <div className="bg-blue-50/60 dark:bg-blue-900/10 p-3 rounded-lg border border-blue-100 dark:border-blue-900/30 flex justify-between items-center">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">Current Loading</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 dark:text-blue-400">{tt("plr.current_loading_qty", "Current Loading")}</span>
                   <span className="font-mono font-black text-blue-700 dark:text-blue-400">{currentLoadingQuantity.toLocaleString()} {unitLabel}</span>
                 </div>
                 <div className="bg-teal-50/60 dark:bg-teal-900/10 p-3 rounded-lg border border-teal-100 dark:border-teal-900/30 flex justify-between items-center">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700 dark:text-teal-400">Total Loaded</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-teal-700 dark:text-teal-400">{tt("plr.total_loaded", "Total Loaded")}</span>
                   <span className="font-mono font-black text-teal-700 dark:text-teal-400">{totalLoadedQuantity.toLocaleString()} {unitLabel}</span>
                 </div>
                 <div className="bg-rose-50/50 dark:bg-rose-900/10 p-3 rounded-lg border border-rose-100 dark:border-rose-900/30 flex justify-between items-center">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600">Remaining to Load</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-rose-600">{tt("plr.remaining_to_load", "Remaining to Load")}</span>
                   <span className="font-mono font-black text-rose-600">{remainingToLoadQuantity.toLocaleString()} {unitLabel}</span>
                 </div>
 
@@ -3110,7 +3111,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                           
                           <div className="space-y-3">
                             <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-400 flex justify-between items-center">
-                              <span>Branch Breakdown</span>
+                              <span>{tt("report.branch_breakdown", "Branch Breakdown")}</span>
                               <span className="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-[8px] dark:bg-slate-800">All</span>
                             </h5>
                             {r.branches.map((b, bIdx) => {
