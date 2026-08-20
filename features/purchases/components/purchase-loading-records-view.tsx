@@ -1014,14 +1014,14 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           }
                         }}
                         options={currentLoadingPorts.map((p) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
-                        placeholder={form.shippingMode === "By Road" ? "Select Border" : "Select Port"}
-                        addOptionLabel={form.shippingMode === "By Road" ? "Add New Border" : "Add New Port"}
+                        placeholder={form.shippingMode === "By Road" ? tt("plr.sel_border", "Select Border") : tt("plr.sel_port", "Select Port")}
+                        addOptionLabel={form.shippingMode === "By Road" ? tt("plr.add_border", "Add New Border") : tt("plr.add_port", "Add New Port")}
                         disabled={!loadingCountryState && currentLoadingPorts.length === 0}
                       />
                     </label>
 
                     <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                      Receiving Country
+                      {tt("plr.receiving_country", "Receiving Country")}
                       <SearchableSelect
                         value={receivingCountryState}
                         onChange={(val) => {
@@ -1033,12 +1033,12 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           }
                         }}
                         options={allCountries.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
-                        placeholder="Select Country"
-                        addOptionLabel="Add New Country"
+                        placeholder={tt("plr.sel_country", "Select Country")}
+                        addOptionLabel={tt("plr.add_country", "Add New Country")}
                       />
                     </label>
                     <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                      Receiving Port / Border
+                      {tt("plr.receiving_port", "Receiving Port / Border")}
                       <SearchableSelect
                         value={receivingPortState}
                         onChange={(val) => {
@@ -1049,14 +1049,14 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           }
                         }}
                         options={currentReceivedPorts.map((p) => ({ label: `${p.port_name} ${p.port_code ? `[${p.port_code}]` : ""}`, value: p.port_name }))}
-                        placeholder={form.shippingMode === "By Road" ? "Select Border" : "Select Port"}
-                        addOptionLabel={form.shippingMode === "By Road" ? "Add New Border" : "Add New Port"}
+                        placeholder={form.shippingMode === "By Road" ? tt("plr.sel_border", "Select Border") : tt("plr.sel_port", "Select Port")}
+                        addOptionLabel={form.shippingMode === "By Road" ? tt("plr.add_border", "Add New Border") : tt("plr.add_port", "Add New Port")}
                         disabled={!receivingCountryState && currentReceivedPorts.length === 0}
                       />
                     </label>
                     
                     <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                      Loading Date
+                      {tt("plr.loading_date", "Loading Date")}
                       <input
                         type="date"
                         value={newLoadingDate}
@@ -1065,7 +1065,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                       />
                     </label>
                     <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                      Receiving Date
+                      {tt("plr.receiving_date", "Receiving Date")}
                       <input
                         type="date"
                         value={receivingDateState}
@@ -1075,7 +1075,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                     </label>
 
                     <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 col-span-2">
-                      Vessel Name
+                      {tt("plr.vessel_name", "Vessel Name")}
                       <input
                         value={vesselName}
                         onChange={(e) => setVesselName(e.target.value)}
@@ -2028,7 +2028,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                               title="Transfer Remaining Loading Balance to Journal"
                             >
                               <Link2 className="h-3 w-3 text-blue-600" />
-                              Transfer Remaining
+                              {tt("plr.transfer_remaining", "Transfer Remaining")}
                             </button>
                             <button onClick={() => handleEditHistory(h)} className="rounded-md border border-slate-200 p-1.5 text-blue-600 hover:border-blue-300 hover:bg-blue-50" title="Edit Entry"><Pencil className="h-3.5 w-3.5" /></button>
                             <button onClick={() => handleDeleteHistory(h)} disabled={savingNewLoading} className="rounded-md border border-slate-200 p-1.5 text-rose-600 hover:border-rose-300 hover:bg-rose-50 disabled:opacity-50" title="Delete Entry"><Trash2 className="h-3.5 w-3.5" /></button>
@@ -2789,7 +2789,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
           />
           <Button type="button" size="sm" variant="outline" onClick={() => void loadRecords()} disabled={loading} className="h-8 rounded-lg border-slate-200 text-xs font-bold">
             <RefreshCcw className={cn("mr-1.5 h-3.5 w-3.5 text-slate-500", loading && "animate-spin")} />
-            Apply Filter
+            {tt("plr.apply_filter", "Apply Filter")}
           </Button>
           <Button type="button" size="sm" variant="outline" onClick={handlePrintReport} className="h-8 rounded-lg border-slate-200 text-xs font-bold">
             <Printer className="mr-1.5 h-3.5 w-3.5 text-slate-500" /> {tt("common.print", "Print")}
