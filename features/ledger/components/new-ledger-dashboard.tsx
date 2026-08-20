@@ -49,6 +49,12 @@ function todayIso() {
   return new Date().toISOString().slice(0, 10);
 }
 
+function monthStartIso() {
+  const d = new Date();
+  d.setDate(1);
+  return d.toISOString().slice(0, 10);
+}
+
 function yearStartIso() {
   const d = new Date();
   d.setMonth(0, 1);
@@ -532,26 +538,42 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
               {fromDate} → {toDate}
             </Button>
             {dateDropdownOpen ? (
-              <div className="absolute right-0 md:left-0 mt-2 z-30 w-64 p-3 bg-popover text-popover-foreground rounded-lg border shadow-lg space-y-3">
+              <div className="absolute right-0 md:left-0 mt-2 z-30 w-64 p-3 bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100 rounded-lg border border-slate-200 dark:border-slate-800 shadow-xl space-y-3">
                 <div className="space-y-1">
-                  <span className="text-[11px] text-muted-foreground font-semibold">From Date</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">From Date</span>
                   <Input type="date" value={fromDate} onChange={(event) => setFromDate(event.target.value)} className="h-9 text-xs" />
                 </div>
                 <div className="space-y-1">
-                  <span className="text-[11px] text-muted-foreground font-semibold">To Date</span>
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">To Date</span>
                   <Input type="date" value={toDate} onChange={(event) => setToDate(event.target.value)} className="h-9 text-xs" />
                 </div>
-                <Button
-                  type="button"
-                  size="sm"
-                  className="w-full font-bold"
-                  onClick={() => {
-                    setDateDropdownOpen(false);
-                    void loadAccountById(ledgerId);
-                  }}
-                >
-                  Apply Date Range
-                </Button>
+                <div className="flex items-center gap-2 pt-1 border-t border-slate-100 dark:border-slate-800">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 font-semibold text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+                    onClick={() => {
+                      setFromDate(monthStartIso());
+                      setToDate(todayIso());
+                      setDateDropdownOpen(false);
+                      if (ledgerId) void loadAccountById(ledgerId);
+                    }}
+                  >
+                    Reset
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    className="flex-1 font-bold bg-[#0F172A] hover:bg-slate-800 text-white dark:bg-sky-600 dark:hover:bg-sky-700 shadow-sm"
+                    onClick={() => {
+                      setDateDropdownOpen(false);
+                      if (ledgerId) void loadAccountById(ledgerId);
+                    }}
+                  >
+                    Apply
+                  </Button>
+                </div>
               </div>
             ) : null}
           </div>
@@ -559,7 +581,7 @@ export function NewLedgerDashboard({ initialAccount = "" }: { initialAccount?: s
             type="button" 
             onClick={() => void loadAccountById(ledgerId)} 
             disabled={loading || !ledgerId} 
-            className="h-10 gap-2 px-4 font-bold bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+            className="h-10 gap-2 px-4 font-bold bg-[#0F172A] hover:bg-slate-800 text-white dark:bg-sky-600 dark:hover:bg-sky-700 disabled:opacity-50 shadow-sm"
           >
             {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
             Search

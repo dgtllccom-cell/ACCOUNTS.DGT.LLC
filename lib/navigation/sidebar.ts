@@ -105,31 +105,119 @@ export const sidebarTree: SidebarNode[] = [
     roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
     children: [
       {
-        key: "new-entry-account",
-        labelKey: "nav.new_account" as any,
-        iconKey: "book-open",
-        href: "/dashboard/ledger/new" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
-      },
-      {
-        key: "new-entry-branch",
-        labelKey: "nav.new_branch" as any,
+        key: "new-entry-branch-group",
+        labelKey: "nav.branch_setup_network" as any,
         iconKey: "building-2",
-        href: "/dashboard/settings/locations" as Route,
-        roles: ["super_admin", "country_admin", "main_branch_admin"]
+        roles: ["super_admin", "country_admin", "main_branch_admin"],
+        children: [
+          {
+            key: "new-entry-country-branch",
+            labelKey: "nav.country_branch" as any,
+            href: "/dashboard/new-entry/branch-entry/country-branch" as Route,
+            roles: ["super_admin"]
+          },
+          {
+            key: "new-entry-city-branch",
+            labelKey: "nav.city_branch" as any,
+            href: "/dashboard/new-entry/branch-entry/city-branch" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin"]
+          },
+          {
+            key: "new-entry-super-admin-branch",
+            labelKey: "nav.super_admin_branch" as any,
+            href: "/dashboard/new-entry/branches/super-admin" as Route,
+            roles: ["super_admin"]
+          },
+          {
+            key: "new-entry-branch-general-report",
+            labelKey: "nav.branch_general_report" as any,
+            href: "/dashboard/branch-management/general-report" as Route,
+            roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant"]
+          },
+          {
+            key: "new-entry-location-management",
+            labelKey: "nav.locations_management" as any,
+            href: "/dashboard/settings/locations" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin"]
+          }
+        ]
       },
       {
-        key: "new-entry-user",
-        labelKey: "nav.new_user" as any,
+        key: "new-entry-user-group",
+        labelKey: "nav.user_entry" as any,
         iconKey: "user-check",
-        href: "/dashboard/users/new" as Route,
-        roles: ["super_admin"]
+        roles: ["super_admin", "country_admin", "main_branch_admin"],
+        children: [
+          {
+            key: "new-entry-user-registration",
+            labelKey: "nav.new_user_registration" as any,
+            href: "/dashboard/new-entry/users/registration" as Route,
+            roles: ["super_admin"]
+          },
+          {
+            key: "new-entry-users-all-report",
+            labelKey: "nav.user_general_report" as any,
+            href: "/dashboard/new-entry/users/all" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin"]
+          },
+          {
+            key: "new-entry-user-super-admin",
+            labelKey: "nav.super_admin_user" as any,
+            href: "/dashboard/new-entry/users/super-admin" as Route,
+            roles: ["super_admin"]
+          },
+          {
+            key: "new-entry-user-country",
+            labelKey: "nav.country_user" as any,
+            href: "/dashboard/new-entry/users/country" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin"]
+          },
+          {
+            key: "new-entry-user-branch",
+            labelKey: "nav.branch_user" as any,
+            href: "/dashboard/new-entry/users/branch" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin"]
+          }
+        ]
+      },
+      {
+        key: "new-entry-account-group",
+        labelKey: "nav.accounts" as any,
+        iconKey: "book-open",
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
+        children: [
+          {
+            key: "new-entry-account-setup",
+            labelKey: "nav.new_account" as any,
+            href: "/dashboard/accounts/setup" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+          },
+          {
+            key: "new-entry-account-ledger",
+            labelKey: "nav.ledger_account" as any,
+            href: "/dashboard/ledger/new" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+          },
+          {
+            key: "new-entry-account-report",
+            labelKey: "nav.new_account_general_report" as any,
+            href: "/dashboard/new-entry/accounts/general-report" as Route,
+            roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+          }
+        ]
       },
       {
         key: "new-entry-employee",
         labelKey: "nav.register_employee" as any,
         iconKey: "users",
         href: "/dashboard/general-office/employees" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "new-entry-hub",
+        labelKey: "nav.new_entry_hub" as any,
+        iconKey: "gantt",
+        href: "/dashboard/new-entry" as Route,
         roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
       },
       {

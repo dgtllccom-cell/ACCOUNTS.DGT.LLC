@@ -27,7 +27,8 @@ import {
   Eye,
   Building2,
   Maximize2,
-  Minimize2
+  Minimize2,
+  FileSpreadsheet
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -1135,7 +1136,7 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
             variant="default"
             size="sm"
             onClick={openFullTreeModal}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white gap-2 font-semibold shadow-sm"
+            className="bg-[#0F172A] hover:bg-slate-800 text-white dark:bg-sky-600 dark:hover:bg-sky-700 gap-2 font-semibold shadow-sm"
           >
             <FolderTree className="h-4 w-4" />
             View Complete Location List
@@ -1162,13 +1163,19 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
         </div>
       ) : null}
 
-      {/* Statistics Cards Summary */}
+      {/* Statistics Cards Summary - Interactive Clickable Cards */}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card className="border-l-4 border-l-sky-500 shadow-sm bg-gradient-to-br from-white to-sky-50/30">
+        <Card 
+          onClick={() => { setActiveTab("country"); setSearchQuery(""); setBanner(null); }}
+          className={cn(
+            "border-l-4 border-l-sky-500 shadow-sm bg-gradient-to-br from-white to-sky-50/30 cursor-pointer transition-all hover:shadow-md hover:scale-[1.01]",
+            activeTab === "country" && "ring-2 ring-sky-500/40"
+          )}
+        >
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Countries</p>
-              <p className="text-2xl font-bold text-sky-950 mt-1">{stats.totalCountries}</p>
+              <p className="text-2xl font-bold text-sky-950 mt-1">{Number(stats.totalCountries || 0).toLocaleString()}</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sky-100 text-sky-700">
               <Globe2 className="h-5 w-5" />
@@ -1176,11 +1183,17 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-indigo-500 shadow-sm bg-gradient-to-br from-white to-indigo-50/30">
+        <Card 
+          onClick={() => { setActiveTab("state"); setSearchQuery(""); setBanner(null); }}
+          className={cn(
+            "border-l-4 border-l-indigo-500 shadow-sm bg-gradient-to-br from-white to-indigo-50/30 cursor-pointer transition-all hover:shadow-md hover:scale-[1.01]",
+            activeTab === "state" && "ring-2 ring-indigo-500/40"
+          )}
+        >
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">States / Provinces</p>
-              <p className="text-2xl font-bold text-indigo-950 mt-1">{stats.totalStates}</p>
+              <p className="text-2xl font-bold text-indigo-950 mt-1">{Number(stats.totalStates || 0).toLocaleString()}</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-indigo-100 text-indigo-700">
               <Map className="h-5 w-5" />
@@ -1188,11 +1201,17 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-teal-500 shadow-sm bg-gradient-to-br from-white to-teal-50/30">
+        <Card 
+          onClick={() => { setActiveTab("city"); setSearchQuery(""); setBanner(null); }}
+          className={cn(
+            "border-l-4 border-l-teal-500 shadow-sm bg-gradient-to-br from-white to-teal-50/30 cursor-pointer transition-all hover:shadow-md hover:scale-[1.01]",
+            activeTab === "city" && "ring-2 ring-teal-500/40"
+          )}
+        >
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Cities / Districts</p>
-              <p className="text-2xl font-bold text-teal-950 mt-1">{stats.totalCities}</p>
+              <p className="text-2xl font-bold text-teal-950 mt-1">{Number(stats.totalCities || 0).toLocaleString()}</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-teal-100 text-teal-700">
               <Building2 className="h-5 w-5" />
@@ -1200,11 +1219,17 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
           </CardContent>
         </Card>
 
-        <Card className="border-l-4 border-l-amber-500 shadow-sm bg-gradient-to-br from-white to-amber-50/30">
+        <Card 
+          onClick={() => { setActiveTab("tehsil"); setSearchQuery(""); setBanner(null); }}
+          className={cn(
+            "border-l-4 border-l-amber-500 shadow-sm bg-gradient-to-br from-white to-amber-50/30 cursor-pointer transition-all hover:shadow-md hover:scale-[1.01]",
+            activeTab === "tehsil" && "ring-2 ring-amber-500/40"
+          )}
+        >
           <CardContent className="p-4 flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Districts / Tehsils</p>
-              <p className="text-2xl font-bold text-amber-950 mt-1">{stats.totalDistricts}</p>
+              <p className="text-2xl font-bold text-amber-950 mt-1">{Number(stats.totalDistricts || 0).toLocaleString()}</p>
             </div>
             <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-amber-100 text-amber-700">
               <MapPin className="h-5 w-5" />
@@ -1388,14 +1413,31 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
-                <Button type="button" variant="outline" size="sm" onClick={() => setIsImportModalOpen(true)}>
-                  <Upload className="mr-1.5 h-4 w-4" /> Import Excel/CSV
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setIsImportModalOpen(true)}
+                  className="gap-1.5 font-semibold text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-xs"
+                >
+                  <Upload className="h-4 w-4" /> Import Excel/CSV
                 </Button>
-                <Button type="button" variant="outline" size="sm" onClick={handleExportCsv}>
-                  <Download className="mr-1.5 h-4 w-4" /> Export CSV
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={handleExportCsv}
+                  className="gap-1.5 font-semibold text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shadow-xs"
+                >
+                  <Download className="h-4 w-4" /> Export CSV
                 </Button>
-                <Button type="button" variant="default" size="sm" onClick={handleOpenAddModal}>
-                  <Plus className="mr-1.5 h-4 w-4" /> Add Record
+                <Button 
+                  type="button" 
+                  size="sm" 
+                  onClick={handleOpenAddModal}
+                  className="bg-[#0F172A] hover:bg-slate-800 text-white dark:bg-sky-600 dark:hover:bg-sky-700 gap-1.5 font-bold shadow-sm"
+                >
+                  <Plus className="h-4 w-4" /> + Add New Location
                 </Button>
               </div>
             </div>
@@ -2117,19 +2159,41 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
       {isImportModalOpen && (
         <SimpleModal title="Bulk Import Locations (CSV)" onClose={() => setIsImportModalOpen(false)} className="max-w-lg">
           <div className="space-y-4 pt-2">
-            <p className="text-xs text-muted-foreground">
-              Upload a CSV file containing: Country Code, Country Name, State Code, State Name, City Code, City Name, Tehsil Code, Tehsil Name.
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-xs text-muted-foreground">
+                Upload a CSV file with: Country, State, City, Tehsil codes &amp; names.
+              </p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  const sampleHeaders = ["Country Code", "Country Name", "State Code", "State Name", "City Code", "City Name", "Tehsil Code", "Tehsil Name"];
+                  const sampleRow = ["PK", "Pakistan", "SD", "Sindh", "KHI", "Karachi", "KSD", "Karachi South"];
+                  downloadCSV("sample_location_import_template.csv", sampleHeaders, [sampleRow]);
+                }}
+                className="text-xs text-sky-700 hover:text-sky-800 font-semibold p-0 h-auto underline"
+              >
+                Download Sample Template
+              </Button>
+            </div>
 
             <div
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleCsvDrop}
-              className="flex flex-col items-center justify-center rounded-lg border-2 border-dashed border-slate-200 bg-slate-50 p-6 text-center"
+              className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-slate-50/80 dark:bg-slate-900/50 p-6 text-center transition-all hover:bg-slate-100/80"
             >
-              <Upload className="h-8 w-8 text-slate-400 mb-2" />
-              <p className="text-xs font-semibold text-slate-700">Drag &amp; Drop your CSV file here</p>
-              <p className="text-[11px] text-slate-500 mt-1">or click below to browse</p>
-              <input type="file" accept=".csv" onChange={handleCsvSelect} className="mt-3 text-xs" />
+              <Upload className="h-9 w-9 text-slate-400 mb-2" />
+              <p className="text-xs font-bold text-slate-800 dark:text-slate-200">Drag &amp; Drop your CSV file here</p>
+              <p className="text-[11px] text-slate-500 mt-0.5">or click to browse your computer</p>
+              <label 
+                htmlFor="bulk-csv-upload-input" 
+                className="mt-3 cursor-pointer inline-flex items-center gap-2 px-3.5 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-xs font-semibold text-slate-800 dark:text-slate-100 shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700"
+              >
+                <FileSpreadsheet className="h-4 w-4 text-emerald-600" />
+                Choose CSV File
+              </label>
+              <input id="bulk-csv-upload-input" type="file" accept=".csv" onChange={handleCsvSelect} className="hidden" />
             </div>
 
             {importLogs.length > 0 && (
@@ -2140,18 +2204,24 @@ export function LocationManagementWizard({ activeTab: initialTab }: LocationMana
               </div>
             )}
 
-            <div className="flex justify-end gap-2 pt-2 border-t">
-              <Button type="button" variant="outline" onClick={() => setIsImportModalOpen(false)}>
-                Close
-              </Button>
-              <Button
-                type="button"
-                onClick={executeBulkImport}
-                disabled={importRows.length === 0 || importProgress !== null}
-              >
-                {importProgress ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Save className="mr-1.5 h-4 w-4" />}
-                Execute Import ({importRows.length} Rows)
-              </Button>
+            <div className="flex items-center justify-between pt-3 border-t border-slate-200 dark:border-slate-800">
+              <span className="text-xs text-muted-foreground font-medium">
+                {importRows.length > 0 ? `${importRows.length} row(s) ready to import` : "No file loaded"}
+              </span>
+              <div className="flex gap-2">
+                <Button type="button" variant="outline" onClick={() => setIsImportModalOpen(false)}>
+                  Close
+                </Button>
+                <Button
+                  type="button"
+                  onClick={executeBulkImport}
+                  disabled={importRows.length === 0 || importProgress !== null}
+                  className="bg-[#0F172A] hover:bg-slate-800 text-white dark:bg-sky-600 dark:hover:bg-sky-700 font-bold shadow-sm disabled:opacity-50"
+                >
+                  {importProgress ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Upload className="mr-1.5 h-4 w-4" />}
+                  {importProgress ? "Importing Locations..." : `Import Locations (${importRows.length} Rows)`}
+                </Button>
+              </div>
             </div>
           </div>
         </SimpleModal>

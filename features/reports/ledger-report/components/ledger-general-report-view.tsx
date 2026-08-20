@@ -843,15 +843,15 @@ export function LedgerReportView({
                 type="button"
                 variant="outline"
                 onClick={() => setDateDropdownOpen(!dateDropdownOpen)}
-                className="h-10 w-full md:w-auto text-xs gap-2"
+                className="h-10 w-full md:w-auto text-xs gap-2 font-semibold text-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 shadow-xs"
               >
-                <Calendar className="h-4 w-4" />
-                {fromDate} â†’ {toDate}
+                <Calendar className="h-4 w-4 text-slate-500" />
+                {fromDate} → {toDate}
               </Button>
               {dateDropdownOpen ? (
-                <div className="absolute right-0 md:left-0 mt-2 z-30 w-64 p-3 bg-popover text-popover-foreground rounded-lg border shadow-lg space-y-3 bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100">
+                <div className="absolute right-0 md:left-0 mt-2 z-30 w-64 p-3 bg-white text-slate-900 dark:bg-slate-900 dark:text-slate-100 rounded-lg border border-slate-200 dark:border-slate-800 shadow-xl space-y-3">
                   <div className="space-y-1">
-                    <span className="text-[11px] text-muted-foreground font-semibold">From Date</span>
+                    <span className="text-[11px] text-slate-500 font-semibold">From Date</span>
                     <Input
                       type="date"
                       value={fromDate}
@@ -863,7 +863,7 @@ export function LedgerReportView({
                     />
                   </div>
                   <div className="space-y-1">
-                    <span className="text-[11px] text-muted-foreground font-semibold">To Date</span>
+                    <span className="text-[11px] text-slate-500 font-semibold">To Date</span>
                     <Input
                       type="date"
                       value={toDate}
@@ -874,17 +874,34 @@ export function LedgerReportView({
                       className="h-9 text-xs"
                     />
                   </div>
-                  <Button
-                    type="button"
-                    size="sm"
-                    className="w-full font-bold"
-                    onClick={() => {
-                      setDateDropdownOpen(false);
-                      void loadReport(ledgerId, accountSearch);
-                    }}
-                  >
-                    Apply Date Range
-                  </Button>
+                  <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-200 dark:border-slate-800">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-3 text-xs font-semibold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+                      onClick={() => {
+                        setDatePreset("this_month");
+                        setFromDate(monthStartIso());
+                        setToDate(todayIso());
+                        setDateDropdownOpen(false);
+                        void loadReport(ledgerId, accountSearch);
+                      }}
+                    >
+                      Reset
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="h-8 px-3 text-xs font-bold bg-[#0F172A] hover:bg-slate-800 text-white dark:bg-sky-600 dark:hover:bg-sky-700 shadow-sm"
+                      onClick={() => {
+                        setDateDropdownOpen(false);
+                        void loadReport(ledgerId, accountSearch);
+                      }}
+                    >
+                      Apply
+                    </Button>
+                  </div>
                 </div>
               ) : null}
             </div>
@@ -892,7 +909,7 @@ export function LedgerReportView({
             {/* 7. Search Input field for queries */}
             <div className="w-full md:w-[180px]">
               <Input
-                className="h-10 text-xs"
+                className="h-10 text-xs border-slate-300 dark:border-slate-700"
                 value={accountSearch}
                 onChange={(e) => setAccountSearch(e.target.value)}
                 placeholder="Filter text..."
@@ -900,18 +917,34 @@ export function LedgerReportView({
             </div>
 
             {/* 8. Search/Apply and Reset buttons */}
-            <Button type="button" onClick={() => void loadReport(ledgerId, accountSearch)} disabled={loading} className="h-10 gap-2">
+            <Button 
+              type="button" 
+              onClick={() => void loadReport(ledgerId, accountSearch)} 
+              disabled={loading} 
+              className="h-10 gap-2 bg-[#0F172A] hover:bg-slate-800 text-white dark:bg-sky-600 dark:hover:bg-sky-700 font-bold px-4 shadow-sm"
+            >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
               Apply
             </Button>
-            <Button type="button" variant="outline" onClick={resetFilters} disabled={loading} className="h-10">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={resetFilters} 
+              disabled={loading} 
+              className="h-10 font-semibold text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
               Reset
             </Button>
 
             {/* 9. Actions button pushed to far right corner */}
             <div id="ledger-actions-menu" className="relative ml-auto">
-              <Button type="button" variant="outline" className="h-10 gap-2" onClick={() => setMenuOpen((v) => !v)}>
-                <MoreVertical className="h-4 w-4" />
+              <Button 
+                type="button" 
+                variant="outline" 
+                className="h-10 gap-2 font-semibold text-slate-800 dark:text-slate-100 border-slate-300 dark:border-slate-700 bg-white hover:bg-slate-50 dark:bg-slate-900 shadow-xs" 
+                onClick={() => setMenuOpen((v) => !v)}
+              >
+                <MoreVertical className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                 Actions
               </Button>
               {menuOpen ? (

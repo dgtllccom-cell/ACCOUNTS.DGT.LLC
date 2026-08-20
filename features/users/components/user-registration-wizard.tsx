@@ -601,7 +601,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
         const desig = e.designation ? ` • ${e.designation}` : "";
         const branch = e.country_branch?.name || e.city_branch?.name ? ` • ${e.country_branch?.name || e.city_branch?.name}` : "";
         const isFemale = (e.gender || e.person?.gender || "").toLowerCase().startsWith("f");
-        const genderBadge = isFemale ? " [♀ Female]" : " [♂ Male]";
+        const genderBadge = isFemale ? " [Female]" : " [Male]";
 
         const pNames = empName.trim().split(" ");
         const fName = e.first_name || e.person?.first_name || pNames[0] || "";
@@ -962,7 +962,7 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               onClick={() => setStep(s.number)}
               className={`flex items-center gap-3 rounded-xl border p-3 text-left transition-all ${
                 isActive
-                  ? "border-emerald-500 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-sm ring-1 ring-emerald-500/30"
+                  ? "border-[#0F172A] bg-slate-900/5 text-slate-900 dark:border-sky-500 dark:bg-sky-950/30 dark:text-sky-300 shadow-sm ring-1 ring-slate-900/20"
                   : isDone
                   ? "border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 text-slate-700 dark:text-slate-300"
                   : "border-slate-200 dark:border-slate-800 bg-card text-slate-500 hover:border-slate-300"
@@ -971,9 +971,9 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
               <div
                 className={`grid h-8 w-8 place-items-center rounded-lg text-xs font-bold transition-colors ${
                   isActive
-                    ? "bg-emerald-600 text-white"
+                    ? "bg-[#0F172A] text-white dark:bg-sky-600 shadow-xs"
                     : isDone
-                    ? "bg-slate-900 text-emerald-400 dark:bg-slate-800"
+                    ? "bg-slate-200 text-slate-800 dark:bg-slate-800 dark:text-slate-200"
                     : "bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-400"
                 }`}
               >
@@ -1039,36 +1039,37 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                       <button
                         type="button"
                         onClick={() => setGenderFilter("all")}
-                        className={`px-3 py-1 text-xs font-bold rounded-md transition-all ${
+                        className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-1.5 ${
                           genderFilter === "all"
-                            ? "bg-white dark:bg-slate-800 text-slate-900 dark:text-white shadow-sm border border-slate-200/80 dark:border-slate-700"
-                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                            ? "bg-[#0F172A] text-white shadow-sm dark:bg-slate-800"
+                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                         }`}
                       >
-                        {tr("genderAll")}
+                        <Users className="h-3.5 w-3.5" />
+                        <span>{tr("genderAll")}</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => setGenderFilter("male")}
-                        className={`px-3 py-1 text-xs font-bold rounded-md transition-all flex items-center gap-1 ${
+                        className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-1.5 ${
                           genderFilter === "male"
-                            ? "bg-blue-600 text-white shadow-sm"
-                            : "text-slate-600 dark:text-slate-400 hover:text-blue-600"
+                            ? "bg-[#0F172A] text-white shadow-sm dark:bg-slate-800"
+                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                         }`}
                       >
-                        <span>♂</span>
+                        <User className="h-3.5 w-3.5" />
                         <span>{tr("genderMale")}</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => setGenderFilter("female")}
-                        className={`px-3 py-1 text-xs font-bold rounded-md transition-all flex items-center gap-1 ${
+                        className={`px-3 py-1.5 text-xs font-bold rounded-md transition-all flex items-center gap-1.5 ${
                           genderFilter === "female"
-                            ? "bg-pink-600 text-white shadow-sm"
-                            : "text-slate-600 dark:text-slate-400 hover:text-pink-600"
+                            ? "bg-[#0F172A] text-white shadow-sm dark:bg-slate-800"
+                            : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100"
                         }`}
                       >
-                        <span>♀</span>
+                        <UserCheck className="h-3.5 w-3.5" />
                         <span>{tr("genderFemale")}</span>
                       </button>
                     </div>
@@ -1095,11 +1096,11 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                     <div className="rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50/80 to-slate-50 p-3.5 space-y-2.5 dark:border-blue-900/50 dark:from-blue-950/30 dark:to-slate-900 shadow-sm">
                       <div className="flex items-center justify-between border-b border-blue-100 dark:border-blue-900/50 pb-2">
                         <div className="flex items-center gap-2.5">
-                          <div className="h-9 w-9 rounded-lg bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-sm overflow-hidden shrink-0">
+                          <div className="h-9 w-9 rounded-lg bg-slate-900 text-slate-100 font-bold flex items-center justify-center text-xs shadow-sm overflow-hidden shrink-0">
                             {employeeProfile.photoUrl ? (
                               <img src={employeeProfile.photoUrl} alt="Employee" className="h-full w-full object-cover" />
                             ) : (
-                              <span>{employeeProfile.gender?.toLowerCase().startsWith("f") ? "♀" : "♂"}</span>
+                              <User className="h-5 w-5 text-slate-300" />
                             )}
                           </div>
                           <div>
@@ -1692,13 +1693,11 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
             {/* Live Card Header with Photo & Name */}
             <div className="flex items-center justify-between border-b pb-3">
               <div className="flex items-center gap-3">
-                <div className="h-12 w-12 rounded-xl bg-slate-900 text-emerald-400 font-bold flex items-center justify-center border border-slate-800 shadow-inner overflow-hidden shrink-0">
+                <div className="h-12 w-12 rounded-xl bg-slate-900 text-slate-100 font-bold flex items-center justify-center border border-slate-800 shadow-inner overflow-hidden shrink-0">
                   {employeeProfile.photoUrl ? (
                     <img src={employeeProfile.photoUrl} alt="Employee" className="h-full w-full object-cover" />
                   ) : (
-                    <span className="text-xl">
-                      {employeeProfile.gender?.toLowerCase().startsWith("f") ? "♀" : "♂"}
-                    </span>
+                    <User className="h-6 w-6 text-slate-300" />
                   )}
                 </div>
                 <div className="min-w-0">
@@ -1735,17 +1734,17 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                 <Building2 className="h-3.5 w-3.5" />
                 <span>1. Employee Master & Employment</span>
               </div>
-              <div className="grid grid-cols-2 gap-x-2 gap-y-1 pl-1 text-[11px] text-slate-600 dark:text-slate-300">
-                <div><span className="text-slate-400">First Name:</span> <span className="font-semibold">{firstName || "-"}</span></div>
-                <div><span className="text-slate-400">Surname / Last:</span> <span className="font-semibold">{lastName || "-"}</span></div>
-                <div><span className="text-slate-400">Department:</span> <span className="font-semibold">{department}</span></div>
-                <div><span className="text-slate-400">Employment:</span> <span>{employeeProfile.employmentType || "Full-Time"}</span></div>
-                <div><span className="text-slate-400">Shift:</span> <span>{employeeProfile.workingShift || "Day Shift"}</span></div>
-                <div><span className="text-slate-400">Job Status:</span> <span>{employeeProfile.jobStatus || "Active Permanent"}</span></div>
-                <div><span className="text-slate-400">Phone:</span> <span>{contactPhone || "-"}</span></div>
-                <div><span className="text-slate-400">WhatsApp:</span> <span>{employeeProfile.whatsapp || contactPhone || "-"}</span></div>
-                <div className="col-span-2"><span className="text-slate-400">Email:</span> <span className="font-medium truncate">{personalEmail || "user@dgt.llc"}</span></div>
-                <div className="col-span-2 border-t pt-1 mt-0.5"><span className="text-slate-400">Address:</span> <span className="font-medium text-slate-800 dark:text-slate-200">{residentialAddress || "Not Provided"}</span></div>
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1 pl-1 text-[11px] text-slate-700 dark:text-slate-200">
+                <div><span className="text-slate-500 font-medium">First Name:</span> <span className="font-semibold">{firstName || "-"}</span></div>
+                <div><span className="text-slate-500 font-medium">Surname / Last:</span> <span className="font-semibold">{lastName || "-"}</span></div>
+                <div><span className="text-slate-500 font-medium">Department:</span> <span className="font-semibold">{department}</span></div>
+                <div><span className="text-slate-500 font-medium">Employment:</span> <span>{employeeProfile.employmentType || "Full-Time"}</span></div>
+                <div><span className="text-slate-500 font-medium">Shift:</span> <span>{employeeProfile.workingShift || "Day Shift"}</span></div>
+                <div><span className="text-slate-500 font-medium">Job Status:</span> <span>{employeeProfile.jobStatus || "Active Permanent"}</span></div>
+                <div><span className="text-slate-500 font-medium">Phone:</span> <span>{contactPhone || "-"}</span></div>
+                <div><span className="text-slate-500 font-medium">WhatsApp:</span> <span>{employeeProfile.whatsapp || contactPhone || "-"}</span></div>
+                <div className="col-span-2"><span className="text-slate-500 font-medium">Email:</span> <span className="font-medium truncate">{personalEmail || "user@dgt.llc"}</span></div>
+                <div className="col-span-2 border-t pt-1 mt-0.5"><span className="text-slate-500 font-medium">Address:</span> <span className="font-medium text-slate-800 dark:text-slate-200">{residentialAddress || "Not Provided"}</span></div>
               </div>
             </div>
 
@@ -1755,11 +1754,11 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                 <MapPin className="h-3.5 w-3.5" />
                 <span>2. Geographic Scope & Branch Access</span>
               </div>
-              <div className="grid grid-cols-2 gap-x-2 gap-y-1 pl-1 text-[11px] text-slate-600 dark:text-slate-300">
-                <div><span className="text-slate-400">Country:</span> <span className="font-bold text-slate-900 dark:text-slate-100">{selectedCountry?.name || "Global Scope"}</span></div>
-                <div><span className="text-slate-400">Branch:</span> <span className="font-semibold">{branchCode || selectedMainBranch?.name || "Main Branch"}</span></div>
-                <div><span className="text-slate-400">Currency:</span> <span className="font-mono font-bold text-emerald-600">{selectedMainBranch?.local_currency || "USD"}</span></div>
-                <div><span className="text-slate-400">Role:</span> <span className="font-bold text-blue-600 uppercase">{role}</span></div>
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1 pl-1 text-[11px] text-slate-700 dark:text-slate-200">
+                <div><span className="text-slate-500 font-medium">Country:</span> <span className="font-bold text-slate-900 dark:text-slate-100">{selectedCountry?.name || "Global Scope"}</span></div>
+                <div><span className="text-slate-500 font-medium">Branch:</span> <span className="font-semibold">{branchCode || selectedMainBranch?.name || "Main Branch"}</span></div>
+                <div><span className="text-slate-500 font-medium">Currency:</span> <span className="font-mono font-bold text-emerald-600">{selectedMainBranch?.local_currency || "USD"}</span></div>
+                <div><span className="text-slate-500 font-medium">Role:</span> <span className="font-bold text-blue-600 uppercase">{role}</span></div>
               </div>
             </div>
 
@@ -1769,11 +1768,11 @@ function UserRegistrationWizardContent({ userIdProp }: { userIdProp?: string } =
                 <Lock className="h-3.5 w-3.5" />
                 <span>3. KYC & Credential Vault</span>
               </div>
-              <div className="grid grid-cols-2 gap-x-2 gap-y-1 pl-1 text-[11px] text-slate-600 dark:text-slate-300">
-                <div><span className="text-slate-400">Login ID:</span> <span className="font-mono font-bold text-emerald-600">{loginUsername || userCode}</span></div>
-                <div><span className="text-slate-400">CNIC/Passport:</span> <span className="font-mono font-bold">{cnicPassportNo || "Not Provided"}</span></div>
-                <div><span className="text-slate-400">Expiry Date:</span> <span>{idExpiryDate || "Permanent"}</span></div>
-                <div><span className="text-slate-400">Vault Ref:</span> <span className="font-mono font-bold text-purple-600">{`VAULT-DGT-${userCode}`}</span></div>
+              <div className="grid grid-cols-2 gap-x-2 gap-y-1 pl-1 text-[11px] text-slate-700 dark:text-slate-200">
+                <div><span className="text-slate-500 font-medium">Login ID:</span> <span className="font-mono font-bold text-emerald-600">{loginUsername || userCode}</span></div>
+                <div><span className="text-slate-500 font-medium">CNIC/Passport:</span> <span className="font-mono font-bold">{cnicPassportNo || "Not Provided"}</span></div>
+                <div><span className="text-slate-500 font-medium">Expiry Date:</span> <span>{idExpiryDate || "Permanent"}</span></div>
+                <div><span className="text-slate-500 font-medium">Vault Ref:</span> <span className="font-mono font-bold text-purple-600">{`VAULT-DGT-${userCode}`}</span></div>
               </div>
             </div>
 
