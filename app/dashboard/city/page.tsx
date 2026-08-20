@@ -1,5 +1,7 @@
 import Link from "next/link";
 import type { Route } from "next";
+import { getRequestLanguage } from "@/lib/i18n/server";
+import { t } from "@/lib/i18n/ui";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { getCurrentErpSession } from "@/lib/auth/session";
@@ -269,6 +271,7 @@ async function loadBranchDashboardData(
 
 export default async function CityDashboardPage(props: { searchParams?: Promise<{ branchId?: string; type?: string }> }) {
   const searchParams = props.searchParams ? await props.searchParams : {};
+  const lang = await getRequestLanguage();
   const session = await getCurrentErpSession();
   const isSuperAdmin = Boolean(session?.isSuperAdmin || session?.roles.includes("super_admin"));
 
@@ -308,8 +311,8 @@ export default async function CityDashboardPage(props: { searchParams?: Promise<
       <div className="p-6">
         <Card className="border-amber-200 bg-amber-50 text-amber-900">
           <CardContent className="p-4">
-            <h2 className="text-lg font-bold">Branch Access Required</h2>
-            <p className="mt-1 text-sm">Your user role does not have an assigned City Branch or Country Branch. Please contact administration to assign your branch location.</p>
+            <h2 className="text-lg font-bold">{t(lang, "cpage.branch_access_required", "Branch Access Required")}</h2>
+            <p className="mt-1 text-sm">{t(lang, "cpage.branch_access_desc", "Your user role does not have an assigned City Branch or Country Branch. Please contact administration to assign your branch location.")}</p>
           </CardContent>
         </Card>
       </div>
@@ -327,7 +330,7 @@ export default async function CityDashboardPage(props: { searchParams?: Promise<
           <div className="flex items-center gap-2">
             <MapPin className="h-5 w-5 text-primary" />
             <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              City / Branch Scope:
+              {t(lang, "cpage.city_branch_scope", "City / Branch Scope:")}
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
@@ -351,7 +354,7 @@ export default async function CityDashboardPage(props: { searchParams?: Promise<
       {!data.databaseReady ? (
         <Card className="border-red-200 bg-red-50 text-red-900 dark:border-red-950/40 dark:bg-red-950/20 dark:text-red-300">
           <CardContent className="p-4 text-sm font-semibold">
-            Branch data could not load: {data.error}
+            {t(lang, "cpage.branch_load_error", "Branch data could not load:")} {data.error}
           </CardContent>
         </Card>
       ) : null}

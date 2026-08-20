@@ -1932,6 +1932,24 @@ export type UiKey =
   | "common.all_categories"
   | "common.all_statuses"
   | "common.loading"
+  | "cpage.branch_access_required"
+  | "cpage.branch_access_desc"
+  | "cpage.city_branch_scope"
+  | "cpage.branch_load_error"
+  | "common.dashboard"
+  | "cpage.access_scoping_required"
+  | "cpage.access_scoping_desc"
+  | "cpage.country_scope"
+  | "cpage.all_countries_global"
+  | "cpage.global_super_admin_scope"
+  | "cpage.country_admin_scope"
+  | "cpage.subtitle"
+  | "cpage.add_branch"
+  | "cpage.view_products"
+  | "cpage.view_overview"
+  | "cpage.overview"
+  | "cpage.products_inventory"
+  | "cpage.stats_load_error"
   | "common.expand"
   | "common.collapse"
   | "log.command_center"
@@ -2771,6 +2789,24 @@ export type UiKey =
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "cpage.branch_access_required": "Branch Access Required",
+  "cpage.branch_access_desc": "Your user role does not have an assigned City Branch or Country Branch. Please contact administration to assign your branch location.",
+  "cpage.city_branch_scope": "City / Branch Scope:",
+  "cpage.branch_load_error": "Branch data could not load:",
+  "common.dashboard": "Dashboard",
+  "cpage.access_scoping_required": "Access Scoping Required",
+  "cpage.access_scoping_desc": "Your user role does not have an assigned country. Please contact the administrator to assign your role to a country scope.",
+  "cpage.country_scope": "Country Scope:",
+  "cpage.all_countries_global": "All Countries (Global)",
+  "cpage.global_super_admin_scope": "Global Super Admin Scope",
+  "cpage.country_admin_scope": "Country Admin Scope",
+  "cpage.subtitle": "Country-level reporting, city branches, local ledger stand, and product inventory details.",
+  "cpage.add_branch": "Add Branch",
+  "cpage.view_products": "View Products",
+  "cpage.view_overview": "View Overview",
+  "cpage.overview": "Overview",
+  "cpage.products_inventory": "Products & Inventory",
+  "cpage.stats_load_error": "Country statistics could not load:",
   "log.create_shipment": "Create Shipment",
   "common.expand": "Expand",
   "common.collapse": "Collapse",
@@ -5788,6 +5824,24 @@ const en: Dict = {
 
 const ur: Dict = {
   ...en,
+  "cpage.branch_access_required": "برانچ رسائی درکار",
+  "cpage.branch_access_desc": "آپ کے صارف کردار کو کوئی سٹی برانچ یا کنٹری برانچ تفویض نہیں۔ براہِ کرم انتظامیہ سے رابطہ کریں تاکہ آپ کی برانچ لوکیشن مقرر کی جا سکے۔",
+  "cpage.city_branch_scope": "شہر / برانچ دائرہ:",
+  "cpage.branch_load_error": "برانچ ڈیٹا لوڈ نہیں ہو سکا:",
+  "common.dashboard": "ڈیش بورڈ",
+  "cpage.access_scoping_required": "رسائی اسکوپنگ درکار",
+  "cpage.access_scoping_desc": "آپ کے صارف کردار کو کوئی ملک تفویض نہیں۔ براہِ کرم منتظم سے رابطہ کریں تاکہ آپ کے کردار کو ملک کے دائرے سے منسلک کیا جا سکے۔",
+  "cpage.country_scope": "ملک کا دائرہ:",
+  "cpage.all_countries_global": "تمام ممالک (عالمی)",
+  "cpage.global_super_admin_scope": "عالمی سپر ایڈمن دائرہ",
+  "cpage.country_admin_scope": "ملک ایڈمن دائرہ",
+  "cpage.subtitle": "ملکی سطح کی رپورٹنگ، شہری برانچیں، مقامی لیجر پوزیشن، اور مصنوعات کی انوینٹری تفصیلات۔",
+  "cpage.add_branch": "برانچ شامل کریں",
+  "cpage.view_products": "مصنوعات دیکھیں",
+  "cpage.view_overview": "جائزہ دیکھیں",
+  "cpage.overview": "جائزہ",
+  "cpage.products_inventory": "مصنوعات اور انوینٹری",
+  "cpage.stats_load_error": "ملکی اعدادوشمار لوڈ نہیں ہو سکے:",
   "log.create_shipment": "نئی شپمنٹ بنائیں",
   "common.expand": "پھیلائیں",
   "common.collapse": "سمیٹیں",
@@ -8787,6 +8841,24 @@ const ur: Dict = {
 
 const ar: Dict = {
   ...en,
+  "cpage.branch_access_required": "مطلوب صلاحية الفرع",
+  "cpage.branch_access_desc": "دور المستخدم الخاص بك ليس له فرع مدينة أو فرع بلد مُعيَّن. يرجى الاتصال بالإدارة لتعيين موقع فرعك.",
+  "cpage.city_branch_scope": "نطاق المدينة / الفرع:",
+  "cpage.branch_load_error": "تعذّر تحميل بيانات الفرع:",
+  "common.dashboard": "لوحة التحكم",
+  "cpage.access_scoping_required": "مطلوب تحديد نطاق الوصول",
+  "cpage.access_scoping_desc": "دور المستخدم الخاص بك ليس له بلد مُعيَّن. يرجى الاتصال بالمسؤول لتعيين دورك لنطاق بلد.",
+  "cpage.country_scope": "نطاق البلد:",
+  "cpage.all_countries_global": "جميع البلدان (عالمي)",
+  "cpage.global_super_admin_scope": "نطاق المشرف العام",
+  "cpage.country_admin_scope": "نطاق مدير البلد",
+  "cpage.subtitle": "تقارير على مستوى البلد، فروع المدن، وضع الدفتر المحلي، وتفاصيل مخزون المنتجات.",
+  "cpage.add_branch": "إضافة فرع",
+  "cpage.view_products": "عرض المنتجات",
+  "cpage.view_overview": "عرض النظرة العامة",
+  "cpage.overview": "نظرة عامة",
+  "cpage.products_inventory": "المنتجات والمخزون",
+  "cpage.stats_load_error": "تعذّر تحميل إحصاءات البلد:",
   "log.create_shipment": "إنشاء شحنة",
   "common.expand": "توسيع",
   "common.collapse": "طي",
@@ -11785,6 +11857,24 @@ const ar: Dict = {
 
 const fa: Dict = {
   ...en,
+  "cpage.branch_access_required": "دسترسی شعبه لازم است",
+  "cpage.branch_access_desc": "نقش کاربری شما شعبه شهری یا شعبه کشوری اختصاص‌یافته‌ای ندارد. لطفاً با مدیریت تماس بگیرید تا محل شعبه شما تعیین شود.",
+  "cpage.city_branch_scope": "محدوده شهر / شعبه:",
+  "cpage.branch_load_error": "داده‌های شعبه بارگذاری نشد:",
+  "common.dashboard": "داشبورد",
+  "cpage.access_scoping_required": "تعیین محدوده دسترسی لازم است",
+  "cpage.access_scoping_desc": "نقش کاربری شما کشور اختصاص‌یافته‌ای ندارد. لطفاً با مدیر تماس بگیرید تا نقش شما به یک محدوده کشور اختصاص یابد.",
+  "cpage.country_scope": "محدوده کشور:",
+  "cpage.all_countries_global": "همه کشورها (جهانی)",
+  "cpage.global_super_admin_scope": "محدوده سوپر ادمین جهانی",
+  "cpage.country_admin_scope": "محدوده مدیر کشور",
+  "cpage.subtitle": "گزارش‌دهی در سطح کشور، شعب شهری، وضعیت دفتر محلی و جزئیات موجودی محصولات.",
+  "cpage.add_branch": "افزودن شعبه",
+  "cpage.view_products": "مشاهده محصولات",
+  "cpage.view_overview": "مشاهده نمای کلی",
+  "cpage.overview": "نمای کلی",
+  "cpage.products_inventory": "محصولات و موجودی",
+  "cpage.stats_load_error": "آمار کشور بارگذاری نشد:",
   "log.create_shipment": "ایجاد محموله",
   "common.expand": "گسترش",
   "common.collapse": "جمع کردن",
@@ -14782,6 +14872,24 @@ const fa: Dict = {
 
 const ps: Dict = {
   ...en,
+  "cpage.branch_access_required": "د څانګې لاسرسی اړین دی",
+  "cpage.branch_access_desc": "ستاسو د کاروونکي رول ټاکل شوې ښاري څانګه یا هېواد څانګه نلري. مهرباني وکړئ د ادارې سره اړیکه ونیسئ.",
+  "cpage.city_branch_scope": "د ښار / څانګې ساحه:",
+  "cpage.branch_load_error": "د څانګې ډیټا نه شوه پورته:",
+  "common.dashboard": "ډشبورډ",
+  "cpage.access_scoping_required": "د لاسرسي ساحه ټاکل اړین دي",
+  "cpage.access_scoping_desc": "ستاسو د کاروونکي رول ټاکل شوی هېواد نلري. مهرباني وکړئ د مدیر سره اړیکه ونیسئ ترڅو ستاسو رول یوې هېواد ساحې ته وټاکل شي.",
+  "cpage.country_scope": "د هېواد ساحه:",
+  "cpage.all_countries_global": "ټول هېوادونه (نړیوال)",
+  "cpage.global_super_admin_scope": "نړیوال سوپر اډمین ساحه",
+  "cpage.country_admin_scope": "د هېواد اډمین ساحه",
+  "cpage.subtitle": "د هېواد کچې راپور، ښاري څانګې، محلي دفتر، او د محصولاتو انوینټري جزئیات.",
+  "cpage.add_branch": "څانګه اضافه کړئ",
+  "cpage.view_products": "محصولات وګورئ",
+  "cpage.view_overview": "کتنه وګورئ",
+  "cpage.overview": "کتنه",
+  "cpage.products_inventory": "محصولات او انوینټري",
+  "cpage.stats_load_error": "د هېواد احصایې نه شوې پورته:",
   "log.create_shipment": "نوی بار جوړ کړئ",
   "common.expand": "پراخول",
   "common.collapse": "راټولول",

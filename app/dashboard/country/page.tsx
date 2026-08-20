@@ -283,6 +283,7 @@ async function loadCountryData(countryId: string): Promise<CountryDashboardData>
 export default async function CountryDashboardPage(props: { searchParams?: Promise<{ tab?: string; countryId?: string }> }) {
   const searchParams = props.searchParams ? await props.searchParams : {};
   const currentTab = searchParams.tab || "overview";
+  const lang = await getRequestLanguage();
 
   const session = await getCurrentErpSession();
   const isSuperAdmin = Boolean(session?.isSuperAdmin || session?.roles.includes("super_admin"));
@@ -307,8 +308,8 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
       <div className="p-6">
         <Card className="border-amber-200 bg-amber-50 text-amber-900">
           <CardContent className="p-4">
-            <h2 className="text-lg font-bold">Access Scoping Required</h2>
-            <p className="text-sm mt-1">Your user role does not have an assigned country. Please contact the administrator to assign your role to a country scope.</p>
+            <h2 className="text-lg font-bold">{t(lang, "cpage.access_scoping_required", "Access Scoping Required")}</h2>
+            <p className="text-sm mt-1">{t(lang, "cpage.access_scoping_desc", "Your user role does not have an assigned country. Please contact the administrator to assign your role to a country scope.")}</p>
           </CardContent>
         </Card>
       </div>
@@ -325,7 +326,7 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
           <div className="flex items-center gap-2">
             <Globe className="h-5 w-5 text-primary" />
             <span className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-              Country Scope:
+              {t(lang, "cpage.country_scope", "Country Scope:")}
             </span>
           </div>
           <div className="flex flex-wrap items-center gap-1.5">
@@ -336,7 +337,7 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
               className="h-8 rounded-lg text-xs font-bold"
             >
               <Link href={`/dashboard/country?countryId=all&tab=${currentTab}` as Route}>
-                All Countries (Global)
+                {t(lang, "cpage.all_countries_global", "All Countries (Global)")}
               </Link>
             </Button>
             {countries.map((c) => (
@@ -360,26 +361,26 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
         <div>
           <div className="flex items-center gap-2">
             <span className="inline-flex h-6 items-center rounded-md bg-sky-50 px-2 py-0.5 text-xs font-semibold text-sky-700 ring-1 ring-inset ring-sky-700/10 dark:bg-sky-950/40 dark:text-sky-300 dark:ring-sky-500/20">
-              {isSuperAdmin ? "Global Super Admin Scope" : "Country Admin Scope"}
+              {isSuperAdmin ? t(lang, "cpage.global_super_admin_scope", "Global Super Admin Scope") : t(lang, "cpage.country_admin_scope", "Country Admin Scope")}
             </span>
           </div>
           <h1 className="mt-1 text-3xl font-bold tracking-tight text-slate-900 dark:text-slate-50">
-            {data.countryName} Dashboard
+            {data.countryName} {t(lang, "common.dashboard", "Dashboard")}
           </h1>
           <p className="text-sm text-muted-foreground">
-            Country-level reporting, city branches, local ledger stand, and product inventory details.
+            {t(lang, "cpage.subtitle", "Country-level reporting, city branches, local ledger stand, and product inventory details.")}
           </p>
         </div>
 
         <div className="flex gap-2">
           <Button asChild variant="outline">
             <Link href="/dashboard/new-entry/branch-entry/city-branch">
-              <Building className="mr-2 h-4 w-4" /> Add Branch
+              <Building className="mr-2 h-4 w-4" /> {t(lang, "cpage.add_branch", "Add Branch")}
             </Link>
           </Button>
           <Button asChild>
             <Link href={`/dashboard/country?countryId=${countryId}&tab=${currentTab === "overview" ? "products" : "overview"}` as Route}>
-              {currentTab === "overview" ? "View Products" : "View Overview"}
+              {currentTab === "overview" ? t(lang, "cpage.view_products", "View Products") : t(lang, "cpage.view_overview", "View Overview")}
             </Link>
           </Button>
         </div>
@@ -396,7 +397,7 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
                 : "border-transparent text-muted-foreground hover:border-slate-300 hover:text-foreground"
             }`}
           >
-            Overview
+            {t(lang, "cpage.overview", "Overview")}
           </Link>
           <Link
             href={`/dashboard/country?countryId=${countryId}&tab=products` as Route}
@@ -406,7 +407,7 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
                 : "border-transparent text-muted-foreground hover:border-slate-300 hover:text-foreground"
             }`}
           >
-            Products & Inventory
+            {t(lang, "cpage.products_inventory", "Products & Inventory")}
           </Link>
         </nav>
       </div>
@@ -418,7 +419,7 @@ export default async function CountryDashboardPage(props: { searchParams?: Promi
           {!data.databaseReady && (
             <Card className="border-red-200 bg-red-50 text-red-900 dark:border-red-950/40 dark:bg-red-950/20 dark:text-red-300">
               <CardContent className="p-4 text-sm font-semibold">
-                Country statistics could not load: {data.error}
+                {t(lang, "cpage.stats_load_error", "Country statistics could not load:")} {data.error}
               </CardContent>
             </Card>
           )}
