@@ -2014,6 +2014,52 @@ export type UiKey =
   | "cdash.col_debit"
   | "cdash.col_credit"
   | "cdash.col_balance"
+  | "bdash.title"
+  | "bdash.subtitle"
+  | "bdash.branch_code"
+  | "bdash.base_currency"
+  | "bdash.today_postings"
+  | "bdash.roznamcha_entries"
+  | "bdash.cash_balance"
+  | "bdash.cash_ledger_standing"
+  | "bdash.bank_balance"
+  | "bdash.bank_ledger_standing"
+  | "bdash.pending_payments"
+  | "bdash.open_exposure"
+  | "bdash.orders"
+  | "bdash.financials"
+  | "bdash.financials_sub"
+  | "bdash.branch_mix"
+  | "bdash.branch_mix_sub"
+  | "bdash.cash"
+  | "bdash.bank"
+  | "bdash.fast_ops"
+  | "bdash.qa_cash_entry"
+  | "bdash.qa_cash_entry_d"
+  | "bdash.qa_new_purchase"
+  | "bdash.qa_new_purchase_d"
+  | "bdash.qa_ledger_report"
+  | "bdash.qa_ledger_report_d"
+  | "bdash.qa_add_customer"
+  | "bdash.qa_add_customer_d"
+  | "bdash.cash_bank_ledger"
+  | "bdash.no_ledgers"
+  | "bdash.recent_txns"
+  | "bdash.col_voucher"
+  | "bdash.col_date"
+  | "bdash.col_type"
+  | "bdash.no_recent_txns"
+  | "bdash.status_draft"
+  | "bdash.entry"
+  | "bdash.inventory_customers"
+  | "bdash.products"
+  | "bdash.customers"
+  | "bdash.profit"
+  | "bdash.customer_directory"
+  | "bdash.customer"
+  | "bdash.no_mobile"
+  | "bdash.no_email"
+  | "bdash.no_customers"
   | "common.no_records"
   | "common.select"
   | "common.clear_selection"
@@ -2722,6 +2768,52 @@ export type UiKey =
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "bdash.title": "Branch Admin Dashboard",
+  "bdash.subtitle": "Daily operational view for branch transactions, local balance sheet, cash levels, and stock metrics.",
+  "bdash.branch_code": "Branch Code",
+  "bdash.base_currency": "Base Currency",
+  "bdash.today_postings": "Today's Postings",
+  "bdash.roznamcha_entries": "Roznamcha entries",
+  "bdash.cash_balance": "Cash Balance",
+  "bdash.cash_ledger_standing": "Cash ledger standing",
+  "bdash.bank_balance": "Bank Balance",
+  "bdash.bank_ledger_standing": "Bank ledger standing",
+  "bdash.pending_payments": "Pending Payments",
+  "bdash.open_exposure": "Open branch exposure",
+  "bdash.orders": "orders",
+  "bdash.financials": "Branch Financials",
+  "bdash.financials_sub": "Purchases, sales & balances",
+  "bdash.branch_mix": "Branch Mix",
+  "bdash.branch_mix_sub": "Spread of core account metrics",
+  "bdash.cash": "Cash",
+  "bdash.bank": "Bank",
+  "bdash.fast_ops": "Fast branch operations",
+  "bdash.qa_cash_entry": "Cash Entry",
+  "bdash.qa_cash_entry_d": "Post branch payment or receipt",
+  "bdash.qa_new_purchase": "New Purchase",
+  "bdash.qa_new_purchase_d": "Create purchase booking",
+  "bdash.qa_ledger_report": "Ledger Report",
+  "bdash.qa_ledger_report_d": "Review branch ledger statement",
+  "bdash.qa_add_customer": "Add Customer",
+  "bdash.qa_add_customer_d": "Create branch customer profile",
+  "bdash.cash_bank_ledger": "Cash, Bank & Ledger Status",
+  "bdash.no_ledgers": "No ledgers assigned to this branch.",
+  "bdash.recent_txns": "Recent Branch Transactions",
+  "bdash.col_voucher": "Voucher",
+  "bdash.col_date": "Date",
+  "bdash.col_type": "Type",
+  "bdash.no_recent_txns": "No recent transactions for this branch.",
+  "bdash.status_draft": "Draft",
+  "bdash.entry": "Entry",
+  "bdash.inventory_customers": "Inventory & Customers",
+  "bdash.products": "Products",
+  "bdash.customers": "Customers",
+  "bdash.profit": "Profit",
+  "bdash.customer_directory": "Customer Directory",
+  "bdash.customer": "Customer",
+  "bdash.no_mobile": "No mobile",
+  "bdash.no_email": "No email",
+  "bdash.no_customers": "No customers registered in this branch scope.",
   "common.no_data": "No data available",
   "cdash.total_accounts": "Total Accounts",
   "cdash.total_products": "Total Products",
@@ -5690,6 +5782,52 @@ const en: Dict = {
 
 const ur: Dict = {
   ...en,
+  "bdash.title": "برانچ ایڈمن ڈیش بورڈ",
+  "bdash.subtitle": "برانچ لین دین، مقامی بیلنس شیٹ، نقد سطح اور اسٹاک میٹرکس کے لیے روزانہ آپریشنل منظر۔",
+  "bdash.branch_code": "برانچ کوڈ",
+  "bdash.base_currency": "بنیادی کرنسی",
+  "bdash.today_postings": "آج کی پوسٹنگز",
+  "bdash.roznamcha_entries": "روزنامچہ اندراجات",
+  "bdash.cash_balance": "نقد بیلنس",
+  "bdash.cash_ledger_standing": "نقد لیجر کی حیثیت",
+  "bdash.bank_balance": "بینک بیلنس",
+  "bdash.bank_ledger_standing": "بینک لیجر کی حیثیت",
+  "bdash.pending_payments": "زیر التواء ادائیگیاں",
+  "bdash.open_exposure": "کھلا برانچ نمائش",
+  "bdash.orders": "آرڈرز",
+  "bdash.financials": "برانچ مالیات",
+  "bdash.financials_sub": "خریداری، فروخت اور بیلنس",
+  "bdash.branch_mix": "برانچ مکس",
+  "bdash.branch_mix_sub": "بنیادی اکاؤنٹ میٹرکس کی تقسیم",
+  "bdash.cash": "نقد",
+  "bdash.bank": "بینک",
+  "bdash.fast_ops": "تیز برانچ آپریشنز",
+  "bdash.qa_cash_entry": "نقد اندراج",
+  "bdash.qa_cash_entry_d": "برانچ ادائیگی یا رسید پوسٹ کریں",
+  "bdash.qa_new_purchase": "نئی خریداری",
+  "bdash.qa_new_purchase_d": "خریداری بکنگ بنائیں",
+  "bdash.qa_ledger_report": "لیجر رپورٹ",
+  "bdash.qa_ledger_report_d": "برانچ لیجر اسٹیٹمنٹ کا جائزہ لیں",
+  "bdash.qa_add_customer": "کسٹمر شامل کریں",
+  "bdash.qa_add_customer_d": "برانچ کسٹمر پروفائل بنائیں",
+  "bdash.cash_bank_ledger": "نقد، بینک اور لیجر کی حیثیت",
+  "bdash.no_ledgers": "اس برانچ کو کوئی لیجر تفویض نہیں۔",
+  "bdash.recent_txns": "حالیہ برانچ لین دین",
+  "bdash.col_voucher": "واؤچر",
+  "bdash.col_date": "تاریخ",
+  "bdash.col_type": "قسم",
+  "bdash.no_recent_txns": "اس برانچ کے لیے کوئی حالیہ لین دین نہیں۔",
+  "bdash.status_draft": "مسودہ",
+  "bdash.entry": "اندراج",
+  "bdash.inventory_customers": "انوینٹری اور کسٹمرز",
+  "bdash.products": "مصنوعات",
+  "bdash.customers": "کسٹمرز",
+  "bdash.profit": "منافع",
+  "bdash.customer_directory": "کسٹمر ڈائرکٹری",
+  "bdash.customer": "کسٹمر",
+  "bdash.no_mobile": "کوئی موبائل نہیں",
+  "bdash.no_email": "کوئی ای میل نہیں",
+  "bdash.no_customers": "اس برانچ کے دائرے میں کوئی کسٹمر رجسٹرڈ نہیں۔",
   "common.no_data": "کوئی ڈیٹا دستیاب نہیں",
   "cdash.total_accounts": "کل اکاؤنٹس",
   "cdash.total_products": "کل مصنوعات",
@@ -8639,6 +8777,52 @@ const ur: Dict = {
 
 const ar: Dict = {
   ...en,
+  "bdash.title": "لوحة مدير الفرع",
+  "bdash.subtitle": "عرض تشغيلي يومي لمعاملات الفرع والميزانية المحلية ومستويات النقد ومقاييس المخزون.",
+  "bdash.branch_code": "رمز الفرع",
+  "bdash.base_currency": "العملة الأساسية",
+  "bdash.today_postings": "تسجيلات اليوم",
+  "bdash.roznamcha_entries": "إدخالات دفتر اليومية",
+  "bdash.cash_balance": "الرصيد النقدي",
+  "bdash.cash_ledger_standing": "وضع دفتر النقد",
+  "bdash.bank_balance": "الرصيد البنكي",
+  "bdash.bank_ledger_standing": "وضع دفتر البنك",
+  "bdash.pending_payments": "المدفوعات المعلقة",
+  "bdash.open_exposure": "التعرض المفتوح للفرع",
+  "bdash.orders": "طلبات",
+  "bdash.financials": "الشؤون المالية للفرع",
+  "bdash.financials_sub": "المشتريات والمبيعات والأرصدة",
+  "bdash.branch_mix": "توزيع الفرع",
+  "bdash.branch_mix_sub": "توزيع مقاييس الحساب الأساسية",
+  "bdash.cash": "نقد",
+  "bdash.bank": "بنك",
+  "bdash.fast_ops": "عمليات الفرع السريعة",
+  "bdash.qa_cash_entry": "إدخال نقدي",
+  "bdash.qa_cash_entry_d": "تسجيل دفعة أو إيصال الفرع",
+  "bdash.qa_new_purchase": "شراء جديد",
+  "bdash.qa_new_purchase_d": "إنشاء حجز شراء",
+  "bdash.qa_ledger_report": "تقرير الدفتر",
+  "bdash.qa_ledger_report_d": "مراجعة كشف دفتر الفرع",
+  "bdash.qa_add_customer": "إضافة عميل",
+  "bdash.qa_add_customer_d": "إنشاء ملف عميل الفرع",
+  "bdash.cash_bank_ledger": "حالة النقد والبنك والدفتر",
+  "bdash.no_ledgers": "لا توجد دفاتر مخصصة لهذا الفرع.",
+  "bdash.recent_txns": "معاملات الفرع الأخيرة",
+  "bdash.col_voucher": "سند",
+  "bdash.col_date": "التاريخ",
+  "bdash.col_type": "النوع",
+  "bdash.no_recent_txns": "لا توجد معاملات أخيرة لهذا الفرع.",
+  "bdash.status_draft": "مسودة",
+  "bdash.entry": "إدخال",
+  "bdash.inventory_customers": "المخزون والعملاء",
+  "bdash.products": "المنتجات",
+  "bdash.customers": "العملاء",
+  "bdash.profit": "الربح",
+  "bdash.customer_directory": "دليل العملاء",
+  "bdash.customer": "عميل",
+  "bdash.no_mobile": "لا يوجد جوال",
+  "bdash.no_email": "لا يوجد بريد",
+  "bdash.no_customers": "لا يوجد عملاء مسجلون في نطاق هذا الفرع.",
   "common.no_data": "لا توجد بيانات متاحة",
   "cdash.total_accounts": "إجمالي الحسابات",
   "cdash.total_products": "إجمالي المنتجات",
@@ -11587,6 +11771,52 @@ const ar: Dict = {
 
 const fa: Dict = {
   ...en,
+  "bdash.title": "داشبورد مدیر شعبه",
+  "bdash.subtitle": "نمای عملیاتی روزانه برای تراکنش‌های شعبه، ترازنامه محلی، سطوح نقدی و معیارهای موجودی.",
+  "bdash.branch_code": "کد شعبه",
+  "bdash.base_currency": "ارز پایه",
+  "bdash.today_postings": "ثبت‌های امروز",
+  "bdash.roznamcha_entries": "ورودی‌های روزنامچه",
+  "bdash.cash_balance": "موجودی نقدی",
+  "bdash.cash_ledger_standing": "وضعیت دفتر نقدی",
+  "bdash.bank_balance": "موجودی بانکی",
+  "bdash.bank_ledger_standing": "وضعیت دفتر بانکی",
+  "bdash.pending_payments": "پرداخت‌های در انتظار",
+  "bdash.open_exposure": "ریسک باز شعبه",
+  "bdash.orders": "سفارش‌ها",
+  "bdash.financials": "امور مالی شعبه",
+  "bdash.financials_sub": "خریدها، فروش‌ها و موجودی‌ها",
+  "bdash.branch_mix": "ترکیب شعبه",
+  "bdash.branch_mix_sub": "توزیع معیارهای اصلی حساب",
+  "bdash.cash": "نقدی",
+  "bdash.bank": "بانک",
+  "bdash.fast_ops": "عملیات سریع شعبه",
+  "bdash.qa_cash_entry": "ورود نقدی",
+  "bdash.qa_cash_entry_d": "ثبت پرداخت یا رسید شعبه",
+  "bdash.qa_new_purchase": "خرید جدید",
+  "bdash.qa_new_purchase_d": "ایجاد رزرو خرید",
+  "bdash.qa_ledger_report": "گزارش دفتر",
+  "bdash.qa_ledger_report_d": "بررسی صورت‌حساب دفتر شعبه",
+  "bdash.qa_add_customer": "افزودن مشتری",
+  "bdash.qa_add_customer_d": "ایجاد پروفایل مشتری شعبه",
+  "bdash.cash_bank_ledger": "وضعیت نقد، بانک و دفتر",
+  "bdash.no_ledgers": "دفتری به این شعبه اختصاص نیافته است.",
+  "bdash.recent_txns": "تراکنش‌های اخیر شعبه",
+  "bdash.col_voucher": "سند",
+  "bdash.col_date": "تاریخ",
+  "bdash.col_type": "نوع",
+  "bdash.no_recent_txns": "تراکنش اخیری برای این شعبه وجود ندارد.",
+  "bdash.status_draft": "پیش‌نویس",
+  "bdash.entry": "ورودی",
+  "bdash.inventory_customers": "موجودی و مشتریان",
+  "bdash.products": "محصولات",
+  "bdash.customers": "مشتریان",
+  "bdash.profit": "سود",
+  "bdash.customer_directory": "فهرست مشتریان",
+  "bdash.customer": "مشتری",
+  "bdash.no_mobile": "بدون موبایل",
+  "bdash.no_email": "بدون ایمیل",
+  "bdash.no_customers": "مشتری‌ای در محدوده این شعبه ثبت نشده است.",
   "common.no_data": "داده‌ای موجود نیست",
   "cdash.total_accounts": "کل حساب‌ها",
   "cdash.total_products": "کل محصولات",
@@ -14533,6 +14763,52 @@ const fa: Dict = {
 
 const ps: Dict = {
   ...en,
+  "bdash.title": "د څانګې مدیر ډشبورډ",
+  "bdash.subtitle": "د څانګې د راکړې ورکړې، محلي بیلانس شیټ، نقدي کچې او د ذخیرې معیارونو لپاره ورځنی عملیاتي لید.",
+  "bdash.branch_code": "د څانګې کوډ",
+  "bdash.base_currency": "بنسټیزه اسعارو",
+  "bdash.today_postings": "د نن ورځې ثبتونه",
+  "bdash.roznamcha_entries": "د روزنامچې ننوتنې",
+  "bdash.cash_balance": "نقدي بیلانس",
+  "bdash.cash_ledger_standing": "د نقدو دفتر حالت",
+  "bdash.bank_balance": "بانکي بیلانس",
+  "bdash.bank_ledger_standing": "د بانک دفتر حالت",
+  "bdash.pending_payments": "پاتې تادیات",
+  "bdash.open_exposure": "د څانګې خلاص خطر",
+  "bdash.orders": "فرمایښتونه",
+  "bdash.financials": "د څانګې مالي چارې",
+  "bdash.financials_sub": "پیرودنې، پلور او بیلانسونه",
+  "bdash.branch_mix": "د څانګې ترکیب",
+  "bdash.branch_mix_sub": "د اصلي حساب معیارونو وېش",
+  "bdash.cash": "نقد",
+  "bdash.bank": "بانک",
+  "bdash.fast_ops": "د څانګې چټک عملیات",
+  "bdash.qa_cash_entry": "نقدي ننوتنه",
+  "bdash.qa_cash_entry_d": "د څانګې تادیه یا رسید ثبت کړئ",
+  "bdash.qa_new_purchase": "نوې پیرودنه",
+  "bdash.qa_new_purchase_d": "د پیرودنې بکینګ جوړ کړئ",
+  "bdash.qa_ledger_report": "د دفتر راپور",
+  "bdash.qa_ledger_report_d": "د څانګې د دفتر بیان وګورئ",
+  "bdash.qa_add_customer": "پیرودونکی اضافه کړئ",
+  "bdash.qa_add_customer_d": "د څانګې پیرودونکي پروفایل جوړ کړئ",
+  "bdash.cash_bank_ledger": "د نقدو، بانک او دفتر حالت",
+  "bdash.no_ledgers": "دې څانګې ته هېڅ دفتر نه دی ټاکل شوی.",
+  "bdash.recent_txns": "د څانګې وروستۍ راکړې ورکړې",
+  "bdash.col_voucher": "واؤچر",
+  "bdash.col_date": "نېټه",
+  "bdash.col_type": "ډول",
+  "bdash.no_recent_txns": "د دې څانګې لپاره هېڅ وروستۍ راکړه ورکړه نشته.",
+  "bdash.status_draft": "مسوده",
+  "bdash.entry": "ننوتنه",
+  "bdash.inventory_customers": "موجودي او پیرودونکي",
+  "bdash.products": "محصولات",
+  "bdash.customers": "پیرودونکي",
+  "bdash.profit": "ګټه",
+  "bdash.customer_directory": "د پیرودونکو لارښود",
+  "bdash.customer": "پیرودونکی",
+  "bdash.no_mobile": "موبایل نشته",
+  "bdash.no_email": "ایمیل نشته",
+  "bdash.no_customers": "د دې څانګې په ساحه کې هېڅ پیرودونکی نه دی ثبت شوی.",
   "common.no_data": "هېڅ ډیټا شتون نلري",
   "cdash.total_accounts": "ټول حسابونه",
   "cdash.total_products": "ټول محصولات",
