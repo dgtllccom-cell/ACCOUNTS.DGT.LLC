@@ -99,6 +99,49 @@ export const sidebarTree: SidebarNode[] = [
     roles: ["super_admin"]
   },
   {
+    key: "new-entry",
+    labelKey: "nav.new_entry" as any,
+    iconKey: "list-plus",
+    roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"],
+    children: [
+      {
+        key: "new-entry-account",
+        labelKey: "nav.new_account" as any,
+        iconKey: "book-open",
+        href: "/dashboard/ledger/new" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "new-entry-branch",
+        labelKey: "nav.new_branch" as any,
+        iconKey: "building-2",
+        href: "/dashboard/settings/locations" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin"]
+      },
+      {
+        key: "new-entry-user",
+        labelKey: "nav.new_user" as any,
+        iconKey: "user-check",
+        href: "/dashboard/users/new" as Route,
+        roles: ["super_admin"]
+      },
+      {
+        key: "new-entry-employee",
+        labelKey: "nav.register_employee" as any,
+        iconKey: "users",
+        href: "/dashboard/general-office/employees" as Route,
+        roles: ["super_admin", "country_admin", "main_branch_admin", "city_branch_admin", "accountant"]
+      },
+      {
+        key: "new-entry-reports",
+        labelKey: "nav.entry_reports" as any,
+        iconKey: "file-text",
+        href: "/dashboard/all-release-entries" as Route,
+        roles: ["super_admin", "country_admin", "country_user", "main_branch_admin", "city_branch_admin", "accountant", "auditor_viewer"]
+      }
+    ]
+  },
+  {
     key: "general-office",
     labelKey: "nav.general_office_management",
     iconKey: "users",

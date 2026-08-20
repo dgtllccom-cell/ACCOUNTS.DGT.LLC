@@ -172,6 +172,12 @@ export type UiKey =
   | "cmd.settings_company"
   // Sidebar navigation
   | "nav.dashboard"
+  | "nav.new_entry"
+  | "nav.new_account"
+  | "nav.new_branch"
+  | "nav.new_user"
+  | "nav.register_employee"
+  | "nav.entry_reports"
   | "nav.forms_directory_audit" | "nav.all_release_entries"
   | "sae.title" | "sae.subtitle" | "sae.refresh" | "sae.module" | "sae.all_modules" | "sae.payment" | "sae.sale" | "sae.warehouse" | "sae.expense" | "sae.total_countries" | "sae.total_branches" | "sae.today_entries" | "sae.net_movement" | "sae.all_countries" | "sae.all_offices" | "sae.all_modules_combined" | "sae.selected_view" | "sae.debit_minus_credit" | "sae.search_all" | "sae.search_ph" | "sae.latest_entries" | "sae.click_row" | "sae.entry_name" | "sae.party" | "sae.linked_bank" | "sae.final" | "sae.loading" | "sae.open_module" | "sae.entry_report" | "sae.field" | "sae.value" | "sae.txn_type" | "sae.total_records" | "sae.page" | "sae.records" | "sae.export_csv" | "sae.all_currencies" | "sae.currency" | "sae.country"
   | "sed.entry_details" | "sed.general_info" | "sed.entry_type" | "sed.description" | "sed.notes" | "sed.posting_date" | "sed.approved_date" | "sed.exchange_rate" | "sed.final_usd" | "sed.amounts_summary" | "sed.total_usd" | "sed.net_balance" | "sed.debit_credit_details" | "sed.account_code" | "sed.account_name" | "sed.audit_trail" | "sed.attachments" | "sed.no_attachments" | "sed.not_found" | "sed.open_source_module" | "sed.excel" | "sed.source_module" | "sed.category" | "sed.voucher_no" | "sed.journal_no" | "sed.total" | "sed.back"
@@ -4236,6 +4242,12 @@ const en: Dict = {
   "nav.new_user": "New User Registration",
   "nav.register_employee": "Register Employee",
   "nav.entry_reports": "Entry & Release Reports",
+  "nav.new_entry": "New Entry",
+  "nav.new_account": "New Account / Ledger",
+  "nav.new_branch": "Branch Setup / Network",
+  "nav.new_user": "New User Registration",
+  "nav.register_employee": "Register Employee",
+  "nav.entry_reports": "Entry & Release Reports",
   "nav.all_release_entries": "All Release Entries",
   "sae.title": "Super Admin — All Release Entries",
   "sae.subtitle": "One live control center for all ERP modules, all countries, all branches — latest activity, debit/credit movement and full entry drill-down.",
@@ -7031,6 +7043,12 @@ const ur: Dict = {
   "nav.new_user": "نئے صارف کا اندراج",
   "nav.register_employee": "ملازم کا اندراج",
   "nav.entry_reports": "اندراج رپورٹس",
+  "nav.new_entry": "نیا اندراج",
+  "nav.new_account": "نیا کھاتہ / لیجر",
+  "nav.new_branch": "برانچ نیٹ ورک و سیٹ اپ",
+  "nav.new_user": "نئے صارف کا اندراج",
+  "nav.register_employee": "ملازم کا اندراج",
+  "nav.entry_reports": "اندراج رپورٹس",
   "nav.all_release_entries": "تمام ریلیز اندراجات",
   "nav.template_gold": "گولڈ",
   "nav.template_cyan": "سایان",
@@ -9228,6 +9246,12 @@ const ar: Dict = {
   "company_form.step_review_save": "٤. المراجعة والحفظ",
   "company_form.section_company_details": "تفاصيل الشركة",
   "nav.dashboard": "لوحة التحكم",
+  "nav.new_entry": "إدخال جديد",
+  "nav.new_account": "حساب جديد / دفتر الأستاذ",
+  "nav.new_branch": "إعداد الفروع والشبكة",
+  "nav.new_user": "تسجيل مستخدم جديد",
+  "nav.register_employee": "تسجيل موظف",
+  "nav.entry_reports": "تقارير الإدخالات",
   "nav.new_entry": "إدخال جديد",
   "nav.new_account": "حساب جديد / دفتر الأستاذ",
   "nav.new_branch": "إعداد الفروع والشبكة",
@@ -11492,6 +11516,12 @@ const fa: Dict = {
   "purchase.transfer_destination_roznamcha_serials": "مقصد انتقال و سریال‌های روزنامچه تجاری",
   "purchase.transfer_locked_completed": "انتقال قفل و تکمیل شد",
   "nav.dashboard": "داشبورد",
+  "nav.new_entry": "ثبت جدید",
+  "nav.new_account": "حساب جدید / دفتر کل",
+  "nav.new_branch": "تنظیم شعبات و شبکه",
+  "nav.new_user": "ثبت کاربر جدید",
+  "nav.register_employee": "ثبت کارمند",
+  "nav.entry_reports": "گزارش‌های ثبت و ترخیص",
   "nav.new_entry": "ثبت جدید",
   "nav.new_account": "حساب جدید / دفتر کل",
   "nav.new_branch": "تنظیم شعبات و شبکه",
@@ -16095,6 +16125,12 @@ const ps: Dict = {
   "nav.filter_by_date_range": "د نیټې د حد له مخې فلټر کول",
   "nav.all_dates": "ټولې نیټې",
   "nav.dashboard": "ډشبورډ",
+  "nav.new_entry": "نوې ننوتنه",
+  "nav.new_account": "نوی حساب / لیجر",
+  "nav.new_branch": "د څانګې او شبکې تنظیم",
+  "nav.new_user": "د نوي کارن ثبت",
+  "nav.register_employee": "د کارمند ثبت",
+  "nav.entry_reports": "د ننوتنو او ریلیز راپورونه",
   "nav.all_release_entries": "ټول خپاره شوي ثبتونه",
   "sae.title": "سوپر اډمین — ټول خپاره شوي ثبتونه",
   "sae.subtitle": "د ټولو ERP ماډلونو، ټولو هېوادونو او څانګو لپاره یو ژوندی کنټرول مرکز — وروستۍ فعالیت، ډیبیټ/کریډیټ حرکت او بشپړ تفصیل.",
