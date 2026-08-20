@@ -10,6 +10,10 @@ export type CustomerInput = {
   cityId?: string | null;
   areaLocationId?: string | null;
   customerName: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  gender?: string | null;
+  photoUrl?: string | null;
   companyName?: string | null;
   contactPerson?: string | null;
   mobile?: string | null;
@@ -42,6 +46,10 @@ export class CustomersService {
       cityId: input.cityId ?? null,
       areaLocationId: input.areaLocationId ?? null,
       customerName: input.customerName,
+      firstName: input.firstName ?? null,
+      lastName: input.lastName ?? null,
+      gender: input.gender ?? null,
+      photoUrl: input.photoUrl ?? null,
       companyName: input.companyName ?? null,
       contactPerson: input.contactPerson ?? null,
       mobile: input.mobile ?? null,
@@ -94,6 +102,10 @@ export class CustomersService {
       cityId: "cityId" in input ? input.cityId ?? null : undefined,
       areaLocationId: "areaLocationId" in input ? input.areaLocationId ?? null : undefined,
       customerName: "customerName" in input ? input.customerName ?? "" : undefined,
+      firstName: "firstName" in input ? input.firstName ?? null : undefined,
+      lastName: "lastName" in input ? input.lastName ?? null : undefined,
+      gender: "gender" in input ? input.gender ?? null : undefined,
+      photoUrl: "photoUrl" in input ? input.photoUrl ?? null : undefined,
       companyName: "companyName" in input ? input.companyName ?? null : undefined,
       contactPerson: "contactPerson" in input ? input.contactPerson ?? null : undefined,
       mobile: "mobile" in input ? input.mobile ?? null : undefined,

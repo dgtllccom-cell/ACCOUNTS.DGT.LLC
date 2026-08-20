@@ -10,6 +10,10 @@ export type CustomerRow = {
   city_id: string | null;
   area_location_id: string | null;
   customer_name: string;
+  first_name: string | null;
+  last_name: string | null;
+  gender: string | null;
+  photo_url: string | null;
   company_name: string | null;
   contact_person: string | null;
   mobile: string | null;
@@ -42,7 +46,8 @@ export type CustomerRegistrationRow = {
 
 const CUSTOMER_COLUMNS = [
   "id", "country_id", "state_province_id", "district_id", "city_id", "area_location_id",
-  "customer_name", "company_name", "contact_person", "mobile", "whatsapp", "email", "address",
+  "customer_name", "first_name", "last_name", "gender", "photo_url",
+  "company_name", "contact_person", "mobile", "whatsapp", "email", "address",
   "notes", "original_language_code", "is_active", "created_at", "updated_at"
 ];
 
@@ -68,7 +73,7 @@ export class CustomersRepository {
         SELECT ${sql(CUSTOMER_COLUMNS)} FROM public.customers
         WHERE deleted_at IS NULL
           AND (${input.countryId ? sql`country_id = ${input.countryId}` : sql`true`})
-          AND (${like ? sql`(customer_name ILIKE ${like} OR company_name ILIKE ${like} OR email ILIKE ${like} OR mobile ILIKE ${like} OR whatsapp ILIKE ${like})` : sql`true`})
+          AND (${like ? sql`(customer_name ILIKE ${like} OR first_name ILIKE ${like} OR last_name ILIKE ${like} OR company_name ILIKE ${like} OR email ILIKE ${like} OR mobile ILIKE ${like} OR whatsapp ILIKE ${like})` : sql`true`})
         ORDER BY customer_name ASC
         LIMIT ${limit}
       `;
@@ -178,6 +183,10 @@ export class CustomersRepository {
     cityId?: string | null;
     areaLocationId?: string | null;
     customerName: string;
+    firstName?: string | null;
+    lastName?: string | null;
+    gender?: string | null;
+    photoUrl?: string | null;
     companyName?: string | null;
     contactPerson?: string | null;
     mobile?: string | null;
@@ -196,6 +205,10 @@ export class CustomersRepository {
       city_id: input.cityId ?? null,
       area_location_id: input.areaLocationId ?? null,
       customer_name: input.customerName.trim(),
+      first_name: input.firstName?.trim() || null,
+      last_name: input.lastName?.trim() || null,
+      gender: input.gender ?? null,
+      photo_url: input.photoUrl ?? null,
       company_name: input.companyName ?? null,
       contact_person: input.contactPerson ?? null,
       mobile: input.mobile ?? null,
@@ -287,6 +300,10 @@ export class CustomersRepository {
       cityId: string | null;
       areaLocationId: string | null;
       customerName: string;
+      firstName: string | null;
+      lastName: string | null;
+      gender: string | null;
+      photoUrl: string | null;
       companyName: string | null;
       contactPerson: string | null;
       mobile: string | null;
@@ -304,6 +321,10 @@ export class CustomersRepository {
     if ("cityId" in input) patch.city_id = input.cityId;
     if ("areaLocationId" in input) patch.area_location_id = input.areaLocationId;
     if ("customerName" in input) patch.customer_name = input.customerName;
+    if ("firstName" in input) patch.first_name = input.firstName;
+    if ("lastName" in input) patch.last_name = input.lastName;
+    if ("gender" in input) patch.gender = input.gender;
+    if ("photoUrl" in input) patch.photo_url = input.photoUrl;
     if ("companyName" in input) patch.company_name = input.companyName;
     if ("contactPerson" in input) patch.contact_person = input.contactPerson;
     if ("mobile" in input) patch.mobile = input.mobile;

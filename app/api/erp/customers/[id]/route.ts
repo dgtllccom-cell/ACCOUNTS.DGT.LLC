@@ -59,6 +59,12 @@ export async function PATCH(request: NextRequest, context: { params: Promise<{ i
         cityId: body.cityId ?? null,
         areaLocationId: body.areaLocationId ?? null,
         customerName: body.customerName,
+        // Only touch person-identity fields when the caller actually sent them, so unrelated
+        // customer edits never wipe an existing first/last/gender/photo.
+        ...(body.firstName !== undefined ? { firstName: body.firstName ?? null } : {}),
+        ...(body.lastName !== undefined ? { lastName: body.lastName ?? null } : {}),
+        ...(body.gender !== undefined ? { gender: body.gender ?? null } : {}),
+        ...(body.photoUrl !== undefined ? { photoUrl: body.photoUrl ?? null } : {}),
         companyName: body.companyName ?? null,
         contactPerson: body.contactPerson ?? null,
         mobile: body.mobile ?? null,

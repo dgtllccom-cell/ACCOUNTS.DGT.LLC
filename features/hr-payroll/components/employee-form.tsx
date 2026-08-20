@@ -26,6 +26,7 @@ import { Button } from "@/components/ui/button";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
+import { openMasterProfileReportWindow } from "@/lib/reports/open-master-profile-report-window";
 
 type EmployeeFormProps = {
   employeeId?: string | null;
@@ -67,6 +68,11 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
 
   // Core fields
   const [personMasterId, setPersonMasterId] = useState("");
+  // Structured person identity (item 4). Populated from the selected person master, editable here,
+  // and synced back to the person master (customers) on save. Full name is derived from these.
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [gender, setGender] = useState("");
   const [category, setCategory] = useState<"Manager" | "Normal Staff" | "Employee" | "Others">("Employee");
   const [designation, setDesignation] = useState("");
   const [department, setDepartment] = useState("");
@@ -277,6 +283,19 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
   const selectedCityBranchObj = useMemo(() => cityBranches.find((b) => b.id === cityBranchId) ?? null, [cityBranches, cityBranchId]);
   const selectedManagerObj = useMemo(() => managers.find((m) => m.id === reportingManagerId) ?? null, [managers, reportingManagerId]);
 
+  // When the selected person changes, load their structured identity from the master; clear when
+  // deselected so no stale values from a previously selected person are ever retained (item 5).
+  useEffect(() => {
+    if (!selectedPersonObj) { setFirstName(""); setLastName(""); setGender(""); return; }
+    setFirstName(selectedPersonObj.first_name || "");
+    setLastName(selectedPersonObj.last_name || "");
+    setGender(selectedPersonObj.gender || "");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPersonObj?.id]);
+
+  // Full name is always derived from the structured fields, falling back to the stored display name.
+  const fullName = [firstName, lastName].filter(Boolean).join(" ").trim() || (selectedPersonObj?.customer_name || "");
+
   async function handleSubmit(e?: React.FormEvent) {
     if (e) e.preventDefault();
     if (!personMasterId) {
@@ -337,6 +356,21 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
     };
 
     try {
+      // Persist the structured identity back to the person master (customers) so First/Last/Full
+      // Name stay canonical and synced across the selector, wizard, table and Print/PDF (item 4).
+      const personCountryId = selectedPersonObj?.country_id || countryId;
+      if (personMasterId && personCountryId && (firstName.trim() || lastName.trim())) {
+        try {
+          await apiPatch(`/api/erp/customers/${personMasterId}`, {
+            countryId: personCountryId,
+            customerName: fullName,
+            firstName: firstName.trim() || null,
+            lastName: lastName.trim() || null,
+            gender: gender || null
+          });
+        } catch { /* non-fatal — the employee still saves even if the master sync fails */ }
+      }
+
       let savedId = employeeId ?? undefined;
       if (employeeId) {
         await apiPatch(`/api/erp/hr-payroll/employees/${employeeId}`, payload);
@@ -359,6 +393,71 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
   // Central-dictionary labels only — no per-component machine translation.
   const CAT_KEYS: Record<string, string> = { "Manager": "hr.f_cat_manager", "Normal Staff": "hr.f_cat_normal_staff", "Employee": "hr.f_cat_employee", "Others": "hr.f_cat_others" };
   const catLabel = (c: string) => t(lang, (CAT_KEYS[c] || "hr.f_cat_employee") as never, c);
+
+  // A4 Employee Master Profile Print/PDF via the shared master-profile engine (item 10).
+  function printProfile() {
+    const dash = "-";
+    const cur = salaryCurrency;
+    openMasterProfileReportWindow({
+      lang,
+      title: t(lang, "hr.f_master_report_card", "Employee Master Profile"),
+      subtitle: fullName || t(lang, "hr.f_cat_employee", "Employee"),
+      reportTypeLabel: catLabel(category),
+      meta: [
+        { label: t(lang, "hr.f_full_name", "Full Name"), value: fullName },
+        { label: t(lang, "rozrep.country", "Country"), value: selectedCountryObj?.name },
+        { label: t(lang, "hr.f_main_branch", "Main Branch"), value: selectedMainBranchObj?.name },
+        { label: t(lang, "hr.f_joining_date", "Joining Date"), value: joiningDate }
+      ],
+      kpis: [
+        { label: t(lang, "hr.f_basic_salary", "Basic Salary"), value: `${Number(basicSalary).toLocaleString()} ${cur}`, tone: "current" },
+        { label: t(lang, "hr.f_total_allowances", "Total Allowances"), value: `${totalAllowances.toLocaleString()} ${cur}`, tone: "credit" },
+        { label: t(lang, "hr.f_deductions", "Deductions"), value: `${(Number(deduction) + Number(taxDeduction)).toLocaleString()} ${cur}`, tone: "debit" },
+        { label: t(lang, "hr.f_net_salary", "Net Salary"), value: `${netSalary.toLocaleString()} ${cur}`, tone: "open" }
+      ],
+      sections: [
+        { title: t(lang, "hr.f_sec_identity", "Identity & Contact"), rows: [
+          { label: t(lang, "hr.f_first_name", "First Name"), value: firstName || dash },
+          { label: t(lang, "hr.f_last_name", "Last Name"), value: lastName || dash },
+          { label: t(lang, "hr.f_full_name", "Full Name"), value: fullName || dash },
+          { label: t(lang, "hr.f_gender", "Gender"), value: gender || dash },
+          { label: t(lang, "hr.pp_mobile_phone", "Mobile Phone"), value: selectedPersonObj?.mobile || dash },
+          { label: t(lang, "sed.f_whatsapp", "WhatsApp"), value: selectedPersonObj?.whatsapp || dash },
+          { label: t(lang, "hr.pp_email_address", "Email"), value: selectedPersonObj?.email || dash },
+          { label: t(lang, "hr.pp_address_location", "Address"), value: selectedPersonObj?.address || dash }
+        ] },
+        { title: t(lang, "hr.f_sec_employment", "Employment & Designation"), rows: [
+          { label: t(lang, "hr.f_lbl_category", "Category"), value: catLabel(category) },
+          { label: t(lang, "hr.f_lbl_designation_short", "Designation"), value: designation || dash },
+          { label: t(lang, "hr.f_lbl_department", "Department"), value: department || dash },
+          { label: t(lang, "hr.f_employment_type", "Employment Type"), value: employmentType || dash },
+          { label: t(lang, "hr.f_job_status", "Job Status"), value: jobStatus || dash }
+        ] },
+        { title: t(lang, "hr.f_sec_location", "Country / Branches"), rows: [
+          { label: t(lang, "rozrep.country", "Country"), value: selectedCountryObj?.name || dash },
+          { label: t(lang, "hr.f_main_branch", "Main Branch"), value: selectedMainBranchObj?.name || dash },
+          { label: t(lang, "hr.f_city_branch", "City Branch"), value: selectedCityBranchObj?.name || dash }
+        ] },
+        { title: t(lang, "hr.f_sec_shift", "Shift & Attendance"), rows: [
+          { label: t(lang, "hr.f_working_shift", "Working Shift"), value: workingShift || dash },
+          { label: t(lang, "hr.f_duty_hours", "Duty Hours"), value: (dutyStartTime && dutyEndTime) ? `${dutyStartTime} – ${dutyEndTime}` : dash },
+          { label: t(lang, "hr.f_weekly_off", "Weekly Off"), value: weeklyOffDay || dash },
+          { label: t(lang, "hr.f_joining_date", "Joining Date"), value: joiningDate || dash }
+        ] },
+        { title: t(lang, "hr.f_sec_payroll", "Salary & Payroll"), rows: [
+          { label: t(lang, "hr.f_salary_type", "Salary Type"), value: salaryType || dash },
+          { label: t(lang, "hr.f_basic_salary", "Basic Salary"), value: `${Number(basicSalary).toLocaleString()} ${cur}` },
+          { label: t(lang, "hr.f_total_allowances", "Total Allowances"), value: `${totalAllowances.toLocaleString()} ${cur}` },
+          { label: t(lang, "hr.f_net_salary", "Net Salary"), value: `${netSalary.toLocaleString()} ${cur}` },
+          { label: t(lang, "hr.f_currency", "Currency"), value: cur }
+        ] },
+        { title: t(lang, "hr.f_sec_status", "Status & Audit"), rows: [
+          { label: t(lang, "hr.f_status", "Status"), value: status || dash },
+          { label: t(lang, "hr.f_job_status", "Job Status"), value: jobStatus || dash }
+        ] }
+      ]
+    });
+  }
 
   if (loading) {
     return <div className="text-center py-12 text-slate-500 dark:text-slate-400 font-medium">{t(lang, "hr.f_loading_details", "Loading employee details...")}</div>;
@@ -389,7 +488,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
 
         {selectedPersonObj && (
           <span className="font-mono text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-3 py-1 rounded-lg border border-emerald-200 dark:border-emerald-800">
-            {selectedPersonObj.customer_name || t(lang, "hr.f_cat_employee", "Employee")} ({catLabel(category)})
+            {(fullName || t(lang, "hr.f_cat_employee", "Employee"))} ({catLabel(category)})
           </span>
         )}
       </div>
@@ -481,11 +580,11 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <div className="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white text-base font-black uppercase">
-                    {(selectedPersonObj.customer_name || "?").trim().charAt(0)}
+                    {(fullName || "?").trim().charAt(0)}
                   </div>
                   <div className="min-w-0">
                     <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">{t(lang, "hr.f_selected_profile", "Selected Employee Master Profile")}</div>
-                    <div className="truncate text-sm font-black text-slate-900 dark:text-slate-100">{selectedPersonObj.customer_name}</div>
+                    <div className="truncate text-sm font-black text-slate-900 dark:text-slate-100">{fullName}</div>
                     <div className="truncate text-[11px] text-slate-500">{selectedPersonObj.company_name || t(lang, "hr.pp_independent", "Independent Account")} · {catLabel(category)}</div>
                   </div>
                 </div>
@@ -516,6 +615,49 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
             </div>
           )}
 
+          {/* Structured identity (item 4): First / Last are independent fields; Full Name is derived. */}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_first_name", "First Name *")}</label>
+              <input
+                type="text"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder={t(lang, "hr.f_ph_first_name", "e.g. Ahmad")}
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_last_name", "Surname / Last Name *")}</label>
+              <input
+                type="text"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder={t(lang, "hr.f_ph_last_name", "e.g. Khan")}
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-3.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_gender", "Gender")}</label>
+              <select
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                className="w-full bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl px-2.5 py-2 text-xs font-medium text-slate-900 dark:text-slate-100"
+              >
+                <option value="">{t(lang, "hr.f_gender_select", "Select…")}</option>
+                <option value="Male">{t(lang, "hr.f_gender_male", "Male")}</option>
+                <option value="Female">{t(lang, "hr.f_gender_female", "Female")}</option>
+                <option value="Other">{t(lang, "hr.f_gender_other", "Other")}</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-bold text-slate-500 dark:text-slate-400 mb-1.5">{t(lang, "hr.f_full_name", "Full Name")}</label>
+            <div className="w-full rounded-xl border border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-900/50 px-3.5 py-2 text-xs font-black text-slate-800 dark:text-slate-100">
+              {fullName || "-"}
+            </div>
+          </div>
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1.5">{t(lang, "hr.f_lbl_designation", "Designation / Position *")}</label>
@@ -544,7 +686,7 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
             <div className="font-bold text-slate-500 uppercase tracking-wider text-[10px]">{t(lang, "hr.f_step1_preview", "STEP 1 PACKET PREVIEW")}</div>
             <div className="grid grid-cols-3 gap-2">
               <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_category", "Category:")}</span> {catLabel(category)}</div>
-              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_name", "Name:")}</span> {selectedPersonObj?.customer_name || t(lang, "hr.f_not_selected", "Not Selected")}</div>
+              <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_name", "Name:")}</span> {fullName || t(lang, "hr.f_not_selected", "Not Selected")}</div>
               <div><span className="font-semibold text-slate-400">{t(lang, "hr.f_lbl_designation_short", "Designation:")}</span> {designation || "-"}</div>
             </div>
           </div>
@@ -936,17 +1078,22 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
               <FileText className="h-4 w-4 text-emerald-600" />
               <span>{t(lang, "hr.f_step5_title", "Step 5 Packet: Employee Master Entry Verification Report")}</span>
             </h3>
-            <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
-              {t(lang, "hr.f_verified_ready", "Verified & Ready")}
-            </span>
+            <div className="flex items-center gap-2">
+              <button type="button" onClick={printProfile} className="inline-flex items-center gap-1 rounded-lg border border-blue-300 dark:border-blue-800 px-2.5 py-1 text-xs font-bold text-blue-700 dark:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-950/40">
+                <Printer className="h-3.5 w-3.5" /> {t(lang, "bankroz.print_pdf", "Print / PDF")}
+              </button>
+              <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950 px-2.5 py-0.5 rounded border border-emerald-200 dark:border-emerald-800">
+                {t(lang, "hr.f_verified_ready", "Verified & Ready")}
+              </span>
+            </div>
           </div>
 
-          <div className="rounded-2xl border-2 border-emerald-500/20 bg-slate-900 text-white p-6 space-y-4 shadow-md">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+          <div className="rounded-2xl border border-slate-200 dark:border-emerald-500/30 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white p-5 sm:p-6 space-y-4 shadow-sm">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-4">
               <div>
-                <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">{t(lang, "hr.f_master_report_card", "Employee Master Report Card")}</div>
-                <h2 className="text-lg font-black text-white">{selectedPersonObj?.customer_name || "Employee Name"}</h2>
-                <p className="text-xs text-slate-400">{designation || "Staff"} — {department || "General"}</p>
+                <div className="text-[10px] font-bold uppercase tracking-widest text-emerald-700 dark:text-emerald-400">{t(lang, "hr.f_master_report_card", "Employee Master Report Card")}</div>
+                <h2 className="text-lg font-black text-slate-900 dark:text-white">{fullName || "Employee Name"}</h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400">{designation || "Staff"} — {department || "General"}</p>
               </div>
               <div className="text-right">
                 <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-600 text-white shadow-xs">
@@ -960,7 +1107,10 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
               const dash = "-";
               const sections: Array<{ title: string; rows: Array<[string, string]> }> = [
                 { title: t(lang, "hr.f_sec_identity", "Identity & Contact"), rows: [
-                  [t(lang, "hr.f_lbl_name", "Name:"), selectedPersonObj?.customer_name || dash],
+                  [t(lang, "hr.f_lbl_name", "Name:"), fullName || dash],
+                  [t(lang, "hr.f_first_name", "First Name"), firstName || dash],
+                  [t(lang, "hr.f_last_name", "Last Name"), lastName || dash],
+                  [t(lang, "hr.f_gender", "Gender"), gender || dash],
                   [t(lang, "hr.f_lbl_category", "Category:"), catLabel(category)],
                   [t(lang, "hr.pp_contact_person", "Contact Person"), selectedPersonObj?.contact_person || dash],
                   [t(lang, "hr.pp_mobile_phone", "Mobile Phone"), selectedPersonObj?.mobile || dash],
@@ -1002,13 +1152,13 @@ export function EmployeeForm({ employeeId, onSave, onCancel, lang: langProp }: E
               return (
                 <div className="grid gap-4 md:grid-cols-2">
                   {sections.map((sec, i) => (
-                    <div key={i} className="rounded-xl bg-slate-800/60 border border-slate-700 p-4">
-                      <div className="mb-2 border-b border-slate-700 pb-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-400">{sec.title}</div>
+                    <div key={i} className="rounded-xl bg-white dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 p-4 shadow-xs">
+                      <div className="mb-2 border-b border-slate-100 dark:border-slate-700 pb-1.5 text-[10px] font-black uppercase tracking-widest text-emerald-700 dark:text-emerald-400">{sec.title}</div>
                       <div className="space-y-1.5">
                         {sec.rows.map(([lbl, val], j) => (
                           <div key={j} className="flex items-start justify-between gap-3 text-xs">
-                            <span className="text-slate-400">{lbl}</span>
-                            <span className="text-end font-semibold text-white break-words">{val}</span>
+                            <span className="text-slate-500 dark:text-slate-400 font-medium">{lbl}</span>
+                            <span className="text-end font-semibold text-slate-900 dark:text-white break-words">{val}</span>
                           </div>
                         ))}
                       </div>

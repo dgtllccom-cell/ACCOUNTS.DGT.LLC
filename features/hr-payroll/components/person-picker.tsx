@@ -12,6 +12,10 @@ import { t } from "@/lib/i18n/ui";
 type PersonRow = {
   id: string;
   customer_name: string;
+  first_name: string | null;
+  last_name: string | null;
+  gender: string | null;
+  photo_url: string | null;
   company_name: string | null;
   contact_person: string | null;
   mobile: string | null;
@@ -20,20 +24,21 @@ type PersonRow = {
   address: string | null;
 };
 
+/** Prefer the structured First + Last name; fall back to the stored full/display name. */
+export function personFullName(row: { first_name?: string | null; last_name?: string | null; customer_name?: string | null }): string {
+  const structured = [row.first_name, row.last_name].filter(Boolean).join(" ").trim();
+  return structured || (row.customer_name ?? "").trim();
+}
+
 function toOption(row: PersonRow): SearchSelectOption {
-  const label = row.company_name
-    ? `${row.customer_name} (${row.company_name})`
-    : row.customer_name;
+  const name = personFullName(row);
+  // Secondary identity line: company · phone — so the admin can tell people apart at a glance.
+  const bits = [row.company_name, row.mobile || row.whatsapp].filter(Boolean).join(" · ");
+  const label = bits ? `${name} — ${bits}` : name;
   const keywords = [
-    row.customer_name,
-    row.company_name,
-    row.contact_person,
-    row.mobile,
-    row.whatsapp,
-    row.email
-  ]
-    .filter(Boolean)
-    .join(" ");
+    name, row.customer_name, row.first_name, row.last_name,
+    row.company_name, row.contact_person, row.mobile, row.whatsapp, row.email
+  ].filter(Boolean).join(" ");
   return { value: row.id, label, keywords };
 }
 
@@ -146,10 +151,10 @@ export function PersonPicker({
           className="w-[96vw] max-w-[700px] max-h-[85vh] overflow-y-auto rounded-2xl font-sans"
         >
           <div className="p-4 space-y-4 text-xs text-slate-800 dark:text-slate-200">
-            <div className="flex items-center justify-between bg-slate-900 text-white p-4 rounded-xl">
+            <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 p-4 rounded-xl">
               <div>
                 <h3 className="text-base font-black uppercase tracking-wide">{viewPerson.customer_name}</h3>
-                <p className="text-xs text-slate-300 font-medium">{t(lang, "hr.pp_company", "Company")}: {viewPerson.company_name || t(lang, "hr.pp_independent", "Independent Account")}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-300 font-medium">{t(lang, "hr.pp_company", "Company")}: {viewPerson.company_name || t(lang, "hr.pp_independent", "Independent Account")}</p>
               </div>
               <div className="text-right">
                 <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-500 text-slate-950">

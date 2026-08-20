@@ -335,6 +335,12 @@ export const customerCreateSchema = scopeSchema.extend({
   cityId: optionalUuidSchema,
   areaLocationId: optionalUuidSchema,
   customerName: z.string().trim().min(2).max(200),
+  // Structured person identity (person master). customerName stays the display/full name;
+  // firstName/lastName are the canonical structured fields synced into it.
+  firstName: z.string().trim().max(120).nullable().optional(),
+  lastName: z.string().trim().max(120).nullable().optional(),
+  gender: z.string().trim().max(30).nullable().optional(),
+  photoUrl: z.string().trim().max(2000).nullable().optional(),
   // Many forms intentionally send `null` for empty optional fields to keep payloads explicit.
   // Accept both omitted and explicit null here.
   companyName: z.string().trim().max(200).nullable().optional(),

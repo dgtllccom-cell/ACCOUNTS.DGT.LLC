@@ -2426,11 +2426,21 @@ export type UiKey =
   | "orgchart.city_locations"
   | "orgchart.branches"
   | "orgchart.staff"
-  | "form.actions" | "form.role" | "form.user_id" | "form.user_name" | "hr.p_due" | "hr.p_generate_err" | "hr.p_generate_register" | "hr.p_generated_msg" | "hr.p_generating" | "ledger.no_entries_found" | "nav.bank_management" | "report.active_types" | "report.activity_history" | "report.all_categories" | "report.balance_pkr" | "report.bill_entries_summary" | "report.branch" | "report.branch_name" | "report.branch_summary" | "report.cleared_entries" | "report.comprehensive_daily" | "report.consolidated" | "report.country" | "report.country_name" | "report.country_summary" | "report.current_filter" | "report.dc_cartons" | "report.edit_history" | "report.explore" | "report.filter_all_projects" | "report.filter_project" | "report.global_financial_summary" | "report.hide_details" | "report.hide_report_details" | "report.invoice_payment_pkr" | "report.net_weight_kg" | "report.no_history" | "report.no_of_bills" | "report.performance_overview" | "report.purchase_payment_pkr" | "report.record_details" | "report.records_found" | "report.remaining_entries" | "report.remaining_payment_pkr" | "report.role" | "report.salesman_name" | "report.salesman_summary" | "report.salesperson" | "report.scope_city_branch" | "report.scope_entire_country" | "report.scope_main_branch" | "report.show_details" | "report.show_report_details" | "report.system_status" | "report.total_bill_entries" | "report.total_global_entries" | "report.total_purchase_pkr" | "report.total_transferred_pkr" | "roz.edit_payment_entry" | "roz.journal_roznamcha_entry_table" | "status.active" | "status.online_synced" | "report.density_comfortable" | "report.density_compact" | "report.columns" | "report.move_up" | "report.move_down" | "report.locked" | "report.advanced_filters" | "report.filter_all_salesmen" | "report.stat_total_bills" | "report.stat_total_net_weight" | "report.stat_quantity_dc" | "report.stat_final_purchase" | "report.stat_final_advance" | "report.stat_final_remaining" | "report.badge_super_admin" | "report.branch_breakdown" | "report.paid_adv" | "report.rem_bal" | "report.total_label" | "report.all_label" | "report.close_overlay" | "hr.f_wizard_title" | "hr.f_job_status" | "hr.f_working_shift" | "hr.f_status" | "hr.f_currency" | "hr.f_net_salary" | "hr.f_total_allowances" | "hr.f_deductions" | "hr.f_salary_type" | "hr.f_duty_hours" | "hr.f_weekly_off" | "hr.f_register_title" | "hr.f_edit_title" | "hr.f_step1_title" | "hr.f_step1_of5" | "hr.f_step1_preview" | "hr.f_select_category" | "hr.f_select_person" | "hr.f_lbl_designation" | "hr.f_lbl_department" | "hr.f_lbl_category" | "hr.f_lbl_name" | "hr.f_lbl_designation_short" | "hr.f_not_selected" | "hr.f_cat_manager" | "hr.f_cat_normal_staff" | "hr.f_cat_employee" | "hr.f_cat_others" | "hr.f_selected_profile" | "hr.f_view_master" | "hr.f_change_selection" | "hr.f_no_person_selected" | "hr.f_sec_identity" | "hr.f_sec_employment" | "hr.f_sec_location" | "hr.f_sec_shift" | "hr.f_sec_payroll" | "hr.f_sec_status" | "hr.pp_view_title" | "hr.pp_company" | "hr.pp_independent" | "hr.pp_active_master" | "hr.pp_contact_person" | "hr.pp_mobile_phone" | "hr.pp_email_address" | "hr.pp_address_location" | "hr.pp_edit_master" | "hr.pp_select_this_person";
+  | "form.actions" | "form.role" | "form.user_id" | "form.user_name" | "hr.p_due" | "hr.p_generate_err" | "hr.p_generate_register" | "hr.p_generated_msg" | "hr.p_generating" | "ledger.no_entries_found" | "nav.bank_management" | "report.active_types" | "report.activity_history" | "report.all_categories" | "report.balance_pkr" | "report.bill_entries_summary" | "report.branch" | "report.branch_name" | "report.branch_summary" | "report.cleared_entries" | "report.comprehensive_daily" | "report.consolidated" | "report.country" | "report.country_name" | "report.country_summary" | "report.current_filter" | "report.dc_cartons" | "report.edit_history" | "report.explore" | "report.filter_all_projects" | "report.filter_project" | "report.global_financial_summary" | "report.hide_details" | "report.hide_report_details" | "report.invoice_payment_pkr" | "report.net_weight_kg" | "report.no_history" | "report.no_of_bills" | "report.performance_overview" | "report.purchase_payment_pkr" | "report.record_details" | "report.records_found" | "report.remaining_entries" | "report.remaining_payment_pkr" | "report.role" | "report.salesman_name" | "report.salesman_summary" | "report.salesperson" | "report.scope_city_branch" | "report.scope_entire_country" | "report.scope_main_branch" | "report.show_details" | "report.show_report_details" | "report.system_status" | "report.total_bill_entries" | "report.total_global_entries" | "report.total_purchase_pkr" | "report.total_transferred_pkr" | "roz.edit_payment_entry" | "roz.journal_roznamcha_entry_table" | "status.active" | "status.online_synced" | "report.density_comfortable" | "report.density_compact" | "report.columns" | "report.move_up" | "report.move_down" | "report.locked" | "report.advanced_filters" | "report.filter_all_salesmen" | "report.stat_total_bills" | "report.stat_total_net_weight" | "report.stat_quantity_dc" | "report.stat_final_purchase" | "report.stat_final_advance" | "report.stat_final_remaining" | "report.badge_super_admin" | "report.branch_breakdown" | "report.paid_adv" | "report.rem_bal" | "report.total_label" | "report.all_label" | "report.close_overlay" | "hr.f_wizard_title" | "hr.f_first_name" | "hr.f_last_name" | "hr.f_full_name" | "hr.f_gender" | "hr.f_gender_select" | "hr.f_gender_male" | "hr.f_gender_female" | "hr.f_gender_other" | "hr.f_ph_first_name" | "hr.f_ph_last_name" | "hr.f_job_status" | "hr.f_working_shift" | "hr.f_status" | "hr.f_currency" | "hr.f_net_salary" | "hr.f_total_allowances" | "hr.f_deductions" | "hr.f_salary_type" | "hr.f_duty_hours" | "hr.f_weekly_off" | "hr.f_register_title" | "hr.f_edit_title" | "hr.f_step1_title" | "hr.f_step1_of5" | "hr.f_step1_preview" | "hr.f_select_category" | "hr.f_select_person" | "hr.f_lbl_designation" | "hr.f_lbl_department" | "hr.f_lbl_category" | "hr.f_lbl_name" | "hr.f_lbl_designation_short" | "hr.f_not_selected" | "hr.f_cat_manager" | "hr.f_cat_normal_staff" | "hr.f_cat_employee" | "hr.f_cat_others" | "hr.f_selected_profile" | "hr.f_view_master" | "hr.f_change_selection" | "hr.f_no_person_selected" | "hr.f_sec_identity" | "hr.f_sec_employment" | "hr.f_sec_location" | "hr.f_sec_shift" | "hr.f_sec_payroll" | "hr.f_sec_status" | "hr.pp_view_title" | "hr.pp_company" | "hr.pp_independent" | "hr.pp_active_master" | "hr.pp_contact_person" | "hr.pp_mobile_phone" | "hr.pp_email_address" | "hr.pp_address_location" | "hr.pp_edit_master" | "hr.pp_select_this_person";
 
 type Dict = Record<UiKey, string>;
 
 const en: Dict = {
+  "hr.f_first_name": "First Name *",
+  "hr.f_last_name": "Surname / Last Name *",
+  "hr.f_full_name": "Full Name",
+  "hr.f_gender": "Gender",
+  "hr.f_gender_select": "Select…",
+  "hr.f_gender_male": "Male",
+  "hr.f_gender_female": "Female",
+  "hr.f_gender_other": "Other",
+  "hr.f_ph_first_name": "e.g. Ahmad",
+  "hr.f_ph_last_name": "e.g. Khan",
   "hr.f_job_status": "Job Status",
   "hr.f_working_shift": "Working Shift",
   "hr.f_status": "Status",
@@ -5239,6 +5249,16 @@ const en: Dict = {
 };
 
 const ur: Dict = {
+  "hr.f_first_name": "پہلا نام *",
+  "hr.f_last_name": "خاندانی نام / آخری نام *",
+  "hr.f_full_name": "پورا نام",
+  "hr.f_gender": "جنس",
+  "hr.f_gender_select": "منتخب کریں…",
+  "hr.f_gender_male": "مرد",
+  "hr.f_gender_female": "عورت",
+  "hr.f_gender_other": "دیگر",
+  "hr.f_ph_first_name": "مثلاً احمد",
+  "hr.f_ph_last_name": "مثلاً خان",
   "hr.f_job_status": "ملازمت کی حیثیت",
   "hr.f_working_shift": "ورکنگ شفٹ",
   "hr.f_status": "حیثیت",
@@ -8038,6 +8058,16 @@ const ur: Dict = {
 };
 
 const ar: Dict = {
+  "hr.f_first_name": "الاسم الأول *",
+  "hr.f_last_name": "اسم العائلة / اللقب *",
+  "hr.f_full_name": "الاسم الكامل",
+  "hr.f_gender": "الجنس",
+  "hr.f_gender_select": "اختر…",
+  "hr.f_gender_male": "ذكر",
+  "hr.f_gender_female": "أنثى",
+  "hr.f_gender_other": "آخر",
+  "hr.f_ph_first_name": "مثال: أحمد",
+  "hr.f_ph_last_name": "مثال: خان",
   "hr.f_job_status": "حالة الوظيفة",
   "hr.f_working_shift": "وردية العمل",
   "hr.f_status": "الحالة",
@@ -10836,6 +10866,16 @@ const ar: Dict = {
 };
 
 const fa: Dict = {
+  "hr.f_first_name": "نام *",
+  "hr.f_last_name": "نام خانوادگی *",
+  "hr.f_full_name": "نام کامل",
+  "hr.f_gender": "جنسیت",
+  "hr.f_gender_select": "انتخاب…",
+  "hr.f_gender_male": "مرد",
+  "hr.f_gender_female": "زن",
+  "hr.f_gender_other": "دیگر",
+  "hr.f_ph_first_name": "مثلاً احمد",
+  "hr.f_ph_last_name": "مثلاً خان",
   "hr.f_job_status": "وضعیت شغل",
   "hr.f_working_shift": "شیفت کاری",
   "hr.f_status": "وضعیت",
@@ -13633,6 +13673,16 @@ const fa: Dict = {
 };
 
 const ps: Dict = {
+  "hr.f_first_name": "لومړی نوم *",
+  "hr.f_last_name": "تخلص / وروستی نوم *",
+  "hr.f_full_name": "بشپړ نوم",
+  "hr.f_gender": "جنسیت",
+  "hr.f_gender_select": "وټاکئ…",
+  "hr.f_gender_male": "نر",
+  "hr.f_gender_female": "ښځه",
+  "hr.f_gender_other": "بل",
+  "hr.f_ph_first_name": "لکه احمد",
+  "hr.f_ph_last_name": "لکه خان",
   "hr.f_job_status": "د دندې حالت",
   "hr.f_working_shift": "د کار شفټ",
   "hr.f_status": "حالت",
