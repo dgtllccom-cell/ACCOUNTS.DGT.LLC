@@ -10,6 +10,8 @@ import { ViewportActionMenu } from "@/components/ui/viewport-action-menu";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Th } from "@/components/ui/translated-th";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 function asRecordArray<T = any>(value: unknown): T[] {
   if (Array.isArray(value)) return value.filter(Boolean) as T[];
   if (value && typeof value === "object") {
@@ -538,13 +540,13 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
   }, [poRow.country_id, poRow.country_branch_id, record.countries?.id, record.country_branches?.id, editingLoadingId]);
 
   async function handleDeleteHistory(h: LoadingRecord) {
-    if (!confirm("Are you sure you want to delete this loading record?")) return;
+    if (!confirm(tt("plr.confirm_delete", "Are you sure you want to delete this loading record?"))) return;
     try {
       setSavingNewLoading(true);
       const res = await fetch(`/api/erp/purchases/loading-records/${h.id}`, { method: "DELETE" });
       const payload = await res.json().catch(() => ({}));
       if (!res.ok || !payload.ok) throw new Error(payload.error?.message || payload.error || "Failed to delete.");
-      setLoadingMessage("Record deleted.");
+      setLoadingMessage(tt("plr.record_deleted", "Record deleted."));
       window.dispatchEvent(new CustomEvent("erp:purchase-loading-saved"));
     } catch (e: any) {
       alert(e.message || "Failed to delete record.");
@@ -724,7 +726,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
 
   async function saveNewLoading() {
     if (!newQuantity) {
-      setLoadingMessage("Enter loading quantity first.");
+      setLoadingMessage(tt("plr.enter_qty", "Enter loading quantity first."));
       return;
     }
     setSavingNewLoading(true);
@@ -864,8 +866,8 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
     <div className="fixed inset-0 z-[100] flex flex-col bg-slate-50 dark:bg-slate-950 animate-in fade-in duration-200">
       <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-4 shadow-sm">
         <div>
-          <h2 className="text-lg font-black tracking-tight text-slate-800 dark:text-slate-100">Load Details Form</h2>
-          <p className="mt-0.5 text-xs font-semibold text-slate-500">Manage loading quantity, checking, brand note, PDF and download actions.</p>
+          <h2 className="text-lg font-black tracking-tight text-slate-800 dark:text-slate-100">{tt("plr.title", "Load Details Form")}</h2>
+          <p className="mt-0.5 text-xs font-semibold text-slate-500">{tt("plr.subtitle", "Manage loading quantity, checking, brand note, PDF and download actions.")}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button type="button" size="sm" onClick={() => {
@@ -903,26 +905,26 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
             }
             setShowNewLoading((value) => !value);
           }} className="h-8 rounded-lg bg-emerald-600 px-3 text-xs font-black text-white hover:bg-emerald-700">
-            <Plus className="mr-1.5 h-3.5 w-3.5" /> New Loading
+            <Plus className="mr-1.5 h-3.5 w-3.5" /> {tt("plr.new_loading", "New Loading")}
           </Button>
           <ViewportActionMenu
-            ariaLabel="Load detail actions"
+            ariaLabel={tt("plr.title", "Load detail actions")}
             buttonClassName="grid h-8 w-8 place-items-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
             trigger={<MoreVertical className="h-4 w-4" />}
           >
             {(close) => (
               <div className="py-1">
                 <button className="flex w-full items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" onClick={() => { close(); setLoadingMessage("Brand view selected for this loading report."); }}>
-                  <Ship className="h-3.5 w-3.5 text-emerald-600" /> Brand
+                  <Ship className="h-3.5 w-3.5 text-emerald-600" /> {tt("plr.brand", "Brand")}
                 </button>
                 <button className="flex w-full items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" onClick={() => { close(); setLoadingMessage("Checking view selected. Review quantity, dates and loading balance before saving."); }}>
-                  <FileText className="h-3.5 w-3.5 text-blue-600" /> Checking
+                  <FileText className="h-3.5 w-3.5 text-blue-600" /> {tt("plr.checking", "Checking")}
                 </button>
                 <button className="flex w-full items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" onClick={() => { close(); downloadLoadDetails("json"); }}>
-                  <Download className="h-3.5 w-3.5 text-indigo-600" /> Download
+                  <Download className="h-3.5 w-3.5 text-indigo-600" /> {tt("common.download", "Download")}
                 </button>
                 <button className="flex w-full items-center gap-2 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800" onClick={() => { close(); downloadLoadDetails("pdf"); }}>
-                  <Printer className="h-3.5 w-3.5 text-rose-600" /> PDF Download
+                  <Printer className="h-3.5 w-3.5 text-rose-600" /> {tt("plr.pdf_download", "PDF Download")}
                 </button>
               </div>
             )}
@@ -950,12 +952,12 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   <div className="mb-4 flex flex-col gap-2">
                     <div className="flex items-center justify-between">
                       <h3 className="text-xs font-black uppercase tracking-widest text-emerald-800 dark:text-emerald-100">
-                        {formStep === 1 ? "New Loading (Step 1 of 2)" : "New Loading (Step 2 of 2)"}
+                        {formStep === 1 ? tt("plr.step1", "New Loading (Step 1 of 2)") : tt("plr.step2", "New Loading (Step 2 of 2)")}
                       </h3>
-                      <span className="rounded-full bg-white px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-100 dark:ring-emerald-500/30">Live</span>
+                      <span className="rounded-full bg-white px-2 py-0.5 text-[9px] font-black uppercase tracking-widest text-emerald-700 ring-1 ring-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-100 dark:ring-emerald-500/30">{tt("plr.live", "Live")}</span>
                     </div>
                     <p className="text-[10px] font-semibold text-emerald-700/80 dark:text-emerald-200/80">
-                      {formStep === 1 ? "Enter shipping and routing details." : "Enter goods, pricing and container details."}
+                      {formStep === 1 ? tt("plr.step1_desc", "Enter shipping and routing details.") : tt("plr.step2_desc", "Enter goods, pricing and container details.")}
                     </p>
                   </div>
 
@@ -963,7 +965,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                     <>
                       <div className="grid grid-cols-2 gap-3 pr-1 pb-2">
                         <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 col-span-2">
-                          B/L Number
+                          {tt("plr.bl_number", "B/L Number")}
                       <input
                         value={blNumber}
                         onChange={(e) => setBlNumber(e.target.value)}
@@ -972,19 +974,19 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                       />
                     </label>
                     <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 col-span-2">
-                      Entry Count
+                      {tt("plr.entry_count", "Entry Count")}
                       <select
                         value={containerCount}
                         onChange={(e) => setContainerCount(e.target.value)}
                         className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold normal-case tracking-normal outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-800 dark:bg-slate-950"
                       >
-                        <option value="1">1 Entry</option>
-                        <option value="2">2 Entries</option>
+                        <option value="1">{tt("plr.entry_1", "1 Entry")}</option>
+                        <option value="2">{tt("plr.entry_2", "2 Entries")}</option>
                       </select>
                     </label>
 
                     <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                      Loading Country
+                      {tt("plr.loading_country", "Loading Country")}
                       <SearchableSelect
                         value={loadingCountryState}
                         onChange={(val) => {
@@ -996,12 +998,12 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                           }
                         }}
                         options={allCountries.map((c) => ({ label: `${c.name} ${c.iso2 ? `(${c.iso2})` : ""}`, value: c.name }))}
-                        placeholder="Select Country"
-                        addOptionLabel="Add New Country"
+                        placeholder={tt("plr.sel_country", "Select Country")}
+                        addOptionLabel={tt("plr.add_country", "Add New Country")}
                       />
                     </label>
                     <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
-                      Loading Port / Border
+                      {tt("plr.loading_port", "Loading Port / Border")}
                       <SearchableSelect
                         value={loadingPortState}
                         onChange={(val) => {
@@ -1708,17 +1710,17 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                   <table className="w-full min-w-[1280px] text-left text-xs">
                     <thead>
                       <tr className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-900/60">
-                        <Th className="px-4 py-3">SR#</Th>
+                        <Th className="px-4 py-3">{tt("common.sr_no", "SR#")}</Th>
                         <Th className="px-4 py-3">Goods</Th>
                         <Th className="px-4 py-3 text-right">Contract Qty</Th>
                         <Th className="px-4 py-3 text-right">Loaded Qty</Th>
                         <Th className="px-4 py-3 text-right">Remaining Qty</Th>
                         <Th className="px-4 py-3 text-right">Net Weight</Th>
                         <Th className="px-4 py-3 text-right">Gross Weight</Th>
-                        <Th className="px-4 py-3 text-right">Purchase Rate</Th>
+                        <Th className="px-4 py-3 text-end">{tt("plr.col_purchase_rate", "Purchase Rate")}</Th>
                         <Th className="px-4 py-3 text-right">Loaded Purchase</Th>
-                        <Th className="px-4 py-3 text-right">Exchange Rate</Th>
-                        <Th className="px-4 py-3 text-right">Final Amount ({localCurrency})</Th>
+                        <Th className="px-4 py-3 text-end">{tt("plr.col_exchange_rate", "Exchange Rate")}</Th>
+                        <Th className="px-4 py-3 text-end">{tt("plr.col_final_amount", "Final Amount")} ({localCurrency})</Th>
                         <Th className="px-4 py-3 text-right">Approved Advance</Th>
                         <Th className="px-4 py-3 text-right">Balance</Th>
                         <Th className="px-4 py-3">Route / Dates</Th>
@@ -1934,31 +1936,31 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
           <div className="mt-6 rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-white px-5 py-4 dark:border-slate-800 dark:bg-slate-900">
               <div>
-                <h3 className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-100">Loading History</h3>
-                <p className="mt-1 text-[10px] font-semibold text-slate-500">All BL/container loading records for this purchase bill.</p>
+                <h3 className="text-xs font-black uppercase tracking-widest text-slate-800 dark:text-slate-100">{tt("plr.history_title", "Loading History")}</h3>
+                <p className="mt-1 text-[10px] font-semibold text-slate-500">{tt("plr.history_desc", "All BL/container loading records for this purchase bill.")}</p>
               </div>
               <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-[10px] font-black uppercase tracking-wider text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-                {history.length} Saved Loading
+                {history.length} {tt("plr.saved_loading", "Saved Loading")}
               </span>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[1180px] text-left text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 bg-slate-50 text-[10px] uppercase tracking-wider text-slate-500 dark:border-slate-800 dark:bg-slate-900/60">
-                    <Th className="px-4 py-3">SR#</Th>
-                    <Th className="px-4 py-3">BL Number</Th>
-                    <Th className="px-4 py-3">Container</Th>
-                    <Th className="px-4 py-3">Vessel / Vehicle</Th>
-                    <Th className="px-4 py-3 text-right">Load Qty</Th>
-                    <Th className="px-4 py-3 text-right">Purchase Rate</Th>
-                    <Th className="px-4 py-3 text-right">Purchase Amount</Th>
-                    <Th className="px-4 py-3 text-right">Exchange Rate</Th>
-                    <Th className="px-4 py-3 text-right">Final Amount ({localCurrency})</Th>
-                    <Th className="px-4 py-3 text-right">Advance Paid</Th>
-                    <Th className="px-4 py-3 text-right">Balance Remaining</Th>
-                    <Th className="px-4 py-3">Ports / Dates</Th>
-                    <Th className="px-4 py-3">Status</Th>
-                    <Th className="px-4 py-3 text-center">Actions</Th>
+                    <Th className="px-4 py-3">{tt("common.sr_no", "SR#")}</Th>
+                    <Th className="px-4 py-3">{tt("plr.col_bl", "BL Number")}</Th>
+                    <Th className="px-4 py-3">{tt("plr.col_container", "Container")}</Th>
+                    <Th className="px-4 py-3">{tt("plr.col_vessel", "Vessel / Vehicle")}</Th>
+                    <Th className="px-4 py-3 text-end">{tt("plr.col_load_qty", "Load Qty")}</Th>
+                    <Th className="px-4 py-3 text-end">{tt("plr.col_purchase_rate", "Purchase Rate")}</Th>
+                    <Th className="px-4 py-3 text-end">{tt("plr.col_purchase_amount", "Purchase Amount")}</Th>
+                    <Th className="px-4 py-3 text-end">{tt("plr.col_exchange_rate", "Exchange Rate")}</Th>
+                    <Th className="px-4 py-3 text-end">{tt("plr.col_final_amount", "Final Amount")} ({localCurrency})</Th>
+                    <Th className="px-4 py-3 text-end">{tt("plr.col_advance_paid", "Advance Paid")}</Th>
+                    <Th className="px-4 py-3 text-end">{tt("plr.col_balance", "Balance Remaining")}</Th>
+                    <Th className="px-4 py-3">{tt("plr.col_ports_dates", "Ports / Dates")}</Th>
+                    <Th className="px-4 py-3">{tt("common.status", "Status")}</Th>
+                    <Th className="px-4 py-3 text-center">{tt("common.actions", "Actions")}</Th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -1984,9 +1986,9 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                         <td className="px-4 py-3 text-right font-mono font-black text-rose-600">{balanceLocal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {localCurrency}</td>
                         <td className="px-4 py-3">
                           <div className="font-semibold text-slate-700 dark:text-slate-200">{h.report_payload?.loadingPort || h.loading_location || "-"} &rarr; {h.report_payload?.receivingPort || h.receiving_location || "-"}</div>
-                          <div className="mt-1 text-[10px] font-semibold text-slate-500">{h.report_payload?.loadingDate || h.loaded_at?.slice(0, 10) || "-"} &rarr; {h.report_payload?.receivingDate || "Pending"}</div>
+                          <div className="mt-1 text-[10px] font-semibold text-slate-500">{h.report_payload?.loadingDate || h.loaded_at?.slice(0, 10) || "-"} &rarr; {h.report_payload?.receivingDate || tt("plr.pending", "Pending")}</div>
                         </td>
-                        <td className="px-4 py-3"><span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-black uppercase text-emerald-700">Loaded</span></td>
+                        <td className="px-4 py-3"><span className="rounded-full border border-emerald-200 bg-emerald-50 px-2 py-1 text-[10px] font-black uppercase text-emerald-700">{tt("plr.status_loaded", "Loaded")}</span></td>
                         <td className="px-4 py-3 text-center">
                           <div className="inline-flex items-center gap-1.5">
                             <button
@@ -2037,7 +2039,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                     );
                   }) : (
                     <tr>
-                      <td colSpan={14} className="px-4 py-8 text-center text-xs font-semibold text-slate-500">No saved loading records yet. Click New Loading to create the first BL/container entry.</td>
+                      <td colSpan={14} className="px-4 py-8 text-center text-xs font-semibold text-slate-500">{tt("plr.no_records", "No saved loading records yet. Click New Loading to create the first BL/container entry.")}</td>
                     </tr>
                   )}
                 </tbody>
@@ -2171,7 +2173,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                    })}
                    {history.length === 0 && (
                       <tr>
-                        <td colSpan={14} className="px-6 py-6 text-center font-medium text-slate-500">No loading history found.</td>
+                        <td colSpan={14} className="px-6 py-6 text-center font-medium text-slate-500">{tt("plr.no_loading_history", "No loading history found.")}</td>
                       </tr>
                    )}
                 </tbody>
@@ -2745,7 +2747,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
         printedBy: apiSession?.fullName || apiSession?.email || "ERP User"
       },
       filters: [
-        { label: "Invoice / PO", value: selectedInvoicePoNo || "All Invoices / POs" },
+        { label: "Invoice / PO", value: selectedInvoicePoNo || tt("plr.all_invoices", "All Invoices / POs") },
         { label: "Loading Status", value: status === "all" ? "All Status" : status.toUpperCase() },
         { label: "Search", value: query.trim() || "All Records" }
       ]
@@ -2763,10 +2765,10 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
             value={selectedInvoicePoNo}
             onChange={(val) => setSelectedInvoicePoNo(val)}
             options={[
-              { label: "All Invoices / POs", value: "" },
+              { label: tt("plr.all_invoices", "All Invoices / POs"), value: "" },
               ...uniqueInvoiceOptions
             ]}
-            placeholder="Select Purchase Invoice / PO..."
+            placeholder={tt("plr.sel_invoice", "Select Purchase Invoice / PO...")}
             className="w-60 text-xs font-semibold relative z-[45]"
           />
           <div className="relative">
@@ -2774,14 +2776,14 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
             <input
               value={query}
               onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search container / loading no / PO"
+              placeholder={tt("plr.search_ph", "Search container / loading no / PO")}
               className="h-8 w-52 rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-xs outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 dark:border-slate-800 dark:bg-slate-900 text-slate-800 dark:text-slate-100"
             />
           </div>
           <SearchableSelect
             value={status}
             onChange={(val) => setStatus(val as "all" | LoadingStatus)}
-            options={statusOptions.map(opt => ({ label: opt === "all" ? "All Status" : opt.toUpperCase(), value: opt }))}
+            options={statusOptions.map(opt => ({ label: opt === "all" ? tt("common.all_status", "All Status") : opt.toUpperCase(), value: opt }))}
             placeholder="All Status"
             className="w-32 text-xs font-semibold relative z-[45]"
           />
@@ -2790,7 +2792,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
             Apply Filter
           </Button>
           <Button type="button" size="sm" variant="outline" onClick={handlePrintReport} className="h-8 rounded-lg border-slate-200 text-xs font-bold">
-            <Printer className="mr-1.5 h-3.5 w-3.5 text-slate-500" /> Print
+            <Printer className="mr-1.5 h-3.5 w-3.5 text-slate-500" /> {tt("common.print", "Print")}
           </Button>
         </div>,
         actionsSlot
@@ -2820,25 +2822,25 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
           <div className="rounded-xl border border-blue-200 bg-blue-50/40 p-4 mb-4 dark:border-blue-900/40 dark:bg-blue-950/20 shadow-sm animate-in fade-in">
             <div className="flex items-center justify-between mb-3 border-b border-blue-100 pb-2 dark:border-blue-900/40">
               <div className="flex items-center gap-2">
-                <span className="rounded font-mono font-black text-xs bg-blue-600 text-white px-2.5 py-0.5">SELECTED PO: {activeInvoiceRecord.purchase_order_no}</span>
-                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">Approved Invoice & Contract Details (Read-Only Source of Truth)</span>
+                <span className="rounded font-mono font-black text-xs bg-blue-600 text-white px-2.5 py-0.5">{tt("plr.sel_po", "SELECTED PO:")} {activeInvoiceRecord.purchase_order_no}</span>
+                <span className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{tt("plr.approved_invoice", "Approved Invoice & Contract Details (Read-Only Source of Truth)")}</span>
               </div>
-              <Button size="sm" variant="ghost" onClick={() => setSelectedInvoicePoNo("")} className="h-6 text-[10px] font-bold text-blue-600 hover:text-blue-800">Clear Selection</Button>
+              <Button size="sm" variant="ghost" onClick={() => setSelectedInvoicePoNo("")} className="h-6 text-[10px] font-bold text-blue-600 hover:text-blue-800">{tt("plr.clear_selection", "Clear Selection")}</Button>
             </div>
 
             <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3 text-[11px] font-semibold">
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Purchase Code</span><span className="font-mono font-bold text-slate-800 dark:text-slate-100">{form.purchaseAccountNumber || form.purchaseAccountNo || "-"}</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Sales Code</span><span className="font-mono font-bold text-slate-800 dark:text-slate-100">{form.salesAccountNumber || form.salesAccountNo || "-"}</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Supplier</span><span className="font-bold text-slate-800 dark:text-slate-100 truncate block">{form.supplierName || form.purchaseAccountName || "Purchase Account"}</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Company & Branch</span><span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{form.branchName || "Main Branch"}</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Goods & Brand</span><span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{form.goodsName || form.itemName || "-"} ({form.brand || "-"})</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Contract Qty (Bags)</span><span className="font-mono font-black text-slate-800 dark:text-slate-100">{totalPOQty.toLocaleString()}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.purchase_code", "Purchase Code")}</span><span className="font-mono font-bold text-slate-800 dark:text-slate-100">{form.purchaseAccountNumber || form.purchaseAccountNo || "-"}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.sales_code", "Sales Code")}</span><span className="font-mono font-bold text-slate-800 dark:text-slate-100">{form.salesAccountNumber || form.salesAccountNo || "-"}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("common.supplier", "Supplier")}</span><span className="font-bold text-slate-800 dark:text-slate-100 truncate block">{form.supplierName || form.purchaseAccountName || "Purchase Account"}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.company_branch", "Company & Branch")}</span><span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{form.branchName || "Main Branch"}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.goods_brand", "Goods & Brand")}</span><span className="font-bold text-slate-800 dark:text-slate-200 truncate block">{form.goodsName || form.itemName || "-"} ({form.brand || "-"})</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.contract_qty", "Contract Qty (Bags)")}</span><span className="font-mono font-black text-slate-800 dark:text-slate-100">{totalPOQty.toLocaleString()}</span></div>
               
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Purchase Rate</span><span className="font-mono font-bold text-blue-600">{finance.priceRate > 0 ? `${finance.priceRate.toLocaleString()} ${finance.currency}` : "-"}</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Exchange Rate</span><span className="font-mono font-bold text-blue-600">{finance.exRate}</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Total Purchase Amount</span><span className="font-mono font-black text-slate-800 dark:text-slate-100">{poOrderTotalFC.toLocaleString(undefined, {minimumFractionDigits: 2})} {finance.currency}</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">Total Advance Paid</span><span className="font-mono font-black text-emerald-600">{poAdvancePaidLC.toLocaleString(undefined, {minimumFractionDigits: 2})} {localCur}</span></div>
-              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800 col-span-2"><span className="text-slate-400 block text-[9px] uppercase">Total Remaining Balance</span><span className="font-mono font-black text-rose-600">{poRemainingDueLC.toLocaleString(undefined, {minimumFractionDigits: 2})} {localCur}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.col_purchase_rate", "Purchase Rate")}</span><span className="font-mono font-bold text-blue-600">{finance.priceRate > 0 ? `${finance.priceRate.toLocaleString()} ${finance.currency}` : "-"}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.col_exchange_rate", "Exchange Rate")}</span><span className="font-mono font-bold text-blue-600">{finance.exRate}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.total_purchase", "Total Purchase Amount")}</span><span className="font-mono font-black text-slate-800 dark:text-slate-100">{poOrderTotalFC.toLocaleString(undefined, {minimumFractionDigits: 2})} {finance.currency}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.total_advance", "Total Advance Paid")}</span><span className="font-mono font-black text-emerald-600">{poAdvancePaidLC.toLocaleString(undefined, {minimumFractionDigits: 2})} {localCur}</span></div>
+              <div className="bg-white p-2.5 rounded-lg border border-slate-100 shadow-sm dark:bg-slate-900 dark:border-slate-800 col-span-2"><span className="text-slate-400 block text-[9px] uppercase">{tt("plr.total_remaining", "Total Remaining Balance")}</span><span className="font-mono font-black text-rose-600">{poRemainingDueLC.toLocaleString(undefined, {minimumFractionDigits: 2})} {localCur}</span></div>
             </div>
           </div>
         );

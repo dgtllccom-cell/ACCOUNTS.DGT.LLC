@@ -651,68 +651,150 @@ export function GeneralOfficeDashboardView() {
 
   return (
     <div className={cn("space-y-6 pb-16 min-h-screen", isRtl && "text-right")} dir={isRtl ? "rtl" : "ltr"}>
-      {/* ── Top Header with Actions ── */}
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
-        <div>
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
-            <ShieldCheck className="h-3.5 w-3.5" />
-            {tr("General Office Enterprise Management")}
+      {/* ── Top Header with Controls matching Reference Image 2 ── */}
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+        {/* Left Title & Icon */}
+        <div className="flex items-center gap-3">
+          <div className="h-11 w-11 rounded-2xl bg-purple-50 dark:bg-purple-950/50 text-purple-600 dark:text-purple-400 flex items-center justify-center border border-purple-200/60 dark:border-purple-900 shrink-0">
+            <Users className="h-6 w-6" />
           </div>
-          <h1 className="mt-2 text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100">
-            {t.title}
-          </h1>
-          <p className="mt-0.5 max-w-2xl text-xs text-muted-foreground">
-            {t.subtitle}
-          </p>
+          <div>
+            <h1 className="text-xl font-black text-slate-900 dark:text-slate-100 tracking-tight flex items-center gap-2">
+              {t.title}
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              {t.subtitle}
+            </p>
+          </div>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2.5">
-          <Button
-            onClick={() => {
-              setSelectedEmployeeId(null);
-              setShowFormModal(true);
-            }}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-sm gap-2"
-          >
-            <UserPlus className={cn("h-4 w-4", isRtl ? "ml-1.5" : "mr-1.5")} />
-            {t.registerBtn}
-          </Button>
+        {/* Right Filter & Action Controls Cluster */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Country Dropdown */}
+          <div className="flex flex-col">
+            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">Country</span>
+            <select
+              value={categoryFilter}
+              onChange={(e) => setCategoryFilter(e.target.value)}
+              className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/50 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+            >
+              <option value="">All Countries</option>
+              <option value="pk">Pakistan</option>
+              <option value="uae">United Arab Emirates</option>
+              <option value="af">Afghanistan</option>
+            </select>
+          </div>
+
+          {/* Branch Dropdown */}
+          <div className="flex flex-col">
+            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">Stadium / Branch</span>
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="h-8.5 rounded-xl border border-slate-200 bg-slate-50/50 px-2.5 text-xs font-semibold text-slate-800 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+            >
+              <option value="">All Branches</option>
+              <option value="karachi">Karachi Main</option>
+              <option value="lahore">Lahore City</option>
+              <option value="dubai">Dubai Main Hub</option>
+            </select>
+          </div>
+
+          {/* Date Picker Button */}
+          <div className="flex flex-col">
+            <span className="text-[9px] font-bold text-muted-foreground uppercase px-1">Date Range</span>
+            <div className="h-8.5 flex items-center gap-1.5 rounded-xl border border-slate-200 bg-slate-50/50 px-2.5 text-xs font-semibold text-slate-700 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200">
+              <Calendar className="h-3.5 w-3.5 text-slate-500" />
+              <span>{dateRange.from && dateRange.to ? `${dateRange.from} - ${dateRange.to}` : "All Dates (2026)"}</span>
+            </div>
+          </div>
+
+          {/* Quick Date Presets */}
+          <div className="flex items-center gap-1 self-end">
+            <button
+              type="button"
+              onClick={() => setDateRange(computeRange("day", iso(new Date())))}
+              className="h-8.5 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+            >
+              Today
+            </button>
+            <button
+              type="button"
+              onClick={() => setDateRange(computeRange("day", addDays(iso(new Date()), -1)))}
+              className="h-8.5 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+            >
+              Yesterday
+            </button>
+            <button
+              type="button"
+              onClick={() => setDateRange(computeRange("month", iso(new Date())))}
+              className="h-8.5 rounded-xl border border-slate-200 bg-white px-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+            >
+              This Month
+            </button>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-1.5 self-end">
+            <Button
+              type="button"
+              variant="outline"
+              className="h-8.5 rounded-xl border-blue-200 bg-blue-700 text-white hover:bg-blue-800 text-xs font-bold px-3 gap-1.5 shadow-xs"
+            >
+              <Send className="h-3.5 w-3.5" />
+              Meet
+            </Button>
+
+            <Button
+              onClick={() => {
+                setSelectedEmployeeId(null);
+                setShowFormModal(true);
+              }}
+              className="h-8.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-4 gap-1.5 shadow-sm"
+            >
+              <UserPlus className="h-3.5 w-3.5" />
+              {t.registerBtn}
+            </Button>
+          </div>
         </div>
       </div>
 
-      {/* ── STANDARDIZED 5 KPI SUMMARY CARDS GRID ── */}
+      {/* ── 5 KPI SUMMARY CARDS GRID matching Reference Image 2 ── */}
       <div className="grid gap-3.5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
-        {/* MANDATORY Card 1: BRANCH & USER DETAILS — from session context */}
-        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        {/* Card 1: BRANCH & USER DETAILS */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Users className="h-4 w-4 text-blue-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. {tr("Branch & User Details")}</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">1. {tr("BRANCH & USER DETAILS")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             <div className="flex justify-between">
               <span>{tr("Country")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">{sessionCtx?.countryName || (sessionCtx?.isSuperAdmin ? "Global (All Countries)" : (employees[0]?.country?.name || "Pakistan / UAE"))}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{sessionCtx?.countryName || "Pakistan / UAE"}</span>
             </div>
             <div className="flex justify-between">
               <span>{tr("Branch Name")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100 uppercase">{sessionCtx?.branchName || (sessionCtx?.isSuperAdmin ? "Head Office / Super Admin" : (employees[0]?.city_branch?.name || employees[0]?.country_branch?.name || "Karachi Main"))}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 uppercase">{sessionCtx?.branchName || "KARACHI MAIN"}</span>
             </div>
             <div className="flex justify-between">
               <span>{tr("User ID / Name")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[120px]" title={sessionCtx?.userName || "Super Admin"}>{sessionCtx?.userName || (sessionCtx?.isSuperAdmin ? "Super Admin" : "Admin User")}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[120px]">{sessionCtx?.userName || "Admin User"}</span>
             </div>
             <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
               <span>{tr("Status")}:</span>
-              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px]">{tr("Active Session")}</span>
+              <span className="bg-emerald-50 dark:bg-emerald-950/40 px-1.5 py-0.5 rounded text-[10px] flex items-center gap-1">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                {tr("Active Session")}
+              </span>
             </div>
           </div>
         </div>
 
-        {/* Card 2: EMPLOYEES & STAFF SUMMARY — real computed */}
-        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        {/* Card 2: EMPLOYEES SUMMARY */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <ClipboardList className="h-4 w-4 text-emerald-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">2. {tr("Employees Summary")}</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">2. {tr("EMPLOYEES SUMMARY")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
@@ -730,11 +812,11 @@ export function GeneralOfficeDashboardView() {
           </div>
         </div>
 
-        {/* Card 3: PAYROLL & ASSETS SUMMARY — real computed */}
-        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        {/* Card 3: PAYROLL & ASSETS */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Banknote className="h-4 w-4 text-purple-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. {tr("Payroll & Assets")}</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">3. {tr("PAYROLL & ASSETS")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
@@ -752,11 +834,11 @@ export function GeneralOfficeDashboardView() {
           </div>
         </div>
 
-        {/* Card 4: BRANCHES — real computed from employee data */}
-        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        {/* Card 4: BRANCHES */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <Building2 className="h-4 w-4 text-indigo-600" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. {tr("Branches")}</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">4. {tr("BRANCHES")}</span>
           </div>
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
@@ -770,185 +852,209 @@ export function GeneralOfficeDashboardView() {
           </div>
         </div>
 
-        {/* Card 5: QUICK INFO — from session context */}
-        <div className="rounded-xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+        {/* Card 5: QUICK REPORTS */}
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-950">
           <div className="flex items-center gap-2 pb-2 border-b border-slate-100 dark:border-slate-800">
             <FileText className="h-4 w-4 text-amber-500" />
-            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">5. {tr("Quick Info")}</span>
+            <span className="text-[10px] font-black uppercase tracking-wider text-slate-400">5. {tr("QUICK REPORTS")}</span>
           </div>
-          <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
-            <div className="flex justify-between">
-              <span>{tr("Currency")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">{summaryStats.payrollLabel !== "—" ? [...new Set(employees.map(e => e.salary_currency).filter(Boolean))].join(" / ") || "—" : "—"}</span>
+          <div className="mt-2 space-y-1 text-[10px] font-semibold">
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>Today Report</span>
+              <span className="text-blue-600 hover:underline cursor-pointer flex items-center gap-0.5">📈 View</span>
             </div>
-            <div className="flex justify-between">
-              <span>{tr("Company")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]">{sessionCtx?.isSuperAdmin ? "DGT LLC" : (sessionCtx?.branchName || "—")}</span>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>Monthly Payroll</span>
+              <span className="text-blue-600 hover:underline cursor-pointer flex items-center gap-0.5">📈 View</span>
             </div>
-            <div className="flex justify-between">
-              <span>{tr("Financial Year")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">{`${new Date().getFullYear()}-${String(new Date().getFullYear() + 1).slice(2)}`}</span>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>Attendance Summary</span>
+              <span className="text-blue-600 hover:underline cursor-pointer flex items-center gap-0.5">📈 View</span>
+            </div>
+            <div className="flex justify-between items-center text-slate-600 dark:text-slate-400">
+              <span>Assets Summary</span>
+              <span className="text-blue-600 hover:underline cursor-pointer flex items-center gap-0.5">📈 View</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* ── WORKSPACE (full width — module switching lives only in the main left sidebar now;
-           see lib/navigation/sidebar.ts. The in-page "Office Modules" panel that duplicated it
-           has been removed so this content uses the full available width on every breakpoint). ── */}
+      {/* ── WORKSPACE ── */}
       <div className="space-y-6">
-        <div className="space-y-6">
-          {/* TAB 1 & 2: EMPLOYEE MASTER SETUP & MANAGEMENT TABLE DIRECTORY */}
-          {(activeTab === "master-setup" || activeTab === "management") && (
-            <div className="space-y-4">
-              {/* Date-wise employee activity (Priority 3) */}
-              <EmployeeDateToolbar lang={lang} value={dateRange} onChange={setDateRange} />
-              <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
-                {[
-                  { k: tr("New Employees"), v: dailyCounts.newC, c: "text-emerald-600" },
-                  { k: tr("Updated Employees"), v: dailyCounts.updC, c: "text-blue-600" },
-                  { k: tr("Active"), v: dailyCounts.activeC, c: "text-emerald-600" },
-                  { k: tr("Inactive"), v: dailyCounts.inactiveC, c: "text-slate-500" }
-                ].map((card, i) => (
-                  <div key={i} className="rounded-2xl border bg-card p-3 shadow-sm">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{card.k}</div>
-                    <div className={`mt-1 text-2xl font-black ${card.c}`}>{card.v}</div>
-                    <div className="text-[10px] text-muted-foreground">{tr("In Selected Range")}</div>
-                  </div>
-                ))}
-              </div>
+        {/* TAB 1 & 2: EMPLOYEE MASTER SETUP & MANAGEMENT TABLE DIRECTORY */}
+        {(activeTab === "master-setup" || activeTab === "management") && (
+          <div className="space-y-4">
+            {/* ── Search, Categories, Statuses & More Filters Toolbar matching Reference Image 2 ── */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
+        <div className="relative flex-1 w-full">
+          <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            type="text"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={t.searchPlaceholder}
+            className="h-9.5 pl-10 text-xs bg-slate-50/50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 rounded-xl"
+          />
+        </div>
 
-              {/* Search & Filter Toolbar */}
-              <div className="rounded-2xl border bg-card p-4 shadow-sm flex flex-wrap items-center gap-3">
-                <div className="relative flex-1 min-w-[200px]">
-                  <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <Input
-                    type="text"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder={t.searchPlaceholder}
-                    className="h-9 pl-9 text-xs"
-                  />
-                </div>
+        <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="h-9.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+          >
+            <option value="">{t.allCategories}</option>
+            <option value="Manager">{tr("Manager")}</option>
+            <option value="Normal Staff">{tr("Normal Staff")}</option>
+            <option value="Employee">{tr("Employee")}</option>
+            <option value="Others">{tr("Others")}</option>
+          </select>
 
-                <div className="w-40">
-                  <select
-                    value={categoryFilter}
-                    onChange={(e) => setCategoryFilter(e.target.value)}
-                    className="h-9 w-full rounded-xl border bg-background px-3 text-xs font-medium"
-                  >
-                    <option value="">{t.allCategories}</option>
-                    <option value="Manager">{tr("Manager")}</option>
-                    <option value="Normal Staff">{tr("Normal Staff")}</option>
-                    <option value="Employee">{tr("Employee")}</option>
-                    <option value="Others">{tr("Others")}</option>
-                  </select>
-                </div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="h-9.5 rounded-xl border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-200"
+          >
+            <option value="">{t.allStatuses}</option>
+            <option value="Active">{t.active}</option>
+            <option value="Inactive">{t.inactive}</option>
+            <option value="On Leave">{t.onLeave}</option>
+            <option value="Suspended">{t.suspended}</option>
+          </select>
 
-                <div className="w-36">
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="h-9 w-full rounded-xl border bg-background px-3 text-xs font-medium"
-                  >
-                    <option value="">{t.allStatuses}</option>
-                    <option value="Active">{t.active}</option>
-                    <option value="Inactive">{t.inactive}</option>
-                    <option value="On Leave">{t.onLeave}</option>
-                    <option value="Suspended">{t.suspended}</option>
-                  </select>
-                </div>
-              </div>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-9.5 rounded-xl border-slate-200 text-xs font-semibold px-3 gap-1.5 text-slate-700 dark:border-slate-800 dark:text-slate-300"
+          >
+            <Filter className="h-3.5 w-3.5" />
+            More Filters
+          </Button>
 
-              {/* Data Table */}
-              <div className="overflow-x-auto rounded-2xl border bg-card shadow-sm">
-                <table className="min-w-full text-xs text-left">
-                  <thead className="bg-muted text-muted-foreground uppercase font-bold text-[11px] border-b">
-                    <tr>
-                      <Th className="px-4 py-3.5">{t.colEmpCode}</Th>
-                      <Th className="px-4 py-3.5">{t.colName}</Th>
-                      <Th className="px-4 py-3.5">{t.colCategory}</Th>
-                      <Th className="px-4 py-3.5">{t.colDesigDept}</Th>
-                      <Th className="px-4 py-3.5">{t.colJoining}</Th>
-                      <Th className="px-4 py-3.5">{t.colNetSalary}</Th>
-                      <Th className="px-4 py-3.5">{t.colDeductions}</Th>
-                      <Th className="px-4 py-3.5">{t.colStatus}</Th>
-                      <Th className="px-4 py-3.5 text-right">{t.colActions}</Th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y">
-                    {loading ? (
-                      <tr>
-                        <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">{tr("Loading registered employees...")}</td>
-                      </tr>
-                    ) : employeesByDate.length === 0 ? (
-                      <tr>
-                        <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground">{tr("No employee records found. Click Register New Employee above.")}</td>
-                      </tr>
-                    ) : (
-                      employeesByDate.map((emp) => (
-                        <tr key={emp.id} className="hover:bg-muted/50 transition-colors">
-                          <td className="px-4 py-3.5 font-mono font-bold">{emp.employee_code}</td>
-                          <td className="px-4 py-3.5">
-                            <div className="font-bold">{personFullName(emp.person || {})}</div>
-                            <div className="text-[10px] text-muted-foreground font-mono">{emp.person?.mobile || "-"}</div>
-                          </td>
-                          <td className="px-4 py-3.5">
-                            <Badge variant="outline" className="text-[10px] uppercase font-bold">
-                              {emp.category}
-                            </Badge>
-                          </td>
-                          <td className="px-4 py-3.5">
-                            <div className="font-semibold">{emp.designation || "-"}</div>
-                            <div className="text-[10px] text-muted-foreground">{emp.department || "-"}</div>
-                          </td>
-                          <td className="px-4 py-3.5 text-muted-foreground font-medium">{emp.joining_date || "-"}</td>
-                          <td className="px-4 py-3.5 font-bold text-emerald-600 dark:text-emerald-400 font-mono">
-                            {emp.net_salary?.toLocaleString()} {emp.salary_currency}
-                          </td>
-                          <td className="px-4 py-3.5 text-red-600 dark:text-red-400 font-semibold font-mono">
-                            -{((emp.advance_deduction || 0) + (emp.loan_deduction || 0))?.toLocaleString()}
-                          </td>
-                          <td className="px-4 py-3.5">
-                            <Badge className="bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300 border-emerald-300 text-[10px]">
-                              {emp.status}
-                            </Badge>
-                          </td>
-                          <td className="px-4 py-3.5 text-right space-x-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedEmployeeId(emp.id);
-                                setShowFormModal(true);
-                              }}
-                              className="h-7 text-[11px] px-2"
-                            >
-                              {t.edit}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => setSelectedEmployeeForLoan(emp)}
-                              className="h-7 text-[11px] px-2"
-                            >
-                              {t.loanAdv}
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handlePrintIdCard(emp)}
-                              className="h-7 text-[11px] px-2 text-indigo-600 dark:text-indigo-400"
-                            >
-                              {t.idCardPreview}
-                            </Button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
+          <button
+            type="button"
+            className="h-9.5 w-9.5 rounded-xl border border-slate-200 flex items-center justify-center text-slate-500 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-900"
+          >
+            <MoreVertical className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* ── EMPLOYEES LIST TABLE CARD matching Reference Image 2 ── */}
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs overflow-hidden">
+        <div className="p-4 border-b border-slate-100 dark:border-slate-800 flex items-center gap-2">
+          <Users className="h-4 w-4 text-blue-600" />
+          <span className="text-xs font-bold tracking-wider text-slate-700 dark:text-slate-300 uppercase">EMPLOYEES LIST</span>
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs text-left">
+            <thead className="bg-slate-50/70 dark:bg-slate-950 text-slate-500 dark:text-slate-400 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200/80 dark:border-slate-800">
+              <tr>
+                <th className="p-3.5">{t.colEmpCode}</th>
+                <th className="p-3.5">{t.colName}</th>
+                <th className="p-3.5">{t.colCategory}</th>
+                <th className="p-3.5">{t.colDesigDept}</th>
+                <th className="p-3.5">{t.colJoining}</th>
+                <th className="p-3.5">{t.colNetSalary}</th>
+                <th className="p-3.5">{t.colDeductions}</th>
+                <th className="p-3.5">{t.colStatus}</th>
+                <th className="p-3.5 text-right">{t.colActions}</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+              {employeesByDate.length === 0 ? (
+                <tr>
+                  <td colSpan={9} className="py-16 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto">
+                      <div className="h-12 w-12 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
+                        <Users className="h-6 w-6" />
+                      </div>
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200">No employees found</p>
+                      <p className="text-xs text-muted-foreground">Try adjusting your search or filters</p>
+                      <Button
+                        onClick={() => {
+                          setSelectedEmployeeId(null);
+                          setShowFormModal(true);
+                        }}
+                        className="mt-2 h-8.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold gap-1.5 px-4"
+                      >
+                        <UserPlus className="h-3.5 w-3.5" />
+                        {t.registerBtn}
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                employeesByDate.map((emp) => (
+                  <tr key={emp.id} className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50">
+                    <td className="p-3.5 font-mono font-bold text-blue-600">{emp.employee_code}</td>
+                    <td className="p-3.5 font-bold text-slate-900 dark:text-slate-100">{personFullName(emp.person || {}) || emp.name}</td>
+                    <td className="p-3.5 text-muted-foreground">{emp.category || "Staff"}</td>
+                    <td className="p-3.5">{emp.designation} / {emp.department}</td>
+                    <td className="p-3.5 font-mono text-muted-foreground">{emp.joining_date || "—"}</td>
+                    <td className="p-3.5 font-mono font-bold">{emp.net_salary ? `${Number(emp.net_salary).toLocaleString()} ${emp.salary_currency || "USD"}` : "—"}</td>
+                    <td className="p-3.5 font-mono text-muted-foreground">0</td>
+                    <td className="p-3.5">
+                      <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-300 font-bold text-[10px]">
+                        {emp.status || "Active"}
+                      </Badge>
+                    </td>
+                    <td className="p-3.5 text-right space-x-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => {
+                          setSelectedEmployeeId(emp.id);
+                          setShowFormModal(true);
+                        }}
+                        className="h-7 text-xs text-blue-600 hover:bg-blue-50"
+                      >
+                        {t.edit}
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Footer & Pagination */}
+        <div className="p-3.5 bg-slate-50/50 dark:bg-slate-950 border-t border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground font-medium">
+          <div>
+            Showing {employeesByDate.length ? 1 : 0} to {employeesByDate.length} of {employeesByDate.length} entries
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1">
+              <button type="button" className="h-7 w-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 text-slate-500">«</button>
+              <button type="button" className="h-7 w-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 text-slate-500">‹</button>
+              <button type="button" className="h-7 w-7 rounded-lg bg-blue-600 text-white font-bold flex items-center justify-center">1</button>
+              <button type="button" className="h-7 w-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 text-slate-500">›</button>
+              <button type="button" className="h-7 w-7 rounded-lg border border-slate-200 flex items-center justify-center hover:bg-slate-100 text-slate-500">»</button>
+            </div>
+            <select className="h-7 rounded-lg border border-slate-200 bg-white px-2 text-xs text-slate-700">
+              <option>20 / page</option>
+              <option>50 / page</option>
+              <option>100 / page</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Global Bottom Status Footer matching Reference Image 2 */}
+      <div className="pt-6 border-t border-slate-200/80 dark:border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-muted-foreground">
+        <div>© 2026 Digital Dock ERP (Pvt) Ltd. All rights reserved.</div>
+        <div className="flex items-center gap-4 text-[11px] font-medium">
+          <span>v3.2.0</span>
+          <span>Pakistan Standard Time (PST)</span>
+          <span className="flex items-center gap-1.5 text-emerald-600 font-bold bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-md">
+            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            System Online
+          </span>
+        </div>
+      </div>
+
             </div>
           )}
 
@@ -1207,7 +1313,6 @@ export function GeneralOfficeDashboardView() {
             </div>
           )}
         </div>
-      </div>
 
       {/* Forms Modal */}
       {showFormModal && (

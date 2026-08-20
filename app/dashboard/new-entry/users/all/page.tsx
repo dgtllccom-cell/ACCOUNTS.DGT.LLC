@@ -402,7 +402,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
             </div>
             <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight flex items-center gap-2.5">
               <Users className="h-6 w-6 text-indigo-600 dark:text-indigo-400" />
-              Super Admin / All Users Directory & Permissions Roster
+              S Admin / All Users Directory
             </h1>
             <p className="text-xs text-muted-foreground font-medium">
               Centralized register of all country & branch users, direct login URLs, access credentials, and granular form permission matrices.
@@ -428,7 +428,7 @@ export default function SuperAdminAllUsersDirectoryPage() {
               Export CSV
             </Button>
 
-            <Link href="/dashboard/new-entry/users/registration">
+            <Link href="/dashboard/new-entry/users/super-admin">
               <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-xs h-9 px-3.5 rounded-xl cursor-pointer">
                 <UserPlus className="w-3.5 h-3.5 mr-1.5" />
                 New User Form
