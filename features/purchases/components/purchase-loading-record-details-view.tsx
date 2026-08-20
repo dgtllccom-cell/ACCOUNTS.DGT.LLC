@@ -13,6 +13,8 @@ import { numberToWords } from "@/lib/utils/number-to-words";
 
 import { Suspense } from "react";
 import { Th } from "@/components/ui/translated-th";
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 function PurchaseLoadingRecordDetailsViewContent({ recordId }: { recordId: string }) {
   const searchParams = useSearchParams();
@@ -116,18 +118,22 @@ function PurchaseLoadingRecordDetailsViewContent({ recordId }: { recordId: strin
     remarks: record.remarks || form.remarks || "We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct."
   };
 
+  const lang = useActiveLanguage();
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+
   return (
-    <div className="space-y-6">
+    <div dir={isRtl ? "rtl" : "ltr"} className="space-y-6">
       <ErpPageActions
         backLink={`/dashboard/purchase/purchase-loading-records?openRecordId=${recordId}`}
-        title="Loading Record Details"
-        subtitle="Comprehensive view of loading, purchase, sales, and goods."
+        title={tt("plr.history_title", "Loading Record Details")}
+        subtitle={tt("plr.subtitle", "Comprehensive view of loading, purchase, sales, and goods.")}
       >
         <Button variant="outline" size="sm" onClick={() => setPrintMode(true)} className="print:hidden">
-          <Printer className="mr-2 h-4 w-4" /> Print Loading Slip
+          <Printer className="mr-2 h-4 w-4" /> {tt("common.print", "Print")}
         </Button>
         <Button variant="outline" size="sm" className="print:hidden" onClick={() => setPrintMode(true)}>
-          <Download className="mr-2 h-4 w-4" /> Export PDF
+          <Download className="mr-2 h-4 w-4" /> {tt("common.export", "Export PDF")}
         </Button>
       </ErpPageActions>
 
@@ -137,24 +143,24 @@ function PurchaseLoadingRecordDetailsViewContent({ recordId }: { recordId: strin
           <CardHeader className="pb-3 border-b bg-slate-50">
             <CardTitle className="text-sm font-bold flex items-center gap-2 text-primary">
               <FileText className="h-4 w-4" />
-              Purchase & Sales Details
+              {tt("plr.purchase_account_details", "Purchase & Sales Details")}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4 space-y-3">
             <div className="flex justify-between border-b border-dashed pb-2">
-              <span className="text-xs text-muted-foreground font-semibold uppercase">Purchase Booking No</span>
+              <span className="text-xs text-muted-foreground font-semibold uppercase">{tt("plr.purchase_code", "Purchase Booking No")}</span>
               <span className="text-xs font-bold">{record.purchase_order_no || "-"}</span>
             </div>
             <div className="flex justify-between border-b border-dashed pb-2">
-              <span className="text-xs text-muted-foreground font-semibold uppercase">Purchase Date</span>
+              <span className="text-xs text-muted-foreground font-semibold uppercase">{tt("plr.loading_date", "Purchase Date")}</span>
               <span className="text-xs font-bold">{form.purchaseDate || form.bookingDate || "-"}</span>
             </div>
             <div className="flex justify-between border-b border-dashed pb-2">
-              <span className="text-xs text-muted-foreground font-semibold uppercase">Sales Order No</span>
+              <span className="text-xs text-muted-foreground font-semibold uppercase">{tt("plr.sales_code", "Sales Order No")}</span>
               <span className="text-xs font-bold">{form.salesOrderNo || "-"}</span>
             </div>
             <div className="flex justify-between pb-2">
-              <span className="text-xs text-muted-foreground font-semibold uppercase">Sales Account</span>
+              <span className="text-xs text-muted-foreground font-semibold uppercase">{tt("plr.sales_account_cr", "Sales Account")}</span>
               <span className="text-xs font-bold truncate max-w-[150px]" title={form.salesAccountName || "-"}>{form.salesAccountName || "-"}</span>
             </div>
           </CardContent>
@@ -165,20 +171,20 @@ function PurchaseLoadingRecordDetailsViewContent({ recordId }: { recordId: strin
           <CardHeader className="pb-3 border-b bg-slate-50">
             <CardTitle className="text-sm font-bold flex items-center gap-2 text-primary">
               <Building2 className="h-4 w-4" />
-              Branch Details
+              {tt("plr.branch_bill_details", "Branch Details")}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4 space-y-3">
             <div className="flex justify-between border-b border-dashed pb-2">
-              <span className="text-xs text-muted-foreground font-semibold uppercase">Country Branch</span>
+              <span className="text-xs text-muted-foreground font-semibold uppercase">{tt("cpb.country_branch", "Country Branch")}</span>
               <span className="text-xs font-bold">{record.country_branches?.name || "-"}</span>
             </div>
             <div className="flex justify-between border-b border-dashed pb-2">
-              <span className="text-xs text-muted-foreground font-semibold uppercase">City Branch</span>
+              <span className="text-xs text-muted-foreground font-semibold uppercase">{tt("common.branch", "City Branch")}</span>
               <span className="text-xs font-bold">{record.city_branches?.name || "-"}</span>
             </div>
             <div className="flex justify-between pb-2">
-              <span className="text-xs text-muted-foreground font-semibold uppercase">Target Location</span>
+              <span className="text-xs text-muted-foreground font-semibold uppercase">{tt("plr.receiving_country", "Target Location")}</span>
               <span className="text-xs font-bold">{record.receiving_location || form.receivedCountry || "-"}</span>
             </div>
           </CardContent>
@@ -189,20 +195,20 @@ function PurchaseLoadingRecordDetailsViewContent({ recordId }: { recordId: strin
           <CardHeader className="pb-3 border-b bg-slate-50">
             <CardTitle className="text-sm font-bold flex items-center gap-2 text-primary">
               <User className="h-4 w-4" />
-              Supplier / Vendor Details
+              {tt("common.supplier", "Supplier / Vendor Details")}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4 space-y-3">
             <div className="flex justify-between border-b border-dashed pb-2">
-              <span className="text-xs text-muted-foreground font-semibold uppercase">Supplier Name</span>
+              <span className="text-xs text-muted-foreground font-semibold uppercase">{tt("common.supplier", "Supplier Name")}</span>
               <span className="text-xs font-bold truncate max-w-[150px]" title={supplierName}>{supplierName}</span>
             </div>
             <div className="flex justify-between border-b border-dashed pb-2">
-              <span className="text-xs text-muted-foreground font-semibold uppercase">Account Detail</span>
+              <span className="text-xs text-muted-foreground font-semibold uppercase">{tt("plr.account_name", "Account Detail")}</span>
               <span className="text-xs font-bold truncate max-w-[150px]" title={form.supplierDetails || poData.accountDetail || "-"}>{form.supplierDetails || poData.accountDetail || "-"}</span>
             </div>
             <div className="flex justify-between pb-2">
-              <span className="text-xs text-muted-foreground font-semibold uppercase">Origin Country</span>
+              <span className="text-xs text-muted-foreground font-semibold uppercase">{tt("plr.origin_country", "Origin Country")}</span>
               <span className="text-xs font-bold">{form.loadingCountry || form.originCountry || "-"}</span>
             </div>
           </CardContent>
@@ -214,7 +220,7 @@ function PurchaseLoadingRecordDetailsViewContent({ recordId }: { recordId: strin
         <CardHeader className="pb-3 border-b bg-slate-50">
           <CardTitle className="text-sm font-bold flex items-center gap-2 text-primary">
             <FileText className="h-4 w-4" />
-            Goods Details
+            {tt("plr.goods_entry", "Goods Details")}
           </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
@@ -222,13 +228,13 @@ function PurchaseLoadingRecordDetailsViewContent({ recordId }: { recordId: strin
             <table className="w-full text-sm">
               <thead className="bg-slate-100/50">
                 <tr>
-                  <Th className="px-4 py-3 text-left font-semibold text-xs text-slate-500 uppercase">Goods Name</Th>
-                  <Th className="px-4 py-3 text-left font-semibold text-xs text-slate-500 uppercase">Details (Brand/Size)</Th>
-                  <Th className="px-4 py-3 text-left font-semibold text-xs text-slate-500 uppercase">Quantity</Th>
-                  <Th className="px-4 py-3 text-left font-semibold text-xs text-slate-500 uppercase">Net Weight</Th>
-                  <Th className="px-4 py-3 text-left font-semibold text-xs text-slate-500 uppercase">Gross Weight</Th>
-                  <Th className="px-4 py-3 text-right font-semibold text-xs text-slate-500 uppercase">Unit Price</Th>
-                  <Th className="px-4 py-3 text-right font-semibold text-xs text-slate-500 uppercase">Total Amount</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs text-slate-500 uppercase">{tt("plr.goods_name", "Goods Name")}</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs text-slate-500 uppercase">{tt("plr.size_spec", "Details (Brand/Size)")}</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs text-slate-500 uppercase">{tt("plr.qty_name", "Quantity")}</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs text-slate-500 uppercase">{tt("plr.contract_net_weight", "Net Weight")}</Th>
+                  <Th className="px-4 py-3 text-left font-semibold text-xs text-slate-500 uppercase">{tt("plr.contract_gross_weight", "Gross Weight")}</Th>
+                  <Th className="px-4 py-3 text-right font-semibold text-xs text-slate-500 uppercase">{tt("plr.col_rate", "Unit Price")}</Th>
+                  <Th className="px-4 py-3 text-right font-semibold text-xs text-slate-500 uppercase">{tt("plr.contract_purchase_amount", "Total Amount")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
@@ -265,41 +271,41 @@ function PurchaseLoadingRecordDetailsViewContent({ recordId }: { recordId: strin
           <CardHeader className="pb-3 border-b bg-slate-50">
             <CardTitle className="text-sm font-bold flex items-center gap-2 text-primary">
               <Truck className="h-4 w-4" />
-              Loading & Logistics
+              {tt("plr.loading_mode", "Loading & Logistics")}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
             <div className="grid grid-cols-2 gap-y-4 gap-x-6">
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">Loading Record No</p>
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.branch_serial", "Loading Record No")}</p>
                 <p className="text-sm font-bold text-primary">{record.loading_record_no}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">Status</p>
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("common.status", "Status")}</p>
                 <p className="text-sm font-bold capitalize">{record.loading_status || "-"}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">Container Number</p>
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.container_no", "Container Number")}</p>
                 <p className="text-sm font-bold">{record.container_number || "-"}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">Container Type</p>
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.divide_type", "Container Type")}</p>
                 <p className="text-sm font-bold">{record.container_type || "-"}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">Loading Port / Country</p>
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.origin_country", "Loading Port / Country")}</p>
                 <p className="text-sm font-bold">{record.loading_location || form.loadingPort || "-"} / {form.loadingCountry || "-"}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">Receiving Port / Country</p>
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.receiving_country", "Receiving Port / Country")}</p>
                 <p className="text-sm font-bold">{record.receiving_location || form.receivedPort || "-"} / {form.receivedCountry || "-"}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">Loading Date</p>
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.loading_date", "Loading Date")}</p>
                 <p className="text-sm font-bold">{record.loaded_at ? new Date(record.loaded_at).toLocaleDateString() : (form.loadingDate || "-")}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">Carrier Name</p>
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.allot_name", "Carrier Name")}</p>
                 <p className="text-sm font-bold">{record.carrier_name || "-"}</p>
               </div>
             </div>
@@ -311,30 +317,30 @@ function PurchaseLoadingRecordDetailsViewContent({ recordId }: { recordId: strin
           <CardHeader className="pb-3 border-b bg-emerald-50/50">
             <CardTitle className="text-sm font-bold flex items-center gap-2 text-emerald-700">
               <CheckCircle2 className="h-4 w-4" />
-              Financial & Payment Details
+              {tt("plr.purchase_account_details", "Financial & Payment Details")}
             </CardTitle>
           </CardHeader>
           <CardContent className="pt-4">
             <div className="grid grid-cols-2 gap-y-4 gap-x-6">
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">Total Purchase Amount</p>
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.contract_purchase_amount", "Total Purchase Amount")}</p>
                 <p className="text-sm font-bold">{form.totalAmount || form.finalAmount || "-"} {currency}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">Advance Percent</p>
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.price_type", "Advance Percent")}</p>
                 <p className="text-sm font-bold">{form.advancePercent || "0"}%</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">Advance Amount Paid</p>
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("plr.previously_loaded", "Advance Amount Paid")}</p>
                 <p className="text-sm font-bold text-emerald-600">{form.advanceAmount || "0"} {currency}</p>
               </div>
               <div>
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">Remaining Balance</p>
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("cpb.remaining_balance", "Remaining Balance")}</p>
                 <p className="text-sm font-bold text-amber-600">{Number(form.totalAmount || form.finalAmount || 0) - Number(form.advanceAmount || 0)} {currency}</p>
               </div>
               <div className="col-span-2 pt-2 border-t border-dashed mt-2">
-                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">Payment / Clearing Status</p>
-                <p className="text-sm font-semibold text-emerald-700">Advance Cleared / Payment Nil Completed</p>
+                <p className="text-[10px] text-muted-foreground font-semibold uppercase mb-1">{tt("common.status", "Payment / Clearing Status")}</p>
+                <p className="text-sm font-semibold text-emerald-700">{tt("plr.po_items_status", "Advance Cleared / Payment Nil Completed")}</p>
               </div>
             </div>
           </CardContent>
