@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -15,6 +15,7 @@ import {
   Receipt,
   ChevronDown,
   ChevronLeft,
+  ChevronRight,
   X
 } from "lucide-react";
 import { DownloadActionIcon } from "@/components/ui/download-action-icon";
@@ -45,6 +46,50 @@ function getCategoryLabel(cat: RoznamchaEntryCategory | null, lang: SupportedLan
     default: return cat;
   }
 }
+
+function formatStatus(status: string | null | undefined, lang: SupportedLanguage): string {
+  if (!status) return "-";
+  const s = status.toLowerCase();
+  if (s === "posted") return t(lang, "status.posted", "Posted");
+  if (s === "draft") return t(lang, "status.draft", "Draft");
+  if (s === "transferred") return t(lang, "status.transferred", "Transferred");
+  if (s === "cancelled") return t(lang, "status.cancelled", "Cancelled");
+  return status;
+}
+
+function formatEntryType(val: string | null | undefined, lang: SupportedLanguage): string {
+  if (!val) return "-";
+  const norm = val.toLowerCase().replace(/[\s_-]+/g, "_");
+  if (norm.includes("purchase_booking_transfer") || norm.includes("purchase_transfer") || norm.includes("booking_transfer")) {
+    return t(lang, "roz.entry_type_po_transfer", "Purchase Booking Transfer");
+  }
+  if (norm.includes("purchase_advance") || norm.includes("po_advance")) {
+    return t(lang, "roz.entry_type_po_adv", "Purchase Advance Payment");
+  }
+  if (norm.includes("purchase_remaining") || norm.includes("po_remaining")) {
+    return t(lang, "roz.entry_type_po_rem", "Purchase Remaining Payment");
+  }
+  if (norm.includes("journal") || norm.includes("general_journal")) {
+    return t(lang, "roz.entry_type_journal", "Journal Entry");
+  }
+  if (norm.includes("bank_deposit") || norm.includes("bank_cheque") || norm.includes("cheque")) {
+    return t(lang, "roz.entry_type_bank_dep", "Bank Deposit");
+  }
+  if (norm.includes("cash_payment") || norm.includes("cash_out")) {
+    return t(lang, "roz.entry_type_cash_pay", "Cash Payment");
+  }
+  if (norm.includes("cash_receipt") || norm.includes("cash_in") || norm.includes("cash_entry")) {
+    return t(lang, "roz.entry_type_cash_rec", "Cash Receipt");
+  }
+  if (norm.includes("expense") || norm.includes("bill_expense")) {
+    return t(lang, "roz.entry_type_expense", "Expense Entry");
+  }
+  if (norm.includes("exchange") || norm.includes("currency_exchange") || norm.includes("fx")) {
+    return t(lang, "roz.entry_type_fx", "Exchange Rate Gain / Loss");
+  }
+  return val.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 type ReportLine = {
   id: string;
   payment_entry_type: string | null;
@@ -146,11 +191,6 @@ function entrySerial(row: ReportRow): string {
   );
 }
 
-function formatEntryType(val: string | null | undefined): string {
-  if (!val) return "-";
-  return val.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase());
-}
-
 function fmtNumber(value: number | string | null | undefined) {
   const n = Number(value);
   if (!Number.isFinite(n)) return "0.00";
@@ -187,6 +227,7 @@ function primaryLine(row: ReportRow): ReportLine | undefined {
 
 function printReportTable(opts: { title: string; subtitle: string; rows: ReportRow[]; totals: { debit: number; credit: number }; lang: SupportedLanguage }) {
   if (typeof window === "undefined") return;
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(opts.lang);
   const win = window.open("", "_blank", "width=1300,height=800");
   if (!win) return;
 
@@ -202,30 +243,30 @@ function printReportTable(opts: { title: string; subtitle: string; rows: ReportR
         <td>${row.countries?.name ?? "-"}</td>
         <td>${branchName(row)}</td>
         <td>${row.profiles?.full_name ?? "-"}</td>
-        <td>${formatEntryType(row.source_transaction_type || row.type)}</td>
+        <td>${formatEntryType(row.source_transaction_type || row.type, opts.lang)}</td>
         <td>${getCategoryLabel(row.entry_category, opts.lang)}</td>
-        <td style="font-family:monospace;">${line?.account_number || line?.ledgers?.code || "-"}</td>
-        <td style="font-weight:bold;">${line?.ledgers?.name ?? "-"}</td>
-        <td>${(row.narration ?? "-").slice(0, 80)}</td>
+        <td style="font-family:monospace;text-align:center;">${line?.account_number || line?.ledgers?.code || "-"}</td>
+        <td style="font-weight:bold;text-align:${isRtl ? "right" : "left"};">${line?.ledgers?.name ?? "-"}</td>
+        <td style="text-align:${isRtl ? "right" : "left"};">${(row.narration ?? "-").slice(0, 80)}</td>
         <td style="text-align:center;font-weight:bold;">${line?.currency ?? row.countries?.currency_code ?? "-"}</td>
         <td class="num">${debit ? fmtNumber(debit) : "-"}</td>
         <td class="num">${credit ? fmtNumber(credit) : "-"}</td>
         <td class="num">${fmtNumber(credit - debit)}</td>
         <td style="text-align:center;font-family:monospace;">${billNumber(row)}</td>
-        <td style="text-align:center;">${row.status}</td>
+        <td style="text-align:center;">${formatStatus(row.status, opts.lang)}</td>
       </tr>`;
     })
     .join("");
 
-  win.document.write(`<!doctype html><html dir="${["ur", "ar", "fa", "ps"].includes(opts.lang) ? "rtl" : "ltr"}" lang="${opts.lang}"><head><title>${opts.title}</title>
+  win.document.write(`<!doctype html><html dir="${isRtl ? "rtl" : "ltr"}" lang="${opts.lang}"><head><title>${opts.title}</title>
     <style>
-      body { font-family: Arial, sans-serif; padding: 20px; color: #111; }
+      body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Arabic", sans-serif; padding: 20px; color: #111; direction: ${isRtl ? "rtl" : "ltr"}; }
       h1 { font-size: 18px; margin-bottom: 2px; }
       p.sub { color: #555; margin-top: 0; font-size: 12px; }
       table { width: 100%; border-collapse: collapse; margin-top: 14px; font-size: 10px; }
-      th, td { border: 1px solid #ccc; padding: 4px 5px; text-align: left; }
+      th, td { border: 1px solid #ccc; padding: 4px 5px; text-align: ${isRtl ? "right" : "left"}; }
       th { background: #0f172a; color: #fff; text-align: center; font-size: 10px; }
-      td.num { text-align: right; font-family: monospace; }
+      td.num { text-align: ${isRtl ? "left" : "right"}; font-family: monospace; }
       tfoot td { font-weight: bold; background: #f1f5f9; }
     </style>
   </head><body>
@@ -264,6 +305,7 @@ export function RoznamchaTypeReportView({
   const router = useRouter();
   const activeLang = useActiveLanguage();
   const currentLang = activeLang || lang;
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(currentLang);
   // Central i18n shorthand (keys live in lib/i18n/ui.ts with all 5 languages).
   const tt = (key: string, fallback: string) => t(currentLang, key as never, fallback);
 
@@ -320,7 +362,7 @@ export function RoznamchaTypeReportView({
         else if (info?.scopes?.countryBranchIds?.[0]) params.set("countryBranchId", info.scopes.countryBranchIds[0]);
       } else {
         if (countryId !== "all") params.set("countryId", countryId);
-        if (branchId !== "all") params.set("cityBranchId", branchId);
+        if (branchId !== "all") params.set("branchId", branchId);
       }
       if (debitCredit !== "all") params.set("debitCredit", debitCredit);
       if (currency !== "all") params.set("currency", currency);
@@ -333,30 +375,31 @@ export function RoznamchaTypeReportView({
       params.set("page", String(page));
       params.set("pageSize", String(pageSize));
 
-      const res = await apiGet<ReportResponse>(`/api/erp/roznamcha/reports?${params.toString()}`);
+      const res = await apiGet<ReportResponse>(`/api/erp/roznamcha/type-report?${params.toString()}`);
       setData(res);
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error("Failed to load Roznamcha report data:", err);
+      setData(null);
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    void loadData();
-    const handleSaved = () => void loadData();
-    window.addEventListener("erp:posting-saved", handleSaved);
-    window.addEventListener("erp:posting-deleted", handleSaved);
-    return () => {
-      window.removeEventListener("erp:posting-saved", handleSaved);
-      window.removeEventListener("erp:posting-deleted", handleSaved);
-    };
+    loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategory, fromDate, toDate, countryId, branchId, debitCredit, currency, status, sortBy, sortDir, page, pageSize]);
+  }, [page, pageSize, sortBy, sortDir, selectedCategory]);
+
+  const currencyOptions = useMemo<SearchSelectOption[]>(() => {
+    const list = ["AED", "USD", "PKR", "AFN", "EUR", "GBP", "SAR", "INR", "CAD", "AUD"];
+    return list.map((c) => ({ value: c, label: c }));
+  }, []);
+
+  const rows = data?.entries ?? [];
 
   function applySearch() {
     setPage(1);
-    void loadData();
+    loadData();
   }
 
   function resetFilters() {
@@ -369,129 +412,86 @@ export function RoznamchaTypeReportView({
     setReferenceNo("");
     setBillNo("");
     setStatus("all");
+    setSelectedCategory(entryCategory);
     setQ("");
     setPage(1);
+    setTimeout(loadData, 20);
   }
 
-  const rows = data?.entries ?? [];
-
-  const currencyOptions: SearchSelectOption[] = useMemo(() => {
-    const set = new Set<string>();
-    for (const row of rows) {
-      const c = primaryLine(row)?.currency;
-      if (c) set.add(c);
+  const localizedPageTitle = useMemo(() => {
+    switch (entryCategory) {
+      case "all": return tt("nav.all_roznamcha_report", "All Roznamcha Report");
+      case "business": return tt("nav.business_report", "Business Roznamcha Report");
+      case "bank": return tt("nav.bank_report_roz", "Bank Roznamcha Report");
+      case "cash": return tt("nav.cash_entry_report", "Cash Roznamcha Report");
+      case "invoice": return tt("nav.invoice_report", "Invoice Roznamcha Report");
+      case "transfer": return tt("roz.transfer_report", "Transfer Roznamcha Report");
+      default: return pageTitle;
     }
-    return Array.from(set).map((c) => ({ value: c, label: c }));
-  }, [rows]);
+  }, [entryCategory, pageTitle, currentLang]);
 
   function exportCsv() {
-    const header = [
-      "S.No",
-      "Date",
-      "Entry Serial",
-      "Country",
-      "Branch",
-      "User",
-      "Entry Type",
-      "Roznamcha Type",
-      "Account No",
-      "Account Name",
-      "Narration / Remarks",
-      "Currency",
-      "Debit",
-      "Credit",
-      "Balance",
-      "Bill/Reference No",
-      "Posting Status"
+    if (!rows.length) return;
+    const headers = [
+      tt("rozrep.sno", "S.No"),
+      tt("rozrep.date", "Date"),
+      tt("rozrep.entry_serial", "Entry Serial"),
+      tt("rozrep.country", "Country"),
+      tt("rozrep.branch", "Branch"),
+      tt("rozrep.user", "User"),
+      tt("rozrep.entry_type", "Entry Type"),
+      tt("rozrep.roznamcha_type", "Roznamcha Type"),
+      tt("rozrep.account_no", "Account No"),
+      tt("rozrep.account_name", "Account Name"),
+      tt("rozrep.narration", "Narration / Remarks"),
+      tt("rozrep.currency", "Currency"),
+      tt("rozrep.debit", "Debit"),
+      tt("rozrep.credit", "Credit"),
+      tt("rozrep.balance", "Balance"),
+      tt("rozrep.bill_ref", "Bill/Ref No"),
+      tt("rozrep.status", "Status")
     ];
-    const csvRows = rows.map((row, idx) => {
+
+    const lines = rows.map((row, idx) => {
       const line = primaryLine(row);
       const debit = Number(line?.debit || 0);
       const credit = Number(line?.credit || 0);
       return [
-        String(idx + 1 + (page - 1) * pageSize),
+        idx + 1 + (page - 1) * pageSize,
         cleanDate(row.entry_date || row.created_at),
         entrySerial(row),
         row.countries?.name ?? "-",
         branchName(row),
         row.profiles?.full_name ?? "-",
-        formatEntryType(row.source_transaction_type || row.type),
-        getCategoryLabel(row.entry_category, activeLang),
+        formatEntryType(row.source_transaction_type || row.type, currentLang),
+        getCategoryLabel(row.entry_category, currentLang),
         line?.account_number || line?.ledgers?.code || "-",
         line?.ledgers?.name ?? "-",
-        row.narration ?? "",
+        row.narration || "-",
         line?.currency ?? row.countries?.currency_code ?? "-",
-        debit ? String(debit) : "0.00",
-        credit ? String(credit) : "0.00",
-        String(credit - debit),
+        debit ? debit.toFixed(2) : "0.00",
+        credit ? credit.toFixed(2) : "0.00",
+        (credit - debit).toFixed(2),
         billNumber(row),
-        row.status
-      ];
+        formatStatus(row.status, currentLang)
+      ].map(csvEscape).join(",");
     });
-    const csv = [header, ...csvRows].map((r) => r.map((c) => csvEscape(String(c ?? ""))).join(",")).join("\r\n");
-    downloadTextFile(`roznamcha-${entryCategory}-report-${todayIso()}.csv`, csv, "text/csv");
+
+    const csvContent = "\uFEFF" + [headers.map(csvEscape).join(","), ...lines].join("\r\n");
+    downloadTextFile(`roznamcha-${selectedCategory}-${todayIso()}.csv`, csvContent, "text/csv");
   }
 
   function printReport() {
-    // Daily/period Roznamcha journal via the reusable journal print engine (real data only).
-    const scope = sessionInfo?.scopes?.summary;
-    const jrows = rows.map((row, idx) => {
-      const line = primaryLine(row);
-      const debit = Number(line?.debit || 0);
-      const credit = Number(line?.credit || 0);
-      return {
-        sno: String(idx + 1),
-        date: cleanDate(row.entry_date || row.created_at),
-        serial: entrySerial(row),
-        country: row.countries?.name ?? "",
-        branch: branchName(row),
-        user: row.profiles?.full_name ?? "",
-        type: formatEntryType(row.source_transaction_type || row.type),
-        account: line?.account_number || line?.ledgers?.code || "",
-        narration: (row.narration ?? "").slice(0, 60),
-        currency: line?.currency ?? row.countries?.currency_code ?? "",
-        debit: debit ? fmtNumber(debit) : "-",
-        credit: credit ? fmtNumber(credit) : "-",
-        status: row.status
-      };
-    });
-    openJournalReportWindow({
-      lang: currentLang,
-      autoPrint: true,
-      title: pageTitle,
-      subtitle: tt("jrn.roznamcha_journal", "Roznamcha Journal"),
-      overviewLabel: tt("jrn.overview", "Journal Overview"),
-      scopeName: pageTitle,
-      reportIdPrefix: "ROZ",
-      reportIdValue: entryCategory,
-      chips: [
-        { label: tt("jrn.date_range", "Date Range"), value: `${fromDate} â†’ ${toDate}` },
-        { label: tt("rozrep.country", "Country"), value: scope?.countryName },
-        { label: tt("rozrep.branch", "Branch"), value: scope?.branchDisplayName || scope?.branchName }
-      ],
-      kpis: [
-        { label: tt("bankroz.total_debit", "Total Debit"), value: fmtNumber(data?.totalDebit ?? 0), tone: "debit" },
-        { label: tt("bankroz.total_credit", "Total Credit"), value: fmtNumber(data?.totalCredit ?? 0), tone: "credit" },
-        { label: tt("jrn.net_balance", "Net Balance"), value: fmtNumber(data?.netBalance ?? 0), tone: "current" },
-        { label: tt("jrn.entry_count", "Entry Count"), value: String(data?.totalCount ?? rows.length), tone: "open" }
-      ],
-      columns: [
-        { key: "sno", label: tt("rozrep.sno", "S.No") },
-        { key: "date", label: tt("rozrep.date", "Date") },
-        { key: "serial", label: tt("rozrep.entry_serial", "Entry Serial") },
-        { key: "country", label: tt("rozrep.country", "Country") },
-        { key: "branch", label: tt("rozrep.branch", "Branch") },
-        { key: "user", label: tt("rozrep.user", "User") },
-        { key: "type", label: tt("rozrep.entry_type", "Entry Type") },
-        { key: "account", label: tt("rozrep.account_no", "Account No") },
-        { key: "narration", label: tt("rozrep.narration", "Narration / Remarks") },
-        { key: "currency", label: tt("rozrep.currency", "Currency") },
-        { key: "debit", label: tt("rozrep.debit", "Debit"), num: true },
-        { key: "credit", label: tt("rozrep.credit", "Credit"), num: true },
-        { key: "status", label: tt("rozrep.status", "Status") }
-      ],
-      rows: jrows,
-      totals: { debit: fmtNumber(data?.totalDebit ?? 0), credit: fmtNumber(data?.totalCredit ?? 0) }
+    if (!rows.length) return;
+    printReportTable({
+      title: localizedPageTitle,
+      subtitle: `${tt("rozrep.from_date", "From Date")}: ${fromDate || "-"}  |  ${tt("rozrep.to_date", "To Date")}: ${toDate || "-"}  |  ${tt("rozrep.total_entries", "Total Entries")}: ${data?.totalCount ?? rows.length}`,
+      rows,
+      totals: {
+        debit: data?.totalDebit ?? rows.reduce((s, r) => s + Number(primaryLine(r)?.debit || 0), 0),
+        credit: data?.totalCredit ?? rows.reduce((s, r) => s + Number(primaryLine(r)?.credit || 0), 0),
+      },
+      lang: currentLang
     });
   }
 
@@ -505,7 +505,7 @@ export function RoznamchaTypeReportView({
   }
 
   return (
-    <div className="w-full space-y-3 text-foreground animate-in fade-in duration-200">
+    <div dir={isRtl ? "rtl" : "ltr"} lang={currentLang} className="w-full space-y-3 text-foreground animate-in fade-in duration-200">
       {/* Top Standard ERP Report Toolbar Strip (Matches exact UI design) */}
       <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-200/80 bg-white/95 px-3 py-1.5 shadow-xs transition-all dark:border-slate-800 dark:bg-slate-900/90">
         <div className="flex flex-wrap items-center gap-2">
@@ -517,8 +517,8 @@ export function RoznamchaTypeReportView({
             onClick={() => router.back()}
             className="h-7 gap-1 rounded-lg border-slate-200 bg-slate-50 px-2.5 text-[10px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
-            <ChevronLeft className="h-3 w-3" />
-            Back
+            {isRtl ? <ChevronRight className="h-3 w-3" /> : <ChevronLeft className="h-3 w-3" />}
+            {tt("rozrep.back", "Back")}
           </Button>
 
           {/* Filter Drawer Toggle */}
@@ -530,12 +530,12 @@ export function RoznamchaTypeReportView({
             onClick={() => setFiltersOpen((v) => !v)}
           >
             <SlidersHorizontal className="h-3 w-3" aria-hidden />
-            {filtersOpen ? "Hide Filters" : "Search / Filters"}
+            {filtersOpen ? tt("rozrep.hide_filters", "Hide Filters") : tt("rozrep.search_filters", "Search / Filters")}
           </Button>
 
           {/* Live Search Input */}
           <div className="relative min-w-[140px] sm:min-w-[180px]">
-            <Search className="pointer-events-none absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+            <Search className={cn("pointer-events-none absolute top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground", isRtl ? "right-2" : "left-2")} />
             <Input
               type="text"
               value={q}
@@ -544,7 +544,7 @@ export function RoznamchaTypeReportView({
                 if (e.key === "Enter") applySearch();
               }}
               placeholder={tt("rozrep.filter_entries_ph", "Filter entries...")}
-              className="h-7 pl-7 pr-6 text-[11px] rounded-lg border-slate-200 bg-slate-50 focus-visible:bg-white dark:border-slate-700 dark:bg-slate-800 dark:focus-visible:bg-slate-900"
+              className={cn("h-7 text-[11px] rounded-lg border-slate-200 bg-slate-50 focus-visible:bg-white dark:border-slate-700 dark:bg-slate-800 dark:focus-visible:bg-slate-900", isRtl ? "pr-7 pl-6" : "pl-7 pr-6")}
             />
             {q && (
               <button
@@ -553,7 +553,7 @@ export function RoznamchaTypeReportView({
                   setQ("");
                   setTimeout(applySearch, 50);
                 }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                className={cn("absolute top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600", isRtl ? "left-2" : "right-2")}
               >
                 <X className="h-3 w-3" />
               </button>
@@ -570,7 +570,7 @@ export function RoznamchaTypeReportView({
             className="h-7 gap-1 rounded-lg border-slate-200 bg-slate-50 px-2 text-[10px] font-bold text-slate-700 hover:bg-slate-100 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-200 dark:hover:bg-slate-700"
           >
             <RefreshCcw className={cn("h-3 w-3", loading && "animate-spin")} />
-            Reload
+            {tt("rozrep.reload", "Reload")}
           </Button>
         </div>
 
@@ -584,7 +584,7 @@ export function RoznamchaTypeReportView({
             className="h-7 gap-1 rounded-lg border-blue-200 bg-blue-50/50 px-2.5 text-[10px] font-bold text-blue-700 hover:bg-blue-100 dark:border-blue-900/50 dark:bg-blue-950/30 dark:text-blue-400"
           >
             <MoreVertical className="h-3 w-3" />
-            Actions
+            {tt("rozrep.actions", "Actions")}
           </Button>
           {actionsMenuOpen && (
             <>
@@ -592,14 +592,14 @@ export function RoznamchaTypeReportView({
                 className="fixed inset-0 z-40"
                 onClick={() => setActionsMenuOpen(false)}
               />
-              <div className="absolute right-0 top-full mt-1 z-50 min-w-[170px] rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl animate-in fade-in zoom-in-95 dark:border-slate-800 dark:bg-slate-900">
+              <div className={cn("absolute top-full mt-1 z-50 min-w-[170px] rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl animate-in fade-in zoom-in-95 dark:border-slate-800 dark:bg-slate-900", isRtl ? "left-0" : "right-0")}>
                 <button
                   type="button"
                   onClick={() => {
                     setActionsMenuOpen(false);
                     printReport();
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-start text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 cursor-pointer"
                 >
                   <Printer className="h-3.5 w-3.5 text-blue-600" />
                   {tt("report.print_pdf_document", "Print / PDF")}
@@ -610,7 +610,7 @@ export function RoznamchaTypeReportView({
                     setActionsMenuOpen(false);
                     exportCsv();
                   }}
-                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  className="flex w-full items-center gap-2 rounded-lg px-2.5 py-1.5 text-start text-xs font-semibold text-slate-700 hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800 cursor-pointer"
                 >
                   <DownloadActionIcon className="h-3.5 w-3.5 text-emerald-600" />
                   {tt("report.export_csv", "Export CSV")}
@@ -661,14 +661,14 @@ export function RoznamchaTypeReportView({
             <div className="flex justify-between items-center">
               <span>{tt("rozrep.role_label", "ROLE:")}</span>
               <span className="font-black text-blue-600 dark:text-blue-400 uppercase">
-                {sessionInfo?.roles?.[0] ?? "SUPER ADMIN"}
+                {sessionInfo?.roles?.[0] ? formatStatus(sessionInfo.roles[0], currentLang) : "SUPER ADMIN"}
               </span>
             </div>
             <div className="flex justify-between items-center">
               <span>{tt("rozrep.datetime_label", "DATE & TIME:")}</span>
               <span className="font-bold text-slate-700 dark:text-slate-300">
-                {new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" })},{" "}
-                {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}
+                {new Date().toLocaleDateString(currentLang === "en" ? "en-GB" : currentLang, { day: "2-digit", month: "short", year: "numeric" })},{" "}
+                {new Date().toLocaleTimeString(currentLang === "en" ? "en-US" : currentLang, { hour: "2-digit", minute: "2-digit", hour12: true })}
               </span>
             </div>
             <div className="flex justify-between items-center mt-auto pt-1.5 border-t border-slate-100 dark:border-slate-800 text-[10px]">
@@ -715,7 +715,7 @@ export function RoznamchaTypeReportView({
               <Receipt className="h-3 w-3" />
             </div>
             <h4 className="text-[11px] font-black uppercase tracking-wider text-purple-800 dark:text-purple-400">
-              3. BILL ENTRIES SUMMARY
+              3. {tt("report.bill_entries_summary", "BILL ENTRIES SUMMARY")}
             </h4>
           </div>
           <div className="p-3 flex flex-col gap-1 text-[11px] font-semibold text-slate-500 dark:text-slate-400 h-full">
@@ -743,7 +743,7 @@ export function RoznamchaTypeReportView({
           type="button"
           onClick={() => setShowAllCategories(!showAllCategories)}
           className={cn(
-            "flex flex-col rounded-xl border transition-all duration-200 text-left overflow-hidden h-full group",
+            "flex flex-col rounded-xl border transition-all duration-200 text-start overflow-hidden h-full group cursor-pointer",
             showAllCategories
               ? "border-orange-500 bg-orange-50/30 shadow-md dark:border-orange-500/50 dark:bg-orange-950/20"
               : "border-slate-200 bg-white shadow-xs hover:border-orange-300 hover:shadow-md dark:border-slate-800 dark:bg-slate-900 dark:hover:border-slate-700"
@@ -771,7 +771,7 @@ export function RoznamchaTypeReportView({
                 {tt("report.active_types", "Active Types")}: <span className="font-extrabold text-orange-600">{tt("report.all_categories", "All Categories")}</span>
               </div>
               <div className="text-[10px] text-slate-500 dark:text-slate-400">
-                {tt("report.current_filter", "Current Filter")}: <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedCategory === "all" ? tt("report.all_categories", "All Categories") : getCategoryLabel(selectedCategory, activeLang)}</span>
+                {tt("report.current_filter", "Current Filter")}: <span className="font-semibold text-slate-700 dark:text-slate-300">{selectedCategory === "all" ? tt("report.all_categories", "All Categories") : getCategoryLabel(selectedCategory, currentLang)}</span>
               </div>
             </div>
             <div className="mt-2.5 flex items-center justify-between pt-1.5 border-t border-slate-100 dark:border-slate-800">
@@ -779,7 +779,7 @@ export function RoznamchaTypeReportView({
                 {showAllCategories ? tt("report.hide_details", "Hide Details") : tt("report.show_details", "Show Details")}
               </span>
               <span className="text-[9px] font-bold text-orange-600 bg-orange-100/80 dark:bg-orange-950/60 px-1.5 py-0.5 rounded">
-                {tt("report.explore", "EXPLORE")} →
+                {tt("report.explore", "EXPLORE")} {isRtl ? "←" : "→"}
               </span>
             </div>
           </div>
@@ -791,10 +791,10 @@ export function RoznamchaTypeReportView({
         <div className="rounded-xl border border-orange-200 bg-orange-50/40 p-3.5 dark:border-orange-900/50 dark:bg-orange-950/20 animate-in fade-in slide-in-from-top-2">
           <div className="flex items-center justify-between mb-2.5">
             <h3 className="text-xs font-black uppercase tracking-wider text-orange-900 dark:text-orange-300">
-              Roznamcha Entry Category Directory
+              {tt("rozrep.category_directory", "Roznamcha Entry Category Directory")}
             </h3>
             <span className="text-[10px] text-orange-700 dark:text-orange-400">
-              Click a category to filter instantly
+              {tt("rozrep.category_directory_hint", "Click a category to filter instantly")}
             </span>
           </div>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-5">
@@ -813,11 +813,11 @@ export function RoznamchaTypeReportView({
                 )}
               >
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase">{getCategoryLabel(cat, activeLang)}</span>
+                  <span className="text-xs font-black text-slate-800 dark:text-slate-200 uppercase">{getCategoryLabel(cat, currentLang)}</span>
                   <span className="text-[10px] font-mono text-slate-400">#{cat}</span>
                 </div>
                 <div className="mt-0.5 text-[10px] text-slate-500 dark:text-slate-400">
-                  {selectedCategory === cat ? "Active View" : "Click to view"}
+                  {selectedCategory === cat ? tt("rozrep.active_view", "Active View") : tt("rozrep.click_to_view", "Click to view")}
                 </div>
               </div>
             ))}
@@ -848,7 +848,7 @@ export function RoznamchaTypeReportView({
                   >
                     <option value="all">{tt("rozrep.all_types", "All Types")}</option>
                     {(["business", "bank", "cash", "invoice", "transfer"] as RoznamchaEntryCategory[]).map((value) => (
-                      <option key={value} value={value}>{getCategoryLabel(value, activeLang)}</option>
+                      <option key={value} value={value}>{getCategoryLabel(value, currentLang)}</option>
                     ))}
                   </select>
                 </div>
@@ -866,10 +866,10 @@ export function RoznamchaTypeReportView({
                 </select>
               </div>
               <SearchSelect
-                label="Currency"
+                label={tt("rozrep.currency_label", "Currency")}
                 value={currency}
                 placeholder={tt("rozrep.all", "All")}
-                options={[{ value: "all", label: "All" }, ...currencyOptions]}
+                options={[{ value: "all", label: tt("rozrep.all", "All") }, ...currencyOptions]}
                 onValueChange={setCurrency}
               />
               <div className="space-y-1">
@@ -891,13 +891,17 @@ export function RoznamchaTypeReportView({
                 <Input className="h-8 text-xs" value={referenceNo} onChange={(e) => setReferenceNo(e.target.value)} placeholder={tt("rozrep.reference_ph", "Reference number")} />
               </div>
               <div className="space-y-1">
-                <Label className="text-[10px] text-muted-foreground">Bill No</Label>
-                <Input className="h-8 text-xs" value={billNo} onChange={(e) => setBillNo(e.target.value)} placeholder="Bill number" />
+                <Label className="text-[10px] text-muted-foreground">{tt("rozrep.bill_no", "Bill No")}</Label>
+                <Input className="h-8 text-xs" value={billNo} onChange={(e) => setBillNo(e.target.value)} placeholder={tt("rozrep.bill_no_ph", "Bill number")} />
               </div>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button type="button" size="sm" className="h-7 text-xs" onClick={applySearch} disabled={loading}>Apply</Button>
-              <Button type="button" size="sm" variant="secondary" className="h-7 text-xs" onClick={resetFilters} disabled={loading}>Reset</Button>
+              <Button type="button" size="sm" className="h-7 text-xs" onClick={applySearch} disabled={loading}>
+                {tt("rozrep.apply_filter", "Apply")}
+              </Button>
+              <Button type="button" size="sm" variant="secondary" className="h-7 text-xs" onClick={resetFilters} disabled={loading}>
+                {tt("rozrep.reset_filter", "Reset")}
+              </Button>
             </div>
           </CardContent>
         </Card>
@@ -907,10 +911,10 @@ export function RoznamchaTypeReportView({
       <Card className="border-slate-200/80 shadow-xs">
         <CardHeader className="py-2 px-3 flex flex-row items-center justify-between border-b border-slate-100 dark:border-slate-800">
           <CardTitle className="text-xs font-bold text-slate-700 dark:text-slate-300">
-            Total Entries: <span className="font-extrabold text-blue-600 dark:text-blue-400">{data?.totalCount ?? 0}</span>
+            {tt("rozrep.total_entries", "Total Entries")}: <span className="font-extrabold text-blue-600 dark:text-blue-400">{data?.totalCount ?? 0}</span>
           </CardTitle>
           <div className="text-[10.5px] font-semibold text-slate-500">
-            Showing Page {page} of {Math.ceil((data?.totalCount ?? 0) / pageSize) || 1}
+            {tt("rozrep.showing_page", "Showing Page")} {page} {tt("rozrep.of", "of")} {Math.ceil((data?.totalCount ?? 0) / pageSize) || 1}
           </div>
         </CardHeader>
         <CardContent className="p-0">
@@ -918,33 +922,33 @@ export function RoznamchaTypeReportView({
             <table className="w-full min-w-[1400px] border-collapse text-xs">
               <thead className="bg-slate-900 text-white">
                 <tr>
-                  <ReportTh>{tt("rozrep.sno", "S.No")}</ReportTh>
+                  <ReportTh className="text-center">{tt("rozrep.sno", "S.No")}</ReportTh>
                   <th
                     className="p-2.5 text-center font-bold cursor-pointer select-none hover:bg-slate-800 whitespace-nowrap"
                     onClick={() => toggleSort("entry_date")}
                   >
-                    {tt("rozrep.date", "Date")} {sortBy === "entry_date" ? (sortDir === "asc" ? "â†‘" : "â†“") : ""}
+                    {tt("rozrep.date", "Date")}{sortBy === "entry_date" ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
                   </th>
-                  <ReportTh>{tt("rozrep.entry_serial", "Entry Serial")}</ReportTh>
-                  <ReportTh>{tt("rozrep.country", "Country")}</ReportTh>
-                  <ReportTh>{tt("rozrep.branch", "Branch")}</ReportTh>
-                  <ReportTh>{tt("rozrep.user", "User")}</ReportTh>
-                  <ReportTh>{tt("rozrep.entry_type", "Entry Type")}</ReportTh>
-                  <ReportTh>{tt("rozrep.roznamcha_type", "Roznamcha Type")}</ReportTh>
-                  <ReportTh>{tt("rozrep.account_no", "Account No")}</ReportTh>
+                  <ReportTh className="text-center">{tt("rozrep.entry_serial", "Entry Serial")}</ReportTh>
+                  <ReportTh className="text-center">{tt("rozrep.country", "Country")}</ReportTh>
+                  <ReportTh className="text-center">{tt("rozrep.branch", "Branch")}</ReportTh>
+                  <ReportTh className="text-center">{tt("rozrep.user", "User")}</ReportTh>
+                  <ReportTh className="text-center">{tt("rozrep.entry_type", "Entry Type")}</ReportTh>
+                  <ReportTh className="text-center">{tt("rozrep.roznamcha_type", "Roznamcha Type")}</ReportTh>
+                  <ReportTh className="text-center">{tt("rozrep.account_no", "Account No")}</ReportTh>
                   <ReportTh className="text-start">{tt("rozrep.account_name", "Account Name")}</ReportTh>
                   <ReportTh className="text-start">{tt("rozrep.narration", "Narration / Remarks")}</ReportTh>
-                  <ReportTh>{tt("rozrep.currency", "Currency")}</ReportTh>
-                  <ReportTh className="text-right">{tt("rozrep.debit", "Debit")}</ReportTh>
-                  <ReportTh className="text-right">{tt("rozrep.credit", "Credit")}</ReportTh>
-                  <ReportTh className="text-right">{tt("rozrep.balance", "Balance")}</ReportTh>
-                  <ReportTh>{tt("rozrep.bill_ref", "Bill/Ref No")}</ReportTh>
-                  <ReportTh>{tt("rozrep.status", "Status")}</ReportTh>
+                  <ReportTh className="text-center">{tt("rozrep.currency", "Currency")}</ReportTh>
+                  <ReportTh className="text-end">{tt("rozrep.debit", "Debit")}</ReportTh>
+                  <ReportTh className="text-end">{tt("rozrep.credit", "Credit")}</ReportTh>
+                  <ReportTh className="text-end">{tt("rozrep.balance", "Balance")}</ReportTh>
+                  <ReportTh className="text-center">{tt("rozrep.bill_ref", "Bill/Ref No")}</ReportTh>
+                  <ReportTh className="text-center">{tt("rozrep.status", "Status")}</ReportTh>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <tr><td colSpan={17} className="p-8 text-center text-sm text-muted-foreground">Loading Entries...</td></tr>
+                  <tr><td colSpan={17} className="p-8 text-center text-sm text-muted-foreground">{tt("rozrep.loading_entries", "Loading Entries...")}</td></tr>
                 ) : rows.length ? (
                   rows.map((row, idx) => {
                     const line = primaryLine(row);
@@ -963,7 +967,7 @@ export function RoznamchaTypeReportView({
                         <ReportTd className="text-center whitespace-nowrap">{branchName(row)}</ReportTd>
                         <ReportTd className="text-center whitespace-nowrap">{row.profiles?.full_name ?? "-"}</ReportTd>
                         <ReportTd className="text-center whitespace-nowrap font-medium text-[11px]">
-                          {formatEntryType(row.source_transaction_type || row.type)}
+                          {formatEntryType(row.source_transaction_type || row.type, currentLang)}
                         </ReportTd>
                         <ReportTd className="text-center whitespace-nowrap font-semibold">
                           {getCategoryLabel(row.entry_category, currentLang)}
@@ -971,7 +975,7 @@ export function RoznamchaTypeReportView({
                         <ReportTd className="text-center font-mono font-bold text-slate-700 dark:text-slate-300 whitespace-nowrap">
                           {line?.account_number || line?.ledgers?.code || "-"}
                         </ReportTd>
-                        <ReportTd className="font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
+                        <ReportTd className="text-start font-semibold text-slate-900 dark:text-slate-100 whitespace-nowrap">
                           {line?.ledgers?.name ?? "-"}
                         </ReportTd>
                         <ReportTd className="text-start max-w-[240px] truncate text-slate-600 dark:text-slate-300">
@@ -980,9 +984,9 @@ export function RoznamchaTypeReportView({
                         <ReportTd className="text-center font-mono font-bold text-slate-700 dark:text-slate-300">
                           {line?.currency ?? row.countries?.currency_code ?? "-"}
                         </ReportTd>
-                        <ReportTd className="text-right font-mono font-bold text-rose-600">{debit ? fmtNumber(debit) : "-"}</ReportTd>
-                        <ReportTd className="text-right font-mono font-bold text-emerald-600">{credit ? fmtNumber(credit) : "-"}</ReportTd>
-                        <ReportTd className="text-right font-mono font-bold">{fmtNumber(credit - debit)}</ReportTd>
+                        <ReportTd className="text-end font-mono font-bold text-rose-600">{debit ? fmtNumber(debit) : "-"}</ReportTd>
+                        <ReportTd className="text-end font-mono font-bold text-emerald-600">{credit ? fmtNumber(credit) : "-"}</ReportTd>
+                        <ReportTd className="text-end font-mono font-bold">{fmtNumber(credit - debit)}</ReportTd>
                         <ReportTd className="text-center font-mono text-[11px] whitespace-nowrap">{billNumber(row)}</ReportTd>
                         <ReportTd className="text-center whitespace-nowrap">
                           <span className={cn(
@@ -991,14 +995,14 @@ export function RoznamchaTypeReportView({
                               ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300 border border-emerald-300/40"
                               : "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300 border border-amber-300/40"
                           )}>
-                            {row.status}
+                            {formatStatus(row.status, currentLang)}
                           </span>
                         </ReportTd>
                       </tr>
                     );
                   })
                 ) : (
-                  <tr><td colSpan={17} className="p-8 text-center text-sm text-muted-foreground">No entries found for the selected filters.</td></tr>
+                  <tr><td colSpan={17} className="p-8 text-center text-sm text-muted-foreground">{tt("rozrep.no_entries_found", "No entries found for the selected filters.")}</td></tr>
                 )}
               </tbody>
             </table>

@@ -56,6 +56,16 @@ async function main() {
     }
   }
 
+  // Ensure .next and .next/server have type: commonjs to avoid ES Module conflicts with package.json "type": "module"
+  try {
+    const serverDir = path.join(nextDir, "server");
+    fs.mkdirSync(serverDir, { recursive: true });
+    fs.writeFileSync(path.join(nextDir, "package.json"), JSON.stringify({ type: "commonjs" }), "utf8");
+    fs.writeFileSync(path.join(serverDir, "package.json"), JSON.stringify({ type: "commonjs" }), "utf8");
+  } catch (pkgErr) {
+    // Ignore
+  }
+
   const { startServer } = require("next/dist/server/lib/start-server");
 
   const allowRetry = process.env.NEXT_DEV_ALLOW_RETRY === "1";

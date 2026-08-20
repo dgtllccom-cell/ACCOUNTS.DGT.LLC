@@ -581,10 +581,10 @@ export function RoznamchaReportView({
               </div>
               <div className="flex flex-wrap gap-2 xl:justify-end">
                 <Button type="button" size="sm" onClick={applyFilters} disabled={loading}>
-                  Apply
+                  {t(lang, "rozrep.apply_filter", "Apply")}
                 </Button>
                 <Button type="button" size="sm" variant="secondary" onClick={resetFilters} disabled={loading}>
-                  Reset
+                  {t(lang, "rozrep.reset_filter", "Reset")}
                 </Button>
               </div>
             </div>
@@ -593,11 +593,11 @@ export function RoznamchaReportView({
       ) : null}
 
       <div className="grid gap-3 md:grid-cols-2 xl:col-span-2 xl:grid-cols-5">
-        <StatCard label="Entries" value={String(summary.entries)} tone="text-slate-950 dark:text-slate-100" />
-        <StatCard label="Countries" value={String(summary.countries)} tone="text-sky-700" />
-        <StatCard label="Debit Total" value={fmtNumber(summary.debit)} tone="text-rose-600" />
-        <StatCard label="Credit Total" value={fmtNumber(summary.credit)} tone="text-emerald-600" />
-        <StatCard label="Remaining Balance" value={fmtNumber(summary.balance)} tone="text-slate-950 dark:text-slate-100" />
+        <StatCard label={t(lang, "rozrep.total_entries", "Entries")} value={String(summary.entries)} tone="text-slate-950 dark:text-slate-100" />
+        <StatCard label={t(lang, "rozrep.country", "Countries")} value={String(summary.countries)} tone="text-sky-700" />
+        <StatCard label={t(lang, "bankroz.total_debit", "Debit Total")} value={fmtNumber(summary.debit)} tone="text-rose-600" />
+        <StatCard label={t(lang, "bankroz.total_credit", "Credit Total")} value={fmtNumber(summary.credit)} tone="text-emerald-600" />
+        <StatCard label={t(lang, "jrn.net_balance", "Remaining Balance")} value={fmtNumber(summary.balance)} tone="text-slate-950 dark:text-slate-100" />
       </div>
 
       <Card id="roznamcha-entries-table" className="border-slate-200/80 shadow-sm">
