@@ -45,20 +45,22 @@ export async function GET(request: NextRequest, props: { params: Promise<{ id: s
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
-    if (!employee) {
+    const record = Array.isArray(employee) ? employee[0] : employee;
+    if (!record) {
       return NextResponse.json({ error: "Employee not found" }, { status: 404 });
     }
+    let employeeData = record;
 
     const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
     // Always resolve — see customers/[id]/route.ts for why skipping lang === "en" would leak
     // non-English source text into the English view.
-    if (employee.person) {
-      const [resolved] = await localizeRecordNames([employee.person as any], "customers", "customer_name", lang);
+    if (employeeData.person) {
+      const [resolved] = await localizeRecordNames([employeeData.person as any], "customers", "customer_name", lang);
       const [resolved2] = await localizeRecordNames([resolved], "customers", "company_name", lang);
-      employee = { ...employee, person: resolved2 };
+      employeeData = { ...employeeData, person: resolved2 };
     }
 
-    return NextResponse.json({ employee });
+    return NextResponse.json({ employee: employeeData });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
