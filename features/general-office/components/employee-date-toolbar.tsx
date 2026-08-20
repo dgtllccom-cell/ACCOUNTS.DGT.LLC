@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { ChevronLeft, ChevronRight, Calendar, Filter, RotateCcw } from "lucide-react";
 import { t } from "@/lib/i18n/ui";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 
@@ -40,63 +40,126 @@ export function inRange(dateStr: string | null | undefined, range: DateRange): b
   return true;
 }
 
-export function EmployeeDateToolbar({ lang, value, onChange }: { lang: SupportedLanguage; value: DateRange; onChange: (r: DateRange) => void }) {
+export function EmployeeDateToolbar({
+  lang,
+  value,
+  onChange
+}: {
+  lang: SupportedLanguage;
+  value: DateRange;
+  onChange: (r: DateRange) => void;
+}) {
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
-  // Central dictionary only — no per-component translation table (all god.* keys live in ui.ts).
   const tt = (k: string, f: string) => t(lang, k as never, f);
   const today = useMemo(() => iso(new Date()), []);
   const [customFrom, setCustomFrom] = useState(value.from || today);
   const [customTo, setCustomTo] = useState(value.to || today);
 
-  const set = (mode: DateMode, anchor = value.anchor) => onChange(computeRange(mode, anchor));
-  const presetBtn = (mode: DateMode, key: string, fallback: string) => (
-    <button type="button" onClick={() => set(mode)}
-      className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${value.mode === mode ? "bg-emerald-600 text-white" : "bg-slate-100 text-slate-600 hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300"}`}>
-      {tt(key, fallback)}
-    </button>
-  );
+  const handleModeChange = (newMode: DateMode) => {
+    if (newMode === "custom") {
+      onChange({ mode: "custom", anchor: customFrom, from: customFrom, to: customTo });
+    } else {
+      onChange(computeRange(newMode, value.anchor));
+    }
+  };
 
-  const label = value.mode === "all"
-    ? tt("god.all_dates", "All Dates")
-    : value.from === value.to ? value.from : `${value.from || "…"} → ${value.to || "…"}`;
+  const label =
+    value.mode === "all"
+      ? tt("god.all_dates", "All Dates")
+      : value.from === value.to
+      ? value.from
+      : `${value.from || "…"} → ${value.to || "…"}`;
 
   return (
-    <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-slate-200 bg-white p-2.5 dark:border-slate-800 dark:bg-slate-900" dir={isRtl ? "rtl" : "ltr"}>
-      {/* Day stepper */}
-      <div className="flex items-center gap-1">
-        <button type="button" onClick={() => onChange(computeRange("day", addDays(value.anchor, -1)))}
-          className="rounded-lg border border-slate-200 p-1.5 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800" title={tt("god.prev_day", "Previous Day")}>
-          <ChevronLeft className="h-4 w-4" />
-        </button>
-        <input type="date" value={value.anchor} onChange={(e) => onChange(computeRange(value.mode === "all" || value.mode === "custom" ? "day" : value.mode, e.target.value))}
-          className="h-8 rounded-lg border border-slate-200 bg-background px-2 text-xs dark:border-slate-700" />
-        <button type="button" onClick={() => onChange(computeRange("day", addDays(value.anchor, 1)))}
-          className="rounded-lg border border-slate-200 p-1.5 hover:bg-slate-50 dark:border-slate-700 dark:hover:bg-slate-800" title={tt("god.next_day", "Next Day")}>
-          <ChevronRight className="h-4 w-4" />
-        </button>
+    <div
+      className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50/70 p-2.5 dark:border-slate-800 dark:bg-slate-900/60"
+      dir={isRtl ? "rtl" : "ltr"}
+    >
+      {/* Left: Quick Date Preset Dropdown & Date Stepper */}
+      <div className="flex flex-wrap items-center gap-2">
+        {/* Preset Select Dropdown */}
+        <div className="relative">
+          <select
+            value={value.mode}
+            onChange={(e) => handleModeChange(e.target.value as DateMode)}
+            className="h-8.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-semibold text-slate-700 shadow-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-200"
+          >
+            <option value="day">{tt("god.today", "Today / Selected Day")}</option>
+            <option value="week">{tt("god.this_week", "This Week")}</option>
+            <option value="month">{tt("god.this_month", "This Month")}</option>
+            <option value="last30">{tt("god.last_30", "Last 30 Days")}</option>
+            <option value="all">{tt("god.all_dates", "All Dates")}</option>
+            <option value="custom">{tt("god.custom_range", "Custom Range (تاریخ کا انتخاب)")}</option>
+          </select>
+        </div>
+
+        {/* Day Stepper Controls (when mode is day) */}
+        {value.mode === "day" && (
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => onChange(computeRange("day", addDays(value.anchor, -1)))}
+              className="h-8.5 w-8.5 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300"
+              title={tt("god.prev_day", "Previous Day")}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <input
+              type="date"
+              value={value.anchor}
+              onChange={(e) => onChange(computeRange("day", e.target.value))}
+              className="h-8.5 rounded-lg border border-slate-200 bg-white px-2 text-xs font-medium dark:border-slate-700 dark:bg-slate-950"
+            />
+            <button
+              type="button"
+              onClick={() => onChange(computeRange("day", addDays(value.anchor, 1)))}
+              className="h-8.5 w-8.5 rounded-lg border border-slate-200 bg-white flex items-center justify-center text-slate-600 hover:bg-slate-100 dark:border-slate-700 dark:bg-slate-950 dark:text-slate-300"
+              title={tt("god.next_day", "Next Day")}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onChange(computeRange("day", today))}
+              className="h-8.5 rounded-lg bg-sky-600 px-2.5 text-xs font-bold text-white hover:bg-sky-700"
+            >
+              {tt("god.today", "Today")}
+            </button>
+          </div>
+        )}
+
+        {/* Custom Range Inputs (when mode is custom) */}
+        {value.mode === "custom" && (
+          <div className="flex items-center gap-1.5 text-xs">
+            <span className="text-muted-foreground font-medium">{tt("god.from_date", "From")}:</span>
+            <input
+              type="date"
+              value={customFrom}
+              onChange={(e) => setCustomFrom(e.target.value)}
+              className="h-8.5 rounded-lg border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-950"
+            />
+            <span className="text-muted-foreground font-medium">{tt("god.to_date", "To")}:</span>
+            <input
+              type="date"
+              value={customTo}
+              onChange={(e) => setCustomTo(e.target.value)}
+              className="h-8.5 rounded-lg border border-slate-200 bg-white px-2 text-xs dark:border-slate-700 dark:bg-slate-950"
+            />
+            <button
+              type="button"
+              onClick={() => onChange({ mode: "custom", anchor: customFrom, from: customFrom, to: customTo })}
+              className="h-8.5 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white hover:bg-emerald-700"
+            >
+              {tt("god.apply", "Apply")}
+            </button>
+          </div>
+        )}
       </div>
-      <button type="button" onClick={() => onChange(computeRange("day", today))}
-        className="rounded-lg bg-blue-600 px-2.5 py-1 text-xs font-bold text-white hover:bg-blue-700">{tt("god.today", "Today")}</button>
 
-      <div className="mx-1 h-5 w-px bg-slate-200 dark:bg-slate-700" />
-      {presetBtn("week", "god.this_week", "This Week")}
-      {presetBtn("month", "god.this_month", "This Month")}
-      {presetBtn("last30", "god.last_30", "Last 30 Days")}
-      {presetBtn("all", "god.all_dates", "All Dates")}
-
-      {/* Custom range */}
-      <div className="mx-1 h-5 w-px bg-slate-200 dark:bg-slate-700" />
-      <div className="flex items-center gap-1 text-xs">
-        <span className="text-slate-400">{tt("god.from_date", "From")}</span>
-        <input type="date" value={customFrom} onChange={(e) => setCustomFrom(e.target.value)} className="h-8 rounded-lg border border-slate-200 bg-background px-1.5 dark:border-slate-700" />
-        <span className="text-slate-400">{tt("god.to_date", "To")}</span>
-        <input type="date" value={customTo} onChange={(e) => setCustomTo(e.target.value)} className="h-8 rounded-lg border border-slate-200 bg-background px-1.5 dark:border-slate-700" />
-        <button type="button" onClick={() => onChange({ mode: "custom", anchor: customFrom, from: customFrom, to: customTo })}
-          className="rounded-lg bg-slate-700 px-2 py-1 font-bold text-white hover:bg-slate-800">{tt("god.apply", "Apply")}</button>
-      </div>
-
-      <div className="ms-auto flex items-center gap-1 text-xs font-bold text-slate-500">
-        <Calendar className="h-3.5 w-3.5" /> {label}
+      {/* Right: Active Date Range Badge Indicator */}
+      <div className="flex items-center gap-1.5 text-xs font-bold text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-950 px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-800 shadow-sm">
+        <Calendar className="h-3.5 w-3.5 text-sky-600" />
+        <span>{label}</span>
       </div>
     </div>
   );

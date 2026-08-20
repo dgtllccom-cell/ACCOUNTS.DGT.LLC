@@ -651,38 +651,33 @@ export function GeneralOfficeDashboardView() {
 
   return (
     <div className={cn("space-y-6 pb-16 min-h-screen", isRtl && "text-right")} dir={isRtl ? "rtl" : "ltr"}>
-      {/* ── Top Executive Banner ── */}
-      <div className="relative overflow-hidden rounded-3xl border border-slate-800 bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 p-6 md:p-8 text-white shadow-xl">
-        <div className="relative z-10 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-          <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold text-emerald-400">
-              <ShieldCheck className="h-3.5 w-3.5" />
-              {tr("General Office Enterprise Management")}
-            </div>
-            <h1 className="mt-3 text-2xl md:text-3xl font-extrabold tracking-tight text-white">
-              {t.title}
-            </h1>
-            <p className="mt-1 max-w-2xl text-xs md:text-sm text-slate-300">
-              {t.subtitle}
-            </p>
+      {/* ── Top Header with Actions ── */}
+      <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-slate-800 pb-4">
+        <div>
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-bold text-emerald-700 dark:text-emerald-400">
+            <ShieldCheck className="h-3.5 w-3.5" />
+            {tr("General Office Enterprise Management")}
           </div>
-
-          <div className="flex flex-wrap items-center gap-2.5">
-            <Button
-              onClick={() => {
-                setSelectedEmployeeId(null);
-                setShowFormModal(true);
-              }}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-lg shadow-emerald-600/20"
-            >
-              <UserPlus className={cn("h-4 w-4", isRtl ? "ml-2" : "mr-2")} />
-              {t.registerBtn}
-            </Button>
-          </div>
+          <h1 className="mt-2 text-2xl md:text-3xl font-black tracking-tight text-slate-900 dark:text-slate-100">
+            {t.title}
+          </h1>
+          <p className="mt-0.5 max-w-2xl text-xs text-muted-foreground">
+            {t.subtitle}
+          </p>
         </div>
 
-        {/* Ambient light glow */}
-        <div className="absolute top-0 right-0 h-64 w-64 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+        <div className="flex flex-wrap items-center gap-2.5">
+          <Button
+            onClick={() => {
+              setSelectedEmployeeId(null);
+              setShowFormModal(true);
+            }}
+            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl shadow-sm gap-2"
+          >
+            <UserPlus className={cn("h-4 w-4", isRtl ? "ml-1.5" : "mr-1.5")} />
+            {t.registerBtn}
+          </Button>
+        </div>
       </div>
 
       {/* ── STANDARDIZED 5 KPI SUMMARY CARDS GRID ── */}
