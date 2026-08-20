@@ -2616,16 +2616,15 @@ Amount: ${row.totalAmount.toLocaleString()} ${row.currencyType}`);
                   ))}
                 </select>
               </div>
-            </div>
-
-            <div className="pt-4 flex justify-end">
-              <Button
-                onClick={() => setScopeConfirmed(true)}
-                disabled={!form.countryId || !form.countryBranchId}
-                className="bg-primary text-primary-foreground font-bold h-8 text-xs px-6"
-              >
-                Confirm Scope
-              </Button>
+              <div className="pt-4 flex justify-end">
+                <Button
+                  onClick={() => setScopeConfirmed(true)}
+                  disabled={!form.countryId || !form.countryBranchId}
+                  className="bg-[#0F172A] hover:bg-slate-800 text-white font-bold h-9 text-xs px-6 rounded-lg shadow-sm disabled:opacity-50 disabled:bg-slate-300 disabled:text-slate-500"
+                >
+                  Confirm Working Scope &rarr;
+                </Button>
+              </div>
             </div>
           </div>
         </SimpleModal>

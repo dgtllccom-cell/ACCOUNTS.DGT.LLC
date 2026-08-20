@@ -325,66 +325,66 @@ export function WarehouseManagement() {
             <div className="border-b bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{message}</div>
           ) : null}
 
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-left text-sm">
-              <thead className="bg-slate-50 text-[11px] uppercase tracking-[0.16em] text-slate-500">
+          <div className="w-full overflow-x-auto">
+            <table className="min-w-full text-left text-xs border-collapse">
+              <thead className="bg-slate-50 dark:bg-slate-950/60 text-[10.5px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <tr>
-                  <th className="px-4 py-3 font-semibold">Warehouse</th>
-                  <th className="px-4 py-3 font-semibold">Owner</th>
-                  <th className="px-4 py-3 font-semibold">Country</th>
-                  <th className="px-4 py-3 font-semibold">City / Area</th>
-                  <th className="px-4 py-3 font-semibold">Type</th>
-                  <th className="px-4 py-3 font-semibold">Status</th>
-                  <th className="px-4 py-3 font-semibold text-right">Actions</th>
+                  <th className="h-10 px-4 py-2 font-bold">Warehouse</th>
+                  <th className="h-10 px-4 py-2 font-bold">Owner</th>
+                  <th className="h-10 px-4 py-2 font-bold">Country</th>
+                  <th className="h-10 px-4 py-2 font-bold">City / Area</th>
+                  <th className="h-10 px-4 py-2 font-bold">Type</th>
+                  <th className="h-10 px-4 py-2 font-bold">Status</th>
+                  <th className="h-10 px-4 py-2 font-bold text-right">Actions</th>
                 </tr>
               </thead>
-              <tbody>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-500">
+                    <td colSpan={7} className="px-4 py-10 text-center text-xs text-slate-400">
                       Loading warehouses...
                     </td>
                   </tr>
                 ) : filteredWarehouses.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-10 text-center text-sm text-slate-500">
+                    <td colSpan={7} className="px-4 py-10 text-center text-xs text-slate-400">
                       No warehouse records matched the current search and filter.
                     </td>
                   </tr>
                 ) : (
                   filteredWarehouses.map((warehouse) => {
-                    const countryName = locationMaps.countries.get(warehouse.country_id || "") || "-";
-                    const cityName = locationMaps.cities.get(warehouse.city_id || "") || locationMaps.states.get(warehouse.state_province_id || "") || "-";
+                    const countryName = locationMaps.countries.get(warehouse.country_id || "") || "—";
+                    const cityName = locationMaps.cities.get(warehouse.city_id || "") || locationMaps.states.get(warehouse.state_province_id || "") || "—";
                     const areaName = locationMaps.areas.get(warehouse.area_id || "") || "";
                     return (
-                      <tr key={warehouse.id} className="border-t align-top">
-                        <td className="px-4 py-3">
-                          <div className="font-semibold text-slate-900">{warehouse.warehouse_name}</div>
-                          <div className="mt-1 text-xs text-slate-500">{warehouse.full_address || "No address recorded"}</div>
+                      <tr key={warehouse.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors border-b border-slate-100 dark:border-slate-800/80">
+                        <td className="px-4 py-2.5">
+                          <div className="font-bold text-slate-900 dark:text-slate-100">{warehouse.warehouse_name}</div>
+                          <div className="text-[10.5px] text-slate-400">{warehouse.full_address || "No address recorded"}</div>
                         </td>
-                        <td className="px-4 py-3">
-                          <div className="font-medium text-slate-800">{warehouse.owner_name || "-"}</div>
+                        <td className="px-4 py-2.5">
+                          <div className="font-semibold text-slate-800 dark:text-slate-200">{warehouse.owner_name || "—"}</div>
                         </td>
-                        <td className="px-4 py-3 text-slate-700">{countryName}</td>
-                        <td className="px-4 py-3 text-slate-700">
-                          <div>{cityName}</div>
-                          {areaName ? <div className="text-xs text-slate-500">{areaName}</div> : null}
+                        <td className="px-4 py-2.5 text-slate-700 dark:text-slate-300">{countryName}</td>
+                        <td className="px-4 py-2.5 text-slate-700 dark:text-slate-300">
+                          <div className="font-medium">{cityName}</div>
+                          {areaName ? <div className="text-[10px] text-slate-400">{areaName}</div> : null}
                         </td>
-                        <td className="px-4 py-3 text-slate-700">{warehouse.warehouse_type}</td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-2.5 text-slate-700 dark:text-slate-300 font-medium">{warehouse.warehouse_type}</td>
+                        <td className="px-4 py-2.5">
                           <span
-                            className={`inline-flex rounded-full px-2.5 py-1 text-[11px] font-semibold ${
+                            className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider min-w-[70px] text-center ${
                               warehouse.status === "Active"
-                                ? "bg-emerald-50 text-emerald-700"
+                                ? "bg-emerald-100 text-emerald-800 border border-emerald-200 dark:bg-emerald-950/50 dark:text-emerald-300 dark:border-emerald-800/40"
                                 : warehouse.status === "Inactive"
-                                ? "bg-slate-100 text-slate-700"
-                                : "bg-amber-50 text-amber-700"
+                                ? "bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+                                : "bg-amber-100 text-amber-800 border border-amber-200 dark:bg-amber-950/50 dark:text-amber-300 dark:border-amber-800/40"
                             }`}
                           >
                             {warehouse.status}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-right">
+                        <td className="px-4 py-2.5 text-right">
                           <UnifiedActionMenu
                             onView={() => setViewWarehouse(warehouse)}
                             onEdit={() => {

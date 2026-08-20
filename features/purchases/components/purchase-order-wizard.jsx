@@ -3645,9 +3645,9 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
               <Button
                 onClick={() => setScopeConfirmed(true)}
                 disabled={!form.countryId || !form.countryBranchId}
-                className="bg-primary text-primary-foreground font-bold h-8 text-xs px-6"
+                className="bg-[#0F172A] hover:bg-slate-800 text-white font-bold h-9 text-xs px-6 rounded-lg shadow-sm disabled:opacity-50 disabled:bg-slate-300 disabled:text-slate-500"
               >
-                {t(lang, "purchase.confirm_scope", "Confirm Scope")}
+                {t(lang, "purchase.confirm_scope", "Confirm Scope")} &rarr;
               </Button>
             </div>
           </div>

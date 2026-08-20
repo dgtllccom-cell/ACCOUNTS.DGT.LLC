@@ -31,6 +31,7 @@ import { deriveSalesBookingPostingState } from "@/lib/services/sales-booking-pos
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/verified-record-translations";
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
+import { ERP_TABLE_STYLES } from "@/components/ui/erp-data-table";
 
 type SalesOrder = {
   [key: string]: any;
@@ -318,181 +319,186 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
       </div>
 
       {/* Master Data Grid with grouped header columns */}
-      <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-xs">
-        <table className="min-w-full text-xs text-left text-slate-700 whitespace-nowrap">
-          <thead className="bg-slate-150 text-slate-800 text-[10px] font-black uppercase tracking-wider">
-            {/* Group Header Row */}
-            <tr className="border-b border-slate-200 text-center">
-              <Th colSpan={9} className="px-3 py-2.5 bg-blue-50/70 text-blue-900 font-extrabold border-r border-slate-200">General Information</Th>
-              <Th colSpan={2} className="px-3 py-2.5 bg-purple-50/70 text-purple-900 font-extrabold border-r border-slate-200">Account Mappings</Th>
-              <Th colSpan={7} className="px-3 py-2.5 bg-emerald-50/70 text-emerald-900 font-extrabold border-r border-slate-200">Product Details</Th>
-              <Th colSpan={9} className="px-3 py-2.5 bg-indigo-50/70 text-indigo-900 font-extrabold border-r border-slate-200">Financial Metrics</Th>
-              <Th colSpan={1} className="px-3 py-2.5 bg-slate-100 text-slate-800 font-extrabold">Actions</Th>
-            </tr>
-            {/* Column Headers Row */}
-            <tr className="bg-slate-50 border-b border-slate-250 text-[9px]">
-              {/* General */}
-              <Th className="px-3 py-2.5 border-r border-slate-200">Journal Serial</Th>
-              <Th className="px-3 py-2.5 border-r border-slate-200">Country Serial</Th>
-              <Th className="px-3 py-2.5 border-r border-slate-200">Branch Serial</Th>
-              <Th className="px-3 py-2.5 border-r border-slate-200">Sales Order No</Th>
-              <Th className="px-3 py-2.5 border-r border-slate-200">Date</Th>
-              <Th className="px-3 py-2.5 border-r border-slate-200">Customer</Th>
-              <Th className="px-3 py-2.5 border-r border-slate-200">User</Th>
-              <Th className="px-3 py-2.5 border-r border-slate-200">Branch</Th>
-              <Th className="px-3 py-2.5 border-r border-slate-200">Country</Th>
-              
-              {/* Accounts */}
-              <Th className="px-3 py-2.5 border-r border-slate-200">Sales Account</Th>
-              <Th className="px-3 py-2.5 border-r border-slate-200">Purchase Account</Th>
-              
-              {/* Product */}
-              <Th className="px-3 py-2.5 border-r border-slate-200">Goods Name</Th>
-              <Th className="px-3 py-2.5 border-r border-slate-200">Brand</Th>
-              <Th className="px-3 py-2.5 border-r border-slate-200">Goods Size</Th>
-              <Th className="px-3 py-2.5 text-right border-r border-slate-200">Quantity</Th>
-              <Th className="px-3 py-2.5 border-r border-slate-200">Unit</Th>
-              <Th className="px-3 py-2.5 text-right border-r border-slate-200">Gross Wt (KG)</Th>
-              <Th className="px-3 py-2.5 text-right border-r border-slate-200">Net Wt (KG)</Th>
-
-              {/* Financials */}
-              <Th className="px-3 py-2.5 border-r border-slate-200">Pur Currency</Th>
-              <Th className="px-3 py-2.5 text-right border-r border-slate-200">Ex. Rate</Th>
-              <Th className="px-3 py-2.5 border-r border-slate-200">Final Currency</Th>
-              <Th className="px-3 py-2.5 text-right border-r border-slate-200">Pur Amount</Th>
-              <Th className="px-3 py-2.5 text-right border-r border-slate-200">Invoice %</Th>
-              <Th className="px-3 py-2.5 text-right border-r border-slate-200">Invoice Amount</Th>
-              <Th className="px-3 py-2.5 text-right border-r border-slate-200">Final Invoice Amount</Th>
-              <Th className="px-3 py-2.5 border-r border-slate-200">Payment Status</Th>
-              <Th className="px-3 py-2.5 border-r border-slate-200">Transfer Status</Th>
-
-              {/* Actions */}
-              <Th className="px-3 py-2.5 text-center">Actions</Th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-150">
-            {loading ? (
-              <tr>
-                <td colSpan={28} className="px-6 py-12 text-center text-slate-400 font-medium">Loading sales bookings...</td>
+      <div className={ERP_TABLE_STYLES.container}>
+        <div className={ERP_TABLE_STYLES.scrollWrapper}>
+          <table className={ERP_TABLE_STYLES.table}>
+            <thead className={ERP_TABLE_STYLES.thead}>
+              {/* Group Header Row */}
+              <tr className="border-b border-slate-200 dark:border-slate-800 text-center">
+                <Th colSpan={9} className="px-3 py-2 bg-blue-50/70 text-blue-900 dark:bg-blue-950/40 dark:text-blue-300 font-extrabold border-r border-slate-200 dark:border-slate-800">General Information</Th>
+                <Th colSpan={2} className="px-3 py-2 bg-purple-50/70 text-purple-900 dark:bg-purple-950/40 dark:text-purple-300 font-extrabold border-r border-slate-200 dark:border-slate-800">Account Mappings</Th>
+                <Th colSpan={7} className="px-3 py-2 bg-emerald-50/70 text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300 font-extrabold border-r border-slate-200 dark:border-slate-800">Product Details</Th>
+                <Th colSpan={9} className="px-3 py-2 bg-indigo-50/70 text-indigo-900 dark:bg-indigo-950/40 dark:text-indigo-300 font-extrabold border-r border-slate-200 dark:border-slate-800">Financial Metrics</Th>
+                <Th colSpan={1} className="px-3 py-2 bg-slate-100 text-slate-800 dark:bg-slate-800 dark:text-slate-200 font-extrabold">Actions</Th>
               </tr>
-            ) : filtered.length === 0 ? (
-              <tr>
-                <td colSpan={28} className="px-6 py-12 text-center text-slate-500">No sales bookings in this stage.</td>
-              </tr>
-            ) : (
-              filtered.map((order) => {
-                const raw = order.form_data || {};
-                const f = raw.form || {};
+              {/* Column Headers Row */}
+              <tr className="bg-slate-50/80 dark:bg-slate-950/80 border-b border-slate-200 dark:border-slate-800 text-[10px]">
+                {/* General */}
+                <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">Journal Serial</Th>
+                <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">Country Serial</Th>
+                <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">Branch Serial</Th>
+                <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">Sales Order No</Th>
+                <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">Date</Th>
+                <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">Customer</Th>
+                <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">User</Th>
+                <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">Branch</Th>
+                <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">Country</Th>
                 
-                const purchaseAmount = Number(order.order_total || 0);
-                const exRate = Number(order.exchange_rate || 1);
-                const finalAmount = purchaseAmount * exRate;
+                {/* Accounts */}
+                <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">Sales Account</Th>
+                <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">Purchase Account</Th>
+                
+                {/* Product */}
+                <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">Goods Name</Th>
+                <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">Brand</Th>
+                <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">Goods Size</Th>
+                <Th className="px-3 py-2 text-right border-r border-slate-200 dark:border-slate-800">Quantity</Th>
+                <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">Unit</Th>
+                <Th className="px-3 py-2 text-right border-r border-slate-200 dark:border-slate-800">Gross Wt (KG)</Th>
+                <Th className="px-3 py-2 text-right border-r border-slate-200 dark:border-slate-800">Net Wt (KG)</Th>
 
-                const invPct = Number(f.invoicePercentage || 100);
-                const invoiceAmt = (purchaseAmount * invPct) / 100;
-                const finalInvoiceAmount = invoiceAmt * exRate;
-                const postingState = deriveSalesBookingPostingState(order as any);
+                {/* Financials */}
+                <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">Pur Currency</Th>
+                <Th className="px-3 py-2 text-right border-r border-slate-200 dark:border-slate-800">Ex. Rate</Th>
+                <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">Final Currency</Th>
+                <Th className="px-3 py-2 text-right border-r border-slate-200 dark:border-slate-800">Pur Amount</Th>
+                <Th className="px-3 py-2 text-right border-r border-slate-200 dark:border-slate-800">Invoice %</Th>
+                <Th className="px-3 py-2 text-right border-r border-slate-200 dark:border-slate-800">Invoice Amount</Th>
+                <Th className="px-3 py-2 text-right border-r border-slate-200 dark:border-slate-800">Final Invoice Amount</Th>
+                <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">Payment Status</Th>
+                <Th className="px-3 py-2 border-r border-slate-200 dark:border-slate-800">Transfer Status</Th>
 
-                const branchName = f.branchName || "-";
-                const branchCountry = f.branchCountry || "-";
-                const userDisplayName = f.userName || "-";
+                {/* Actions */}
+                <Th className="px-3 py-2 text-center">Actions</Th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+              {loading ? (
+                <tr>
+                  <td colSpan={28} className="px-6 py-12 text-center text-slate-400 font-medium">Loading sales bookings...</td>
+                </tr>
+              ) : filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={28} className="px-6 py-12 text-center text-slate-500 dark:text-slate-400">No sales bookings in this stage.</td>
+                </tr>
+              ) : (
+                filtered.map((order) => {
+                  const raw = order.form_data || {};
+                  const f = raw.form || {};
+                  
+                  const purchaseAmount = Number(order.order_total || 0);
+                  const exRate = Number(order.exchange_rate || 1);
+                  const finalAmount = purchaseAmount * exRate;
 
-                return (
-                  <tr key={order.id} className="hover:bg-slate-50 transition-colors duration-150 border-b border-slate-100">
-                    {/* General Information */}
-                    <td className="px-3 py-2.5 font-mono text-[10px] text-slate-500 border-r border-slate-150">{order.super_admin_serial_number || raw.traceability?.superAdminSerialNumber || "-"}</td>
-                    <td className="px-3 py-2.5 font-mono text-[10px] text-slate-500 border-r border-slate-150">{order.country_transaction_serial_number || raw.traceability?.countryTransactionSerialNumber || "-"}</td>
-                    <td className="px-3 py-2.5 font-mono text-[10px] text-slate-500 border-r border-slate-150">{order.branch_transaction_serial_number || raw.traceability?.branchTransactionSerialNumber || "-"}</td>
-                    <td className="px-3 py-2.5 font-mono font-bold text-blue-600 border-r border-slate-150">{order.sales_order_no}</td>
-                    <td className="px-3 py-2.5 text-slate-600 border-r border-slate-150 font-mono">{order.order_date}</td>
-                    <td className="px-3 py-2.5 font-bold text-slate-800 border-r border-slate-150 truncate max-w-[120px]" title={order.customer_name || "-"}>{localized(order, "customer_name", order.customer_name || "-")}</td>
-                    <td className="px-3 py-2.5 text-slate-600 border-r border-slate-150 truncate max-w-[80px]" title={userDisplayName}>{userDisplayName}</td>
-                    <td className="px-3 py-2.5 text-slate-600 border-r border-slate-150 truncate max-w-[80px]" title={branchName}>{localized(order, "branch_name", branchName)}</td>
-                    <td className="px-3 py-2.5 text-slate-600 border-r border-slate-150 truncate max-w-[80px]" title={branchCountry}>{localized(order, "country_name", branchCountry)}</td>
-                    
-                    {/* Accounts */}
-                    <td className="px-3 py-2.5 text-slate-700 font-medium border-r border-slate-150 truncate max-w-[100px]" title={f.salesAccountName || "-"}>{localized(order, "sales_account_name", f.salesAccountName || "-")}</td>
-                    <td className="px-3 py-2.5 text-slate-700 font-medium border-r border-slate-150 truncate max-w-[100px]" title={f.purchaseAccountName || "-"}>{localized(order, "purchase_account_name", f.purchaseAccountName || "-")}</td>
+                  const invPct = Number(f.invoicePercentage || 100);
+                  const invoiceAmt = (purchaseAmount * invPct) / 100;
+                  const finalInvoiceAmount = invoiceAmt * exRate;
+                  const postingState = deriveSalesBookingPostingState(order as any);
 
-                    {/* Product */}
-                    <td className="px-3 py-2.5 font-bold text-slate-800 border-r border-slate-150 truncate max-w-[120px]" title={order.product_summary || "-"}>{localized(order, "product_name", order.product_summary || "-")}</td>
-                    <td className="px-3 py-2.5 text-slate-600 border-r border-slate-150">{f.brand || "-"}</td>
-                    <td className="px-3 py-2.5 text-slate-600 border-r border-slate-150">{f.size || "-"}</td>
-                    <td className="px-3 py-2.5 text-right font-mono text-slate-800 border-r border-slate-150">{order.quantity?.toLocaleString()}</td>
-                    <td className="px-3 py-2.5 text-slate-600 border-r border-slate-150">{f.qtyName || "Bags"}</td>
-                    <td className="px-3 py-2.5 text-right font-mono text-slate-600 border-r border-slate-150">{Number(f.grossWeight || 0).toLocaleString()}</td>
-                    <td className="px-3 py-2.5 text-right font-mono text-blue-600 font-bold border-r border-slate-150">{order.total_weight?.toLocaleString()}</td>
+                  const branchName = f.branchName || "—";
+                  const branchCountry = f.branchCountry || "—";
+                  const userDisplayName = f.userName || "—";
 
-                    {/* Financials */}
-                    <td className="px-3 py-2.5 font-black text-slate-800 border-r border-slate-150">{order.original_currency_code || "USD"}</td>
-                    <td className="px-3 py-2.5 text-right font-mono text-slate-600 border-r border-slate-150">{exRate.toFixed(4)}</td>
-                    <td className="px-3 py-2.5 font-black text-slate-800 border-r border-slate-150">{order.currency_code || "AED"}</td>
-                    <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-800 border-r border-slate-150">${purchaseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                    <td className="px-3 py-2.5 text-right font-mono text-slate-600 border-r border-slate-150">{invPct}%</td>
-                    <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-800 border-r border-slate-150">${invoiceAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                    <td className="px-3 py-2.5 text-right font-mono font-black text-emerald-600 border-r border-slate-150">{order.currency_code} {finalInvoiceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                    <td className="px-3 py-2.5 border-r border-slate-150">
-                      <span className={`px-2 py-0.2 rounded text-[8px] font-bold ${
-                        postingState.visualStatus === "red"
-                          ? "bg-rose-50 text-rose-700 border border-rose-100"
-                          : "bg-slate-900 text-white border border-slate-900"
-                      }`}>
-                        {postingState.label}
-                      </span>
-                    </td>
-                    <td className="px-3 py-2.5 border-r border-slate-150">
-                      <span className={`px-2 py-0.2 rounded text-[8px] font-bold ${
-                        postingState.visualStatus === "red"
-                          ? "bg-rose-50 text-rose-700 border border-rose-100"
-                          : order.sales_status === "draft"
-                          ? "bg-slate-100 text-slate-500 border border-slate-200"
-                          : order.sales_status === "Confirmed" || order.sales_status === "confirmed"
-                            ? "bg-blue-50 text-blue-700 border border-blue-150"
-                            : "bg-emerald-50 text-emerald-700 border border-emerald-100"
-                      }`}>
-                        {postingState.visualStatus === "red" ? "Pending" : order.sales_status}
-                      </span>
-                    </td>
-
-                    {/* Actions */}
-                    <td className="px-3 py-2.5 text-center space-x-2">
-                      <RecordTranslationCorrectionDialog recordTable="sales_orders" recordId={order.id} onSaved={loadOrders} />
-                      <Button
-                        onClick={() => handlePrint(order)}
-                        variant="outline"
-                        className="border-slate-200 bg-white text-slate-600 hover:bg-slate-100 text-xs px-2 py-1 h-auto"
-                      >
-                        <Printer className="h-3.5 w-3.5" />
-                      </Button>
+                  return (
+                    <tr key={order.id} className="hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-colors border-b border-slate-100 dark:border-slate-800/80">
+                      {/* General Information */}
+                      <td className="px-3 py-2.5 font-mono text-[10px] text-slate-500 dark:text-slate-400 border-r border-slate-100 dark:border-slate-800">{order.super_admin_serial_number || raw.traceability?.superAdminSerialNumber || "—"}</td>
+                      <td className="px-3 py-2.5 font-mono text-[10px] text-slate-500 dark:text-slate-400 border-r border-slate-100 dark:border-slate-800">{order.country_transaction_serial_number || raw.traceability?.countryTransactionSerialNumber || "—"}</td>
+                      <td className="px-3 py-2.5 font-mono text-[10px] text-slate-500 dark:text-slate-400 border-r border-slate-100 dark:border-slate-800">{order.branch_transaction_serial_number || raw.traceability?.branchTransactionSerialNumber || "—"}</td>
+                      <td className="px-3 py-2.5 font-mono font-bold text-blue-600 dark:text-blue-400 border-r border-slate-100 dark:border-slate-800">{order.sales_order_no}</td>
+                      <td className="px-3 py-2.5 text-slate-600 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800 font-mono">{order.order_date}</td>
+                      <td className="px-3 py-2.5 font-bold text-slate-900 dark:text-slate-100 border-r border-slate-100 dark:border-slate-800 truncate max-w-[120px]" title={order.customer_name || "-"}>{localized(order, "customer_name", order.customer_name || "—")}</td>
+                      <td className="px-3 py-2.5 text-slate-600 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800 truncate max-w-[80px]" title={userDisplayName}>{userDisplayName}</td>
+                      <td className="px-3 py-2.5 text-slate-600 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800 truncate max-w-[80px]" title={branchName}>{localized(order, "branch_name", branchName)}</td>
+                      <td className="px-3 py-2.5 text-slate-600 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800 truncate max-w-[80px]" title={branchCountry}>{localized(order, "country_name", branchCountry)}</td>
                       
-                      {order.sales_status === "draft" && (
-                        <Button
-                          disabled={updatingId === order.id}
-                          onClick={() => transitionStatus(order.id, "Confirmed")}
-                          className="bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold px-2 py-1 h-auto rounded-lg shadow-sm"
-                        >
-                          Confirm Booking
-                        </Button>
-                      )}
+                      {/* Accounts */}
+                      <td className="px-3 py-2.5 text-slate-700 dark:text-slate-300 font-medium border-r border-slate-100 dark:border-slate-800 truncate max-w-[100px]" title={f.salesAccountName || "-"}>{localized(order, "sales_account_name", f.salesAccountName || "—")}</td>
+                      <td className="px-3 py-2.5 text-slate-700 dark:text-slate-300 font-medium border-r border-slate-100 dark:border-slate-800 truncate max-w-[100px]" title={f.purchaseAccountName || "-"}>{localized(order, "purchase_account_name", f.purchaseAccountName || "—")}</td>
 
-                      {(order.sales_status === "Confirmed" || order.sales_status === "confirmed") && (
-                        <Button
-                          disabled={updatingId === order.id}
-                          onClick={() => transitionStatus(order.id, "Finalized")}
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white text-[10px] font-bold px-2 py-1 h-auto rounded-lg shadow-sm"
-                        >
-                          Finalize & Post GL
-                        </Button>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })
+                      {/* Product */}
+                      <td className="px-3 py-2.5 font-bold text-slate-900 dark:text-slate-100 border-r border-slate-100 dark:border-slate-800 truncate max-w-[120px]" title={order.product_summary || "-"}>{localized(order, "product_name", order.product_summary || "—")}</td>
+                      <td className="px-3 py-2.5 text-slate-600 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800">{f.brand || "—"}</td>
+                      <td className="px-3 py-2.5 text-slate-600 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800">{f.size || "—"}</td>
+                      <td className="px-3 py-2.5 text-right font-mono text-slate-800 dark:text-slate-200 border-r border-slate-100 dark:border-slate-800">{order.quantity?.toLocaleString()}</td>
+                      <td className="px-3 py-2.5 text-slate-600 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800">{f.qtyName || "Bags"}</td>
+                      <td className="px-3 py-2.5 text-right font-mono text-slate-600 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800">{Number(f.grossWeight || 0).toLocaleString()}</td>
+                      <td className="px-3 py-2.5 text-right font-mono text-blue-600 dark:text-blue-400 font-bold border-r border-slate-100 dark:border-slate-800">{order.total_weight?.toLocaleString()}</td>
+
+                      {/* Financials */}
+                      <td className="px-3 py-2.5 font-black text-slate-800 dark:text-slate-200 border-r border-slate-100 dark:border-slate-800">{order.original_currency_code || "USD"}</td>
+                      <td className="px-3 py-2.5 text-right font-mono text-slate-600 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800">{exRate.toFixed(4)}</td>
+                      <td className="px-3 py-2.5 font-black text-slate-800 dark:text-slate-200 border-r border-slate-100 dark:border-slate-800">{order.currency_code || "AED"}</td>
+                      <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200 border-r border-slate-100 dark:border-slate-800">${purchaseAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      <td className="px-3 py-2.5 text-right font-mono text-slate-600 dark:text-slate-300 border-r border-slate-100 dark:border-slate-800">{invPct}%</td>
+                      <td className="px-3 py-2.5 text-right font-mono font-bold text-slate-800 dark:text-slate-200 border-r border-slate-100 dark:border-slate-800">${invoiceAmt.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      <td className="px-3 py-2.5 text-right font-mono font-black text-emerald-600 dark:text-emerald-400 border-r border-slate-100 dark:border-slate-800">{order.currency_code} {finalInvoiceAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                      <td className="px-3 py-2.5 border-r border-slate-100 dark:border-slate-800 text-center">
+                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                          postingState.visualStatus === "red"
+                            ? "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40"
+                            : "bg-[#0F172A] text-white border border-slate-900 dark:bg-slate-800 dark:text-slate-100"
+                        }`}>
+                          {postingState.label}
+                        </span>
+                      </td>
+                      <td className="px-3 py-2.5 border-r border-slate-100 dark:border-slate-800 text-center">
+                        <span className={`inline-block px-2.5 py-0.5 rounded-full text-[9px] font-black uppercase tracking-wider ${
+                          postingState.visualStatus === "red"
+                            ? "bg-rose-50 text-rose-700 border border-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:border-rose-800/40"
+                            : order.sales_status === "draft"
+                            ? "bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700"
+                            : order.sales_status === "Confirmed" || order.sales_status === "confirmed"
+                              ? "bg-blue-50 text-blue-700 border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/40"
+                              : "bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/40"
+                        }`}>
+                          {postingState.visualStatus === "red" ? "Pending" : order.sales_status}
+                        </span>
+                      </td>
+
+                      {/* Actions */}
+                      <td className="px-3 py-2.5 text-center">
+                        <div className="inline-flex items-center justify-center gap-2">
+                          <RecordTranslationCorrectionDialog recordTable="sales_orders" recordId={order.id} onSaved={loadOrders} />
+                          <Button
+                            onClick={() => handlePrint(order)}
+                            variant="outline"
+                            size="sm"
+                            className="h-8 w-8 p-0 border-slate-300 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0"
+                            title="Print Sales Order"
+                          >
+                            <Printer className="h-3.5 w-3.5" />
+                          </Button>
+                          
+                          {order.sales_status === "draft" && (
+                            <Button
+                              disabled={updatingId === order.id}
+                              onClick={() => transitionStatus(order.id, "Confirmed")}
+                              className="h-8 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold px-3 rounded-lg shadow-sm"
+                            >
+                              Confirm Booking
+                            </Button>
+                          )}
+
+                          {(order.sales_status === "Confirmed" || order.sales_status === "confirmed") && (
+                            <Button
+                              disabled={updatingId === order.id}
+                              onClick={() => transitionStatus(order.id, "Finalized")}
+                              className="h-8 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 rounded-lg shadow-sm"
+                            >
+                              Finalize & Post GL
+                            </Button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
             )}
           </tbody>
         </table>
+        </div>
       </div>
-
     </div>
   );
 }

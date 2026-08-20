@@ -317,20 +317,21 @@ function PartyRolePanel({
   return (
     <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-xs space-y-3 dark:border-slate-800 dark:bg-slate-900">
       <div className="flex items-center justify-between gap-3">
-        <div>
-          <div className="text-[10.5px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400">{label}</div>
-          <div className="mt-0.5 text-sm font-bold text-slate-900 dark:text-slate-100">
-            {selection.customerName ? selection.customerName : `Select ${label}`}
-          </div>
+        <div className="text-[11px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-400">
+          {label}
         </div>
-        <span className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold text-blue-700 dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300">
+        <button
+          type="button"
+          onClick={() => setCompanyPickerOpen(true)}
+          className="inline-flex items-center gap-1 rounded-full border border-blue-200 bg-blue-50 px-2.5 py-0.5 text-[10px] font-bold text-blue-700 hover:bg-blue-100 transition dark:border-blue-900/50 dark:bg-blue-950/40 dark:text-blue-300 cursor-pointer"
+        >
           <Building2 className="h-3 w-3" />
           {effectiveCompanyName ? "Company Linked" : "Pick Company"}
-        </span>
+        </button>
       </div>
 
       <SearchSelect
-        label={`${label} Party`}
+        label={`Search ${label}`}
         value={selection.customerId}
         placeholder={disabled ? "Loading..." : `Search ${label.toLowerCase()} by name / code / phone`}
         options={customerOptions}
@@ -1302,7 +1303,7 @@ export function CustomerOrderManagementView() {
         </form>
 
         {/* Right Side Register & Live Report */}
-        <div className="space-y-4 xl:col-span-7">
+        <div className="space-y-4 xl:col-span-7 xl:sticky xl:top-4 xl:self-start h-fit max-h-[calc(100vh-2rem)] overflow-y-auto pr-0.5">
           {/* Top KPI Cards */}
           <div className="space-y-3 rounded-xl border border-slate-200 bg-white p-4 shadow-xs dark:border-slate-800 dark:bg-slate-900">
             <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
@@ -1345,7 +1346,9 @@ export function CustomerOrderManagementView() {
             {loading ? (
               <div className="py-12 text-center text-xs font-semibold text-slate-400">Loading customer orders…</div>
             ) : visibleOrders.length === 0 ? (
-              <div className="py-12 text-center text-xs text-slate-500">No customer orders created yet.</div>
+              <div className="py-12 text-center text-xs text-slate-500">
+                No customer orders found. Fill out the form on the left to create one.
+              </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[950px] text-left text-xs text-slate-800 dark:text-slate-200">

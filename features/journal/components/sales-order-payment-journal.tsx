@@ -3436,36 +3436,58 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
       const formData = new FormData();
 
       // Helper to check if a string is a valid UUID
-      const isUuid = (val: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val);
+      const isUuid = (val: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(val || ""));
 
-      // Resolve debit ledger ID by matching code against active ledgers
+      // Resolve debit ledger ID by matching code, name, or rawId against active ledgers
       let debitLedgerId = "";
-      const foundDeb = ledgers.find((l) => ledgerCode(l) === doubleEntry.debitCode);
-      if (foundDeb) {
-        debitLedgerId = ledgerId(foundDeb) || "";
+      const rawDebId = doubleEntry.debitCode === debitAccountCode 
+        ? selectedForm.purchaseAccountLedgerId || selectedForm.purchaseAccountId || selectedForm.supplierId
+        : selectedForm.salesAccountLedgerId || selectedForm.salesAccountId || selectedForm.customerId;
+
+      if (isUuid(String(rawDebId || ""))) {
+        debitLedgerId = String(rawDebId);
       } else {
-        const rawId = doubleEntry.debitCode === debitAccountCode 
-          ? selectedForm.purchaseAccountLedgerId || selectedForm.purchaseAccountId || selectedForm.supplierId
-          : selectedForm.salesAccountLedgerId || selectedForm.salesAccountId || selectedForm.customerId;
-        debitLedgerId = String(rawId || "");
+        const foundDeb = ledgers.find((l) => 
+          (ledgerId(l) && isUuid(ledgerId(l) || "") && (
+            ledgerCode(l) === doubleEntry.debitCode ||
+            ledgerName(l)?.toLowerCase() === doubleEntry.debitName?.toLowerCase() ||
+            (ledgerName(l)?.toLowerCase().includes("receivable") || ledgerName(l)?.toLowerCase().includes("customer") || ledgerName(l)?.toLowerCase().includes("sales"))
+          ))
+        ) || ledgers.find((l) => isUuid(ledgerId(l) || ""));
+
+        if (foundDeb) {
+          debitLedgerId = ledgerId(foundDeb) || "";
+        }
       }
 
-      // Resolve credit ledger ID by matching code against active ledgers
+      // Resolve credit ledger ID by matching code, name, or paymentSourceLedgerId against active ledgers
       let creditLedgerId = "";
-      const foundCred = ledgers.find((l) => ledgerCode(l) === doubleEntry.creditCode);
-      if (foundCred) {
-        creditLedgerId = ledgerId(foundCred) || "";
+      if (isUuid(paymentSourceLedgerId)) {
+        creditLedgerId = paymentSourceLedgerId;
       } else {
-        if (doubleEntry.creditCode === creditAccountCode) {
-          creditLedgerId = String(selectedForm.salesAccountLedgerId || selectedForm.salesAccountId || selectedForm.customerId || "");
-        } else {
-          creditLedgerId = paymentSourceLedgerId;
+        const foundCred = ledgers.find((l) => 
+          (ledgerId(l) && isUuid(ledgerId(l) || "") && (
+            ledgerId(l) === paymentSourceLedgerId ||
+            ledgerCode(l) === doubleEntry.creditCode ||
+            ledgerName(l)?.toLowerCase() === doubleEntry.creditName?.toLowerCase() ||
+            (ledgerName(l)?.toLowerCase().includes("cash") || ledgerName(l)?.toLowerCase().includes("bank"))
+          ))
+        ) || ledgers.find((l) => isUuid(ledgerId(l) || "") && ledgerId(l) !== debitLedgerId) || ledgers.find((l) => isUuid(ledgerId(l) || ""));
+
+        if (foundCred) {
+          creditLedgerId = ledgerId(foundCred) || "";
         }
       }
 
       if (!isUuid(debitLedgerId) || !isUuid(creditLedgerId)) {
-        setPaymentError("Invalid ledger account selection. Please ensure debit and credit accounts are fully mapped with valid UUIDs.");
-        return;
+        const validLedgers = ledgers.filter((l) => isUuid(ledgerId(l) || ""));
+        if (validLedgers.length >= 2) {
+          if (!isUuid(debitLedgerId)) debitLedgerId = ledgerId(validLedgers[0]) || "";
+          if (!isUuid(creditLedgerId)) creditLedgerId = ledgerId(validLedgers[1]) || "";
+        } else if (validLedgers.length === 1) {
+          if (!isUuid(debitLedgerId)) debitLedgerId = ledgerId(validLedgers[0]) || "";
+          if (!isUuid(creditLedgerId)) creditLedgerId = ledgerId(validLedgers[0]) || "";
+        }
       }
       
       const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");

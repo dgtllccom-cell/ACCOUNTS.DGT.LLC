@@ -696,15 +696,15 @@ export function GeneralOfficeDashboardView() {
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold text-slate-600 dark:text-slate-400">
             <div className="flex justify-between">
               <span>{tr("Country")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100">{sessionCtx?.countryName || "—"}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100">{sessionCtx?.countryName || (sessionCtx?.isSuperAdmin ? "Global (All Countries)" : (employees[0]?.country?.name || "Pakistan / UAE"))}</span>
             </div>
             <div className="flex justify-between">
               <span>{tr("Branch Name")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100 uppercase">{sessionCtx?.branchName || "—"}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 uppercase">{sessionCtx?.branchName || (sessionCtx?.isSuperAdmin ? "Head Office / Super Admin" : (employees[0]?.city_branch?.name || employees[0]?.country_branch?.name || "Karachi Main"))}</span>
             </div>
             <div className="flex justify-between">
               <span>{tr("User ID / Name")}:</span>
-              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[110px]" title={sessionCtx?.userName || ""}>{sessionCtx?.userName || "—"}</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 truncate max-w-[120px]" title={sessionCtx?.userName || "Super Admin"}>{sessionCtx?.userName || (sessionCtx?.isSuperAdmin ? "Super Admin" : "Admin User")}</span>
             </div>
             <div className="flex justify-between text-emerald-600 dark:text-emerald-400 font-bold">
               <span>{tr("Status")}:</span>
@@ -744,7 +744,7 @@ export function GeneralOfficeDashboardView() {
           <div className="mt-2.5 space-y-1 text-[11px] font-semibold">
             <div className="flex justify-between text-slate-600 dark:text-slate-400">
               <span>{t.monthlyPayroll}:</span>
-              <span className="font-bold font-mono text-slate-900 dark:text-slate-100">{summaryStats.payrollLabel}</span>
+              <span className="font-bold font-mono text-slate-900 dark:text-slate-100 pl-1">{summaryStats.payrollLabel}</span>
             </div>
             <div className="flex justify-between text-amber-600 font-bold">
               <span>{t.pendingLeaves}:</span>

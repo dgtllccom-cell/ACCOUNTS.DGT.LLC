@@ -319,30 +319,30 @@ export function AllReleaseEntriesView({ lang: langProp = "en" }: { lang?: string
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-end gap-2 rounded-xl border border-slate-200 bg-white p-3 dark:border-slate-800 dark:bg-slate-900">
+      <div className="flex flex-wrap items-end gap-2.5 rounded-xl border border-slate-200 bg-white p-3.5 shadow-xs dark:border-slate-800 dark:bg-slate-900">
         <div>
           <label className="block text-[11px] font-bold text-slate-500 mb-1">{tt("sae.module", "Module")}</label>
-          <select value={moduleFilter} onChange={(e) => setModuleFilter(e.target.value)} className="h-9 rounded-md border border-slate-300 bg-background px-2 text-xs font-semibold dark:border-slate-700">
+          <select value={moduleFilter} onChange={(e) => setModuleFilter(e.target.value)} className="h-9 rounded-md border border-slate-300 bg-background px-2.5 text-xs font-semibold dark:border-slate-700 outline-none">
             {MODULES.map((m) => <option key={m} value={m}>{moduleLabel(m)}</option>)}
           </select>
         </div>
         <div>
           <label className="block text-[11px] font-bold text-slate-500 mb-1">{tt("sae.country", "Country")}</label>
-          <select value={countryId} onChange={(e) => setCountryId(e.target.value)} className="h-9 rounded-md border border-slate-300 bg-background px-2 text-xs font-semibold dark:border-slate-700">
+          <select value={countryId} onChange={(e) => setCountryId(e.target.value)} className="h-9 rounded-md border border-slate-300 bg-background px-2.5 text-xs font-semibold dark:border-slate-700 outline-none">
             <option value="">{tt("sae.all_countries", "All Countries")}</option>
             {(data?.filters?.countries ?? []).map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
           </select>
         </div>
         <div>
           <label className="block text-[11px] font-bold text-slate-500 mb-1">{tt("sae.currency", "Currency")}</label>
-          <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="h-9 rounded-md border border-slate-300 bg-background px-2 text-xs font-semibold dark:border-slate-700">
+          <select value={currency} onChange={(e) => setCurrency(e.target.value)} className="h-9 rounded-md border border-slate-300 bg-background px-2.5 text-xs font-semibold dark:border-slate-700 outline-none">
             <option value="">{tt("sae.all_currencies", "All Currencies")}</option>
             {(data?.filters?.currencies ?? []).map((cur) => <option key={cur} value={cur}>{cur}</option>)}
           </select>
         </div>
         <div>
           <label className="block text-[11px] font-bold text-slate-500 mb-1">{tt("acct.status", "Status")}</label>
-          <select value={status} onChange={(e) => setStatus(e.target.value)} className="h-9 rounded-md border border-slate-300 bg-background px-2 text-xs font-semibold dark:border-slate-700">
+          <select value={status} onChange={(e) => setStatus(e.target.value)} className="h-9 rounded-md border border-slate-300 bg-background px-2.5 text-xs font-semibold dark:border-slate-700 outline-none">
             <option value="">{tt("rozrep.all", "All")}</option>
             <option value="posted">{tt("bankroz.cleared", "Posted")}</option>
             <option value="pending">{tt("bankroz.pending", "Pending")}</option>
@@ -351,45 +351,45 @@ export function AllReleaseEntriesView({ lang: langProp = "en" }: { lang?: string
         </div>
         <div>
           <label className="block text-[11px] font-bold text-slate-500 mb-1">{tt("bankroz.from_date", "From Date")}</label>
-          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-9 rounded-md border border-slate-300 bg-background px-2 text-xs dark:border-slate-700" />
+          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="h-9 rounded-md border border-slate-300 bg-background px-2 text-xs dark:border-slate-700 outline-none" />
         </div>
         <div>
           <label className="block text-[11px] font-bold text-slate-500 mb-1">{tt("bankroz.to_date", "To Date")}</label>
-          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-9 rounded-md border border-slate-300 bg-background px-2 text-xs dark:border-slate-700" />
+          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="h-9 rounded-md border border-slate-300 bg-background px-2 text-xs dark:border-slate-700 outline-none" />
         </div>
-        <div className="flex-1 min-w-[200px]">
+        <div className="flex-1 min-w-[220px]">
           <label className="block text-[11px] font-bold text-slate-500 mb-1">{tt("sae.search_all", "Search All Entries")}</label>
-          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={tt("sae.search_ph", "Search customer, employee, bank, purchase, sale, voucher, branch, reference...")} className="h-9 w-full rounded-md border border-slate-300 bg-background px-3 text-xs dark:border-slate-700" />
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={tt("sae.search_ph", "Search customer, employee, bank, purchase, sale, voucher, branch, reference...")} className="h-9 w-full rounded-md border border-slate-300 bg-background px-3 text-xs dark:border-slate-700 outline-none" />
         </div>
-        <button onClick={clearFilters} className="h-9 rounded-md border border-slate-300 px-3 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300">{tt("bankroz.reset_filters", "Clear Filters")}</button>
-        <button onClick={exportCsv} disabled={exporting} className="h-9 rounded-md border border-emerald-500 px-3 text-xs font-bold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50 dark:text-emerald-300 dark:hover:bg-emerald-950/30">⬇ {tt("sae.export_csv", "Export CSV")}</button>
-        <button onClick={printJournal} className="h-9 rounded-md bg-blue-600 px-3 text-xs font-bold text-white hover:bg-blue-700">{tt("bankroz.print_pdf", "Print / PDF")}</button>
+        <button onClick={clearFilters} className="h-9 inline-flex items-center justify-center rounded-md border border-slate-300 px-3 text-xs font-bold text-slate-600 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-300 shrink-0 shadow-2xs">{tt("bankroz.reset_filters", "Reset Filters")}</button>
+        <button onClick={exportCsv} disabled={exporting} className="h-9 inline-flex items-center justify-center rounded-md border border-emerald-500 px-3 text-xs font-bold text-emerald-700 hover:bg-emerald-50 disabled:opacity-50 dark:text-emerald-300 dark:hover:bg-emerald-950/30 shrink-0 shadow-2xs">⬇ {tt("sae.export_csv", "Export CSV")}</button>
+        <button onClick={printJournal} className="h-9 inline-flex items-center justify-center rounded-md bg-[#0F172A] hover:bg-slate-800 text-white px-3.5 text-xs font-bold shrink-0 shadow-2xs">{tt("bankroz.print_pdf", "Print / PDF")}</button>
       </div>
 
       {error && <div className="rounded-lg bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:bg-rose-950/30 dark:text-rose-300">{error}</div>}
 
       {/* Feed table (real data) */}
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
         <div className="flex items-center justify-between border-b border-slate-200 px-4 py-3 dark:border-slate-800">
           <h2 className="text-sm font-black">{tt("sae.latest_entries", "Latest ERP Entries — All Countries & Branches")}</h2>
           <span className="text-[11px] text-slate-500">{tt("sae.click_row", "Click any row to open full detail")} · {tt("sae.total_records", "Total")}: {total.toLocaleString()}</span>
         </div>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[1200px] text-xs">
+        <div className="w-full overflow-x-auto">
+          <table className="w-full min-w-[1280px] text-xs">
             <thead className="bg-slate-50 dark:bg-slate-950/50">
               <tr className="text-[10px] uppercase text-slate-500">
-                <th className="p-2 text-start">{tt("rozrep.sno", "Sr #")}</th>
-                <th className="p-2 text-start">{tt("bankroz.date_time", "Date / Time")}</th>
-                <th className="p-2 text-start">{tt("sae.module", "Module")}</th>
-                <th className="p-2 text-start">{tt("rozrep.country", "Country")}</th>
-                <th className="p-2 text-start">{tt("rozrep.branch", "Branch")}</th>
-                <th className="p-2 text-start">{tt("sae.entry_name", "Entry Name")}</th>
-                <th className="p-2 text-start">{tt("sae.party", "Party / Person")}</th>
-                <th className="p-2 text-start">{tt("acct.reference_no", "Reference")}</th>
-                <th className="p-2 text-start">{tt("rozrep.currency", "Currency")}</th>
-                <th className="p-2 text-end">{tt("rozrep.debit", "Debit")}</th>
-                <th className="p-2 text-end">{tt("rozrep.credit", "Credit")}</th>
-                <th className="p-2 text-start">{tt("acct.status", "Status")}</th>
+                <th className="p-2.5 text-start w-12">{tt("rozrep.sno", "Sr #")}</th>
+                <th className="p-2.5 text-start min-w-[140px]">{tt("bankroz.date_time", "Date / Time")}</th>
+                <th className="p-2.5 text-start min-w-[110px]">{tt("sae.module", "Module")}</th>
+                <th className="p-2.5 text-start min-w-[90px]">{tt("rozrep.country", "Country")}</th>
+                <th className="p-2.5 text-start min-w-[100px]">{tt("rozrep.branch", "Branch")}</th>
+                <th className="p-2.5 text-start min-w-[160px]">{tt("sae.entry_name", "Entry Name")}</th>
+                <th className="p-2.5 text-start min-w-[120px]">{tt("sae.party", "Party / Person")}</th>
+                <th className="p-2.5 text-start min-w-[130px]">{tt("acct.reference_no", "Reference")}</th>
+                <th className="p-2.5 text-start min-w-[70px]">{tt("rozrep.currency", "Currency")}</th>
+                <th className="p-2.5 text-end min-w-[90px]">{tt("rozrep.debit", "Debit")}</th>
+                <th className="p-2.5 text-end min-w-[90px]">{tt("rozrep.credit", "Credit")}</th>
+                <th className="p-2.5 text-center min-w-[110px]">{tt("acct.status", "Status")}</th>
               </tr>
             </thead>
             <tbody>
@@ -398,19 +398,23 @@ export function AllReleaseEntriesView({ lang: langProp = "en" }: { lang?: string
               ) : entries.length === 0 ? (
                 <tr><td colSpan={12} className="p-6 text-center text-slate-400">{tt("report.builder_no_records", "No records found")}</td></tr>
               ) : entries.map((e) => (
-                <tr key={e.sr} onClick={() => setSelected(e)} className="cursor-pointer border-b border-slate-100 hover:bg-slate-50 dark:border-slate-800 dark:hover:bg-slate-800/50">
-                  <td className="p-2 font-mono text-slate-500">{e.sr}</td>
-                  <td className="p-2 whitespace-nowrap">{e.date ? new Date(e.date).toLocaleString() : "-"}</td>
-                  <td className="p-2 font-semibold">{moduleLabel(e.module)}</td>
-                  <td className="p-2">{e.country || "-"}</td>
-                  <td className="p-2">{e.branch || "-"}</td>
-                  <td className="p-2 max-w-[220px] truncate">{e.entryName}</td>
-                  <td className="p-2">{e.party || "-"}</td>
-                  <td className="p-2 font-mono">{e.reference || "-"}</td>
-                  <td className="p-2">{e.currency || "-"}</td>
-                  <td className="p-2 text-end font-mono text-rose-600">{e.debit ? fmtMoney(e.debit) : "-"}</td>
-                  <td className="p-2 text-end font-mono text-emerald-600">{e.credit ? fmtMoney(e.credit) : "-"}</td>
-                  <td className="p-2"><span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${statusClass(e.status)}`}>{e.status}</span></td>
+                <tr key={e.sr} onClick={() => setSelected(e)} className="cursor-pointer border-b border-slate-100 hover:bg-slate-50/80 transition-colors dark:border-slate-800 dark:hover:bg-slate-800/50">
+                  <td className="p-2.5 font-mono text-slate-500">{e.sr}</td>
+                  <td className="p-2.5 whitespace-nowrap">{e.date ? new Date(e.date).toLocaleString() : "—"}</td>
+                  <td className="p-2.5 font-semibold whitespace-nowrap">{moduleLabel(e.module)}</td>
+                  <td className="p-2.5 whitespace-nowrap">{e.country || "—"}</td>
+                  <td className="p-2.5 whitespace-nowrap">{e.branch || "—"}</td>
+                  <td className="p-2.5 max-w-[220px] truncate font-medium">{e.entryName}</td>
+                  <td className="p-2.5 whitespace-nowrap">{e.party || "—"}</td>
+                  <td className="p-2.5 font-mono whitespace-nowrap">{e.reference || "—"}</td>
+                  <td className="p-2.5 font-semibold whitespace-nowrap">{e.currency || "USD"}</td>
+                  <td className="p-2.5 text-end font-mono text-rose-600 whitespace-nowrap">{e.debit ? fmtMoney(e.debit) : "0.00"}</td>
+                  <td className="p-2.5 text-end font-mono text-emerald-600 whitespace-nowrap">{e.credit ? fmtMoney(e.credit) : "0.00"}</td>
+                  <td className="p-2.5 text-center whitespace-nowrap">
+                    <span className={`inline-block rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider min-w-[70px] text-center ${statusClass(e.status)}`}>
+                      {e.status || "unpaid"}
+                    </span>
+                  </td>
                 </tr>
               ))}
             </tbody>

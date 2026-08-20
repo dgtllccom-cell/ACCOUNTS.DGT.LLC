@@ -104,8 +104,15 @@ export function RecordTranslationCorrectionDialog({
   }
 
   return <>
-    <Button type="button" variant="outline" onClick={() => setOpen(true)} className="h-8 gap-1.5 text-[10px] font-bold uppercase">
-      <Languages className="h-3.5 w-3.5" /> Correct translations
+    <Button 
+      type="button" 
+      variant="outline" 
+      size="sm"
+      onClick={() => setOpen(true)} 
+      className="h-8 inline-flex items-center justify-center gap-2 px-3 text-[11px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0 whitespace-nowrap shadow-2xs"
+    >
+      <Languages className="h-3.5 w-3.5 shrink-0 text-blue-600 dark:text-blue-400" />
+      <span>Correct translations</span>
     </Button>
     {open && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-3" role="dialog" aria-modal="true" aria-label="Record translation corrections">
       <div className="flex max-h-[94vh] w-full max-w-7xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl dark:bg-slate-950">

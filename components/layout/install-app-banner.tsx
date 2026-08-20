@@ -116,7 +116,7 @@ export function InstallAppBanner() {
     <>
       {/* ── Top Install Banner ── */}
       <div
-        className="bg-gradient-to-r from-blue-900 via-[#06122d] to-indigo-950 text-white px-4 py-2.5 shadow-md border-b border-blue-800/50 flex flex-wrap items-center justify-between gap-3 text-xs"
+        className="bg-gradient-to-r from-blue-900 via-[#06122d] to-indigo-950 text-white px-4 pt-3.5 pb-3 shadow-md border-b border-blue-800/50 flex flex-wrap items-center justify-between gap-3 text-xs overflow-visible min-h-[52px]"
         style={{ backgroundColor: "#06122d", color: "#ffffff" }}
       >
         <div className="flex items-center gap-3">
@@ -124,13 +124,13 @@ export function InstallAppBanner() {
             <Smartphone className="h-4 w-4 text-blue-300" />
           </div>
           <div>
-            <div className="font-extrabold flex items-center gap-2">
-              <span>Install Digital Dock ERP Mobile &amp; Desktop App</span>
-              <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-1.5 py-0.5 rounded text-[9.5px] font-mono">
+            <div className="font-extrabold flex items-center gap-2 leading-normal">
+              <span className="tracking-tight text-sm font-black">Install Digital Dock ERP Mobile &amp; Desktop App</span>
+              <span className="bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded text-[10px] font-mono whitespace-nowrap">
                 Automatic Download Ready
               </span>
             </div>
-            <p className="text-[10.5px] text-blue-200/80 hidden sm:block">
+            <p className="text-[11px] text-blue-200/90 leading-snug hidden sm:block mt-0.5">
               Click below to automatically download the app installer directly into your computer for 1-click desktop access.
             </p>
           </div>

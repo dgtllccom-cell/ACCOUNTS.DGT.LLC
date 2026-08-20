@@ -473,8 +473,7 @@ export function RoznamchaTypeReportView({
         credit ? credit.toFixed(2) : "0.00",
         (credit - debit).toFixed(2),
         billNumber(row),
-        formatStatus(row.status, currentLang)
-      ].map(csvEscape).join(",");
+      ].map(String).map(csvEscape).join(",");
     });
 
     const csvContent = "\uFEFF" + [headers.map(csvEscape).join(","), ...lines].join("\r\n");
