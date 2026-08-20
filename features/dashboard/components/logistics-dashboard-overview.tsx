@@ -141,7 +141,7 @@ function EmptyChartState({ message, height }: { message: string; height: number 
   );
 }
 
-export function LogisticsDashboardOverview({ data }: { data: LogisticsDashboardData }) {
+export function LogisticsDashboardOverview({ data, canCreateShipment = false }: { data: LogisticsDashboardData; canCreateShipment?: boolean }) {
   const lang = useActiveLanguage();
   const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
@@ -384,8 +384,16 @@ export function LogisticsDashboardOverview({ data }: { data: LogisticsDashboardD
                   ))
                 ) : (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground font-semibold">
-                      {tt("log.no_shipments", "No logistics shipments found yet.")}
+                    <td colSpan={6} className="px-4 py-8 text-center">
+                      <p className="text-muted-foreground font-semibold">{tt("log.no_shipments", "No logistics shipments found yet.")}</p>
+                      {canCreateShipment && (
+                        <Link
+                          href="/dashboard/shipping-line/shipment-details"
+                          className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-primary-foreground hover:bg-primary/90 transition-colors"
+                        >
+                          <span className="text-sm leading-none">+</span> {tt("log.create_shipment", "Create Shipment")}
+                        </Link>
+                      )}
                     </td>
                   </tr>
                 )}

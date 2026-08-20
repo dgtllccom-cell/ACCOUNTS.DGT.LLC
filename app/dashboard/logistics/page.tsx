@@ -1,5 +1,7 @@
 import { LogisticsDashboardOverview, type LogisticsDashboardData } from "@/features/dashboard/components/logistics-dashboard-overview";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { getCurrentErpSession } from "@/lib/auth/session";
+import { hasRolePermission } from "@/lib/permissions/middleware";
 
 type QueryBuilder = any;
 type QueryResult<T> = {
@@ -136,11 +138,15 @@ async function loadLogisticsDashboardData(): Promise<LogisticsDashboardData> {
 }
 
 export default async function LogisticsDashboardPage() {
-  const data = await loadLogisticsDashboardData();
+  const [data, session] = await Promise.all([
+    loadLogisticsDashboardData(),
+    getCurrentErpSession(),
+  ]);
+  const canCreateShipment = session ? hasRolePermission(session, "shipments", "create") : false;
 
   return (
-    <main className="min-h-screen bg-slate-50 p-4 md:p-6">
-      <LogisticsDashboardOverview data={data} />
+    <main className="min-h-screen bg-background p-4 md:p-6">
+      <LogisticsDashboardOverview data={data} canCreateShipment={canCreateShipment} />
     </main>
   );
 }

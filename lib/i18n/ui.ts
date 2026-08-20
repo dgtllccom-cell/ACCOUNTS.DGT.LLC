@@ -1994,6 +1994,7 @@ export type UiKey =
   | "log.not_scheduled"
   | "log.assignment"
   | "log.pending_task_fallback"
+  | "log.create_shipment"
   | "common.no_data"
   | "cdash.total_accounts"
   | "cdash.total_products"
@@ -2770,6 +2771,7 @@ export type UiKey =
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "log.create_shipment": "Create Shipment",
   "common.expand": "Expand",
   "common.collapse": "Collapse",
   "bdash.title": "Branch Admin Dashboard",
@@ -5786,6 +5788,7 @@ const en: Dict = {
 
 const ur: Dict = {
   ...en,
+  "log.create_shipment": "نئی شپمنٹ بنائیں",
   "common.expand": "پھیلائیں",
   "common.collapse": "سمیٹیں",
   "nav.branch_setup_network": "برانچ سیٹ اپ / نیٹ ورک",
@@ -8784,6 +8787,7 @@ const ur: Dict = {
 
 const ar: Dict = {
   ...en,
+  "log.create_shipment": "إنشاء شحنة",
   "common.expand": "توسيع",
   "common.collapse": "طي",
   "nav.branch_setup_network": "إعداد الفرع / الشبكة",
@@ -11781,6 +11785,7 @@ const ar: Dict = {
 
 const fa: Dict = {
   ...en,
+  "log.create_shipment": "ایجاد محموله",
   "common.expand": "گسترش",
   "common.collapse": "جمع کردن",
   "nav.branch_setup_network": "راه‌اندازی شعبه / شبکه",
@@ -14777,6 +14782,7 @@ const fa: Dict = {
 
 const ps: Dict = {
   ...en,
+  "log.create_shipment": "نوی بار جوړ کړئ",
   "common.expand": "پراخول",
   "common.collapse": "راټولول",
   "nav.branch_setup_network": "د څانګې تنظیم / شبکه",
