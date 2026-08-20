@@ -1063,13 +1063,13 @@ export function GeneralOfficeDashboardView() {
 
               <div className="grid gap-4 sm:grid-cols-2">
                 {employees.slice(0, 4).map((emp) => (
-                  <div key={emp.id} className="rounded-2xl border p-5 bg-slate-900 text-white space-y-3">
-                    <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+                  <div key={emp.id} className="rounded-2xl border border-slate-200 dark:border-slate-800 p-5 bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-white space-y-3 shadow-xs">
+                    <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 pb-3">
                       <div>
-                        <div className="font-extrabold text-sm text-blue-400">ACCOUNTS.DGT.LLC</div>
-                        <div className="text-[9px] text-slate-400 font-mono">{tr("Official Identity Card").toUpperCase()}</div>
+                        <div className="font-extrabold text-sm text-blue-600 dark:text-blue-400">ACCOUNTS.DGT.LLC</div>
+                        <div className="text-[9px] text-slate-500 dark:text-slate-400 font-mono">{tr("Official Identity Card").toUpperCase()}</div>
                       </div>
-                      <Badge className="bg-emerald-500/20 text-emerald-400 border-emerald-500/40 text-[9px]">
+                      <Badge className="bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 border-emerald-500/40 text-[9px]">
                         {tr("Verified").toUpperCase()}
                       </Badge>
                     </div>

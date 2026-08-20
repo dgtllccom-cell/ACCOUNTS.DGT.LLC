@@ -11,6 +11,8 @@ import { getCurrentErpSession } from "@/lib/auth/session";
 import { CountryProductsDashboard } from "@/features/dashboard/components/country-products-dashboard";
 import { CountryDashboardOverview } from "@/features/dashboard/components/country-dashboard-overview";
 
+import { withLocalPg } from "@/lib/db/local-postgres";
+
 type RecentEntry = {
   id: string;
   voucher_no: string | null;
@@ -72,11 +74,11 @@ type CountryItem = {
 
 async function loadCountryList(): Promise<CountryItem[]> {
   try {
-    const dbUrl = process.env.DATABASE_URL;
-    if (!dbUrl) return [];
-    const sql = postgres(dbUrl, { prepare: false, idle_timeout: 5, connect_timeout: 10 });
-    const rows = await sql<CountryItem[]>`SELECT id, name, currency_code FROM countries WHERE deleted_at IS NULL ORDER BY name ASC;`;
-    return rows;
+    const res = await withLocalPg(async (sql) => {
+      const rows = await sql<CountryItem[]>`SELECT id, name, currency_code FROM countries WHERE deleted_at IS NULL ORDER BY name ASC;`;
+      return rows;
+    });
+    return res || [];
   } catch {
     return [];
   }
@@ -84,55 +86,57 @@ async function loadCountryList(): Promise<CountryItem[]> {
 
 async function loadCountryData(countryId: string): Promise<CountryDashboardData> {
   try {
-    const dbUrl = process.env.DATABASE_URL;
-    if (!dbUrl) throw new Error("DATABASE_URL is not configured");
-    const sql = postgres(dbUrl, { prepare: false, idle_timeout: 5, connect_timeout: 10 });
-
     const isAll = countryId === "all";
 
-    const [
-      countryRes,
-      mainBranchesRes,
-      cityBranchesRes,
-      usersRes,
-      accountsRes,
-      ledgersRes,
-      purchaseRows,
-      salesRows,
-      recentRows,
-      productsCountRes
-    ] = await Promise.all([
-      isAll
-        ? sql`SELECT 'All Countries (Global)' as name, 'USD' as currency_code;`
-        : sql`SELECT name, currency_code FROM countries WHERE id = ${countryId} LIMIT 1;`.catch(() => []),
-      isAll
-        ? sql`SELECT id, name, code, local_currency, country_id FROM country_branches WHERE deleted_at IS NULL;`.catch(() => [])
-        : sql`SELECT id, name, code, local_currency, country_id FROM country_branches WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
-      isAll
-        ? sql`SELECT id, country_branch_id, country_id, name, code, city_name, status, local_currency FROM city_branches WHERE deleted_at IS NULL;`.catch(() => [])
-        : sql`SELECT id, country_branch_id, country_id, name, code, city_name, status, local_currency FROM city_branches WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
-      isAll
-        ? sql`SELECT count(*)::int as c FROM user_role_assignments WHERE is_active = true AND deleted_at IS NULL;`.catch(() => [{ c: 0 }])
-        : sql`SELECT count(*)::int as c FROM user_role_assignments WHERE country_id = ${countryId} AND is_active = true AND deleted_at IS NULL;`.catch(() => [{ c: 0 }]),
-      isAll
-        ? sql`SELECT count(*)::int as c FROM enterprise_accounts WHERE deleted_at IS NULL;`.catch(() => [{ c: 0 }])
-        : sql`SELECT count(*)::int as c FROM enterprise_accounts WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => [{ c: 0 }]),
-      isAll
-        ? sql`SELECT id, country_branch_id, city_branch_id, debit_total, credit_total, current_balance, currency FROM ledgers WHERE deleted_at IS NULL;`.catch(() => [])
-        : sql`SELECT id, country_branch_id, city_branch_id, debit_total, credit_total, current_balance, currency FROM ledgers WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
-      isAll
-        ? sql`SELECT order_total, country_branch_id, city_branch_id FROM purchase_orders WHERE deleted_at IS NULL;`.catch(() => [])
-        : sql`SELECT order_total, country_branch_id, city_branch_id FROM purchase_orders WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
-      isAll
-        ? sql`SELECT order_total, country_branch_id, city_branch_id FROM sales_orders WHERE deleted_at IS NULL;`.catch(() => [])
-        : sql`SELECT order_total, country_branch_id, city_branch_id FROM sales_orders WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
-      isAll
-        ? sql`SELECT id, voucher_no, entry_date, type, status, created_at FROM roznamcha_entries WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 8;`.catch(() => [])
-        : sql`SELECT id, voucher_no, entry_date, type, status, created_at FROM roznamcha_entries WHERE country_id = ${countryId} ORDER BY created_at DESC LIMIT 8;`.catch(() => []),
-      isAll
-        ? sql`SELECT product_specifications FROM goods_registry WHERE deleted_at IS NULL;`.catch(() => [])
-        : sql`SELECT product_specifications FROM goods_registry WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => [])
-    ]);
+    const data = await withLocalPg(async (sql) => {
+      const [
+        countryRes,
+        mainBranchesRes,
+        cityBranchesRes,
+        usersRes,
+        accountsRes,
+        ledgersRes,
+        purchaseRows,
+        salesRows,
+        recentRows,
+        productsCountRes
+      ] = await Promise.all([
+        isAll
+          ? sql`SELECT 'All Countries (Global)' as name, 'USD' as currency_code;`
+          : sql`SELECT name, currency_code FROM countries WHERE id = ${countryId} LIMIT 1;`.catch(() => []),
+        isAll
+          ? sql`SELECT id, name, code, local_currency, country_id FROM country_branches WHERE deleted_at IS NULL;`.catch(() => [])
+          : sql`SELECT id, name, code, local_currency, country_id FROM country_branches WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
+        isAll
+          ? sql`SELECT id, country_branch_id, country_id, name, code, city_name, status, local_currency FROM city_branches WHERE deleted_at IS NULL;`.catch(() => [])
+          : sql`SELECT id, country_branch_id, country_id, name, code, city_name, status, local_currency FROM city_branches WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
+        isAll
+          ? sql`SELECT count(*)::int as c FROM user_role_assignments WHERE is_active = true AND deleted_at IS NULL;`.catch(() => [{ c: 0 }])
+          : sql`SELECT count(*)::int as c FROM user_role_assignments WHERE country_id = ${countryId} AND is_active = true AND deleted_at IS NULL;`.catch(() => [{ c: 0 }]),
+        isAll
+          ? sql`SELECT count(*)::int as c FROM enterprise_accounts WHERE deleted_at IS NULL;`.catch(() => [{ c: 0 }])
+          : sql`SELECT count(*)::int as c FROM enterprise_accounts WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => [{ c: 0 }]),
+        isAll
+          ? sql`SELECT id, country_branch_id, city_branch_id, debit_total, credit_total, current_balance, currency FROM ledgers WHERE deleted_at IS NULL;`.catch(() => [])
+          : sql`SELECT id, country_branch_id, city_branch_id, debit_total, credit_total, current_balance, currency FROM ledgers WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
+        isAll
+          ? sql`SELECT order_total, country_branch_id, city_branch_id FROM purchase_orders WHERE deleted_at IS NULL;`.catch(() => [])
+          : sql`SELECT order_total, country_branch_id, city_branch_id FROM purchase_orders WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
+        isAll
+          ? sql`SELECT order_total, country_branch_id, city_branch_id FROM sales_orders WHERE deleted_at IS NULL;`.catch(() => [])
+          : sql`SELECT order_total, country_branch_id, city_branch_id FROM sales_orders WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => []),
+        isAll
+          ? sql`SELECT id, voucher_no, entry_date, type, status, created_at FROM roznamcha_entries WHERE deleted_at IS NULL ORDER BY created_at DESC LIMIT 8;`.catch(() => [])
+          : sql`SELECT id, voucher_no, entry_date, type, status, created_at FROM roznamcha_entries WHERE country_id = ${countryId} ORDER BY created_at DESC LIMIT 8;`.catch(() => []),
+        isAll
+          ? sql`SELECT product_specifications FROM goods_registry WHERE deleted_at IS NULL;`.catch(() => [])
+          : sql`SELECT product_specifications FROM goods_registry WHERE country_id = ${countryId} AND deleted_at IS NULL;`.catch(() => [])
+      ]);
+      return { countryRes, mainBranchesRes, cityBranchesRes, usersRes, accountsRes, ledgersRes, purchaseRows, salesRows, recentRows, productsCountRes };
+    });
+
+    if (!data) throw new Error("Database connection could not be established");
+    const { countryRes, mainBranchesRes, cityBranchesRes, usersRes, accountsRes, ledgersRes, purchaseRows, salesRows, recentRows, productsCountRes } = data;
 
     const countryObj = countryRes[0] || {};
     const countryName = countryObj.name || (isAll ? "All Countries (Global)" : "Country Scoped");

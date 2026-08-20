@@ -1,13 +1,30 @@
 "use client";
 
 import React, { useState, useEffect, useMemo } from "react";
-import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
-import { getLedgerStatement, listLedgerReportLedgers, type LedgerLookupRow, type LedgerStatementLine } from "@/features/reports/ledger-report/ledger-report-api";
-import { Loader2 } from "lucide-react";
+import {
+  getLedgerStatement,
+  listLedgerReportLedgers,
+  type LedgerLookupRow,
+  type LedgerStatementLine
+} from "@/features/reports/ledger-report/ledger-report-api";
+import {
+  ArrowLeft,
+  BookOpen,
+  Calendar,
+  Download,
+  Loader2,
+  Printer,
+  RefreshCw,
+  Search,
+  Building,
+  User,
+  Layers,
+  ShieldCheck
+} from "lucide-react";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
@@ -20,22 +37,23 @@ type SessionInfo = {
 };
 
 function fmt(n: number) {
-  return Number.isFinite(n) ? n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "0.00";
+  return Number.isFinite(n)
+    ? n.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : "0.00";
 }
 
 export function UnifiedDetailedLedgerView() {
+  const router = useRouter();
   const lang = useActiveLanguage();
   const tr = (label: string) => translateHeader(lang, label);
   const tv = (value: string | null | undefined) => translateValue(lang, value);
   const isRtl = rtlLanguages.includes(lang);
+
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
   const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [portalNode, setPortalNode] = useState<HTMLElement | null>(null);
 
   useEffect(() => {
     let active = true;
-    setPortalNode(document.getElementById("erp-page-actions-slot"));
-    
     fetch("/api/erp/auth/session", { credentials: "include" })
       .then((res) => res.json())
       .then((info: SessionInfo) => {
@@ -45,10 +63,12 @@ export function UnifiedDetailedLedgerView() {
         }
       })
       .catch(console.error);
-    return () => { active = false; };
+    return () => {
+      active = false;
+    };
   }, []);
 
-  // Filters
+  // Date Filters
   const [fromDate, setFromDate] = useState(() => {
     const d = new Date();
     d.setMonth(0);
@@ -57,20 +77,17 @@ export function UnifiedDetailedLedgerView() {
   });
   const [toDate, setToDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [selectedLedgerId, setSelectedLedgerId] = useState<string | null>(null);
-  
+
   // Extra Unified Filters (Country / Branch / User)
   const [filterType, setFilterType] = useState<"none" | "country" | "branch" | "user">("none");
   const [filterValue, setFilterValue] = useState("");
-  
+
   // Data
   const [header, setHeader] = useState<LedgerLookupRow | null>(null);
   const [lines, setLines] = useState<LedgerStatementLine[]>([]);
   const [loading, setLoading] = useState(false);
   const [ledgerOptions, setLedgerOptions] = useState<SearchSelectOption[]>([]);
   const [searchingLedgers, setSearchingLedgers] = useState(false);
-
-  // Exchange Rate (only relevant for super admin, but kept in state)
-  const [exchangeRate, setExchangeRate] = useState<number>(278.50);
 
   const loadStatement = async (targetLedgerId?: string | null, fDate?: string, tDate?: string) => {
     const ledgerToFetch = targetLedgerId !== undefined ? targetLedgerId : selectedLedgerId;
@@ -98,31 +115,43 @@ export function UnifiedDetailedLedgerView() {
     }
   };
 
-  // Search ledgers for dropdown & re-resolve upon language switch
   useEffect(() => {
     let active = true;
     const fetchOptions = async () => {
       setSearchingLedgers(true);
       try {
-        const scope = isSuperAdmin ? "super_admin" : "country";
-        const res = await listLedgerReportLedgers({ reportScope: scope as any, limit: 500, language: lang });
+        const res = await listLedgerReportLedgers({
+          reportScope: isSuperAdmin ? "super_admin" : "country",
+          limit: 2000,
+          language: lang
+        });
         if (active && res?.ledgers) {
           const grouped = new Map<string, { label: string; keywords: string; ids: string[] }>();
           for (const row of res.ledgers) {
-            const key = row.accountId || row.accountCode || row.ledgerCode;
+            const key = row.accountId || row.accountCode || row.ledgerCode || row.ledgerId;
             if (!grouped.has(key)) {
-              const code = row.accountCode || row.ledgerCode;
-              const name = row.accountName || row.ledgerName;
-              const curr = row.ledgerCurrency;
+              const code = row.accountCode || row.ledgerCode || "";
+              const name = row.accountName || row.ledgerName || "";
+              const curr = row.ledgerCurrency || "";
+              const comp = row.companyName || "";
+              const custNo = row.customerNumber || "";
+              const rawCode = row.rawAccountCode || "";
+              const refNo = row.manualReferenceNumber || "";
+              const cName = row.countryName || "";
+              const bName = row.cityBranchName || row.countryBranchName || "";
+
+              const label = `${code ? code + " — " : ""}${name}${curr ? ` (${curr})` : ""}${comp ? ` • ${comp}` : ""}`;
+              const keywords = `${code} ${rawCode} ${refNo} ${custNo} ${name} ${comp} ${curr} ${cName} ${bName} ${row.accountKind || ""}`;
+
               grouped.set(key, {
-                label: `${code} - ${name} (${curr})`,
-                keywords: `${code} ${row.rawAccountCode || ""} ${row.manualReferenceNumber || ""} ${row.customerNumber || ""} ${name}`,
+                label,
+                keywords,
                 ids: []
               });
             }
             grouped.get(key)!.ids.push(row.ledgerId);
           }
-          const options = Array.from(grouped.values()).map(g => ({
+          const options = Array.from(grouped.values()).map((g) => ({
             value: g.ids.join(","),
             label: g.label,
             keywords: g.keywords
@@ -130,9 +159,10 @@ export function UnifiedDetailedLedgerView() {
           setLedgerOptions(options);
 
           if (options.length > 0) {
-            const currentSelected = selectedLedgerId && options.some(o => o.value === selectedLedgerId)
-              ? selectedLedgerId
-              : options[0].value;
+            const currentSelected =
+              selectedLedgerId && options.some((o) => o.value === selectedLedgerId)
+                ? selectedLedgerId
+                : options[0].value;
             setSelectedLedgerId(currentSelected);
             loadStatement(currentSelected);
           }
@@ -144,43 +174,77 @@ export function UnifiedDetailedLedgerView() {
       }
     };
     fetchOptions();
-    return () => { active = false; };
-    // Re-resolve dropdown account names when the ERP language changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSuperAdmin, lang]);
+    return () => {
+      active = false;
+    };
+  }, [lang, isSuperAdmin]);
 
   const handleApply = () => {
     loadStatement();
   };
 
   const handleReset = () => {
-    setSelectedLedgerId(null);
-    setHeader(null);
-    setLines([]);
-    setExchangeRate(278.50);
+    if (ledgerOptions.length > 0) {
+      setSelectedLedgerId(ledgerOptions[0].value);
+      loadStatement(ledgerOptions[0].value);
+    } else {
+      setSelectedLedgerId(null);
+      setHeader(null);
+      setLines([]);
+    }
     setFilterType("none");
     setFilterValue("");
   };
 
+  const exportCsv = () => {
+    if (!calculatedTotals.lines.length) return;
+    const headers = ["Date", "Serial", "User", "Branch", "Entry Type", "Ref No", "Description", "Debit", "Credit", "Balance", "USD Rate", "Debit USD", "Credit USD"];
+    const rows = calculatedTotals.lines.map((line) => [
+      line.entryDate?.split("T")[0] || "",
+      line.branchSerialNo || line.countrySerialNo || line.superAdminSerialNo || "",
+      line.createdByName || "",
+      line.branchName || "",
+      line.sourceTable || "",
+      line.referenceNo || "",
+      `"${(line.description || "").replace(/"/g, '""')}"`,
+      line.debit || 0,
+      line.credit || 0,
+      line.runningBalance || 0,
+      line.usdRate || 0,
+      line.drUsd || 0,
+      line.crUsd || 0
+    ]);
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((r) => r.join(","))].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `ledger_${header?.accountCode || "statement"}_${fromDate}_${toDate}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const filterDropdownOptions = useMemo(() => {
     if (filterType === "none" || !lines) return [];
-    let values = new Set<string>();
-    lines.forEach(line => {
+    const values = new Set<string>();
+    lines.forEach((line) => {
       if (filterType === "user" && line.createdByName) values.add(line.createdByName);
       if (filterType === "branch" && line.branchName) values.add(line.branchName);
       if (filterType === "country" && header?.countryName) values.add(header.countryName);
     });
-    return Array.from(values).sort().map(v => ({ label: v, value: v }));
+    return Array.from(values)
+      .sort()
+      .map((v) => ({ label: v, value: v }));
   }, [filterType, lines, header]);
 
   const calculatedTotals = useMemo(() => {
     let sumDr = 0;
     let sumCr = 0;
-    let sumDrPkr = 0;
-    let sumCrPkr = 0;
+    let sumDrUsd = 0;
+    let sumCrUsd = 0;
     let running = 0;
 
-    const filteredLines = lines.filter(line => {
+    const filteredLines = lines.filter((line) => {
       if (filterType === "none" || !filterValue) return true;
       if (filterType === "user") return line.createdByName === filterValue;
       if (filterType === "branch") return line.branchName === filterValue;
@@ -188,22 +252,22 @@ export function UnifiedDetailedLedgerView() {
       return true;
     });
 
-    const mappedLines = filteredLines.map(line => {
+    const mappedLines = filteredLines.map((line) => {
       sumDr += line.debit || 0;
       sumCr += line.credit || 0;
       running += (line.debit || 0) - (line.credit || 0);
 
-      const drPkr = (line.debit || 0) * exchangeRate;
-      const crPkr = (line.credit || 0) * exchangeRate;
+      const drUsd = (line.debit || 0) > 0 ? line.usdAmount || 0 : 0;
+      const crUsd = (line.credit || 0) > 0 ? line.usdAmount || 0 : 0;
 
-      sumDrPkr += drPkr;
-      sumCrPkr += crPkr;
+      sumDrUsd += drUsd;
+      sumCrUsd += crUsd;
 
       return {
         ...line,
         runningBalance: running,
-        drPkr,
-        crPkr
+        drUsd,
+        crUsd
       };
     });
 
@@ -211,30 +275,86 @@ export function UnifiedDetailedLedgerView() {
       lines: mappedLines,
       sumDr,
       sumCr,
-      sumDrPkr,
-      sumCrPkr,
+      sumDrUsd,
+      sumCrUsd,
       running
     };
-  }, [lines, exchangeRate, filterType, filterValue, header]);
+  }, [lines, filterType, filterValue, header]);
 
   return (
-    <div className="p-4 bg-[#f7f8fb] min-h-screen" dir={isRtl ? "rtl" : "ltr"}>
-      <style dangerouslySetInnerHTML={{ __html: `
-        .report-section h5 { margin-bottom:6px; font-weight:600; font-size:13px; color:#111827; border-bottom:2px solid #dee2e6; padding-bottom:4px; }
-        .report-row { display:flex; flex-wrap:wrap; justify-content:space-between; margin-bottom:10px; gap: 10px; }
-        .report-col { flex:1; min-width:200px; background: white; padding: 12px; border-radius: 6px; border: 1px solid #e2e8f0; }
-        .kv { display:flex; gap:4px; align-items:center; margin:4px 0; }
-        .kv .k { min-width:110px; font-size:11.5px; color:#6b7280; font-weight: 500; }
-        .kv .v { font-size:12px; font-weight:600; color:#111827; word-break: break-word; }
-        .entry-table th, .entry-table td { font-size:11px; padding:6px 8px; border: 1px solid #dee2e6; }
-        .entry-table thead th { background:#212529; color:#fff; text-align:center; white-space: nowrap; }
-        .entry-table tbody tr:nth-child(even) { background-color: #f8f9fa; }
-      `}} />
+    <div className="w-full space-y-4 p-3 sm:p-5 lg:p-6" dir={isRtl ? "rtl" : "ltr"}>
+      {/* ── Top Navigation & Page Actions Strip ── */}
+      <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-3.5 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3 dark:border-slate-800">
+          <div className="flex items-center gap-3">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => router.back()}
+              className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-bold shadow-xs hover:bg-slate-100 dark:hover:bg-slate-800"
+              title={tr("Back to previous page")}
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              <span>{tr("Back")}</span>
+            </Button>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-md bg-emerald-50 px-2 py-0.5 text-[11px] font-bold text-emerald-700 ring-1 ring-inset ring-emerald-700/10 dark:bg-emerald-950/50 dark:text-emerald-300">
+                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-600" />
+                  {isSuperAdmin ? tr("Super Admin Scope") : tr("Authorized Ledger Scope")}
+                </span>
+                <h1 className="text-base font-black text-slate-900 dark:text-slate-100">
+                  {tr("Detailed Ledger Statement")}
+                </h1>
+              </div>
+              <p className="text-[11px] text-slate-400 font-medium hidden sm:block">
+                {tr("Standard ERP navigation and live multi-currency ledger drill-down")}
+              </p>
+            </div>
+          </div>
 
-      {/* Top Filters Bar Portal */}
-      {portalNode && createPortal(
-        <div className="flex items-center gap-2 bg-slate-50/50 p-1 rounded-lg border border-slate-200 shadow-sm">
-          <div className="w-[200px]">
+          {/* Quick Print / Export Tools */}
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => window.print()}
+              className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-bold shadow-xs"
+            >
+              <Printer className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{tr("Print")}</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={exportCsv}
+              disabled={!calculatedTotals.lines.length}
+              className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-bold shadow-xs"
+            >
+              <Download className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">{tr("Export CSV")}</span>
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={() => loadStatement()}
+              disabled={loading}
+              className="h-8 gap-1.5 rounded-lg px-2.5 text-xs font-bold shadow-xs"
+            >
+              <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} />
+              <span className="hidden sm:inline">{tr("Refresh")}</span>
+            </Button>
+          </div>
+        </div>
+
+        {/* ── Prominent Searchable Account Selector & Filters Bar ── */}
+        <div className="flex flex-wrap items-center gap-3 pt-1">
+          {/* Primary Account Combobox */}
+          <div className="flex-1 min-w-[280px] max-w-xl">
             <SearchSelect
               label=""
               options={ledgerOptions}
@@ -248,186 +368,395 @@ export function UnifiedDetailedLedgerView() {
                   setLines([]);
                 }
               }}
-              placeholder={tr("Search Account No...")}
+              placeholder={searchingLedgers ? tr("Loading accounts...") : tr("Search by Account Name, No, Ref, Company, Code...")}
             />
           </div>
-          
-          <div className="flex items-center gap-1 bg-white border border-slate-200 rounded-md px-1.5 py-0.5">
-            <span className="text-[10px] text-slate-500 font-semibold px-1">{tr("From")}</span>
-            <Input type="date" className="h-6 w-[105px] text-xs border-0 shadow-none bg-transparent p-0 focus-visible:ring-0" value={fromDate} onChange={e => setFromDate(e.target.value)} />
-            <span className="text-[10px] text-slate-500 font-semibold px-1 border-l border-slate-200 ml-1 pl-2">{tr("To")}</span>
-            <Input type="date" className="h-6 w-[105px] text-xs border-0 shadow-none bg-transparent p-0 focus-visible:ring-0" value={toDate} onChange={e => setToDate(e.target.value)} />
+
+          {/* Date Pickers */}
+          <div className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-slate-50/70 px-2 py-1 dark:border-slate-700 dark:bg-slate-800/60">
+            <Calendar className="h-3.5 w-3.5 text-slate-400" />
+            <span className="text-[11px] font-bold text-slate-500 dark:text-slate-400">{tr("From")}</span>
+            <Input
+              type="date"
+              className="h-7 w-[115px] border-0 bg-transparent p-0 text-xs font-semibold shadow-none focus-visible:ring-0 dark:text-slate-100"
+              value={fromDate}
+              onChange={(e) => setFromDate(e.target.value)}
+            />
+            <span className="border-l border-slate-200 pl-1.5 text-[11px] font-bold text-slate-500 dark:border-slate-700 dark:text-slate-400">
+              {tr("To")}
+            </span>
+            <Input
+              type="date"
+              className="h-7 w-[115px] border-0 bg-transparent p-0 text-xs font-semibold shadow-none focus-visible:ring-0 dark:text-slate-100"
+              value={toDate}
+              onChange={(e) => setToDate(e.target.value)}
+            />
           </div>
 
-          <div className="w-[150px] flex gap-1">
-            <div className="flex-1">
-              <select 
-                className="flex h-7 w-full rounded-md border border-input bg-background px-2 py-0 text-xs shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                value={filterType}
-                onChange={e => {
-                  setFilterType(e.target.value as any);
-                  setFilterValue("");
-                }}
-              >
-                <option value="none">{tr("Filter By")}</option>
-                <option value="country">{tr("Country")}</option>
-                <option value="branch">{tr("Branch")}</option>
-                <option value="user">{tr("User")}</option>
-              </select>
-            </div>
-          </div>
-          {filterType !== "none" && (
-            <div className="w-[140px]">
-              <SearchSelect
-                label=""
-                options={filterDropdownOptions}
-                value={filterValue}
-                onValueChange={(v: string) => setFilterValue(v)}
-                placeholder={`Select ${filterType}...`}
-              />
-            </div>
-          )}
+          {/* Filter by Country / Branch / User */}
+          <div className="flex items-center gap-1.5">
+            <select
+              className="h-8 rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-semibold shadow-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-primary dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100"
+              value={filterType}
+              onChange={(e) => {
+                setFilterType(e.target.value as any);
+                setFilterValue("");
+              }}
+            >
+              <option value="none">{tr("Filter By (All)")}</option>
+              {isSuperAdmin && <option value="country">{tr("Country")}</option>}
+              <option value="branch">{tr("Branch")}</option>
+              <option value="user">{tr("User")}</option>
+            </select>
 
-          <div className="flex gap-1 ml-1">
-            <Button size="sm" onClick={handleApply} disabled={loading} className="text-[10px] h-7 px-3">
-              {loading ? <Loader2 className="h-3 w-3 animate-spin mr-1" /> : null} {tr("Apply")}
-            </Button>
-            <Button size="sm" variant="outline" onClick={handleReset} className="text-[10px] h-7 px-2">{tr("Reset")}</Button>
-          </div>
-        </div>,
-        portalNode
-      )}
-
-      {/* Top Row Details (4 Boxes now) */}
-      <div className="report-row report-section">
-        <div className="report-col">
-          <h5>{tr("Account Details")}</h5>
-          <div className="kv"><div className="k">{tr("A/c Name")}:</div><div className="v">{header?.accountName || header?.ledgerName || "-"}</div></div>
-          <div className="kv"><div className="k">{tr("A/c Number")}:</div><div className="v">{header?.accountCode || header?.ledgerCode || "-"}</div></div>
-          <div className="kv"><div className="k">{tr("Category")}:</div><div className="v">{tv(header?.accountKind) || "-"}</div></div>
-          <div className="kv"><div className="k">{tr("Type")}:</div><div className="v">{tv(header?.normalBalance) || "-"}</div></div>
-          <div className="kv"><div className="k">{tr("Currency")}:</div><div className="v">{header?.ledgerCurrency || "-"}</div></div>
-        </div>
-
-        <div className="report-col">
-          <h5>{tr("Company Details")}</h5>
-          <div className="kv"><div className="k">{tr("Company Name")}:</div><div className="v">{header?.companyName || header?.countryName || "—"}</div></div>
-          <div className="kv"><div className="k">{tr("City")}:</div><div className="v">{header?.cityName || "-"}</div></div>
-          <div className="kv"><div className="k">{tr("State")}:</div><div className="v">{header?.stateName || "-"}</div></div>
-          <div className="kv"><div className="k">{tr("Address")}:</div><div className="v">{header?.address || "-"}</div></div>
-        </div>
-
-        <div className="report-col">
-          <h5>{tr("Branch & Session Details")}</h5>
-          <div className="kv"><div className="k">{tr("Branch Name")}:</div><div className="v">{header?.cityBranchName || header?.countryBranchName || "-"}</div></div>
-          <div className="kv"><div className="k">{tr("Country")}:</div><div className="v">{header?.countryName || "-"}</div></div>
-          <div className="kv"><div className="k">{tr("User Name")}:</div><div className="v">{sessionInfo?.user?.fullName || "Admin"}</div></div>
-          <div className="kv"><div className="k">{tr("Login Date")}:</div><div className="v">{new Date().toLocaleDateString()}</div></div>
-        </div>
-
-        <div className="report-col">
-          <h5>{tr("Ledger Summary")}</h5>
-          <div className="kv"><div className="k">{tr("Entries")}:</div><div className="v">{lines.length}</div></div>
-          <div className="kv"><div className="k">{tr("Dr")}:</div><div className="v text-rose-600">{fmt(calculatedTotals.sumDr)}</div></div>
-          <div className="kv"><div className="k">{tr("Cr")}:</div><div className="v text-emerald-600">{fmt(calculatedTotals.sumCr)}</div></div>
-          <div className="kv"><div className="k">{tr("Balance")}:</div><div className={`v ${calculatedTotals.running < 0 ? 'text-rose-600' : calculatedTotals.running > 0 ? 'text-emerald-600' : 'text-slate-500'}`}>{fmt(calculatedTotals.running)}</div></div>
-          
-          {isSuperAdmin && (
-            <div className="kv">
-              <div className="k">{tr("Exchange Rate")}:</div>
-              <div className="v text-blue-600 flex items-center gap-1">
-                1 USD =
-                <Input 
-                  type="number" 
-                  step="0.01" 
-                  min="0" 
-                  value={exchangeRate} 
-                  onChange={(e) => setExchangeRate(Number(e.target.value) || 0)}
-                  className="h-7 w-24 text-xs inline-flex px-1" 
+            {filterType !== "none" && (
+              <div className="w-[160px]">
+                <SearchSelect
+                  label=""
+                  options={filterDropdownOptions}
+                  value={filterValue}
+                  onValueChange={(v: string) => setFilterValue(v)}
+                  placeholder={`Select ${filterType}...`}
                 />
-                PKR
               </div>
-            </div>
-          )}
+            )}
+          </div>
+
+          {/* Filter Apply & Reset */}
+          <div className="flex items-center gap-2">
+            <Button
+              size="sm"
+              onClick={handleApply}
+              disabled={loading}
+              className="h-8 gap-1.5 rounded-lg px-3.5 text-xs font-bold shadow-xs bg-emerald-600 hover:bg-emerald-700 text-white"
+            >
+              {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Search className="h-3.5 w-3.5" />}
+              <span>{tr("Apply")}</span>
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={handleReset}
+              className="h-8 rounded-lg px-3 text-xs font-semibold shadow-xs hover:bg-slate-100 dark:hover:bg-slate-800"
+            >
+              {tr("Reset")}
+            </Button>
+          </div>
         </div>
-
-
       </div>
 
-      {/* Ledger Entries */}
-      <div className="mt-4 bg-white p-3 border border-slate-200 rounded-md shadow-sm overflow-x-auto report-section">
-        <h5 className="mb-3">{tr("Ledger Entries")}</h5>
-        <table className="w-full text-left border-collapse entry-table">
-          <thead>
-            <tr>
-              <Th>Date</Th>
-              <Th>Serial</Th>
-              <Th>Name</Th>
-              <Th>No.</Th>
-              <Th>Details</Th>
-              <Th>Dr.</Th>
-              <Th>Cr.</Th>
-              <Th>Total</Th>
-              {isSuperAdmin && (
-                <>
-                  <Th>Ex. Rate</Th>
-                  <Th>Dr. (PKR)</Th>
-                  <Th>Cr. (PKR)</Th>
-                </>
+      {/* ── Top Summary Row (4 Theme-Aligned Cards) ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        {/* Card 1: Account Details */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3 dark:border-slate-800">
+            <h5 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+              <BookOpen className="h-3.5 w-3.5 text-emerald-600" />
+              <span>{tr("Account Details")}</span>
+            </h5>
+            <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-mono font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">
+              {header?.ledgerCurrency || "—"}
+            </span>
+          </div>
+          <div className="space-y-1.5 text-xs">
+            <div className="flex justify-between gap-2">
+              <span className="text-slate-400 font-medium">{tr("A/c Name")}:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 text-end truncate">
+                {header?.accountName || header?.ledgerName || "—"}
+              </span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-slate-400 font-medium">{tr("A/c Number")}:</span>
+              <span className="font-mono font-bold text-slate-800 dark:text-slate-200">
+                {header?.accountCode || header?.ledgerCode || "—"}
+              </span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-slate-400 font-medium">{tr("Category")}:</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-300">
+                {tv(header?.accountKind) || "—"}
+              </span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-slate-400 font-medium">{tr("Normal Type")}:</span>
+              <span className="font-semibold uppercase text-slate-700 dark:text-slate-300">
+                {tv(header?.normalBalance) || "—"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 2: Company Details */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3 dark:border-slate-800">
+            <h5 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+              <Building className="h-3.5 w-3.5 text-blue-600" />
+              <span>{tr("Company Details")}</span>
+            </h5>
+          </div>
+          <div className="space-y-1.5 text-xs">
+            <div className="flex justify-between gap-2">
+              <span className="text-slate-400 font-medium">{tr("Company Name")}:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 text-end truncate">
+                {header?.companyName || "DGT LLC"}
+              </span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-slate-400 font-medium">{tr("Country / City")}:</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200">
+                {header?.countryName || "—"}{header?.cityName ? ` / ${header.cityName}` : ""}
+              </span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-slate-400 font-medium">{tr("Address")}:</span>
+              <span className="font-medium text-slate-700 dark:text-slate-300 text-end truncate">
+                {header?.address || "—"}
+              </span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-slate-400 font-medium">{tr("Customer No")}:</span>
+              <span className="font-mono font-bold text-slate-700 dark:text-slate-300">
+                {header?.customerNumber || header?.manualReferenceNumber || "—"}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 3: Branch & Session */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3 dark:border-slate-800">
+            <h5 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+              <User className="h-3.5 w-3.5 text-violet-600" />
+              <span>{tr("Branch & Session Details")}</span>
+            </h5>
+          </div>
+          <div className="space-y-1.5 text-xs">
+            <div className="flex justify-between gap-2">
+              <span className="text-slate-400 font-medium">{tr("Branch Name")}:</span>
+              <span className="font-bold text-slate-900 dark:text-slate-100 text-end truncate">
+                {header?.cityBranchName || header?.countryBranchName || tr("Main Office")}
+              </span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-slate-400 font-medium">{tr("Country")}:</span>
+              <span className="font-semibold text-slate-800 dark:text-slate-200">
+                {header?.countryName || "—"}
+              </span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-slate-400 font-medium">{tr("User Name")}:</span>
+              <span className="font-bold text-slate-800 dark:text-slate-200">
+                {sessionInfo?.user?.fullName || "User"}
+              </span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-slate-400 font-medium">{tr("Session Scope")}:</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-300">
+                {isSuperAdmin ? tr("Global Super Admin") : tr("Scoped Access")}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Card 4: Ledger Summary & Live Stand */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <div className="flex items-center justify-between border-b border-slate-100 pb-2 mb-3 dark:border-slate-800">
+            <h5 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-1.5">
+              <Layers className="h-3.5 w-3.5 text-amber-600" />
+              <span>{tr("Ledger Summary")}</span>
+            </h5>
+            <span className="rounded bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700 dark:bg-emerald-950/60 dark:text-emerald-300">
+              {calculatedTotals.lines.length} {tr("Entries")}
+            </span>
+          </div>
+          <div className="space-y-1.5 text-xs">
+            <div className="flex justify-between gap-2">
+              <span className="text-slate-400 font-medium">{tr("Total Debit (Dr)")}:</span>
+              <span className="font-bold text-rose-600 dark:text-rose-400">{fmt(calculatedTotals.sumDr)}</span>
+            </div>
+            <div className="flex justify-between gap-2">
+              <span className="text-slate-400 font-medium">{tr("Total Credit (Cr)")}:</span>
+              <span className="font-bold text-emerald-600 dark:text-emerald-400">{fmt(calculatedTotals.sumCr)}</span>
+            </div>
+            <div className="flex justify-between gap-2 border-t border-slate-100 pt-1 dark:border-slate-800">
+              <span className="text-slate-600 dark:text-slate-300 font-bold">{tr("Net Balance")}:</span>
+              <span
+                className={`font-black text-sm ${
+                  calculatedTotals.running < 0
+                    ? "text-rose-600 dark:text-rose-400"
+                    : calculatedTotals.running > 0
+                    ? "text-emerald-600 dark:text-emerald-400"
+                    : "text-slate-600 dark:text-slate-400"
+                }`}
+              >
+                {fmt(calculatedTotals.running)} {header?.ledgerCurrency || ""}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ── Main Ledger Entries Table Card ── */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-900">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3 mb-3 dark:border-slate-800">
+          <div className="flex items-center gap-2">
+            <h3 className="text-sm font-black text-slate-900 dark:text-slate-100">
+              {tr("Ledger Statement & Activity Audit")}
+            </h3>
+            {header && (
+              <span className="text-xs text-slate-400 font-medium hidden md:inline">
+                ({header.ledgerCode} • {header.ledgerCurrency})
+              </span>
+            )}
+          </div>
+          <span className="text-xs font-mono font-bold text-slate-500 dark:text-slate-400">
+            {tr("Showing")} {calculatedTotals.lines.length} {tr("Records")}
+          </span>
+        </div>
+
+        <div className="overflow-x-auto rounded-xl border border-slate-200 dark:border-slate-800">
+          <table className="w-full text-left border-collapse text-xs">
+            <thead>
+              <tr className="bg-slate-50 dark:bg-slate-800/80 text-slate-700 dark:text-slate-200 border-b border-slate-200 dark:border-slate-700">
+                <Th className="p-2.5 whitespace-nowrap text-center font-bold">Date</Th>
+                <Th className="p-2.5 whitespace-nowrap text-center font-bold">Serial No</Th>
+                <Th className="p-2.5 whitespace-nowrap font-bold">User / Operator</Th>
+                <Th className="p-2.5 whitespace-nowrap font-bold">Branch Name</Th>
+                <Th className="p-2.5 whitespace-nowrap font-bold">Entry Type</Th>
+                <Th className="p-2.5 whitespace-nowrap font-bold">Ref No</Th>
+                <Th className="p-2.5 min-w-[200px] font-bold">Description / Particulars</Th>
+                <Th className="p-2.5 whitespace-nowrap text-right font-bold text-rose-700 dark:text-rose-400">Debit (Dr)</Th>
+                <Th className="p-2.5 whitespace-nowrap text-right font-bold text-emerald-700 dark:text-emerald-400">Credit (Cr)</Th>
+                <Th className="p-2.5 whitespace-nowrap text-right font-black">Running Balance</Th>
+                <Th className="p-2.5 whitespace-nowrap text-center font-bold">USD Rate</Th>
+                <Th className="p-2.5 whitespace-nowrap text-right font-bold text-blue-700 dark:text-blue-400">Dr (USD)</Th>
+                <Th className="p-2.5 whitespace-nowrap text-right font-bold text-amber-600 dark:text-amber-400">Cr (USD)</Th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+              {calculatedTotals.lines.map((line, idx) => (
+                <tr
+                  key={idx}
+                  className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                >
+                  <td className="p-2.5 text-center font-mono whitespace-nowrap text-slate-600 dark:text-slate-400">
+                    {line.entryDate?.split("T")[0] || "—"}
+                  </td>
+                  <td className="p-2.5 text-center font-mono text-[11px] font-semibold text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                    {line.branchSerialNo || line.countrySerialNo || line.superAdminSerialNo || "—"}
+                  </td>
+                  <td className="p-2.5 font-semibold text-slate-800 dark:text-slate-200 whitespace-nowrap">
+                    {line.createdByName || "User"}
+                  </td>
+                  <td className="p-2.5 text-slate-600 dark:text-slate-400 whitespace-nowrap">
+                    {line.branchName || "Main Office"}
+                  </td>
+                  <td className="p-2.5 whitespace-nowrap">
+                    <span className="inline-block rounded px-2 py-0.5 text-[10px] font-bold bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300">
+                      {line.sourceTable === "ledger_posting_batches"
+                        ? tr("Opening Balance")
+                        : line.sourceTable === "roznamcha_entries"
+                        ? tr("Roznamcha")
+                        : tv(line.sourceTable) || "—"}
+                    </span>
+                  </td>
+                  <td className="p-2.5 font-mono text-slate-700 dark:text-slate-300 whitespace-nowrap">
+                    {line.referenceNo || "—"}
+                  </td>
+                  <td className="p-2.5 text-slate-700 dark:text-slate-300 max-w-sm">
+                    <div>{line.description || "—"}</div>
+                    {((line as any).perKgRate || (line as any).purchaseCurrency || (line as any).totalPurchaseAmount) ? (
+                      <div className="text-[10px] text-slate-400 mt-1 pt-1 border-t border-slate-100 dark:border-slate-800 flex gap-2">
+                        {(line as any).perKgRate && <span>{tr("Per KG Rate")}: {fmt((line as any).perKgRate)}</span>}
+                        {(line as any).purchaseCurrency && <span>{tr("Currency")}: {(line as any).purchaseCurrency}</span>}
+                        {(line as any).totalPurchaseAmount && <span>{tr("Total")}: {fmt((line as any).totalPurchaseAmount)}</span>}
+                      </div>
+                    ) : null}
+                  </td>
+                  <td className="p-2.5 text-right font-bold text-rose-600 dark:text-rose-400 whitespace-nowrap">
+                    {line.debit ? fmt(line.debit) : "—"}
+                  </td>
+                  <td className="p-2.5 text-right font-bold text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                    {line.credit ? fmt(line.credit) : "—"}
+                  </td>
+                  <td
+                    className={`p-2.5 text-right font-black whitespace-nowrap ${
+                      line.runningBalance < 0
+                        ? "text-rose-600 dark:text-rose-400"
+                        : line.runningBalance > 0
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-slate-600 dark:text-slate-400"
+                    }`}
+                  >
+                    {fmt(line.runningBalance)}
+                  </td>
+                  <td className="p-2.5 text-center font-mono text-slate-500 whitespace-nowrap">
+                    {line.usdRate ? line.usdRate.toFixed(4) : "—"}
+                  </td>
+                  <td className="p-2.5 text-right font-semibold text-blue-600 dark:text-blue-400 whitespace-nowrap">
+                    {line.debit ? fmt((line as any).drUsd) : "—"}
+                  </td>
+                  <td className="p-2.5 text-right font-semibold text-amber-600 dark:text-amber-400 whitespace-nowrap">
+                    {line.credit ? fmt((line as any).crUsd) : "—"}
+                  </td>
+                </tr>
+              ))}
+
+              {calculatedTotals.lines.length === 0 && !loading && (
+                <tr>
+                  <td colSpan={13} className="text-center py-10 text-slate-400">
+                    <BookOpen className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                    <p className="text-sm font-semibold">{tr("No ledger transactions found for the selected period.")}</p>
+                    <p className="text-xs mt-1">{tr("Please choose an account from the search selector above or adjust your date range.")}</p>
+                  </td>
+                </tr>
               )}
-            </tr>
-          </thead>
-          <tbody>
-            {calculatedTotals.lines.map((line, idx) => (
-              <tr key={idx}>
-                <td className="whitespace-nowrap">{line.entryDate?.split('T')[0] || "-"}</td>
-                <td className="whitespace-nowrap">{line.branchSerialNo || line.countrySerialNo || line.superAdminSerialNo || "-"}</td>
-                <td className="whitespace-nowrap"><a href="#" className="text-blue-600 hover:underline">{line.createdByName || "-"}</a></td>
-                <td className="whitespace-nowrap">{line.referenceNo || "-"}</td>
-                <td>{line.description || "-"}</td>
-                <td className="text-right text-rose-700 font-medium">{line.debit ? fmt(line.debit) : "0"}</td>
-                <td className="text-right text-emerald-700 font-medium">{line.credit ? fmt(line.credit) : "0"}</td>
-                <td className={`text-right font-bold ${line.runningBalance < 0 ? 'text-rose-700' : line.runningBalance > 0 ? 'text-emerald-700' : ''}`}>
-                  {fmt(line.runningBalance)}
-                </td>
-                {isSuperAdmin && (
-                  <>
-                    <td className="text-center">{exchangeRate.toFixed(2)}</td>
-                    <td className="text-right text-blue-700 font-medium">{line.debit ? fmt(line.drPkr) : "0.00"}</td>
-                    <td className="text-right text-amber-600 font-medium">{line.credit ? fmt(line.crPkr) : "0.00"}</td>
-                  </>
-                )}
-              </tr>
-            ))}
-            {calculatedTotals.lines.length === 0 && !loading && (
-              <tr>
-                <td colSpan={isSuperAdmin ? 11 : 8} className="text-center py-6 text-slate-500">{tr("No entries found. Select an account and apply filters.")}</td>
-              </tr>
+
+              {loading && (
+                <tr>
+                  <td colSpan={13} className="text-center py-10 text-slate-500">
+                    <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2 text-primary" />
+                    <p className="text-xs font-semibold">{tr("Loading live ledger statement from database...")}</p>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+
+            {calculatedTotals.lines.length > 0 && (
+              <tfoot>
+                <tr className="bg-slate-100 dark:bg-slate-800 font-bold border-t-2 border-slate-300 dark:border-slate-700">
+                  <td colSpan={7} className="p-2.5 text-right uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    {tr("Grand Totals")}
+                  </td>
+                  <td className="p-2.5 text-right font-black text-rose-600 dark:text-rose-400 whitespace-nowrap">
+                    {fmt(calculatedTotals.sumDr)}
+                  </td>
+                  <td className="p-2.5 text-right font-black text-emerald-600 dark:text-emerald-400 whitespace-nowrap">
+                    {fmt(calculatedTotals.sumCr)}
+                  </td>
+                  <td
+                    className={`p-2.5 text-right font-black whitespace-nowrap ${
+                      calculatedTotals.running < 0
+                        ? "text-rose-600 dark:text-rose-400"
+                        : calculatedTotals.running > 0
+                        ? "text-emerald-600 dark:text-emerald-400"
+                        : "text-slate-700 dark:text-slate-300"
+                    }`}
+                  >
+                    {fmt(calculatedTotals.running)}
+                  </td>
+                  <td className="p-2.5 text-center text-slate-400">—</td>
+                  <td className="p-2.5 text-right font-bold text-blue-700 dark:text-blue-400 whitespace-nowrap">
+                    {fmt(calculatedTotals.sumDrUsd)}
+                  </td>
+                  <td className="p-2.5 text-right font-bold text-amber-600 dark:text-amber-400 whitespace-nowrap">
+                    {fmt(calculatedTotals.sumCrUsd)}
+                  </td>
+                </tr>
+              </tfoot>
             )}
-            {loading && (
-              <tr>
-                <td colSpan={isSuperAdmin ? 11 : 8} className="text-center py-6 text-slate-500"><Loader2 className="h-5 w-5 animate-spin mx-auto mb-2" /> {tr("Loading data...")}</td>
-              </tr>
-            )}
-          </tbody>
-          {calculatedTotals.lines.length > 0 && (
-            <tfoot>
-              <tr className="bg-slate-100 font-bold border-t-2 border-slate-300">
-                <td colSpan={5} className="text-right">{tr("Totals")}</td>
-                <td className="text-right text-rose-700">{fmt(calculatedTotals.sumDr)}</td>
-                <td className="text-right text-emerald-700">{fmt(calculatedTotals.sumCr)}</td>
-                <td className={`text-right ${calculatedTotals.running < 0 ? 'text-rose-700' : calculatedTotals.running > 0 ? 'text-emerald-700' : ''}`}>{fmt(calculatedTotals.running)}</td>
-                {isSuperAdmin && (
-                  <>
-                    <td className="text-center">—</td>
-                    <td className="text-right text-blue-700">{fmt(calculatedTotals.sumDrPkr)}</td>
-                    <td className="text-right text-amber-600">{fmt(calculatedTotals.sumCrPkr)}</td>
-                  </>
-                )}
-              </tr>
-            </tfoot>
-          )}
-        </table>
+          </table>
+        </div>
       </div>
     </div>
   );

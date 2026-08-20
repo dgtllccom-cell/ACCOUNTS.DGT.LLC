@@ -24,6 +24,11 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/dashboard/super",
+        destination: "/dashboard/super-admin",
+        permanent: false,
+      },
+      {
         source: "/dashboard/journal",
         destination: "/dashboard/journal/sales-order-payment/advance",
         permanent: false,

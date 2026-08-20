@@ -562,18 +562,18 @@ export function DailyExchangeRateManager() {
         <div className="lg:col-span-8 space-y-3">
           
           {/* Header Filter Controls Bar */}
-          <div className="bg-slate-900 text-white p-4 rounded-2xl shadow-xs border border-slate-800 space-y-3">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-800 pb-2.5">
+          <div className="bg-white dark:bg-slate-900 text-slate-900 dark:text-white p-4 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 space-y-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-2.5">
               <div>
-                <h3 className="text-xs font-black uppercase tracking-wide flex items-center gap-2 text-emerald-400">
+                <h3 className="text-xs font-black uppercase tracking-wide flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
                   <Clock className="w-4 h-4" />
                   {th("SUPER ADMIN LIVE EXCHANGE RATES TABLE")}
                 </h3>
-                <p className="text-[10px] text-slate-400 font-medium">
+                <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                   Audited intra-day exchange rates recorded by users and branch terminals worldwide.
                 </p>
               </div>
-              <span className="text-[10px] font-mono font-black bg-slate-800 text-emerald-400 px-2.5 py-1 rounded-lg border border-slate-700 shadow-xs">
+              <span className="text-[10px] font-mono font-black bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-emerald-400 px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 shadow-xs">
                 {th("TOTAL ENTRIES:")} {rates.length}
               </span>
             </div>

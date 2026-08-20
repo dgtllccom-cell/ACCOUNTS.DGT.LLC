@@ -1,5 +1,5 @@
 import { Activity, Building2, Globe, User, Users2, Wrench } from "lucide-react";
-import postgres from "postgres";
+import { withLocalPg } from "@/lib/db/local-postgres";
 import { redirect } from "next/navigation";
 import type { Route } from "next";
 import { getCurrentErpSession } from "@/lib/auth/session";
@@ -42,118 +42,114 @@ function money(value: number) {
 }
 
 async function loadDashboard(): Promise<DashboardData> {
-  const dbUrl = process.env.DATABASE_URL;
-  if (!dbUrl) return { ...EMPTY_DATA, error: "DATABASE_URL is not configured." };
-
-  const sql = postgres(dbUrl, { max: 1, prepare: false, idle_timeout: 5, connect_timeout: 10 });
-  const count = async (table: string) => {
-    try {
-      const rows = await sql`select count(*)::int as value from ${sql(table)} where deleted_at is null`;
-      return Number(rows[0]?.value || 0);
-    } catch {
-      try {
-        const rows = await sql`select count(*)::int as value from ${sql(table)}`;
-        return Number(rows[0]?.value || 0);
-      } catch {
-        return 0;
-      }
-    }
-  };
-
   try {
-    await sql`select 1 as connected`;
-    const countriesCount = await count("countries");
-    const countryBranchesCount = await count("country_branches");
-    const cityBranchesCount = await count("city_branches");
-    const usersCount = await count("profiles");
-    const customersCount = await count("customers");
-    const companiesCount = await count("companies");
-    const activeRows = await sql`select count(distinct user_id)::int as value from user_role_assignments where is_active=true and deleted_at is null`.catch(() => [{ value: 0 }]);
-    const purchaseRows = await sql`select country_id, order_total from purchase_orders where deleted_at is null`.catch(() => []);
-    const salesRows = await sql`select country_id, order_total from sales_orders where deleted_at is null`.catch(() => []);
-    const ledgerRows = await sql`select country_id, debit_total, credit_total, current_balance from ledgers where deleted_at is null`.catch(() => []);
-    const countries = await sql`select id, name, currency_code, is_active from countries where deleted_at is null order by name`.catch(() => []);
-    const mainBranches = await sql`select id, country_id from country_branches where deleted_at is null`.catch(() => []);
-    const cityBranches = await sql`select id, country_id from city_branches where deleted_at is null`.catch(() => []);
-    const countryUsers = await sql`select country_id, count(distinct user_id)::int as users from user_role_assignments where is_active=true and deleted_at is null and country_id is not null group by country_id`.catch(() => []);
-    const monthly = await sql`
-      with months as (
-        select generate_series(date_trunc('month', current_date)-interval '5 months', date_trunc('month', current_date), interval '1 month') month_start
-      )
-      select to_char(month_start,'Mon YYYY') name,
-        coalesce((select sum(order_total) from sales_orders where deleted_at is null and created_at>=month_start and created_at<month_start+interval '1 month'),0)::float8 sales,
-        coalesce((select sum(order_total) from purchase_orders where deleted_at is null and created_at>=month_start and created_at<month_start+interval '1 month'),0)::float8 purchases
-      from months order by month_start
-    `.catch(() => []);
-    const countryRows = countries as unknown as CountryRow[];
-    const mainBranchRows = mainBranches as unknown as BranchRow[];
-    const cityBranchRows = cityBranches as unknown as BranchRow[];
-    const countryUserData = countryUsers as unknown as CountryUserRow[];
-    const purchases = purchaseRows as unknown as OrderTotalRow[];
-    const sales = salesRows as unknown as OrderTotalRow[];
-    const ledgers = ledgerRows as unknown as LedgerTotalRow[];
-    const monthlyData = monthly as unknown as MonthlyRow[];
-    const activeData = activeRows as unknown as CountRow[];
+    const result = await withLocalPg(async (sql) => {
+      const count = async (table: string) => {
+        try {
+          const rows = await sql`select count(*)::int as value from ${sql(table)} where deleted_at is null`;
+          return Number(rows[0]?.value || 0);
+        } catch {
+          try {
+            const rows = await sql`select count(*)::int as value from ${sql(table)}`;
+            return Number(rows[0]?.value || 0);
+          } catch {
+            return 0;
+          }
+        }
+      };
 
-    const summaries = new Map<string, CountryFinancialSummary>();
-    for (const row of countryRows) {
-      summaries.set(row.id, {
-        id: row.id,
-        name: row.name,
-        currency: row.currency_code || "",
-        totalPurchases: 0,
-        totalSales: 0,
-        totalDebit: 0,
-        totalCredit: 0,
-        totalLedgerBalance: 0,
-        totalBranches: mainBranchRows.filter((branch) => branch.country_id === row.id).length + cityBranchRows.filter((branch) => branch.country_id === row.id).length,
-        totalUsers: Number(countryUserData.find((entry) => entry.country_id === row.id)?.users || 0),
-        isActive: row.is_active === true
-      });
-    }
-    for (const row of purchases) {
-      if (!row.country_id) continue;
-      const summary = summaries.get(row.country_id);
-      if (summary) summary.totalPurchases += Number(row.order_total || 0);
-    }
-    for (const row of sales) {
-      if (!row.country_id) continue;
-      const summary = summaries.get(row.country_id);
-      if (summary) summary.totalSales += Number(row.order_total || 0);
-    }
-    for (const row of ledgers) {
-      if (!row.country_id) continue;
-      const summary = summaries.get(row.country_id);
-      if (summary) {
-        summary.totalDebit += Number(row.debit_total || 0);
-        summary.totalCredit += Number(row.credit_total || 0);
-        summary.totalLedgerBalance += Number(row.current_balance || 0);
+      const countriesCount = await count("countries");
+      const countryBranchesCount = await count("country_branches");
+      const cityBranchesCount = await count("city_branches");
+      const usersCount = await count("profiles");
+      const customersCount = await count("customers");
+      const companiesCount = await count("companies");
+      const activeRows = await sql`select count(distinct user_id)::int as value from user_role_assignments where is_active=true and deleted_at is null`.catch(() => [{ value: 0 }]);
+      const purchaseRows = await sql`select country_id, order_total from purchase_orders where deleted_at is null`.catch(() => []);
+      const salesRows = await sql`select country_id, order_total from sales_orders where deleted_at is null`.catch(() => []);
+      const ledgerRows = await sql`select country_id, debit_total, credit_total, current_balance from ledgers where deleted_at is null`.catch(() => []);
+      const countries = await sql`select id, name, currency_code, is_active from countries where deleted_at is null order by name`.catch(() => []);
+      const mainBranches = await sql`select id, country_id from country_branches where deleted_at is null`.catch(() => []);
+      const cityBranches = await sql`select id, country_id from city_branches where deleted_at is null`.catch(() => []);
+      const countryUsers = await sql`select country_id, count(distinct user_id)::int as users from user_role_assignments where is_active=true and deleted_at is null and country_id is not null group by country_id`.catch(() => []);
+      const monthly = await sql`
+        with months as (
+          select generate_series(date_trunc('month', current_date)-interval '5 months', date_trunc('month', current_date), interval '1 month') month_start
+        )
+        select to_char(month_start,'Mon YYYY') name,
+          coalesce((select sum(order_total) from sales_orders where deleted_at is null and created_at>=month_start and created_at<month_start+interval '1 month'),0)::float8 sales,
+          coalesce((select sum(order_total) from purchase_orders where deleted_at is null and created_at>=month_start and created_at<month_start+interval '1 month'),0)::float8 purchases
+        from months order by month_start
+      `.catch(() => []);
+      const countryRows = countries as unknown as CountryRow[];
+      const mainBranchRows = mainBranches as unknown as BranchRow[];
+      const cityBranchRows = cityBranches as unknown as BranchRow[];
+      const countryUserData = countryUsers as unknown as CountryUserRow[];
+      const purchases = purchaseRows as unknown as OrderTotalRow[];
+      const sales = salesRows as unknown as OrderTotalRow[];
+      const ledgers = ledgerRows as unknown as LedgerTotalRow[];
+      const monthlyData = monthly as unknown as MonthlyRow[];
+      const activeData = activeRows as unknown as CountRow[];
+
+      const summaries = new Map<string, CountryFinancialSummary>();
+      for (const row of countryRows) {
+        summaries.set(row.id, {
+          id: row.id,
+          name: row.name,
+          currency: row.currency_code || "",
+          totalPurchases: 0,
+          totalSales: 0,
+          totalDebit: 0,
+          totalCredit: 0,
+          totalLedgerBalance: 0,
+          totalBranches: mainBranchRows.filter((branch) => branch.country_id === row.id).length + cityBranchRows.filter((branch) => branch.country_id === row.id).length,
+          totalUsers: Number(countryUserData.find((entry) => entry.country_id === row.id)?.users || 0),
+          isActive: row.is_active === true
+        });
       }
-    }
+      for (const row of purchases) {
+        if (!row.country_id) continue;
+        const summary = summaries.get(row.country_id);
+        if (summary) summary.totalPurchases += Number(row.order_total || 0);
+      }
+      for (const row of sales) {
+        if (!row.country_id) continue;
+        const summary = summaries.get(row.country_id);
+        if (summary) summary.totalSales += Number(row.order_total || 0);
+      }
+      for (const row of ledgers) {
+        if (!row.country_id) continue;
+        const summary = summaries.get(row.country_id);
+        if (summary) {
+          summary.totalDebit += Number(row.debit_total || 0);
+          summary.totalCredit += Number(row.credit_total || 0);
+          summary.totalLedgerBalance += Number(row.current_balance || 0);
+        }
+      }
 
-    const salesTotal = sales.reduce((total, row) => total + Number(row.order_total || 0), 0);
-    const purchaseTotal = purchases.reduce((total, row) => total + Number(row.order_total || 0), 0);
-    const debitTotal = ledgers.reduce((total, row) => total + Number(row.debit_total || 0), 0);
-    const creditTotal = ledgers.reduce((total, row) => total + Number(row.credit_total || 0), 0);
-    const ledgerBalance = ledgers.reduce((total, row) => total + Number(row.current_balance || 0), 0);
-    return {
-      counts: { countries: countriesCount, branches: countryBranchesCount + cityBranchesCount, users: usersCount, customers: customersCount, suppliers: companiesCount },
-      totals: {
-        sales: salesTotal,
-        purchases: purchaseTotal,
-        debit: debitTotal,
-        credit: creditTotal,
-        balance: ledgerBalance
-      },
-      activeUsers: Number(activeData[0]?.value || 0),
-      countries: Array.from(summaries.values()),
-      monthly: monthlyData.map((row) => ({ name: String(row.name), sales: Number(row.sales || 0), purchases: Number(row.purchases || 0) })),
-      error: null
-    };
+      const salesTotal = sales.reduce((total, row) => total + Number(row.order_total || 0), 0);
+      const purchaseTotal = purchases.reduce((total, row) => total + Number(row.order_total || 0), 0);
+      const debitTotal = ledgers.reduce((total, row) => total + Number(row.debit_total || 0), 0);
+      const creditTotal = ledgers.reduce((total, row) => total + Number(row.credit_total || 0), 0);
+      const ledgerBalance = ledgers.reduce((total, row) => total + Number(row.current_balance || 0), 0);
+      return {
+        counts: { countries: countriesCount, branches: countryBranchesCount + cityBranchesCount, users: usersCount, customers: customersCount, suppliers: companiesCount },
+        totals: {
+          sales: salesTotal,
+          purchases: purchaseTotal,
+          debit: debitTotal,
+          credit: creditTotal,
+          balance: ledgerBalance
+        },
+        activeUsers: Number(activeData[0]?.value || 0),
+        countries: Array.from(summaries.values()),
+        monthly: monthlyData.map((row) => ({ name: String(row.name), sales: Number(row.sales || 0), purchases: Number(row.purchases || 0) })),
+        error: null
+      };
+    });
+    return result || { ...EMPTY_DATA, error: "Database not available" };
   } catch (error) {
     return { ...EMPTY_DATA, error: error instanceof Error ? error.message : "Unable to load the live database." };
-  } finally {
-    await sql.end({ timeout: 2 }).catch(() => undefined);
   }
 }
 

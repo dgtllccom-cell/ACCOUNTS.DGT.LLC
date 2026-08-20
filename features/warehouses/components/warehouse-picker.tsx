@@ -87,16 +87,16 @@ export function WarehousePicker({
           className="w-[96vw] max-w-[700px] max-h-[85vh] overflow-y-auto rounded-2xl font-sans"
         >
           <div className="p-4 space-y-4 text-xs text-slate-800 dark:text-slate-200">
-            <div className="flex items-center justify-between bg-slate-900 text-white p-4 rounded-xl">
+            <div className="flex items-center justify-between bg-slate-100 dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 p-4 rounded-xl">
               <div>
                 <h3 className="text-base font-black uppercase tracking-wide">{viewWarehouse.warehouse_name}</h3>
-                <p className="text-xs text-slate-300 font-medium">Type: {viewWarehouse.warehouse_type || "General Storage"}</p>
+                <p className="text-xs text-slate-500 dark:text-slate-300 font-medium">Code: {viewWarehouse.warehouse_code || viewWarehouse.id.slice(0, 8)}</p>
               </div>
               <div className="text-right">
                 <span className="px-2.5 py-1 rounded-full text-[10px] font-black uppercase bg-emerald-500 text-slate-950">
                   {viewWarehouse.is_active !== false ? "Active Facility" : "Inactive"}
                 </span>
-                <p className="text-[10px] text-slate-400 mt-1">Code: <span className="font-mono font-bold text-white">{viewWarehouse.warehouse_code || viewWarehouse.id.slice(0, 8)}</span></p>
+                <p className="text-[10px] text-slate-400 mt-1">Type: <span className="font-bold text-slate-800 dark:text-white uppercase">{viewWarehouse.warehouse_type || "general"}</span></p>
               </div>
             </div>
 
