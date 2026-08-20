@@ -16,7 +16,6 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Th } from "@/components/ui/translated-th";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
 import { t } from "@/lib/i18n/ui";
 import { BranchScopeDropdown } from "@/features/purchases/components/branch-scope-dropdown";
 import { deriveLocalPurchasePostingState } from "@/lib/services/local-purchase-posting-state";
@@ -114,6 +113,7 @@ function MasterSelectPopover({
   addNewLabel,
   placeholder = "Select..."
 }: MasterSelectPopoverProps) {
+  const msLang = useActiveLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [search, setSearch] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
@@ -154,7 +154,7 @@ function MasterSelectPopover({
               <input
                 type="text"
                 autoFocus
-                placeholder="Search..."
+                placeholder={t(msLang, "lp.form_search", "Search...")}
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 className="w-full h-7 pl-7 pr-2 text-[11px] bg-slate-50 rounded-md border border-slate-200 outline-none focus:border-blue-500"
@@ -236,6 +236,7 @@ export function LocalPurchaseView({
   countries = []
 }: LocalPurchaseViewProps) {
   const lang = useActiveLanguage();
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
   const [goodsList, setGoodsList] = useState<any[]>(initialGoodsList);
   const [purchases, setPurchases] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(true);
@@ -1245,7 +1246,7 @@ export function LocalPurchaseView({
   }, [filteredPurchases, countryOptions, countryBranches, cityBranches, activeBranch, localCurrency]);
 
   return (
-    <div className="w-full px-3 sm:px-6 py-4 space-y-6">
+    <div className="w-full px-3 sm:px-6 py-4 space-y-6" dir={isRtl ? "rtl" : "ltr"}>
       <div className="flex flex-wrap items-center justify-between gap-4 bg-white border border-slate-200 p-4 rounded-2xl shadow-sm">
         <div className="flex items-center gap-3">
           <div className="rounded-xl bg-blue-50 p-2.5 text-blue-600">
@@ -1527,7 +1528,7 @@ export function LocalPurchaseView({
                 currentStep === 1 ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
-              1 Booking
+              {t(lang, "lp.step1_tab", "1 Booking")}
             </button>
 
             <button
@@ -1537,7 +1538,7 @@ export function LocalPurchaseView({
                 currentStep === 2 ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
-              2 Goods
+              {t(lang, "lp.step2_tab", "2 Goods")}
             </button>
 
             <button
@@ -1547,7 +1548,7 @@ export function LocalPurchaseView({
                 currentStep === 3 ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
-              3 Others
+              {t(lang, "lp.step3_tab", "3 Others")}
             </button>
 
             <button
@@ -1557,7 +1558,7 @@ export function LocalPurchaseView({
                 currentStep === 4 ? "bg-blue-600 text-white shadow-md shadow-blue-100" : "bg-slate-100 text-slate-600 hover:bg-slate-200"
               }`}
             >
-              4 Review
+              {t(lang, "lp.step4_tab", "4 Review")}
             </button>
           </div>
 
@@ -1567,10 +1568,10 @@ export function LocalPurchaseView({
             <Card className="border-slate-200 bg-white shadow-md rounded-2xl overflow-hidden">
               <CardHeader className="bg-slate-50 border-b border-slate-100 p-3.5 flex flex-row items-center justify-between">
                 <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-800 flex items-center gap-2">
-                  {currentStep === 1 && <><FileText className="h-4 w-4 text-blue-600" /> STEP 1: BILL & ACCOUNTS INFO</>}
-                  {currentStep === 2 && <><Package className="h-4 w-4 text-blue-600" /> STEP 2: GOODS ENTRY</>}
-                  {currentStep === 3 && <><Truck className="h-4 w-4 text-blue-600" /> STEP 3: LOGISTICS & OTHERS</>}
-                  {currentStep === 4 && <><CheckCircle2 className="h-4 w-4 text-emerald-600" /> STEP 4: REVIEW & ACCEPT</>}
+                  {currentStep === 1 && <><FileText className="h-4 w-4 text-blue-600" /> {t(lang, "lp.step1_header", "STEP 1: BILL & ACCOUNTS INFO")}</>}
+                  {currentStep === 2 && <><Package className="h-4 w-4 text-blue-600" /> {t(lang, "lp.step2_header", "STEP 2: GOODS ENTRY")}</>}
+                  {currentStep === 3 && <><Truck className="h-4 w-4 text-blue-600" /> {t(lang, "lp.step3_header", "STEP 3: LOGISTICS & OTHERS")}</>}
+                  {currentStep === 4 && <><CheckCircle2 className="h-4 w-4 text-emerald-600" /> {t(lang, "lp.step4_header", "STEP 4: REVIEW & ACCEPT")}</>}
                 </CardTitle>
                 <button
                   type="button"
@@ -1588,20 +1589,20 @@ export function LocalPurchaseView({
               {currentStep === 1 && (
                 <div className="space-y-4 animate-in fade-in duration-200">
                   <div className="border-l-2 border-blue-600 pl-2">
-                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">1. Bill & Accounts Information</h4>
+                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t(lang, "lp.bill_accounts_info", "1. Bill & Accounts Information")}</h4>
                   </div>
 
                   <div className="space-y-3">
                     {/* 1. Sales Account (CR) */}
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Sales Account (CR) *</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.sales_account_cr", "Sales Account (CR) *")}</label>
                       <select
                         value={salesAccountNo}
                         onChange={e => setSalesAccountNo(e.target.value)}
                         className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold outline-none"
                         required
                       >
-                        <option value="">Select Credit Account...</option>
+                        <option value="">{t(lang, "lp.select_cr_account", "Select Credit Account...")}</option>
                         {accountsList.map(acc => (
                           <option key={acc.id} value={acc.code}>
                             {acc.code} - {acc.name} ({acc.currency})
@@ -1612,14 +1613,14 @@ export function LocalPurchaseView({
 
                     {/* 2. Purchase Account (DR) */}
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Purchase Account (DR) *</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.purchase_account_dr", "Purchase Account (DR) *")}</label>
                       <select
                         value={purchaseAccountNo}
                         onChange={e => setPurchaseAccountNo(e.target.value)}
                         className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold outline-none"
                         required
                       >
-                        <option value="">Select Debit Account...</option>
+                        <option value="">{t(lang, "lp.select_dr_account", "Select Debit Account...")}</option>
                         {accountsList.map(acc => (
                           <option key={acc.id} value={acc.code}>
                             {acc.code} - {acc.name} ({acc.currency})
@@ -1631,14 +1632,14 @@ export function LocalPurchaseView({
                     {/* 3. Broker / Agent Account */}
                     <div>
                       <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1 flex items-center gap-1">
-                        <User className="h-3 w-3 text-purple-600" /> Broker / Agent Account
+                        <User className="h-3 w-3 text-purple-600" /> {t(lang, "lp.broker_account", "Broker / Agent Account")}
                       </label>
                       <select
                         value={brokerAccountNo}
                         onChange={e => setBrokerAccountNo(e.target.value)}
                         className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none"
                       >
-                        <option value="">Select Broker Account...</option>
+                        <option value="">{t(lang, "lp.select_broker", "Select Broker Account...")}</option>
                         {accountsList.map(acc => (
                           <option key={acc.id} value={acc.code}>
                             {acc.code} - {acc.name} ({acc.currency})
@@ -1650,20 +1651,20 @@ export function LocalPurchaseView({
                     {/* 4. Shipment Type & 5. Payment Condition */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Shipment Type *</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.shipment_type", "Shipment Type *")}</label>
                         <select
                           value={shipmentType}
                           onChange={e => setShipmentType(e.target.value)}
                           className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none font-bold text-blue-700"
                         >
-                          <option value="Loading by Truck">Loading by Truck</option>
-                          <option value="Warehouse Transfer">Warehouse Transfer</option>
-                          <option value="Export Shipment">Export Shipment</option>
+                          <option value="Loading by Truck">{t(lang, "lp.shipment_loading", "Loading by Truck")}</option>
+                          <option value="Warehouse Transfer">{t(lang, "lp.shipment_warehouse", "Warehouse Transfer")}</option>
+                          <option value="Export Shipment">{t(lang, "lp.shipment_export", "Export Shipment")}</option>
                         </select>
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Payment Condition *</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.payment_condition", "Payment Condition *")}</label>
                         <select
                           value={paymentMode}
                           onChange={e => setPaymentMode(e.target.value)}
@@ -1693,12 +1694,12 @@ export function LocalPurchaseView({
 
                     {/* 7. Remarks / Terms Notes */}
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Remarks / Terms Notes</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.remarks_label", "Remarks / Terms Notes")}</label>
                       <textarea
                         rows={2}
                         value={remarks}
                         onChange={e => setRemarks(e.target.value)}
-                        placeholder="Write booking terms, shipment notes, or payment instructions..."
+                        placeholder={t(lang, "lp.ph_remarks", "Write booking terms, shipment notes, or payment instructions...")}
                         className="w-full rounded-lg border border-slate-200 bg-white p-2.5 text-xs outline-none font-sans"
                       />
                     </div>
@@ -1710,7 +1711,7 @@ export function LocalPurchaseView({
                       onClick={() => setCurrentStep(2)}
                       className="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-5 h-9 rounded-xl shadow-md shadow-blue-100 flex items-center gap-1.5"
                     >
-                      Next: Goods Entry <ArrowRight className="h-3.5 w-3.5" />
+                      {t(lang, "lp.next_goods_entry", "Next: Goods Entry")} <ArrowRight className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </div>
@@ -1720,29 +1721,29 @@ export function LocalPurchaseView({
               {currentStep === 2 && (
                 <div className="space-y-4 animate-in fade-in duration-200">
                   <div className="border-l-2 border-emerald-600 pl-2">
-                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">2. Goods Entry & Pricing Metrics</h4>
+                    <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t(lang, "lp.goods_entry_section", "2. Goods Entry & Pricing Metrics")}</h4>
                   </div>
 
                   <div className="space-y-3">
                     {/* 1. Goods Name */}
                     <div>
-                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Goods Selection (Goods Name) *</label>
+                      <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.goods_selection", "Goods Selection (Goods Name) *")}</label>
                       <select
                         value={goodsId}
                         onChange={e => setGoodsId(e.target.value)}
                         className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs font-semibold outline-none"
                       >
-                        <option value="">Select Goods Master...</option>
+                        <option value="">{t(lang, "lp.select_goods", "Select Goods Master...")}</option>
                         {goodsOptions.map(g => (
                           <option key={g.id} value={g.id}>{g.name}</option>
                         ))}
-                        <option value="CUSTOM">+ Custom Product Entry</option>
+                        <option value="CUSTOM">{t(lang, "lp.custom_entry", "+ Custom Product Entry")}</option>
                       </select>
                       {goodsId === "CUSTOM" && (
                         <input
                           value={customGoodsName}
                           onChange={e => setCustomGoodsName(e.target.value)}
-                          placeholder="Enter Custom Goods Name..."
+                          placeholder={t(lang, "lp.ph_custom_goods", "Enter Custom Goods Name...")}
                           className="w-full h-9 mt-2 rounded-lg border border-blue-300 bg-blue-50/50 px-3 text-xs font-bold outline-none"
                         />
                       )}
@@ -1751,17 +1752,17 @@ export function LocalPurchaseView({
                     {/* 2. Chassis / Lot Code */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Chassis / Lot Code</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.chassis_lot", "Chassis / Lot Code")}</label>
                         <input
                           value={chassisCode}
                           onChange={e => setChassisCode(e.target.value)}
-                          placeholder="Auto / Chassis #"
+                          placeholder={t(lang, "lp.ph_chassis", "Auto / Chassis #")}
                           className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-mono outline-none text-blue-700 font-bold"
                         />
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Lot Number / Mark</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.lot_mark", "Lot Number / Mark")}</label>
                         <input
                           value={lotNo}
                           onChange={e => setLotNo(e.target.value)}
@@ -1775,7 +1776,7 @@ export function LocalPurchaseView({
                     <div className="grid grid-cols-2 gap-3">
                       {/* Brand with popover + New Brand */}
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Brand</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.brand_label", "Brand")}</label>
                         {brandOptions.length > 0 ? (
                           <MasterSelectPopover
                             label=""
@@ -1784,8 +1785,8 @@ export function LocalPurchaseView({
                             options={brandOptions}
                             onSelect={v => setBrand(v)}
                             onAddNew={() => setIsAddingBrandModal(true)}
-                            addNewLabel="+ New Brand"
-                            placeholder="Select Brand..."
+                            addNewLabel={t(lang, "lp.new_brand", "+ New Brand")}
+                            placeholder={t(lang, "lp.ph_brand", "Select Brand...")}
                           />
                         ) : (
                           <div className="space-y-1">
@@ -1807,7 +1808,7 @@ export function LocalPurchaseView({
 
                       {/* Size with popover + New Size */}
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Size Specification</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.size_spec", "Size Specification")}</label>
                         {sizeOptions.length > 0 ? (
                           <MasterSelectPopover
                             label=""
@@ -1816,8 +1817,8 @@ export function LocalPurchaseView({
                             options={sizeOptions}
                             onSelect={v => setSize(v)}
                             onAddNew={() => setIsAddingSizeModal(true)}
-                            addNewLabel="+ New Size"
-                            placeholder="Select Size..."
+                            addNewLabel={t(lang, "lp.new_size", "+ New Size")}
+                            placeholder={t(lang, "lp.ph_size", "Select Size...")}
                           />
                         ) : (
                           <div className="space-y-1">
@@ -1841,7 +1842,7 @@ export function LocalPurchaseView({
                     {/* 5. Quantity Type & 6. Quantity Number */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Quantity Type (Packing)</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.qty_type", "Quantity Type (Packing)")}</label>
                         <select
                           value={quantityName}
                           onChange={e => setQuantityName(e.target.value)}
@@ -1852,7 +1853,7 @@ export function LocalPurchaseView({
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Quantity Number (Count) *</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.qty_count", "Quantity Number (Count) *")}</label>
                         <input
                           type="number"
                           value={quantityCount}
@@ -1866,7 +1867,7 @@ export function LocalPurchaseView({
                     {/* 7. Weight per Quantity (KG) + Empty Tare (KG) */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Weight per Quantity (KG) *</label>
+                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wt_per_pkg", "Weight per Quantity (KG) *")}</label>
                         <input
                           type="number"
                           step="any"
@@ -1878,7 +1879,7 @@ export function LocalPurchaseView({
                       </div>
 
                       <div>
-                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">1 Empty Tare Weight (KG)</label>
+                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.empty_tare", "1 Empty Tare Weight (KG)")}</label>
                         <input
                           type="number"
                           step="any"
@@ -1903,20 +1904,20 @@ export function LocalPurchaseView({
                     {/* 9. Divide Type & 10. Divide Value */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Divide Type</label>
+                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.divide_type", "Divide Type")}</label>
                         <select
                           value={divideType}
                           onChange={e => setDivideType(e.target.value)}
                           className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none font-bold text-slate-700"
                         >
-                          <option value="D/KGs">D/KGs (KG/Bag Divide)</option>
-                          <option value="D/Ton">D/Ton (Metric Ton Divide)</option>
-                          <option value="D/Unit">D/Unit (Direct Unit Divide)</option>
+                          <option value="D/KGs">{t(lang, "lp.d_kgs", "D/KGs (KG/Bag Divide)")}</option>
+                          <option value="D/Ton">{t(lang, "lp.d_ton", "D/Ton (Metric Ton Divide)")}</option>
+                          <option value="D/Unit">{t(lang, "lp.d_unit", "D/Unit (Direct Unit Divide)")}</option>
                         </select>
                       </div>
 
                       <div>
-                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Divide Value (KG)</label>
+                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.divide_value", "Divide Value (KG)")}</label>
                         <input
                           type="number"
                           step="any"
@@ -1930,7 +1931,7 @@ export function LocalPurchaseView({
 
                     {/* 11. Total Divide Units (Auto Calculate) */}
                     <div className="p-2.5 bg-purple-50/60 border border-purple-100 rounded-xl">
-                      <label className="block text-[9px] font-bold text-purple-700 uppercase mb-1">Total Divide Units (Auto Calculate)</label>
+                      <label className="block text-[9px] font-bold text-purple-700 uppercase mb-1">{t(lang, "lp.total_divide_auto", "Total Divide Units (Auto Calculate)")}</label>
                       <input
                         readOnly
                         value={`${numbers.toLocaleString()} Packs/Units`}
@@ -1941,19 +1942,19 @@ export function LocalPurchaseView({
                     {/* 12. Price Type & 13. Unit Price */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Price Type (Rate Basis)</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.price_type", "Price Type (Rate Basis)")}</label>
                         <select
                           value={rateType}
                           onChange={e => setRateType(e.target.value as any)}
                           className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none font-bold text-slate-700"
                         >
-                          <option value="Per KG Weight">Per KG Weight</option>
-                          <option value="Per Bag / Package">Per Bag / Package</option>
+                          <option value="Per KG Weight">{t(lang, "lp.per_kg", "Per KG Weight")}</option>
+                          <option value="Per Bag / Package">{t(lang, "lp.per_bag", "Per Bag / Package")}</option>
                         </select>
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Unit Price Rate *</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.unit_price_rate", "Unit Price Rate *")}</label>
                         <input
                           type="number"
                           step="any"
@@ -1968,7 +1969,7 @@ export function LocalPurchaseView({
                     {/* 14. Final Amount (Auto Calculate) & 15. Tax Type */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Final Amount (Auto Calculate)</label>
+                        <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.final_amount_auto", "Final Amount (Auto Calculate)")}</label>
                         <input
                           readOnly
                           value={`${purchaseCurrency} ${finalCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
@@ -1977,14 +1978,14 @@ export function LocalPurchaseView({
                       </div>
 
                       <div>
-                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Tax Type Option</label>
+                        <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.tax_type_option", "Tax Type Option")}</label>
                         <select
                           value={applyTax}
                           onChange={e => setApplyTax(e.target.value)}
                           className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs font-bold outline-none"
                         >
-                          <option value="No">No Tax</option>
-                          <option value="Yes">Apply Tax / VAT</option>
+                          <option value="No">{t(lang, "lp.no_tax", "No Tax")}</option>
+                          <option value="Yes">{t(lang, "lp.apply_tax", "Apply Tax / VAT")}</option>
                         </select>
                       </div>
                     </div>
@@ -1993,7 +1994,7 @@ export function LocalPurchaseView({
                     {applyTax === "Yes" && (
                       <div className="grid grid-cols-2 gap-3 p-2.5 bg-amber-50/60 border border-amber-200 rounded-xl">
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Tax Percentage (%)</label>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.tax_pct", "Tax Percentage (%)")}</label>
                           <input
                             type="number"
                             value={taxPercentage}
@@ -2002,7 +2003,7 @@ export function LocalPurchaseView({
                           />
                         </div>
                         <div>
-                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Calculated Tax Amount</label>
+                          <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.calc_tax", "Calculated Tax Amount")}</label>
                           <input
                             readOnly
                             value={`${purchaseCurrency} ${taxAmount.toLocaleString(undefined, { minimumFractionDigits: 2 })}`}
@@ -2027,14 +2028,14 @@ export function LocalPurchaseView({
                       onClick={handleAddLineItem}
                       className="w-1/3 h-9 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-extrabold flex items-center justify-center gap-1 shadow-sm"
                     >
-                      <Plus className="h-3.5 w-3.5" /> Add Item to List
+                      <Plus className="h-3.5 w-3.5" /> {t(lang, "lp.add_item_to_list", "Add Item to List")}
                     </Button>
                     <Button
                       type="button"
                       onClick={() => setCurrentStep(3)}
                       className="w-1/3 h-9 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-extrabold flex items-center justify-center gap-1"
                     >
-                      Next: Logistics <ArrowRight className="h-3.5 w-3.5" />
+                      {t(lang, "lp.next_logistics", "Next: Logistics")} <ArrowRight className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </div>
@@ -2045,7 +2046,7 @@ export function LocalPurchaseView({
                 <div className="space-y-4 animate-in fade-in duration-200">
                   <div className="border-l-2 border-purple-600 pl-2">
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                      <Truck className="h-3.5 w-3.5 text-purple-600" /> 3. Payment & Logistics Details
+                      <Truck className="h-3.5 w-3.5 text-purple-600" /> {t(lang, "lp.payment_logistics", "3. Payment & Logistics Details")}
                     </h4>
                   </div>
 
@@ -2054,17 +2055,17 @@ export function LocalPurchaseView({
                     {/* ── A. PAYMENT INFORMATION BLOCK ── */}
                     <div className="rounded-xl border border-slate-200 p-3 space-y-3 bg-slate-50/50">
                       <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest flex items-center gap-1">
-                        <CreditCard className="h-3 w-3 text-blue-500" /> Payment Condition
+                        <CreditCard className="h-3 w-3 text-blue-500" /> {t(lang, "lp.payment_condition_s", "Payment Condition")}
                       </p>
 
                       <div className="grid grid-cols-2 gap-2 text-xs">
                         <div>
-                          <label className="block text-[9px] font-bold text-slate-400 uppercase">Selected Payment Type</label>
+                          <label className="block text-[9px] font-bold text-slate-400 uppercase">{t(lang, "lp.sel_payment_type", "Selected Payment Type")}</label>
                           <span className="font-extrabold text-slate-800 text-[11px] block mt-1">{paymentMode}</span>
                         </div>
                         {paymentMode !== "Advance" && (
                           <div>
-                            <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Payment Date</label>
+                            <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.payment_date", "Payment Date")}</label>
                             <input
                               type="date"
                               value={cashPaymentDate}
@@ -2080,7 +2081,7 @@ export function LocalPurchaseView({
                         <div className="space-y-2 border-t border-slate-200/60 pt-2">
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Advance Payment Percentage (%)</label>
+                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.adv_pct", "Advance Payment Percentage (%)")}</label>
                               <input
                                 type="number"
                                 step="any"
@@ -2090,7 +2091,7 @@ export function LocalPurchaseView({
                               />
                             </div>
                             <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Advance Payment Amount</label>
+                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.adv_amount", "Advance Payment Amount")}</label>
                               <input
                                 type="number"
                                 step="any"
@@ -2102,7 +2103,7 @@ export function LocalPurchaseView({
                           </div>
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Remaining Amount</label>
+                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.remaining_amount", "Remaining Amount")}</label>
                               <input
                                 readOnly
                                 value={`${purchaseCurrency} ${remainingBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
@@ -2110,7 +2111,7 @@ export function LocalPurchaseView({
                               />
                             </div>
                             <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Total Bill Cost</label>
+                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.total_bill_cost", "Total Bill Cost")}</label>
                               <input
                                 readOnly
                                 value={`${purchaseCurrency} ${combinedBillCost.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
@@ -2120,7 +2121,7 @@ export function LocalPurchaseView({
                           </div>
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Advance Payment Due Date</label>
+                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.adv_due_date", "Advance Payment Due Date")}</label>
                               <input
                                 type="date"
                                 value={advancePaymentDate}
@@ -2129,7 +2130,7 @@ export function LocalPurchaseView({
                               />
                             </div>
                             <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Remaining Payment Due Date</label>
+                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.remaining_due_date", "Remaining Payment Due Date")}</label>
                               <input
                                 type="date"
                                 value={remainingDueDate}
@@ -2146,13 +2147,13 @@ export function LocalPurchaseView({
                     {shipmentType === "Warehouse Transfer" && (
                       <div className="rounded-xl border border-slate-200 p-3 space-y-3 bg-slate-50/50">
                         <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest flex items-center gap-1">
-                          <Warehouse className="h-3 w-3 text-purple-500" /> Warehouse Transfer Details
+                          <Warehouse className="h-3 w-3 text-purple-500" /> {t(lang, "lp.wh_transfer", "Warehouse Transfer Details")}
                         </p>
 
                         <div className="space-y-2">
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Warehouse Master Setup</label>
+                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wh_master", "Warehouse Master Setup")}</label>
                               <select
                                 value={selectedWarehouseId}
                                 onChange={e => {
@@ -2163,15 +2164,15 @@ export function LocalPurchaseView({
                                 }}
                                 className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none font-semibold text-slate-800"
                               >
-                                <option value="">Select Warehouse...</option>
+                                <option value="">{t(lang, "lp.select_warehouse", "Select Warehouse...")}</option>
                                 {warehousesList.map(w => (
                                   <option key={w.id} value={w.id}>{w.warehouse_name} ({w.id})</option>
                                 ))}
-                                <option value="CUSTOM">+ Custom Manual Entry</option>
+                                <option value="CUSTOM">{t(lang, "lp.custom_manual", "+ Custom Manual Entry")}</option>
                               </select>
                             </div>
                             <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Warehouse Code</label>
+                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wh_code", "Warehouse Code")}</label>
                               <input
                                 value={selectedWarehouseId === "CUSTOM" ? "" : selectedWarehouseId}
                                 readOnly={selectedWarehouseId !== "CUSTOM"}
@@ -2184,17 +2185,17 @@ export function LocalPurchaseView({
 
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Warehouse Name (Auto)</label>
+                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wh_name_auto", "Warehouse Name (Auto)")}</label>
                               <input
                                 value={warehouseName}
                                 readOnly={selectedWarehouseId !== "CUSTOM"}
                                 onChange={e => setWarehouseName(e.target.value)}
-                                placeholder="Auto Loaded Name"
+                                placeholder={t(lang, "lp.ph_auto_name", "Auto Loaded Name")}
                                 className="w-full h-9 rounded-lg border border-slate-200 bg-slate-100 px-3 text-xs outline-none text-slate-800 font-bold"
                               />
                             </div>
                             <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Warehouse Transfer Date</label>
+                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wh_transfer_date", "Warehouse Transfer Date")}</label>
                               <input
                                 type="date"
                                 value={transferDate}
@@ -2206,20 +2207,20 @@ export function LocalPurchaseView({
 
                           {/* Link to Warehouse stock Account */}
                           <div>
-                            <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Link with Warehouse Account *</label>
+                            <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.wh_account_link", "Link with Warehouse Account *")}</label>
                             <select
                               value={warehouseAccountNo}
                               onChange={e => setWarehouseAccountNo(e.target.value)}
                               className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none text-purple-700 font-bold"
                             >
-                              <option value="">Select Warehouse Stock Account...</option>
+                              <option value="">{t(lang, "lp.wh_account_link", "Link with Warehouse Account *")}</option>
                               {accountsList.map(acc => (
                                 <option key={acc.id} value={acc.code}>
                                   {acc.code} - {acc.name} ({acc.currency})
                                 </option>
                               ))}
                             </select>
-                            <p className="text-[8px] text-slate-400 mt-1">Stock will be automatically transferred to this Warehouse Account upon posting.</p>
+                            <p className="text-[8px] text-slate-400 mt-1">{t(lang, "lp.wh_stock_auto", "Stock will be automatically transferred to this Warehouse Account upon posting.")}</p>
                           </div>
                         </div>
                       </div>
@@ -2229,13 +2230,13 @@ export function LocalPurchaseView({
                     {shipmentType === "Loading by Truck" && (
                       <div className="rounded-xl border border-slate-200 p-3 space-y-3 bg-slate-50/50">
                         <p className="text-[10px] font-extrabold text-slate-500 uppercase tracking-widest flex items-center gap-1">
-                          <Truck className="h-3 w-3 text-purple-500" /> Loading by Truck Details
+                          <Truck className="h-3 w-3 text-purple-500" /> {t(lang, "lp.truck_details", "Loading by Truck Details")}
                         </p>
 
                         <div className="space-y-2">
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Truck Management Master</label>
+                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.truck_master", "Truck Management Master")}</label>
                               <select
                                 value={selectedTruckId}
                                 onChange={e => {
@@ -2252,20 +2253,20 @@ export function LocalPurchaseView({
                                 }}
                                 className="w-full h-9 rounded-lg border border-slate-200 bg-white px-2 text-xs outline-none font-semibold text-slate-800"
                               >
-                                <option value="">Select Registered Truck...</option>
+                                <option value="">{t(lang, "lp.select_truck", "Select Registered Truck...")}</option>
                                 {TRUCK_LIST.map(t => (
                                   <option key={t.id} value={t.id}>{t.truckNo} - {t.driverName} ({t.details})</option>
                                 ))}
-                                <option value="CUSTOM">+ Custom / Non-Setup Entry</option>
+                                <option value="CUSTOM">{t(lang, "lp.custom_truck", "+ Custom / Non-Setup Entry")}</option>
                               </select>
                             </div>
                             <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Truck Number *</label>
+                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.truck_no", "Truck Number *")}</label>
                               <input
                                 value={truckNo}
                                 readOnly={selectedTruckId !== "CUSTOM" && selectedTruckId !== ""}
                                 onChange={e => setTruckNo(e.target.value)}
-                                placeholder="Truck Number"
+                                placeholder={t(lang, "lp.ph_truck_no", "Truck Number")}
                                 className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-mono font-bold text-indigo-700 outline-none"
                               />
                             </div>
@@ -2273,17 +2274,17 @@ export function LocalPurchaseView({
 
                           <div className="grid grid-cols-2 gap-2">
                             <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Driver Name</label>
+                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.driver_name", "Driver Name")}</label>
                               <input
                                 value={driverName}
                                 readOnly={selectedTruckId !== "CUSTOM" && selectedTruckId !== ""}
                                 onChange={e => setDriverName(e.target.value)}
-                                placeholder="Driver Name"
+                                placeholder={t(lang, "lp.ph_driver", "Driver Name")}
                                 className="w-full h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs outline-none"
                               />
                             </div>
                             <div>
-                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">Loading Date</label>
+                              <label className="block text-[9px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.purchase_date", "Loading Date")}</label>
                               <input
                                 type="date"
                                 value={loadingDate}
@@ -2300,7 +2301,7 @@ export function LocalPurchaseView({
                     {shipmentType === "Export Shipment" && (
                       <div className="rounded-xl border border-amber-200 bg-amber-50/50 p-3 space-y-2 text-xs text-amber-800">
                         <p className="text-[10px] font-extrabold uppercase tracking-widest flex items-center gap-1">
-                          <Flag className="h-3.5 w-3.5 text-amber-600" /> Export Shipment Workflow
+                          <Flag className="h-3.5 w-3.5 text-amber-600" /> {t(lang, "lp.export_workflow", "Export Shipment Workflow")}
                         </p>
                         <p className="text-[10px] leading-relaxed">
                           This purchase is designated for export. Shipment routes, customs documentation, and container loading tracking must be completed via the Export Loading & Shipping modules after booking.
@@ -2317,7 +2318,7 @@ export function LocalPurchaseView({
                     </Button>
                     <Button type="button" onClick={() => setCurrentStep(4)}
                       className="w-1/2 h-9 rounded-xl bg-slate-800 hover:bg-slate-900 text-white text-[10px] font-extrabold flex items-center justify-center gap-1">
-                      Next: Review <ArrowRight className="h-3.5 w-3.5" />
+                      {t(lang, "lp.next_review", "Next: Review")} <ArrowRight className="h-3.5 w-3.5" />
                     </Button>
                   </div>
                 </div>
@@ -2328,70 +2329,70 @@ export function LocalPurchaseView({
                 <div className="space-y-4 animate-in fade-in duration-200">
                   <div className="border-l-2 border-emerald-600 pl-2">
                     <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center gap-1.5">
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> 4. Full Bill Review & Final Booking
+                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-600" /> {t(lang, "lp.review_section", "4. Full Bill Review & Final Booking")}
                     </h4>
                   </div>
 
                   {/* Review Notice */}
                   <div className="bg-slate-50 border border-slate-100 p-2.5 rounded-lg text-[9px] text-slate-500 font-medium">
-                    Please review the payment conditions, weights, and logistics summary in the right-hand panel before finalized acceptance.
+                    {t(lang, "lp.review_notice", "Please review the payment conditions, weights, and logistics summary before finalized acceptance.")}
                   </div>
 
                   {/* Payment & Logistics Summary */}
                   <div className="rounded-xl border border-slate-200 bg-slate-50/50 p-3 space-y-1.5">
-                    <p className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-2">Payment & Logistics</p>
+                    <p className="text-[9px] font-extrabold text-slate-500 uppercase tracking-widest mb-2">{t(lang, "lp.payment_logistics_s", "Payment & Logistics")}</p>
                     <div className="flex justify-between text-[10px]">
-                      <span className="text-slate-500">Payment Mode:</span>
+                      <span className="text-slate-500">{t(lang, "lp.payment_mode", "Payment Mode:")}</span>
                       <span className="font-bold text-slate-800">{paymentMode}</span>
                     </div>
                     {paymentMode === "Advance" && (
                       <>
                         <div className="flex justify-between text-[10px]">
-                          <span className="text-slate-500">Advance Amount:</span>
+                          <span className="text-slate-500">{t(lang, "lp.advance_amount_s", "Advance Amount:")}</span>
                           <span className="font-mono font-bold text-emerald-700">{purchaseCurrency} {calculatedAdvanceAmount.toLocaleString(undefined,{minimumFractionDigits:2})}</span>
                         </div>
                         <div className="flex justify-between text-[10px]">
-                          <span className="text-slate-500">Remaining Balance:</span>
+                          <span className="text-slate-500">{t(lang, "lp.remaining_balance_s", "Remaining Balance:")}</span>
                           <span className="font-mono font-bold text-red-600">{purchaseCurrency} {remainingBalance.toLocaleString(undefined,{minimumFractionDigits:2})}</span>
                         </div>
                         <div className="flex justify-between text-[10px]">
-                          <span className="text-slate-500">Advance Date:</span>
+                          <span className="text-slate-500">{t(lang, "lp.advance_date_s", "Advance Date:")}</span>
                           <span className="font-mono text-slate-700">{advancePaymentDate}</span>
                         </div>
                         <div className="flex justify-between text-[10px]">
-                          <span className="text-slate-500">Remaining Due:</span>
+                          <span className="text-slate-500">{t(lang, "lp.remaining_due_s", "Remaining Due:")}</span>
                           <span className="font-mono text-slate-700">{remainingDueDate}</span>
                         </div>
                       </>
                     )}
                     <div className="flex justify-between text-[10px]">
-                      <span className="text-slate-500">Shipment Type:</span>
+                      <span className="text-slate-500">{t(lang, "lp.shipment_type_s", "Shipment Type:")}</span>
                       <span className="font-bold text-slate-800">{shipmentType}</span>
                     </div>
-                    {truckNo && <div className="flex justify-between text-[10px]"><span className="text-slate-500">Truck No:</span><span className="font-mono font-bold text-indigo-700">{truckNo}</span></div>}
-                    {driverName && <div className="flex justify-between text-[10px]"><span className="text-slate-500">Driver:</span><span className="font-bold text-slate-700">{driverName}</span></div>}
-                    {warehouseName && <div className="flex justify-between text-[10px]"><span className="text-slate-500">Warehouse:</span><span className="font-bold text-slate-700">{warehouseName}</span></div>}
-                    {remarks && <div className="flex justify-between text-[10px]"><span className="text-slate-500">Remarks:</span><span className="font-semibold text-slate-700 text-right max-w-[60%] truncate">{remarks}</span></div>}
+                    {truckNo && <div className="flex justify-between text-[10px]"><span className="text-slate-500">{t(lang, "lp.truck_no_s", "Truck No:")}</span><span className="font-mono font-bold text-indigo-700">{truckNo}</span></div>}
+                    {driverName && <div className="flex justify-between text-[10px]"><span className="text-slate-500">{t(lang, "lp.driver_s", "Driver:")}</span><span className="font-bold text-slate-700">{driverName}</span></div>}
+                    {warehouseName && <div className="flex justify-between text-[10px]"><span className="text-slate-500">{t(lang, "lp.warehouse_s", "Warehouse:")}</span><span className="font-bold text-slate-700">{warehouseName}</span></div>}
+                    {remarks && <div className="flex justify-between text-[10px]"><span className="text-slate-500">{t(lang, "lp.remarks_s", "Remarks:")}</span><span className="font-semibold text-slate-700 text-right max-w-[60%] truncate">{remarks}</span></div>}
                   </div>
 
                   {/* Financial Totals */}
                   <div className="p-4 bg-slate-900 text-white rounded-2xl space-y-2 shadow-lg">
                     <div className="flex justify-between items-center text-xs">
-                      <span className="text-slate-400">Total Goods Lines:</span>
+                      <span className="text-slate-400">{t(lang, "lp.total_goods_lines", "Total Goods Lines:")}</span>
                       <span className="font-mono font-black">{draftItems.length > 0 ? draftItems.length : 1} Line(s)</span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
-                      <span className="text-slate-400">Total Net Weight:</span>
+                      <span className="text-slate-400">{t(lang, "lp.total_net_weight", "Total Net Weight:")}</span>
                       <span className="font-mono font-bold text-blue-400">
                         {draftItems.length > 0 ? draftItems.reduce((a,i)=>a+i.netWeight,0).toLocaleString() : netWeight.toLocaleString()} kg
                       </span>
                     </div>
                     <div className="flex justify-between items-center text-xs">
-                      <span className="text-slate-400">Tax Amount:</span>
+                      <span className="text-slate-400">{t(lang, "lp.tax_amount_s", "Tax Amount:")}</span>
                       <span className="font-mono font-bold text-amber-400">{purchaseCurrency} {taxAmount.toLocaleString(undefined,{minimumFractionDigits:2})}</span>
                     </div>
                     <div className="flex justify-between items-center text-sm font-black border-t border-slate-800 pt-2 text-emerald-400">
-                      <span>Total Bill Amount:</span>
+                      <span>{t(lang, "lp.total_bill_amount", "Total Bill Amount:")}</span>
                       <span className="font-mono text-base font-black">
                         {purchaseCurrency} {combinedBillCost?.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}
                       </span>
@@ -3003,9 +3004,9 @@ export function LocalPurchaseView({
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
               <div>
                 <h3 className="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
-                  <Building2 className="h-4 w-4 text-blue-600" /> SELECT WORKING LOCATION SCOPE
+                  <Building2 className="h-4 w-4 text-blue-600" /> {t(lang, "lp.scope_modal_title", "SELECT WORKING LOCATION SCOPE")}
                 </h3>
-                <p className="text-[10px] text-slate-500 font-medium mt-0.5">Please select the Country, Branch, and City Branch before creating bill.</p>
+                <p className="text-[10px] text-slate-500 font-medium mt-0.5">{t(lang, "lp.scope_modal_desc", "Please select the Country, Branch, and City Branch before creating bill.")}</p>
               </div>
               <button onClick={() => setIsScopeModalOpen(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="h-4 w-4" />
@@ -3036,7 +3037,7 @@ export function LocalPurchaseView({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">Country Branch *</label>
+                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">{t(lang, "lp.country_branch", "Country Branch *")}</label>
                 <select
                   value={scopeBranchId}
                   onChange={e => {
@@ -3059,13 +3060,13 @@ export function LocalPurchaseView({
               </div>
 
               <div>
-                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">City Branch</label>
+                <label className="block text-[10px] font-bold text-slate-600 uppercase mb-1">{t(lang, "lp.city_branch", "City Branch")}</label>
                 <select
                   value={scopeCityBranchId}
                   onChange={e => setScopeCityBranchId(e.target.value)}
                   className="w-full h-10 rounded-xl border border-slate-200 px-3 text-xs font-bold outline-none focus:border-blue-500 bg-slate-50"
                 >
-                  <option value="">Select City Branch...</option>
+                  <option value="">{t(lang, "lp.sel_city_branch", "Select City Branch...")}</option>
                   {scopeCityBranches.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
                 </select>
                 {scopeCityBranches.length === 0 && scopeBranchId && (
@@ -3108,7 +3109,7 @@ export function LocalPurchaseView({
           <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex justify-between items-center border-b border-slate-100 pb-3">
               <h3 className="text-sm font-black text-slate-800 uppercase flex items-center gap-2">
-                <Package className="h-4 w-4 text-blue-600" /> CREATE NEW GOODS MASTER
+                <Package className="h-4 w-4 text-blue-600" /> {t(lang, "lp.create_goods_title", "CREATE NEW GOODS MASTER")}
               </h3>
               <button onClick={() => setIsAddingGoodsModal(false)} className="text-slate-400 hover:text-slate-600">
                 <X className="h-4 w-4" />
@@ -3117,7 +3118,7 @@ export function LocalPurchaseView({
 
             <form onSubmit={handleCreateGoodsMaster} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Goods Item Name *</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.goods_item_name", "Goods Item Name *")}</label>
                 <input
                   required
                   autoFocus
@@ -3175,7 +3176,7 @@ export function LocalPurchaseView({
 
             <form onSubmit={handleEditGoodsMaster} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">Goods Item Name *</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.goods_item_name", "Goods Item Name *")}</label>
                 <input
                   required
                   autoFocus
@@ -3231,7 +3232,7 @@ export function LocalPurchaseView({
 
             <form onSubmit={handleCreateBrandVariation} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">New Brand Name *</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.new_brand_name", "New Brand Name *")}</label>
                 <input
                   required
                   autoFocus
@@ -3279,7 +3280,7 @@ export function LocalPurchaseView({
 
             <form onSubmit={handleCreateSizeVariation} className="space-y-4">
               <div>
-                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">New Size Name *</label>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase mb-1">{t(lang, "lp.new_size_name", "New Size Name *")}</label>
                 <input
                   required
                   autoFocus
@@ -3488,7 +3489,7 @@ export function LocalPurchaseView({
 
                           <div className="mt-4 grid grid-cols-[1fr_310px] gap-4">
                             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                              <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">Amount In Words</p>
+                              <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">{t(lang, "lp.amount_in_words", "Amount In Words")}</p>
                               <p className="text-sm font-black capitalize text-slate-900">{amountToWordsEn(rowGrandTotal, rowCurrency)}</p>
                               <div className="mt-4 grid grid-cols-2 gap-3 text-[9px]">
                                 <div className="rounded-lg border border-dashed border-slate-300 bg-white p-3">
@@ -3620,7 +3621,7 @@ export function LocalPurchaseView({
               </div>
 
               <div className="bg-slate-900 text-white rounded-lg p-3 flex justify-between items-center text-xs">
-                <span className="font-bold text-slate-300 uppercase">Total Bill Amount:</span>
+                <span className="font-bold text-slate-300 uppercase">{t(lang, "lp.total_bill_amount", "Total Bill Amount:")}</span>
                 <span className="font-mono text-base font-black text-emerald-700">
                   {selectedRowForVoucher.localCurrency || selectedRowForVoucher.local_currency} {Number(selectedRowForVoucher.finalCost || selectedRowForVoucher.final_cost || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
