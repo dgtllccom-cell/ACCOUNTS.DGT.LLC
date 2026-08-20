@@ -139,25 +139,26 @@ export function BranchScopeDropdown({
 
   return (
     <div ref={rootRef} className={`relative flex flex-col gap-1 ${className}`}>
-      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
         <Globe2 className="h-3 w-3 text-blue-500" aria-hidden /> {t(lang, "lp.branch_scope_label", "Country / Branch / City")}
       </span>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex h-9 w-64 items-center justify-between gap-2 rounded-lg border border-slate-200 bg-slate-50 px-2.5 text-xs font-bold text-slate-800 outline-none hover:bg-white focus:border-blue-500"
+        title={label}
+        className="flex h-9 w-64 items-center justify-between gap-2 rounded-lg border border-border bg-muted px-2.5 text-xs font-bold text-foreground outline-none hover:bg-accent focus:border-primary"
       >
         <span className="truncate">{label}</span>
-        <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
+        <ChevronDown className={`h-3.5 w-3.5 shrink-0 text-muted-foreground transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
       </button>
 
       {open && (
-        <div className="absolute start-0 top-full z-40 mt-1 max-h-80 w-72 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl">
+        <div className="absolute start-0 top-full z-40 mt-1 max-h-80 w-72 overflow-y-auto rounded-xl border border-border bg-popover text-popover-foreground p-1.5 shadow-xl">
           <button
             type="button"
             onClick={selectAll}
             className={`flex w-full items-center justify-between rounded-lg px-2.5 py-1.5 text-xs font-bold ${
-              !value.countryId ? "bg-blue-50 text-blue-700" : "text-slate-600 hover:bg-slate-50"
+              !value.countryId ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent"
             }`}
           >
             {t(lang, "lp.all_branches", "All Countries / Branches")}
@@ -172,14 +173,14 @@ export function BranchScopeDropdown({
               <div key={country.id} className="mt-0.5">
                 <div
                   className={`flex items-center gap-1 rounded-lg px-1 py-1 text-xs font-black uppercase tracking-wide ${
-                    isCountrySelected ? "bg-blue-50 text-blue-700" : "text-slate-700"
+                    isCountrySelected ? "bg-primary/10 text-primary" : "text-foreground"
                   }`}
                 >
                   <button
                     type="button"
                     onClick={() => toggleCountry(country.id)}
-                    className="rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                    aria-label={isExpanded ? "Collapse" : "Expand"}
+                    className="rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                    aria-label={isExpanded ? t(lang, "common.collapse", "Collapse") : t(lang, "common.expand", "Expand")}
                   >
                     {branches.length > 0 ? (
                       isExpanded ? <ChevronDown className="h-3.5 w-3.5" /> : <ChevronRight className="h-3.5 w-3.5 rtl:rotate-180" />
@@ -199,7 +200,7 @@ export function BranchScopeDropdown({
                 </div>
 
                 {isExpanded && branches.length > 0 && (
-                  <div className="ms-4 border-s border-slate-100 ps-2">
+                  <div className="ms-4 border-s border-border ps-2">
                     {branches.map((branch) => {
                       const cities = citiesByBranch.get(branch.id) ?? [];
                       const branchExpanded = expandedBranchIds.has(branch.id);
@@ -208,14 +209,14 @@ export function BranchScopeDropdown({
                         <div key={branch.id} className="mt-0.5">
                           <div
                             className={`flex items-center gap-1 rounded-lg px-1 py-1 text-[11px] font-bold ${
-                              isBranchSelected ? "bg-blue-50 text-blue-700" : "text-slate-600"
+                              isBranchSelected ? "bg-primary/10 text-primary" : "text-muted-foreground"
                             }`}
                           >
                             <button
                               type="button"
                               onClick={() => toggleBranch(branch.id)}
-                              className="rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-                              aria-label={branchExpanded ? "Collapse" : "Expand"}
+                              className="rounded p-0.5 text-muted-foreground hover:bg-accent hover:text-foreground"
+                              aria-label={branchExpanded ? t(lang, "common.collapse", "Collapse") : t(lang, "common.expand", "Expand")}
                             >
                               {cities.length > 0 ? (
                                 branchExpanded ? <ChevronDown className="h-3 w-3" /> : <ChevronRight className="h-3 w-3 rtl:rotate-180" />
@@ -228,14 +229,14 @@ export function BranchScopeDropdown({
                               onClick={() => selectBranch(country.id, branch.id)}
                               className="flex flex-1 items-center gap-1.5 truncate py-0.5 text-start"
                             >
-                              <Building2 className="h-3 w-3 shrink-0 text-slate-400" aria-hidden />
+                              <Building2 className="h-3 w-3 shrink-0 text-muted-foreground" aria-hidden />
                               <span className="truncate">{branch.name}</span>
                             </button>
                             {isBranchSelected && <Check className="h-3 w-3 shrink-0" aria-hidden />}
                           </div>
 
                           {branchExpanded && cities.length > 0 && (
-                            <div className="ms-4 border-s border-slate-100 ps-2">
+                            <div className="ms-4 border-s border-border ps-2">
                               {cities.map((city) => {
                                 const isCitySelected = value.cityBranchId === city.id;
                                 return (
@@ -244,7 +245,7 @@ export function BranchScopeDropdown({
                                     type="button"
                                     onClick={() => selectCity(country.id, branch.id, city.id)}
                                     className={`flex w-full items-center gap-1.5 truncate rounded-lg px-1.5 py-1 text-[11px] font-semibold ${
-                                      isCitySelected ? "bg-blue-50 text-blue-700" : "text-slate-500 hover:bg-slate-50"
+                                      isCitySelected ? "bg-primary/10 text-primary" : "text-muted-foreground hover:bg-accent"
                                     }`}
                                   >
                                     <MapPin className="h-3 w-3 shrink-0 text-emerald-500" aria-hidden />

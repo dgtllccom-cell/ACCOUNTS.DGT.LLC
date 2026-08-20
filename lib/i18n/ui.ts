@@ -1932,6 +1932,8 @@ export type UiKey =
   | "common.all_categories"
   | "common.all_statuses"
   | "common.loading"
+  | "common.expand"
+  | "common.collapse"
   | "log.command_center"
   | "log.dashboard_title"
   | "log.dashboard_subtitle"
@@ -2768,6 +2770,8 @@ export type UiKey =
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "common.expand": "Expand",
+  "common.collapse": "Collapse",
   "bdash.title": "Branch Admin Dashboard",
   "bdash.subtitle": "Daily operational view for branch transactions, local balance sheet, cash levels, and stock metrics.",
   "bdash.branch_code": "Branch Code",
@@ -5782,6 +5786,8 @@ const en: Dict = {
 
 const ur: Dict = {
   ...en,
+  "common.expand": "پھیلائیں",
+  "common.collapse": "سمیٹیں",
   "nav.branch_setup_network": "برانچ سیٹ اپ / نیٹ ورک",
   "bdash.title": "برانچ ایڈمن ڈیش بورڈ",
   "bdash.subtitle": "برانچ لین دین، مقامی بیلنس شیٹ، نقد سطح اور اسٹاک میٹرکس کے لیے روزانہ آپریشنل منظر۔",
@@ -8778,6 +8784,8 @@ const ur: Dict = {
 
 const ar: Dict = {
   ...en,
+  "common.expand": "توسيع",
+  "common.collapse": "طي",
   "nav.branch_setup_network": "إعداد الفرع / الشبكة",
   "bdash.title": "لوحة مدير الفرع",
   "bdash.subtitle": "عرض تشغيلي يومي لمعاملات الفرع والميزانية المحلية ومستويات النقد ومقاييس المخزون.",
@@ -11773,6 +11781,8 @@ const ar: Dict = {
 
 const fa: Dict = {
   ...en,
+  "common.expand": "گسترش",
+  "common.collapse": "جمع کردن",
   "nav.branch_setup_network": "راه‌اندازی شعبه / شبکه",
   "purchase.pending_transfer_badge": "انتقال در انتظار",
   "bdash.title": "داشبورد مدیر شعبه",
@@ -14767,6 +14777,8 @@ const fa: Dict = {
 
 const ps: Dict = {
   ...en,
+  "common.expand": "پراخول",
+  "common.collapse": "راټولول",
   "nav.branch_setup_network": "د څانګې تنظیم / شبکه",
   "bdash.title": "د څانګې مدیر ډشبورډ",
   "bdash.subtitle": "د څانګې د راکړې ورکړې، محلي بیلانس شیټ، نقدي کچې او د ذخیرې معیارونو لپاره ورځنی عملیاتي لید.",
