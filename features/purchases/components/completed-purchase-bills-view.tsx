@@ -11,48 +11,13 @@ import { SimpleModal } from "@/components/ui/simple-modal";
 import { printStore } from "@/lib/store/print-store";
 import { Th } from "@/components/ui/translated-th";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
-
-type LanguageCode = "en" | "ur" | "ar" | "fa" | "ps";
-
-const TRANSLATIONS: Record<string, Record<LanguageCode, string>> = {
-  title: {
-    en: "Completed Purchase Bills Register",
-    ur: "مکمل پرچیز بلز رجسٹر",
-    ar: "سجل فواتير الشراء المكتملة",
-    fa: "دفتر ثبت فاکتورهای خرید تکمیل شده",
-    ps: "د بشپړ شوي پیرود بیلونو راجستر"
-  },
-  subtitle: {
-    en: "Final archive of fully completed purchase contracts with 0 remaining balance.",
-    ur: "صفر بقایا رقم کے ساتھ مکمل شدہ پرچیز معاہدوں کا حتمی آرکائیو۔",
-    ar: "الأرشيف النهائي لعقود الشراء المكتملة بالكامل مع رصيد متبقي 0.",
-    fa: "آرشیو نهایی قراردادهای خرید کاملاً تکمیل شده با مانده صفر.",
-    ps: "د 0 پاتې بیلانس سره د بشپړ شوي پیرود قراردادونو وروستی آرشیف."
-  },
-  searchPlaceholder: {
-    en: "Search PO / Manual Bill / Supplier...",
-    ur: "پرچیز آرڈر / مینوئل بل / سپلائر تلاش کریں...",
-    ar: "ابحث برقم الشراء / الفاتورة اليدوية / المورد...",
-    fa: "جستجوی سفارش / فاکتور دستی / تامین‌کننده...",
-    ps: "د پیرود امر / لاسي بل / چمتو کونکی لټون کړئ..."
-  },
-  poNo: { en: "Purchase Bill No.", ur: "پرچیز بل نمبر", ar: "رقم فاتورة الشراء", fa: "شماره فاکتور خرید", ps: "د پیرود بل شمیره" },
-  manualNo: { en: "Manual Bill No.", ur: "مینوئل بل نمبر", ar: "رقم الفاتورة اليدوية", fa: "شماره فاکتور دستی", ps: "لاسي بل شمیره" },
-  blNo: { en: "BL No.", ur: "بی ایل نمبر", ar: "رقم بوليصة الشحن", fa: "شماره بارنامه", ps: "د بی ایل شمیره" },
-  supplier: { en: "Supplier", ur: "سپلائر", ar: "المورد", fa: "تامین‌کننده", ps: "چمتو کونکی" },
-  countryBranch: { en: "Country & Branch", ur: "ملک اور برانچ", ar: "البلد والفرع", fa: "کشور و شعبه", ps: "هیواد او څانګه" },
-  contractQty: { en: "Contract Qty", ur: "معاہدہ کی مقدار", ar: "كمية العقد", fa: "مقدار قرارداد", ps: "د قرارداد مقدار" },
-  loadedQty: { en: "Loaded Qty", ur: "لوڈ شدہ مقدار", ar: "الكمية المحملة", fa: "مقدار بارگیری شده", ps: "بار شوی مقدار" },
-  purchaseAmount: { en: "Purchase Amount", ur: "پرچیز رقم", ar: "مبلغ الشراء", fa: "مبلغ خرید", ps: "د پیرود مقدار" },
-  totalPaid: { en: "Total Paid", ur: "کل ادائیگی", ar: "إجمالي المدفوع", fa: "کل پرداخت شده", ps: "ټوله تادیه شوې" },
-  remainingBalance: { en: "Remaining Balance", ur: "بقایا رقم", ar: "الرصيد المتبقي", fa: "مانده حساب", ps: "پاتې بیلانس" },
-  completionDate: { en: "Completion Date", ur: "تکمیل کی تاریخ", ar: "تاريخ الإكمال", fa: "تاریخ تکمیل", ps: "د بشپړیدو نیټه" },
-  completedBy: { en: "Completed By", ur: "تکمیل کنندہ", ar: "تم بواسطة", fa: "تکمیل شده توسط", ps: "بشپړ شوی لخوا" },
-  actions: { en: "Actions", ur: "اقدامات", ar: "الإجراءات", fa: "عملیات", ps: "کړنې" }
-};
+import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 
 export function CompletedPurchaseBillsView() {
-  const [lang, setLang] = useState<LanguageCode>("en");
+  const lang = useActiveLanguage();
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang);
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingRecords, setLoadingRecords] = useState<any[]>([]);
   const [payments, setPayments] = useState<any[]>([]);
@@ -60,8 +25,6 @@ export function CompletedPurchaseBillsView() {
   const [query, setQuery] = useState("");
   const [selectedBill, setSelectedBill] = useState<any | null>(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-
-  const tr = (key: string) => TRANSLATIONS[key]?.[lang] || TRANSLATIONS[key]?.en || key;
 
   async function loadData() {
     setLoading(true);
@@ -295,13 +258,13 @@ export function CompletedPurchaseBillsView() {
   }, [completedBills]);
 
   return (
-    <div className="mx-auto w-full max-w-[1650px] px-3 py-4 space-y-4 font-sans text-slate-800 dark:text-slate-100">
+    <div dir={isRtl ? "rtl" : "ltr"} className="mx-auto w-full max-w-[1650px] px-3 py-4 space-y-4 font-sans text-slate-800 dark:text-slate-100">
       {/* SINGLE CLEAN ACTION / CONTROL HEADER BAR (No duplicate back buttons!) */}
       <div className="flex flex-wrap items-center justify-between gap-3 bg-white dark:bg-slate-900 p-2.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
         <div className="flex items-center gap-3">
           <Button onClick={() => window.history.back()} variant="ghost" size="sm" className="h-8 px-2 text-xs font-bold text-slate-600 hover:text-slate-900">
             <ArrowLeft className="h-4 w-4 mr-1" />
-            Back
+            {tt("plr.back", "Back")}
           </Button>
 
           <div className="h-4 w-px bg-slate-200 dark:bg-slate-800" />
@@ -309,50 +272,26 @@ export function CompletedPurchaseBillsView() {
           <div>
             <h1 className="text-base font-black uppercase tracking-tight text-slate-800 dark:text-slate-100 flex items-center gap-2">
               <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-              {tr("title")}
-              <span className="text-[11px] font-medium text-slate-400 normal-case ml-2">Daily completed purchase register - 0 balance archive</span>
+              {tt("cpb.title", "Completed Purchase Bills Register")}
+              <span className="text-[11px] font-medium text-slate-400 normal-case ml-2">{tt("cpb.subtitle", "Final archive of completed purchase contracts.")}</span>
             </h1>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {/* 5-LANGUAGE SWITCHER */}
-          <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
-            {[
-              { code: "en", label: "English" },
-              { code: "ur", label: "اردو" },
-              { code: "ps", label: "پښتو" },
-              { code: "fa", label: "فارسی" },
-              { code: "ar", label: "العربية" }
-            ].map(item => (
-              <button
-                key={item.code}
-                type="button"
-                onClick={() => setLang(item.code as LanguageCode)}
-                className={`px-2.5 py-1 text-[11px] font-bold rounded-md transition ${
-                  lang === item.code 
-                    ? "bg-white text-emerald-700 shadow-xs dark:bg-slate-900 dark:text-emerald-400" 
-                    : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
-                }`}
-              >
-                {item.label}
-              </button>
-            ))}
-          </div>
-
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder={tr("searchPlaceholder")}
+              placeholder={tt("cpb.search_ph", "Search PO / Manual Bill / Supplier...")}
               className="h-8 w-60 rounded-lg border border-slate-200 bg-white pl-8 pr-3 text-xs outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
             />
           </div>
 
           <Button onClick={() => void loadData()} variant="outline" size="sm" className="h-8 font-bold text-xs">
             <RefreshCw className={`h-3.5 w-3.5 mr-1 text-slate-500 ${loading ? "animate-spin" : ""}`} />
-            Refresh
+            {tt("common.refresh", "Refresh")}
           </Button>
 
           <JournalPrintButton
@@ -514,19 +453,19 @@ export function CompletedPurchaseBillsView() {
           <table className="w-full text-left text-xs whitespace-nowrap">
             <thead className="bg-slate-50 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:bg-slate-900/60 dark:border-slate-800">
               <tr>
-                <Th className="px-4 py-3">{tr("poNo")}</Th>
-                <Th className="px-4 py-3">{tr("manualNo")}</Th>
-                <Th className="px-4 py-3">{tr("blNo")}</Th>
-                <Th className="px-4 py-3">{tr("supplier")}</Th>
-                <Th className="px-4 py-3">{tr("countryBranch")}</Th>
-                <Th className="px-4 py-3 text-right">{tr("contractQty")}</Th>
-                <Th className="px-4 py-3 text-right">{tr("loadedQty")}</Th>
-                <Th className="px-4 py-3 text-right">{tr("purchaseAmount")}</Th>
-                <Th className="px-4 py-3 text-right">{tr("totalPaid")}</Th>
-                <Th className="px-4 py-3 text-right">{tr("remainingBalance")}</Th>
-                <Th className="px-4 py-3">{tr("completionDate")}</Th>
-                <Th className="px-4 py-3">{tr("completedBy")}</Th>
-                <Th className="px-4 py-3 text-center">{tr("actions")}</Th>
+                <Th className="px-4 py-3">{tt("cpb.po_no", "Purchase Bill No.")}</Th>
+                <Th className="px-4 py-3">{tt("cpb.manual_no", "Manual Bill No.")}</Th>
+                <Th className="px-4 py-3">{tt("cpb.bl_no", "BL No.")}</Th>
+                <Th className="px-4 py-3">{tt("cpb.supplier", "Supplier")}</Th>
+                <Th className="px-4 py-3">{tt("cpb.country_branch", "Country & Branch")}</Th>
+                <Th className="px-4 py-3 text-right">{tt("cpb.contract_qty", "Contract Qty")}</Th>
+                <Th className="px-4 py-3 text-right">{tt("cpb.loaded_qty", "Loaded Qty")}</Th>
+                <Th className="px-4 py-3 text-right">{tt("cpb.purchase_amount", "Purchase Amount")}</Th>
+                <Th className="px-4 py-3 text-right">{tt("cpb.total_paid", "Total Paid")}</Th>
+                <Th className="px-4 py-3 text-right">{tt("cpb.remaining_balance", "Remaining Balance")}</Th>
+                <Th className="px-4 py-3">{tt("cpb.completion_date", "Completion Date")}</Th>
+                <Th className="px-4 py-3">{tt("cpb.completed_by", "Completed By")}</Th>
+                <Th className="px-4 py-3 text-center">{tt("common.actions", "Actions")}</Th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
@@ -618,8 +557,7 @@ export function CompletedPurchaseBillsView() {
                 <tr>
                   <td colSpan={13} className="px-6 py-12 text-center text-muted-foreground">
                     <Package className="h-10 w-10 mx-auto text-slate-300 mb-3" />
-                    <p className="font-bold text-slate-700">No Completed Purchase Bills</p>
-                    <p className="text-xs">Purchase bills will automatically appear here once their remaining balance is fully paid.</p>
+                    <p className="font-bold text-slate-700">{tt("cpb.no_bills", "No completed purchase bills found.")}</p>
                   </td>
                 </tr>
               )}
