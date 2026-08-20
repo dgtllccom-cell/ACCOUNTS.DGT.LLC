@@ -1,0 +1,3444 @@
+{
+  "totalTables": 777,
+  "activeTablesCount": 79,
+  "coreActiveTables": [
+    {
+      "table_name": "cities",
+      "row_estimate": "664494"
+    },
+    {
+      "table_name": "translations_arabic",
+      "row_estimate": "10710"
+    },
+    {
+      "table_name": "translations_english",
+      "row_estimate": "10710"
+    },
+    {
+      "table_name": "translations_pashto",
+      "row_estimate": "10710"
+    },
+    {
+      "table_name": "translations_persian",
+      "row_estimate": "10710"
+    },
+    {
+      "table_name": "translations_urdu",
+      "row_estimate": "10710"
+    },
+    {
+      "table_name": "districts",
+      "row_estimate": "1841"
+    },
+    {
+      "table_name": "roznamcha_lines",
+      "row_estimate": "1176"
+    },
+    {
+      "table_name": "roznamcha_entries",
+      "row_estimate": "589"
+    },
+    {
+      "table_name": "audit_logs",
+      "row_estimate": "588"
+    },
+    {
+      "table_name": "purchase_order_items",
+      "row_estimate": "391"
+    },
+    {
+      "table_name": "ledger_balances",
+      "row_estimate": "326"
+    },
+    {
+      "table_name": "purchase_order_payments",
+      "row_estimate": "235"
+    },
+    {
+      "table_name": "translation_field_registry",
+      "row_estimate": "228"
+    },
+    {
+      "table_name": "customers",
+      "row_estimate": "208"
+    },
+    {
+      "table_name": "companies",
+      "row_estimate": "203"
+    },
+    {
+      "table_name": "purchase_orders",
+      "row_estimate": "200"
+    },
+    {
+      "table_name": "states_provinces",
+      "row_estimate": "177"
+    },
+    {
+      "table_name": "warehouses",
+      "row_estimate": "169"
+    },
+    {
+      "table_name": "purchase_loading_records",
+      "row_estimate": "153"
+    },
+    {
+      "table_name": "banks",
+      "row_estimate": "150"
+    },
+    {
+      "table_name": "enterprise_accounts",
+      "row_estimate": "133"
+    },
+    {
+      "table_name": "customer_contacts",
+      "row_estimate": "120"
+    },
+    {
+      "table_name": "zz_bak2_20260801_companies",
+      "row_estimate": "115"
+    },
+    {
+      "table_name": "permissions",
+      "row_estimate": "105"
+    },
+    {
+      "table_name": "customer_registrations",
+      "row_estimate": "80"
+    },
+    {
+      "table_name": "transaction_serial_sequences",
+      "row_estimate": "70"
+    },
+    {
+      "table_name": "zz_bak2_20260801_banks",
+      "row_estimate": "65"
+    },
+    {
+      "table_name": "zz_bak2_20260801_customers",
+      "row_estimate": "65"
+    },
+    {
+      "table_name": "daily_usd_rates",
+      "row_estimate": "64"
+    },
+    {
+      "table_name": "employees",
+      "row_estimate": "54"
+    },
+    {
+      "table_name": "local_applied_migrations",
+      "row_estimate": "48"
+    },
+    {
+      "table_name": "ledgers",
+      "row_estimate": "28"
+    },
+    {
+      "table_name": "erp_schema_migrations",
+      "row_estimate": "24"
+    },
+    {
+      "table_name": "areas_locations",
+      "row_estimate": "20"
+    },
+    {
+      "table_name": "user_role_assignments",
+      "row_estimate": "20"
+    },
+    {
+      "table_name": "profiles",
+      "row_estimate": "18"
+    },
+    {
+      "table_name": "_applied_schema_migrations",
+      "row_estimate": "15"
+    },
+    {
+      "table_name": "city_branches",
+      "row_estimate": "14"
+    },
+    {
+      "table_name": "goods",
+      "row_estimate": "14"
+    },
+    {
+      "table_name": "bank_cheque_transactions",
+      "row_estimate": "12"
+    },
+    {
+      "table_name": "account_types",
+      "row_estimate": "9"
+    },
+    {
+      "table_name": "ports",
+      "row_estimate": "9"
+    },
+    {
+      "table_name": "product_units",
+      "row_estimate": "9"
+    },
+    {
+      "table_name": "zz_bak_20260801_cities",
+      "row_estimate": "9"
+    },
+    {
+      "table_name": "company_registration_types",
+      "row_estimate": "8"
+    },
+    {
+      "table_name": "countries",
+      "row_estimate": "8"
+    },
+    {
+      "table_name": "document_types",
+      "row_estimate": "8"
+    },
+    {
+      "table_name": "account_companies",
+      "row_estimate": "7"
+    },
+    {
+      "table_name": "zz_bak_20260801_states_provinces",
+      "row_estimate": "7"
+    },
+    {
+      "table_name": "stock_movements",
+      "row_estimate": "6"
+    },
+    {
+      "table_name": "clearing_customer_order_parties",
+      "row_estimate": "5"
+    },
+    {
+      "table_name": "communication_center_profiles",
+      "row_estimate": "5"
+    },
+    {
+      "table_name": "languages",
+      "row_estimate": "5"
+    },
+    {
+      "table_name": "account_banks",
+      "row_estimate": "4"
+    },
+    {
+      "table_name": "account_customer_owners",
+      "row_estimate": "4"
+    },
+    {
+      "table_name": "account_warehouses",
+      "row_estimate": "4"
+    },
+    {
+      "table_name": "accounts",
+      "row_estimate": "4"
+    },
+    {
+      "table_name": "country_branches",
+      "row_estimate": "4"
+    },
+    {
+      "table_name": "record_change_history",
+      "row_estimate": "4"
+    },
+    {
+      "table_name": "sales_orders",
+      "row_estimate": "4"
+    },
+    {
+      "table_name": "shipping_line_records",
+      "row_estimate": "4"
+    },
+    {
+      "table_name": "zz_bak_20260801_countries",
+      "row_estimate": "4"
+    },
+    {
+      "table_name": "zz_bak_20260801_districts",
+      "row_estimate": "4"
+    },
+    {
+      "table_name": "contact_types",
+      "row_estimate": "3"
+    },
+    {
+      "table_name": "enterprise_account_history",
+      "row_estimate": "3"
+    },
+    {
+      "table_name": "product_brands",
+      "row_estimate": "3"
+    },
+    {
+      "table_name": "product_categories",
+      "row_estimate": "3"
+    },
+    {
+      "table_name": "tax_codes",
+      "row_estimate": "3"
+    },
+    {
+      "table_name": "clearing_agents",
+      "row_estimate": "2"
+    },
+    {
+      "table_name": "clearing_customer_orders",
+      "row_estimate": "1"
+    },
+    {
+      "table_name": "office_attendance",
+      "row_estimate": "1"
+    },
+    {
+      "table_name": "office_documents",
+      "row_estimate": "1"
+    },
+    {
+      "table_name": "product_country_mapping",
+      "row_estimate": "1"
+    },
+    {
+      "table_name": "product_inventory_balances",
+      "row_estimate": "1"
+    },
+    {
+      "table_name": "products",
+      "row_estimate": "1"
+    },
+    {
+      "table_name": "report_auto_email_configs",
+      "row_estimate": "1"
+    },
+    {
+      "table_name": "saved_reports",
+      "row_estimate": "1"
+    },
+    {
+      "table_name": "shipping_expense_transfers",
+      "row_estimate": "1"
+    },
+    {
+      "table_name": "branches",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "currency_rates",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "journal_entries",
+      "row_estimate": "0"
+    }
+  ],
+  "allTables": [
+    {
+      "table_name": "cities",
+      "row_estimate": "664494"
+    },
+    {
+      "table_name": "translations_arabic",
+      "row_estimate": "10710"
+    },
+    {
+      "table_name": "translations_english",
+      "row_estimate": "10710"
+    },
+    {
+      "table_name": "translations_pashto",
+      "row_estimate": "10710"
+    },
+    {
+      "table_name": "translations_persian",
+      "row_estimate": "10710"
+    },
+    {
+      "table_name": "translations_urdu",
+      "row_estimate": "10710"
+    },
+    {
+      "table_name": "districts",
+      "row_estimate": "1841"
+    },
+    {
+      "table_name": "roznamcha_lines",
+      "row_estimate": "1176"
+    },
+    {
+      "table_name": "roznamcha_entries",
+      "row_estimate": "589"
+    },
+    {
+      "table_name": "audit_logs",
+      "row_estimate": "588"
+    },
+    {
+      "table_name": "purchase_order_items",
+      "row_estimate": "391"
+    },
+    {
+      "table_name": "ledger_balances",
+      "row_estimate": "326"
+    },
+    {
+      "table_name": "purchase_order_payments",
+      "row_estimate": "235"
+    },
+    {
+      "table_name": "translation_field_registry",
+      "row_estimate": "228"
+    },
+    {
+      "table_name": "customers",
+      "row_estimate": "208"
+    },
+    {
+      "table_name": "companies",
+      "row_estimate": "203"
+    },
+    {
+      "table_name": "purchase_orders",
+      "row_estimate": "200"
+    },
+    {
+      "table_name": "states_provinces",
+      "row_estimate": "177"
+    },
+    {
+      "table_name": "warehouses",
+      "row_estimate": "169"
+    },
+    {
+      "table_name": "purchase_loading_records",
+      "row_estimate": "153"
+    },
+    {
+      "table_name": "banks",
+      "row_estimate": "150"
+    },
+    {
+      "table_name": "enterprise_accounts",
+      "row_estimate": "133"
+    },
+    {
+      "table_name": "customer_contacts",
+      "row_estimate": "120"
+    },
+    {
+      "table_name": "zz_bak2_20260801_companies",
+      "row_estimate": "115"
+    },
+    {
+      "table_name": "permissions",
+      "row_estimate": "105"
+    },
+    {
+      "table_name": "customer_registrations",
+      "row_estimate": "80"
+    },
+    {
+      "table_name": "transaction_serial_sequences",
+      "row_estimate": "70"
+    },
+    {
+      "table_name": "zz_bak2_20260801_banks",
+      "row_estimate": "65"
+    },
+    {
+      "table_name": "zz_bak2_20260801_customers",
+      "row_estimate": "65"
+    },
+    {
+      "table_name": "daily_usd_rates",
+      "row_estimate": "64"
+    },
+    {
+      "table_name": "employees",
+      "row_estimate": "54"
+    },
+    {
+      "table_name": "local_applied_migrations",
+      "row_estimate": "48"
+    },
+    {
+      "table_name": "ledgers",
+      "row_estimate": "28"
+    },
+    {
+      "table_name": "erp_schema_migrations",
+      "row_estimate": "24"
+    },
+    {
+      "table_name": "areas_locations",
+      "row_estimate": "20"
+    },
+    {
+      "table_name": "user_role_assignments",
+      "row_estimate": "20"
+    },
+    {
+      "table_name": "profiles",
+      "row_estimate": "18"
+    },
+    {
+      "table_name": "_applied_schema_migrations",
+      "row_estimate": "15"
+    },
+    {
+      "table_name": "city_branches",
+      "row_estimate": "14"
+    },
+    {
+      "table_name": "goods",
+      "row_estimate": "14"
+    },
+    {
+      "table_name": "bank_cheque_transactions",
+      "row_estimate": "12"
+    },
+    {
+      "table_name": "account_types",
+      "row_estimate": "9"
+    },
+    {
+      "table_name": "ports",
+      "row_estimate": "9"
+    },
+    {
+      "table_name": "product_units",
+      "row_estimate": "9"
+    },
+    {
+      "table_name": "zz_bak_20260801_cities",
+      "row_estimate": "9"
+    },
+    {
+      "table_name": "company_registration_types",
+      "row_estimate": "8"
+    },
+    {
+      "table_name": "countries",
+      "row_estimate": "8"
+    },
+    {
+      "table_name": "document_types",
+      "row_estimate": "8"
+    },
+    {
+      "table_name": "account_companies",
+      "row_estimate": "7"
+    },
+    {
+      "table_name": "zz_bak_20260801_states_provinces",
+      "row_estimate": "7"
+    },
+    {
+      "table_name": "stock_movements",
+      "row_estimate": "6"
+    },
+    {
+      "table_name": "clearing_customer_order_parties",
+      "row_estimate": "5"
+    },
+    {
+      "table_name": "communication_center_profiles",
+      "row_estimate": "5"
+    },
+    {
+      "table_name": "languages",
+      "row_estimate": "5"
+    },
+    {
+      "table_name": "account_banks",
+      "row_estimate": "4"
+    },
+    {
+      "table_name": "account_customer_owners",
+      "row_estimate": "4"
+    },
+    {
+      "table_name": "account_warehouses",
+      "row_estimate": "4"
+    },
+    {
+      "table_name": "accounts",
+      "row_estimate": "4"
+    },
+    {
+      "table_name": "country_branches",
+      "row_estimate": "4"
+    },
+    {
+      "table_name": "record_change_history",
+      "row_estimate": "4"
+    },
+    {
+      "table_name": "sales_orders",
+      "row_estimate": "4"
+    },
+    {
+      "table_name": "shipping_line_records",
+      "row_estimate": "4"
+    },
+    {
+      "table_name": "zz_bak_20260801_countries",
+      "row_estimate": "4"
+    },
+    {
+      "table_name": "zz_bak_20260801_districts",
+      "row_estimate": "4"
+    },
+    {
+      "table_name": "contact_types",
+      "row_estimate": "3"
+    },
+    {
+      "table_name": "enterprise_account_history",
+      "row_estimate": "3"
+    },
+    {
+      "table_name": "product_brands",
+      "row_estimate": "3"
+    },
+    {
+      "table_name": "product_categories",
+      "row_estimate": "3"
+    },
+    {
+      "table_name": "tax_codes",
+      "row_estimate": "3"
+    },
+    {
+      "table_name": "clearing_agents",
+      "row_estimate": "2"
+    },
+    {
+      "table_name": "clearing_customer_orders",
+      "row_estimate": "1"
+    },
+    {
+      "table_name": "office_attendance",
+      "row_estimate": "1"
+    },
+    {
+      "table_name": "office_documents",
+      "row_estimate": "1"
+    },
+    {
+      "table_name": "product_country_mapping",
+      "row_estimate": "1"
+    },
+    {
+      "table_name": "product_inventory_balances",
+      "row_estimate": "1"
+    },
+    {
+      "table_name": "products",
+      "row_estimate": "1"
+    },
+    {
+      "table_name": "report_auto_email_configs",
+      "row_estimate": "1"
+    },
+    {
+      "table_name": "saved_reports",
+      "row_estimate": "1"
+    },
+    {
+      "table_name": "shipping_expense_transfers",
+      "row_estimate": "1"
+    },
+    {
+      "table_name": "account_groups",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_ar_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_ar_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_ar_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_ar_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_ar_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_en_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_en_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_en_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_en_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_en_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_fa_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_fa_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_fa_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_fa_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_fa_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_ps_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_ps_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_ps_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_ps_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_ps_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_ur_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_ur_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_ur_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_ur_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_groups_ur_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_ar_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_ar_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_ar_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_ar_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_ar_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_en_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_en_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_en_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_en_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_en_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_fa_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_fa_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_fa_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_fa_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_fa_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_ps_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_ps_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_ps_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_ps_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_ps_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_ur_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_ur_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_ur_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_ur_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "account_types_ur_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_ar_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_ar_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_ar_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_ar_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_ar_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_en_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_en_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_en_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_en_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_en_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_fa_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_fa_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_fa_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_fa_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_fa_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_ps_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_ps_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_ps_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_ps_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_ps_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_ur_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_ur_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_ur_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_ur_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "accounts_ur_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "app_settings",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_request_items",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_requests",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_ar_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_ar_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_ar_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_ar_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_ar_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_en_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_en_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_en_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_en_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_en_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_fa_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_fa_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_fa_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_fa_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_fa_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_ps_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_ps_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_ps_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_ps_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_ps_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_ur_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_ur_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_ur_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_ur_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "approval_status_history_ur_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_ar_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_ar_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_ar_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_ar_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_ar_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_en_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_en_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_en_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_en_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_en_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_fa_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_fa_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_fa_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_fa_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_fa_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_ps_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_ps_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_ps_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_ps_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_ps_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_ur_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_ur_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_ur_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_ur_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "areas_locations_ur_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "attachments",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "bank_cheque_transactions_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "bank_cheque_transactions_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "bank_cheque_transactions_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "bank_cheque_transactions_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "bank_cheque_transactions_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "banks_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "banks_ar_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "banks_ar_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "banks_ar_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "banks_ar_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "banks_ar_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "banks_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "banks_en_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "banks_en_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "banks_en_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "banks_en_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "banks_en_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "banks_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "banks_fa_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "banks_fa_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "banks_fa_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "banks_fa_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "banks_fa_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "banks_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "banks_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "branches",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "branches_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "branches_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "branches_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "branches_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "branches_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "cities_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "cities_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "cities_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "cities_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "cities_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "city_branches_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "city_branches_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "city_branches_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "city_branches_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "city_branches_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_agent_branches",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_agent_branches_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_agent_branches_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_agent_branches_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_agent_branches_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_agent_branches_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_agents_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_agents_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_agents_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_agents_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_agents_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_customer_order_parties_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_customer_order_parties_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_customer_order_parties_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_customer_order_parties_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_customer_order_parties_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_customer_orders_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_customer_orders_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_customer_orders_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_customer_orders_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "clearing_customer_orders_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_attachments",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_audit_logs",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_campaigns",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_campaigns_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_campaigns_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_campaigns_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_campaigns_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_campaigns_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_followups",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_followups_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_followups_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_followups_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_followups_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_followups_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_leads",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_leads_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_leads_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_leads_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_leads_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_leads_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_messages",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_profiles_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_profiles_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_profiles_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_profiles_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_center_profiles_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_contact_preferences",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_conversations",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_messages",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_reminder_rules",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_reminder_rules_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_reminder_rules_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_reminder_rules_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_reminder_rules_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_reminder_rules_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_templates",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_templates_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_templates_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_templates_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_templates_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "communication_templates_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "companies_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "companies_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "companies_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "companies_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "companies_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "company_registration_types_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "company_registration_types_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "company_registration_types_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "company_registration_types_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "company_registration_types_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "contact_types_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "contact_types_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "contact_types_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "contact_types_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "contact_types_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "countries_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "countries_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "countries_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "countries_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "countries_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "country_branches_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "country_branches_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "country_branches_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "country_branches_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "country_branches_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "country_company_profiles",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "country_company_profiles_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "country_company_profiles_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "country_company_profiles_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "country_company_profiles_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "country_company_profiles_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "country_contact_type_rules",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "currency_rates",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "customers_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "customers_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "customers_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "customers_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "customers_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "districts_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "districts_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "districts_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "districts_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "districts_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "document_types_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "document_types_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "document_types_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "document_types_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "document_types_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "employee_advances_loans",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "employee_salaries_due",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "employees_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "employees_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "employees_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "employees_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "employees_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "enterprise_accounts_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "enterprise_accounts_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "enterprise_accounts_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "enterprise_accounts_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "enterprise_accounts_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "enterprise_ledger_reversals",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_activity_events",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_assignments",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_assignments_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_assignments_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_assignments_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_assignments_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_assignments_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_email_accounts",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_email_accounts_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_email_accounts_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_email_accounts_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_email_accounts_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_email_accounts_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_email_messages",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_email_providers",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_email_providers_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_email_providers_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_email_providers_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_email_providers_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_email_providers_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_modules",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_modules_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_modules_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_modules_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_modules_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_modules_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_multilingual_events",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_page_database_bindings",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_pdf_email_jobs",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_pdf_email_jobs_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_pdf_email_jobs_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_pdf_email_jobs_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_pdf_email_jobs_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_pdf_email_jobs_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_record_transfers",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_report_exports",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_report_templates",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_report_templates_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_report_templates_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_report_templates_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_report_templates_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_report_templates_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_role_template_permissions",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_role_templates",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_role_templates_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_role_templates_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_role_templates_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_role_templates_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "erp_role_templates_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "exchange_rate_history",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "expenses_bill_lines",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "expenses_bills",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "expenses_bills_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "expenses_bills_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "expenses_bills_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "expenses_bills_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "expenses_bills_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "financial_periods",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "financial_periods_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "financial_periods_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "financial_periods_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "financial_periods_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "financial_periods_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "goods_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "goods_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "goods_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "goods_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "goods_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "goods_variations",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "goods_variations_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "goods_variations_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "goods_variations_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "goods_variations_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "goods_variations_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "import_truck_loadings",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "import_truck_loadings_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "import_truck_loadings_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "import_truck_loadings_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "import_truck_loadings_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "import_truck_loadings_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "inter_branch_ledger_transfers",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "inter_branch_ledger_transfers_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "inter_branch_ledger_transfers_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "inter_branch_ledger_transfers_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "inter_branch_ledger_transfers_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "inter_branch_ledger_transfers_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "journal_entries",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "journal_entries_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "journal_entries_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "journal_entries_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "journal_entries_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "journal_entries_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "journal_lines",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "journal_lines_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "journal_lines_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "journal_lines_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "journal_lines_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "journal_lines_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "journal_reversals",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ledger_entries",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ledger_opening_balances",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ledger_posting_batches",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ledger_posting_batches_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ledger_posting_batches_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ledger_posting_batches_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ledger_posting_batches_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ledger_posting_batches_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ledger_posting_lines",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ledger_posting_lines_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ledger_posting_lines_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ledger_posting_lines_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ledger_posting_lines_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ledger_posting_lines_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ledger_transaction_audit_trail",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ledgers_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ledgers_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ledgers_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ledgers_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ledgers_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "loading_ports_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "loading_ports_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "loading_ports_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "loading_ports_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "loading_ports_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "local_purchases",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "local_purchases_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "local_purchases_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "local_purchases_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "local_purchases_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "local_purchases_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "management_categories",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "management_categories_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "management_categories_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "management_categories_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "management_categories_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "management_categories_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "management_parameter_values",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "management_parameters",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "management_parameters_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "management_parameters_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "management_parameters_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "management_parameters_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "management_parameters_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "memberships",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "module_audit_rules",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "module_dependencies",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "module_number_sequences",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "module_settings",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "money_exchange_entries",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "money_exchange_entries_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "money_exchange_entries_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "money_exchange_entries_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "money_exchange_entries_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "money_exchange_entries_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "nex.js",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "office_assets",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "office_documents_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "office_documents_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "office_documents_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "office_documents_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "office_documents_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "office_leave_requests",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "parent_business_groups",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "parent_business_groups_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "parent_business_groups_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "parent_business_groups_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "parent_business_groups_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "parent_business_groups_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "payment_methods",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "payment_methods_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "payment_methods_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "payment_methods_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "payment_methods_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "payment_methods_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "permissions_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "permissions_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "permissions_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "permissions_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "permissions_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ports_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ports_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ports_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ports_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "ports_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "postal_codes",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "postal_codes_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "postal_codes_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "postal_codes_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "postal_codes_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "postal_codes_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "product_branch_mapping",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "product_brands_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "product_brands_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "product_brands_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "product_brands_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "product_brands_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "product_categories_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "product_categories_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "product_categories_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "product_categories_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "product_categories_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "product_city_mapping",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "product_translations",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "product_units_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "product_units_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "product_units_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "product_units_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "product_units_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "product_warehouse_mapping",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "products_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "products_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "products_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "products_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "products_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "profiles_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "profiles_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "profiles_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "profiles_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "profiles_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_loading_records_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_loading_records_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_loading_records_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_loading_records_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_loading_records_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_order_expenses",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_order_expenses_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_order_expenses_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_order_expenses_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_order_expenses_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_order_expenses_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_order_items_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_order_items_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_order_items_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_order_items_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_order_items_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_order_payments_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_order_payments_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_order_payments_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_order_payments_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "purchase_order_payments_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "received_ports_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "received_ports_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "received_ports_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "received_ports_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "received_ports_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "record_locks",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "record_translations_legacy",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "report_definitions",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "report_definitions_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "report_definitions_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "report_definitions_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "report_definitions_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "report_definitions_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "report_exports",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "report_runs",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "report_snapshots",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "reports",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "role_permissions",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "roles",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "roles_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "roles_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "roles_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "roles_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "roles_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "roznamcha_entries_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "roznamcha_entries_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "roznamcha_entries_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "roznamcha_entries_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "roznamcha_entries_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "roznamcha_lines_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "roznamcha_lines_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "roznamcha_lines_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "roznamcha_lines_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "roznamcha_lines_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "roznamcha_reversals",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "sales_order_payments",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "sales_order_payments_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "sales_order_payments_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "sales_order_payments_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "sales_order_payments_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "sales_order_payments_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "sales_orders_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "sales_orders_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "sales_orders_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "sales_orders_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "sales_orders_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "saved_reports_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "saved_reports_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "saved_reports_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "saved_reports_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "saved_reports_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "shipment_documents",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "shipment_documents_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "shipment_documents_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "shipment_documents_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "shipment_documents_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "shipment_documents_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "shipping_bl_records",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "shipping_bl_records_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "shipping_bl_records_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "shipping_bl_records_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "shipping_bl_records_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "shipping_bl_records_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "shipping_line_records_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "shipping_line_records_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "shipping_line_records_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "shipping_line_records_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "shipping_line_records_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "soft_delete_logs",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "states_provinces_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "states_provinces_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "states_provinces_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "states_provinces_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "states_provinces_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "tax_codes_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "tax_codes_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "tax_codes_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "tax_codes_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "tax_codes_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "transactions",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "transactions_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "transactions_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "transactions_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "transactions_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "transactions_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "transit_truck_loadings",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "transit_truck_loadings_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "transit_truck_loadings_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "transit_truck_loadings_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "transit_truck_loadings_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "transit_truck_loadings_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "translation_audit_logs",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "translation_generation_jobs",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "translation_keys",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "translation_values",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "truck_loadings",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "truck_loadings_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "truck_loadings_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "truck_loadings_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "truck_loadings_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "truck_loadings_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "trucks",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "trucks_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "trucks_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "trucks_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "trucks_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "trucks_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "usd_purchase_sales",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "user_language_preferences",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "user_permission_sets",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "voucher_sequences",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "warehouses_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "warehouses_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "warehouses_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "warehouses_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "warehouses_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_accounts",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_accounts_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_accounts_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_accounts_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_accounts_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_accounts_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_activity_log",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_contacts",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_contacts_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_contacts_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_contacts_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_contacts_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_contacts_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_conversations",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_message_media",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_messages",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_messages_ar",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_messages_en",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_messages_fa",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_messages_ps",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "whatsapp_messages_ur",
+      "row_estimate": "0"
+    },
+    {
+      "table_name": "zz_bak_20260801_areas_locations",
+      "row_estimate": "0"
+    }
+  ]
+}

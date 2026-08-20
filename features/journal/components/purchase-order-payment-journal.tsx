@@ -2701,17 +2701,15 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     async function fetchLedgers() {
       try {
         const { listLedgerReportLedgers } = await import("@/features/reports/ledger-report/ledger-report-api");
-        const scopedCountryId = isSuperAdmin ? (saCountryId || null) : (selectedOrderForLedger?.country_id ?? null);
+        const scopedCountryId = selectedOrderForLedger?.country_id ?? (session?.scopes?.countryIds?.[0] || session?.countryId || null);
         const scopedCountryBranchId = selectedOrderForLedger?.country_branch_id ?? null;
-        const scopedCityBranchId = isSuperAdmin ? (saBranchId || null) : (selectedOrderForLedger?.city_branch_id ?? null);
+        const scopedCityBranchId = selectedOrderForLedger?.city_branch_id ?? (session?.scopes?.cityBranchIds?.[0] || session?.cityBranchId || null);
         
         const res = await listLedgerReportLedgers({
-          reportScope: isSuperAdmin
-            ? (saBranchId ? "branch" : saCountryId ? "country" : "super_admin")
-            : (scopedCountryId ? "country" : "super_admin"),
+          reportScope: scopedCityBranchId ? "branch" : scopedCountryId ? "country" : "super_admin",
           countryId: scopedCountryId,
-          countryBranchId: null,
-          cityBranchId: isSuperAdmin ? (saBranchId || null) : null,
+          countryBranchId: scopedCountryBranchId,
+          cityBranchId: scopedCityBranchId,
           limit: 1000
         });
         if (!cancelled) {
@@ -2723,7 +2721,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     }
     fetchLedgers();
     return () => { cancelled = true; };
-  }, [isSuperAdmin, saCountryId, saBranchId, selectedOrderForLedger?.country_id, selectedOrderForLedger?.country_branch_id, selectedOrderForLedger?.city_branch_id]);
+  }, [session, selectedOrderForLedger?.country_id, selectedOrderForLedger?.country_branch_id, selectedOrderForLedger?.city_branch_id]);
 
   useEffect(() => {
     let cancelled = false;
@@ -3484,34 +3482,32 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
   // Load custom select options
   const ledgerOptions = useMemo(() => {
     // Determine the target country and branch to filter by
-    let targetCountryId = isSuperAdmin ? (saCountryId || null) : (session?.scopes?.countryIds?.[0] || session?.countryId || null);
-    let targetCityBranchId = isSuperAdmin ? (saBranchId || null) : (session?.scopes?.cityBranchIds?.[0] || session?.cityBranchId || null);
+    const targetCountryId = selected?.country_id || session?.scopes?.countryIds?.[0] || session?.countryId || null;
+    const targetCityBranchId = selected?.city_branch_id || session?.scopes?.cityBranchIds?.[0] || session?.cityBranchId || null;
+    const targetCountryBranchId = selected?.country_branch_id || null;
 
-    // If a purchase order is selected, narrow or set the target country/branch based on the selected purchase order
-    if (selected) {
-      if (selected.country_id) {
-        targetCountryId = selected.country_id;
-      }
-      if (selected.city_branch_id) {
-        targetCityBranchId = selected.city_branch_id;
-      }
-    }
-
-    // Filter strictly by the active scope
+    // Filter strictly by the active order's branch and country scope
     const filteredLedgers = ledgers.filter((l) => {
+      const lCountryId = l.country_id || l.countryId;
+      const lCityBranchId = l.city_branch_id || l.cityBranchId;
+      const lCountryBranchId = l.country_branch_id || l.countryBranchId;
+
       // Filter by Country ID if specified
-      if (targetCountryId && l.countryId && l.countryId !== targetCountryId) {
+      if (targetCountryId && lCountryId && lCountryId !== targetCountryId) {
         return false;
       }
       // Filter by Branch ID if specified
-      if (targetCityBranchId && l.cityBranchId && l.cityBranchId !== targetCityBranchId) {
+      if (targetCityBranchId && lCityBranchId && lCityBranchId !== targetCityBranchId) {
+        return false;
+      }
+      if (!targetCityBranchId && targetCountryBranchId && lCountryBranchId && lCountryBranchId !== targetCountryBranchId) {
         return false;
       }
       return true;
     });
 
     return filteredLedgers.map(toLedgerOption);
-  }, [ledgers, isSuperAdmin, saCountryId, saBranchId, session, selected]);
+  }, [ledgers, session, selected]);
 
   // Calculate dynamic currency values
   const isLocalCurrency = currency === baseCurrency;
@@ -3612,51 +3608,98 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
       const formData = new FormData();
 
       // Helper to check if a string is a valid UUID
-      const isUuid = (val: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(val || ""));
+      const isUuid = (val: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(val || "").trim());
 
-      // Resolve debit ledger ID by matching code, name, or rawId against active ledgers
+      const form = selected.form_data?.form || {};
+
+      // 1. Resolve debit ledger ID (Supplier / Trade Payable / Purchase party)
       let debitLedgerId = "";
-      const rawDebId = doubleEntry.debitCode === debitAccountCode 
-        ? selectedForm.purchaseAccountLedgerId || selectedForm.purchaseAccountId || selectedForm.supplierId
-        : selectedForm.salesAccountLedgerId || selectedForm.salesAccountId || selectedForm.customerId;
+      const candidateDebitIds = [
+        selected.supplier_ledger_id,
+        (selected as any).supplierLedgerId,
+        form.supplierAccountId,
+        form.supplier_ledger_id,
+        form.supplierLedgerId,
+        form.salesAccountLedgerId,
+        form.salesAccountId,
+        form.purchaseAccountLedgerId,
+        form.purchaseAccountId,
+        form.supplierId,
+        selectedForm.salesAccountLedgerId,
+        selectedForm.supplierAccountId,
+        selectedForm.purchaseAccountLedgerId
+      ].filter(Boolean);
 
-      if (isUuid(String(rawDebId || ""))) {
-        debitLedgerId = String(rawDebId);
-      } else {
-        const foundDeb = ledgers.find((l) => 
-          (ledgerId(l) && isUuid(ledgerId(l) || "") && (
-            ledgerCode(l) === doubleEntry.debitCode ||
-            ledgerName(l)?.toLowerCase() === doubleEntry.debitName?.toLowerCase() ||
-            (ledgerName(l)?.toLowerCase().includes("payable") || ledgerName(l)?.toLowerCase().includes("liability") || ledgerName(l)?.toLowerCase().includes("supplier"))
-          ))
-        ) || ledgers.find((l) => isUuid(ledgerId(l) || ""));
-
-        if (foundDeb) {
-          debitLedgerId = ledgerId(foundDeb) || "";
+      for (const candidate of candidateDebitIds) {
+        if (isUuid(String(candidate))) {
+          debitLedgerId = String(candidate).trim();
+          break;
         }
       }
 
-      // Resolve credit ledger ID by matching code, name, or paymentSourceLedgerId against active ledgers
+      // 2. If not a direct UUID, find by matching supplier ledger code or name in ledgers
+      if (!debitLedgerId) {
+        const supplierCode = String(form.salesAccountNo || form.supplierAccountNo || form.supplierAccountCode || doubleEntry.debitCode || "").trim().toLowerCase();
+        const supplierName = String(form.salesAccountName || form.supplierName || form.supplierAccountName || doubleEntry.debitName || "").trim().toLowerCase();
+        
+        const matchedLedger = ledgers.find((l) => {
+          const id = ledgerId(l);
+          if (!id || !isUuid(id)) return false;
+          const c = ledgerCode(l).toLowerCase();
+          const n = ledgerName(l).toLowerCase();
+          if (supplierCode && (c === supplierCode || c.includes(supplierCode))) return true;
+          if (supplierName && (n === supplierName || n.includes(supplierName))) return true;
+          return false;
+        });
+
+        if (matchedLedger) {
+          debitLedgerId = ledgerId(matchedLedger) || "";
+        }
+      }
+
+      // 3. Fallback: match by nature / account type in order's country scope
+      if (!debitLedgerId) {
+        const targetCountry = selected.country_id;
+        const matchedPayable = ledgers.find((l) => {
+          const id = ledgerId(l);
+          if (!id || !isUuid(id)) return false;
+          const lCountry = l.country_id || l.countryId;
+          if (targetCountry && lCountry && lCountry !== targetCountry) return false;
+          const n = ledgerName(l).toLowerCase();
+          const type = String(l.account_type || l.nature || "").toLowerCase();
+          return type.includes("liability") || type.includes("payable") || n.includes("payable") || n.includes("supplier") || n.includes("trade");
+        });
+
+        if (matchedPayable) {
+          debitLedgerId = ledgerId(matchedPayable) || "";
+        }
+      }
+
+      // 4. Ultimate fallback: any valid UUID ledger in order's scope
+      if (!debitLedgerId) {
+        const valid = ledgers.find((l) => isUuid(ledgerId(l) || ""));
+        if (valid) debitLedgerId = ledgerId(valid) || "";
+      }
+
+      // 5. Resolve credit ledger ID (Payment source Bank/Cash account)
       let creditLedgerId = "";
       if (isUuid(paymentSourceLedgerId)) {
         creditLedgerId = paymentSourceLedgerId;
       } else {
-        const foundCred = ledgers.find((l) => 
-          (ledgerId(l) && isUuid(ledgerId(l) || "") && (
-            ledgerId(l) === paymentSourceLedgerId ||
-            ledgerCode(l) === doubleEntry.creditCode ||
-            ledgerName(l)?.toLowerCase() === doubleEntry.creditName?.toLowerCase() ||
-            (ledgerName(l)?.toLowerCase().includes("cash") || ledgerName(l)?.toLowerCase().includes("bank"))
-          ))
-        ) || ledgers.find((l) => isUuid(ledgerId(l) || "") && ledgerId(l) !== debitLedgerId) || ledgers.find((l) => isUuid(ledgerId(l) || ""));
+        const matchedCredit = ledgers.find((l) => {
+          const id = ledgerId(l);
+          if (!id || !isUuid(id) || id === debitLedgerId) return false;
+          const c = ledgerCode(l).toLowerCase();
+          const n = ledgerName(l).toLowerCase();
+          return c === doubleEntry.creditCode?.toLowerCase() || n === doubleEntry.creditName?.toLowerCase() || n.includes("cash") || n.includes("bank");
+        }) || ledgers.find((l) => isUuid(ledgerId(l) || "") && ledgerId(l) !== debitLedgerId) || ledgers.find((l) => isUuid(ledgerId(l) || ""));
 
-        if (foundCred) {
-          creditLedgerId = ledgerId(foundCred) || "";
+        if (matchedCredit) {
+          creditLedgerId = ledgerId(matchedCredit) || "";
         }
       }
 
       if (!isUuid(debitLedgerId) || !isUuid(creditLedgerId)) {
-        // Ultimate fallback to first two valid UUID ledgers in database
         const validLedgers = ledgers.filter((l) => isUuid(ledgerId(l) || ""));
         if (validLedgers.length >= 2) {
           if (!isUuid(debitLedgerId)) debitLedgerId = ledgerId(validLedgers[0]) || "";
@@ -5280,43 +5323,6 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
                           {/* Left Column (Inputs): 7 cols */}
                           <div className="lg:col-span-7 space-y-2.5">
-                            {isSuperAdmin && (
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                                <FieldBlock label={currentLanguage === "en" ? "Country (Super Admin)" : "ملک (سپر ایڈمن)"} required={false}>
-                                  <SearchableSelect
-                                    value={saCountryId}
-                                    onChange={(val) => {
-                                      setSaCountryId(val);
-                                      setSaBranchId("");
-                                      setPaymentSourceLedgerId("");
-                                    }}
-                                    options={[
-                                      { label: currentLanguage === "en" ? "-- All Countries --" : "-- تمام ممالک --", value: "" },
-                                      ...saCountries.map(c => ({ label: tData(c.name, currentLanguage), value: c.id }))
-                                    ]}
-                                    placeholder={currentLanguage === "en" ? "-- All Countries --" : "-- تمام ممالک --"}
-                                    className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100 h-8"
-                                  />
-                                </FieldBlock>
-                                <FieldBlock label={currentLanguage === "en" ? "Branch (Super Admin)" : "برانچ (سپر ایڈمن)"} required={false}>
-                                  <SearchableSelect
-                                    value={saBranchId}
-                                    onChange={(val) => {
-                                      setSaBranchId(val);
-                                      setPaymentSourceLedgerId("");
-                                    }}
-                                    options={[
-                                      { label: currentLanguage === "en" ? "-- All Branches --" : "-- تمام برانچز --", value: "" },
-                                      ...saBranches.filter(b => b.country_id === saCountryId || b.country_id === undefined).map(b => ({ label: tData(b.name, currentLanguage), value: b.id }))
-                                    ]}
-                                    placeholder={currentLanguage === "en" ? "-- All Branches --" : "-- تمام برانچز --"}
-                                    disabled={!saCountryId}
-                                    className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100 h-8"
-                                  />
-                                </FieldBlock>
-                              </div>
-                            )}
-
                             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                               <FieldBlock label={t("payment_source_account", currentLanguage)} required>
                                 <SearchSelect

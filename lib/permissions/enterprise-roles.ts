@@ -1,5 +1,6 @@
 export const enterpriseRoles = [
   "super_admin",
+  "super_admin_reports",
   "country_admin",
   "country_user",
   "main_branch_admin",
@@ -15,6 +16,7 @@ export type EnterpriseRole = (typeof enterpriseRoles)[number];
 
 export const enterpriseRoleScopes: Record<EnterpriseRole, string> = {
   super_admin: "Global",
+  super_admin_reports: "Global Read-Only Reports",
   country_admin: "Assigned country",
   country_user: "Assigned country",
   main_branch_admin: "Assigned country main branch",
@@ -28,6 +30,38 @@ export const enterpriseRoleScopes: Record<EnterpriseRole, string> = {
 
 export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
   super_admin: ["*:*"],
+  super_admin_reports: [
+    "dashboard:read",
+    "companies:read",
+    "business_groups:read",
+    "country_company_profiles:read",
+    "countries:read",
+    "country_branches:read",
+    "city_branches:read",
+    "customers:read",
+    "accounts:read",
+    "ledgers:read",
+    "roznamcha:read",
+    "journal_entries:read",
+    "reports:read",
+    "reports:export",
+    "purchases:read",
+    "products:read",
+    "product_categories:read",
+    "product_brands:read",
+    "product_units:read",
+    "chs_products:read",
+    "banks:read",
+    "warehouses:read",
+    "inventory:read",
+    "sales:read",
+    "shipping_records:read",
+    "clearing_agents:read",
+    "clearing_agent_branches:read",
+    "financial_periods:read",
+    "currency_rates:read",
+    "audit_logs:read"
+  ],
   country_admin: [
     "companies:read",
     "business_groups:read",
@@ -384,6 +418,7 @@ export const enterpriseRolePermissions: Record<EnterpriseRole, string[]> = {
 
 export const dashboardByRole: Record<EnterpriseRole, string> = {
   super_admin: "/dashboard/super-admin",
+  super_admin_reports: "/dashboard/reports",
   country_admin: "/dashboard/country",
   country_user: "/dashboard/country",
   main_branch_admin: "/dashboard/city",

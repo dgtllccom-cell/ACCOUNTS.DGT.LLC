@@ -30,23 +30,25 @@ export function hasRolePermission(session: ErpSession, resource: string, action:
 
 export function canAccessCountry(session: ErpSession, countryId?: string | null) {
   // If a route does not provide a countryId, treat it as "any allowed country".
-  // Super Admin can access all. Non-super users must have at least one assigned country.
-  if (!countryId) return session.isSuperAdmin || session.countryIds.length > 0;
-  return session.isSuperAdmin || session.countryIds.includes(countryId);
+  // Super Admin and Super Admin Reports can access all. Non-super users must have at least one assigned country.
+  const isGlobal = session.isSuperAdmin || session.roles?.includes("super_admin_reports");
+  if (!countryId) return isGlobal || session.countryIds.length > 0;
+  return isGlobal || session.countryIds.includes(countryId);
 }
 
 export function canAccessCountryBranch(session: ErpSession, countryBranchId?: string | null) {
-  if (!countryBranchId) return session.isSuperAdmin || session.countryBranchIds.length > 0;
-  return session.isSuperAdmin || session.countryBranchIds.includes(countryBranchId);
+  const isGlobal = session.isSuperAdmin || session.roles?.includes("super_admin_reports");
+  if (!countryBranchId) return isGlobal || session.countryBranchIds.length > 0;
+  return isGlobal || session.countryBranchIds.includes(countryBranchId);
 }
 
 export function canAccessCityBranch(session: ErpSession, cityBranchId?: string | null) {
+  const isGlobal = session.isSuperAdmin || session.roles?.includes("super_admin_reports");
   if (!cityBranchId) {
-    // To query without a specific city branch (cross-branch query), you must be Super Admin or have country-level access.
-    // A mere city branch admin cannot query across all branches.
-    return session.isSuperAdmin || session.countryIds.length > 0 || session.countryBranchIds.length > 0;
+    // To query without a specific city branch (cross-branch query), you must be Super Admin, Super Admin Reports, or have country-level access.
+    return isGlobal || session.countryIds.length > 0 || session.countryBranchIds.length > 0;
   }
-  return session.isSuperAdmin || session.cityBranchIds.includes(cityBranchId);
+  return isGlobal || session.cityBranchIds.includes(cityBranchId);
 }
 
 export function canApprove(session: ErpSession, countryId?: string | null, cityBranchId?: string | null) {

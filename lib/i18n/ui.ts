@@ -1932,6 +1932,38 @@ export type UiKey =
   | "common.all_categories"
   | "common.all_statuses"
   | "common.loading"
+  | "common.code"
+  | "common.total"
+  | "acct.title"
+  | "acct.subtitle"
+  | "acct.print_preview"
+  | "acct.new"
+  | "acct.search_ph"
+  | "acct.status_all"
+  | "acct.active_only"
+  | "acct.inactive_only"
+  | "acct.col_ledger_group"
+  | "acct.none"
+  | "acct.delete_title"
+  | "acct.add_new"
+  | "acct.type_code"
+  | "acct.code_ph"
+  | "acct.name_label"
+  | "acct.name_ph"
+  | "acct.desc_ph"
+  | "acct.active_type"
+  | "acct.save_type"
+  | "acct.registry_title"
+  | "acct.grp_assets"
+  | "acct.grp_liabilities"
+  | "acct.grp_equity"
+  | "acct.grp_revenue"
+  | "acct.grp_expenses"
+  | "acct.type_name_col"
+  | "acct.confirm_delete"
+  | "acct.fill_required"
+  | "acct.failed_delete"
+  | "acct.failed_save"
   | "cpage.branch_access_required"
   | "cpage.branch_access_desc"
   | "cpage.city_branch_scope"
@@ -2789,6 +2821,38 @@ export type UiKey =
 type Dict = Record<string, string>;
 
 const en: Dict = {
+  "common.code": "Code",
+  "common.total": "Total",
+  "acct.title": "Account Types",
+  "acct.subtitle": "Manage chart of accounts classification categories and ledger groups",
+  "acct.print_preview": "Print Preview",
+  "acct.new": "New Account Type",
+  "acct.search_ph": "Search account types...",
+  "acct.status_all": "All Status",
+  "acct.active_only": "Active Only",
+  "acct.inactive_only": "Inactive Only",
+  "acct.col_ledger_group": "Ledger Group",
+  "acct.none": "No account types found",
+  "acct.delete_title": "Delete Account Type",
+  "acct.add_new": "Add New Account Type",
+  "acct.type_code": "Type Code",
+  "acct.code_ph": "e.g. ASSET-CURR / EXP-OPR",
+  "acct.name_label": "Account Type Name",
+  "acct.name_ph": "e.g. Current Assets / Operating Expenses",
+  "acct.desc_ph": "Optional description / accounting guidance...",
+  "acct.active_type": "Active Account Type",
+  "acct.save_type": "Save Type",
+  "acct.registry_title": "Account Types Registry",
+  "acct.grp_assets": "Assets",
+  "acct.grp_liabilities": "Liabilities",
+  "acct.grp_equity": "Equity",
+  "acct.grp_revenue": "Revenue / Income",
+  "acct.grp_expenses": "Expenses",
+  "acct.type_name_col": "Type Name",
+  "acct.confirm_delete": "Delete this account type?",
+  "acct.fill_required": "Please fill in Code and Name.",
+  "acct.failed_delete": "Failed to delete:",
+  "acct.failed_save": "Failed to save:",
   "cpage.branch_access_required": "Branch Access Required",
   "cpage.branch_access_desc": "Your user role does not have an assigned City Branch or Country Branch. Please contact administration to assign your branch location.",
   "cpage.city_branch_scope": "City / Branch Scope:",
@@ -5824,6 +5888,38 @@ const en: Dict = {
 
 const ur: Dict = {
   ...en,
+  "common.code": "کوڈ",
+  "common.total": "کل",
+  "acct.title": "اکاؤنٹ کی اقسام",
+  "acct.subtitle": "چارٹ آف اکاؤنٹس کی درجہ بندی اور لیجر گروپس کا انتظام کریں",
+  "acct.print_preview": "پرنٹ پیش نظارہ",
+  "acct.new": "نئی اکاؤنٹ قسم",
+  "acct.search_ph": "اکاؤنٹ کی اقسام تلاش کریں...",
+  "acct.status_all": "تمام حیثیت",
+  "acct.active_only": "صرف فعال",
+  "acct.inactive_only": "صرف غیر فعال",
+  "acct.col_ledger_group": "لیجر گروپ",
+  "acct.none": "کوئی اکاؤنٹ قسم نہیں ملی",
+  "acct.delete_title": "اکاؤنٹ قسم حذف کریں",
+  "acct.add_new": "نئی اکاؤنٹ قسم شامل کریں",
+  "acct.type_code": "قسم کا کوڈ",
+  "acct.code_ph": "مثلاً ASSET-CURR / EXP-OPR",
+  "acct.name_label": "اکاؤنٹ قسم کا نام",
+  "acct.name_ph": "مثلاً موجودہ اثاثے / آپریٹنگ اخراجات",
+  "acct.desc_ph": "اختیاری تفصیل / اکاؤنٹنگ رہنمائی...",
+  "acct.active_type": "فعال اکاؤنٹ قسم",
+  "acct.save_type": "قسم محفوظ کریں",
+  "acct.registry_title": "اکاؤنٹ اقسام رجسٹری",
+  "acct.grp_assets": "اثاثے",
+  "acct.grp_liabilities": "واجبات",
+  "acct.grp_equity": "ایکویٹی",
+  "acct.grp_revenue": "آمدنی / محصول",
+  "acct.grp_expenses": "اخراجات",
+  "acct.type_name_col": "قسم کا نام",
+  "acct.confirm_delete": "کیا یہ اکاؤنٹ قسم حذف کریں؟",
+  "acct.fill_required": "براہِ کرم کوڈ اور نام درج کریں۔",
+  "acct.failed_delete": "حذف ناکام:",
+  "acct.failed_save": "محفوظ کرنا ناکام:",
   "cpage.branch_access_required": "برانچ رسائی درکار",
   "cpage.branch_access_desc": "آپ کے صارف کردار کو کوئی سٹی برانچ یا کنٹری برانچ تفویض نہیں۔ براہِ کرم انتظامیہ سے رابطہ کریں تاکہ آپ کی برانچ لوکیشن مقرر کی جا سکے۔",
   "cpage.city_branch_scope": "شہر / برانچ دائرہ:",
@@ -8841,6 +8937,38 @@ const ur: Dict = {
 
 const ar: Dict = {
   ...en,
+  "common.code": "الرمز",
+  "common.total": "الإجمالي",
+  "acct.title": "أنواع الحسابات",
+  "acct.subtitle": "إدارة فئات تصنيف دليل الحسابات ومجموعات الدفتر",
+  "acct.print_preview": "معاينة الطباعة",
+  "acct.new": "نوع حساب جديد",
+  "acct.search_ph": "البحث عن أنواع الحسابات...",
+  "acct.status_all": "كل الحالات",
+  "acct.active_only": "النشطة فقط",
+  "acct.inactive_only": "غير النشطة فقط",
+  "acct.col_ledger_group": "مجموعة الدفتر",
+  "acct.none": "لم يتم العثور على أنواع حسابات",
+  "acct.delete_title": "حذف نوع الحساب",
+  "acct.add_new": "إضافة نوع حساب جديد",
+  "acct.type_code": "رمز النوع",
+  "acct.code_ph": "مثال ASSET-CURR / EXP-OPR",
+  "acct.name_label": "اسم نوع الحساب",
+  "acct.name_ph": "مثال الأصول المتداولة / المصاريف التشغيلية",
+  "acct.desc_ph": "وصف اختياري / إرشادات محاسبية...",
+  "acct.active_type": "نوع حساب نشط",
+  "acct.save_type": "حفظ النوع",
+  "acct.registry_title": "سجل أنواع الحسابات",
+  "acct.grp_assets": "الأصول",
+  "acct.grp_liabilities": "الخصوم",
+  "acct.grp_equity": "حقوق الملكية",
+  "acct.grp_revenue": "الإيرادات / الدخل",
+  "acct.grp_expenses": "المصاريف",
+  "acct.type_name_col": "اسم النوع",
+  "acct.confirm_delete": "حذف نوع الحساب هذا؟",
+  "acct.fill_required": "يرجى إدخال الرمز والاسم.",
+  "acct.failed_delete": "فشل الحذف:",
+  "acct.failed_save": "فشل الحفظ:",
   "cpage.branch_access_required": "مطلوب صلاحية الفرع",
   "cpage.branch_access_desc": "دور المستخدم الخاص بك ليس له فرع مدينة أو فرع بلد مُعيَّن. يرجى الاتصال بالإدارة لتعيين موقع فرعك.",
   "cpage.city_branch_scope": "نطاق المدينة / الفرع:",
@@ -11857,6 +11985,38 @@ const ar: Dict = {
 
 const fa: Dict = {
   ...en,
+  "common.code": "کد",
+  "common.total": "کل",
+  "acct.title": "انواع حساب",
+  "acct.subtitle": "مدیریت دسته‌بندی نمودار حساب‌ها و گروه‌های دفتر",
+  "acct.print_preview": "پیش‌نمایش چاپ",
+  "acct.new": "نوع حساب جدید",
+  "acct.search_ph": "جستجوی انواع حساب...",
+  "acct.status_all": "همه وضعیت‌ها",
+  "acct.active_only": "فقط فعال",
+  "acct.inactive_only": "فقط غیرفعال",
+  "acct.col_ledger_group": "گروه دفتر",
+  "acct.none": "نوع حسابی یافت نشد",
+  "acct.delete_title": "حذف نوع حساب",
+  "acct.add_new": "افزودن نوع حساب جدید",
+  "acct.type_code": "کد نوع",
+  "acct.code_ph": "مثال ASSET-CURR / EXP-OPR",
+  "acct.name_label": "نام نوع حساب",
+  "acct.name_ph": "مثال دارایی‌های جاری / هزینه‌های عملیاتی",
+  "acct.desc_ph": "توضیحات اختیاری / راهنمای حسابداری...",
+  "acct.active_type": "نوع حساب فعال",
+  "acct.save_type": "ذخیره نوع",
+  "acct.registry_title": "دفتر انواع حساب",
+  "acct.grp_assets": "دارایی‌ها",
+  "acct.grp_liabilities": "بدهی‌ها",
+  "acct.grp_equity": "حقوق صاحبان سهام",
+  "acct.grp_revenue": "درآمد / عایدات",
+  "acct.grp_expenses": "هزینه‌ها",
+  "acct.type_name_col": "نام نوع",
+  "acct.confirm_delete": "این نوع حساب حذف شود؟",
+  "acct.fill_required": "لطفاً کد و نام را وارد کنید.",
+  "acct.failed_delete": "حذف ناموفق:",
+  "acct.failed_save": "ذخیره ناموفق:",
   "cpage.branch_access_required": "دسترسی شعبه لازم است",
   "cpage.branch_access_desc": "نقش کاربری شما شعبه شهری یا شعبه کشوری اختصاص‌یافته‌ای ندارد. لطفاً با مدیریت تماس بگیرید تا محل شعبه شما تعیین شود.",
   "cpage.city_branch_scope": "محدوده شهر / شعبه:",
@@ -14872,6 +15032,38 @@ const fa: Dict = {
 
 const ps: Dict = {
   ...en,
+  "common.code": "کوډ",
+  "common.total": "ټول",
+  "acct.title": "د حساب ډولونه",
+  "acct.subtitle": "د حسابونو د چارټ د طبقه‌بندۍ کټګورۍ او د دفتر ګروپونه اداره کړئ",
+  "acct.print_preview": "د چاپ مخکتنه",
+  "acct.new": "نوی حساب ډول",
+  "acct.search_ph": "د حساب ډولونه ولټوئ...",
+  "acct.status_all": "ټول حالتونه",
+  "acct.active_only": "یوازې فعال",
+  "acct.inactive_only": "یوازې غیرفعال",
+  "acct.col_ledger_group": "د دفتر ګروپ",
+  "acct.none": "هېڅ حساب ډول ونه موندل شو",
+  "acct.delete_title": "د حساب ډول حذف کړئ",
+  "acct.add_new": "نوی حساب ډول اضافه کړئ",
+  "acct.type_code": "د ډول کوډ",
+  "acct.code_ph": "لکه ASSET-CURR / EXP-OPR",
+  "acct.name_label": "د حساب ډول نوم",
+  "acct.name_ph": "لکه اوسني شتمنۍ / عملیاتي لګښتونه",
+  "acct.desc_ph": "اختیاري توضیح / د محاسبې لارښود...",
+  "acct.active_type": "فعال حساب ډول",
+  "acct.save_type": "ډول خوندي کړئ",
+  "acct.registry_title": "د حساب ډولونو راجستر",
+  "acct.grp_assets": "شتمنۍ",
+  "acct.grp_liabilities": "پورونه",
+  "acct.grp_equity": "پانګه",
+  "acct.grp_revenue": "عاید / محصول",
+  "acct.grp_expenses": "لګښتونه",
+  "acct.type_name_col": "د ډول نوم",
+  "acct.confirm_delete": "دا حساب ډول حذف کړئ؟",
+  "acct.fill_required": "مهرباني وکړئ کوډ او نوم دننه کړئ.",
+  "acct.failed_delete": "حذف ناکام شو:",
+  "acct.failed_save": "خوندي کول ناکام شو:",
   "cpage.branch_access_required": "د څانګې لاسرسی اړین دی",
   "cpage.branch_access_desc": "ستاسو د کاروونکي رول ټاکل شوې ښاري څانګه یا هېواد څانګه نلري. مهرباني وکړئ د ادارې سره اړیکه ونیسئ.",
   "cpage.city_branch_scope": "د ښار / څانګې ساحه:",
