@@ -5793,17 +5793,90 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
                     )}
                   </FieldBlock>
 
-                  <div className="space-y-1">
-                    <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                      {t("transaction_entry_preview", currentLanguage)}
-                    </span>
-                    <div className="h-9 flex items-center px-3 rounded-lg border border-indigo-400/40 bg-indigo-500/10 text-indigo-600 font-bold text-xs uppercase truncate">
-                      {currentLanguage === "en"
-                        ? `🔵 Balanced entry — Dr: ${doubleEntry.debitCode} / Cr: ${doubleEntry.creditCode}`
-                        : `🔵 متوازن انٹری — ڈیبٹ: ${doubleEntry.debitCode} / کریڈٹ: ${doubleEntry.creditCode}`}
+                  </div>
+
+                  {/* DR ACCOUNTS & CR ACCOUNTS Live Preview Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                    {/* DR ACCOUNT (Debit Destination) */}
+                    <div className="rounded-xl border border-blue-200 bg-white p-3 shadow-sm dark:border-blue-900/50 dark:bg-slate-950">
+                      <div className="flex items-center justify-between pb-1.5 border-b border-blue-100 dark:border-blue-900/40">
+                        <div className="flex items-center gap-1.5">
+                          <span className="inline-flex rounded bg-blue-600 px-1.5 py-0.5 text-[9px] font-black text-white">DR</span>
+                          <span className="text-[11px] font-black uppercase tracking-wider text-blue-800 dark:text-blue-300">
+                            DR ACCOUNTS
+                          </span>
+                        </div>
+                        <span className="text-[9px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-950 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
+                          Settlement Target
+                        </span>
+                      </div>
+
+                      <div className="mt-2 space-y-1.5 text-xs">
+                        <div>
+                          <div className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400">Account Name</div>
+                          <div className="font-extrabold text-slate-900 dark:text-slate-100 text-xs">{doubleEntry.debitName}</div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-[10.5px]">
+                          <div>
+                            <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Account No.</div>
+                            <div className="font-mono font-bold text-slate-800 dark:text-slate-200">{doubleEntry.debitCode}</div>
+                          </div>
+                          <div>
+                            <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Branch</div>
+                            <div className="font-semibold text-slate-700 dark:text-slate-300 truncate">{doubleEntry.debitBranch}</div>
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center pt-1.5 border-t border-slate-100 dark:border-slate-800 font-bold">
+                          <span className="text-slate-500 text-[10px]">Amount to DR:</span>
+                          <span className="font-mono text-blue-700 dark:text-blue-400 font-black text-xs">{amount ? money(amount, baseCurrency) : "0.00 " + baseCurrency}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* CR ACCOUNT'S (Credit Payment Source) */}
+                    <div className="rounded-xl border border-rose-200 bg-white p-3 shadow-sm dark:border-rose-900/50 dark:bg-slate-950">
+                      <div className="flex items-center justify-between pb-1.5 border-b border-rose-100 dark:border-rose-900/40">
+                        <div className="flex items-center gap-1.5">
+                          <span className="inline-flex rounded bg-rose-600 px-1.5 py-0.5 text-[9px] font-black text-white">CR</span>
+                          <span className="text-[11px] font-black uppercase tracking-wider text-rose-800 dark:text-rose-300">
+                            CR ACCOUNT'S
+                          </span>
+                        </div>
+                        <span className="text-[9px] font-bold text-rose-600 bg-rose-50 dark:bg-rose-950 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-800">
+                          Payment Source
+                        </span>
+                      </div>
+
+                      <div className="mt-2 space-y-1.5 text-xs">
+                        <div>
+                          <div className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400">Selected Source Account</div>
+                          <div className="font-extrabold text-slate-900 dark:text-slate-100 text-xs">{doubleEntry.creditName}</div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-[10.5px]">
+                          <div>
+                            <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Account No.</div>
+                            <div className="font-mono font-bold text-slate-800 dark:text-slate-200">{doubleEntry.creditCode}</div>
+                          </div>
+                          <div>
+                            <div className="text-[9px] font-bold uppercase tracking-wider text-slate-400">Current Balance</div>
+                            <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{sourceBalanceText}</div>
+                          </div>
+                        </div>
+                        <div className="flex justify-between items-center pt-1.5 border-t border-slate-100 dark:border-slate-800 font-bold">
+                          <span className="text-slate-500 text-[10px]">Amount to CR:</span>
+                          <span className="font-mono text-rose-600 dark:text-rose-400 font-black text-xs">{amount ? money(amount, baseCurrency) : "0.00 " + baseCurrency}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
+
+                  {/* Balanced Entry Status */}
+                  <div className="rounded-xl border border-indigo-200 bg-indigo-50/60 p-2.5 dark:border-indigo-900/40 dark:bg-indigo-950/30 text-indigo-900 dark:text-indigo-200 text-xs flex items-center justify-between">
+                    <div className="font-bold flex items-center gap-2">
+                      <span className="font-black text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded-full">BALANCED</span>
+                      <span className="text-[11px] truncate">DR: {doubleEntry.debitCode} ({doubleEntry.debitName}) ➔ CR: {doubleEntry.creditCode} ({doubleEntry.creditName})</span>
+                    </div>
+                  </div>
 
                 <FieldBlock label={t("comments_label", currentLanguage)}>
                   <textarea

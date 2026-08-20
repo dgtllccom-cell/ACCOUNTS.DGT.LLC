@@ -5266,421 +5266,400 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                           <span className="text-[11px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300 flex items-center gap-1.5">
                             <span>Post New Payment Voucher / Roznamcha Settlement</span>
                           </span>
-                          
-                          {/* Live Account Flow Indicator Banner (Right Side) */}
-                          <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-800 px-2.5 py-1 rounded-lg">
-                            <div className="text-[10px] font-semibold text-slate-600 dark:text-slate-300">
-                              <span className="font-black text-rose-600">CR (Source): </span>
-                              <span className="font-bold text-slate-900 dark:text-slate-100">{doubleEntry.creditName} ({doubleEntry.creditCode})</span>
-                            </div>
-                            <span className="text-slate-400 font-black">&rarr;</span>
-                            <div className="text-[10px] font-semibold text-slate-600 dark:text-slate-300">
-                              <span className="font-black text-emerald-600">DR (Dest): </span>
-                              <span className="font-bold text-slate-900 dark:text-slate-100">{doubleEntry.debitName} ({doubleEntry.debitCode})</span>
-                            </div>
-                          </div>
 
                           <button
                             type="button"
                             onClick={() => setIsDoubleEntryExpanded(false)}
-                            className="text-[10px] font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 ml-auto"
+                            className="text-[10px] font-bold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 ml-auto cursor-pointer"
                           >
                             ✕ Close Form
                           </button>
                         </div>
 
-                        {isSuperAdmin && (
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                            <FieldBlock label={currentLanguage === "en" ? "Country (Super Admin)" : "ملک (سپر ایڈمن)"} required={false}>
-                              <SearchableSelect
-                                value={saCountryId}
-                                onChange={(val) => {
-                                  setSaCountryId(val);
-                                  setSaBranchId("");
-                                  setPaymentSourceLedgerId("");
-                                }}
-                                options={[
-                                  { label: currentLanguage === "en" ? "-- All Countries --" : "-- تمام ممالک --", value: "" },
-                                  ...saCountries.map(c => ({ label: tData(c.name, currentLanguage), value: c.id }))
-                                ]}
-                                placeholder={currentLanguage === "en" ? "-- All Countries --" : "-- تمام ممالک --"}
-                                className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100 h-8"
-                              />
-                            </FieldBlock>
-                            <FieldBlock label={currentLanguage === "en" ? "Branch (Super Admin)" : "برانچ (سپر ایڈمن)"} required={false}>
-                              <SearchableSelect
-                                value={saBranchId}
-                                onChange={(val) => {
-                                  setSaBranchId(val);
-                                  setPaymentSourceLedgerId("");
-                                }}
-                                options={[
-                                  { label: currentLanguage === "en" ? "-- All Branches --" : "-- تمام برانچز --", value: "" },
-                                  ...saBranches.filter(b => b.country_id === saCountryId || b.country_id === undefined).map(b => ({ label: tData(b.name, currentLanguage), value: b.id }))
-                                ]}
-                                placeholder={currentLanguage === "en" ? "-- All Branches --" : "-- تمام برانچز --"}
-                                disabled={!saCountryId}
-                                className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100 h-8"
-                              />
-                            </FieldBlock>
-                          </div>
-                        )}
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-                          <FieldBlock label={t("payment_source_account", currentLanguage)} required>
-                            <SearchSelect
-                              label=""
-                              value={paymentSourceLedgerId}
-                              placeholder={currentLanguage === "en" ? "Search Payment Source Account..." : "ادائیگی کا سورس اکاؤنٹ تلاش کریں..."}
-                              options={ledgerOptions}
-                              disabled={loading}
-                              onValueChange={(val) => {
-                                setPaymentSourceLedgerId(val);
-                                const led = ledgers.find((l) => ledgerId(l) === val);
-                                if (led) {
-                                  const name = ledgerName(led).toLowerCase();
-                                  const code = ledgerCode(led).toLowerCase();
-                                  if (name.includes("cash") || code.includes("cash")) {
-                                    setPaymentType("cash");
-                                    setRoznamchaType("Cash Book No.");
-                                  } else if (name.includes("bank") || code.includes("bank")) {
-                                    setPaymentType("bank");
-                                    setRoznamchaType("Roznamcha Book No.");
-                                  }
-                                }
-                              }}
-                            />
-                            {selectedSourceLedger && (
-                              <div className="mt-0.5 text-[9.5px] font-semibold text-slate-500 flex justify-between">
-                                <span>{currentLanguage === "en" ? "Bal: " : "بیلنس: "}{sourceBalanceText}</span>
-                                <span>{currentLanguage === "en" ? "Cur: " : "کرنسی: "}{selectedSourceLedger.currency || baseCurrency}</span>
+                        {/* 2-Column Split: Form on Left (7 cols), DR/CR Account Cards on Right (5 cols) */}
+                        <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
+                          {/* Left Column (Inputs): 7 cols */}
+                          <div className="lg:col-span-7 space-y-2.5">
+                            {isSuperAdmin && (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <FieldBlock label={currentLanguage === "en" ? "Country (Super Admin)" : "ملک (سپر ایڈمن)"} required={false}>
+                                  <SearchableSelect
+                                    value={saCountryId}
+                                    onChange={(val) => {
+                                      setSaCountryId(val);
+                                      setSaBranchId("");
+                                      setPaymentSourceLedgerId("");
+                                    }}
+                                    options={[
+                                      { label: currentLanguage === "en" ? "-- All Countries --" : "-- تمام ممالک --", value: "" },
+                                      ...saCountries.map(c => ({ label: tData(c.name, currentLanguage), value: c.id }))
+                                    ]}
+                                    placeholder={currentLanguage === "en" ? "-- All Countries --" : "-- تمام ممالک --"}
+                                    className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100 h-8"
+                                  />
+                                </FieldBlock>
+                                <FieldBlock label={currentLanguage === "en" ? "Branch (Super Admin)" : "برانچ (سپر ایڈمن)"} required={false}>
+                                  <SearchableSelect
+                                    value={saBranchId}
+                                    onChange={(val) => {
+                                      setSaBranchId(val);
+                                      setPaymentSourceLedgerId("");
+                                    }}
+                                    options={[
+                                      { label: currentLanguage === "en" ? "-- All Branches --" : "-- تمام برانچز --", value: "" },
+                                      ...saBranches.filter(b => b.country_id === saCountryId || b.country_id === undefined).map(b => ({ label: tData(b.name, currentLanguage), value: b.id }))
+                                    ]}
+                                    placeholder={currentLanguage === "en" ? "-- All Branches --" : "-- تمام برانچز --"}
+                                    disabled={!saCountryId}
+                                    className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100 h-8"
+                                  />
+                                </FieldBlock>
                               </div>
                             )}
-                          </FieldBlock>
 
-                          <FieldBlock label={t("roznamcha_type_label", currentLanguage)} required>
-                            <SearchableSelect
-                              value={roznamchaType}
-                              onChange={(val) => {
-                                setRoznamchaType(val);
-                                if (val === "Cash Book No.") {
-                                  setPaymentType("cash");
-                                  const cashLed = ledgers.find((l) => ledgerName(l).toLowerCase().includes("cash") || ledgerCode(l).toLowerCase().includes("cash"));
-                                  if (cashLed) setPaymentSourceLedgerId(ledgerId(cashLed) || "");
-                                } else if (val === "Roznamcha Book No.") {
-                                  setPaymentType("bank");
-                                  const bankLed = ledgers.find((l) => ledgerName(l).toLowerCase().includes("bank") || ledgerCode(l).toLowerCase().includes("bank"));
-                                  if (bankLed) setPaymentSourceLedgerId(ledgerId(bankLed) || "");
-                                }
-                              }}
-                              options={[
-                                { label: currentLanguage === "en" ? "Cash Book No." : "کیش بک نمبر", value: "Cash Book No." },
-                                { label: currentLanguage === "en" ? "Roznamcha Book No." : "روزنامچہ بک نمبر", value: "Roznamcha Book No." },
-                                { label: currentLanguage === "en" ? "Receipt No." : "رسید نمبر", value: "Receipt No." }
-                              ]}
-                              placeholder={currentLanguage === "en" ? "Select Type" : "قسم منتخب کریں"}
-                              className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100 h-8"
-                            />
-                          </FieldBlock>
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                              <FieldBlock label={t("payment_source_account", currentLanguage)} required>
+                                <SearchSelect
+                                  label=""
+                                  value={paymentSourceLedgerId}
+                                  placeholder={currentLanguage === "en" ? "Search Payment Source Account..." : "ادائیگی کا سورس اکاؤنٹ تلاش کریں..."}
+                                  options={ledgerOptions}
+                                  disabled={loading}
+                                  onValueChange={(val) => {
+                                    setPaymentSourceLedgerId(val);
+                                    const led = ledgers.find((l) => ledgerId(l) === val);
+                                    if (led) {
+                                      const name = ledgerName(led).toLowerCase();
+                                      const code = ledgerCode(led).toLowerCase();
+                                      if (name.includes("cash") || code.includes("cash")) {
+                                        setPaymentType("cash");
+                                        setRoznamchaType("Cash Book No.");
+                                      } else if (name.includes("bank") || code.includes("bank")) {
+                                        setPaymentType("bank");
+                                        setRoznamchaType("Roznamcha Book No.");
+                                      }
+                                    }
+                                  }}
+                                />
+                                {selectedSourceLedger && (
+                                  <div className="mt-0.5 text-[9.5px] font-semibold text-slate-500 flex justify-between">
+                                    <span>{currentLanguage === "en" ? "Bal: " : "بیلنس: "}{sourceBalanceText}</span>
+                                    <span>{currentLanguage === "en" ? "Cur: " : "کرنسی: "}{selectedSourceLedger.currency || baseCurrency}</span>
+                                  </div>
+                                )}
+                              </FieldBlock>
 
-                          <FieldBlock label={t("roznamcha_number_label", currentLanguage)} required>
-                            <Input
-                              className="h-8 text-xs font-semibold w-full"
-                              value={roznamchaNumber}
-                              onChange={(e) => setRoznamchaNumber(e.target.value)}
-                              placeholder="e.g. 000123"
-                            />
-                          </FieldBlock>
-
-                          <FieldBlock label={t("payment_date_label", currentLanguage)} required>
-                            <Input
-                              className="h-8 text-xs font-semibold w-full"
-                              type="date"
-                              value={paymentDate}
-                              onChange={(e) => setPaymentDate(e.target.value)}
-                            />
-                          </FieldBlock>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                          <FieldBlock label={t("roznamcha_category_label", currentLanguage)} required>
-                            <SearchableSelect
-                              value={paymentType}
-                              onChange={(val) => {
-                                const value = val as any;
-                                setPaymentType(value);
-                                setTypeDetails({});
-                                setAttachmentFile(null);
-                                setFinalPayment("");
-                                if (value === "cash") {
-                                  setRoznamchaType("Cash Book No.");
-                                  const cashLed = ledgers.find((l) => ledgerName(l).toLowerCase().includes("cash") || ledgerCode(l).toLowerCase().includes("cash"));
-                                  if (cashLed) setPaymentSourceLedgerId(ledgerId(cashLed) || "");
-                                } else if (value === "bank") {
-                                  setRoznamchaType("Roznamcha Book No.");
-                                  const bankLed = ledgers.find((l) => ledgerName(l).toLowerCase().includes("bank") || ledgerCode(l).toLowerCase().includes("bank"));
-                                  if (bankLed) setPaymentSourceLedgerId(ledgerId(bankLed) || "");
-                                }
-                              }}
-                              options={[
-                                { label: currentLanguage === "en" ? "Select Category" : "زمرہ منتخب کریں", value: "" },
-                                { label: currentLanguage === "en" ? "Cash Roznamcha" : "کیش روزنامچہ", value: "cash" },
-                                { label: currentLanguage === "en" ? "Bank Roznamcha" : "بینک روزنامچہ", value: "bank" },
-                                { label: currentLanguage === "en" ? "Business Roznamcha" : "بزنس روزنامچہ", value: "business" },
-                                { label: currentLanguage === "en" ? "Invoice Journal" : "انکوائس جرنل", value: "invoice" },
-                                { label: currentLanguage === "en" ? "Transfer" : "منتقلی", value: "transfer" }
-                              ]}
-                              placeholder={currentLanguage === "en" ? "Select Category" : "زمرہ منتخب کریں"}
-                              className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100"
-                            />
-                          </FieldBlock>
-
-                          <FieldBlock label={t("currency_label", currentLanguage)} required>
-                            <SearchableSelect
-                              value={currency}
-                              onChange={(val) => setCurrency(val)}
-                              options={[
-                                { label: "USD", value: "USD" },
-                                { label: "AED", value: "AED" },
-                                { label: "PKR", value: "PKR" },
-                                { label: "INR", value: "INR" },
-                                { label: "AFN", value: "AFN" },
-                                { label: "IRR", value: "IRR" }
-                              ]}
-                              placeholder={currentLanguage === "en" ? "Select Currency" : "کرنسی منتخب کریں"}
-                              className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100"
-                            />
-                          </FieldBlock>
-                        </div>
-
-                        {/* Dynamic Type Panel */}
-                        {paymentType && (
-                          <div className="rounded-lg border bg-slate-50/50 p-3 dark:bg-slate-900/20">
-                            <div className="mb-2 text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
-                              {paymentType === "cash" && (currentLanguage === "en" ? "Cash Details" : "کیش کی تفصیلات")}
-                              {paymentType === "bank" && (currentLanguage === "en" ? "Bank Details" : "بینک کی تفصیلات")}
-                              {paymentType === "business" && (currentLanguage === "en" ? "Business Details" : "بزنس کی تفصیلات")}
-                              {paymentType === "invoice" && (currentLanguage === "en" ? "Invoice Details" : "انکوائس کی تفصیلات")}
-                              {paymentType === "transfer" && (currentLanguage === "en" ? "Transfer Details" : "منتقلی کی تفصیلات")}
+                              <FieldBlock label={t("roznamcha_type_label", currentLanguage)} required>
+                                <SearchableSelect
+                                  value={roznamchaType}
+                                  onChange={(val) => {
+                                    setRoznamchaType(val);
+                                    if (val === "Cash Book No.") {
+                                      setPaymentType("cash");
+                                      const cashLed = ledgers.find((l) => ledgerName(l).toLowerCase().includes("cash") || ledgerCode(l).toLowerCase().includes("cash"));
+                                      if (cashLed) setPaymentSourceLedgerId(ledgerId(cashLed) || "");
+                                    } else if (val === "Roznamcha Book No.") {
+                                      setPaymentType("bank");
+                                      const bankLed = ledgers.find((l) => ledgerName(l).toLowerCase().includes("bank") || ledgerCode(l).toLowerCase().includes("bank"));
+                                      if (bankLed) setPaymentSourceLedgerId(ledgerId(bankLed) || "");
+                                    }
+                                  }}
+                                  options={[
+                                    { label: currentLanguage === "en" ? "Cash Book No." : "کیش بک نمبر", value: "Cash Book No." },
+                                    { label: currentLanguage === "en" ? "Roznamcha Book No." : "روزنامچہ بک نمبر", value: "Roznamcha Book No." },
+                                    { label: currentLanguage === "en" ? "Receipt No." : "رسید نمبر", value: "Receipt No." }
+                                  ]}
+                                  placeholder={currentLanguage === "en" ? "Select Type" : "قسم منتخب کریں"}
+                                  className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100 h-8"
+                                />
+                              </FieldBlock>
                             </div>
-                            
-                            {paymentType === "cash" && (
-                              <div className="grid gap-3 md:grid-cols-2">
-                                <FieldBlock label={t("receiver_sender_name", currentLanguage)}>
-                                  <Input className="h-9 text-xs font-semibold" value={typeDetails.receiverSenderName || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, receiverSenderName: e.target.value }))} placeholder={currentLanguage === "en" ? "Receiver or sender name" : "وصول کنندہ یا بھیجنے والے کا نام"} />
-                                </FieldBlock>
-                                <FieldBlock label={t("mobile_number", currentLanguage)}>
-                                  <Input className="h-9 text-xs font-semibold" value={typeDetails.mobileNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, mobileNumber: e.target.value }))} placeholder="03xxxxxxxxx" />
-                                </FieldBlock>
-                                <FieldBlock label={t("whatsapp_number", currentLanguage)}>
-                                  <Input className="h-9 text-xs font-semibold" value={typeDetails.whatsappNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, whatsappNumber: e.target.value }))} placeholder="03xxxxxxxxx" />
-                                </FieldBlock>
-                                <FieldBlock label={t("id_card_copy_upload", currentLanguage)}>
-                                  <div className="flex items-center gap-2">
-                                    <Label className="cursor-pointer flex w-max items-center justify-center h-8 px-3 rounded-full bg-slate-100 hover:bg-slate-200 border text-slate-500 shadow-sm transition gap-1.5 text-[10px] font-semibold">
-                                      <Paperclip className="h-3 w-3" />
-                                      <span>{currentLanguage === "en" ? "Attach" : "منسلک کریں"}</span>
-                                      <Input
-                                        type="file"
-                                        className="hidden"
-                                        onChange={(e) => {
-                                          const file = e.target.files?.[0] ?? null;
-                                          setAttachmentFile(file);
-                                          setTypeDetails((p) => ({ ...p, idCardCopyName: file?.name || "" }));
-                                        }}
-                                      />
-                                    </Label>
-                                    {typeDetails.idCardCopyName && <span className="text-[10px] font-mono text-slate-500 bg-slate-50 px-2 py-1.5 rounded border truncate max-w-[200px]">{typeDetails.idCardCopyName}</span>}
+
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                              <FieldBlock label={t("roznamcha_number_label", currentLanguage)} required>
+                                <Input
+                                  className="h-8 text-xs font-semibold w-full"
+                                  value={roznamchaNumber}
+                                  onChange={(e) => setRoznamchaNumber(e.target.value)}
+                                  placeholder="e.g. 000123"
+                                />
+                              </FieldBlock>
+
+                              <FieldBlock label={t("payment_date_label", currentLanguage)} required>
+                                <Input
+                                  className="h-8 text-xs font-semibold w-full"
+                                  type="date"
+                                  value={paymentDate}
+                                  onChange={(e) => setPaymentDate(e.target.value)}
+                                />
+                              </FieldBlock>
+
+                              <FieldBlock label={t("currency_label", currentLanguage)} required>
+                                <SearchableSelect
+                                  value={currency}
+                                  onChange={(val) => setCurrency(val)}
+                                  options={[
+                                    { label: "USD", value: "USD" },
+                                    { label: "AED", value: "AED" },
+                                    { label: "PKR", value: "PKR" },
+                                    { label: "INR", value: "INR" },
+                                    { label: "AFN", value: "AFN" },
+                                    { label: "IRR", value: "IRR" }
+                                  ]}
+                                  placeholder={currentLanguage === "en" ? "Select Currency" : "کرنسی منتخب کریں"}
+                                  className="relative z-[45] text-xs font-semibold text-slate-800 dark:text-slate-100 h-8"
+                                />
+                              </FieldBlock>
+                            </div>
+
+                            {/* Dynamic Type Panel (Bank / Cash) */}
+                            {paymentType && (
+                              <div className="rounded-lg border bg-slate-50/60 p-2.5 dark:bg-slate-900/30">
+                                <div className="mb-1.5 text-[10px] font-black uppercase tracking-wider text-blue-700 dark:text-blue-300">
+                                  {paymentType === "cash" && (currentLanguage === "en" ? "Cash Details" : "کیش کی تفصیلات")}
+                                  {paymentType === "bank" && (currentLanguage === "en" ? "Bank Details" : "بینک کی تفصیلات")}
+                                  {paymentType === "business" && (currentLanguage === "en" ? "Business Details" : "بزنس کی تفصیلات")}
+                                  {paymentType === "invoice" && (currentLanguage === "en" ? "Invoice Details" : "انکوائس کی تفصیلات")}
+                                  {paymentType === "transfer" && (currentLanguage === "en" ? "Transfer Details" : "منتقلی کی تفصیلات")}
+                                </div>
+                                
+                                {paymentType === "bank" && (
+                                  <div className="space-y-2">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                      <div className="space-y-1 relative z-[46]">
+                                        <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                          {currentLanguage === "en" ? "Bank Name" : "بینک کا نام"}
+                                        </span>
+                                        <SearchableSelect
+                                          value={typeDetails.bankName || ""}
+                                          onChange={(val) => {
+                                            if (val === "__ADD_NEW__") {
+                                              openAddOption("bank");
+                                            } else {
+                                              setTypeDetails((prev) => ({ ...prev, bankName: val }));
+                                            }
+                                          }}
+                                          options={[
+                                            { label: currentLanguage === "en" ? "Select Bank" : "بینک منتخب کریں", value: "" },
+                                            ...(selected ? getCountryBankList(rowCountryName(selected)) : getCountryBankList(session?.countryName || "")).map((bank) => ({ label: bank, value: bank })),
+                                            ...savedBanks.map((bank) => ({ label: bank.name, value: bank.name }))
+                                          ]}
+                                          placeholder={currentLanguage === "en" ? "Select Bank" : "بینک منتخب کریں"}
+                                          addOptionLabel={currentLanguage === "en" ? "New Bank" : "نیا بینک"}
+                                          className="text-xs font-semibold text-slate-800 dark:text-slate-100 h-8"
+                                        />
+                                      </div>
+
+                                      <div className="space-y-1 relative z-[46]">
+                                        <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                                          {currentLanguage === "en" ? "Payment Method" : "ادائیگی کا طریقہ"}
+                                        </span>
+                                        <SearchableSelect
+                                          value={typeDetails.method || ""}
+                                          onChange={(val) => {
+                                            if (val === "__ADD_NEW__") {
+                                              openAddOption("method");
+                                            } else {
+                                              setTypeDetails((prev) => ({ ...prev, method: val }));
+                                            }
+                                          }}
+                                          options={[
+                                            { label: currentLanguage === "en" ? "Select Method" : "طریقہ منتخب کریں", value: "" },
+                                            ...["Cheque", "Mobile Transfer", "Online Transfer", "Bank Transfer"].map((method) => ({ label: method, value: method })),
+                                            ...savedMethods.map((method) => ({ label: method, value: method }))
+                                          ]}
+                                          placeholder={currentLanguage === "en" ? "Select Method" : "طریقہ منتخب کریں"}
+                                          addOptionLabel={currentLanguage === "en" ? "New Method" : "نیا طریقہ"}
+                                          className="text-xs font-semibold text-slate-800 dark:text-slate-100 h-8"
+                                        />
+                                      </div>
+
+                                      <FieldBlock label={currentLanguage === "en" ? "Reference No." : "حوالہ نمبر"}>
+                                        <Input
+                                          className="h-8 text-xs font-semibold w-full"
+                                          value={typeDetails.refNo || ""}
+                                          onChange={(e) => setTypeDetails((prev) => ({ ...prev, refNo: e.target.value }))}
+                                          placeholder={currentLanguage === "en" ? "Cheque/Tx No" : "چیک یا ٹرانزیکشن نمبر"}
+                                        />
+                                      </FieldBlock>
+                                      
+                                      <FieldBlock label={currentLanguage === "en" ? "Attachment Upload" : "فائل منسلک اپ لوڈ"}>
+                                        <div className="flex items-center gap-2">
+                                          <Label className="cursor-pointer flex w-max items-center justify-center h-8 px-3 rounded-md bg-slate-100 hover:bg-slate-200 border text-slate-500 shadow-sm transition gap-1.5 text-[10px] font-semibold">
+                                            <Paperclip className="h-3 w-3" />
+                                            <span>{currentLanguage === "en" ? "Attach" : "منسلک کریں"}</span>
+                                            <Input
+                                              type="file"
+                                              className="hidden"
+                                              onChange={(e) => {
+                                                const file = e.target.files?.[0] ?? null;
+                                                setAttachmentFile(file);
+                                                setTypeDetails((p) => ({ ...p, bankAttachmentName: file?.name || "" }));
+                                              }}
+                                            />
+                                          </Label>
+                                          {typeDetails.bankAttachmentName && <span className="text-[10px] font-mono text-slate-500 bg-slate-50 px-2 py-1 rounded border truncate max-w-[120px]">{typeDetails.bankAttachmentName}</span>}
+                                        </div>
+                                      </FieldBlock>
+                                    </div>
                                   </div>
-                                </FieldBlock>
+                                )}
+
+                                {paymentType === "cash" && (
+                                  <div className="grid gap-2.5 sm:grid-cols-2">
+                                    <FieldBlock label={t("receiver_sender_name", currentLanguage)}>
+                                      <Input className="h-8 text-xs font-semibold" value={typeDetails.receiverSenderName || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, receiverSenderName: e.target.value }))} placeholder={currentLanguage === "en" ? "Receiver/Sender" : "وصول کنندہ / بھیجنے والا"} />
+                                    </FieldBlock>
+                                    <FieldBlock label={t("mobile_number", currentLanguage)}>
+                                      <Input className="h-8 text-xs font-semibold" value={typeDetails.mobileNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, mobileNumber: e.target.value }))} placeholder="03xxxxxxxxx" />
+                                    </FieldBlock>
+                                  </div>
+                                )}
                               </div>
                             )}
 
-                            {paymentType === "bank" && (
-                              <div className="space-y-2">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
-                                  <div className="space-y-1 relative z-[46]">
-                                    <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                      {currentLanguage === "en" ? "Bank Name" : "بینک کا نام"}
-                                    </span>
-                                    <SearchableSelect
-                                      value={typeDetails.bankName || ""}
-                                      onChange={(val) => {
-                                        if (val === "__ADD_NEW__") {
-                                          openAddOption("bank");
-                                        } else {
-                                          setTypeDetails((prev) => ({ ...prev, bankName: val }));
-                                        }
-                                      }}
-                                      options={[
-                                        { label: currentLanguage === "en" ? "Select Bank" : "بینک منتخب کریں", value: "" },
-                                        ...(selected ? getCountryBankList(rowCountryName(selected)) : getCountryBankList(session?.countryName || "")).map((bank) => ({ label: bank, value: bank })),
-                                        ...savedBanks.map((bank) => ({ label: bank.name, value: bank.name }))
-                                      ]}
-                                      placeholder={currentLanguage === "en" ? "Select Bank" : "بینک منتخب کریں"}
-                                      addOptionLabel={currentLanguage === "en" ? "New Bank" : "نیا بینک"}
-                                      className="text-xs font-semibold text-slate-800 dark:text-slate-100 h-8"
-                                    />
-                                  </div>
-
-                                  <div className="space-y-1 relative z-[46]">
-                                    <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                                      {currentLanguage === "en" ? "Payment Method" : "ادائیگی کا طریقہ"}
-                                    </span>
-                                    <SearchableSelect
-                                      value={typeDetails.method || ""}
-                                      onChange={(val) => {
-                                        if (val === "__ADD_NEW__") {
-                                          openAddOption("method");
-                                        } else {
-                                          setTypeDetails((prev) => ({ ...prev, method: val }));
-                                        }
-                                      }}
-                                      options={[
-                                        { label: currentLanguage === "en" ? "Select Method" : "طریقہ منتخب کریں", value: "" },
-                                        ...["Cheque", "Mobile Transfer", "Online Transfer", "Bank Transfer"].map((method) => ({ label: method, value: method })),
-                                        ...savedMethods.map((method) => ({ label: method, value: method }))
-                                      ]}
-                                      placeholder={currentLanguage === "en" ? "Select Method" : "طریقہ منتخب کریں"}
-                                      addOptionLabel={currentLanguage === "en" ? "New Method" : "نیا طریقہ"}
-                                      className="text-xs font-semibold text-slate-800 dark:text-slate-100 h-8"
-                                    />
-                                  </div>
-
-                                  <FieldBlock label={currentLanguage === "en" ? "Reference No." : "حوالہ نمبر"}>
-                                    <Input
-                                      className="h-8 text-xs font-semibold w-full"
-                                      value={typeDetails.refNo || ""}
-                                      onChange={(e) => setTypeDetails((prev) => ({ ...prev, refNo: e.target.value }))}
-                                      placeholder={currentLanguage === "en" ? "Cheque/Tx No" : "چیک یا ٹرانزیکشن نمبر"}
-                                    />
+                            {/* Currency Rate / Calculations */}
+                            {currency && showCalcPanel && (
+                              <div className="rounded-lg border bg-slate-50/60 p-2.5 dark:bg-slate-900/30">
+                                <div className="mb-1.5 text-[10px] font-black uppercase tracking-wider text-slate-500">
+                                  {t("transaction_conversion_details", currentLanguage)} ({selected?.currency_code || "USD"} ➔ {baseCurrency})
+                                </div>
+                                <div className="grid gap-2.5 sm:grid-cols-3">
+                                  <FieldBlock label={`${t("purchase_currency_amount", currentLanguage)} (${selected?.currency_code || "USD"})`} required>
+                                    <Input className="h-8 text-xs font-semibold" value={calcAmount} onChange={(e) => setCalcAmount(e.target.value)} type="number" step="0.0001" min="0" placeholder="e.g. 100" />
                                   </FieldBlock>
-                                  <FieldBlock label={t("payment_date_label", currentLanguage)} required>
-                                    <Input
-                                      className="h-8 text-xs font-semibold w-full"
-                                      type="date"
-                                      required
-                                      value={typeDetails.payDate || paymentDate}
-                                      onChange={(e) => setTypeDetails((prev) => ({ ...prev, payDate: e.target.value }))}
-                                    />
+                                  <FieldBlock label={t("exchange_rate_label", currentLanguage)} required>
+                                    <Input className="h-8 text-xs font-semibold" value={exchangeRate} onChange={(e) => setExchangeRate(e.target.value)} type="number" step="0.0001" min="0" disabled={selected?.currency_code === baseCurrency && currency === baseCurrency} />
+                                  </FieldBlock>
+                                  <FieldBlock label={t("operation_label", currentLanguage)}>
+                                    <select
+                                      className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs font-semibold outline-none"
+                                      value={calcOp}
+                                      onChange={(e) => setCalcOp(e.target.value as any)}
+                                    >
+                                      <option value="mul">{currentLanguage === "en" ? "Multiply (*)" : "ضرب کریں (*)"}</option>
+                                      <option value="div">{currentLanguage === "en" ? "Divide (/)" : "تقسیم کریں (/)"}</option>
+                                    </select>
                                   </FieldBlock>
                                 </div>
-
-                                <FieldBlock label={currentLanguage === "en" ? "Attachment Upload" : "فائل منسلک اپ لوڈ"}>
-                                  <div className="flex items-center gap-2">
-                                    <Label className="cursor-pointer flex w-max items-center justify-center h-7 px-3 rounded-full bg-slate-100 hover:bg-slate-200 border text-slate-500 shadow-sm transition gap-1.5 text-[10px] font-semibold">
-                                      <Paperclip className="h-3 w-3" />
-                                      <span>{currentLanguage === "en" ? "Attach" : "منسلک کریں"}</span>
-                                      <Input
-                                        type="file"
-                                        className="hidden"
-                                        onChange={(e) => {
-                                          const file = e.target.files?.[0] ?? null;
-                                          setAttachmentFile(file);
-                                          setTypeDetails((p) => ({ ...p, bankAttachmentName: file?.name || "" }));
-                                        }}
-                                      />
-                                    </Label>
-                                    {typeDetails.bankAttachmentName && <span className="text-[10px] font-mono text-slate-500 bg-slate-50 px-2 py-1 rounded border truncate max-w-[150px]">{typeDetails.bankAttachmentName}</span>}
-                                  </div>
-                                </FieldBlock>
                               </div>
                             )}
 
-                            {(paymentType === "business" || paymentType === "invoice") && (
-                              <div className="grid gap-2.5 md:grid-cols-2">
-                                <FieldBlock label={currentLanguage === "en" ? "Invoice Number" : "انوائس نمبر"}>
-                                  <Input className="h-8 text-xs font-semibold" value={typeDetails.invoiceNumber || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, invoiceNumber: e.target.value }))} placeholder="Invoice number" />
-                                </FieldBlock>
-                                <FieldBlock label={currentLanguage === "en" ? "Purchase Information" : "خریداری کی معلومات"}>
-                                  <Input className="h-8 text-xs font-semibold" value={typeDetails.purchaseInfo || typeDetails.businessName || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, purchaseInfo: e.target.value, businessName: e.target.value }))} placeholder="Purchase information" />
-                                </FieldBlock>
+                            <FieldBlock label={`${t("final_local_amount", currentLanguage)} (${baseCurrency})`} required>
+                              <div className="relative">
+                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">
+                                  {baseCurrency}
+                                </span>
+                                <Input
+                                  className="h-8 pl-12 text-right text-xs font-black font-mono"
+                                  value={showCalcPanel && calcFinal !== null ? calcFinal.toFixed(2) : finalPayment}
+                                  onChange={(e) => setFinalPayment(e.target.value)}
+                                  placeholder="0.00"
+                                  type="number"
+                                  step="0.01"
+                                  min="0"
+                                  disabled={showCalcPanel && calcFinal !== null}
+                                />
                               </div>
-                            )}
+                            </FieldBlock>
 
-                            {paymentType === "transfer" && (
-                              <div className="grid gap-2.5 md:grid-cols-3">
-                                <FieldBlock label={currentLanguage === "en" ? "From" : "سے"}>
-                                  <Input className="h-8 text-xs font-semibold" value={typeDetails.from || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, from: e.target.value }))} placeholder="From account" />
-                                </FieldBlock>
-                                <FieldBlock label={currentLanguage === "en" ? "To" : "کو"}>
-                                  <Input className="h-8 text-xs font-semibold" value={typeDetails.to || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, to: e.target.value }))} placeholder="To account" />
-                                </FieldBlock>
-                                <FieldBlock label={currentLanguage === "en" ? "Reference" : "حوالہ"}>
-                                  <Input className="h-8 text-xs font-semibold" value={typeDetails.ref || ""} onChange={(e) => setTypeDetails((p) => ({ ...p, ref: e.target.value }))} placeholder="Reference" />
-                                </FieldBlock>
-                              </div>
-                            )}
-                          </div>
-                        )}
-
-                        {/* Currency Rate / Calculations */}
-                        {currency && showCalcPanel && (
-                          <div className="rounded-lg border bg-slate-50/60 p-2.5 dark:bg-slate-900/30">
-                            <div className="mb-1.5 text-[10px] font-black uppercase tracking-wider text-slate-500">
-                              {t("transaction_conversion_details", currentLanguage)} ({selected?.currency_code || "USD"} ➔ {baseCurrency})
-                            </div>
-                            <div className="grid gap-2.5 md:grid-cols-3">
-                              <FieldBlock label={`${t("purchase_currency_amount", currentLanguage)} (${selected?.currency_code || "USD"})`} required>
-                                <Input className="h-8 text-xs font-semibold" value={calcAmount} onChange={(e) => setCalcAmount(e.target.value)} type="number" step="0.0001" min="0" placeholder="e.g. 100" />
-                              </FieldBlock>
-                              <FieldBlock label={t("exchange_rate_label", currentLanguage)} required>
-                                <Input className="h-8 text-xs font-semibold" value={exchangeRate} onChange={(e) => setExchangeRate(e.target.value)} type="number" step="0.0001" min="0" disabled={selected?.currency_code === baseCurrency && currency === baseCurrency} />
-                              </FieldBlock>
-                              <FieldBlock label={t("operation_label", currentLanguage)}>
-                                <select
-                                  className="h-8 w-full rounded-md border border-input bg-background px-2 text-xs font-semibold outline-none"
-                                  value={calcOp}
-                                  onChange={(e) => setCalcOp(e.target.value as any)}
-                                >
-                                  <option value="mul">{currentLanguage === "en" ? "Multiply (*)" : "ضرب کریں (*)"}</option>
-                                  <option value="div">{currentLanguage === "en" ? "Divide (/)" : "تقسیم کریں (/)"}</option>
-                                </select>
-                              </FieldBlock>
-                            </div>
-                          </div>
-                        )}
-
-                        <div className="grid gap-2.5 md:grid-cols-2">
-                          <FieldBlock label={`${t("final_local_amount", currentLanguage)} (${baseCurrency})`} required>
-                            <div className="relative">
-                              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-black text-slate-400">
-                                {baseCurrency}
-                              </span>
-                              <Input
-                                className="h-8 pl-12 text-right text-xs font-black font-mono"
-                                value={showCalcPanel && calcFinal !== null ? calcFinal.toFixed(2) : finalPayment}
-                                onChange={(e) => setFinalPayment(e.target.value)}
-                                placeholder="0.00"
-                                type="number"
-                                step="0.01"
-                                min="0"
-                                disabled={showCalcPanel && calcFinal !== null}
+                            <FieldBlock label={t("comments_label", currentLanguage)}>
+                              <textarea
+                                rows={2}
+                                className="flex w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs font-semibold ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                                value={remarks}
+                                onChange={(e) => setRemarks(e.target.value)}
+                                placeholder={currentLanguage === "en" ? "Manually add descriptions, comments, or transaction notes..." : "تفصیلات، کمنٹس، یا ٹرانزیکشن نوٹس شامل کریں..."}
                               />
-                            </div>
-                          </FieldBlock>
+                            </FieldBlock>
+                          </div>
 
-                          <div className="space-y-1">
-                            <span className="block text-[10px] font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                              {t("transaction_entry_preview", currentLanguage)}
-                            </span>
-                            <div className="h-8 flex items-center px-3 rounded-lg border border-indigo-400/40 bg-indigo-500/10 text-indigo-600 font-bold text-xs uppercase truncate">
-                              {currentLanguage === "en"
-                                ? `🔵 Balanced entry — Dr: ${doubleEntry.debitCode} / Cr: ${doubleEntry.creditCode}`
-                                : `🔵 متوازن انٹری — ڈیبٹ: ${doubleEntry.debitCode} / کریڈٹ: ${doubleEntry.creditCode}`}
+                          {/* Right Column: DR ACCOUNTS & CR ACCOUNTS Live Panels (5 cols) */}
+                          <div className="lg:col-span-5 space-y-3">
+                            {/* Card 1: DR ACCOUNTS (Debit Destination) */}
+                            <div className="rounded-xl border border-blue-200 bg-white p-3.5 shadow-sm dark:border-blue-900/50 dark:bg-slate-950">
+                              <div className="flex items-center justify-between pb-2 border-b border-blue-100 dark:border-blue-900/40">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="inline-flex rounded bg-blue-600 px-1.5 py-0.5 text-[9px] font-black text-white">DR</span>
+                                  <span className="text-xs font-black uppercase tracking-wider text-blue-800 dark:text-blue-300">
+                                    DR ACCOUNTS
+                                  </span>
+                                </div>
+                                <span className="text-[9.5px] font-bold text-blue-600 bg-blue-50 dark:bg-blue-950 px-2 py-0.5 rounded-full border border-blue-200 dark:border-blue-800">
+                                  Settlement Target
+                                </span>
+                              </div>
+
+                              <div className="mt-2.5 space-y-2 text-xs">
+                                <div>
+                                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Account Name</div>
+                                  <div className="font-extrabold text-slate-900 dark:text-slate-100 text-sm">{doubleEntry.debitName}</div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                                  <div>
+                                    <div className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400">Account No.</div>
+                                    <div className="font-mono font-bold text-slate-800 dark:text-slate-200">{doubleEntry.debitCode}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400">Branch</div>
+                                    <div className="font-semibold text-slate-700 dark:text-slate-300 truncate">{doubleEntry.debitBranch}</div>
+                                  </div>
+                                </div>
+                                <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800 font-bold">
+                                  <span className="text-slate-500 text-[10.5px]">Amount to DR:</span>
+                                  <span className="font-mono text-blue-700 dark:text-blue-400 font-black text-sm">{amount ? money(amount, baseCurrency) : "0.00 " + baseCurrency}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Card 2: CR ACCOUNT'S (Credit Payment Source) */}
+                            <div className="rounded-xl border border-rose-200 bg-white p-3.5 shadow-sm dark:border-rose-900/50 dark:bg-slate-950">
+                              <div className="flex items-center justify-between pb-2 border-b border-rose-100 dark:border-rose-900/40">
+                                <div className="flex items-center gap-1.5">
+                                  <span className="inline-flex rounded bg-rose-600 px-1.5 py-0.5 text-[9px] font-black text-white">CR</span>
+                                  <span className="text-xs font-black uppercase tracking-wider text-rose-800 dark:text-rose-300">
+                                    CR ACCOUNT'S
+                                  </span>
+                                </div>
+                                <span className="text-[9.5px] font-bold text-rose-600 bg-rose-50 dark:bg-rose-950 px-2 py-0.5 rounded-full border border-rose-200 dark:border-rose-800">
+                                  Payment Source
+                                </span>
+                              </div>
+
+                              <div className="mt-2.5 space-y-2 text-xs">
+                                <div>
+                                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Selected Source Account</div>
+                                  <div className="font-extrabold text-slate-900 dark:text-slate-100 text-sm">{doubleEntry.creditName}</div>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2 text-[11px]">
+                                  <div>
+                                    <div className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400">Account No.</div>
+                                    <div className="font-mono font-bold text-slate-800 dark:text-slate-200">{doubleEntry.creditCode}</div>
+                                  </div>
+                                  <div>
+                                    <div className="text-[9.5px] font-bold uppercase tracking-wider text-slate-400">Current Balance</div>
+                                    <div className="font-mono font-bold text-emerald-600 dark:text-emerald-400">{sourceBalanceText}</div>
+                                  </div>
+                                </div>
+                                <div className="flex justify-between items-center pt-2 border-t border-slate-100 dark:border-slate-800 font-bold">
+                                  <span className="text-slate-500 text-[10.5px]">Amount to CR:</span>
+                                  <span className="font-mono text-rose-600 dark:text-rose-400 font-black text-sm">{amount ? money(amount, baseCurrency) : "0.00 " + baseCurrency}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Card 3: Balanced Entry Status Pill */}
+                            <div className="rounded-xl border border-indigo-200 bg-indigo-50/60 p-3 dark:border-indigo-900/40 dark:bg-indigo-950/30 text-indigo-900 dark:text-indigo-200 text-xs">
+                              <div className="font-bold flex items-center justify-between">
+                                <span>⚖️ Double-Entry Live Status</span>
+                                <span className="font-black text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded-full">BALANCED</span>
+                              </div>
+                              <div className="text-[10.5px] mt-1 font-semibold text-indigo-700 dark:text-indigo-300 truncate">
+                                DR: {doubleEntry.debitCode} ➔ CR: {doubleEntry.creditCode}
+                              </div>
                             </div>
                           </div>
                         </div>
-
-                        <FieldBlock label={t("comments_label", currentLanguage)}>
-                          <textarea
-                            rows={2}
-                            className="flex w-full rounded-md border border-input bg-background px-3 py-1.5 text-xs font-semibold ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
-                            value={remarks}
-                            onChange={(e) => setRemarks(e.target.value)}
-                            placeholder={currentLanguage === "en" ? "Manually add descriptions, comments, or transaction notes..." : "تفصیلات، کمنٹس، یا ٹرانزیکشن نوٹس شامل کریں..."}
-                          />
-                        </FieldBlock>
 
                         {/* Submit Action Button */}
                         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-3 border-t border-slate-200 dark:border-slate-800">
@@ -5696,7 +5675,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                             type="button"
                             onClick={handleProcessPayment}
                             disabled={processingPayment || !amount || !canSave}
-                            className="h-10 px-6 font-bold text-xs uppercase shadow-md transition bg-indigo-600 hover:bg-indigo-700 text-white"
+                            className="h-10 px-6 font-bold text-xs uppercase shadow-md transition bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
                           >
                             {processingPayment ? (currentLanguage === "en" ? "Processing..." : "پروسیسنگ ہو رہی ہے...") : (
                               currentLanguage === "en" ? `Post ${activeMode === "advance" ? "Advance" : activeMode === "credit" ? "Credit" : "Remaining"} Payment` : `${activeMode === "advance" ? "ایڈوانس" : activeMode === "credit" ? "کریڈٹ" : "باقی"} ادائیگی پوسٹ کریں`
