@@ -1,7 +1,7 @@
 import type { NextRequest } from "next/server";
 import type { ErpSession } from "@/lib/auth/session";
 import { requireErpSession } from "@/lib/auth/session";
-import { authorize, type PermissionCheck } from "@/lib/permissions/middleware";
+import { authorize, canAccessCityBranch, canAccessCountry, canAccessCountryBranch, hasRolePermission, ErpPermissionError, type PermissionCheck } from "@/lib/permissions/middleware";
 
 export type ApiScope = {
   countryId?: string | null;
@@ -37,6 +37,57 @@ export function authorizeApiScope(
     countryBranchId: input.countryBranchId,
     cityBranchId: input.cityBranchId
   });
+}
+
+/**
+ * Dual-scope authorization for Country-to-Country records that legitimately belong to TWO
+ * scopes at once (a source/purchasing branch and a destination/receiving branch) — e.g. a
+ * Country Purchase's dest_country_id/dest_country_branch_id/dest_city_branch_id. Mirrors the
+ * RLS OR pattern already designed (but never wired into app code) on
+ * inter_branch_ledger_transfers (0020_branch_ledger_inter_branch_accounting.sql). The
+ * permission string still gates the resource/action; only the SCOPE check is OR'd across the
+ * two triples, so a user with legitimate access to either the source or the destination side
+ * can read the record. Super admin always passes.
+ */
+export function authorizeApiScopeEither(
+  session: ErpSession,
+  input: {
+    resource: string;
+    action: string;
+    source: ApiScope;
+    destination: ApiScope | null | undefined;
+  }
+) {
+  if (!hasRolePermission(session, input.resource, input.action)) {
+    throw new ErpPermissionError(`Missing permission: ${input.resource}:${input.action}`);
+  }
+  if (session.isSuperAdmin) return;
+
+  const matchesScope = (scope: ApiScope) => {
+    if (scope.cityBranchId) return canAccessCityBranch(session, scope.cityBranchId);
+    if (scope.countryBranchId) return canAccessCountryBranch(session, scope.countryBranchId);
+    if (scope.countryId) return canAccessCountry(session, scope.countryId);
+    return false;
+  };
+
+  const sourceOk = matchesScope(input.source);
+  const destOk = input.destination ? matchesScope(input.destination) : false;
+
+  if (!sourceOk && !destOk) {
+    throw new ErpPermissionError("Neither the source nor destination scope of this record is allowed for this user.");
+  }
+}
+
+/** True if the session's scope matches the destination side of a Country Purchase record
+ *  (used to gate destination-only actions like Receiving to destination-branch users, not
+ *  just anyone with source access). Super admin always passes. */
+export function isDestinationScopeUser(session: ErpSession, destination: ApiScope | null | undefined) {
+  if (session.isSuperAdmin) return true;
+  if (!destination || (!destination.cityBranchId && !destination.countryBranchId && !destination.countryId)) return false;
+  if (destination.cityBranchId) return canAccessCityBranch(session, destination.cityBranchId);
+  if (destination.countryBranchId) return canAccessCountryBranch(session, destination.countryBranchId);
+  if (destination.countryId) return canAccessCountry(session, destination.countryId);
+  return false;
 }
 
 /**
@@ -101,4 +152,60 @@ export function enforceScopeFilter(
   }
 
   return q;
+}
+
+/**
+ * Like enforceScopeFilter, but for tables that also carry a destination scope (e.g.
+ * purchase_orders.dest_country_id/dest_country_branch_id/dest_city_branch_id) — a non-super
+ * user sees a row if EITHER their session scope matches the source columns OR the destination
+ * columns, so a destination-branch user can see incoming Country Purchase orders they didn't
+ * create. Explicit query-param filters still apply first and always narrow to source columns
+ * (matching enforceScopeFilter's existing behavior) since filtering is normally initiated from
+ * the source side's own screens.
+ */
+export function enforceScopeFilterWithDestination(
+  query: any,
+  session: ErpSession,
+  explicitScope?: ApiScope,
+  destColumns: { countryId: string; countryBranchId: string; cityBranchId: string } = {
+    countryId: "dest_country_id",
+    countryBranchId: "dest_country_branch_id",
+    cityBranchId: "dest_city_branch_id"
+  }
+): any {
+  let q = query;
+
+  if (explicitScope?.cityBranchId) {
+    q = q.eq("city_branch_id", explicitScope.cityBranchId);
+    return q;
+  } else if (explicitScope?.countryBranchId) {
+    q = q.eq("country_branch_id", explicitScope.countryBranchId);
+    return q;
+  } else if (explicitScope?.countryId) {
+    q = q.eq("country_id", explicitScope.countryId);
+    return q;
+  }
+
+  if (session.isSuperAdmin) return q;
+
+  const sourceClauses: string[] = [];
+  const destClauses: string[] = [];
+  if (session.cityBranchIds.length > 0) {
+    sourceClauses.push(`city_branch_id.in.(${session.cityBranchIds.join(",")})`);
+    destClauses.push(`${destColumns.cityBranchId}.in.(${session.cityBranchIds.join(",")})`);
+  }
+  if (session.countryBranchIds.length > 0) {
+    sourceClauses.push(`country_branch_id.in.(${session.countryBranchIds.join(",")})`);
+    destClauses.push(`${destColumns.countryBranchId}.in.(${session.countryBranchIds.join(",")})`);
+  }
+  if (session.countryIds.length > 0) {
+    sourceClauses.push(`country_id.in.(${session.countryIds.join(",")})`);
+    destClauses.push(`${destColumns.countryId}.in.(${session.countryIds.join(",")})`);
+  }
+
+  const allClauses = [...sourceClauses, ...destClauses];
+  if (allClauses.length === 0) {
+    return q.eq("id", "00000000-0000-0000-0000-000000000000");
+  }
+  return q.or(allClauses.join(","));
 }

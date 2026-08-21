@@ -25,7 +25,12 @@ function asFiniteNumber(value: unknown, fallback = 0) {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
-const tt = (key: string, fb: string) => t("en", key as any, fb);
+// NOTE: this can't call useActiveLanguage() itself (module scope, not a component) — every
+// component below builds its OWN `tt` via buildTt(activeLang) so the page actually follows the
+// selected language instead of always rendering English.
+function buildTt(lang: string) {
+  return (key: string, fb: string) => t((lang || "en") as any, key as any, fb);
+}
 
 function CustomDropdown({ record, onLoadDetails }: { record: LoadingRecord, onLoadDetails: (r: LoadingRecord) => void }) {
   return (
@@ -167,6 +172,8 @@ function normalizeAdvanceToPurchaseCurrency(rawAdvance: number, contractPurchase
 
 
 function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord; onClose: () => void; onSaved?: () => void }) {
+  const activeLang = useActiveLanguage();
+  const tt = buildTt(activeLang);
   const poData = (Array.isArray(record.purchase_orders) ? record.purchase_orders[0] : record.purchase_orders)?.form_data || {};
   const poRow = (Array.isArray(record.purchase_orders) ? record.purchase_orders[0] : record.purchase_orders) || {};
   const form = poData.form || {};
@@ -2271,6 +2278,8 @@ function emptyForm() {
 }
 
 export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: string }) {
+  const activeLang = useActiveLanguage();
+  const tt = buildTt(activeLang);
   const [actionsSlot, setActionsSlot] = useState<Element | null>(null);
 
   useEffect(() => {
@@ -2480,7 +2489,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
     setLoading(true);
     setMessage("");
     try {
-      const params = new URLSearchParams({ limit: "150" });
+      const params = new URLSearchParams({ limit: "150", lang: activeLang || "en" });
       if (status !== "all") params.set("status", status);
       if (query.trim()) params.set("q", query.trim());
       const response = await fetch(`/api/erp/purchases/loading-records?${params.toString()}`, { cache: "no-store" });
@@ -2519,7 +2528,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
       window.removeEventListener("erp:purchase-loading-saved", refresh);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [activeLang]);
 
   async function saveRecord() {
     setSaving(true);

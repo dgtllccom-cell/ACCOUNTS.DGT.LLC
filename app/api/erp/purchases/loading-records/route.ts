@@ -9,8 +9,31 @@ import { requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { resolvePurchaseAmounts, resolvePurchaseLoadingSummary, validatePurchaseLoadingEntries } from "@/lib/services/purchase-calculation-service";
+import { safeInsertPurchaseOrderExpenses } from "@/lib/services/purchase-table-manager";
+import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 
-const loadingStatusSchema = z.enum(["draft", "pending", "loaded", "received", "cancelled"]);
+const LOCALIZED_TEXT_FIELDS = ["carrier_name", "transport_company", "driver_name", "shipping_line", "transport_remarks", "receiving_remarks"] as const;
+
+/** Localize every registered free-text field on a list of loading records for the given language. */
+async function localizeLoadingRecords<T extends { id: string }>(records: T[], lang: Parameters<typeof localizeRecordNames>[3]): Promise<T[]> {
+  // Synthetic (not-yet-loaded) rows have no real id to key translations by — skip those.
+  const real = records.filter((r) => typeof r.id === "string" && !r.id.startsWith("synthetic-"));
+  if (real.length === 0) return records;
+  let working: any[] = real;
+  for (const field of LOCALIZED_TEXT_FIELDS) {
+    working = await localizeRecordNames(working, "purchase_loading_records", field as never, lang);
+  }
+  const byId = new Map(working.map((r: any) => [r.id, r]));
+  return records.map((r) => byId.get(r.id) ?? r);
+}
+
+const loadingStatusSchema = z.enum([
+  "draft", "pending", "loaded", "dispatched", "in_transit",
+  "partially_received", "received", "cancelled"
+]);
+const transportModeSchema = z.enum(["By Road", "By Sea", "By Air"]);
 
 const querySchema = z.object({
   countryId: uuidSchema.optional(),
@@ -18,7 +41,8 @@ const querySchema = z.object({
   cityBranchId: uuidSchema.optional(),
   status: loadingStatusSchema.optional(),
   q: z.string().trim().max(200).optional(),
-  limit: z.coerce.number().int().min(1).max(10000).default(100)
+  limit: z.coerce.number().int().min(1).max(10000).default(100),
+  lang: z.string().trim().max(5).optional()
 });
 
 const createSchema = z.object({
@@ -38,7 +62,21 @@ const createSchema = z.object({
   remarks: z.string().trim().max(1000).nullable().optional(),
   loadedContainers: z.coerce.number().min(1).default(1),
   loadedQuantity: z.coerce.number().min(0).default(0),
-  reportPayload: z.record(z.string(), z.unknown()).default({})
+  reportPayload: z.record(z.string(), z.unknown()).default({}),
+  // Phase 3 — Transportation.
+  transportMode: transportModeSchema.nullable().optional(),
+  transportCompany: z.string().trim().max(200).nullable().optional(),
+  vehicleNo: z.string().trim().max(80).nullable().optional(),
+  truckId: optionalUuidSchema,
+  driverName: z.string().trim().max(160).nullable().optional(),
+  driverMobile: z.string().trim().max(40).nullable().optional(),
+  shippingLine: z.string().trim().max(160).nullable().optional(),
+  transportReference: z.string().trim().max(160).nullable().optional(),
+  departureDate: z.string().trim().max(10).nullable().optional(),
+  expectedArrivalDate: z.string().trim().max(10).nullable().optional(),
+  transportExpenseAmount: z.coerce.number().min(0).default(0),
+  transportExpenseCurrency: z.string().trim().length(3).default("USD"),
+  transportRemarks: z.string().trim().max(1000).nullable().optional()
 });
 
 type Session = Awaited<ReturnType<typeof requireErpSession>>;
@@ -190,8 +228,10 @@ export async function GET(request: NextRequest) {
       cityBranchId: request.nextUrl.searchParams.get("cityBranchId") ?? undefined,
       status: request.nextUrl.searchParams.get("status") ?? undefined,
       q: request.nextUrl.searchParams.get("q") ?? undefined,
-      limit: request.nextUrl.searchParams.get("limit") ?? undefined
+      limit: request.nextUrl.searchParams.get("limit") ?? undefined,
+      lang: request.nextUrl.searchParams.get("lang") ?? undefined
     });
+    const lang = normalizeLanguage(query.lang, "en");
 
     authorizeApiScope(session, {
       resource: "purchases",
@@ -207,7 +247,7 @@ export async function GET(request: NextRequest) {
     let recordsQuery = supabase
       .from("purchase_loading_records")
       .select(
-        "id, loading_record_no, purchase_order_id, purchase_order_no, container_number, container_type, loading_status, loaded_at, loading_location, receiving_location, shipment_status, carrier_name, remarks, report_payload, country_id, country_branch_id, city_branch_id, loaded_quantity, total_quantity, loading_percentage, loaded_purchase_amount, loaded_advance_amount, purchase_currency, exchange_rate, loaded_purchase_local, loaded_advance_local, payment_made, remaining_loading_balance, local_currency, posted_to_journal, journal_entry_id, journal_posted_at, created_at, countries(name, iso2), country_branches(name, code), city_branches(name, code, city_name), purchase_orders(form_data, advance_paid, remaining_due, order_total, purchase_order_payments(amount, exchange_rate, reference_no, narration, source_reference_no))"
+        "id, loading_record_no, purchase_order_id, purchase_order_no, container_number, container_type, loading_status, loaded_at, loading_location, receiving_location, shipment_status, carrier_name, remarks, report_payload, country_id, country_branch_id, city_branch_id, loaded_quantity, total_quantity, loading_percentage, loaded_purchase_amount, loaded_advance_amount, purchase_currency, exchange_rate, loaded_purchase_local, loaded_advance_local, payment_made, remaining_loading_balance, local_currency, posted_to_journal, journal_entry_id, journal_posted_at, created_at, transport_mode, transport_company, vehicle_no, truck_id, driver_name, driver_mobile, shipping_line, transport_reference, departure_date, expected_arrival_date, actual_arrival_date, transport_expense_amount, transport_expense_currency, transport_remarks, received_quantity, received_at, received_by, receiving_warehouse_id, receiving_goods_id, receiving_remarks, countries(name, iso2), country_branches(name, code), city_branches(name, code, city_name), purchase_orders(form_data, advance_paid, remaining_due, order_total, dest_country_id, dest_country_branch_id, dest_city_branch_id, purchase_order_payments(amount, exchange_rate, reference_no, narration, source_reference_no))"
       )
       .is("deleted_at", null)
       .order("created_at", { ascending: false });
@@ -309,10 +349,11 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      const allRecords = [...records, ...syntheticRecords];
+      const allRecords = await localizeLoadingRecords([...records, ...syntheticRecords], lang);
       return apiOk({ records: allRecords, summary: summarize(allRecords), setupRequired: false, setupMessage: null, ...scopePayload });
     } catch (_) {
-      return apiOk({ records, summary: summarize(records), setupRequired: false, setupMessage: null, ...scopePayload });
+      const localizedRecords = await localizeLoadingRecords(records, lang);
+      return apiOk({ records: localizedRecords, summary: summarize(localizedRecords), setupRequired: false, setupMessage: null, ...scopePayload });
     }
   } catch (error) {
     return handleApiError(error);
@@ -518,6 +559,20 @@ export async function POST(request: NextRequest) {
       loaded_advance_local: loadedAdvanceLocal,
       remaining_loading_balance: remainingLoadingBalance,
       local_currency: localCurrency,
+      // Phase 3 — Transportation.
+      transport_mode: body.transportMode ?? null,
+      transport_company: body.transportCompany ?? null,
+      vehicle_no: body.vehicleNo ?? null,
+      truck_id: body.truckId ?? null,
+      driver_name: body.driverName ?? null,
+      driver_mobile: body.driverMobile ?? null,
+      shipping_line: body.shippingLine ?? null,
+      transport_reference: body.transportReference ?? null,
+      departure_date: body.departureDate || null,
+      expected_arrival_date: body.expectedArrivalDate || null,
+      transport_expense_amount: body.transportExpenseAmount,
+      transport_expense_currency: body.transportExpenseCurrency,
+      transport_remarks: body.transportRemarks ?? null,
       created_by: session.userId
     };
 
@@ -528,6 +583,28 @@ export async function POST(request: NextRequest) {
         .select("id, loading_record_no")
         .single()
     );
+
+    void syncRecordTranslations({
+      table: "purchase_loading_records",
+      recordId: (inserted as any).id,
+      record: payload,
+      originalLanguage: "en",
+      actorId: session.userId
+    });
+
+    // Transportation expense reuses the existing purchase expense trail — no new posting engine.
+    if (body.transportExpenseAmount > 0 && body.purchaseOrderId) {
+      await safeInsertPurchaseOrderExpenses(supabase, [{
+        purchase_order_id: body.purchaseOrderId,
+        expense_type: "transport",
+        description: `Transport (${body.transportMode || "unspecified mode"}) for loading ${loadingRecordNo}`,
+        expense_currency: body.transportExpenseCurrency,
+        exchange_rate: orderExchangeRate || 1,
+        amount_original: body.transportExpenseAmount,
+        amount_local: body.transportExpenseAmount * (orderExchangeRate || 1),
+        amount_usd: body.transportExpenseCurrency === "USD" ? body.transportExpenseAmount : 0
+      }]);
+    }
 
     await writeAuditLog({
       action: "create",

@@ -199,7 +199,15 @@ export const TRANSLATABLE_FIELDS: Record<string, TranslatableField[]> = {
     { field: "name", mode: "translate" },
     { field: "description", mode: "translate" },
   ],
-  purchase_loading_records: [{ field: "carrier_name", mode: "transliterate" }],
+  purchase_loading_records: [
+    { field: "carrier_name", mode: "transliterate" },
+    // Country-to-Country Purchase — Transportation & Receiving.
+    { field: "transport_company", mode: "transliterate" },
+    { field: "driver_name", mode: "transliterate" },
+    { field: "shipping_line", mode: "transliterate" },
+    { field: "transport_remarks", mode: "translate" },
+    { field: "receiving_remarks", mode: "translate" },
+  ],
   purchase_order_items: [
     { field: "goods_name", mode: "translate" },
     { field: "brand", mode: "translate" },

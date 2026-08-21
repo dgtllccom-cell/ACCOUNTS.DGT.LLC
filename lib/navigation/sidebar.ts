@@ -559,7 +559,7 @@ export const sidebarTree: SidebarNode[] = [
           {
             key: "country-branch-purchase",
             labelKey: "nav.country_branch_purchase",
-            href: "/dashboard/purchase/local-purchase-journal-report" as Route
+            href: "/dashboard/purchase/new-purchase-booking-order" as Route
           },
           {
             key: "country-local-purchase",
@@ -574,7 +574,7 @@ export const sidebarTree: SidebarNode[] = [
           {
             key: "country-loading",
             labelKey: "nav.country_loading",
-            href: "/dashboard/purchase/loading-form" as Route
+            href: "/dashboard/purchase/purchase-loading-records" as Route
           }
         ]
       }

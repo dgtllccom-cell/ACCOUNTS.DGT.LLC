@@ -3,7 +3,7 @@ import { z } from "zod";
 import { apiOk, apiError, handleApiError } from "@/lib/api/response";
 import { purchaseOrderUpdateSchema, uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
-import { authorizeApiScope } from "@/lib/api/scope-middleware";
+import { authorizeApiScope, authorizeApiScopeEither } from "@/lib/api/scope-middleware";
 import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { revertOrderBookingTransfer, revertAllOrderPayments } from "@/lib/services/purchase-payment-reversal";
@@ -78,12 +78,21 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
           })()
         );
 
-    authorizeApiScope(session, {
+    // Dual-scope: a Country Purchase is visible to its source (purchasing) branch OR its
+    // destination (receiving) branch — see lib/api/scope-middleware.ts authorizeApiScopeEither.
+    authorizeApiScopeEither(session, {
       resource: "purchases",
       action: "read",
-      countryId: (row as any)?.country_id ?? null,
-      countryBranchId: (row as any)?.country_branch_id ?? null,
-      cityBranchId: (row as any)?.city_branch_id ?? null
+      source: {
+        countryId: (row as any)?.country_id ?? null,
+        countryBranchId: (row as any)?.country_branch_id ?? null,
+        cityBranchId: (row as any)?.city_branch_id ?? null
+      },
+      destination: {
+        countryId: (row as any)?.dest_country_id ?? null,
+        countryBranchId: (row as any)?.dest_country_branch_id ?? null,
+        cityBranchId: (row as any)?.dest_city_branch_id ?? null
+      }
     });
 
     const translationRows = getDbUrl()
@@ -856,14 +865,32 @@ export async function DELETE(request: NextRequest, context: { params: Promise<{ 
     const params = paramsSchema.parse(await context.params);
 
     const supabase = (await createApiSupabaseClient()) as any;
-    const row = await requireSupabaseData(
-      supabase
-        .from("purchase_orders")
-        .select("id, purchase_order_no, country_id, country_branch_id, city_branch_id, ledger_posting_status, payment_status")
-        .eq("id", params.id)
-        .is("deleted_at", null)
-        .maybeSingle()
-    );
+    // Direct-Postgres first: the Supabase client's reads are RLS-gated on auth.uid(), which is
+    // always NULL under the temp-session bootstrap login, so this SELECT can silently return no
+    // row even for an order that genuinely exists (same class of bug already worked around
+    // elsewhere in this codebase, e.g. app/api/erp/roznamcha/route.ts).
+    const row = getDbUrl()
+      ? await withLocalPg(async (sql) => {
+          const rows = await sql`
+            select id, purchase_order_no, country_id, country_branch_id, city_branch_id, ledger_posting_status, payment_status
+            from purchase_orders
+            where id = ${params.id}::uuid and deleted_at is null
+            limit 1
+          `;
+          return rows[0] ?? null;
+        })
+      : await requireSupabaseData(
+          supabase
+            .from("purchase_orders")
+            .select("id, purchase_order_no, country_id, country_branch_id, city_branch_id, ledger_posting_status, payment_status")
+            .eq("id", params.id)
+            .is("deleted_at", null)
+            .maybeSingle()
+        );
+
+    if (!row) {
+      return apiError("NOT_FOUND", "Purchase order not found.", 404);
+    }
 
     // Explicitly require super_admin or country_admin for deletion
     if (!session.isSuperAdmin && !session.roles?.includes("super_admin") && !session.roles?.includes("country_admin")) {
