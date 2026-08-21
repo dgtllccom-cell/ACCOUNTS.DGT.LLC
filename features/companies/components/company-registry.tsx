@@ -49,165 +49,12 @@ export type CompanyRegistryItem = {
   raw?: CompanyRow;
 };
 
-// Mock fallback data matching the reference screenshot exactly when DB is empty
-const INITIAL_DEMO_COMPANIES: CompanyRegistryItem[] = [
-  {
-    id: "comp-1",
-    accountNo: "1001001",
-    consortium: "Al-Razi Consortium",
-    branchRules: "Multi Branch Allowed",
-    accountName: "Al-Razi Trading LLC",
-    companiesCount: 5,
-    contractsCount: 8,
-    primaryContact: "+971 50 123 4567",
-    email: "info@alrazi.ae",
-    country: "UAE",
-    state: "Dubai",
-    city: "Dubai",
-    address: "Business Bay, Tower 4, Suite 1201"
-  },
-  {
-    id: "comp-2",
-    accountNo: "1001002",
-    consortium: "Ghani Group",
-    branchRules: "Branch by Country",
-    accountName: "Ghani International",
-    companiesCount: 6,
-    contractsCount: 10,
-    primaryContact: "+92 300 1234567",
-    email: "contact@ghani.com.pk",
-    country: "Pakistan",
-    state: "Punjab",
-    city: "Lahore",
-    address: "Gulberg III, Main Boulevard"
-  },
-  {
-    id: "comp-3",
-    accountNo: "1001003",
-    consortium: "Shahbaz Consortium",
-    branchRules: "Single Country Only",
-    accountName: "Shahbaz Industries Ltd.",
-    companiesCount: 4,
-    contractsCount: 6,
-    primaryContact: "+92 321 9876543",
-    email: "info@shahbaz.com",
-    country: "Pakistan",
-    state: "Sindh",
-    city: "Karachi",
-    address: "SITE Industrial Area"
-  },
-  {
-    id: "comp-4",
-    accountNo: "1001004",
-    consortium: "Damaan Group",
-    branchRules: "All Branches Allowed",
-    accountName: "Damaan Business Group",
-    companiesCount: 7,
-    contractsCount: 12,
-    primaryContact: "+971 55 765 4321",
-    email: "info@damaan.com",
-    country: "UAE",
-    state: "Dubai",
-    city: "Deira Hub",
-    address: "Al Maktoum Road"
-  },
-  {
-    id: "comp-5",
-    accountNo: "1001005",
-    consortium: "Iqbal Consortium",
-    branchRules: "City Branch Rule",
-    accountName: "Iqbal Corporation",
-    companiesCount: 3,
-    contractsCount: 5,
-    primaryContact: "+92 333 1112223",
-    email: "admin@iqbalcorp.com",
-    country: "Pakistan",
-    state: "KPK",
-    city: "Peshawar",
-    address: "University Road"
-  },
-  {
-    id: "comp-6",
-    accountNo: "1001006",
-    consortium: "Khan Brothers",
-    branchRules: "Branch by Country",
-    accountName: "Khan Brothers LLC",
-    companiesCount: 5,
-    contractsCount: 9,
-    primaryContact: "+971 52 654 7890",
-    email: "info@khanbrothers.ae",
-    country: "UAE",
-    state: "Sharjah",
-    city: "Sharjah",
-    address: "Industrial Area 3"
-  },
-  {
-    id: "comp-7",
-    accountNo: "1001007",
-    consortium: "Sial Traders",
-    branchRules: "Multi Branch Allowed",
-    accountName: "Sial Traders International",
-    companiesCount: 2,
-    contractsCount: 4,
-    primaryContact: "+92 344 5556677",
-    email: "contact@sialtraders.com",
-    country: "Pakistan",
-    state: "Punjab",
-    city: "Sialkot",
-    address: "Kashmir Road"
-  },
-  {
-    id: "comp-8",
-    accountNo: "1001008",
-    consortium: "Malik Enterprises",
-    branchRules: "All Branches Allowed",
-    accountName: "Malik Enterprises Ltd.",
-    companiesCount: 6,
-    contractsCount: 11,
-    primaryContact: "+92 300 7654321",
-    email: "info@malikent.com",
-    country: "Pakistan",
-    state: "Islamabad",
-    city: "Islamabad",
-    address: "Blue Area, G-7"
-  },
-  {
-    id: "comp-9",
-    accountNo: "1001009",
-    consortium: "Global Links",
-    branchRules: "Single Country Only",
-    accountName: "Global Links FZCO",
-    companiesCount: 4,
-    contractsCount: 7,
-    primaryContact: "+971 56 987 1234",
-    email: "info@globallinks.ae",
-    country: "UAE",
-    state: "Dubai",
-    city: "JAFZA",
-    address: "Jebel Ali Free Zone"
-  },
-  {
-    id: "comp-10",
-    accountNo: "1001010",
-    consortium: "Future Vision",
-    branchRules: "City Branch Rule",
-    accountName: "Future Vision Group",
-    companiesCount: 8,
-    contractsCount: 15,
-    primaryContact: "+92 311 2223344",
-    email: "info@futurevision.com",
-    country: "Pakistan",
-    state: "Punjab",
-    city: "Rawalpindi",
-    address: "Saddar Cantt"
-  }
-];
-
 export function CompanyRegistry() {
   const router = useRouter();
 
   const [companies, setCompanies] = useState<CompanyRegistryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filters
@@ -223,40 +70,38 @@ export function CompanyRegistry() {
   const [page, setPage] = useState(1);
   const pageSize = 10;
 
-  // Load Companies from DB or use standard demo set
+  // Load Companies from DB. Live data only — no demo/fallback records.
   const loadCompaniesFromDb = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const res: any = await apiGet("/api/erp/companies");
-      const rawList: any[] = Array.isArray(res?.companies) 
-        ? res.companies 
-        : Array.isArray(res?.data?.companies) 
-        ? res.data.companies 
+      const rawList: any[] = Array.isArray(res?.companies)
+        ? res.companies
+        : Array.isArray(res?.data?.companies)
+        ? res.data.companies
         : [];
 
-      if (rawList.length > 0) {
-        const mapped: CompanyRegistryItem[] = rawList.map((c: any, i: number) => ({
-          id: c.id,
-          accountNo: `10010${String(i + 1).padStart(2, "0")}`,
-          consortium: c.owner_name ? `${c.owner_name} Group` : "Standard Consortium",
-          branchRules: "Multi Branch Allowed",
-          accountName: c.name || "Company Account",
-          companiesCount: 1,
-          contractsCount: 2,
-          primaryContact: (c.contacts && c.contacts[0]?.value) || "+971 50 000 0000",
-          email: `${(c.name || "info").toLowerCase().replace(/[^a-z0-9]/g, "")}@company.dgt.llc`,
-          country: c.country_name || "Pakistan",
-          state: c.state_name || "Punjab",
-          city: c.city_name || "Karachi",
-          address: c.address || "Main Commercial Area",
-          raw: c
-        }));
-        setCompanies(mapped);
-      } else {
-        setCompanies(INITIAL_DEMO_COMPANIES);
-      }
-    } catch (e) {
-      setCompanies(INITIAL_DEMO_COMPANIES);
+      const mapped: CompanyRegistryItem[] = rawList.map((c: any, i: number) => ({
+        id: c.id,
+        accountNo: `10010${String(i + 1).padStart(2, "0")}`,
+        consortium: c.owner_name ? `${c.owner_name} Group` : "Standard Consortium",
+        branchRules: "Multi Branch Allowed",
+        accountName: c.name || "Company Account",
+        companiesCount: 1,
+        contractsCount: 2,
+        primaryContact: (c.contacts && c.contacts[0]?.value) || "+971 50 000 0000",
+        email: `${(c.name || "info").toLowerCase().replace(/[^a-z0-9]/g, "")}@company.dgt.llc`,
+        country: c.country_name || "Pakistan",
+        state: c.state_name || "Punjab",
+        city: c.city_name || "Karachi",
+        address: c.address || "Main Commercial Area",
+        raw: c
+      }));
+      setCompanies(mapped);
+    } catch (e: any) {
+      setCompanies([]);
+      setLoadError(e?.message || "Failed to load company registry");
     } finally {
       setLoading(false);
     }
@@ -340,7 +185,12 @@ export function CompanyRegistry() {
 
   return (
     <div className="space-y-6 text-slate-900 dark:text-slate-100 pb-16">
-      
+      {loadError ? (
+        <div role="alert" className="rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-700 dark:text-rose-300">
+          Live company registry data could not be loaded. {loadError}
+        </div>
+      ) : null}
+
       {/* ── TOP HEADER MATCHING SCREENSHOT 1 ── */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white dark:bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 shadow-xs">
         {/* Left: Icon + Title */}
