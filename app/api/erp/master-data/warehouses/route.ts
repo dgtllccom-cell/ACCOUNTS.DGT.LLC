@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { withLocalPg } from "@/lib/db/local-postgres";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 
@@ -17,13 +18,22 @@ export async function GET() {
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "warehouses", action: "read" });
-    const supabase = createSupabaseAdminClient();
-    let q = supabase.from("warehouses").select(COLS).is("deleted_at", null).order("warehouse_name", { ascending: true });
-    if (!session.isSuperAdmin && session.countryIds && session.countryIds.length > 0) {
-      q = q.or(`country_id.in.(${session.countryIds.join(",")}),country_id.is.null`);
-    }
-    const { data, error } = await q;
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    // withLocalPg, not the RLS-gated Supabase admin client: SUPABASE_SERVICE_ROLE_KEY
+    // resolves to the anon key in this environment, so RLS silently filters this list to
+    // zero rows even for a super-admin session — same root cause fixed elsewhere this pass.
+    const countryIds = !session.isSuperAdmin ? session.countryIds : null;
+    const data = await withLocalPg(async (sql) => {
+      return sql`
+        select id, country_id, state_province_id, district_id, city_id, area_id, owner_name,
+               warehouse_code, warehouse_name, warehouse_type, full_address, contact_number,
+               status, description, is_active, created_at, updated_at
+        from warehouses
+        where deleted_at is null
+          ${countryIds && countryIds.length > 0 ? sql`and (country_id = ANY(${countryIds}::uuid[]) or country_id is null)` : sql``}
+        order by warehouse_name asc
+      `;
+    });
     return NextResponse.json({ warehouses: data || [] });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

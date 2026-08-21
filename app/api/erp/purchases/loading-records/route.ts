@@ -8,8 +8,8 @@ import { authorizeApiScope, enforceScopeFilter } from "@/lib/api/scope-middlewar
 import { requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
 import { requireErpSession } from "@/lib/auth/session";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { withLocalPg } from "@/lib/db/local-postgres";
 import { resolvePurchaseAmounts, resolvePurchaseLoadingSummary, validatePurchaseLoadingEntries } from "@/lib/services/purchase-calculation-service";
-import { safeInsertPurchaseOrderExpenses } from "@/lib/services/purchase-table-manager";
 import { syncRecordTranslations } from "@/lib/i18n/record-translation-sync";
 import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
@@ -244,40 +244,69 @@ export async function GET(request: NextRequest) {
     const supabase = createSupabaseAdminClient() as any;
     const scopePayload = await buildScopePayload(supabase, session);
     const hasDirectCityScope = !session.isSuperAdmin && session.assignments.some((assignment) => Boolean(assignment.cityBranchId));
-    let recordsQuery = supabase
-      .from("purchase_loading_records")
-      .select(
-        "id, loading_record_no, purchase_order_id, purchase_order_no, container_number, container_type, loading_status, loaded_at, loading_location, receiving_location, shipment_status, carrier_name, remarks, report_payload, country_id, country_branch_id, city_branch_id, loaded_quantity, total_quantity, loading_percentage, loaded_purchase_amount, loaded_advance_amount, purchase_currency, exchange_rate, loaded_purchase_local, loaded_advance_local, payment_made, remaining_loading_balance, local_currency, posted_to_journal, journal_entry_id, journal_posted_at, created_at, transport_mode, transport_company, vehicle_no, truck_id, driver_name, driver_mobile, shipping_line, transport_reference, departure_date, expected_arrival_date, actual_arrival_date, transport_expense_amount, transport_expense_currency, transport_remarks, received_quantity, received_at, received_by, receiving_warehouse_id, receiving_goods_id, receiving_remarks, countries(name, iso2), country_branches(name, code), city_branches(name, code, city_name), purchase_orders(form_data, advance_paid, remaining_due, order_total, dest_country_id, dest_country_branch_id, dest_city_branch_id, purchase_order_payments(amount, exchange_rate, reference_no, narration, source_reference_no))"
-      )
-      .is("deleted_at", null)
-      .order("created_at", { ascending: false });
 
-    // Use unified scope enforcement
-    recordsQuery = enforceScopeFilter(recordsQuery, session, {
-      countryId: query.countryId,
-      countryBranchId: query.countryBranchId,
-      cityBranchId: query.cityBranchId
-    });
-    if (hasDirectCityScope && !query.cityBranchId && session.cityBranchIds.length > 0) {
-      recordsQuery = recordsQuery.in("city_branch_id", session.cityBranchIds);
-    }
-
-    if (query.status) recordsQuery = recordsQuery.eq("loading_status", query.status);
-    if (query.q) {
-      const term = query.q.replace(/[%_]/g, "");
-      recordsQuery = recordsQuery.or(`loading_record_no.ilike."%${term}%",container_number.ilike."%${term}%",purchase_order_no.ilike."%${term}%",loading_location.ilike."%${term}%",receiving_location.ilike."%${term}%"`);
-    }
-
-    const { data, error } = await recordsQuery.limit(query.limit);
-    if (error) {
-      const message = error.message || "Purchase loading records are not available.";
-      if (message.includes("purchase_loading_records") || message.includes("schema cache")) {
-        return apiOk(emptyPayload(session, "Purchase Loading Records database table is not migrated yet."));
-      }
-      throw new Error(message);
-    }
-
-    const records = data ?? [];
+    // Reads go through withLocalPg, not the RLS-gated Supabase admin client: in this
+    // environment SUPABASE_SERVICE_ROLE_KEY resolves to the same value as the anon key (no
+    // real service-role secret configured), so RLS silently filters purchase_loading_records
+    // SELECTs down to zero rows even for a super-admin session — same root cause as the
+    // purchase-orders DELETE bug fixed earlier, same fix. enforceScopeFilter's logic is
+    // replicated by hand below (explicit query-param scope first, else session scope for
+    // non-super-admins, else unrestricted for super admins).
+    const term = query.q ? query.q.replace(/[%_]/g, "") : null;
+    const records: any[] = (await withLocalPg(async (sql) => {
+      return sql`
+        select
+          plr.id, plr.loading_record_no, plr.purchase_order_id, plr.purchase_order_no,
+          plr.container_number, plr.container_type, plr.loading_status, plr.loaded_at,
+          plr.loading_location, plr.receiving_location, plr.shipment_status, plr.carrier_name,
+          plr.remarks, plr.report_payload, plr.country_id, plr.country_branch_id, plr.city_branch_id,
+          plr.loaded_quantity, plr.total_quantity, plr.loading_percentage, plr.loaded_purchase_amount,
+          plr.loaded_advance_amount, plr.purchase_currency, plr.exchange_rate, plr.loaded_purchase_local,
+          plr.loaded_advance_local, plr.payment_made, plr.remaining_loading_balance, plr.local_currency,
+          plr.posted_to_journal, plr.journal_entry_id, plr.journal_posted_at, plr.created_at,
+          plr.transport_mode, plr.transport_company, plr.vehicle_no, plr.truck_id, plr.driver_name,
+          plr.driver_mobile, plr.shipping_line, plr.transport_reference, plr.departure_date,
+          plr.expected_arrival_date, plr.actual_arrival_date, plr.transport_expense_amount,
+          plr.transport_expense_currency, plr.transport_remarks, plr.received_quantity, plr.received_at,
+          plr.received_by, plr.receiving_warehouse_id, plr.receiving_goods_id, plr.receiving_remarks,
+          case when c.id is not null then jsonb_build_object('name', c.name, 'iso2', c.iso2) else null end as countries,
+          case when cb.id is not null then jsonb_build_object('name', cb.name, 'code', cb.code) else null end as country_branches,
+          case when cib.id is not null then jsonb_build_object('name', cib.name, 'code', cib.code, 'city_name', cib.city_name) else null end as city_branches,
+          case when po.id is not null then jsonb_build_object(
+            'form_data', po.form_data, 'advance_paid', po.advance_paid, 'remaining_due', po.remaining_due,
+            'order_total', po.order_total, 'dest_country_id', po.dest_country_id,
+            'dest_country_branch_id', po.dest_country_branch_id, 'dest_city_branch_id', po.dest_city_branch_id,
+            'purchase_order_payments', coalesce(
+              (select jsonb_agg(jsonb_build_object('amount', pop.amount, 'exchange_rate', pop.exchange_rate, 'reference_no', pop.reference_no, 'narration', pop.narration, 'source_reference_no', pop.source_reference_no))
+               from purchase_order_payments pop where pop.purchase_order_id = po.id and pop.deleted_at is null),
+              '[]'::jsonb
+            )
+          ) else null end as purchase_orders
+        from purchase_loading_records plr
+        left join countries c on c.id = plr.country_id
+        left join country_branches cb on cb.id = plr.country_branch_id
+        left join city_branches cib on cib.id = plr.city_branch_id
+        left join purchase_orders po on po.id = plr.purchase_order_id
+        where plr.deleted_at is null
+          ${query.cityBranchId ? sql`and plr.city_branch_id = ${query.cityBranchId}::uuid`
+            : query.countryBranchId ? sql`and plr.country_branch_id = ${query.countryBranchId}::uuid`
+            : query.countryId ? sql`and plr.country_id = ${query.countryId}::uuid`
+            : sql``}
+          ${!session.isSuperAdmin && session.cityBranchIds.length > 0
+            ? sql`and (plr.city_branch_id = ANY(${session.cityBranchIds}::uuid[]) or plr.city_branch_id is null) ${session.countryIds.length > 0 ? sql`and plr.country_id = ANY(${session.countryIds}::uuid[])` : sql``}`
+            : !session.isSuperAdmin && session.countryBranchIds.length > 0
+            ? sql`and plr.country_branch_id = ANY(${session.countryBranchIds}::uuid[])`
+            : !session.isSuperAdmin && session.countryIds.length > 0
+            ? sql`and plr.country_id = ANY(${session.countryIds}::uuid[])`
+            : !session.isSuperAdmin
+            ? sql`and false`
+            : sql``}
+          ${query.status ? sql`and plr.loading_status = ${query.status}` : sql``}
+          ${term ? sql`and (plr.loading_record_no ilike ${"%" + term + "%"} or plr.container_number ilike ${"%" + term + "%"} or plr.purchase_order_no ilike ${"%" + term + "%"} or plr.loading_location ilike ${"%" + term + "%"} or plr.receiving_location ilike ${"%" + term + "%"})` : sql``}
+        order by plr.created_at desc
+        limit ${query.limit}
+      `;
+    })) ?? [];
 
     // ── 2. Fetch approved purchase orders with advance paid to ensure all approved bookings show automatically in loading queue ──
     try {
@@ -427,103 +456,115 @@ export async function POST(request: NextRequest) {
     let localCurrency = "AED";
 
     if (body.purchaseOrderId) {
-      const { data: po } = await supabase
-        .from("purchase_orders")
-        .select("id, order_total, advance_paid, remaining_due, remaining_paid, credit_amount, currency_code, exchange_rate, form_data, payment_status")
-        .eq("id", body.purchaseOrderId)
-        .single();
+      // Mutating reads/writes go through withLocalPg, not the RLS-gated Supabase admin
+      // client: in this environment SUPABASE_SERVICE_ROLE_KEY resolves to the same value
+      // as the anon key (no real service-role secret configured), so RLS blocks writes
+      // here even for a super-admin session — same root cause as the purchase-orders
+      // DELETE bug fixed earlier, same fix. Row-locks the PO for the duration so two
+      // concurrent loading-record creates can't both under-count persistedLoadedQuantity
+      // and jointly over-load the order.
+      const purchaseOrderId = body.purchaseOrderId;
+      const poResult = await withLocalPg(async (sql) => {
+        return sql.begin(async (tx) => {
+          const poRows = await tx`
+            select id, order_total, advance_paid, remaining_due, remaining_paid, credit_amount,
+                   currency_code, exchange_rate, form_data, payment_status
+            from purchase_orders where id = ${purchaseOrderId}::uuid
+            for update
+          `;
+          const po = poRows[0];
+          if (!po) return null;
 
-      if (po) {
-        // Use unified calculation service
-        const amounts = resolvePurchaseAmounts(po as any);
-        // Update workflow on the purchase order
-        const formData = po.form_data || {};
-        const workflow = formData.workflow || {};
+          const amounts = resolvePurchaseAmounts(po as any);
+          const formData = po.form_data || {};
+          const workflow = formData.workflow || {};
 
-        const goodsEntries = Array.isArray(formData.goodsEntries) ? formData.goodsEntries : [];
-        const goodsQuantity = goodsEntries.reduce((sum: number, item: any) => sum + Number(item.qtyNo || item.quantity || 0), 0);
-        const totalContainers = Number(workflow.totalContainers || formData.form?.containerCount || formData.totals?.totalContainers || 0);
-        const totalQty = Number(workflow.totalQuantity || formData.totals?.totalQuantity || goodsQuantity || formData.form?.quantity || 0);
-        const reportGoodsEntries = Array.isArray((body.reportPayload as any)?.goodsEntries) ? (body.reportPayload as any).goodsEntries : [];
-        const normalizedReportEntryCount = Number((body.reportPayload as any)?.entryCount ?? body.loadedContainers ?? reportGoodsEntries.length ?? 1);
-        const currentLoadedQuantity = Number(body.loadedQuantity || reportGoodsEntries.reduce((sum: number, item: any) => sum + Number(item.quantityNo || item.loadedQuantity || item.loadingQuantity || item.quantity || 0), 0));
-        const existingLoadingRows = await supabase
-          .from("purchase_loading_records")
-          .select("loaded_quantity, report_payload")
-          .eq("purchase_order_id", body.purchaseOrderId)
-          .is("deleted_at", null);
-        if (existingLoadingRows.error) {
-          throw new Error(existingLoadingRows.error.message);
-        }
-        const persistedLoadedQuantity = (existingLoadingRows.data ?? []).reduce((sum: number, row: any) => {
-          return sum + Number(row?.loaded_quantity || row?.report_payload?.loadedQuantity || row?.report_payload?.loadingQuantity || 0);
-        }, 0);
+          const goodsEntries = Array.isArray(formData.goodsEntries) ? formData.goodsEntries : [];
+          const goodsQuantity = goodsEntries.reduce((sum: number, item: any) => sum + Number(item.qtyNo || item.quantity || 0), 0);
+          const totalContainers = Number(workflow.totalContainers || formData.form?.containerCount || formData.totals?.totalContainers || 0);
+          const totalQty = Number(workflow.totalQuantity || formData.totals?.totalQuantity || goodsQuantity || formData.form?.quantity || 0);
+          const reportGoodsEntries = Array.isArray((body.reportPayload as any)?.goodsEntries) ? (body.reportPayload as any).goodsEntries : [];
+          const normalizedReportEntryCount = Number((body.reportPayload as any)?.entryCount ?? body.loadedContainers ?? reportGoodsEntries.length ?? 1);
+          const currentLoadedQuantity = Number(body.loadedQuantity || reportGoodsEntries.reduce((sum: number, item: any) => sum + Number(item.quantityNo || item.loadedQuantity || item.loadingQuantity || item.quantity || 0), 0));
 
-        const validatedBundle = reportGoodsEntries.length > 0
-          ? validatePurchaseLoadingEntries({
-              entryCount: normalizedReportEntryCount,
-              entries: reportGoodsEntries,
-              totalQuantity: totalQty,
-              previousLoadedQuantity: persistedLoadedQuantity
-            })
-          : null;
+          const existingLoadingRows = await tx`
+            select loaded_quantity, report_payload from purchase_loading_records
+            where purchase_order_id = ${purchaseOrderId}::uuid and deleted_at is null
+          `;
+          const persistedLoadedQuantity = existingLoadingRows.reduce((sum: number, row: any) => {
+            return sum + Number(row?.loaded_quantity || row?.report_payload?.loadedQuantity || row?.report_payload?.loadingQuantity || 0);
+          }, 0);
 
-        const entryLoadedQuantity = validatedBundle?.loadedQuantity ?? currentLoadedQuantity;
-        const newLoadedQuantity = persistedLoadedQuantity + entryLoadedQuantity;
+          const validatedBundle = reportGoodsEntries.length > 0
+            ? validatePurchaseLoadingEntries({
+                entryCount: normalizedReportEntryCount,
+                entries: reportGoodsEntries,
+                totalQuantity: totalQty,
+                previousLoadedQuantity: persistedLoadedQuantity
+              })
+            : null;
 
-        if (newLoadedQuantity > totalQty) {
-          throw new Error("Loaded quantity exceeds the remaining purchase quantity.");
-        }
+          const entryLoadedQuantity = validatedBundle?.loadedQuantity ?? currentLoadedQuantity;
+          const newLoadedQuantity = persistedLoadedQuantity + entryLoadedQuantity;
 
-        const remainingContainers = Math.max(0, totalContainers - Number(body.loadedContainers || 1));
-        const remainingQuantity = Math.max(0, totalQty - newLoadedQuantity);
-        const summary = resolvePurchaseLoadingSummary(po as any, persistedLoadedQuantity, entryLoadedQuantity);
+          if (newLoadedQuantity > totalQty) {
+            throw new Error("Loaded quantity exceeds the remaining purchase quantity.");
+          }
 
-        totalQuantity = summary.totalQuantity;
-        loadingPercentage = Math.min(100, summary.totalQuantity > 0 ? (newLoadedQuantity / summary.totalQuantity) * 100 : 0);
-        loadedPurchaseAmount = summary.loadedPurchaseFC;
-        loadedAdvanceAmount = summary.loadedAdvanceFC;
-        purchaseCurrency = amounts.purchaseCurrency;
-        orderExchangeRate = amounts.exchangeRate;
-        loadedPurchaseLocal = summary.loadedPurchaseLC;
-        loadedAdvanceLocal = summary.loadedAdvanceLC;
-        remainingLoadingBalance = summary.remainingLoadingFC;
-        localCurrency = amounts.localCurrency;
+          const remainingContainers = Math.max(0, totalContainers - Number(body.loadedContainers || 1));
+          const remainingQuantity = Math.max(0, totalQty - newLoadedQuantity);
+          const summary = resolvePurchaseLoadingSummary(po as any, persistedLoadedQuantity, entryLoadedQuantity);
 
-        workflow.totalContainers = totalContainers;
-        workflow.loadedContainers = Number(body.loadedContainers || 1) + Number(workflow.loadedContainers || 0);
-        workflow.remainingContainers = remainingContainers;
+          workflow.totalContainers = totalContainers;
+          workflow.loadedContainers = Number(body.loadedContainers || 1) + Number(workflow.loadedContainers || 0);
+          workflow.remainingContainers = remainingContainers;
 
-        workflow.totalQuantity = totalQty;
-        workflow.loadedQuantity = newLoadedQuantity;
-        workflow.remainingQuantity = remainingQuantity;
-        workflow.stockStage = "remaining";
-        workflow.inventoryStatus = "Remaining Stock";
-        workflow.nextDestination = "Land Stock";
-        workflow.stockStatus = "RED";
+          workflow.totalQuantity = totalQty;
+          workflow.loadedQuantity = newLoadedQuantity;
+          workflow.remainingQuantity = remainingQuantity;
+          workflow.stockStage = "remaining";
+          workflow.inventoryStatus = "Remaining Stock";
+          workflow.nextDestination = "Land Stock";
+          workflow.stockStatus = "RED";
+          workflow.containerStatus = remainingContainers > 0 ? "Partially Loaded" : "Fully Loaded";
 
-        if (remainingContainers > 0) {
-           workflow.containerStatus = "Partially Loaded";
-        } else {
-           workflow.containerStatus = "Fully Loaded";
-        }
+          formData.workflow = workflow;
 
-        formData.workflow = workflow;
-        
-        const isPaid = po.payment_status === "completed" || po.remaining_due === 0;
-        
-        // Move to Finalized Purchase Orders automatically if paid and fully loaded
-        if (isPaid && remainingContainers === 0) {
-           workflow.lifecycleStatus = "Finalized Purchase Orders";
-        }
+          const isPaid = po.payment_status === "completed" || Number(po.remaining_due) === 0;
+          if (isPaid && remainingContainers === 0) {
+            workflow.lifecycleStatus = "Finalized Purchase Orders";
+          }
 
-        await supabase.from("purchase_orders").update({ 
-           form_data: formData
-        }).eq("id", body.purchaseOrderId);
+          await tx`update purchase_orders set form_data = ${JSON.stringify(formData)}::jsonb where id = ${purchaseOrderId}::uuid`;
 
-        if (validatedBundle) {
-          loadedQuantity = validatedBundle.loadedQuantity;
-        }
+          return {
+            totalQuantity: summary.totalQuantity,
+            loadingPercentage: Math.min(100, summary.totalQuantity > 0 ? (newLoadedQuantity / summary.totalQuantity) * 100 : 0),
+            loadedPurchaseAmount: summary.loadedPurchaseFC,
+            loadedAdvanceAmount: summary.loadedAdvanceFC,
+            purchaseCurrency: amounts.purchaseCurrency,
+            orderExchangeRate: amounts.exchangeRate,
+            loadedPurchaseLocal: summary.loadedPurchaseLC,
+            loadedAdvanceLocal: summary.loadedAdvanceLC,
+            remainingLoadingBalance: summary.remainingLoadingFC,
+            localCurrency: amounts.localCurrency,
+            loadedQuantity: validatedBundle ? validatedBundle.loadedQuantity : loadedQuantity
+          };
+        });
+      });
+
+      if (poResult) {
+        totalQuantity = poResult.totalQuantity;
+        loadingPercentage = poResult.loadingPercentage;
+        loadedPurchaseAmount = poResult.loadedPurchaseAmount;
+        loadedAdvanceAmount = poResult.loadedAdvanceAmount;
+        purchaseCurrency = poResult.purchaseCurrency;
+        orderExchangeRate = poResult.orderExchangeRate;
+        loadedPurchaseLocal = poResult.loadedPurchaseLocal;
+        loadedAdvanceLocal = poResult.loadedAdvanceLocal;
+        remainingLoadingBalance = poResult.remainingLoadingBalance;
+        localCurrency = poResult.localCurrency;
+        loadedQuantity = poResult.loadedQuantity;
       }
     }
 
@@ -576,13 +617,28 @@ export async function POST(request: NextRequest) {
       created_by: session.userId
     };
 
-    const inserted = await requireSupabaseData(
-      supabase
-        .from("purchase_loading_records")
-        .insert(payload)
-        .select("id, loading_record_no")
-        .single()
-    );
+    // Same RLS root cause as above — insert (and the transport-expense insert that reuses
+    // the existing purchase expense trail) via withLocalPg in one connection.
+    const insertResult = await withLocalPg(async (sql) => {
+      const rows = await sql`insert into purchase_loading_records ${sql(payload as any)} returning id, loading_record_no`;
+      if (body.transportExpenseAmount > 0 && body.purchaseOrderId) {
+        await sql`insert into purchase_order_expenses ${sql({
+          purchase_order_id: body.purchaseOrderId,
+          expense_type: "transport",
+          description: `Transport (${body.transportMode || "unspecified mode"}) for loading ${loadingRecordNo}`,
+          expense_currency: body.transportExpenseCurrency,
+          exchange_rate: orderExchangeRate || 1,
+          amount_original: body.transportExpenseAmount,
+          amount_local: body.transportExpenseAmount * (orderExchangeRate || 1),
+          amount_usd: body.transportExpenseCurrency === "USD" ? body.transportExpenseAmount : 0
+        } as any)}`;
+      }
+      return rows[0];
+    });
+    if (!insertResult) {
+      throw new Error("Database connection is not configured for loading-record creation.");
+    }
+    const inserted = insertResult;
 
     void syncRecordTranslations({
       table: "purchase_loading_records",
@@ -591,20 +647,6 @@ export async function POST(request: NextRequest) {
       originalLanguage: "en",
       actorId: session.userId
     });
-
-    // Transportation expense reuses the existing purchase expense trail — no new posting engine.
-    if (body.transportExpenseAmount > 0 && body.purchaseOrderId) {
-      await safeInsertPurchaseOrderExpenses(supabase, [{
-        purchase_order_id: body.purchaseOrderId,
-        expense_type: "transport",
-        description: `Transport (${body.transportMode || "unspecified mode"}) for loading ${loadingRecordNo}`,
-        expense_currency: body.transportExpenseCurrency,
-        exchange_rate: orderExchangeRate || 1,
-        amount_original: body.transportExpenseAmount,
-        amount_local: body.transportExpenseAmount * (orderExchangeRate || 1),
-        amount_usd: body.transportExpenseCurrency === "USD" ? body.transportExpenseAmount : 0
-      }]);
-    }
 
     await writeAuditLog({
       action: "create",

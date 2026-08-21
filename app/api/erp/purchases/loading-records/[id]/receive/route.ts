@@ -48,7 +48,7 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
           where plr.id = ${params.id}::uuid
             and plr.deleted_at is null
           limit 1
-          for update;
+          for update of plr;
         `;
         const record = rows[0];
         if (!record) throw new Error("Purchase loading record not found.");
