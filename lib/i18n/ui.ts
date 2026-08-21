@@ -420,6 +420,7 @@ export type UiKey =
   | "pc.search"
   | "pc.empty"
   | "pb.title"
+  | "pbrand.title"
   | "pb.code"
   | "pb.name"
   | "pb.description"
@@ -4554,7 +4555,7 @@ const en: Dict = {
   "pc.cancel": "Cancel",
   "pc.search": "Search categories...",
   "pc.empty": "No categories found",
-  "pb.title": "Product Brands",
+  "pbrand.title": "Product Brands",
   "pb.code": "Brand Code",
   "pb.name": "Brand Name",
   "pb.description": "Description",
@@ -6314,7 +6315,6 @@ const en: Dict = {
   "pb.drag_drop": "Drag & drop files here or click to browse",
 
   "pb.pdf": "PDF",
-  "pb.preview_report": "Preview Report",
   "common.unknown": "",
 
   "cpb.print_title": "COMPLETED PURCHASE BILLS REGISTER",
@@ -6690,7 +6690,6 @@ const ur: Dict = {
   "pb.save_draft": "مسودہ محفوظ کریں",
   "pb.accept_verify": "قبول اور تصدیق",
   "pb.register_order": "آرڈر درج کریں",
-  "pb.preview_report": "رپورٹ پریویو",
   "pb.shipping_location": "ترسیل اور مقام",
   "pb.loading_departure": "لوڈنگ / روانگی",
   "pb.receiving_arrival": "وصول / آمد",
@@ -8809,7 +8808,7 @@ const ur: Dict = {
   "pc.cancel": "منسوخ",
   "pc.search": "کیٹگری تلاش کریں...",
   "pc.empty": "کوئی کیٹگری نہیں ملی",
-  "pb.title": "پروڈکٹ برانڈز",
+  "pbrand.title": "پروڈکٹ برانڈز",
   "pb.code": "برانڈ کوڈ",
   "pb.name": "برانڈ نام",
   "pb.description": "تفصیل",
@@ -10329,7 +10328,6 @@ const ar: Dict = {
   "pb.save_draft": "حفظ المسودة",
   "pb.accept_verify": "قبول والتحقق",
   "pb.register_order": "تسجيل الطلب",
-  "pb.preview_report": "معاينة التقرير",
   "pb.shipping_location": "الشحن والموقع",
   "pb.loading_departure": "التحميل / المغادرة",
   "pb.receiving_arrival": "الاستلام / الوصول",
@@ -12451,7 +12449,7 @@ const ar: Dict = {
   "pc.cancel": "إلغاء",
   "pc.search": "بحث عن الفئات...",
   "pc.empty": "لا توجد فئات",
-  "pb.title": "علامات المنتج",
+  "pbrand.title": "علامات المنتج",
   "pb.code": "رمز العلامة",
   "pb.name": "اسم العلامة",
   "pb.description": "الوصف",
@@ -13967,7 +13965,6 @@ const fa: Dict = {
   "pb.save_draft": "ذخیره پیش‌نویس",
   "pb.accept_verify": "پذیرش و تأیید",
   "pb.register_order": "ثبت سفارش",
-  "pb.preview_report": "پیش‌نمایش گزارش",
   "pb.shipping_location": "حمل‌ونقل و مکان",
   "pb.loading_departure": "بارگیری / حرکت",
   "pb.receiving_arrival": "دریافت / ورود",
@@ -16091,7 +16088,7 @@ const fa: Dict = {
   "pc.cancel": "لغو",
   "pc.search": "جستجوی دسته‌ها...",
   "pc.empty": "دسته‌ای یافت نشد",
-  "pb.title": "برندهای محصول",
+  "pbrand.title": "برندهای محصول",
   "pb.code": "کد برند",
   "pb.name": "نام برند",
   "pb.description": "توضیحات",
@@ -17604,7 +17601,6 @@ const ps: Dict = {
   "pb.save_draft": "مسوده خوندي کړئ",
   "pb.accept_verify": "منل او تصدیق",
   "pb.register_order": "امر راجسټر کړئ",
-  "pb.preview_report": "راپور مخکتنه",
   "pb.shipping_location": "لیږد او موقع",
   "pb.loading_departure": "بارول / حرکت",
   "pb.receiving_arrival": "اخیستل / رسیدل",
@@ -19721,7 +19717,7 @@ const ps: Dict = {
   "pc.cancel": "لغوه کول",
   "pc.search": "د کټګوریو لټون...",
   "pc.empty": "هیڅ کټګوري ونه موندل شوه",
-  "pb.title": "د محصول برنډونه",
+  "pbrand.title": "د محصول برنډونه",
   "pb.code": "د برنډ کوډ",
   "pb.name": "د برنډ نوم",
   "pb.description": "تشریح",
