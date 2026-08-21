@@ -3517,15 +3517,15 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
         if (valid) creditLedgerId = ledgerId(valid) || "";
       }
 
+      // Do NOT guess a ledger here — picking an arbitrary ledger could silently post this
+      // payment against the wrong account. If the customer/payment-source ledger genuinely
+      // couldn't be resolved, fail loudly so the order's account link can be corrected.
       if (!isUuid(debitLedgerId) || !isUuid(creditLedgerId)) {
-        const validLedgers = ledgers.filter((l) => isUuid(ledgerId(l) || ""));
-        if (validLedgers.length >= 2) {
-          if (!isUuid(debitLedgerId)) debitLedgerId = ledgerId(validLedgers[0]) || "";
-          if (!isUuid(creditLedgerId)) creditLedgerId = ledgerId(validLedgers[1]) || "";
-        } else if (validLedgers.length === 1) {
-          if (!isUuid(debitLedgerId)) debitLedgerId = ledgerId(validLedgers[0]) || "";
-          if (!isUuid(creditLedgerId)) creditLedgerId = ledgerId(validLedgers[0]) || "";
-        }
+        throw new Error(
+          !isUuid(creditLedgerId)
+            ? "Could not determine the customer account's ledger for this order. Please reselect the customer/sales account on this order and try again."
+            : "Could not determine the payment source (bank/cash) ledger. Please select a payment account and try again."
+        );
       }
       
       const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");

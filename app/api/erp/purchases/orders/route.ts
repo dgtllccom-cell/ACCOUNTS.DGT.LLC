@@ -511,10 +511,15 @@ export async function POST(request: NextRequest) {
       country_id: effective.countryId,
       country_branch_id: effective.countryBranchId,
       city_branch_id: effective.cityBranchId,
+      // Country-to-Country Purchase: optional destination scope, distinct from the purchasing
+      // scope above. Left null for a plain same-country purchase.
+      dest_country_id: body.destCountryId ?? null,
+      dest_country_branch_id: body.destCountryBranchId ?? null,
+      dest_city_branch_id: body.destCityBranchId ?? null,
       purchase_order_no: purchaseOrderNo,
       purchase_contract_no: body.purchaseContractNo?.trim() || null,
       supplier_company_id: body.supplierCompanyId ?? null,
-      
+
       purchase_currency: purchaseCurrency,
       payment_currency: paymentCurrency,
       currency_code: purchaseCurrency,

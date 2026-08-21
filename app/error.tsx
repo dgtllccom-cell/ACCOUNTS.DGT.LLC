@@ -51,21 +51,11 @@ export default function GlobalClientError({
                 const keys = await caches.keys();
                 for (const k of keys) await caches.delete(k);
               }
-              const msg = String(error?.message || error || "");
-              let targetRoute: string | null = null;
-              try {
-                const match = msg.match(/_next\/static\/chunks\/app(\/[^.\?]+?)(?:\/page|\/layout|\/route|-[a-f0-9]+|\.js)/i);
-                if (match && match[1]) {
-                  let r = match[1];
-                  if (r.endsWith("/page")) r = r.slice(0, -5);
-                  if (r.endsWith("/layout")) r = r.slice(0, -7);
-                  if (r.endsWith("/route")) r = r.slice(0, -6);
-                  targetRoute = r || "/dashboard";
-                }
-              } catch (e) {}
-              const dest = targetRoute || window.location.pathname;
-              const cleanDest = dest.replace(/\/page$/, "");
-              window.location.replace(cleanDest + (cleanDest.includes("?") ? "&" : "?") + "_v=" + now);
+              const currentPath = window.location.pathname;
+              const currentSearch = window.location.search || '';
+              const cleanSearch = currentSearch.replace(/[\?&]_v=\d+/, '').replace(/^&/, '');
+              const finalUrl = currentPath + (cleanSearch ? (cleanSearch.charAt(0) === '?' ? cleanSearch : '?' + cleanSearch) + '&' : '?') + '_v=' + now;
+              window.location.replace(finalUrl);
             }
           }
         } catch {}

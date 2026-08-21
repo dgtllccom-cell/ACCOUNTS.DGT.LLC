@@ -5,15 +5,22 @@ import { COUNTRY_BRANCH_ACCESS_REGISTER } from "@/lib/repositories/access-regist
 
 export async function GET(request: NextRequest) {
   try {
-    const pdfPath = path.join(process.cwd(), "public", "reports", "COUNTRY_BRANCH_LOGIN_ACCESS_REGISTER.pdf");
-    const rootPdfPath = path.join(process.cwd(), "COUNTRY_BRANCH_LOGIN_ACCESS_REGISTER.pdf");
+    const candidatePaths = [
+      path.join(process.cwd(), "public", "reports", "COUNTRY_BRANCH_LOGIN_ACCESS_REGISTER.pdf"),
+      path.join(process.cwd(), "public", "COUNTRY_BRANCH_LOGIN_ACCESS_REGISTER.pdf"),
+      path.join(process.cwd(), "COUNTRY_BRANCH_LOGIN_ACCESS_REGISTER.pdf"),
+      path.join(process.cwd(), "reports", "COUNTRY_BRANCH_LOGIN_ACCESS_REGISTER.pdf")
+    ];
 
-    let finalPath = pdfPath;
-    if (!fs.existsSync(finalPath) && fs.existsSync(rootPdfPath)) {
-      finalPath = rootPdfPath;
+    let finalPath: string | null = null;
+    for (const p of candidatePaths) {
+      if (fs.existsSync(p)) {
+        finalPath = p;
+        break;
+      }
     }
 
-    if (fs.existsSync(finalPath)) {
+    if (finalPath) {
       const fileBuffer = fs.readFileSync(finalPath);
       return new NextResponse(fileBuffer, {
         status: 200,

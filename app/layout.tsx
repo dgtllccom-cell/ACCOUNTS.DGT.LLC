@@ -105,34 +105,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           if ('serviceWorker' in navigator) {
             navigator.serviceWorker.getRegistrations().then(function(regs) { regs.forEach(function(r) { r.unregister(); }); }).catch(function() {});
           }
-          // NOTE: this runs inside a dangerouslySetInnerHTML template literal, where a JS
-          // template literal strips "\/" down to "/". A regex literal here (e.g.
-          // /_next\/static\/chunks\/.../) therefore gets its escapes removed, the first bare
-          // "/" ends the literal early, and the leftover text becomes bogus regex flags -> an
-          // "Invalid regular expression flags" SyntaxError that kills this whole inline script.
-          // Extract the route with plain string ops (no backslashes) so it can never recur.
-          var targetRoute = null;
-          try {
-            var marker = '/_next/static/chunks/app';
-            var mi = str.indexOf(marker);
-            if (mi !== -1) {
-              var rest = str.slice(mi + marker.length);
-              var cut = rest.length;
-              for (var ci = 0; ci < rest.length; ci++) {
-                var ch = rest.charAt(ci);
-                if (ch === '?' || ch === '"' || ch === "'" || ch === ' ' || ch === ')' || ch === ':') { cut = ci; break; }
-              }
-              var seg = rest.slice(0, cut);
-              if (seg.length > 3 && seg.slice(-3) === '.js') seg = seg.slice(0, -3);
-              var dash = seg.lastIndexOf('-');
-              if (dash > 0) seg = seg.slice(0, dash);
-              if (seg.length >= 5 && seg.slice(-5) === '/page') seg = seg.slice(0, -5);
-              if (seg.length >= 7 && seg.slice(-7) === '/layout') seg = seg.slice(0, -7);
-              if (seg.length >= 6 && seg.slice(-6) === '/route') seg = seg.slice(0, -6);
-              if (seg && seg.charAt(0) === '/') targetRoute = seg;
-            }
-          } catch(e) {}
-          var dest = targetRoute || window.location.pathname;
           var countKey = 'erp_auto_chunk_cnt';
           var tsKey = 'erp_auto_chunk_ts';
           var now = Date.now();
@@ -142,7 +114,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           if (count < 3) {
             sessionStorage.setItem(countKey, String(count + 1));
             sessionStorage.setItem(tsKey, String(now));
-            window.location.replace(dest + (dest.indexOf('?') !== -1 ? '&' : '?') + '_v=' + now);
+            var currentPath = window.location.pathname;
+            var currentSearch = window.location.search || '';
+            var cleanSearch = currentSearch.replace(/[\?&]_v=\d+/, '').replace(/^&/, '');
+            var sep = cleanSearch.indexOf('?') !== -1 || cleanSearch.length > 0 ? '&' : '?';
+            var finalUrl = currentPath + (cleanSearch ? (cleanSearch.charAt(0) === '?' ? cleanSearch : '?' + cleanSearch) + '&' : '?') + '_v=' + now;
+            window.location.replace(finalUrl);
           }
         }
       } catch (inner) {}

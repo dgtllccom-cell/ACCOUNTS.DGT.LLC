@@ -248,6 +248,12 @@ export const purchaseOrderCreateSchema = scopeSchema.extend({
   countryBranchId: optionalUuidSchema,
   cityBranchId: optionalUuidSchema,
 
+  // Country-to-Country Purchase: optional destination scope, distinct from the purchasing
+  // scope above. Leave unset for a plain same-country purchase.
+  destCountryId: optionalUuidSchema,
+  destCountryBranchId: optionalUuidSchema,
+  destCityBranchId: optionalUuidSchema,
+
   supplierCompanyId: optionalUuidSchema,
   purchaseContractNo: z.string().trim().max(120).optional(),
 

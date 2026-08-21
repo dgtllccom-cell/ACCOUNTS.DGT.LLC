@@ -163,6 +163,11 @@ const DEFAULT_FORM = {
   countryId: "",
   countryBranchId: "",
   cityBranchId: "",
+  // Country-to-Country Purchase: optional destination scope. Leave blank for a plain
+  // same-country purchase.
+  destCountryId: "",
+  destCountryBranchId: "",
+  destCityBranchId: "",
   purchaseAccountNo: "",
   purchaseAccountName: "",
   purchaseAccountBranch: "",
@@ -654,6 +659,10 @@ export function PurchaseOrderWizard({ session }) {
   const [dbReceivedPorts, setDbReceivedPorts] = useState([]);
   const [mainBranches, setMainBranches] = useState([]);
   const [cityBranches, setCityBranches] = useState([]);
+  // Country-to-Country Purchase: destination-scope branch lists, mirroring mainBranches/cityBranches
+  // but keyed off form.destCountryId/destCountryBranchId instead of the source scope.
+  const [destMainBranches, setDestMainBranches] = useState([]);
+  const [destCityBranches, setDestCityBranches] = useState([]);
   const [scopeConfirmed, setScopeConfirmed] = useState(false);
   const [dbAccounts, setDbAccounts] = useState([]);
   const [customQtyNames, setCustomQtyNames] = useState([]);
@@ -1658,6 +1667,50 @@ export function PurchaseOrderWizard({ session }) {
     };
   }, [form.countryId, form.countryBranchId]);
 
+  // Country-to-Country Purchase: load destination Main Branches when destCountryId changes.
+  useEffect(() => {
+    let cancelled = false;
+    const destCountryId = form.destCountryId;
+    if (!destCountryId) {
+      setDestMainBranches([]);
+      return;
+    }
+    async function loadDestCountryBranches() {
+      try {
+        const res = await fetch(`/api/branch-management/country-branches?countryId=${encodeURIComponent(destCountryId)}`).then(r => r.json());
+        const list = Array.isArray(res?.countryBranches) ? res.countryBranches : [];
+        if (!cancelled) setDestMainBranches(list);
+      } catch (err) {
+        console.error("Failed to load destination country branches:", err);
+      }
+    }
+    loadDestCountryBranches();
+    return () => { cancelled = true; };
+  }, [form.destCountryId]);
+
+  // Country-to-Country Purchase: load destination City Branches when destCountryId/destCountryBranchId changes.
+  useEffect(() => {
+    let cancelled = false;
+    const destCountryId = form.destCountryId;
+    if (!destCountryId) {
+      setDestCityBranches([]);
+      return;
+    }
+    async function loadDestCityBranches() {
+      try {
+        const queryParams = new URLSearchParams({ countryId: destCountryId });
+        if (form.destCountryBranchId) queryParams.append("countryBranchId", form.destCountryBranchId);
+        const res = await fetch(`/api/branch-management/city-branches?${queryParams.toString()}`).then(r => r.json());
+        const list = Array.isArray(res?.cityBranches) ? res.cityBranches : [];
+        if (!cancelled) setDestCityBranches(list);
+      } catch (err) {
+        console.error("Failed to load destination city branches:", err);
+      }
+    }
+    loadDestCityBranches();
+    return () => { cancelled = true; };
+  }, [form.destCountryId, form.destCountryBranchId]);
+
   // Sync Branch Code and Name for Branch Serial display and generate formatted Bill No
   useEffect(() => {
     let selectedBranch = null;
@@ -2355,6 +2408,9 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
       countryId: cleanUuid(form.countryId),
       countryBranchId: cleanUuid(form.countryBranchId),
       cityBranchId: cleanUuid(form.cityBranchId),
+      destCountryId: cleanUuid(form.destCountryId),
+      destCountryBranchId: cleanUuid(form.destCountryBranchId),
+      destCityBranchId: cleanUuid(form.destCityBranchId),
       supplierCompanyId: cleanUuid(form.purchaseCompanyId),
       purchaseOrderNo: customOrderNo || form.purchaseOrderNo,
       purchaseContractNo: form.purchaseContractNo || form.purchaseOrderNo,
@@ -5049,6 +5105,63 @@ Amount: ${Number(row.totalAmount || 0).toLocaleString()} ${row.currencyType || "
                         </div>
                       </div>
                     </div>
+
+                    {/* --- Country-to-Country Purchase: optional destination branch --- */}
+                    <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                      <div className="mb-3 flex items-center gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
+                        <div className="grid h-9 w-9 place-items-center rounded-lg bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-300">
+                          <Globe2 className="h-4 w-4" />
+                        </div>
+                        <div>
+                          <h4 className="text-[11px] font-black uppercase tracking-[0.18em] text-slate-900 dark:text-slate-100">{t(lang, "purchase.dest_branch_title", "Destination Branch (Country-to-Country Purchase)")}</h4>
+                          <p className="text-[10px] font-semibold text-slate-500 dark:text-slate-400">{t(lang, "purchase.dest_branch_subtitle", "Optional. Set only when this purchase is being made on behalf of a different country/branch.")}</p>
+                        </div>
+                      </div>
+                      <div className="grid gap-4 sm:grid-cols-3">
+                        <label className="space-y-1">
+                          <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.dest_country_label", "Destination Country")}</span>
+                          <select
+                            value={form.destCountryId || ""}
+                            onChange={(e) => setForm(p => ({ ...p, destCountryId: e.target.value, destCountryBranchId: "", destCityBranchId: "" }))}
+                            className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-900 outline-none focus:border-blue-500 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                          >
+                            <option value="">{t(lang, "purchase.dest_country_none", "None (same-country purchase)")}</option>
+                            {(allCountries.length ? allCountries : countries).map((c) => (
+                              <option key={c.id} value={c.id}>{c.name}</option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="space-y-1">
+                          <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "purchase.dest_branch_label", "Destination Main Branch")}</span>
+                          <select
+                            value={form.destCountryBranchId || ""}
+                            onChange={(e) => setForm(p => ({ ...p, destCountryBranchId: e.target.value, destCityBranchId: "" }))}
+                            disabled={!form.destCountryId}
+                            className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-900 outline-none focus:border-blue-500 disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                          >
+                            <option value="">{t(lang, "purchase.select_branch_ellipsis", "Select Branch...")}</option>
+                            {destMainBranches.map((b) => (
+                              <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
+                            ))}
+                          </select>
+                        </label>
+                        <label className="space-y-1">
+                          <span className="block text-[9px] font-black uppercase tracking-wider text-slate-500">{t(lang, "branch.city_label", "City Branch")}</span>
+                          <select
+                            value={form.destCityBranchId || ""}
+                            onChange={(e) => setForm(p => ({ ...p, destCityBranchId: e.target.value }))}
+                            disabled={!form.destCountryId}
+                            className="h-8 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-900 outline-none focus:border-blue-500 disabled:opacity-50 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-100"
+                          >
+                            <option value="">{t(lang, "purchase.select_city_branch_ellipsis", "Select City Branch...")}</option>
+                            {destCityBranches.map((b) => (
+                              <option key={b.id} value={b.id}>{b.city_name || b.name} ({b.code || b.branch_code})</option>
+                            ))}
+                          </select>
+                        </label>
+                      </div>
+                    </div>
+
                     {/* --- SECTION 2: ADVANCE & PAYMENT TERMS --- */}
                     <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded p-3 space-y-3">
                       <h4 className="text-[10px] font-black uppercase text-slate-800 dark:text-slate-200 border-b border-slate-200 dark:border-slate-800 pb-1">{t(lang, "purchase.advance_payment_terms_title", "Advance & Payment Terms")}</h4>

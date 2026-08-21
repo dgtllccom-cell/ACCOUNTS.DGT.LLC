@@ -39,6 +39,9 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
               po.country_id,
               po.country_branch_id,
               po.city_branch_id,
+              po.dest_country_id,
+              po.dest_country_branch_id,
+              po.dest_city_branch_id,
               po.supplier_company_id,
               to_jsonb(comp.*) as companies,
               po.currency_code,
@@ -67,7 +70,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
             return supabase
               .from("purchase_orders")
               .select(
-                "id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id, supplier_company_id, companies(name), currency_code, exchange_rate, order_total, advance_paid, remaining_paid, credit_amount, remaining_due, payment_status, ledger_posting_status, form_data, created_at, updated_at"
+                "id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id, dest_country_id, dest_country_branch_id, dest_city_branch_id, supplier_company_id, companies(name), currency_code, exchange_rate, order_total, advance_paid, remaining_paid, credit_amount, remaining_due, payment_status, ledger_posting_status, form_data, created_at, updated_at"
               )
               .eq("id", params.id)
               .is("deleted_at", null)

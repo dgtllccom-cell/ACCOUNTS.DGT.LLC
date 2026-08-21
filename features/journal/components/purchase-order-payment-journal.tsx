@@ -3699,17 +3699,17 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
         }
       }
 
+      // Do NOT guess a ledger here — picking an arbitrary ledger could silently post this
+      // payment against the wrong account. If the supplier/payment-source ledger genuinely
+      // couldn't be resolved, fail loudly so the order's account link can be corrected.
       if (!isUuid(debitLedgerId) || !isUuid(creditLedgerId)) {
-        const validLedgers = ledgers.filter((l) => isUuid(ledgerId(l) || ""));
-        if (validLedgers.length >= 2) {
-          if (!isUuid(debitLedgerId)) debitLedgerId = ledgerId(validLedgers[0]) || "";
-          if (!isUuid(creditLedgerId)) creditLedgerId = ledgerId(validLedgers[1]) || "";
-        } else if (validLedgers.length === 1) {
-          if (!isUuid(debitLedgerId)) debitLedgerId = ledgerId(validLedgers[0]) || "";
-          if (!isUuid(creditLedgerId)) creditLedgerId = ledgerId(validLedgers[0]) || "";
-        }
+        throw new Error(
+          !isUuid(debitLedgerId)
+            ? "Could not determine the purchase account's ledger for this order. Please reselect the purchase/supplier account on this order and try again."
+            : "Could not determine the payment source (bank/cash) ledger. Please select a payment account and try again."
+        );
       }
-      
+
       const searchParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
       const selectedLoadingRecordId = selectedLoadingRecord?.id ? String(selectedLoadingRecord.id) : "";
       const fromLoading = searchParams.get("fromLoading") === "true" || Boolean(selectedLoadingRecordId);

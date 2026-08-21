@@ -77,12 +77,28 @@ function buildPurchaseGoodsAuditRemark(orderRow: any, fallbackReference?: string
 }
 
 async function assertLedgerMatchesPurchaseScope(supabase: any, ledgerId: string, orderRow: any, label: string) {
-  const { data: ledger, error } = await supabase
+  let { data: ledger, error } = await supabase
     .from("ledgers")
     .select("id, code, name, country_id, country_branch_id, city_branch_id")
     .eq("id", ledgerId)
     .is("deleted_at", null)
     .maybeSingle();
+
+  if ((error || !ledger) && ledgerId) {
+    // Compatibility fallback: some callers pass an accounts.id instead of the ledger's own id
+    // (ledgers.account_id is a separate FK, not the same UUID as ledgers.id). Resolve the
+    // ledger linked to that account rather than failing outright.
+    const byAccount = await supabase
+      .from("ledgers")
+      .select("id, code, name, country_id, country_branch_id, city_branch_id")
+      .eq("account_id", ledgerId)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (!byAccount.error && byAccount.data) {
+      ledger = byAccount.data;
+      error = null;
+    }
+  }
 
   if (error || !ledger) {
     throw new Error(label + " ledger was not found.");
@@ -254,12 +270,15 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const remainingAdvanceUSD = Math.max(0, requiredAdvanceUSD - advancePaidUSD);
     const tolerance = 0.01;
 
-    if (body.debitLedgerId === body.creditLedgerId) {
-      throw new Error("Debit and credit ledgers must be different for purchase payment posting.");
-    }
-
     const debitLedger = await assertLedgerMatchesPurchaseScope(supabase, body.debitLedgerId, orderRow, "Debit");
     const creditLedger = await assertLedgerMatchesPurchaseScope(supabase, body.creditLedgerId, orderRow, "Credit");
+    // Use the resolved ledger rows' own ids from here on — the client may have sent an
+    // accounts.id (see the compatibility fallback above), which is a different UUID.
+    const resolvedDebitLedgerId = debitLedger.id;
+    const resolvedCreditLedgerId = creditLedger.id;
+    if (resolvedDebitLedgerId === resolvedCreditLedgerId) {
+      throw new Error("Debit and credit ledgers must be different for purchase payment posting.");
+    }
     const trace = buildPurchaseTrace(orderRow, body.referenceNo ?? null);
     const postingReferenceNo = body.referenceNo?.trim() || trace.referenceNo;
     const goodsAuditRemark = buildPurchaseGoodsAuditRemark(orderRow, postingReferenceNo);
@@ -304,8 +323,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       p_amount: body.amount,
       p_currency_code: body.currencyCode,
       p_exchange_rate: effectiveRoznamchaExchangeRate,
-      p_debit_ledger_id: body.debitLedgerId,
-      p_credit_ledger_id: body.creditLedgerId,
+      p_debit_ledger_id: resolvedDebitLedgerId,
+      p_credit_ledger_id: resolvedCreditLedgerId,
       p_reference_no: postingReferenceNo,
       p_narration: postingNarration || null
     });
@@ -375,12 +394,12 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     )) as any[];
 
     const exRate = Number(body.exchangeRate || (orderRow as any)?.exchange_rate || 1) || 1;
-    assertDistinctBookingLedgers(body.debitLedgerId, body.creditLedgerId, "Purchase payment");
+    assertDistinctBookingLedgers(resolvedDebitLedgerId, resolvedCreditLedgerId, "Purchase payment");
     assertBalancedPostedLines({
       label: "Purchase payment",
       lines: journalLines,
-      expectedDebitLedgerId: body.debitLedgerId,
-      expectedCreditLedgerId: body.creditLedgerId,
+      expectedDebitLedgerId: resolvedDebitLedgerId,
+      expectedCreditLedgerId: resolvedCreditLedgerId,
       expectedAmount: Number(body.amount),
       expectedExchangeRate: exRate
     });
@@ -417,8 +436,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
             lastPaymentTrace: {
               paymentId,
               roznamchaEntryId: paymentRecord.roznamcha_entry_id,
-              debitLedgerId: body.debitLedgerId,
-              creditLedgerId: body.creditLedgerId,
+              debitLedgerId: resolvedDebitLedgerId,
+              creditLedgerId: resolvedCreditLedgerId,
               originalCurrencyCode: paymentRecord.original_currency_code || body.currencyCode,
               currencyName: paymentRecord.currency_name || body.currencyCode,
               exchangeRate: paymentRecord.exchange_rate || body.exchangeRate,
@@ -450,8 +469,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
         amount: body.amount,
         currencyCode: body.currencyCode,
         exchangeRate: body.exchangeRate,
-        debitLedgerId: body.debitLedgerId,
-        creditLedgerId: body.creditLedgerId,
+        debitLedgerId: resolvedDebitLedgerId,
+        creditLedgerId: resolvedCreditLedgerId,
         systemBillNumber: trace.systemBillNumber,
         manualBillNumber: trace.manualBillNumber,
         partyName: trace.partyName,
