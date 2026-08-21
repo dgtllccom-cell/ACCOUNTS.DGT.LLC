@@ -28,7 +28,7 @@ import {
   Container,
 } from "lucide-react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
-import { autoTranslate5Languages } from "@/lib/i18n/multilingual-translator";
+import { t } from "@/lib/i18n/ui";
 import { Th } from "@/components/ui/translated-th";
 /* ---------------- types ---------------- */
 export type KVRow = { k: string; v: string; muted?: boolean; pill?: boolean; sub?: string };
@@ -135,22 +135,16 @@ function StatusPill({
   );
 }
 function KV({ k, v, muted, pill, sub }: KVRow) {
-  const activeLang = useActiveLanguage();
-  const tr = (text: string) => {
-    if (!text || text === "-") return text;
-    const res = autoTranslate5Languages(text);
-    return res[activeLang] || text;
-  };
   return (
     <div className="flex items-start justify-between gap-3 py-1">
-      <span className="text-[11.5px] text-muted-foreground">{tr(k)}</span>
+      <span className="text-[11.5px] text-muted-foreground">{k}</span>
       <div className="min-w-0 text-right">
         {pill ? (
-          <StatusPill>{tr(v)}</StatusPill>
+          <StatusPill>{v}</StatusPill>
         ) : (
-          <div className={`truncate text-[12.5px] font-semibold ${muted ? "text-muted-foreground" : "text-foreground"}`}>{tr(v)}</div>
+          <div className={`truncate text-[12.5px] font-semibold ${muted ? "text-muted-foreground" : "text-foreground"}`}>{v}</div>
         )}
-        {sub ? <div className="text-[10.5px] text-muted-foreground">{tr(sub)}</div> : null}
+        {sub ? <div className="text-[10.5px] text-muted-foreground">{sub}</div> : null}
       </div>
     </div>
   );
@@ -161,12 +155,6 @@ function InfoCard({
   n: string; title: string; rows: KVRow[]; accent?: string;
   watermark?: string; watermarkTone?: "dr" | "cr"; footer?: React.ReactNode;
 }) {
-  const activeLang = useActiveLanguage();
-  const tr = (text: string) => {
-    if (!text || text === "-") return text;
-    const res = autoTranslate5Languages(text);
-    return res[activeLang] || text;
-  };
   const wmColor = watermarkTone === "dr" ? "text-rose-500/10"
     : watermarkTone === "cr" ? "text-emerald-500/10" : "text-slate-500/10";
   return (
@@ -178,7 +166,7 @@ function InfoCard({
       ) : null}
       <div className="relative mb-2.5 flex items-center gap-2.5 border-b border-border/60 pb-2.5">
         <span className={`inline-flex h-6 w-6 items-center justify-center rounded-md ${accent} text-[10.5px] font-bold text-primary-foreground`}>{n}</span>
-        <h3 className="text-[11.5px] font-semibold tracking-[0.14em] text-foreground">{tr(title)}</h3>
+        <h3 className="text-[11.5px] font-semibold tracking-[0.14em] text-foreground">{title}</h3>
       </div>
       <div className="relative flex-1 divide-y divide-border/50">
         {rows.map((r) => <KV key={r.k} {...r} />)}
@@ -191,22 +179,17 @@ function AccountPaymentStrip({
   tone, amount, paid, balance, status,
 }: { tone: "dr" | "cr"; amount: string; paid: string; balance: string; status: string }) {
   const activeLang = useActiveLanguage();
-  const tr = (text: string) => {
-    if (!text || text === "-") return text;
-    const res = autoTranslate5Languages(text);
-    return res[activeLang] || text;
-  };
   const colors = tone === "dr"
     ? { chip: "bg-rose-50 text-rose-700 ring-rose-200", bar: "bg-rose-500", balance: "text-rose-700" }
     : { chip: "bg-emerald-50 text-emerald-700 ring-emerald-200", bar: "bg-emerald-500", balance: "text-emerald-700" };
   return (
     <div>
       <div className="mb-1.5 flex items-center justify-between">
-        <span className="text-[9.5px] font-bold uppercase tracking-widest text-muted-foreground">{tr("Payment Summary")}</span>
-        <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-bold ring-1 ${colors.chip}`}>{tr(status)}</span>
+        <span className="text-[9.5px] font-bold uppercase tracking-widest text-muted-foreground">{t(activeLang, "pb.payment_summary", "Payment Summary")}</span>
+        <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-bold ring-1 ${colors.chip}`}>{status}</span>
       </div>
       <div className="grid grid-cols-3 gap-1.5 text-center">
-        {[[tr("Invoice"), amount], [tr("Paid"), paid], [tr("Balance"), balance]].map(([k, v], i) => (
+        {[[t(activeLang, "pb.invoice", "Invoice"), amount], [t(activeLang, "pb.paid", "Paid"), paid], [t(activeLang, "pb.balance", "Balance"), balance]].map(([k, v], i) => (
           <div key={i} className="rounded-md bg-slate-50 py-1">
             <div className="text-[8.5px] uppercase tracking-wider text-muted-foreground">{k}</div>
             <div className={`text-[10.5px] font-bold ${i === 2 ? colors.balance : "text-foreground"}`}>{v}</div>
@@ -252,14 +235,18 @@ function Chip({ icon: Icon, children }: { icon: React.ComponentType<{ className?
 }
 function Field({ label, children, className = "" }: { label: string; children: React.ReactNode; className?: string }) {
   const activeLang = useActiveLanguage();
-  const tr = (text: string) => {
-    if (!text || text === "-") return text;
-    const res = autoTranslate5Languages(text);
-    return res[activeLang] || text;
+  const fieldKeyMap: Record<string, string> = {
+    "Shipping Mode": "pb.shipping_mode", "Loading Country": "pb.loading_country",
+    "Loading Port": "pb.loading_port", "Loading Date": "pb.loading_date",
+    "Receiving Country": "pb.receiving_country", "Receiving Port": "pb.receiving_port",
+    "Receiving Date": "pb.receiving_date", "Payment Type": "pb.payment_type",
+    "Advance %": "pb.advance_pct", "Advance Date": "pb.advance_date",
+    "Final Payment Date": "pb.final_payment_date", "Container No.": "pb.container_no",
+    "Container Type / Size": "pb.container_type",
   };
   return (
     <label className={`flex flex-col gap-1 ${className}`}>
-      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{tr(label)}</span>
+      <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">{t(activeLang, fieldKeyMap[label] || "common.unknown", label)}</span>
       {children}
     </label>
   );
@@ -277,6 +264,8 @@ export function PurchaseBookingViewRedesign({
   paymentSchedule = DEFAULT_PAYMENTS,
   chrome = true,
 }: PurchaseBookingViewRedesignProps = {}) {
+  const lang = useActiveLanguage();
+  const isRtl = ["ur","ar","fa","ps"].includes(lang);
   const [view, setView] = useState<View>("form");
   const prevViewRef = useRef<View>("form");
   // Restore previous view after the print dialog closes (Print / PDF flow).
@@ -302,7 +291,7 @@ export function PurchaseBookingViewRedesign({
   const printMode: "" | "print-full" | "print-compact" =
     view === "full" ? "print-full" : view === "compact" ? "print-compact" : "";
   return (
-    <div className={`min-h-screen bg-slate-50 text-foreground ${printMode}`}>
+    <div className={`min-h-screen bg-slate-50 text-foreground ${printMode}`} dir={isRtl ? "rtl" : "ltr"}>
       <style>{`
         /* ---------- On-screen A4 preview sizing ---------- */
         .a4-sheet {
@@ -428,14 +417,14 @@ export function PurchaseBookingViewRedesign({
                 {/* Left Title & View Switcher */}
                 <div className="flex flex-wrap items-center gap-3">
                   <div>
-                    <h1 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-lg">New Purchase Booking Order</h1>
+                    <h1 className="text-base font-extrabold tracking-tight text-slate-900 dark:text-white sm:text-lg">{t(lang, "pb.title", "New Purchase Booking Order")}</h1>
                     <p className="hidden text-[11px] text-muted-foreground sm:block">Standard ERP layout · Responsive · A4 Print Ready</p>
                   </div>
                   <div className="inline-flex rounded-lg bg-slate-100 p-1 dark:bg-slate-800">
                     {([
-                      { k: "form", label: "Form View", icon: ClipboardList },
-                      { k: "full", label: "Full Report", icon: FileText },
-                      { k: "compact", label: "Compact Order", icon: FileDown },
+                      { k: "form", label: t(lang, "pb.form_view", "Form View"), icon: ClipboardList },
+                      { k: "full", label: t(lang, "pb.full_report", "Full Report"), icon: FileText },
+                      { k: "compact", label: t(lang, "pb.compact_order", "Compact Order"), icon: FileDown },
                     ] as { k: View; label: string; icon: React.ComponentType<{ className?: string }> }[]).map((t) => {
                       const Icon = t.icon;
                       return (
@@ -450,15 +439,15 @@ export function PurchaseBookingViewRedesign({
 
                 {/* Right Prominent Action Buttons */}
                 <div className="flex flex-wrap items-center gap-2">
-                  <TopButton icon={Save} variant="primary" onClick={() => {}}>Save Draft</TopButton>
-                  <TopButton icon={Check} variant="success" onClick={() => {}}>Accept & Verify</TopButton>
-                  <TopButton icon={ArrowRightLeft} variant="dark" onClick={() => {}}>Register Order</TopButton>
+                  <TopButton icon={Save} variant="primary" onClick={() => {}}>{t(lang, "pb.save_draft", "Save Draft")}</TopButton>
+                  <TopButton icon={Check} variant="success" onClick={() => {}}>{t(lang, "pb.accept_verify", "Accept & Verify")}</TopButton>
+                  <TopButton icon={ArrowRightLeft} variant="dark" onClick={() => {}}>{t(lang, "pb.register_order", "Register Order")}</TopButton>
                   <div className="hidden h-5 w-[1px] bg-slate-200 dark:bg-slate-700 md:block" />
                   <TopButton icon={Eye} variant="ghost" onClick={() => setView(view === "form" ? "full" : "form")}>
                     {view === "form" ? "Preview Report" : "Form View"}
                   </TopButton>
-                  <TopButton icon={Printer} variant="dark" onClick={() => handlePrint(view === "compact" ? "compact" : "full")}>Print</TopButton>
-                  <TopButton icon={Download} variant="amber" onClick={() => handlePrint("full")}>PDF</TopButton>
+                  <TopButton icon={Printer} variant="dark" onClick={() => handlePrint(view === "compact" ? "compact" : "full")}>{t(lang, "common.print", "Print")}</TopButton>
+                  <TopButton icon={Download} variant="amber" onClick={() => handlePrint("full")}>{t(lang, "pb.pdf", "PDF")}</TopButton>
                 </div>
               </div>
             </div>
@@ -485,12 +474,12 @@ function FormView({
   return (
     <div className="space-y-4">
       <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <InfoCard n="01" title="BRANCH DETAILS" rows={branchDetails} />
-        <InfoCard n="02" title="BILL DETAILS" rows={billDetails} accent="bg-sky-500" />
-        <InfoCard n="03" title="PURCHASE ACCOUNT (DR)" rows={purchaseAccount} accent="bg-rose-500"
+        <InfoCard n="01" title={t(lang, "pb.branch_details", "BRANCH DETAILS")} rows={branchDetails} />
+        <InfoCard n="02" title={t(lang, "pb.bill_details", "BILL DETAILS")} rows={billDetails} accent="bg-sky-500" />
+        <InfoCard n="03" title={t(lang, "pb.purchase_account_dr", "PURCHASE ACCOUNT (DR)")} rows={purchaseAccount} accent="bg-rose-500"
           watermark="DR" watermarkTone="dr"
           footer={<AccountPaymentStrip tone="dr" amount="75,500" paid="0" balance="75,500" status="PENDING" />} />
-        <InfoCard n="04" title="SALES ACCOUNT (CR)" rows={salesAccount} accent="bg-emerald-500"
+        <InfoCard n="04" title={t(lang, "pb.sales_account_cr", "SALES ACCOUNT (CR)")} rows={salesAccount} accent="bg-emerald-500"
           watermark="CR" watermarkTone="cr"
           footer={<AccountPaymentStrip tone="cr" amount="75,500" paid="0" balance="75,500" status="PENDING" />} />
       </section>
@@ -498,12 +487,12 @@ function FormView({
         <div className="rounded-xl border border-border bg-card p-4 shadow-sm lg:col-span-5">
           <div className="mb-3 flex items-center gap-2.5">
             <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-slate-900 text-[10.5px] font-bold text-white">S</span>
-            <h3 className="text-[12px] font-semibold tracking-[0.14em]">SHIPPING & LOCATION</h3>
+            <h3 className="text-[12px] font-semibold tracking-[0.14em]">{t(lang, "pb.shipping_location", "SHIPPING & LOCATION")}</h3>
           </div>
           <div className="rounded-lg border-l-4 border-amber-400 bg-amber-50/60 p-3">
             <div className="mb-2 flex items-center gap-2">
               <Ship className="h-3.5 w-3.5 text-amber-600" />
-              <span className="text-[10.5px] font-bold uppercase tracking-widest text-amber-800">Loading / Departure</span>
+              <span className="text-[10.5px] font-bold uppercase tracking-widest text-amber-800">{t(lang, "pb.loading_departure", "Loading / Departure")}</span>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
               <Field label="Shipping Mode"><select className={inputCls} defaultValue="Sea"><option>By Sea</option><option>By Air</option><option>By Road</option></select></Field>
@@ -515,7 +504,7 @@ function FormView({
           <div className="mt-3 rounded-lg border-l-4 border-emerald-500 bg-emerald-50/60 p-3">
             <div className="mb-2 flex items-center gap-2">
               <Anchor className="h-3.5 w-3.5 text-emerald-700" />
-              <span className="text-[10.5px] font-bold uppercase tracking-widest text-emerald-800">Receiving / Arrival</span>
+              <span className="text-[10.5px] font-bold uppercase tracking-widest text-emerald-800">{t(lang, "pb.receiving_arrival", "Receiving / Arrival")}</span>
             </div>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               <Field label="Receiving Country"><select className={inputCls} defaultValue="PK"><option>Pakistan</option><option>India</option></select></Field>
@@ -528,7 +517,7 @@ function FormView({
 
           <div className="mb-3 flex items-center gap-2.5">
             <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-sky-500 text-[10.5px] font-bold text-white">A</span>
-            <h3 className="text-[12px] font-semibold tracking-[0.14em]">ADVANCE & PAYMENT TERMS</h3>
+            <h3 className="text-[12px] font-semibold tracking-[0.14em]">{t(lang, "pb.advance_payment", "ADVANCE & PAYMENT TERMS")}</h3>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <Field label="Payment Type"><select className={inputCls} defaultValue="Advance"><option>Advance</option><option>Credit</option><option>On Delivery</option></select></Field>
@@ -540,7 +529,7 @@ function FormView({
         <div className="rounded-xl border border-border bg-card p-4 shadow-sm lg:col-span-3">
           <div className="mb-3 flex items-center gap-2.5">
             <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-slate-700 text-[10.5px] font-bold text-white">C</span>
-            <h3 className="text-[12px] font-semibold tracking-[0.14em]">CONTAINER</h3>
+            <h3 className="text-[12px] font-semibold tracking-[0.14em]">{t(lang, "pb.container", "CONTAINER")}</h3>
           </div>
           <div className="grid grid-cols-1 gap-2">
             <Field label="Container No."><input className={inputCls} placeholder="e.g. ABCU1234567" /></Field>
