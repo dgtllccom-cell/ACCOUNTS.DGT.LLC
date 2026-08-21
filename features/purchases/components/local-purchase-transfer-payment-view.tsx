@@ -9,6 +9,8 @@ import {
   Scale, CreditCard, ArrowDownLeft
 } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import { Button } from "@/components/ui/button";
 import { Th } from "@/components/ui/translated-th";
 
@@ -138,6 +140,9 @@ interface LocalPurchaseRecord {
 
 export function LocalPurchaseTransferPaymentView({ session }: { session: any }) {
   const router = useRouter();
+  const activeLang = useActiveLanguage();
+  const isRtl = ["ur","ar","fa","ps"].includes(activeLang);
+  const tt = (key: string, fb: string) => t(activeLang, key as never, fb);
   const [purchases, setPurchases] = useState<LocalPurchaseRecord[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -190,21 +195,21 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
   }, [filteredPurchases]);
 
   return (
-    <div className="space-y-6 p-4 sm:p-6 text-slate-900 dark:text-slate-100 bg-slate-50/50 dark:bg-slate-950 min-h-screen">
+    <div className="space-y-6 p-4 sm:p-6 text-slate-900 dark:text-slate-100 bg-slate-50/50 dark:bg-slate-950 min-h-screen" dir={isRtl ? "rtl" : "ltr"}>
       
       {/* Top Banner: Branch, User & Date Time Bar */}
       <div className="flex flex-wrap items-center justify-between text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-3 rounded-2xl shadow-xs gap-3">
         <div className="flex items-center gap-2">
-          <span className="text-slate-400">BRANCH NAME:</span>
+          <span className="text-slate-400">{tt("common.branch","BRANCH NAME")}:</span>
           <span className="text-blue-600 dark:text-blue-400 font-extrabold">{session.branchName || "UNITED ARAB EMIRATES MAIN BRANCH"}</span>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-slate-400">USER NAME:</span>
+          <span className="text-slate-400">{tt("common.user","USER NAME")}:</span>
           <span className="text-slate-900 dark:text-white font-extrabold">{session.fullName || session.email || "SUPER ADMIN"}</span>
         </div>
         <div className="flex items-center gap-3 font-mono" suppressHydrationWarning>
-          <div>DATE: <span className="text-slate-800 dark:text-slate-200 font-bold">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}</span></div>
-          <div>TIME: <span className="text-slate-800 dark:text-slate-200 font-bold">{new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}</span></div>
+          <div>{tt("common.date","DATE")}: <span className="text-slate-800 dark:text-slate-200 font-bold">{new Date().toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase()}</span></div>
+          <div>{tt("common.time","TIME")}: <span className="text-slate-800 dark:text-slate-200 font-bold">{new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}</span></div>
         </div>
       </div>
 
@@ -214,12 +219,12 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
           <div className="flex items-center gap-2">
             <Send className="h-5 w-5 text-amber-600" />
             <h1 className="text-lg font-black text-slate-800 dark:text-white uppercase tracking-tight flex items-center gap-2">
-              Inter-Country / Local Purchase Transfer Payment
+              {tt("lptpv.page_title","Inter-Country / Local Purchase Transfer Payment")}
               <span className="bg-amber-400 text-amber-950 text-[10px] font-black px-2 py-0.5 rounded-full shadow-xs uppercase tracking-wider">NEW</span>
             </h1>
           </div>
           <p className="text-xs text-slate-500 font-medium mt-0.5">
-            Verify and post accepted local purchases to the General Ledger & Roznamcha
+            {tt("lptpv.page_subtitle","Verify and post accepted local purchases to the General Ledger & Roznamcha")}
           </p>
         </div>
 
@@ -229,7 +234,7 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
             <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
-              placeholder="Search serial, item, vendor..."
+              placeholder={tt("lpjr.search_ph","Search serial, item, vendor...")}
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               className="h-9 w-full rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-950 pl-8 pr-3 text-xs outline-none focus:border-blue-500 font-medium"
@@ -296,7 +301,7 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
               {session.branchName || "Global Head Office"}
             </div>
             <p className="text-[10px] text-slate-400 font-medium mt-1 uppercase">
-              Posting role: <span className="text-blue-500 font-bold">{session.role || "Administrator"}</span>
+              {tt("lptpv.kpi_posting_role","Posting role")}: <span className="text-blue-500 font-bold">{session.role || "Administrator"}</span>
             </p>
           </CardContent>
         </Card>
@@ -308,11 +313,11 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
           <div className="flex items-center gap-2">
             <Send className="h-4 w-4 text-amber-600" />
             <CardTitle className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200">
-              PENDING GENERAL LEDGER TRANSFERS
+              {tt("lptpv.table_title","PENDING GENERAL LEDGER TRANSFERS")}
             </CardTitle>
           </div>
           <span className="text-[10px] font-mono font-bold text-amber-700 bg-amber-100 px-2 py-0.5 rounded">
-            Ready to Post: {filteredPurchases.length}
+            {tt("lptpv.ready_to_post","Ready to Post")}: {filteredPurchases.length}
           </span>
         </CardHeader>
 
@@ -321,17 +326,17 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
             <table className="w-full text-left text-xs whitespace-nowrap border-collapse">
               <thead className="sticky top-0 z-10 bg-slate-900 text-white text-[9px] font-extrabold uppercase tracking-wider border-b border-slate-700">
                 <tr>
-                  <Th className="p-2.5 border-r border-slate-700 text-center">VOUCHER NO</Th>
-                  <Th className="p-2.5 border-r border-slate-700">DATE</Th>
-                  <Th className="p-2.5 border-r border-slate-700">BRANCH NAME</Th>
-                  <Th className="p-2.5 border-r border-slate-700">PURCHASE ACC (DR)</Th>
-                  <Th className="p-2.5 border-r border-slate-700">SALES ACC (CR)</Th>
-                  <Th className="p-2.5 border-r border-slate-700">GOODS NAME</Th>
-                  <Th className="p-2.5 border-r border-slate-700">BRAND</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-right">QTY</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-right font-black">TOTAL COST</Th>
-                  <Th className="p-2.5 border-r border-slate-700 text-center">PAY MODE</Th>
-                  <Th className="p-2.5 text-center">ACTIONS</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-center">{tt("lptpv.col_voucher_no","VOUCHER NO")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700">{tt("common.date","DATE")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700">{tt("common.branch","BRANCH NAME")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700">{tt("lptpv.col_purchase_acc","PURCHASE ACC (DR)")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700">{tt("lptpv.col_sales_acc","SALES ACC (CR)")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700">{tt("lpjr.inv_goods_name","GOODS NAME")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700">{tt("lpjr.inv_brand","BRAND")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-right">{tt("lptpv.col_qty","QTY")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-right font-black">{tt("lptpv.col_total_cost","TOTAL COST")}</Th>
+                  <Th className="p-2.5 border-r border-slate-700 text-center">{tt("lptpv.col_pay_mode","PAY MODE")}</Th>
+                  <Th className="p-2.5 text-center">{tt("lptpv.col_actions","ACTIONS")}</Th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200 dark:divide-slate-800 text-[10px]">
@@ -339,14 +344,14 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
                   <tr>
                     <td colSpan={11} className="p-10 text-center text-slate-400 font-sans">
                       <Loader2 className="h-6 w-6 animate-spin mx-auto text-amber-600 mb-2" />
-                      Fetching pending GL transfers...
+                      {tt("lptpv.loading","Fetching pending GL transfers...")}
                     </td>
                   </tr>
                 ) : filteredPurchases.length === 0 ? (
                   <tr>
                     <td colSpan={11} className="p-10 text-center text-slate-400 font-sans">
                       <CheckCircle2 className="h-8 w-8 mx-auto text-emerald-500 mb-2" />
-                      <p className="font-bold text-slate-700">All accepted purchases have been successfully posted to Ledger</p>
+                      <p className="font-bold text-slate-700">{tt("lptpv.all_posted","All accepted purchases have been successfully posted to Ledger")}</p>
                     </td>
                   </tr>
                 ) : (
@@ -395,7 +400,7 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
                             {transferringId === row.id ? (
                               <Loader2 className="h-3 w-3 animate-spin" />
                             ) : (
-                              "Verify & Post to GL"
+                              tt("lptpv.verify_post","Verify & Post to GL")
                             )}
                           </Button>
                           <Button
@@ -545,39 +550,39 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
                         <div className="grid grid-cols-[88px_1fr_210px] gap-4 bg-slate-950 p-5 text-white">
                           <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white text-xl font-black text-slate-950">LOGO</div>
                           <div className="space-y-1">
-                            <h2 className="text-xl font-black uppercase tracking-[0.18em]">Tax Invoice</h2>
+                            <h2 className="text-xl font-black uppercase tracking-[0.18em]">{tt("lpjr.inv_tax_invoice","Tax Invoice")}</h2>
                             <p className="text-sm font-extrabold uppercase tracking-wide">{companyName}</p>
                             <p className="text-[10px] text-slate-300">{branchName}</p>
                             <p className="max-w-lg text-[10px] leading-4 text-slate-300">{officeAddress}</p>
                           </div>
                           <div className="space-y-1 text-right text-[10px]">
-                            <p>Invoice No: <span className="font-mono font-black text-white">{voucherRef}</span></p>
-                            <p>Invoice Date: <span className="font-mono font-bold">{rowDate}</span></p>
-                            <p>Payment Method: <span className="font-bold">{paymentMethod}</span></p>
-                            <p>Phone: <span className="font-bold">{officePhone}</span></p>
-                            <p>Email: <span className="font-bold">{officeEmail}</span></p>
-                            <p className="rounded-lg bg-white/10 px-2 py-1 font-bold text-blue-100">TRN / VAT: {trnNumber}</p>
+                            <p>{tt("lpjr.inv_invoice_no","Invoice No")}: <span className="font-mono font-black text-white">{voucherRef}</span></p>
+                            <p>{tt("lpjr.inv_inv_date","Invoice Date")}: <span className="font-mono font-bold">{rowDate}</span></p>
+                            <p>{tt("lpjr.inv_payment_method","Payment Method")}: <span className="font-bold">{paymentMethod}</span></p>
+                            <p>{tt("lpjr.inv_phone","Phone")}: <span className="font-bold">{officePhone}</span></p>
+                            <p>{tt("lpjr.inv_email","Email")}: <span className="font-bold">{officeEmail}</span></p>
+                            <p className="rounded-lg bg-white/10 px-2 py-1 font-bold text-blue-100">{tt("lpjr.inv_trn_vat","TRN / VAT")}: {trnNumber}</p>
                           </div>
                         </div>
 
                         <div className="grid grid-cols-3 gap-3 border-b border-slate-200 bg-slate-50 p-4">
                           <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">Supplier Details</p>
+                            <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">{tt("lpjr.inv_supplier_details","Supplier Details")}</p>
                             <p className="text-sm font-black text-slate-900">{supplierName}</p>
                             <p className="mt-1 text-slate-500">Country: United Arab Emirates</p>
-                            <p className="text-slate-500">Invoice Currency: <span className="font-bold text-slate-800">{rowCurrency}</span></p>
+                            <p className="text-slate-500">{tt("lpjr.inv_invoice_currency","Invoice Currency")}: <span className="font-bold text-slate-800">{rowCurrency}</span></p>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">Delivery / Warehouse</p>
-                            <p>Transaction Type: <span className="font-bold">{shippingMode}</span></p>
-                            <p>Warehouse: <span className="font-bold">{selectedRowForVoucher.warehouseName || selectedRowForVoucher.warehouse_name || "-"}</span></p>
-                            <p>Truck No: <span className="font-mono font-bold text-indigo-700">{selectedRowForVoucher.truckNo || selectedRowForVoucher.truck_no || "-"}</span></p>
+                            <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">{tt("lpjr.inv_delivery_wh","Delivery / Warehouse")}</p>
+                            <p>{tt("lpjr.inv_transaction_type","Transaction Type")}: <span className="font-bold">{shippingMode}</span></p>
+                            <p>{tt("lpjr.inv_warehouse","Warehouse")}: <span className="font-bold">{selectedRowForVoucher.warehouseName || selectedRowForVoucher.warehouse_name || "-"}</span></p>
+                            <p>{tt("lpjr.inv_truck_no","Truck No")}: <span className="font-mono font-bold text-indigo-700">{selectedRowForVoucher.truckNo || selectedRowForVoucher.truck_no || "-"}</span></p>
                           </div>
                           <div className="rounded-xl border border-slate-200 bg-white p-3">
-                            <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">Invoice Control</p>
-                            <p>Branch: <span className="font-bold">{branchName}</span></p>
-                            <p>Document Ref: <span className="font-mono font-bold">{voucherRef}</span></p>
-                            <p>Status: <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700">{selectedRowForVoucher.status === "posted" ? "Posted" : "Accepted"}</span></p>
+                            <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">{tt("lpjr.inv_invoice_control","Invoice Control")}</p>
+                            <p>{tt("common.branch","Branch")}: <span className="font-bold">{branchName}</span></p>
+                            <p>{tt("lpjr.inv_doc_ref","Document Ref")}: <span className="font-mono font-bold">{voucherRef}</span></p>
+                            <p>Status: <span className="rounded-full bg-emerald-50 px-2 py-0.5 font-bold text-emerald-700">{selectedRowForVoucher.status === "posted" ? tt("lpjr.inv_posted","Posted") : tt("lpjr.inv_accepted","Accepted")}</span></p>
                           </div>
                         </div>
 
@@ -586,17 +591,17 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
                             <thead className="bg-slate-900 text-white">
                               <tr>
                                 <Th className="border border-slate-800 p-2 text-left">Sr.</Th>
-                                <Th className="border border-slate-800 p-2 text-left">Goods Name</Th>
-                                <Th className="border border-slate-800 p-2 text-left">HS Code</Th>
-                                <Th className="border border-slate-800 p-2 text-left">Brand</Th>
-                                <Th className="border border-slate-800 p-2 text-left">Size</Th>
-                                <Th className="border border-slate-800 p-2 text-right">Quantity</Th>
-                                <Th className="border border-slate-800 p-2 text-left">Unit</Th>
-                                <Th className="border border-slate-800 p-2 text-right">Unit Price</Th>
-                                <Th className="border border-slate-800 p-2 text-right">Taxable Amount</Th>
+                                <Th className="border border-slate-800 p-2 text-left">{tt("lpjr.inv_goods_name","Goods Name")}</Th>
+                                <Th className="border border-slate-800 p-2 text-left">{tt("lpjr.inv_hs_code","HS Code")}</Th>
+                                <Th className="border border-slate-800 p-2 text-left">{tt("lpjr.inv_brand","Brand")}</Th>
+                                <Th className="border border-slate-800 p-2 text-left">{tt("lpjr.inv_size","Size")}</Th>
+                                <Th className="border border-slate-800 p-2 text-right">{tt("lpjr.inv_quantity","Quantity")}</Th>
+                                <Th className="border border-slate-800 p-2 text-left">{tt("lpjr.inv_unit","Unit")}</Th>
+                                <Th className="border border-slate-800 p-2 text-right">{tt("lpjr.inv_unit_price","Unit Price")}</Th>
+                                <Th className="border border-slate-800 p-2 text-right">{tt("lpjr.inv_taxable_amt","Taxable Amount")}</Th>
                                 <Th className="border border-slate-800 p-2 text-right">VAT %</Th>
-                                <Th className="border border-slate-800 p-2 text-right">VAT Amount</Th>
-                                <Th className="border border-slate-800 p-2 text-right">Total Amount</Th>
+                                <Th className="border border-slate-800 p-2 text-right">{tt("lpjr.inv_vat_amt","VAT Amount")}</Th>
+                                <Th className="border border-slate-800 p-2 text-right">{tt("lpjr.inv_total_amt","Total Amount")}</Th>
                               </tr>
                             </thead>
                             <tbody>
@@ -622,26 +627,26 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
 
                           <div className="mt-4 grid grid-cols-[1fr_310px] gap-4">
                             <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
-                              <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">Amount In Words</p>
+                              <p className="mb-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-500">{tt("lpjr.inv_amount_words","Amount In Words")}</p>
                               <p className="text-sm font-black capitalize text-slate-900">{amountToWordsEn(rowGrandTotal, rowCurrency)}</p>
                               <div className="mt-4 grid grid-cols-2 gap-3 text-[9px]">
                                 <div className="rounded-lg border border-dashed border-slate-300 bg-white p-3">
-                                  <p className="font-black uppercase text-slate-500">QR Code</p>
-                                  <p className="mt-2 text-slate-400 font-bold">QR Reference: UAE e-invoice standard.</p>
+                                  <p className="font-black uppercase text-slate-500">{tt("lpjr.inv_qr_code","QR Code")}</p>
+                                  <p className="mt-2 text-slate-400 font-bold">{tt("lpjr.inv_qr_ref","QR Reference: UAE e-invoice standard.")}</p>
                                 </div>
                                 <div className="rounded-lg border border-dashed border-slate-300 bg-white p-3">
-                                  <p className="font-black uppercase text-slate-500">Company Stamp</p>
-                                  <p className="mt-2 text-slate-400 font-bold">Authorized Stamp Space</p>
+                                  <p className="font-black uppercase text-slate-500">{tt("lpjr.inv_company_stamp","Company Stamp")}</p>
+                                  <p className="mt-2 text-slate-400 font-bold">{tt("lpjr.inv_stamp_space","Authorized Stamp Space")}</p>
                                 </div>
                               </div>
                             </div>
 
                             <div className="overflow-hidden rounded-xl border border-slate-300 text-[10px]">
-                              <div className="bg-slate-100 px-3 py-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-700">Summary</div>
+                              <div className="bg-slate-100 px-3 py-2 text-[9px] font-black uppercase tracking-[0.14em] text-slate-700">{tt("lpjr.inv_summary","Summary")}</div>
                               <div className="space-y-2 p-3">
-                                <div className="flex justify-between"><span>Sub Total</span><span className="font-mono font-bold">{rowCurrency} {rowSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-                                <div className="flex justify-between text-red-650"><span>VAT Total</span><span className="font-mono font-bold">{rowCurrency} {rowTaxAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
-                                <div className="flex justify-between border-t border-slate-300 pt-2 text-sm font-black text-emerald-700"><span>Grand Total</span><span className="font-mono">{rowCurrency} {rowGrandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+                                <div className="flex justify-between"><span>{tt("lpjr.inv_sub_total","Sub Total")}</span><span className="font-mono font-bold">{rowCurrency} {rowSubtotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+                                <div className="flex justify-between text-red-650"><span>{tt("lpjr.inv_vat_total","VAT Total")}</span><span className="font-mono font-bold">{rowCurrency} {rowTaxAmt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
+                                <div className="flex justify-between border-t border-slate-300 pt-2 text-sm font-black text-emerald-700"><span>{tt("lpjr.inv_grand_total","Grand Total")}</span><span className="font-mono">{rowCurrency} {rowGrandTotal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span></div>
                               </div>
                             </div>
                           </div>
@@ -649,23 +654,23 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
 
                         <div className="grid grid-cols-2 gap-4 border-t border-slate-200 bg-slate-50 p-4 text-[9px]">
                           <div className="space-y-1">
-                            <p className="font-black uppercase tracking-[0.14em] text-blue-800">Bank Details</p>
-                            <p>Bank Name: -</p>
-                            <p>Account Name: {companyName}</p>
-                            <p>IBAN: -</p>
+                            <p className="font-black uppercase tracking-[0.14em] text-blue-800">{tt("lpjr.inv_bank_details","Bank Details")}</p>
+                            <p>{tt("lpjr.inv_bank_name","Bank Name")}: -</p>
+                            <p>{tt("lpjr.inv_account_name","Account Name")}: {companyName}</p>
+                            <p>{tt("lpjr.inv_iban","IBAN")}: -</p>
                           </div>
                           <div className="space-y-1">
-                            <p className="font-black uppercase tracking-[0.14em] text-slate-700">Terms & Conditions</p>
-                            <p>1. Goods received in good condition are subject to company purchase policy.</p>
-                            <p>2. VAT and taxable amounts are calculated according to UAE tax invoice requirements.</p>
-                            <p>3. This invoice is generated from the ERP local purchase module.</p>
+                            <p className="font-black uppercase tracking-[0.14em] text-slate-700">{tt("lpjr.inv_terms","Terms & Conditions")}</p>
+                            <p>{tt("lpjr.inv_terms_1","1. Goods received in good condition are subject to company purchase policy.")}</p>
+                            <p>{tt("lpjr.inv_terms_2","2. VAT and taxable amounts are calculated according to UAE tax invoice requirements.")}</p>
+                            <p>{tt("lpjr.inv_terms_3","3. This invoice is generated from the ERP local purchase module.")}</p>
                           </div>
                         </div>
 
                         <div className="grid grid-cols-3 gap-6 p-5 text-center text-[9px] font-bold text-slate-600">
-                          <div className="border-t border-slate-700 pt-2">Prepared By</div>
-                          <div className="border-t border-slate-700 pt-2">Checked By</div>
-                          <div className="border-t border-slate-700 pt-2">Authorized Signature</div>
+                          <div className="border-t border-slate-700 pt-2">{tt("lpjr.inv_prepared_by","Prepared By")}</div>
+                          <div className="border-t border-slate-700 pt-2">{tt("lpjr.inv_checked_by","Checked By")}</div>
+                          <div className="border-t border-slate-700 pt-2">{tt("lpjr.inv_auth_sig","Authorized Signature")}</div>
                         </div>
                       </div>
                     </div>
@@ -677,35 +682,35 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
                   <div className="space-y-4 text-xs">
                     <div className="flex justify-between items-start border-b-2 border-slate-800 pb-3">
                       <div>
-                        <h2 className="text-sm font-black uppercase text-slate-900 tracking-tight">LOCAL PURCHASE BILL VOUCHER</h2>
+                        <h2 className="text-sm font-black uppercase text-slate-900 tracking-tight">{tt("lpjr.vchr_title","LOCAL PURCHASE BILL VOUCHER")}</h2>
                         <p className="text-[10px] text-slate-500 font-bold uppercase">
                           {selectedRowForVoucher.branchName || selectedRowForVoucher.branch_name || "Global System Branch"}
                         </p>
                       </div>
                       <div className="text-right text-xs font-mono">
                         <span className="font-black text-blue-600 block text-sm">LP-{selectedRowForVoucher.id?.slice(0, 5).toUpperCase()}</span>
-                        <span className="text-[9px] text-slate-500 block">Date: {new Date(selectedRowForVoucher.createdAt || selectedRowForVoucher.created_at || Date.now()).toLocaleDateString("en-GB")}</span>
+                        <span className="text-[9px] text-slate-500 block">{tt("lpjr.vchr_date","Date")}: {new Date(selectedRowForVoucher.createdAt || selectedRowForVoucher.created_at || Date.now()).toLocaleDateString("en-GB")}</span>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3 rounded-lg border border-slate-100">
                       <div>
-                        <span className="text-[9px] font-bold text-slate-400 uppercase block">Supplier / Vendor:</span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase block">{tt("lpjr.vchr_supplier","Supplier / Vendor:")}</span>
                         <span className="font-bold text-slate-800 text-xs">{selectedRowForVoucher.supplierName || selectedRowForVoucher.supplier_name || "-"}</span>
                         <span className="text-[9px] text-emerald-600 block font-bold mt-1 uppercase font-mono">
-                          Payment Mode: {selectedRowForVoucher.paymentMode || selectedRowForVoucher.payment_mode || "Cash"}
+                          {tt("lpjr.vchr_payment_mode","Payment Mode")}: {selectedRowForVoucher.paymentMode || selectedRowForVoucher.payment_mode || "Cash"}
                         </span>
                         {selectedRowForVoucher.paymentMode === "Advance" && (
                           <div className="text-[9px] text-red-500 font-bold uppercase mt-1 font-mono">
-                            Remaining Bal: {rowCurrency} {Number(selectedRowForVoucher.remainingBalance || selectedRowForVoucher.remaining_balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                            {tt("lpjr.vchr_remaining_bal","Remaining Bal")}: {rowCurrency} {Number(selectedRowForVoucher.remainingBalance || selectedRowForVoucher.remaining_balance || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                           </div>
                         )}
                       </div>
                       <div className="text-right text-[10px] space-y-0.5">
-                        <span className="text-[9px] font-bold text-slate-400 uppercase block">Shipping & Logistics:</span>
+                        <span className="text-[9px] font-bold text-slate-400 uppercase block">{tt("lpjr.vchr_shipping","Shipping & Logistics:")}</span>
                         <div className="font-semibold text-slate-700">Mode: <span className="font-bold">{selectedRowForVoucher.shippingMode || selectedRowForVoucher.shipping_mode || "Loading"}</span></div>
-                        <div className="font-semibold text-slate-700">Warehouse: <span className="font-bold">{selectedRowForVoucher.warehouseName || selectedRowForVoucher.warehouse_name || "-"}</span></div>
-                        <div className="font-semibold text-slate-700">Truck No: <span className="font-bold font-mono text-indigo-600">{selectedRowForVoucher.truckNo || selectedRowForVoucher.truck_no || "-"}</span></div>
+                        <div className="font-semibold text-slate-700">{tt("lpjr.vchr_warehouse","Warehouse")}: <span className="font-bold">{selectedRowForVoucher.warehouseName || selectedRowForVoucher.warehouse_name || "-"}</span></div>
+                        <div className="font-semibold text-slate-700">{tt("lpjr.vchr_truck_no","Truck No")}: <span className="font-bold font-mono text-indigo-600">{selectedRowForVoucher.truckNo || selectedRowForVoucher.truck_no || "-"}</span></div>
                       </div>
                     </div>
 
@@ -713,12 +718,12 @@ export function LocalPurchaseTransferPaymentView({ session }: { session: any }) 
                       <table className="w-full text-left text-xs border border-slate-200">
                         <thead className="bg-slate-100 text-slate-700 text-[9px] font-bold uppercase">
                           <tr>
-                            <Th className="p-2 border-b">Goods Item</Th>
-                            <Th className="p-2 border-b">Brand/Origin</Th>
+                            <Th className="p-2 border-b">{tt("lpjr.vchr_goods_item","Goods Item")}</Th>
+                            <Th className="p-2 border-b">{tt("lpjr.vchr_brand_origin","Brand/Origin")}</Th>
                             <Th className="p-2 border-b text-right">Qty</Th>
-                            <Th className="p-2 border-b text-right">Net Weight</Th>
-                            <Th className="p-2 border-b text-right">Rate</Th>
-                            <Th className="p-2 border-b text-right font-black">Final Amount</Th>
+                            <Th className="p-2 border-b text-right">{tt("lpjr.vchr_net_weight","Net Weight")}</Th>
+                            <Th className="p-2 border-b text-right">{tt("lpjr.vchr_rate","Rate")}</Th>
+                            <Th className="p-2 border-b text-right font-black">{tt("lpjr.vchr_final_amount","Final Amount")}</Th>
                           </tr>
                         </thead>
                         <tbody className="text-[10px]">
