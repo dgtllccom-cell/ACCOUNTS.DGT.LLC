@@ -636,3 +636,40 @@ body {
     text-align: center;
   }
 }
+
+/* Modal Primary Button Fix */
+.modal-footer .btn-primary {
+  background-color: #2563eb !important; /* Primary theme color */
+  color: #ffffff !important;            /* High-contrast text */
+  font-weight: 600 !important;
+  padding: 8px 20px !important;
+  border-radius: 8px !important;
+  border: none !important;
+  cursor: pointer !important;
+  transition: background-color 0.2s ease-in-out !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06) !important;
+}
+
+.modal-footer .btn-primary:hover:not(:disabled) {
+  background-color: #1d4ed8 !important;
+}
+
+.modal-footer .btn-primary:disabled {
+  opacity: 0.65 !important;
+  cursor: not-allowed !important;
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+}
+
+.modal-footer .btn-secondary {
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+

@@ -684,6 +684,16 @@ export function LocationQuickCreateModal({
     }
   }
 
+  const saveButtonLabel = useMemo(() => {
+    if (saving) return "Saving...";
+    if (type === "district") return "Save District";
+    if (type === "area") return "Save Area";
+    if (type === "city") return "Save City";
+    if (type === "state") return "Save State";
+    if (type === "country") return "Save Country";
+    return `Save ${typeLabel}`;
+  }, [saving, type, typeLabel]);
+
   const title = `New ${typeLabel}`;
 
   return (
@@ -743,13 +753,24 @@ export function LocationQuickCreateModal({
           </div>
         )}
 
-        <div className="flex justify-end gap-2 border-t pt-4">
-          <Button type="button" variant="outline" onClick={onClose} disabled={saving}>
+        <div className="modal-footer flex justify-end gap-2 border-t pt-4">
+          <Button
+            type="button"
+            variant="outline"
+            className="btn-secondary"
+            onClick={onClose}
+            disabled={saving}
+          >
             Cancel
           </Button>
-          <Button type="button" onClick={handleSave} disabled={saving || !canSave}>
-            <Plus className="h-4 w-4 mr-1" />
-            {saving ? "Saving..." : "Save"}
+          <Button
+            type="button"
+            className="btn-primary bg-[#2563eb] hover:bg-[#1d4ed8] text-white font-semibold shadow-md border-0 px-5 py-2 disabled:bg-[#2563eb]/60 disabled:text-white"
+            onClick={handleSave}
+            disabled={saving || !canSave}
+          >
+            <Plus className="h-4 w-4 mr-1 text-white" />
+            {saveButtonLabel}
           </Button>
         </div>
       </div>

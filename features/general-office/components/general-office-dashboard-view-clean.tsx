@@ -557,16 +557,20 @@ export function GeneralOfficeDashboardView() {
 
   // Fetch employees from API
   // Root-cause fix for the intermittent empty list: `lang` is corrected en→active right after
-  // mount, which fires a second load. Previously a request-sequence guard DROPPED the superseded
-  // response, so if the newer request was slow/failed on a slow server the table stayed empty even
-  // though the API had data. We now abort the superseded request and always apply the LATEST
-  // non-aborted response — the UI can never be left empty while the API is returning rows.
+  const [loadError, setLoadError] = useState<string | null>(null);
   const loadAbortRef = useRef<AbortController | null>(null);
   const loadEmployees = useCallback(async () => {
     loadAbortRef.current?.abort();
     const ac = new AbortController();
     loadAbortRef.current = ac;
     setLoading(true);
+    setLoadError(null);
+    const timeoutId = setTimeout(() => {
+      if (!ac.signal.aborted) {
+        ac.abort();
+        setLoadError("Loading timed out (10s limit). Please check your connection and retry.");
+      }
+    }, 10000);
     try {
       const qp = new URLSearchParams();
       if (search) qp.set("search", search);
@@ -574,13 +578,26 @@ export function GeneralOfficeDashboardView() {
       if (statusFilter) qp.set("status", statusFilter);
       qp.set("lang", lang);
       const res = await fetch(`/api/erp/hr-payroll/employees?${qp.toString()}`, { signal: ac.signal });
+      clearTimeout(timeoutId);
       if (res.ok) {
         const json = await res.json();
-        if (!ac.signal.aborted) setEmployees(Array.isArray(json.employees) ? json.employees : []);
+        if (!ac.signal.aborted) {
+          setEmployees(Array.isArray(json.employees) ? json.employees : []);
+          setLoadError(null);
+        }
+      } else {
+        if (!ac.signal.aborted) {
+          setLoadError(`Failed to load employee records (HTTP ${res.status}). Please retry.`);
+        }
       }
-    } catch (err) {
-      if (!(err instanceof DOMException && err.name === "AbortError")) console.error("Error loading employees:", err);
+    } catch (err: any) {
+      clearTimeout(timeoutId);
+      if (!(err instanceof DOMException && err.name === "AbortError")) {
+        console.error("Error loading employees:", err);
+        setLoadError(err?.message || "Failed to load employees. Please retry.");
+      }
     } finally {
+      clearTimeout(timeoutId);
       if (!ac.signal.aborted) setLoading(false);
     }
   }, [search, categoryFilter, statusFilter, lang]);
@@ -970,7 +987,44 @@ export function GeneralOfficeDashboardView() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
-              {employeesByDate.length === 0 ? (
+              {loading ? (
+                [...Array(6)].map((_, i) => (
+                  <tr key={`skel-${i}`} className="animate-pulse">
+                    <td className="p-3.5"><div className="h-3.5 w-16 bg-slate-200 dark:bg-slate-700 rounded" /></td>
+                    <td className="p-3.5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="h-7 w-7 rounded-full bg-slate-200 dark:bg-slate-700 shrink-0" />
+                        <div className="h-3.5 w-32 bg-slate-200 dark:bg-slate-700 rounded" />
+                      </div>
+                    </td>
+                    <td className="p-3.5"><div className="h-3 w-16 bg-slate-100 dark:bg-slate-800 rounded" /></td>
+                    <td className="p-3.5"><div className="h-3 w-28 bg-slate-100 dark:bg-slate-800 rounded" /></td>
+                    <td className="p-3.5"><div className="h-3 w-20 bg-slate-100 dark:bg-slate-800 rounded" /></td>
+                    <td className="p-3.5"><div className="h-3.5 w-24 bg-slate-200 dark:bg-slate-700 rounded" /></td>
+                    <td className="p-3.5"><div className="h-3 w-8 bg-slate-100 dark:bg-slate-800 rounded" /></td>
+                    <td className="p-3.5"><div className="h-5 w-14 bg-emerald-100 dark:bg-emerald-950/60 rounded-full" /></td>
+                    <td className="p-3.5 text-right"><div className="h-7 w-12 bg-slate-100 dark:bg-slate-800 rounded-lg ml-auto" /></td>
+                  </tr>
+                ))
+              ) : loadError ? (
+                <tr>
+                  <td colSpan={9} className="py-12 text-center">
+                    <div className="flex flex-col items-center justify-center gap-2 max-w-md mx-auto">
+                      <div className="h-12 w-12 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+                        <AlertCircle className="h-6 w-6" />
+                      </div>
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200">{loadError}</p>
+                      <Button
+                        onClick={() => void loadEmployees()}
+                        className="mt-2 h-8.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold gap-1.5 px-4"
+                      >
+                        <RefreshCcw className="h-3.5 w-3.5" />
+                        Retry Loading
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ) : employeesByDate.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="py-16 text-center">
                     <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto">

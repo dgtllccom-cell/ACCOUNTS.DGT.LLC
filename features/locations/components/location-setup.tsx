@@ -511,12 +511,17 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
               </select>
             </div>
           </div>
-          <div className="flex items-center justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => setModal(null)}>
+          <div className="modal-footer flex items-center justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" className="btn-secondary" onClick={() => setModal(null)}>
               Cancel
             </Button>
-            <Button type="button" onClick={addCountry} disabled={!newCountryName.trim() || !newCountryCurrency.trim()}>
-              Save
+            <Button
+              type="button"
+              className="btn-primary bg-[#1e40af] hover:bg-[#1d4ed8] text-white font-semibold shadow-md border-0"
+              onClick={addCountry}
+              disabled={!newCountryName.trim() || !newCountryCurrency.trim()}
+            >
+              Save Country
             </Button>
           </div>
         </SimpleModal>
@@ -536,12 +541,17 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
             <Label>State Code (optional)</Label>
             <Input value={newStateCode} onChange={(e) => setNewStateCode(e.target.value)} placeholder="BAL" />
           </div>
-          <div className="flex items-center justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => setModal(null)}>
+          <div className="modal-footer flex items-center justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" className="btn-secondary" onClick={() => setModal(null)}>
               Cancel
             </Button>
-            <Button type="button" onClick={addState} disabled={!newStateName.trim()}>
-              Save
+            <Button
+              type="button"
+              className="btn-primary bg-[#1e40af] hover:bg-[#1d4ed8] text-white font-semibold shadow-md border-0"
+              onClick={addState}
+              disabled={!newStateName.trim()}
+            >
+              Save State
             </Button>
           </div>
         </SimpleModal>
@@ -573,12 +583,17 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
               <Input value={newCityZip} onChange={(e) => setNewCityZip(e.target.value)} placeholder="86000" />
             </div>
           </div>
-          <div className="flex items-center justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => setModal(null)}>
+          <div className="modal-footer flex items-center justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" className="btn-secondary" onClick={() => setModal(null)}>
               Cancel
             </Button>
-            <Button type="button" onClick={addCity} disabled={!newCityName.trim()}>
-              Save
+            <Button
+              type="button"
+              className="btn-primary bg-[#1e40af] hover:bg-[#1d4ed8] text-white font-semibold shadow-md border-0"
+              onClick={addCity}
+              disabled={!newCityName.trim()}
+            >
+              Save City
             </Button>
           </div>
         </SimpleModal>
@@ -598,12 +613,17 @@ export function LocationSetup({ lang = "en" }: { lang?: SupportedLanguage }) {
             <Label>Area Code (optional)</Label>
             <Input value={newAreaCode} onChange={(e) => setNewAreaCode(e.target.value)} placeholder="MBZ" />
           </div>
-          <div className="flex items-center justify-end gap-2 pt-2">
-            <Button type="button" variant="outline" onClick={() => setModal(null)}>
+          <div className="modal-footer flex items-center justify-end gap-2 pt-2">
+            <Button type="button" variant="outline" className="btn-secondary" onClick={() => setModal(null)}>
               Cancel
             </Button>
-            <Button type="button" onClick={addArea} disabled={!newAreaName.trim()}>
-              Save
+            <Button
+              type="button"
+              className="btn-primary bg-[#1e40af] hover:bg-[#1d4ed8] text-white font-semibold shadow-md border-0"
+              onClick={addArea}
+              disabled={!newAreaName.trim()}
+            >
+              Save Area
             </Button>
           </div>
         </SimpleModal>
