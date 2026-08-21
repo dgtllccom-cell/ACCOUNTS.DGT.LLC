@@ -22,6 +22,8 @@ import {
   FileText
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import { Th } from "@/components/ui/translated-th";
 
 /* ─────────────────────── helpers ─────────────────────── */
@@ -112,6 +114,9 @@ export function PurchaseTransferErpReportView({
   purchaseData?: any;
 }) {
   const router = useRouter();
+  const activeLang = useActiveLanguage();
+  const isRtl = ["ur","ar","fa","ps"].includes(activeLang);
+  const tt = (key: string, fb: string) => t(activeLang, key as never, fb);
   const searchParams = useSearchParams();
   const idParam = searchParams.get("id");
 
@@ -280,7 +285,7 @@ export function PurchaseTransferErpReportView({
   const currency = d.currency || "USD";
 
   return (
-    <div className="min-h-screen bg-slate-100 text-slate-900">
+    <div className="min-h-screen bg-slate-100 text-slate-900" dir={isRtl ? "rtl" : "ltr"}>
 
       {/* ───────────── STICKY TOOLBAR (print:hidden) ───────────── */}
       <header className="sticky top-0 z-50 bg-[#0f2942] text-white px-4 py-2.5 flex items-center justify-between shadow-lg print:hidden">
@@ -293,11 +298,11 @@ export function PurchaseTransferErpReportView({
             className="h-8 text-white hover:bg-white/10 gap-1.5 px-2"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            <span className="text-[10px] font-bold uppercase">Back to Report</span>
+            <span className="text-[10px] font-bold uppercase">{tt("pter.back_to_report","Back to Report")}</span>
           </Button>
           <div className="h-4 w-px bg-white/20" />
           <div>
-            <p className="text-[8px] font-bold uppercase tracking-widest text-blue-200">Purchase Transfer Payment</p>
+            <p className="text-[8px] font-bold uppercase tracking-widest text-blue-200">{tt("pter.transfer_payment","Purchase Transfer Payment")}</p>
             <p className="text-xs font-black text-white">{d.purchaseBookingOrderNumber}</p>
           </div>
         </div>
@@ -316,7 +321,7 @@ export function PurchaseTransferErpReportView({
             className="h-8 text-white hover:bg-white/10 gap-1.5 px-2.5"
           >
             <Printer className="h-3.5 w-3.5" />
-            <span className="text-[10px] font-bold uppercase hidden sm:inline">Print / PDF</span>
+            <span className="text-[10px] font-bold uppercase hidden sm:inline">{tt("pter.print_pdf","Print / PDF")}</span>
           </Button>
 
           {/* ★ PRIMARY: Transfer Payment button */}
@@ -328,7 +333,7 @@ export function PurchaseTransferErpReportView({
             className="h-8 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-[10px] uppercase tracking-wide px-3 shadow-md gap-1.5 border-none disabled:opacity-50"
           >
             <WalletCards className="h-3.5 w-3.5" />
-            {transferring ? "Transferring..." : "Transfer Payment"}
+            {transferring ? tt("pter.transferring","Transferring...") : tt("pter.btn_transfer","Transfer Payment")}
           </Button>
         </div>
       </header>
@@ -341,11 +346,11 @@ export function PurchaseTransferErpReportView({
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
               <p className="text-[8px] font-bold uppercase tracking-[0.3em] text-blue-200">Daman Business Group — Enterprise ERP</p>
-              <h1 className="text-xl font-black tracking-tight mt-0.5">ERP Transaction Report</h1>
-              <p className="text-[10px] text-blue-200 font-semibold mt-0.5">Purchase Transfer Payment — Official Audit Document</p>
+              <h1 className="text-xl font-black tracking-tight mt-0.5">{tt("pter.erp_report_title","ERP Transaction Report")}</h1>
+              <p className="text-[10px] text-blue-200 font-semibold mt-0.5">{tt("pter.official_audit_doc","Purchase Transfer Payment — Official Audit Document")}</p>
             </div>
             <div className="text-right">
-              <p className="text-[9px] font-bold uppercase tracking-widest text-blue-200">Journal Number</p>
+              <p className="text-[9px] font-bold uppercase tracking-widest text-blue-200">{tt("pter.journal_number","Journal Number")}</p>
               <p className="text-sm font-black font-mono">{journalNumber}</p>
               <p className="text-[10px] text-blue-300 font-mono mt-0.5">{journalDate}</p>
             </div>
@@ -353,57 +358,57 @@ export function PurchaseTransferErpReportView({
         </div>
 
         {/* ── 1. HEADER INFORMATION ─────────────────────── */}
-        <SectionCard icon={<FileText className="h-4 w-4" />} title="Transaction Header" badge={d.status}>
+        <SectionCard icon={<FileText className="h-4 w-4" />} title={tt("pter.sec_txn_header","Transaction Header")} badge={d.status}>
           <div className="grid sm:grid-cols-2 gap-x-8">
             <div>
-              <InfoRow label="Booking Reference" value={d.purchaseBookingOrderNumber} mono />
-              <InfoRow label="Purchase Date" value={fmtDate(d.purchaseDate)} />
-              <InfoRow label="Booking Date" value={fmtDate(d.bookingDate || d.createdAt)} />
-              <InfoRow label="Transaction Status" value={d.status || "-"} />
+              <InfoRow label={tt("pter.booking_ref","Booking Reference")} value={d.purchaseBookingOrderNumber} mono />
+              <InfoRow label={tt("pter.purchase_date","Purchase Date")} value={fmtDate(d.purchaseDate)} />
+              <InfoRow label={tt("pter.booking_date","Booking Date")} value={fmtDate(d.bookingDate || d.createdAt)} />
+              <InfoRow label={tt("pter.transaction_status","Transaction Status")} value={d.status || "-"} />
             </div>
             <div>
-              <InfoRow label="Booking User" value={d.audit?.userName || "Admin"} />
-              <InfoRow label="User ID" value={d.audit?.userId || "-"} mono />
-              <InfoRow label="Branch Name" value={d.branchName || "-"} />
-              <InfoRow label="Country" value={d.countryName || "-"} />
+              <InfoRow label={tt("pter.booking_user","Booking User")} value={d.audit?.userName || "Admin"} />
+              <InfoRow label={tt("pter.user_id","User ID")} value={d.audit?.userId || "-"} mono />
+              <InfoRow label={tt("common.branch","Branch Name")} value={d.branchName || "-"} />
+              <InfoRow label={tt("common.country","Country")} value={d.countryName || "-"} />
             </div>
           </div>
         </SectionCard>
 
         {/* ── 2. SUPPLIER INFORMATION ───────────────────── */}
         <div className="grid sm:grid-cols-2 gap-4">
-          <SectionCard icon={<Building2 className="h-4 w-4" />} title="Supplier Information">
-            <InfoRow label="Supplier Code" value={d.purchaseAccountNumber || "SUP-001"} mono />
-            <InfoRow label="Supplier Name" value={d.supplierName || "-"} />
+          <SectionCard icon={<Building2 className="h-4 w-4" />} title={tt("pter.sec_supplier_info","Supplier Information")}>
+            <InfoRow label={tt("pter.supplier_code","Supplier Code")} value={d.purchaseAccountNumber || "SUP-001"} mono />
+            <InfoRow label={tt("pter.supplier_name","Supplier Name")} value={d.supplierName || "-"} />
             <InfoRow
-              label="Contact Number"
+              label={tt("pter.contact_number","Contact Number")}
               value={form.supplierPhone || form.contactPhone || d.form_data?.supplier?.phone || "-"}
             />
             <InfoRow
-              label="Email"
+              label={tt("lpjr.inv_email","Email")}
               value={form.supplierEmail || form.contactEmail || d.form_data?.supplier?.email || "-"}
             />
-            <InfoRow label="Country" value={d.countryName || form.loadingCountry || "-"} />
+            <InfoRow label={tt("common.country","Country")} value={d.countryName || form.loadingCountry || "-"} />
           </SectionCard>
 
           {/* ── 3. BUYER INFORMATION ─────────────────────── */}
-          <SectionCard icon={<User className="h-4 w-4" />} title="Buyer Information">
-            <InfoRow label="Buyer Code" value={d.salesAccountNumber || "BUY-001"} mono />
-            <InfoRow label="Buyer Name" value={d.buyerName || "-"} />
+          <SectionCard icon={<User className="h-4 w-4" />} title={tt("pter.sec_buyer_info","Buyer Information")}>
+            <InfoRow label={tt("pter.buyer_code","Buyer Code")} value={d.salesAccountNumber || "BUY-001"} mono />
+            <InfoRow label={tt("pter.buyer_name","Buyer Name")} value={d.buyerName || "-"} />
             <InfoRow
-              label="Contact Number"
+              label={tt("pter.contact_number","Contact Number")}
               value={form.buyerPhone || form.buyerContact || "-"}
             />
             <InfoRow
-              label="Email"
+              label={tt("lpjr.inv_email","Email")}
               value={form.buyerEmail || "-"}
             />
-            <InfoRow label="Country" value={form.receivedCountry || d.branchName || "-"} />
+            <InfoRow label={tt("common.country","Country")} value={form.receivedCountry || d.branchName || "-"} />
           </SectionCard>
         </div>
 
         {/* ── 4. GOODS DETAILS ──────────────────────────── */}
-        <SectionCard icon={<Package className="h-4 w-4" />} title="Goods Details">
+        <SectionCard icon={<Package className="h-4 w-4" />} title={tt("pter.sec_goods_details","Goods Details")}>
           <div className="overflow-x-auto">
             <table className="w-full text-xs border-collapse">
               <thead>
@@ -434,7 +439,7 @@ export function PurchaseTransferErpReportView({
               </tbody>
               <tfoot>
                 <tr className="bg-slate-50 font-black text-[11px]">
-                  <td colSpan={7} className="px-3 py-2.5 text-right text-slate-600 uppercase tracking-wider">Grand Total</td>
+                  <td colSpan={7} className="px-3 py-2.5 text-right text-slate-600 uppercase tracking-wider">{tt("pter.grand_total","Grand Total")}</td>
                   <td className="px-3 py-2.5 text-right text-[#0f2942] font-black text-sm font-mono">
                     {money(totalPurchaseAmount)} {currency}
                   </td>
@@ -445,26 +450,26 @@ export function PurchaseTransferErpReportView({
         </SectionCard>
 
         {/* ── 5. LOADING & TRANSPORT ─────────�        {/* ── 6. PAYMENT INFORMATION ───────────────────── */}
-        <SectionCard icon={<CreditCard className="h-4 w-4" />} title="Payment Information" badge={d.paymentStatus || d.status}>
+        <SectionCard icon={<CreditCard className="h-4 w-4" />} title={tt("pter.sec_payment_info","Payment Information")} badge={d.paymentStatus || d.status}>
           <div className="grid sm:grid-cols-2 gap-x-8">
             <div>
-              <InfoRow label="Total Purchase Amount" value={`${money(totalPurchaseAmount)} ${currency}`} mono />
-              <InfoRow label="Advance Paid" value={`${money(advanceAmount)} ${currency}`} mono />
-              <InfoRow label="Remaining Balance" value={`${money(remainingBalance)} ${currency}`} mono />
+              <InfoRow label={tt("pter.total_purchase_amt","Total Purchase Amount")} value={`${money(totalPurchaseAmount)} ${currency}`} mono />
+              <InfoRow label={tt("pter.advance_paid","Advance Paid")} value={`${money(advanceAmount)} ${currency}`} mono />
+              <InfoRow label={tt("pter.remaining_balance","Remaining Balance")} value={`${money(remainingBalance)} ${currency}`} mono />
             </div>
             <div>
-              <InfoRow label="Payment Status" value={d.paymentStatus || d.status || "-"} />
-              <InfoRow label="Payment Type" value={form.paymentType || "-"} />
-              <InfoRow label="Due Date" value={fmtDate(form.dueDate || form.loadingDate)} />
+              <InfoRow label={tt("pter.payment_status","Payment Status")} value={d.paymentStatus || d.status || "-"} />
+              <InfoRow label={tt("pter.payment_type","Payment Type")} value={form.paymentType || "-"} />
+              <InfoRow label={tt("pter.due_date","Due Date")} value={fmtDate(form.dueDate || form.loadingDate)} />
             </div>
           </div>
 
           {/* Payment summary bar */}
           <div className="mt-4 grid grid-cols-3 gap-3">
             {[
-              { label: "Total Amount", value: `${money(totalPurchaseAmount)} ${currency}`, color: "text-[#0f2942]" },
-              { label: "Advance Paid", value: `${money(advanceAmount)} ${currency}`, color: "text-emerald-600" },
-              { label: "Remaining Due", value: `${money(remainingBalance)} ${currency}`, color: "text-rose-600" }
+              { label: tt("pter.lbl_total_amount","Total Amount"), value: `${money(totalPurchaseAmount)} ${currency}`, color: "text-[#0f2942]" },
+              { label: tt("pter.lbl_advance_paid","Advance Paid"), value: `${money(advanceAmount)} ${currency}`, color: "text-emerald-600" },
+              { label: tt("pter.lbl_remaining_due","Remaining Due"), value: `${money(remainingBalance)} ${currency}`, color: "text-rose-600" }
             ].map((item) => (
               <div key={item.label} className="rounded-lg border bg-slate-50 p-3 text-center dark:bg-slate-900/40">
                 <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">{item.label}</p>
@@ -475,12 +480,12 @@ export function PurchaseTransferErpReportView({
         </SectionCard>
 
         {/* ── 7. ACCOUNTING / LEDGER IMPACT ────────────── */}
-        <SectionCard icon={<BookOpen className="h-4 w-4" />} title="Accounting / Ledger Impact">
+        <SectionCard icon={<BookOpen className="h-4 w-4" />} title={tt("pter.sec_accounting","Accounting / Ledger Impact")}>
           {/* Journal meta */}
           <div className="grid sm:grid-cols-3 gap-x-8 mb-4">
-            <InfoRow label="Journal Number" value={journalNumber} mono />
-            <InfoRow label="Journal Date" value={journalDate} />
-            <InfoRow label="Posting Status" value={d.ledger_posting_status || "Pending"} />
+            <InfoRow label={tt("pter.journal_number","Journal Number")} value={journalNumber} mono />
+            <InfoRow label={tt("pter.journal_date","Journal Date")} value={journalDate} />
+            <InfoRow label={tt("pter.posting_status","Posting Status")} value={d.ledger_posting_status || "Pending"} />
           </div>
 
           {/* Balance validation badge */}
@@ -490,24 +495,24 @@ export function PurchaseTransferErpReportView({
               : "border-rose-200 bg-rose-50 text-rose-700"
           }`}>
             {isBalanced ? (
-              <><CheckCircle2 className="h-4 w-4" /> Journal Entry Balanced — Total Debit equals Total Credit</>
+              <><CheckCircle2 className="h-4 w-4" /> {tt("pter.balanced_msg","Journal Entry Balanced — Total Debit equals Total Credit")}</>
             ) : (
-              <><AlertTriangle className="h-4 w-4" /> Journal Entry Not Balanced — Please verify accounting entries</>
+              <><AlertTriangle className="h-4 w-4" /> {tt("pter.unbalanced_msg","Journal Entry Not Balanced — Please verify accounting entries")}</>
             )}
           </div>
 
           <div className="space-y-6">
             {/* Booking Transfer Stage Preview */}
             <div className="space-y-2">
-              <h3 className="text-xs font-black uppercase text-indigo-700 dark:text-indigo-400">1. Booking Transfer Stage (GL Impact)</h3>
+              <h3 className="text-xs font-black uppercase text-indigo-700 dark:text-indigo-400">{tt("pter.stage1_gl","1. Booking Transfer Stage (GL Impact)")}</h3>
               <div className="overflow-x-auto rounded-lg border border-slate-200">
                 <table className="w-full text-xs border-collapse">
                   <thead>
                     <tr className="bg-slate-100 text-[10px] font-black uppercase tracking-wider text-slate-650 border-b border-slate-200">
-                      <Th className="px-4 py-2.5 text-left">GL Code</Th>
-                      <Th className="px-4 py-2.5 text-left">Account Name</Th>
-                      <Th className="px-4 py-2.5 text-right">Debit ({currency})</Th>
-                      <Th className="px-4 py-2.5 text-right">Credit ({currency})</Th>
+                      <Th className="px-4 py-2.5 text-left">{tt("pter.col_gl_code","GL Code")}</Th>
+                      <Th className="px-4 py-2.5 text-left">{tt("pter.col_account_name","Account Name")}</Th>
+                      <Th className="px-4 py-2.5 text-right">{tt("pter.col_debit","Debit")} ({currency})</Th>
+                      <Th className="px-4 py-2.5 text-right">{tt("pter.col_credit","Credit")} ({currency})</Th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
@@ -531,13 +536,13 @@ export function PurchaseTransferErpReportView({
             {/* Advance Payment Stage Preview */}
             {advanceAmount > 0 && (
               <div className="space-y-2">
-                <h3 className="text-xs font-black uppercase text-emerald-700 dark:text-emerald-400">2. Advance Payment Stage (GL Impact)</h3>
+                <h3 className="text-xs font-black uppercase text-emerald-700 dark:text-emerald-400">{tt("pter.stage2_gl","2. Advance Payment Stage (GL Impact)")}</h3>
                 <div className="overflow-x-auto rounded-lg border border-slate-200">
                   <table className="w-full text-xs border-collapse">
                     <thead>
                       <tr className="bg-slate-100 text-[10px] font-black uppercase tracking-wider text-slate-650 border-b border-slate-200">
-                        <Th className="px-4 py-2.5 text-left">GL Code</Th>
-                        <Th className="px-4 py-2.5 text-left">Account Name</Th>
+                        <Th className="px-4 py-2.5 text-left">{tt("pter.col_gl_code","GL Code")}</Th>
+                        <Th className="px-4 py-2.5 text-left">{tt("pter.col_account_name","Account Name")}</Th>
                         <Th className="px-4 py-2.5 text-right">Debit ({currency})</Th>
                         <Th className="px-4 py-2.5 text-right">Credit ({currency})</Th>
                       </tr>
@@ -564,7 +569,7 @@ export function PurchaseTransferErpReportView({
 
           {/* Accounting flow note */}
           <div className="mt-4 rounded-lg border border-slate-200 bg-slate-50 p-3 text-[10px] font-semibold text-slate-500 space-y-1">
-            <p className="font-black text-slate-600 uppercase text-[9px] tracking-wider mb-1">Accounting Flow — Purchase Transfer Stage</p>
+            <p className="font-black text-slate-600 uppercase text-[9px] tracking-wider mb-1">{tt("pter.accounting_flow","Accounting Flow — Purchase Transfer Stage")}</p>
             <p>
               <span className="text-blue-700 font-black">DEBIT:</span>{" "}
               Purchase Inventory Account (INV) = Goods received into inventory at purchase cost
@@ -575,7 +580,7 @@ export function PurchaseTransferErpReportView({
             </p>
             {advanceAmount > 0 && (
               <div className="border-t border-slate-200 pt-1.5 mt-1.5">
-                <p className="font-black text-slate-600 uppercase text-[9px] tracking-wider mb-1">Payment Posting Stage (on Transfer Payment)</p>
+                <p className="font-black text-slate-600 uppercase text-[9px] tracking-wider mb-1">{tt("pter.payment_stage","Payment Posting Stage (on Transfer Payment)")}</p>
                 <p>
                   <span className="text-blue-700 font-black">DEBIT:</span>{" "}
                   Supplier Payable Account (AP) = Clears the supplier liability
@@ -595,7 +600,7 @@ export function PurchaseTransferErpReportView({
               <TrendingUp className="h-5 w-5" />
             </div>
             <div>
-              <p className="text-xs font-black text-emerald-900">Ready to process payment transfer?</p>
+              <p className="text-xs font-black text-emerald-900">{tt("pter.cta_ready","Ready to process payment transfer?")}</p>
               <p className="text-[10px] text-emerald-600 font-semibold mt-0.5">
                 This will automatically generate double-entry ledgers, post to general/supplier/cash accounts, and update status.
               </p>
@@ -636,13 +641,13 @@ export function PurchaseTransferErpReportView({
           </div>
           <div className="flex items-center gap-2">
             <Calendar className="h-3.5 w-3.5" />
-            <span>Generated: {new Date().toLocaleDateString("en-GB")}</span>
+            <span>{tt("pter.generated","Generated")}: {new Date().toLocaleDateString("en-GB")}</span>
           </div>
         </footer>
 
         {/* Print-only Transfer To Payment notice */}
         <div className="hidden print:block border-t border-slate-300 pt-4 mt-2 text-center text-[10px] font-semibold text-slate-500">
-          This is an official ERP transaction document. Transfer to payment must be processed via the ERP system.
+          {tt("pter.print_notice","This is an official ERP transaction document. Transfer to payment must be processed via the ERP system.")}
         </div>
       </main>
 
