@@ -17,6 +17,7 @@ import { ReportPageHeader } from "@/components/reports/report-page-header";
 import { ReportTd, ReportTh } from "@/components/reports/report-primitives";
 import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { cn } from "@/lib/utils";
 import { apiGet } from "@/lib/api/client";
 import {
@@ -124,6 +125,10 @@ export function RoznamchaReportView({
   typeFilter: RoznamchaType;
 }) {
   const router = useRouter();
+  // Prefer the live client language over the (possibly stale) server-threaded `lang` prop —
+  // see CLAUDE.md multilingual-architecture reconciliation rule.
+  const activeLang = useActiveLanguage();
+  const effectiveLang = activeLang !== "en" ? activeLang : lang;
   const [loading, setLoading] = useState(true);
   const [entries, setEntries] = useState<RoznamchaEntryRow[]>([]);
   const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
@@ -159,7 +164,8 @@ export function RoznamchaReportView({
       const res = await listRoznamchaEntries({
         countryId: info.scopes.isSuperAdmin ? null : info.scopes.countryIds[0] ?? null,
         countryBranchId: info.scopes.isSuperAdmin ? null : info.scopes.countryBranchIds[0] ?? null,
-        cityBranchId: info.scopes.isSuperAdmin ? null : info.scopes.cityBranchIds[0] ?? null
+        cityBranchId: info.scopes.isSuperAdmin ? null : info.scopes.cityBranchIds[0] ?? null,
+        lang: effectiveLang
       });
 
       setEntries(res.entries ?? []);
@@ -183,7 +189,8 @@ export function RoznamchaReportView({
       window.removeEventListener("erp:posting-saved", handleSaved);
       window.removeEventListener("erp:posting-deleted", handleSaved);
     };
-  }, []);
+    // effectiveLang: re-fetch so narration/description re-resolve in the newly selected language.
+  }, [effectiveLang]);
 
   const countryOptions = useMemo(() => {
     const map = new Map<string, SearchSelectOption>();
@@ -286,7 +293,7 @@ export function RoznamchaReportView({
     setSelectedId(id);
     setSelectedLoading(true);
     try {
-      const res = await getRoznamchaEntry(id);
+      const res = await getRoznamchaEntry(id, effectiveLang);
       setSelectedHeader(res.header);
       setSelectedLines(res.lines ?? []);
       setSelectedTotals(res.totals ?? null);

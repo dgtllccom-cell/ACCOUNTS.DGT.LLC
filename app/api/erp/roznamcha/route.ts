@@ -19,6 +19,21 @@ import { localizeRecordNames } from "@/lib/i18n/localize-records";
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
 
+/** Localize `description` on every nested roznamcha_lines row across a list of entries. */
+async function localizeRoznamchaEntryLines<T extends { id: string; roznamcha_lines?: Array<{ id: string; description?: string | null }> | null }>(
+  entries: T[],
+  lang: Parameters<typeof localizeRecordNames>[3]
+): Promise<T[]> {
+  const allLines = entries.flatMap((entry) => entry.roznamcha_lines ?? []);
+  if (allLines.length === 0) return entries;
+  const localizedLines = await localizeRecordNames(allLines as Array<{ id: string; description?: string | null }>, "roznamcha_lines", "description", lang);
+  const byId = new Map(localizedLines.map((line) => [line.id, line]));
+  return entries.map((entry) => {
+    if (!entry.roznamcha_lines || entry.roznamcha_lines.length === 0) return entry;
+    return { ...entry, roznamcha_lines: entry.roznamcha_lines.map((line) => byId.get(line.id) ?? line) };
+  });
+}
+
 function toNumber(value: unknown) {
   const n = typeof value === "number" ? value : Number(value);
   return Number.isFinite(n) ? n : 0;
@@ -1138,7 +1153,8 @@ export async function GET(request: NextRequest) {
     });
 
     if (viaPg) {
-      const resolvedEntries = await localizeRecordNames(viaPg.entries, "roznamcha_entries", "narration", lang);
+      const narrationResolved = await localizeRecordNames(viaPg.entries, "roznamcha_entries", "narration", lang);
+      const resolvedEntries = await localizeRoznamchaEntryLines(narrationResolved, lang);
       return apiOk({ entries: resolvedEntries, limit });
     }
 
@@ -1227,7 +1243,8 @@ export async function GET(request: NextRequest) {
         }
       }
     }
-    const resolvedEntries = await localizeRecordNames(entries as any[], "roznamcha_entries", "narration", lang);
+    const narrationResolved = await localizeRecordNames(entries as any[], "roznamcha_entries", "narration", lang);
+    const resolvedEntries = await localizeRoznamchaEntryLines(narrationResolved, lang);
 
     return apiOk({
       entries: resolvedEntries,

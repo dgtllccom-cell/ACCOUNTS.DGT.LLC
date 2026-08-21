@@ -73,6 +73,7 @@ export async function listRoznamchaEntries(params: {
   toDate?: string | null;
   search?: string | null;
   limit?: number;
+  lang?: string | null;
 }) {
   const qp = new URLSearchParams();
   if (params.countryId) qp.set("countryId", params.countryId);
@@ -82,16 +83,20 @@ export async function listRoznamchaEntries(params: {
   if (params.toDate) qp.set("toDate", params.toDate);
   if (params.search) qp.set("search", params.search);
   if (params.limit) qp.set("limit", String(params.limit));
+  if (params.lang) qp.set("lang", params.lang);
 
   return apiGet<{ entries: RoznamchaEntryRow[]; limit: number }>(`/api/erp/roznamcha?${qp.toString()}`);
 }
 
-export async function getRoznamchaEntry(id: string) {
+export async function getRoznamchaEntry(id: string, lang?: string | null) {
+  const qp = new URLSearchParams();
+  if (lang) qp.set("lang", lang);
+  const suffix = qp.toString() ? `?${qp.toString()}` : "";
   return apiGet<{
     found: boolean;
     id: string;
     header: RoznamchaEntryRow | null;
     lines: RoznamchaLineRow[];
     totals: { lines: number; debit: number; credit: number };
-  }>(`/api/erp/roznamcha/${id}`);
+  }>(`/api/erp/roznamcha/${id}${suffix}`);
 }

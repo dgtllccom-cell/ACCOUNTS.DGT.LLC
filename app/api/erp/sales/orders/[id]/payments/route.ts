@@ -10,6 +10,8 @@ import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
 import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 
 const paramsSchema = z.object({
   id: uuidSchema
@@ -116,6 +118,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
   try {
     const session = await requireErpSession();
     const params = paramsSchema.parse(await context.params);
+    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
 
     const supabase = (await createApiSupabaseClient()) as any;
     const order = await requireSupabaseData(
@@ -155,7 +158,14 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
         .limit(200)
     )) as any[];
 
-    const mapped = (rows ?? []).map((row: any) => ({
+    const localizedRows = await localizeRecordNames(
+      (rows ?? []) as Array<{ id: string; remarks?: string | null }>,
+      "sales_order_payments",
+      "remarks",
+      lang
+    );
+
+    const mapped = localizedRows.map((row: any) => ({
       ...row,
       kind: row.payment_kind,
       entry_date: row.payment_date,

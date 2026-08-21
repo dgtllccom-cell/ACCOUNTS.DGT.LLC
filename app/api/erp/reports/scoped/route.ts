@@ -203,6 +203,7 @@ export async function GET(request: NextRequest) {
       admin = createSupabaseAdminClient();
     }
     const adminClient = admin as any;
+    const lang = normalizeLanguage(parsed.lang, "en");
 
     let data: any[] = [];
     let summary: any = {};
@@ -398,28 +399,39 @@ export async function GET(request: NextRequest) {
       case "journal": {
         let q = adminClient
           .from("journal_entries")
-          .select(`id, entry_date, narration, status, reference_no,
+          .select(`id, entry_date, memo, status, reference_no,
                    country_id, city_branch_id, country_branch_id,
-                   journal_lines(account_id, debit, credit, currency, description, accounts(name))`)
+                   journal_lines(id, account_id, debit, credit, currency, description, accounts(name))`)
           .is("deleted_at", null)
           .order("entry_date", { ascending: false });
 
         q = applyStandardFilters(q, { dateField: "entry_date" });
         const { data: rows } = await q.limit(limit);
 
-        data = (rows ?? []).map((r: any) => {
+        const entryRows = (rows ?? []) as any[];
+        const localizedEntries = await localizeRecordNames(entryRows as Array<{ id: string; memo?: string | null }>, "journal_entries", "memo", lang);
+        const memoById = new Map(localizedEntries.map((r) => [r.id, r.memo]));
+
+        const allLines = entryRows.flatMap((r) => r.journal_lines ?? []);
+        const localizedLines = allLines.length
+          ? await localizeRecordNames(allLines as Array<{ id: string; description?: string | null }>, "journal_lines", "description", lang)
+          : [];
+        const lineDescById = new Map(localizedLines.map((l) => [l.id, l.description]));
+
+        data = entryRows.map((r: any) => {
           const totalDebit = r.journal_lines?.reduce((s: number, l: any) => s + Number(l.debit || 0), 0) ?? 0;
           const totalCredit = r.journal_lines?.reduce((s: number, l: any) => s + Number(l.credit || 0), 0) ?? 0;
           const currency = r.journal_lines?.[0]?.currency ?? "PKR";
           return {
             serial: r.reference_no || r.id?.slice(0, 8),
             date: r.entry_date,
-            narration: r.narration || "—",
+            narration: memoById.get(r.id) || r.memo || "—",
             totalDebit,
             totalCredit,
             currency,
             status: r.status,
-            lineCount: r.journal_lines?.length ?? 0
+            lineCount: r.journal_lines?.length ?? 0,
+            lines: (r.journal_lines ?? []).map((l: any) => ({ ...l, description: lineDescById.get(l.id) ?? l.description }))
           };
         });
 

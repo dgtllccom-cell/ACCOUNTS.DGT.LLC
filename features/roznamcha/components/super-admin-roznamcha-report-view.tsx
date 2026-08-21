@@ -1192,6 +1192,11 @@ function SuperAdminRoznamchaReportViewContent({
   const exchangeRef = useRef<HTMLDivElement | null>(null);
   const filtersRef = useRef<HTMLDivElement | null>(null);
 
+  // Prefer the live client language over the (possibly stale) server-threaded `lang` prop —
+  // see CLAUDE.md multilingual-architecture reconciliation rule.
+  const activeLang = useActiveLanguage();
+  const effectiveLang = activeLang !== "en" ? activeLang : lang;
+
   const [draftFilters, setDraftFilters] = useState<FilterState>({
     fromDate: "",
     toDate: "",
@@ -1266,13 +1271,14 @@ function SuperAdminRoznamchaReportViewContent({
         fromDate: rangeFilters.fromDate,
         toDate: rangeFilters.toDate,
         search: rangeFilters.partySearch,
-        limit: 500
+        limit: 500,
+        lang: effectiveLang
       });
 
       const detailed = await Promise.all(
         (response.entries ?? []).map(async (entry) => {
           try {
-            const res = await getRoznamchaEntry(entry.id);
+            const res = await getRoznamchaEntry(entry.id, effectiveLang);
             if (!res.header) return [];
             const entryLines = res.lines ?? [];
             if (entryLines.length === 0) {
@@ -1322,7 +1328,8 @@ function SuperAdminRoznamchaReportViewContent({
       window.removeEventListener("focus", handleSaved);
       document.removeEventListener("visibilitychange", handleVisibilityRefresh);
     };
-  }, []);
+    // effectiveLang: re-fetch so narration/description re-resolve in the newly selected language.
+  }, [effectiveLang]);
 
   const effectiveTypeFilter = useMemo<RoznamchaType>(() => {
     if (!sessionInfo) return typeFilter;

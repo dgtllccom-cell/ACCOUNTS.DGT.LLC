@@ -1038,7 +1038,7 @@ function NestedPaymentHistory({
     async function fetchPayments() {
       setLoading(true);
       try {
-        const response = await fetch(`/api/erp/purchases/orders/${row.id}/payments`, { credentials: "include" });
+        const response = await fetch(`/api/erp/purchases/orders/${row.id}/payments?lang=${currentLanguage}`, { credentials: "include" });
         const body = await response.json();
         if (body?.ok && body.data?.payments && !cancelled) {
           setPayments(body.data.payments);
@@ -1051,7 +1051,7 @@ function NestedPaymentHistory({
     }
     fetchPayments();
     return () => { cancelled = true; };
-  }, [row.id]);
+  }, [row.id, currentLanguage]);
 
   const form = row.form_data?.form || {};
   const purchaseCurrency = String(
@@ -2505,7 +2505,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
 
     let paymentHistory: any[] = [];
     try {
-      const response = await fetch(`/api/erp/purchases/orders/${row.id}/payments`, { credentials: "include" });
+      const response = await fetch(`/api/erp/purchases/orders/${row.id}/payments?lang=${currentLanguage}`, { credentials: "include" });
       const body = await response.json();
       if (body?.ok && body.data?.payments) {
         paymentHistory = body.data.payments.filter((p: any) => !p.narration?.toLowerCase().includes("initial booking transfer"));
@@ -2636,7 +2636,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     async function fetchPayments() {
       setLoadingPayments(true);
       try {
-        const response = await fetch(`/api/erp/purchases/orders/${selectedId}/payments`, { credentials: "include" });
+        const response = await fetch(`/api/erp/purchases/orders/${selectedId}/payments?lang=${currentLanguage}`, { credentials: "include" });
         const body = await response.json();
         if (body?.ok && body.data?.payments && !cancelled) {
           setSelectedOrderPayments(body.data.payments);
@@ -2649,7 +2649,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     }
     void fetchPayments();
     return () => { cancelled = true; };
-  }, [selectedId]);
+  }, [selectedId, currentLanguage]);
   useEffect(() => {
     if (!viewingRow?.id) {
       setViewingRowPayments([]);
@@ -2660,7 +2660,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     async function fetchViewingPayments() {
       setLoadingViewingRowPayments(true);
       try {
-        const response = await fetch(`/api/erp/purchases/orders/${viewingRowId}/payments`, { credentials: "include" });
+        const response = await fetch(`/api/erp/purchases/orders/${viewingRowId}/payments?lang=${currentLanguage}`, { credentials: "include" });
         const body = await response.json();
         if (body?.ok && body.data?.payments && !cancelled) {
           setViewingRowPayments(body.data.payments.filter((p: any) => !p.narration?.toLowerCase().includes("initial booking transfer")));
@@ -2673,7 +2673,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     }
     void fetchViewingPayments();
     return () => { cancelled = true; };
-  }, [viewingRow?.id]);
+  }, [viewingRow?.id, currentLanguage]);
 
 
   useEffect(() => {

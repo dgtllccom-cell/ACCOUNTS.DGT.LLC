@@ -6,6 +6,8 @@ import { uuidSchema } from "@/lib/api/erp-validation";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { createApiSupabaseClient } from "@/lib/api/supabase";
 import { revalidatePath } from "next/cache";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
+import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
 
 type RoznamchaHeader = {
   id: string;
@@ -51,11 +53,12 @@ type RoznamchaLine = {
 
 import { withLocalPg } from "@/lib/db/local-postgres";
 
-export async function GET(_request: NextRequest, context: { params: Promise<{ id: string }> }) {
+export async function GET(request: NextRequest, context: { params: Promise<{ id: string }> }) {
   try {
     const session = await requireErpSession();
     const params = await context.params;
     const id = uuidSchema.parse(params.id);
+    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
 
     // Try direct PostgreSQL first for maximum performance and schema resilience
     const viaPg = await withLocalPg(async (sql) => {
@@ -147,11 +150,14 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
         { lines: 0, debit: 0, credit: 0 }
       );
 
+      const [localizedHeader] = await localizeRecordNames([viaPg.header as { id: string; narration?: string | null }], "roznamcha_entries", "narration", lang);
+      const localizedLines = await localizeRecordNames(viaPg.lines as unknown as Array<{ id: string; description?: string | null }>, "roznamcha_lines", "description", lang);
+
       return apiOk({
         found: true,
         id,
-        header: { ...viaPg.header, translations: viaPg.translations },
-        lines: viaPg.lines,
+        header: { ...localizedHeader, translations: viaPg.translations },
+        lines: localizedLines,
         totals
       });
     }
@@ -225,11 +231,14 @@ export async function GET(_request: NextRequest, context: { params: Promise<{ id
       { lines: 0, debit: 0, credit: 0 }
     );
 
+    const [localizedHeader] = await localizeRecordNames([header as RoznamchaHeader], "roznamcha_entries", "narration", lang);
+    const localizedLines = await localizeRecordNames(safeLines, "roznamcha_lines", "description", lang);
+
     return apiOk({
       found: true,
       id,
-      header: { ...(header as RoznamchaHeader), translations },
-      lines: safeLines,
+      header: { ...localizedHeader, translations },
+      lines: localizedLines,
       totals
     });
   } catch (error) {

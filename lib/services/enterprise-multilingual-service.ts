@@ -220,7 +220,7 @@ export async function saveVerifiedEnterpriseRecordTranslations(
   input: Omit<EnterpriseTranslationSaveInput, "fields"> & { fields: VerifiedEnterpriseTranslationField[] },
   db?: EnterpriseDbClient
 ) {
-  const results: Array<{ fieldName: string; status: "complete" | "pending"; missingLanguages: SupportedLanguage[]; translations: VerifiedTranslationMap }> = [];
+  const results: Array<{ fieldName: string; status: "complete" | "pending" | "needs_review"; missingLanguages: SupportedLanguage[]; translations: VerifiedTranslationMap }> = [];
   for (const field of input.fields.filter((item) => typeof item.value === "string" && item.value.trim())) {
     const originalText = String(field.value).trim();
     const { autoTranslate5Languages, detectScriptType } = await import("@/lib/i18n/multilingual-translator");
@@ -234,20 +234,29 @@ export async function saveVerifiedEnterpriseRecordTranslations(
       supplied: field.translations
     });
 
-    // Backfill missing languages from the central approved system_dictionary
+    // Backfill missing languages from the central approved system_dictionary — a curated,
+    // human-approved source, so this still counts as verified (not a guess).
     for (const lng of LANG_KEYS) {
       if (verified.translations[lng]?.trim()) continue;
       const dictVal = await lookupApprovedDictionary(input.recordTable, originalText, lng);
       if (dictVal) verified.translations[lng] = dictVal;
     }
 
-    // Complete any remaining missing language using autoTranslate5Languages
+    // Complete any remaining missing language using autoTranslate5Languages — this is an
+    // UNVERIFIED machine guess (no dictionary hit, no human input), so any field that needed
+    // it gets flagged needs_review rather than silently marked complete.
+    let usedUnverifiedFallback = false;
     const auto5 = autoTranslate5Languages(originalText, originalLanguage);
     for (const lng of LANG_KEYS) {
       if (!verified.translations[lng]?.trim()) {
         verified.translations[lng] = auto5[lng] || originalText;
+        usedUnverifiedFallback = true;
       }
     }
+
+    const isManual = verified.engine === "manual";
+    const writeStatus = isManual ? "complete" : usedUnverifiedFallback ? "needs_review" : "complete";
+    const writeEngine = isManual ? "manual" : usedUnverifiedFallback ? "auto_unverified" : "local_dictionary";
 
     await upsertRecordTranslationRpc({
       recordTable: input.recordTable,
@@ -261,12 +270,12 @@ export async function saveVerifiedEnterpriseRecordTranslations(
       persian: verified.translations.fa ?? null,
       pashto: verified.translations.ps ?? null,
       languageTexts: verified.translations,
-      source: verified.engine === "manual" ? "manual" : input.source ?? "auto",
-      status: "complete",
-      engine: verified.engine === "manual" ? "manual" : "local_dictionary",
-      actorId: verified.engine === "manual" ? input.actorId ?? null : null
+      source: isManual ? "manual" : input.source ?? "auto",
+      status: writeStatus,
+      engine: writeEngine,
+      actorId: isManual ? input.actorId ?? null : null
     }, db);
-    results.push({ fieldName: field.fieldName, status: "complete", missingLanguages: [], translations: verified.translations });
+    results.push({ fieldName: field.fieldName, status: writeStatus, missingLanguages: [], translations: verified.translations });
   }
   return results;
 }

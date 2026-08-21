@@ -998,7 +998,7 @@ function NestedPaymentHistory({
     async function fetchPayments() {
       setLoading(true);
       try {
-        const response = await fetch(`/api/erp/sales/orders/${row.id}/payments`, { credentials: "include" });
+        const response = await fetch(`/api/erp/sales/orders/${row.id}/payments?lang=${currentLanguage}`, { credentials: "include" });
         const body = await response.json();
         if (body?.ok && body.data?.payments && !cancelled) {
           setPayments(body.data.payments);
@@ -1011,7 +1011,7 @@ function NestedPaymentHistory({
     }
     fetchPayments();
     return () => { cancelled = true; };
-  }, [row.id]);
+  }, [row.id, currentLanguage]);
 
   const form = row.form_data?.form || {};
   const purchaseCurrency = String(
@@ -2442,7 +2442,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
 
     let paymentHistory: any[] = [];
     try {
-      const response = await fetch(`/api/erp/sales/orders/${row.id}/payments`, { credentials: "include" });
+      const response = await fetch(`/api/erp/sales/orders/${row.id}/payments?lang=${currentLanguage}`, { credentials: "include" });
       const body = await response.json();
       if (body?.ok && body.data?.payments) {
         paymentHistory = body.data.payments.filter((p: any) => !p.narration?.toLowerCase().includes("initial booking transfer"));
@@ -2570,7 +2570,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     async function fetchPayments() {
       setLoadingPayments(true);
       try {
-        const response = await fetch(`/api/erp/sales/orders/${selectedId}/payments`, { credentials: "include" });
+        const response = await fetch(`/api/erp/sales/orders/${selectedId}/payments?lang=${currentLanguage}`, { credentials: "include" });
         const body = await response.json();
         if (body?.ok && body.data?.payments && !cancelled) {
           setSelectedOrderPayments(body.data.payments);
@@ -2583,7 +2583,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     }
     void fetchPayments();
     return () => { cancelled = true; };
-  }, [selectedId]);
+  }, [selectedId, currentLanguage]);
   useEffect(() => {
     if (!viewingRow?.id) {
       setViewingRowPayments([]);
@@ -2594,7 +2594,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     async function fetchViewingPayments() {
       setLoadingViewingRowPayments(true);
       try {
-        const response = await fetch(`/api/erp/sales/orders/${viewingRowId}/payments`, { credentials: "include" });
+        const response = await fetch(`/api/erp/sales/orders/${viewingRowId}/payments?lang=${currentLanguage}`, { credentials: "include" });
         const body = await response.json();
         if (body?.ok && body.data?.payments && !cancelled) {
           setViewingRowPayments(body.data.payments.filter((p: any) => !p.narration?.toLowerCase().includes("initial booking transfer")));
@@ -2607,7 +2607,7 @@ export function SalesOrderPaymentJournal({ mode = "advance" }: { mode?: PaymentM
     }
     void fetchViewingPayments();
     return () => { cancelled = true; };
-  }, [viewingRow?.id]);
+  }, [viewingRow?.id, currentLanguage]);
 
 
   useEffect(() => {
