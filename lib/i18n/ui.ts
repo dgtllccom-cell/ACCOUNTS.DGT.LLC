@@ -6317,12 +6317,33 @@ const en: Dict = {
   "pb.preview_report": "Preview Report",
   "common.unknown": "",
 
+  "cpb.print_title": "COMPLETED PURCHASE BILLS REGISTER",
+  "cpb.print_subtitle": "Official A4 ERP Journal Report - Zero Remaining Balance Archive",
+  "cpb.col_po_no": "PO Number",
+  "cpb.col_manual_no": "Manual Bill No",
+  "cpb.col_purchase_usd": "Purchase ($)",
+  "cpb.col_total_paid_aed": "Total Paid (AED)",
+  "cpb.view_details": "View Details",
+  "cpb.print_pdf": "Print PDF",
+  "cpb.email": "Email",
+  "cpb.whatsapp": "WhatsApp",
+
 };
 
 const ur: Dict = {
 
 
   ...en,
+  "cpb.print_title": "مکمل پرچیز بلز رجسٹر",
+  "cpb.print_subtitle": "سرکاری A4 ERP جرنل رپورٹ - صفر بقایا آرکائیو",
+  "cpb.col_po_no": "پرچیز آرڈر نمبر",
+  "cpb.col_manual_no": "دستی بل نمبر",
+  "cpb.col_purchase_usd": "خریداری ($)",
+  "cpb.col_total_paid_aed": "کل ادائیگی (AED)",
+  "cpb.view_details": "تفصیلات دیکھیں",
+  "cpb.print_pdf": "PDF پرنٹ کریں",
+  "cpb.email": "ای میل",
+  "cpb.whatsapp": "واٹس ایپ",
   "pb.pdf": "PDF",
   "pb.preview_report": "رپورٹ پریویو",
   "common.unknown": "",
@@ -9789,6 +9810,16 @@ const ar: Dict = {
 
 
   ...en,
+  "cpb.print_title": "سجل فواتير الشراء المكتملة",
+  "cpb.print_subtitle": "تقرير دفتر يومية ERP رسمي - أرشيف الرصيد الصفري",
+  "cpb.col_po_no": "رقم أمر الشراء",
+  "cpb.col_manual_no": "رقم الفاتورة اليدوي",
+  "cpb.col_purchase_usd": "الشراء ($)",
+  "cpb.col_total_paid_aed": "إجمالي المدفوع (AED)",
+  "cpb.view_details": "عرض التفاصيل",
+  "cpb.print_pdf": "طباعة PDF",
+  "cpb.email": "البريد الإلكتروني",
+  "cpb.whatsapp": "واتساب",
   "pb.pdf": "PDF",
   "pb.preview_report": "معاينة التقرير",
   "common.unknown": "",
@@ -13254,6 +13285,16 @@ const fa: Dict = {
 
 
   ...en,
+  "cpb.print_title": "ثبت فاکتورهای خرید تکمیل‌شده",
+  "cpb.print_subtitle": "گزارش رسمی A4 ERP - آرشیو موجودی صفر",
+  "cpb.col_po_no": "شماره سفارش خرید",
+  "cpb.col_manual_no": "شماره فاکتور دستی",
+  "cpb.col_purchase_usd": "خرید ($)",
+  "cpb.col_total_paid_aed": "کل پرداخت شده (AED)",
+  "cpb.view_details": "مشاهده جزئیات",
+  "cpb.print_pdf": "چاپ PDF",
+  "cpb.email": "ایمیل",
+  "cpb.whatsapp": "واتساپ",
   "pb.pdf": "PDF",
   "pb.preview_report": "پیش‌نمایش گزارش",
   "common.unknown": "",
@@ -16718,6 +16759,16 @@ const ps: Dict = {
 
 
   ...en,
+  "cpb.print_title": "د بشپړ پیرود بلونو راجستر",
+  "cpb.print_subtitle": "رسمي A4 ERP ژورنل راپور - صفر پاتې بیلانس آرشیف",
+  "cpb.col_po_no": "د پیرود امر شمیره",
+  "cpb.col_manual_no": "لاسي بل شمیره",
+  "cpb.col_purchase_usd": "پیرود ($)",
+  "cpb.col_total_paid_aed": "ټول تادیه شوی (AED)",
+  "cpb.view_details": "توضیحات وګورئ",
+  "cpb.print_pdf": "PDF پرنټ کړئ",
+  "cpb.email": "بریښنا لیک",
+  "cpb.whatsapp": "واټساپ",
   "pb.pdf": "PDF",
   "pb.preview_report": "راپور مخکتنه",
   "common.unknown": "",

@@ -295,17 +295,17 @@ export function CompletedPurchaseBillsView() {
           </Button>
 
           <JournalPrintButton
-            title="COMPLETED PURCHASE BILLS REGISTER"
-            subtitle="Official A4 ERP Journal Report - Zero Remaining Balance Archive"
+            title={tt("cpb.print_title", "COMPLETED PURCHASE BILLS REGISTER")}
+            subtitle={tt("cpb.print_subtitle", "Official A4 ERP Journal Report - Zero Remaining Balance Archive")}
             columns={[
-              { key: "poNo", label: "PO Number", align: "left" },
-              { key: "manualNo", label: "Manual Bill No", align: "left" },
-              { key: "supplier", label: "Supplier Name", align: "left" },
-              { key: "branch", label: "Country & Branch", align: "left" },
-              { key: "loadedQty", label: "Loaded Qty", align: "right" },
-              { key: "purchaseAmountUSD", label: "Purchase ($)", align: "right", format: "currency" },
-              { key: "totalPaidAED", label: "Total Paid (AED)", align: "right", format: "currency" },
-              { key: "completionDate", label: "Completion Date", align: "center" }
+              { key: "poNo", label: tt("cpb.col_po_no", "PO Number"), align: "left" },
+              { key: "manualNo", label: tt("cpb.col_manual_no", "Manual Bill No"), align: "left" },
+              { key: "supplier", label: tt("cpb.supplier", "Supplier Name"), align: "left" },
+              { key: "branch", label: tt("cpb.country_branch", "Country & Branch"), align: "left" },
+              { key: "loadedQty", label: tt("cpb.loaded_qty", "Loaded Qty"), align: "right" },
+              { key: "purchaseAmountUSD", label: tt("cpb.col_purchase_usd", "Purchase ($)"), align: "right", format: "currency" },
+              { key: "totalPaidAED", label: tt("cpb.total_paid", "Total Paid (AED)"), align: "right", format: "currency" },
+              { key: "completionDate", label: tt("cpb.completion_date", "Completion Date"), align: "center" }
             ]}
             rows={completedBills.map((row) => {
               const d = getBillDetails(row);
@@ -520,7 +520,7 @@ export function CompletedPurchaseBillsView() {
                           type="button"
                           onClick={() => { setSelectedBill(row); setIsDetailModalOpen(true); }}
                           className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800 dark:hover:text-blue-400"
-                          title="View Details"
+                          title={tt("cpb.view_details", "View Details")}
                         >
                           <Eye className="h-4 w-4" />
                         </button>
@@ -528,7 +528,7 @@ export function CompletedPurchaseBillsView() {
                           type="button"
                           onClick={() => handlePrintReport(row)}
                           className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:hover:bg-slate-800 dark:hover:text-slate-100"
-                          title="Print PDF"
+                          title={tt("cpb.print_pdf", "Print PDF")}
                         >
                           <Printer className="h-4 w-4" />
                         </button>
@@ -536,7 +536,7 @@ export function CompletedPurchaseBillsView() {
                           type="button"
                           onClick={() => handleShareEmail(row)}
                           className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-blue-600 dark:hover:bg-slate-800 dark:hover:text-blue-400"
-                          title="Email"
+                          title={tt("cpb.email", "Email")}
                         >
                           <Mail className="h-4 w-4" />
                         </button>
@@ -544,7 +544,7 @@ export function CompletedPurchaseBillsView() {
                           type="button"
                           onClick={() => handleShareWhatsApp(row)}
                           className="rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-emerald-600 dark:hover:bg-slate-800 dark:hover:text-emerald-400"
-                          title="WhatsApp"
+                          title={tt("cpb.whatsapp", "WhatsApp")}
                         >
                           <Share2 className="h-4 w-4" />
                         </button>
