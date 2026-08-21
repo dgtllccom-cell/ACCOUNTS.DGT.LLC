@@ -28,6 +28,7 @@ import {
   Container,
 } from "lucide-react";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import type { SupportedLanguage } from "@/lib/i18n/languages";
 import { t } from "@/lib/i18n/ui";
 import { Th } from "@/components/ui/translated-th";
 /* ---------------- types ---------------- */
@@ -47,6 +48,7 @@ export interface PurchaseBookingViewRedesignProps {
   salesAccount?: KVRow[];
   goods?: GoodsRow[];
   paymentSchedule?: PaymentRow[];
+  lang?: SupportedLanguage;
   /** Hide the app chrome (sidebar/header) when embedding inside an existing shell. */
   chrome?: boolean;
 }
@@ -287,7 +289,7 @@ export function PurchaseBookingViewRedesign({
       requestAnimationFrame(() => setTimeout(() => window.print(), 80)),
     );
   };
-  const shared = { branchDetails, billDetails, purchaseAccount, salesAccount, goods, paymentSchedule };
+  const shared = { branchDetails, billDetails, purchaseAccount, salesAccount, goods, paymentSchedule, lang };
   const printMode: "" | "print-full" | "print-compact" =
     view === "full" ? "print-full" : view === "compact" ? "print-compact" : "";
   return (
@@ -469,7 +471,7 @@ export default PurchaseBookingViewRedesign;
    FORM VIEW
    ================================================================ */
 function FormView({
-  branchDetails, billDetails, purchaseAccount, salesAccount, goods, paymentSchedule,
+  branchDetails, billDetails, purchaseAccount, salesAccount, goods, paymentSchedule, lang,
 }: Required<Omit<PurchaseBookingViewRedesignProps, "chrome">>) {
   return (
     <div className="space-y-4">

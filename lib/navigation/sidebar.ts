@@ -564,12 +564,12 @@ export const sidebarTree: SidebarNode[] = [
           {
             key: "country-local-purchase",
             labelKey: "nav.country_local_purchase",
-            href: "/dashboard/purchase/purchase-transfer-verification" as Route
+            href: "/dashboard/purchase/local-purchase" as Route
           },
           {
             key: "country-transfer",
             labelKey: "nav.country_transfer",
-            href: "/dashboard/purchase/local-goods-received?scope=country" as Route
+            href: "/dashboard/purchase/purchase-loading-records" as Route
           },
           {
             key: "country-loading",

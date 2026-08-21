@@ -32,13 +32,17 @@ function buildTt(lang: string) {
   return (key: string, fb: string) => t((lang || "en") as any, key as any, fb);
 }
 
-function CustomDropdown({ record, onLoadDetails }: { record: LoadingRecord, onLoadDetails: (r: LoadingRecord) => void }) {
+const RECEIVABLE_STATUSES = new Set(["loaded", "dispatched", "in_transit", "partially_received"]);
+
+function CustomDropdown({ record, onLoadDetails, onReceive }: { record: LoadingRecord, onLoadDetails: (r: LoadingRecord) => void, onReceive?: (r: LoadingRecord) => void }) {
+  const canReceive = onReceive && RECEIVABLE_STATUSES.has(String(record.loading_status || ""));
   return (
     <UnifiedActionMenu
       onView={() => window.open(`/dashboard/purchase/purchase-loading-records/${record.id}`, "_self")}
       onEdit={() => onLoadDetails(record)}
       customItems={[
-        { label: "Load Details", icon: <FileText className="h-4 w-4 text-blue-500" />, onClick: () => onLoadDetails(record) }
+        { label: "Load Details", icon: <FileText className="h-4 w-4 text-blue-500" />, onClick: () => onLoadDetails(record) },
+        ...(canReceive ? [{ label: "Receive", icon: <ArrowDownLeft className="h-4 w-4 text-emerald-600" />, onClick: () => onReceive!(record) }] : [])
       ]}
     />
   );
@@ -276,6 +280,19 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
   const [receivingPortState, setReceivingPortState] = useState(receivingPort !== "-" ? receivingPort : "");
   const [receivingDateState, setReceivingDateState] = useState(form.receivedDate || form.arrivalDate || "");
   const [vesselName, setVesselName] = useState("");
+  // Country-to-Country Purchase — Transportation.
+  const [transportMode, setTransportMode] = useState<"By Road" | "By Sea" | "By Air">("By Sea");
+  const [transportCompany, setTransportCompany] = useState("");
+  const [vehicleNo, setVehicleNo] = useState("");
+  const [driverName, setDriverName] = useState("");
+  const [driverMobile, setDriverMobile] = useState("");
+  const [shippingLine, setShippingLine] = useState("");
+  const [transportReference, setTransportReference] = useState("");
+  const [departureDate, setDepartureDate] = useState("");
+  const [expectedArrivalDate, setExpectedArrivalDate] = useState("");
+  const [transportExpenseAmount, setTransportExpenseAmount] = useState("");
+  const [transportExpenseCurrency, setTransportExpenseCurrency] = useState("USD");
+  const [transportRemarksInput, setTransportRemarksInput] = useState("");
   const [savingNewLoading, setSavingNewLoading] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("");
   const [expandedPoNos, setExpandedPoNos] = useState<Record<string, boolean>>({});
@@ -764,6 +781,19 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
           remarks: newLoadingNote || record.remarks || null,
           loadedContainers: 1,
           loadedQuantity: newQuantity,
+          // Country-to-Country Purchase — Transportation.
+          transportMode,
+          transportCompany: transportCompany || null,
+          vehicleNo: vehicleNo || null,
+          driverName: driverName || null,
+          driverMobile: driverMobile || null,
+          shippingLine: shippingLine || null,
+          transportReference: transportReference || null,
+          departureDate: departureDate || null,
+          expectedArrivalDate: expectedArrivalDate || null,
+          transportExpenseAmount: Number(transportExpenseAmount || 0),
+          transportExpenseCurrency,
+          transportRemarks: transportRemarksInput || null,
           reportPayload: {
             sourceRecordId: record.id,
             sourceLoadingRecordNo: record.loading_record_no,
@@ -1093,6 +1123,81 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
                     </label>
 
                       </div>
+
+                      {/* Country-to-Country Purchase — Transportation */}
+                      <div className="mt-4 rounded-lg border border-indigo-200 bg-indigo-50/40 p-3 dark:border-indigo-900/50 dark:bg-indigo-950/10">
+                        <div className="mb-3 flex items-center gap-2 border-b border-indigo-100 pb-2 dark:border-indigo-900/40">
+                          <span className="h-2.5 w-2.5 rounded-full bg-indigo-500" />
+                          <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-100">{tt("plr.transport_title", "Transportation")}</h5>
+                        </div>
+                        <div className="grid gap-3 sm:grid-cols-3">
+                          <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                            {tt("plr.transport_mode", "Transport Mode")}
+                            <select
+                              value={transportMode}
+                              onChange={(e) => setTransportMode(e.target.value as "By Road" | "By Sea" | "By Air")}
+                              className="h-9 w-full rounded-lg border border-slate-200 bg-white px-2.5 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                            >
+                              <option value="By Road">{tt("plr.by_road", "By Road")}</option>
+                              <option value="By Sea">{tt("plr.by_sea", "By Sea")}</option>
+                              <option value="By Air">{tt("plr.by_air", "By Air")}</option>
+                            </select>
+                          </label>
+                          <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                            {tt("plr.transport_company", "Transport Company")}
+                            <input value={transportCompany} onChange={(e) => setTransportCompany(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
+                          </label>
+                          <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                            {transportMode === "By Road" ? tt("plr.vehicle_no", "Vehicle No.") : tt("plr.transport_reference", "BL / Transport Ref.")}
+                            <input
+                              value={transportMode === "By Road" ? vehicleNo : transportReference}
+                              onChange={(e) => transportMode === "By Road" ? setVehicleNo(e.target.value) : setTransportReference(e.target.value)}
+                              className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950"
+                            />
+                          </label>
+                          {transportMode === "By Road" ? (
+                            <>
+                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                                {tt("plr.driver_name", "Driver Name")}
+                                <input value={driverName} onChange={(e) => setDriverName(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
+                              </label>
+                              <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                                {tt("plr.driver_mobile", "Driver Mobile")}
+                                <input value={driverMobile} onChange={(e) => setDriverMobile(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
+                              </label>
+                            </>
+                          ) : (
+                            <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                              {tt("plr.shipping_line", "Shipping Line")}
+                              <input value={shippingLine} onChange={(e) => setShippingLine(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
+                            </label>
+                          )}
+                          <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                            {tt("plr.departure_date", "Departure Date")}
+                            <input type="date" value={departureDate} onChange={(e) => setDepartureDate(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
+                          </label>
+                          <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                            {tt("plr.expected_arrival_date", "Expected Arrival")}
+                            <input type="date" value={expectedArrivalDate} onChange={(e) => setExpectedArrivalDate(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
+                          </label>
+                          <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+                            {tt("plr.transport_expense", "Transport Expense")}
+                            <div className="flex gap-1.5">
+                              <input type="number" min="0" step="0.01" value={transportExpenseAmount} onChange={(e) => setTransportExpenseAmount(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
+                              <select value={transportExpenseCurrency} onChange={(e) => setTransportExpenseCurrency(e.target.value)} className="h-9 w-20 rounded-lg border border-slate-200 bg-white px-1 text-xs font-bold outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950">
+                                <option value="USD">USD</option>
+                                <option value="AED">AED</option>
+                                <option value="PKR">PKR</option>
+                              </select>
+                            </div>
+                          </label>
+                          <label className="space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300 col-span-3">
+                            {tt("plr.transport_remarks", "Transport Remarks")}
+                            <input value={transportRemarksInput} onChange={(e) => setTransportRemarksInput(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-indigo-500 dark:border-slate-800 dark:bg-slate-950" />
+                          </label>
+                        </div>
+                      </div>
+
                       <div className="mt-5">
                         <Button
                           type="button"
@@ -2195,7 +2300,7 @@ function LoadDetailsModal({ record, onClose, onSaved }: { record: LoadingRecord;
     </div>
   );
 }
-type LoadingStatus = "draft" | "pending" | "loaded" | "received" | "cancelled";
+type LoadingStatus = "draft" | "pending" | "loaded" | "dispatched" | "in_transit" | "partially_received" | "received" | "cancelled";
 type LoadingRecord = {
   [key: string]: any;
   id: string;
@@ -2258,8 +2363,145 @@ type ApiPayload = {
   error?: { message?: string } | string;
 };
 
-const statusOptions: Array<"all" | LoadingStatus> = ["all", "draft", "pending", "loaded", "received", "cancelled"];
+const statusOptions: Array<"all" | LoadingStatus> = ["all", "draft", "pending", "loaded", "dispatched", "in_transit", "partially_received", "received", "cancelled"];
 const containerTypes = ["20 FT", "40 FT", "20 FT Reefer", "40 FT Reefer", "Non Reefer"];
+
+/**
+ * Country-to-Country Purchase — Destination Receiving. Confirms received quantity against a
+ * loading record and posts through the SAME stock write path as the rest of the ERP's
+ * inventory system (see POST .../loading-records/[id]/receive) — no parallel stock system.
+ * Supports partial receiving: can be opened again on the same record until fully received.
+ */
+function ReceivingModal({ record, onClose, onReceived }: { record: LoadingRecord; onClose: () => void; onReceived?: () => void }) {
+  const activeLang = useActiveLanguage();
+  const tt = buildTt(activeLang);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(activeLang || "en");
+
+  const loadedQuantity = Number(record.loaded_quantity || 0);
+  const alreadyReceived = Number(record.received_quantity || 0);
+  const remainingToReceive = Math.max(0, loadedQuantity - alreadyReceived);
+
+  const [warehouses, setWarehouses] = useState<Array<{ id: string; warehouse_name: string; warehouse_code: string }>>([]);
+  const [warehouseId, setWarehouseId] = useState("");
+  const [receivedQuantity, setReceivedQuantity] = useState(String(remainingToReceive || ""));
+  const [unitCost, setUnitCost] = useState("");
+  const [remarks, setRemarks] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/erp/master-data/warehouses");
+        const data = await res.json();
+        if (!cancelled) setWarehouses(Array.isArray(data.warehouses) ? data.warehouses : []);
+      } catch { /* non-fatal — user can still see the error if they try to submit without one */ }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  async function submitReceiving() {
+    const qty = Number(receivedQuantity || 0);
+    if (!qty || qty <= 0) {
+      setMessage(tt("plr.receive_enter_qty", "Enter a received quantity greater than zero."));
+      return;
+    }
+    if (qty > remainingToReceive + 0.0001) {
+      setMessage(tt("plr.receive_exceeds_remaining", "Received quantity cannot exceed the remaining quantity to receive."));
+      return;
+    }
+    if (!warehouseId) {
+      setMessage(tt("plr.receive_select_warehouse", "Select a destination warehouse."));
+      return;
+    }
+    setSaving(true);
+    setMessage("");
+    try {
+      const res = await fetch(`/api/erp/purchases/loading-records/${record.id}/receive`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          receivedQuantity: qty,
+          warehouseId,
+          unitCost: Number(unitCost || 0),
+          remarks: remarks || null
+        })
+      });
+      const body = await res.json();
+      if (!res.ok || body?.ok === false) {
+        throw new Error(body?.error?.message || "Failed to confirm receiving.");
+      }
+      window.dispatchEvent(new CustomEvent("erp:purchase-loading-saved"));
+      onReceived?.();
+      onClose();
+    } catch (err: any) {
+      setMessage(err?.message || tt("plr.receive_failed", "Failed to confirm receiving."));
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return createPortal(
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4" onClick={onClose}>
+      <div dir={isRtl ? "rtl" : "ltr"} className="w-full max-w-md rounded-2xl bg-white p-5 shadow-2xl dark:bg-slate-900" onClick={(e) => e.stopPropagation()}>
+        <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+          <h3 className="text-sm font-black uppercase tracking-widest text-slate-800 dark:text-slate-100">{tt("plr.receiving_title", "Destination Receiving")}</h3>
+          <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800"><ChevronDown className="h-4 w-4 rotate-45" /></button>
+        </div>
+
+        <div className="mb-4 grid grid-cols-3 gap-2 rounded-lg bg-slate-50 p-3 text-center dark:bg-slate-950">
+          <div>
+            <div className="text-[9px] font-black uppercase tracking-wider text-slate-500">{tt("plr.loaded_quantity", "Loaded")}</div>
+            <div className="text-sm font-black text-slate-800 dark:text-slate-100">{loadedQuantity.toLocaleString()}</div>
+          </div>
+          <div>
+            <div className="text-[9px] font-black uppercase tracking-wider text-slate-500">{tt("plr.already_received", "Received")}</div>
+            <div className="text-sm font-black text-emerald-600">{alreadyReceived.toLocaleString()}</div>
+          </div>
+          <div>
+            <div className="text-[9px] font-black uppercase tracking-wider text-slate-500">{tt("plr.remaining_to_receive", "Remaining")}</div>
+            <div className="text-sm font-black text-amber-600">{remainingToReceive.toLocaleString()}</div>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <label className="block space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+            {tt("plr.receiving_warehouse", "Destination Warehouse")}
+            <select value={warehouseId} onChange={(e) => setWarehouseId(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950">
+              <option value="">{tt("plr.select_warehouse", "Select Warehouse...")}</option>
+              {warehouses.map((w) => (
+                <option key={w.id} value={w.id}>{w.warehouse_name} {w.warehouse_code ? `(${w.warehouse_code})` : ""}</option>
+              ))}
+            </select>
+          </label>
+          <label className="block space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+            {tt("plr.received_quantity", "Received Quantity")}
+            <input type="number" min="0" max={remainingToReceive} step="0.01" value={receivedQuantity} onChange={(e) => setReceivedQuantity(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950" />
+          </label>
+          <label className="block space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+            {tt("plr.unit_cost", "Unit Cost (optional)")}
+            <input type="number" min="0" step="0.01" value={unitCost} onChange={(e) => setUnitCost(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950" />
+          </label>
+          <label className="block space-y-1 text-[10px] font-black uppercase tracking-widest text-slate-600 dark:text-slate-300">
+            {tt("plr.receiving_remarks", "Remarks")}
+            <input value={remarks} onChange={(e) => setRemarks(e.target.value)} className="h-9 w-full rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold normal-case tracking-normal outline-none focus:border-emerald-500 dark:border-slate-800 dark:bg-slate-950" />
+          </label>
+        </div>
+
+        {message && <div className="mt-3 rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-semibold text-rose-700 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300">{message}</div>}
+
+        <div className="mt-5 flex justify-end gap-2">
+          <Button type="button" variant="outline" onClick={onClose} className="h-9 rounded-lg text-xs font-bold">{tt("common.cancel", "Cancel")}</Button>
+          <Button type="button" onClick={() => void submitReceiving()} disabled={saving || remainingToReceive <= 0} className="h-9 rounded-lg bg-emerald-600 text-xs font-bold text-white hover:bg-emerald-700">
+            {saving ? tt("common.saving", "Saving...") : tt("plr.confirm_receiving", "Confirm Receiving")}
+          </Button>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
 
 function emptyForm() {
   return {
@@ -2310,6 +2552,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
   const [message, setMessage] = useState("");
   const [form, setForm] = useState(() => emptyForm());
   const [selectedLoadDetailsRecord, setSelectedLoadDetailsRecord] = useState<LoadingRecord | null>(null);
+  const [receivingRecord, setReceivingRecord] = useState<LoadingRecord | null>(null);
 
   useEffect(() => {
     if (openRecordId && records.length > 0 && !selectedLoadDetailsRecord) {
@@ -2768,6 +3011,9 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
     <div className="w-full max-w-none space-y-4 px-2 py-3 text-slate-900 dark:text-slate-100 sm:px-4">
       {selectedLoadDetailsRecord && (
         <LoadDetailsModal record={selectedLoadDetailsRecord} onClose={() => setSelectedLoadDetailsRecord(null)} onSaved={() => void loadRecords()} />
+      )}
+      {receivingRecord && (
+        <ReceivingModal record={receivingRecord} onClose={() => setReceivingRecord(null)} onReceived={() => void loadRecords()} />
       )}
       {actionsSlot && createPortal(
         <div className="flex flex-wrap items-center gap-1.5 print:hidden">
@@ -3480,7 +3726,7 @@ export function PurchaseLoadingRecordsView({ openRecordId }: { openRecordId?: st
                                                     >
                                                       Transfer to Journal
                                                     </Button>
-                                                    <CustomDropdown record={r} onLoadDetails={setSelectedLoadDetailsRecord} />
+                                                    <CustomDropdown record={r} onLoadDetails={setSelectedLoadDetailsRecord} onReceive={setReceivingRecord} />
                                                   </div>
                                                 </td>
                                               </tr>
