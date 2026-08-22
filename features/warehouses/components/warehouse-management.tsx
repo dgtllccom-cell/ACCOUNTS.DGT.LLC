@@ -11,6 +11,8 @@ import {
   Printer,
   Warehouse as WarehouseIcon
 } from "lucide-react";
+import { useActiveLanguage } from "@/lib/i18n/use-active-language";
+import { t } from "@/lib/i18n/ui";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { SimpleModal } from "@/components/ui/simple-modal";
@@ -46,6 +48,9 @@ function parseContactSummary(value: string | null) {
 }
 
 export function WarehouseManagement() {
+  const lang = useActiveLanguage();
+  const tt = (key: string, fallback: string) => t(lang, key as never, fallback);
+  const isRtl = ["ur", "ar", "fa", "ps"].includes(lang || "en");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [warehouses, setWarehouses] = useState<WarehouseRecord[]>([]);
@@ -69,7 +74,7 @@ export function WarehouseManagement() {
     setError(null);
     setMessage(null);
     try {
-      const rows = await fetchWarehouses();
+      const rows = await fetchWarehouses(lang);
       setWarehouses(rows);
     } catch (err: any) {
       setError(err?.message ?? "Failed to load warehouses.");
@@ -82,7 +87,8 @@ export function WarehouseManagement() {
     setTitleSlot(document.getElementById("erp-page-title-slot"));
     setActionsSlot(document.getElementById("erp-page-actions-slot"));
     void loadWarehouses();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
 
   useEffect(() => {
     let cancelled = false;
@@ -182,10 +188,10 @@ export function WarehouseManagement() {
   const pageTitle = (
     <div className="min-w-0">
       <h1 className="truncate text-xs font-black tracking-tight text-slate-900 dark:text-slate-100 sm:text-sm">
-        Warehouse Registry & Master Setup
+        {tt("wh.title", "Warehouse Registry & Master Setup")}
       </h1>
       <p className="hidden text-[9.5px] font-medium text-slate-400 sm:block">
-        Real warehouse records linked with customer owners, location scope, and master-data controls.
+        {tt("wh.subtitle", "Real warehouse records linked with customer owners, location scope, and master-data controls.")}
       </p>
     </div>
   );
@@ -198,7 +204,7 @@ export function WarehouseManagement() {
           <Input
             value={search}
             onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search warehouses"
+            placeholder={tt("wh.search_placeholder", "Search warehouses")}
             className="h-7 w-[210px] rounded-lg border-slate-200 pl-8 text-[11px] font-medium"
           />
         </div>
@@ -207,11 +213,11 @@ export function WarehouseManagement() {
           onChange={(event) => setStatusFilter(event.target.value)}
           className="h-7 rounded-lg border border-slate-200 bg-white px-2.5 text-[11px] font-semibold text-slate-700"
         >
-          <option value="all">All Statuses</option>
-          <option value="Active">Active</option>
-          <option value="Inactive">Inactive</option>
-          <option value="Under Maintenance">Under Maintenance</option>
-          <option value="Closed">Closed</option>
+          <option value="all">{tt("wh.status_all", "All Statuses")}</option>
+          <option value="Active">{tt("creg.status_active", "Active")}</option>
+          <option value="Inactive">{tt("creg.status_inactive", "Inactive")}</option>
+          <option value="Under Maintenance">{tt("wh.status_under_maintenance", "Under Maintenance")}</option>
+          <option value="Closed">{tt("wh.status_closed", "Closed")}</option>
         </select>
       </div>
       <Button
@@ -222,7 +228,7 @@ export function WarehouseManagement() {
         className="h-7 gap-1 rounded-lg border-slate-700 bg-slate-900 px-2.5 text-[10px] font-bold text-cyan-400 hover:bg-slate-800"
       >
         <Printer className="h-3.5 w-3.5" />
-        Print / Report
+        {tt("wh.print_report", "Print / Report")}
       </Button>
       <Button
         type="button"
@@ -232,7 +238,7 @@ export function WarehouseManagement() {
         className="h-7 gap-1 rounded-lg border-slate-200 bg-white px-2.5 text-[10px] font-bold text-slate-700"
       >
         <RefreshCw className="h-3.5 w-3.5" />
-        Refresh
+        {tt("common.refresh", "Refresh")}
       </Button>
       <Button
         type="button"
@@ -244,7 +250,7 @@ export function WarehouseManagement() {
         className="h-7 gap-1 rounded-lg bg-indigo-600 px-2.5 text-[10px] font-bold text-white hover:bg-indigo-700"
       >
         <Plus className="h-3.5 w-3.5" />
-        New Warehouse
+        {tt("wh.new_warehouse", "New Warehouse")}
       </Button>
     </>
   );
@@ -254,12 +260,12 @@ export function WarehouseManagement() {
       {titleSlot ? createPortal(pageTitle, titleSlot) : null}
       {actionsSlot ? createPortal(pageActions, actionsSlot) : null}
 
-      <div className="space-y-4 py-3">
+      <div dir={isRtl ? "rtl" : "ltr"} className="space-y-4 py-3">
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
           <div className="rounded-2xl border bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Total Warehouses</div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{tt("wh.kpi_total", "Total Warehouses")}</div>
                 <div className="mt-2 text-2xl font-black text-slate-900">{stats.total}</div>
               </div>
               <WarehouseIcon className="h-5 w-5 text-indigo-600" />
@@ -268,7 +274,7 @@ export function WarehouseManagement() {
           <div className="rounded-2xl border bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Active</div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{tt("creg.status_active", "Active")}</div>
                 <div className="mt-2 text-2xl font-black text-emerald-700">{stats.active}</div>
               </div>
               <Building2 className="h-5 w-5 text-emerald-600" />
@@ -277,7 +283,7 @@ export function WarehouseManagement() {
           <div className="rounded-2xl border bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Non-Active</div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{tt("wh.kpi_nonactive", "Non-Active")}</div>
                 <div className="mt-2 text-2xl font-black text-amber-700">{stats.inactive}</div>
               </div>
               <RefreshCw className="h-5 w-5 text-amber-600" />
@@ -286,7 +292,7 @@ export function WarehouseManagement() {
           <div className="rounded-2xl border bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">Owner Linked</div>
+                <div className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">{tt("wh.kpi_owner_linked", "Owner Linked")}</div>
                 <div className="mt-2 text-2xl font-black text-sky-700">{stats.linkedOwners}</div>
               </div>
               <Eye className="h-5 w-5 text-sky-600" />
@@ -301,7 +307,7 @@ export function WarehouseManagement() {
               <Input
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search warehouses, owner, location"
+                placeholder={tt("wh.search_placeholder_full", "Search warehouses, owner, location")}
                 className="pl-9"
               />
             </div>
@@ -310,11 +316,11 @@ export function WarehouseManagement() {
               onChange={(event) => setStatusFilter(event.target.value)}
               className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700"
             >
-              <option value="all">All Statuses</option>
-              <option value="Active">Active</option>
-              <option value="Inactive">Inactive</option>
-              <option value="Under Maintenance">Under Maintenance</option>
-              <option value="Closed">Closed</option>
+              <option value="all">{tt("wh.status_all", "All Statuses")}</option>
+              <option value="Active">{tt("creg.status_active", "Active")}</option>
+              <option value="Inactive">{tt("creg.status_inactive", "Inactive")}</option>
+              <option value="Under Maintenance">{tt("wh.status_under_maintenance", "Under Maintenance")}</option>
+              <option value="Closed">{tt("wh.status_closed", "Closed")}</option>
             </select>
           </div>
 
@@ -329,20 +335,20 @@ export function WarehouseManagement() {
             <table className="min-w-full text-left text-xs border-collapse">
               <thead className="bg-slate-50 dark:bg-slate-950/60 text-[10.5px] uppercase font-black tracking-wider text-slate-500 dark:text-slate-400 border-b border-slate-200 dark:border-slate-800">
                 <tr>
-                  <th className="h-10 px-4 py-2 font-bold">Warehouse</th>
-                  <th className="h-10 px-4 py-2 font-bold">Owner</th>
-                  <th className="h-10 px-4 py-2 font-bold">Country</th>
-                  <th className="h-10 px-4 py-2 font-bold">City / Area</th>
-                  <th className="h-10 px-4 py-2 font-bold">Type</th>
-                  <th className="h-10 px-4 py-2 font-bold">Status</th>
-                  <th className="h-10 px-4 py-2 font-bold text-right">Actions</th>
+                  <th className="h-10 px-4 py-2 font-bold">{tt("wh.col_warehouse", "Warehouse")}</th>
+                  <th className="h-10 px-4 py-2 font-bold">{tt("wh.col_owner", "Owner")}</th>
+                  <th className="h-10 px-4 py-2 font-bold">{tt("common.country", "Country")}</th>
+                  <th className="h-10 px-4 py-2 font-bold">{tt("wh.col_city_area", "City / Area")}</th>
+                  <th className="h-10 px-4 py-2 font-bold">{tt("wh.col_type", "Type")}</th>
+                  <th className="h-10 px-4 py-2 font-bold">{tt("common.status", "Status")}</th>
+                  <th className="h-10 px-4 py-2 font-bold text-right">{tt("common.actions", "Actions")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                 {loading ? (
                   <tr>
                     <td colSpan={7} className="px-4 py-10 text-center text-xs text-slate-400">
-                      Loading warehouses...
+                      {tt("wh.loading", "Loading warehouses...")}
                     </td>
                   </tr>
                 ) : filteredWarehouses.length === 0 ? (
@@ -434,21 +440,21 @@ export function WarehouseManagement() {
         >
           <div className="grid gap-3 md:grid-cols-2">
             <div className="rounded-xl border bg-slate-50 p-3">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Warehouse</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{tt("wh.col_warehouse", "Warehouse")}</div>
               <div className="mt-2 text-base font-bold text-slate-900">{viewWarehouse.warehouse_name}</div>
             </div>
             <div className="rounded-xl border bg-slate-50 p-3">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Owner</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{tt("wh.col_owner", "Owner")}</div>
               <div className="mt-2 text-base font-bold text-slate-900">{viewWarehouse.owner_name || "-"}</div>
             </div>
             <div className="rounded-xl border bg-slate-50 p-3">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Country</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{tt("common.country", "Country")}</div>
               <div className="mt-2 text-sm font-semibold text-slate-800">
                 {locationMaps.countries.get(viewWarehouse.country_id || "") || "-"}
               </div>
             </div>
             <div className="rounded-xl border bg-slate-50 p-3">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">State / City / Area</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{tt("wh.state_city_area", "State / City / Area")}</div>
               <div className="mt-2 text-sm font-semibold text-slate-800">
                 {[
                   locationMaps.states.get(viewWarehouse.state_province_id || "") || null,
@@ -460,15 +466,15 @@ export function WarehouseManagement() {
               </div>
             </div>
             <div className="rounded-xl border bg-slate-50 p-3">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Type</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{tt("wh.col_type", "Type")}</div>
               <div className="mt-2 text-sm font-semibold text-slate-800">{viewWarehouse.warehouse_type}</div>
             </div>
             <div className="rounded-xl border bg-slate-50 p-3">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Status</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{tt("common.status", "Status")}</div>
               <div className="mt-2 text-sm font-semibold text-slate-800">{viewWarehouse.status}</div>
             </div>
             <div className="rounded-xl border bg-slate-50 p-3 md:col-span-2">
-              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">Address</div>
+              <div className="text-[11px] font-semibold uppercase tracking-[0.16em] text-slate-500">{tt("wh.address", "Address")}</div>
               <div className="mt-2 text-sm font-semibold text-slate-800">{viewWarehouse.full_address || "-"}</div>
             </div>
             <div className="rounded-xl border bg-slate-50 p-3 md:col-span-2">
@@ -493,7 +499,7 @@ export function WarehouseManagement() {
       <UniversalReportModal
         isOpen={showReport}
         onClose={() => setShowReport(false)}
-        title="Warehouse Registry Report"
+        title={tt("wh.report_title", "Warehouse Registry Report")}
         subtitle="Complete Storage Facility, Yard, & Logistics Master Registry"
         exportFileName="warehouse_registry_report"
         filters={[

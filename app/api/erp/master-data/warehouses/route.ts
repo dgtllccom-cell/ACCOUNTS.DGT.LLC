@@ -1,10 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { withLocalPg } from "@/lib/db/local-postgres";
 import { translateMasterRecord } from "@/lib/services/translation-trigger-service";
 import { allocateFormSerials } from "@/lib/services/form-serials";
+import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
 
 /**
  * Warehouses master — list + create (secure-by-default).
@@ -14,16 +16,17 @@ import { allocateFormSerials } from "@/lib/services/form-serials";
 const COLS =
   "id, country_id, state_province_id, district_id, city_id, area_id, owner_name, warehouse_code, warehouse_name, warehouse_type, full_address, contact_number, status, description, is_active, created_at, updated_at";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
     const session = await requireErpSession();
     authorizeApiScope(session, { resource: "warehouses", action: "read" });
+    const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
 
     // withLocalPg, not the RLS-gated Supabase admin client: SUPABASE_SERVICE_ROLE_KEY
     // resolves to the anon key in this environment, so RLS silently filters this list to
     // zero rows even for a super-admin session — same root cause fixed elsewhere this pass.
     const countryIds = !session.isSuperAdmin ? session.countryIds : null;
-    const data = await withLocalPg(async (sql) => {
+    let data = await withLocalPg(async (sql) => {
       return sql`
         select id, country_id, state_province_id, district_id, city_id, area_id, owner_name,
                warehouse_code, warehouse_name, warehouse_type, full_address, contact_number,
@@ -34,6 +37,8 @@ export async function GET() {
         order by warehouse_name asc
       `;
     });
+    data = await localizeRecordNames((data ?? []) as any[], "warehouses", "warehouse_name", lang);
+    data = await localizeRecordNames((data ?? []) as any[], "warehouses", "owner_name", lang);
     return NextResponse.json({ warehouses: data || [] });
   } catch (err: any) {
     return NextResponse.json({ error: err.message }, { status: 500 });

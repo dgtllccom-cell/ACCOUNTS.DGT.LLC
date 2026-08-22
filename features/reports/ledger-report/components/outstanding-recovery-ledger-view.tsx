@@ -25,6 +25,7 @@ import { cn } from "@/lib/utils";
 import { openGenericErpReport, formatCellValue, getRowValue, type GenericReportColumn } from "@/lib/reports/open-generic-erp-report";
 import { openJournalReportWindow } from "@/lib/reports/open-journal-report-window";
 import { openOutstandingRecoveryPrintReport } from "@/lib/reports/open-outstanding-recovery-print-report";
+import { PrintableReportHeader } from "@/components/reports/printable-report-header";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { translateValue } from "@/lib/i18n/table-values";
@@ -486,6 +487,17 @@ export function OutstandingRecoveryLedgerView({ lang: langProp = "en", pageTitle
           </button>
         </div>
       </div>
+
+      {/* Printable Report Header for Direct Print / PDF Output */}
+      <PrintableReportHeader
+        documentTitle="Outstanding & Recovery Ledger Report"
+        documentSubtitle="Account-wise remaining balances, aging & recovery"
+        scopeCountry={scopeCountry}
+        scopeBranch={scopeBranch}
+        scopeCurrency="AED"
+        userName={scopeUserName}
+        dateRange="Current Financial Session"
+      />
 
       {/* 4 Primary Summary Panels Grid */}
       <div className="summary-cards-container grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">

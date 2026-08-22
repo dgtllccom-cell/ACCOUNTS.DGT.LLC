@@ -812,27 +812,27 @@ export function CompanyRegistry() {
 
             <div className="grid grid-cols-2 gap-3 text-xs">
               <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl space-y-1">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Branch Rules:</span>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">{tt("creg.modal_branch_rules", "Branch Rules:")}</span>
                 <div className="font-bold text-slate-800 dark:text-slate-200">{previewCompany.branchRules}</div>
               </div>
               <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl space-y-1">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Total Companies:</span>
-                <div className="font-bold text-blue-600">{previewCompany.companiesCount} Companies</div>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">{tt("creg.modal_total_companies", "Total Companies:")}</span>
+                <div className="font-bold text-blue-600">{previewCompany.companiesCount} {tt("creg.companies_suffix", "Companies")}</div>
               </div>
               <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl space-y-1">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Active Contracts:</span>
-                <div className="font-bold text-purple-600">{previewCompany.contractsCount} Contracts</div>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">{tt("creg.modal_active_contracts", "Active Contracts:")}</span>
+                <div className="font-bold text-purple-600">{previewCompany.contractsCount} {tt("creg.contracts_suffix", "Contracts")}</div>
               </div>
               <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl space-y-1">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Primary Mobile:</span>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">{tt("creg.modal_primary_mobile", "Primary Mobile:")}</span>
                 <div className="font-mono font-bold text-slate-800 dark:text-slate-200">{previewCompany.primaryContact}</div>
               </div>
               <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl space-y-1 col-span-2">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Official Email:</span>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">{tt("creg.modal_official_email", "Official Email:")}</span>
                 <div className="font-mono font-bold text-blue-600">{previewCompany.email}</div>
               </div>
               <div className="p-3 bg-slate-50 dark:bg-slate-950 rounded-xl space-y-1 col-span-2">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground">Registered Address:</span>
+                <span className="text-[10px] uppercase font-bold text-muted-foreground">{tt("creg.modal_registered_address", "Registered Address:")}</span>
                 <div className="font-medium text-slate-700 dark:text-slate-300">{previewCompany.address}, {previewCompany.city}, {previewCompany.state}, {previewCompany.country}</div>
               </div>
             </div>
@@ -844,14 +844,14 @@ export function CompanyRegistry() {
                 onClick={() => handlePrint(previewCompany)}
                 className="text-xs font-bold gap-1.5"
               >
-                <Printer className="h-3.5 w-3.5" /> Print Dossier
+                <Printer className="h-3.5 w-3.5" /> {tt("creg.print_dossier", "Print Dossier")}
               </Button>
               <Button
                 size="sm"
                 onClick={() => setPreviewCompany(null)}
                 className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold"
               >
-                Close
+                {tt("common.close", "Close")}
               </Button>
             </div>
           </div>

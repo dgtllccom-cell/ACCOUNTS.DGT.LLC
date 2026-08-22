@@ -35,8 +35,9 @@ export type WarehouseRecord = {
 
 const BASE = "/api/erp/master-data/warehouses";
 
-export async function fetchWarehouses(): Promise<WarehouseRecord[]> {
-  const res = await fetch(BASE, { cache: "no-store" });
+export async function fetchWarehouses(lang?: string): Promise<WarehouseRecord[]> {
+  const url = lang ? `${BASE}?lang=${encodeURIComponent(lang)}` : BASE;
+  const res = await fetch(url, { cache: "no-store" });
   const json = await res.json();
   if (!res.ok) throw new Error(json.error || "Failed to load warehouses");
   return (json.warehouses || []) as WarehouseRecord[];
