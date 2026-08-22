@@ -95,7 +95,7 @@ export default function GlobalClientError({
     } catch (e) {
       console.warn("Failed to clear service worker caches:", e);
     }
-    window.location.href = window.location.pathname + "?_t=" + Date.now();
+    window.location.replace(window.location.pathname);
   };
 
   const handleCopyDiagnostic = () => {
