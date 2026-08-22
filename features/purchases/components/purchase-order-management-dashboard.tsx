@@ -109,8 +109,12 @@ function localizedReportValue(
 ) {
   const translated = resolveVerifiedTranslation(row.translations?.[field], lang);
   if (translated) return translated;
-  // A source-language fallback would falsely present English as Urdu/Arabic/etc.
-  return lang === "en" && fallback ? fallback : translationPendingLabel(lang);
+  // No verified per-record translation yet — show the honest original value (same "Tier 3"
+  // fallback localizeRecordNames uses everywhere else) rather than a bare "Translation
+  // pending" placeholder, which replaced real data (including master-data fields like
+  // countryName/branchName that were never going to have a per-record translation in the
+  // first place) with no usable information for the viewer.
+  return fallback || translationPendingLabel(lang);
 }
 
 type ApiPayload = {

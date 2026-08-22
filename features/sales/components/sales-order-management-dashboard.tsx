@@ -74,7 +74,7 @@ export function SalesOrderManagementDashboard({ initialStage }: { initialStage?:
   const [search, setSearch] = useState("");
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const localized = (order: SalesOrder, field: string, fallback: string) =>
-    resolveVerifiedTranslation(order.translations?.[field], activeLang) || (activeLang === "en" ? fallback : translationPendingLabel(activeLang));
+    resolveVerifiedTranslation(order.translations?.[field], activeLang) || fallback || translationPendingLabel(activeLang);
 
   // Load orders
   async function loadOrders() {

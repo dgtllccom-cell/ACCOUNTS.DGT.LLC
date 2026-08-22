@@ -1362,8 +1362,10 @@ export function PurchaseBookingJournalReportView({
   const activeLang = useActiveLanguage();
   const trUi = useCallback((label: string) => {
     if (activeLang === "en") return label;
-    const translated = translateHeader(activeLang, label);
-    return translated === label ? translationPendingLabel(activeLang) : translated;
+    // translateHeader() already returns the original label unchanged when no dictionary
+    // entry exists for it — that IS the correct fallback, not a signal to replace it with a
+    // "Translation pending" placeholder.
+    return translateHeader(activeLang, label);
   }, [activeLang]);
   const trField = useCallback((row: any, fieldName: string, fallback: string) => {
     if (!fallback || fallback === "-") return fallback;
@@ -1371,7 +1373,7 @@ export function PurchaseBookingJournalReportView({
     if (transObj && transObj[activeLang]) {
       return transObj[activeLang];
     }
-    return activeLang === "en" ? fallback : translationPendingLabel(activeLang);
+    return fallback;
   }, [activeLang]);
 
   const [searchText, setSearchText] = useState("");
@@ -3706,8 +3708,9 @@ function SummaryCard({ icon, label, value, accent }: { icon: React.ReactNode; la
 function DarkTable({ lang, headers, tableGroups, children }: { lang: Parameters<typeof translationPendingLabel>[0]; headers: string[]; tableGroups: {label: string, span: number, cls: string}[]; children: React.ReactNode }) {
   const strictLabel = (label: string) => {
     if (lang === "en") return label;
-    const translated = translateHeader(lang, label);
-    return translated === label ? translationPendingLabel(lang) : translated;
+    // translateHeader() already returns the original label unchanged when untranslated —
+    // that's the correct fallback, not a cue to show a "Translation pending" placeholder.
+    return translateHeader(lang, label);
   };
   return (
     <div className="overflow-x-auto overflow-y-auto rounded-xl border border-slate-200 bg-white shadow-sm max-h-[calc(100vh-300px)] min-h-[420px]">

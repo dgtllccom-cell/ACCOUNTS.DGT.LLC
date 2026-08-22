@@ -127,7 +127,7 @@ export function SalesBookingJournalReportView() {
   }, [reports]);
 
   const localized = (row: SalesReport, field: string, fallback: string) =>
-    resolveVerifiedTranslation(row.translations?.[field], activeLang) || (activeLang === "en" ? fallback : translationPendingLabel(activeLang));
+    resolveVerifiedTranslation(row.translations?.[field], activeLang) || fallback || translationPendingLabel(activeLang);
 
   function exportCsv() {
     const headers = ["SO Number", "Date", "Customer", "Product Details", "Qty", "Total Weight", "Containers", "Amount", "Status", "Payment", "Delivery"];

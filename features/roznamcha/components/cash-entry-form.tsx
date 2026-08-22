@@ -52,7 +52,7 @@ import { getBankById } from "@/features/banks/bank-api";
 import { openA4ReportWindow } from "@/lib/reports/open-a4-report-window";
 import { RoznamchaReportsDropdown } from "@/features/roznamcha/components/roznamcha-reports-dropdown";
 import { Th } from "@/components/ui/translated-th";
-import { resolveVerifiedTranslation, translationPendingLabel } from "@/lib/i18n/verified-record-translations";
+import { resolveVerifiedTranslation } from "@/lib/i18n/verified-record-translations";
 import { RecordTranslationCorrectionDialog } from "@/features/translations/components/record-translation-correction-dialog";
 
 function getRoznamchaCategoryLabel(row: any) {
@@ -1600,7 +1600,7 @@ export function CashEntryForm({
       { label: "Date", value: header.entry_date || "-" },
       { label: "Voucher No", value: header.voucher_no || "-" },
       { label: "Journal No", value: header.journal_no || "-" },
-      { label: "Narration", value: resolveVerifiedTranslation(header.translations?.narration, lang) || (lang === "en" ? (header.narration || "-") : translationPendingLabel(lang)) },
+      { label: "Narration", value: resolveVerifiedTranslation(header.translations?.narration, lang) || header.narration || "-" },
       { label: "Status", value: header.status || "-" }
     ];
     
@@ -3305,7 +3305,7 @@ export function CashEntryForm({
                           </td>
                             <td className="p-3 text-[11px] font-medium leading-relaxed text-slate-600 dark:text-slate-400 max-w-[200px] border border-slate-200 dark:border-slate-800" title={line.description || row.narration || ""}>
                               <div className="line-clamp-3">
-                                {resolveVerifiedTranslation(row.translations?.[`lines.${idx}.description`] || row.translations?.narration, lang) || (lang === "en" ? (line.description || row.narration || "-") : translationPendingLabel(lang))}
+                                {resolveVerifiedTranslation(row.translations?.[`lines.${idx}.description`] || row.translations?.narration, lang) || line.description || row.narration || "-"}
                               </div>
                             </td>
                           <td className="p-3 text-center whitespace-nowrap border border-slate-200 dark:border-slate-800">
