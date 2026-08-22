@@ -41,6 +41,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 import { SearchSelect, type SearchSelectOption } from "@/components/ui/search-select";
+import { SearchableSelect } from "@/components/ui/searchable-select";
 import { SimpleModal } from "@/components/ui/simple-modal";
 import { OpenFullBillModal } from "@/components/invoices/open-full-bill-modal";
 import { Label } from "@/components/ui/label";
