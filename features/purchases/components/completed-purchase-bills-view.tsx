@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { SimpleModal } from "@/components/ui/simple-modal";
+import { OpenFullBillModal } from "@/components/invoices/open-full-bill-modal";
 import { printStore } from "@/lib/store/print-store";
 import { Th } from "@/components/ui/translated-th";
 import { JournalPrintButton } from "@/components/reports/journal-print-button";
@@ -568,66 +569,12 @@ export function CompletedPurchaseBillsView() {
 
       {/* DETAIL MODAL */}
       {selectedBill && (
-        <SimpleModal
+        <OpenFullBillModal
           isOpen={isDetailModalOpen}
           onClose={() => setIsDetailModalOpen(false)}
-          title={`Completed Purchase Bill Details - ${selectedBill.purchase_order_no}`}
-          maxWidth="max-w-4xl"
-        >
-          <div className="space-y-4 text-xs">
-            {(() => {
-              const details = getBillDetails(selectedBill);
-
-              return (
-                <>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-50 dark:bg-slate-800/50 p-4 rounded-xl border border-slate-200 dark:border-slate-800 font-mono">
-                    <div>
-                      <span className="block text-[10px] text-slate-400 font-sans font-bold">Bill Serial</span>
-                      <span className="font-bold text-blue-600">{selectedBill.purchase_order_no}</span>
-                    </div>
-                    <div>
-                      <span className="block text-[10px] text-slate-400 font-sans font-bold">Manual Bill</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-100">{details.manualBillNo}</span>
-                    </div>
-                    <div>
-                      <span className="block text-[10px] text-slate-400 font-sans font-bold">B/L Number(s)</span>
-                      <span className="font-bold text-slate-800 dark:text-slate-100">{details.blNumbers}</span>
-                    </div>
-                    <div>
-                      <span className="block text-[10px] text-slate-400 font-sans font-bold">Completion Date</span>
-                      <span className="font-bold text-emerald-600">{details.completedAt}</span>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <Card className="p-4 space-y-2">
-                      <h4 className="font-bold uppercase text-[10px] text-slate-500">Supplier & Branch Info</h4>
-                      <p><span className="font-semibold text-slate-500">Supplier:</span> {details.supplierName}</p>
-                      <p><span className="font-semibold text-slate-500">Country:</span> {details.countryName}</p>
-                      <p><span className="font-semibold text-slate-500">Branch:</span> {details.branchName}</p>
-                    </Card>
-
-                    <Card className="p-4 space-y-2">
-                      <h4 className="font-bold uppercase text-[10px] text-slate-500">Financial Summary</h4>
-                      <p><span className="font-semibold text-slate-500">Contract Total (USD):</span> ${details.purchaseAmountFC.toLocaleString(undefined, { minimumFractionDigits: 2 })}</p>
-                      <p><span className="font-semibold text-slate-500">Exchange Rate:</span> 1 USD = {details.exRate.toFixed(2)} AED/PKR</p>
-                      <p className="font-bold text-emerald-600"><span className="text-slate-500 font-normal">Total Paid:</span> {details.totalPaidLC.toLocaleString(undefined, { minimumFractionDigits: 2 })} AED (Balance: 0.00)</p>
-                    </Card>
-                  </div>
-
-                  <div className="flex justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
-                    <Button onClick={() => handlePrintReport(selectedBill)} variant="outline" size="sm" className="font-bold text-xs">
-                      <Printer className="h-3.5 w-3.5 mr-1" /> Print PDF
-                    </Button>
-                    <Button onClick={() => handleShareWhatsApp(selectedBill)} className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs">
-                      <Share2 className="h-3.5 w-3.5 mr-1" /> Share WhatsApp
-                    </Button>
-                  </div>
-                </>
-              );
-            })()}
-          </div>
-        </SimpleModal>
+          order={selectedBill}
+          lang={lang}
+        />
       )}
     </div>
   );

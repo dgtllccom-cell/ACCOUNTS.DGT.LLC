@@ -47,6 +47,7 @@ import { DetailDrawer } from "@/components/ui/detail-drawer";
 import { openPurchaseA4ReportWindow } from "@/lib/reports/open-purchase-a4-report-window";
 import { openProformaInvoiceWindow } from "@/lib/reports/open-proforma-invoice-window";
 import { openTradeDocumentWindow } from "@/lib/reports/open-trade-document-window";
+import { OpenFullBillModal } from "@/components/invoices/open-full-bill-modal";
 import { cn } from "@/lib/utils";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { UnifiedActionMenu } from "@/components/ui/unified-action-menu";
@@ -1241,6 +1242,7 @@ export function PurchaseBookingJournalReportView({
   const [error, setError] = useState<string | null>(null);
   const [scope, setScope] = useState<ReportScope | null>(null);
   const [selectedId, setSelectedId] = useState("");
+  const [selectedBillForModal, setSelectedBillForModal] = useState<any | null>(null);
   const [activeTab, setActiveTab] = useState<DashboardTab>("purchase");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [transferring, setTransferring] = useState(false);
@@ -2439,14 +2441,14 @@ export function PurchaseBookingJournalReportView({
                       <Td center className={cn("font-bold text-[10px] uppercase", !isPosted ? "text-red-600 font-black" : "text-slate-700 dark:text-slate-300")}>{userName}</Td>
                       <Td center onClick={(e) => e.stopPropagation()}>
                         <div className="flex items-center justify-center gap-1">
-                          {(!isPosted || isSuperAdmin || isCountryAdmin) && <button
+                          <button
                             type="button"
-                            onClick={() => { setSelectedId(report.id); setIsDrawerOpen(true); }}
+                            onClick={() => setSelectedBillForModal(report)}
                             className="inline-flex h-7 w-7 items-center justify-center rounded border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition shadow-sm"
                             title={trUi("Inspect / View Bill Details")}
                           >
                             <Eye className="h-3.5 w-3.5" />
-                          </button>}
+                          </button>
                           {!isPosted && <button
                             type="button"
                             onClick={() => {
@@ -2891,11 +2893,11 @@ export function PurchaseBookingJournalReportView({
                             }
                           },
                           {
-                            key: "print-compact-order",
-                            label: "Print Compact Booking Order",
+                            key: "open-full-bill-modal",
+                            label: "Open Full Bill & Payment Lanes",
                             icon: <FileText className="h-4 w-4 text-indigo-500" />,
                             onClick: () => {
-                              router.push(`/dashboard/purchase/purchase-booking-demo?defaultView=compact`);
+                              setSelectedBillForModal(report);
                             }
                           },
                           {
@@ -3558,6 +3560,16 @@ export function PurchaseBookingJournalReportView({
             );
           })()}
         </DetailDrawer>
+
+        {/* ── FULL BILL & PAYMENT ENTRIES MODAL (DR vs CR LANES) ── */}
+        {selectedBillForModal && (
+          <OpenFullBillModal
+            isOpen={Boolean(selectedBillForModal)}
+            onClose={() => setSelectedBillForModal(null)}
+            order={selectedBillForModal}
+            lang={activeLang}
+          />
+        )}
     </div>
   );
 }

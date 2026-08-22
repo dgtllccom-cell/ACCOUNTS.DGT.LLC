@@ -2997,7 +2997,7 @@ export function CashEntryForm({
                   : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
               )}
             >
-              📅 {lang === "ur" ? "ایک دن (1 دن)" : lang === "ps" ? "یوه ورځ (1 ورځ)" : lang === "ar" ? "يوم واحد" : lang === "fa" ? "یک روز" : "1 Day (Single Date)"}
+              📅 {t(lang, "roz.filter_one_day", "1 Day (Single Date)")}
             </button>
             <button
               type="button"
@@ -3009,7 +3009,7 @@ export function CashEntryForm({
                   : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
               )}
             >
-              📆 {lang === "ur" ? "تاریخ تا تاریخ (رینج)" : lang === "ps" ? "د نیټې موده" : lang === "ar" ? "نطاق التاريخ" : lang === "fa" ? "بازه زمانی" : "Date Range (From - To)"}
+              📆 {t(lang, "roz.filter_date_range", "Date Range (From - To)")}
             </button>
             <button
               type="button"
@@ -3021,7 +3021,7 @@ export function CashEntryForm({
                   : "text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-slate-200"
               )}
             >
-              🌐 {lang === "ur" ? "تمام اندراجات" : lang === "ps" ? "ټول اندراجات" : lang === "ar" ? "كل الإدخالات" : lang === "fa" ? "تمام ورودی‌ها" : "All Dates"}
+              🌐 {t(lang, "roz.filter_all_dates", "All Dates")}
             </button>
           </div>
 
@@ -3050,7 +3050,7 @@ export function CashEntryForm({
                 onClick={() => shiftTableDay(-1)}
                 title={lang === "ur" ? "پچھلا دن" : "Previous Day"}
               >
-                ◀ {lang === "ur" ? "پچھلا دن" : lang === "ps" ? "مخکنۍ ورځ" : lang === "ar" ? "السابق" : lang === "fa" ? "روز قبل" : "Prev Day"}
+                ◀ {t(lang, "roz.prev_day", "Prev Day")}
               </Button>
               <input
                 type="date"
@@ -3071,7 +3071,7 @@ export function CashEntryForm({
                 )}
                 onClick={() => setTableDatePreset("today")}
               >
-                📅 {lang === "ur" ? "آج" : lang === "ps" ? "نن" : lang === "ar" ? "اليوم" : lang === "fa" ? "امروز" : "Today"}
+                📅 {t(lang, "roz.today", "Today")}
               </Button>
               <Button
                 type="button"
@@ -3081,7 +3081,7 @@ export function CashEntryForm({
                 onClick={() => shiftTableDay(1)}
                 title={lang === "ur" ? "اگلا دن" : "Next Day"}
               >
-                {lang === "ur" ? "اگلا دن" : lang === "ps" ? "بله ورځ" : lang === "ar" ? "التالي" : lang === "fa" ? "روز بعد" : "Next Day"} ▶
+                {t(lang, "roz.next_day", "Next Day")} ▶
               </Button>
             </div>
           )}
@@ -3142,29 +3142,29 @@ export function CashEntryForm({
           <table className="w-full min-w-[700px] border-collapse border border-slate-200 dark:border-slate-800 text-xs">
             <thead className="bg-slate-50 text-slate-700 dark:bg-slate-900 dark:text-slate-300">
               <tr className="text-left">
-                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "تاریخ اور ہسٹری" : lang === "ps" ? "نیټه او تاریخچه" : lang === "ar" ? "التاريخ والتأريخ" : lang === "fa" ? "تاریخ و سوابق" : "Date & History"}</Th>
-                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "سیریلز اور واؤچرز" : lang === "ps" ? "سیریلونه او واوچرونه" : lang === "ar" ? "الأرقام التسلسلية والسندات" : lang === "fa" ? "سریال‌ها و اسناد" : "Serials & Vouchers"}</Th>
-                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "روزنامچہ کیٹگری" : lang === "ps" ? "د روزنامچې برخه" : lang === "ar" ? "فئة روزنامجة" : lang === "fa" ? "دسته‌بندی روزنامچه" : "Roznamcha Category"}</Th>
-                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "اکاؤنٹ تفصیلات" : lang === "ps" ? "د حساب تفصیلات" : lang === "ar" ? "تفاصيل الحساب" : lang === "fa" ? "جزئیات حساب" : "Account Details"}</Th>
-                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "نمبرز" : lang === "ps" ? "شمېرې" : lang === "ar" ? "الأرقام" : lang === "fa" ? "شماره‌ها" : "Numbers"}</Th>
-                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{lang === "ur" ? "تفصیلات" : lang === "ps" ? "تفصیلات" : lang === "ar" ? "التفاصيل" : lang === "fa" ? "جزئیات" : "Details"}</Th>
-                <Th className="p-3 font-bold text-center border border-slate-200 dark:border-slate-800">{lang === "ur" ? "کریڈٹ / ڈیبٹ" : lang === "ps" ? "کریډیټ / ډیبیټ" : lang === "ar" ? "دائن / مدين" : lang === "fa" ? "بستانکار / بدهکار" : "Credit/Debit"}</Th>
-                <Th className="p-3 font-bold text-right border border-slate-200 dark:border-slate-800">{lang === "ur" ? "ڈیبٹ (وصولی)" : lang === "ps" ? "ډیبیټ" : lang === "ar" ? "مدين" : lang === "fa" ? "بدهکار" : "Debit"}</Th>
-                <Th className="p-3 font-bold text-right border border-slate-200 dark:border-slate-800">{lang === "ur" ? "کریڈٹ (ادائیگی)" : lang === "ps" ? "کریډیټ" : lang === "ar" ? "دائن" : lang === "fa" ? "بستانکار" : "Credit"}</Th>
-                <Th className="p-3 font-bold text-center border border-slate-200 dark:border-slate-800">{lang === "ur" ? "کارروائی" : lang === "ps" ? "کړنې" : lang === "ar" ? "الإجراءات" : lang === "fa" ? "عملیات" : "Actions"}</Th>
+                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{t(lang, "roz.col_date_history", "Date & History")}</Th>
+                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{t(lang, "roz.col_serials_vouchers", "Serials & Vouchers")}</Th>
+                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{t(lang, "roz.col_category", "Roznamcha Category")}</Th>
+                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{t(lang, "roz.col_account_details", "Account Details")}</Th>
+                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{t(lang, "roz.col_numbers", "Numbers")}</Th>
+                <Th className="p-3 font-bold border border-slate-200 dark:border-slate-800">{t(lang, "roz.col_details", "Details")}</Th>
+                <Th className="p-3 font-bold text-center border border-slate-200 dark:border-slate-800">{t(lang, "roz.col_credit_debit", "Credit/Debit")}</Th>
+                <Th className="p-3 font-bold text-right border border-slate-200 dark:border-slate-800">{t(lang, "roz.col_debit", "Debit")}</Th>
+                <Th className="p-3 font-bold text-right border border-slate-200 dark:border-slate-800">{t(lang, "roz.col_credit", "Credit")}</Th>
+                <Th className="p-3 font-bold text-center border border-slate-200 dark:border-slate-800">{t(lang, "common.actions", "Actions")}</Th>
               </tr>
             </thead>
             <tbody>
               {loadingEntries ? (
                 <tr>
                   <td colSpan={10} className="p-8 text-center text-slate-400 font-medium italic border border-slate-200 dark:border-slate-800">
-                    {lang === "ur" ? "لوڈ ہو رہا ہے..." : lang === "ps" ? "بارول کیږي..." : lang === "ar" ? "جار التحميل..." : lang === "fa" ? "در حال بارگذاری..." : "Loading entries..."}
+                    {t(lang, "roz.loading_entries", "Loading entries...")}
                   </td>
                 </tr>
               ) : recentEntries.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="p-8 text-center text-slate-400 font-medium italic border border-slate-200 dark:border-slate-800">
-                    {lang === "ur" ? "کوئی اندراج موجود نہیں ہے۔" : lang === "ps" ? "هیڅ اندراج شتون نلري." : lang === "ar" ? "لا توجد إدخالات." : lang === "fa" ? "هیچ ورودی ثبت نشده است." : "No entries recorded yet."}
+                    {t(lang, "roz.no_entries", "No entries found.")}
                   </td>
                 </tr>
               ) : (
@@ -3178,8 +3178,8 @@ export function CashEntryForm({
                     const sign = isDebit ? "+" : isCredit ? "-" : "";
                     const amountStr = `${sign}${fmtAmount(amountVal)} ${line.currency || ""}`;
                     
-                    const debitText = lang === "ur" ? "ڈیبٹ (وصولی)" : lang === "ps" ? "ډیبیټ (ترلاسه شوی)" : lang === "ar" ? "مدين (مستلم)" : lang === "fa" ? "بدهکار (دریافتی)" : "Debit";
-                    const creditText = lang === "ur" ? "کریڈٹ (ادائیگی)" : lang === "ps" ? "کریډیټ (تادیه شوی)" : lang === "ar" ? "دائن (مدفوع)" : lang === "fa" ? "بستانکار (پرداختی)" : "Credit";
+                    const debitText = t(lang, "roz.col_debit", "Debit");
+                    const creditText = t(lang, "roz.col_credit", "Credit");
 
                     const typeBadge = isDebit ? (
                       <span className="rounded bg-rose-50 px-2.5 py-0.5 font-bold text-rose-700 dark:bg-rose-950/40 dark:text-rose-300">

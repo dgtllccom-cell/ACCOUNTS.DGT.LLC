@@ -897,7 +897,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                     <button
                       type="button"
                       onClick={() => {
-                        const promptMsg = lang === "ur" ? "نیا زمرہ داخل کریں:" : lang === "ar" ? "إدخال فئة جديدة:" : lang === "ps" ? "نوی ویش داخل کړئ:" : "Enter New Category Name:";
+                        const promptMsg = t(lang, "acct.enter_new_category_prompt", "Enter New Category Name:");
                         const newCat = window.prompt(promptMsg);
                         if (newCat && newCat.trim()) {
                           setCustomCategories((prev) => Array.from(new Set([...prev, newCat.trim()])));
@@ -906,7 +906,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                       }}
                       className="text-[10px] font-bold text-blue-600 hover:text-blue-700 hover:underline"
                     >
-                      + {lang === "ur" ? "نیا زمرہ شامل کریں" : lang === "ar" ? "إضافة فئة جديدة" : lang === "ps" ? "نوی کټګوري اضافه کړئ" : "Add New Category"}
+                      + {t(lang, "acct.add_new_category", "Add New Category")}
                     </button>
                   </div>
                   <select
@@ -915,7 +915,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                     onChange={(event) => {
                       const val = event.target.value;
                       if (val === "__ADD_NEW_CATEGORY__") {
-                        const promptMsg = lang === "ur" ? "نیا زمرہ داخل کریں:" : lang === "ar" ? "إدخال فئة جديدة:" : lang === "ps" ? "نوی ویش داخل کړئ:" : "Enter New Category Name:";
+                        const promptMsg = t(lang, "acct.enter_new_category_prompt", "Enter New Category Name:");
                         const newCat = window.prompt(promptMsg);
                         if (newCat && newCat.trim()) {
                           setCustomCategories((prev) => Array.from(new Set([...prev, newCat.trim()])));
@@ -934,7 +934,7 @@ export function NewAccountSetup({ lang: propLang, initialAccountId }: { lang?: S
                       <option key={item} value={item}>{localizedOption(item, lang)}</option>
                     ))}
                     <option value="__ADD_NEW_CATEGORY__">
-                      + {lang === "ur" ? "نیا زمرہ شامل کریں..." : lang === "ar" ? "إضافة فئة جديدة..." : lang === "ps" ? "نوی کټګوري اضافه کړئ..." : "Add New Category..."}
+                      + {t(lang, "acct.add_new_category_ellipsis", "Add New Category...")}
                     </option>
                   </select>
                 </div>
