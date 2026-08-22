@@ -251,7 +251,7 @@ export function PurchaseModuleWorkspace({
     setLoading(true);
     setError("");
     try {
-      const response = await fetch("/api/erp/purchases/orders?limit=300", { cache: "no-store" });
+      const response = await fetch(`/api/erp/purchases/orders?limit=300&lang=${encodeURIComponent(lang || "en")}`, { cache: "no-store" });
       const body = (await response.json().catch(() => ({}))) as OrdersPayload;
       if (!response.ok || body.ok === false) {
         const message = typeof body.error === "string" ? body.error : body.error?.message;
@@ -281,7 +281,8 @@ export function PurchaseModuleWorkspace({
       date: now.toLocaleDateString("en-GB", { day: "2-digit", month: "short", year: "numeric" }).toUpperCase(),
       time: now.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }).toUpperCase()
     });
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lang]);
 
   const stageRows = useMemo(() => orders.filter((row) => stageMatches(row, title, type)), [orders, title, type]);
   const countries = useMemo(() => Array.from(new Set(stageRows.map(country))).sort(), [stageRows]);

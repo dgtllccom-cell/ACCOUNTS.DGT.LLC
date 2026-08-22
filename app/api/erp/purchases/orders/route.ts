@@ -18,6 +18,8 @@ import { revalidatePath } from "next/cache";
 import { purchaseOrderTranslationFields } from "@/lib/i18n/purchase-order-translations";
 import { buildVerifiedTranslationSet } from "@/lib/i18n/verified-record-translations";
 import { getDbUrl, withLocalPg } from "@/lib/db/local-postgres";
+import { normalizeLanguage } from "@/lib/services/enterprise-multilingual-service";
+import { localizeRecordNames } from "@/lib/i18n/localize-records";
 import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
 import { validateAccountCountryScope, validateLedgerCountryScope } from "@/lib/api/country-scope-validator";
 
@@ -224,6 +226,7 @@ export async function GET(request: NextRequest) {
       limit: searchParams.get("limit") || undefined,
       q: searchParams.get("q") || searchParams.get("search") || searchParams.get("purchaseOrderNo") || undefined
     });
+    const lang = normalizeLanguage(searchParams.get("lang"), "en");
 
     authorizeApiScope(session, {
       resource: "purchases",
@@ -331,7 +334,7 @@ export async function GET(request: NextRequest) {
       }
     }
     const seenPo = new Set<string>();
-    const mappedRows = (rawRows ?? []).map((row: any) => {
+    const preMappedRows = (rawRows ?? []).map((row: any) => {
       const formData = typeof row.form_data === "string"
         ? (() => { try { return JSON.parse(row.form_data); } catch { return row.form_data; } })()
         : row.form_data;
@@ -342,6 +345,46 @@ export async function GET(request: NextRequest) {
         branchName: row.country_branches?.name || null
       };
     });
+
+    // Country/branch names have real record_translations coverage — resolve them the same
+    // way the Country Purchase Reports/Timeline routes do, not left raw.
+    const countryIdMap = new Map<string, string | null>();
+    for (const r of preMappedRows) {
+      if (r.country_id) countryIdMap.set(r.country_id, r.countryName);
+      if (r.dest_country_id) countryIdMap.set(r.dest_country_id, r.dest_countries?.name ?? null);
+    }
+    const localizedCountries = await localizeRecordNames(
+      Array.from(countryIdMap, ([id, name]) => ({ id, name })),
+      "countries",
+      "name",
+      lang
+    );
+    const countryNameById = new Map(localizedCountries.map((c) => [c.id, c.name]));
+
+    const branchIdMap = new Map<string, string | null>();
+    for (const r of preMappedRows) {
+      if (r.country_branch_id) branchIdMap.set(r.country_branch_id, r.branchName);
+      if (r.dest_country_branch_id) branchIdMap.set(r.dest_country_branch_id, r.dest_country_branches?.name ?? null);
+    }
+    const localizedBranches = await localizeRecordNames(
+      Array.from(branchIdMap, ([id, name]) => ({ id, name })),
+      "country_branches",
+      "name",
+      lang
+    );
+    const branchNameById = new Map(localizedBranches.map((b) => [b.id, b.name]));
+
+    const mappedRows = preMappedRows.map((row: any) => ({
+      ...row,
+      countryName: (row.country_id && countryNameById.get(row.country_id)) || row.countryName,
+      branchName: (row.country_branch_id && branchNameById.get(row.country_branch_id)) || row.branchName,
+      dest_countries: row.dest_country_id && countryNameById.get(row.dest_country_id)
+        ? { ...row.dest_countries, name: countryNameById.get(row.dest_country_id) }
+        : row.dest_countries,
+      dest_country_branches: row.dest_country_branch_id && branchNameById.get(row.dest_country_branch_id)
+        ? { ...row.dest_country_branches, name: branchNameById.get(row.dest_country_branch_id) }
+        : row.dest_country_branches
+    }));
     const rows = mappedRows.filter((row: any) => {
       const poNo = String(row.purchase_order_no || "").trim().toUpperCase();
       if (!poNo) return true;
