@@ -67,6 +67,7 @@ import { t as tGlobal } from "@/lib/i18n/ui";
 import { useActiveLanguage } from "@/lib/i18n/use-active-language";
 import { translateHeader } from "@/lib/i18n/table-headers";
 import { rtlLanguages } from "@/lib/i18n/languages";
+import { CurrencyTotalsGrid } from "@/components/payment-report/currency-totals-grid";
 function isUuid(value: any): boolean {
   if (!value || typeof value !== "string") return false;
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value.trim());
@@ -1236,6 +1237,14 @@ function NestedPaymentHistory({
                 <span className="text-slate-500 font-semibold">Invoice / Advance Amount:</span>
                 <span className="font-mono font-black text-emerald-600 dark:text-emerald-400">{money(calcs.advanceAmountFC, calcs.purchCurr)}</span>
               </div>
+              {Number(calcs.advancePercent) > 0 && form?.advancePaymentDate && (
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-500 font-semibold">Advance Payment Due Date:</span>
+                  <span className="bg-amber-50 text-amber-700 px-2 py-0.5 rounded text-[10px] font-mono font-black dark:bg-amber-950/40 dark:text-amber-400">
+                    {String(form.advancePaymentDate)}
+                  </span>
+                </div>
+              )}
               <div className="border-t border-dashed border-slate-100 dark:border-slate-800/60 my-1"></div>
               <div className="flex justify-between items-center text-xs">
                 <span className="text-slate-800 dark:text-slate-200 font-bold">Remaining Purchase Balance:</span>
@@ -2318,6 +2327,21 @@ function DashboardSummaryHeader({
           </div>
         </div>
 
+        {/* Currency Wise Purchase Total (Original Currency) — never mixes different currencies into one figure */}
+        <CurrencyTotalsGrid
+          rows={Object.values(summary.foreignCurrencies)}
+          localCurrency={summary.localCurrency}
+          totalLC={{
+            totalPurchase: summary.totalPurchaseLC,
+            advancePaid: summary.advancePaidLC,
+            remainingBalance: summary.remainingBalanceLC,
+          }}
+          formatMoney={(v) => formatMoney(v)}
+          title={th("CURRENCY WISE PURCHASE TOTAL (ORIGINAL CURRENCY)")}
+          noteLabel={th("Does not mix currencies")}
+          colLabels={{ total: th("Total"), advance: th("Advance Paid"), remaining: th("Remaining") }}
+        />
+
         {/* Collapsible Country Dashboard Section Content */}
         {showAllCountries && (
           <div className="country-accordion-content block animate-in slide-in-from-top-2 fade-in duration-300">
@@ -2644,8 +2668,15 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
   const [showModalHistory, setShowModalHistory] = useState(false);
   const [remainingLoadingRecords, setRemainingLoadingRecords] = useState<any[]>([]);
   const [loadingRemainingLoadingRecords, setLoadingRemainingLoadingRecords] = useState(false);
+  // Stable per-payment-attempt key so a genuine double submission (double-click, network retry)
+  // replays against the same server-side idempotency lock instead of posting twice. Regenerated
+  // whenever a different order is opened for payment or after a successful post.
+  const paymentIdempotencyKeyRef = React.useRef<string>("");
 
   useEffect(() => {
+    // A new order was opened for payment (or the modal was closed) — the next submission is a
+    // genuinely new attempt, not a retry of whatever was being entered before.
+    paymentIdempotencyKeyRef.current = "";
     if (!selectedId) {
       setSelectedOrderPayments([]);
       setShowModalHistory(false);
@@ -3188,9 +3219,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
   const displayRows = useMemo(() => {
     if (activeMode !== "remaining") return filtered;
 
-    const urlParams = new URLSearchParams(typeof window !== "undefined" ? window.location.search : "");
-    const urlLoadingScope = urlParams.get("fromLoading") === "true";
-    if (!remainingLoadingRecords.length && urlLoadingScope) return filtered;
+    // remainingLoadingRecords is only ever populated when arriving from the Loading Records
+    // module with real loading-record data attached; on direct navigation (the normal case —
+    // clicking the "Remaining" tab/menu item) it's empty, and there is nothing to enrich rows
+    // with. Fall back to the already-correctly-filtered order list rather than silently
+    // rendering zero rows.
+    if (!remainingLoadingRecords.length) return filtered;
 
     const needle = query.trim().toLowerCase();
     const start = startDateFilter ? new Date(startDateFilter) : null;
@@ -3622,6 +3656,12 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
     setPaymentSuccess("");
     setPaymentError("");
 
+    if (!paymentIdempotencyKeyRef.current) {
+      paymentIdempotencyKeyRef.current =
+        typeof crypto !== "undefined" && "randomUUID" in crypto ? crypto.randomUUID() : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    }
+    const idempotencyKey = paymentIdempotencyKeyRef.current;
+
     try {
       const finalRemarks = remarks.trim() || `Automated payment settlement for Purchase Order No: ${selected.purchase_order_no}. Roznamcha Category: ${paymentType.toUpperCase()}.`;
       const formData = new FormData();
@@ -3769,7 +3809,8 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
       const res = await fetch(postUrl, {
         method: "POST",
         body: formData,
-        credentials: "include"
+        credentials: "include",
+        headers: { "X-Idempotency-Key": idempotencyKey }
       });
       const body = await res.json();
       if (!res.ok || body?.ok === false) {
@@ -3778,6 +3819,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
 
       const allSerials = [body.data?.serialNumber, body.data?.countrySerialNumber, body.data?.branchSerialNumber].filter(Boolean).join(" | ");
       setPaymentSuccess(`Double-entry ledger voucher successfully balanced! Journal Serial Number: ${allSerials || "N/A"}.`);
+      paymentIdempotencyKeyRef.current = ""; // next submission is a new, distinct payment attempt
       setCalcAmount("");
       setFinalPayment("");
       setRemarks("");
@@ -3868,7 +3910,14 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
           </td>
           {/* 5. Invoice % */}
           <td className={cn("px-3 py-4 align-middle border-b border-slate-100 dark:border-slate-800 text-center font-mono font-bold text-[11px]", getRowColor())}>
-            {calcs.advancePercent}%
+            <div className="flex flex-col items-center gap-0.5">
+              <span>{calcs.advancePercent}%</span>
+              {Number(calcs.advancePercent) > 0 && form?.advancePaymentDate && (
+                <span className="text-[9px] font-semibold text-amber-600 dark:text-amber-400 whitespace-nowrap" title="Advance Payment Due Date">
+                  Due: {String(form.advancePaymentDate)}
+                </span>
+              )}
+            </div>
           </td>
           {/* 6. Invoice Amount (FC) */}
           <td className={cn("px-3 py-4 align-middle border-b border-slate-100 dark:border-slate-800 text-right font-mono font-black text-[11px] text-emerald-600 dark:text-emerald-400", getRowColor())}>
@@ -5084,6 +5133,9 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                           <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">Required Advance</div>
                           <div className="mt-1 font-mono text-[13px] font-black text-indigo-700 dark:text-indigo-300">{money(requiredAdvanceBC, poCurrencyHeader)}</div>
                           <div className="mt-1 font-mono text-[10px] font-semibold text-slate-500">Percent: {advancePercent}%</div>
+                          {advancePercent > 0 && form.advancePaymentDate && (
+                            <div className="mt-1 font-mono text-[10px] font-bold text-amber-600 dark:text-amber-400">Due: {String(form.advancePaymentDate)}</div>
+                          )}
                         </div>
                         <div className="rounded-xl border border-slate-200 bg-slate-50/70 p-3 dark:border-slate-800 dark:bg-slate-900/40">
                           <div className="text-[9px] font-black uppercase tracking-wider text-slate-400">Advance Paid</div>
@@ -5120,7 +5172,7 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                           type="button"
                           variant="outline"
                           size="sm"
-                          onClick={() => window.open(`/dashboard/reports/ledger-report?accountCode=${encodeURIComponent(doubleEntry.debitCode)}`, "_blank")}
+                          onClick={() => window.open(`/dashboard/reports/ledger/super-admin`, "_blank")}
                           className="h-7 px-2.5 text-[10px] font-bold text-blue-600 hover:bg-blue-50 border-blue-200"
                         >
                           Ledger Report
@@ -5582,26 +5634,46 @@ export function PurchaseOrderPaymentJournal({ mode = "advance" }: { mode?: Payme
                         </div>
 
                         {/* Submit Action Button */}
-                        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-3 border-t border-slate-200 dark:border-slate-800">
-                          <div className="text-xs space-y-0.5 text-slate-500">
-                            <div>
-                              <span className="font-bold text-slate-800 dark:text-slate-200">{currentLanguage === "en" ? "Posting: " : "پوسٹنگ: "}</span>
-                              <span className="font-bold text-indigo-600">DR</span> {doubleEntry.debitName} ({doubleEntry.debitCode}) / <span className="font-bold text-rose-600">CR</span> {doubleEntry.creditName} ({doubleEntry.creditCode})
-                            </div>
-                            <div><span className="font-bold text-slate-800 dark:text-slate-200">{currentLanguage === "en" ? "Amount: " : "رقم: "}</span>{amount ? money(amount, baseCurrency) : "—"}</div>
-                          </div>
+                        {(() => {
+                          // Every reason Save could be disabled, named plainly — a disabled
+                          // button must never be silent about why.
+                          const missing: string[] = [];
+                          if (!paymentSourceLedgerId) missing.push(currentLanguage === "en" ? "Payment Source Account" : "ادائیگی کا سورس اکاؤنٹ");
+                          if (!roznamchaNumber) missing.push(currentLanguage === "en" ? "Roznamcha / Voucher Number" : "روزنامچہ / واؤچر نمبر");
+                          if (!paymentType) missing.push(currentLanguage === "en" ? "Payment Type (select a source account to set this)" : "ادائیگی کی قسم (سیٹ کرنے کے لیے سورس اکاؤنٹ منتخب کریں)");
+                          if (!(amount > 0)) missing.push(currentLanguage === "en" ? "Payment Amount (must be greater than 0)" : "ادائیگی کی رقم (0 سے زیادہ ہونی چاہیے)");
 
-                          <Button
-                            type="button"
-                            onClick={handleProcessPayment}
-                            disabled={processingPayment || !amount || !canSave}
-                            className="h-10 px-6 font-bold text-xs uppercase shadow-md transition bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
-                          >
-                            {processingPayment ? (currentLanguage === "en" ? "Processing..." : "پروسیسنگ ہو رہی ہے...") : (
-                              currentLanguage === "en" ? `Post ${activeMode === "advance" ? "Advance" : activeMode === "credit" ? "Credit" : "Remaining"} Payment` : `${activeMode === "advance" ? "ایڈوانس" : activeMode === "credit" ? "کریڈٹ" : "باقی"} ادائیگی پوسٹ کریں`
-                            )}
-                          </Button>
-                        </div>
+                          return (
+                            <>
+                              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-3 border-t border-slate-200 dark:border-slate-800">
+                                <div className="text-xs space-y-0.5 text-slate-500">
+                                  <div>
+                                    <span className="font-bold text-slate-800 dark:text-slate-200">{currentLanguage === "en" ? "Posting: " : "پوسٹنگ: "}</span>
+                                    <span className="font-bold text-indigo-600">DR</span> {doubleEntry.debitName} ({doubleEntry.debitCode}) / <span className="font-bold text-rose-600">CR</span> {doubleEntry.creditName} ({doubleEntry.creditCode})
+                                  </div>
+                                  <div><span className="font-bold text-slate-800 dark:text-slate-200">{currentLanguage === "en" ? "Amount: " : "رقم: "}</span>{amount ? money(amount, baseCurrency) : "—"}</div>
+                                </div>
+
+                                <Button
+                                  type="button"
+                                  onClick={handleProcessPayment}
+                                  disabled={processingPayment || missing.length > 0}
+                                  className="h-10 px-6 font-bold text-xs uppercase shadow-md transition bg-indigo-600 hover:bg-indigo-700 text-white cursor-pointer"
+                                >
+                                  {processingPayment ? (currentLanguage === "en" ? "Processing..." : "پروسیسنگ ہو رہی ہے...") : (
+                                    currentLanguage === "en" ? `Post ${activeMode === "advance" ? "Advance" : activeMode === "credit" ? "Credit" : "Remaining"} Payment` : `${activeMode === "advance" ? "ایڈوانس" : activeMode === "credit" ? "کریڈٹ" : "باقی"} ادائیگی پوسٹ کریں`
+                                  )}
+                                </Button>
+                              </div>
+                              {!processingPayment && missing.length > 0 && (
+                                <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] font-semibold text-amber-800 dark:border-amber-900/40 dark:bg-amber-950/20 dark:text-amber-300">
+                                  {currentLanguage === "en" ? "Save is disabled — still needed: " : "محفوظ کرنا غیر فعال ہے — ابھی درکار ہے: "}
+                                  {missing.join(currentLanguage === "en" ? ", " : "، ")}
+                                </div>
+                              )}
+                            </>
+                          );
+                        })()}
 
                         {/* Feedback messages */}
                         {paymentSuccess && (

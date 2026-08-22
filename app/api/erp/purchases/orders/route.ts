@@ -242,12 +242,18 @@ export async function GET(request: NextRequest) {
       const rows = await sql`
         SELECT po.*, to_jsonb(c.*) as countries, to_jsonb(cb.*) as country_branches,
           case when dc.id is not null then jsonb_build_object('name', dc.name, 'currency_code', dc.currency_code) else null end as dest_countries,
-          case when dcb.id is not null then jsonb_build_object('name', dcb.name, 'code', dcb.code) else null end as dest_country_branches
+          case when dcb.id is not null then jsonb_build_object('name', dcb.name, 'code', dcb.code) else null end as dest_country_branches,
+          coalesce(lr.loading_record_count, 0) as loading_record_count
         FROM public.purchase_orders po
         LEFT JOIN public.countries c ON c.id = po.country_id
         LEFT JOIN public.country_branches cb ON cb.id = po.country_branch_id
         LEFT JOIN public.countries dc ON dc.id = po.dest_country_id
         LEFT JOIN public.country_branches dcb ON dcb.id = po.dest_country_branch_id
+        LEFT JOIN LATERAL (
+          SELECT count(*)::int AS loading_record_count
+          FROM public.purchase_loading_records plr
+          WHERE plr.purchase_order_id = po.id AND plr.deleted_at IS NULL
+        ) lr ON true
         WHERE po.deleted_at IS NULL
           AND (${query.cityBranchId ? sql`po.city_branch_id = ${query.cityBranchId}::uuid` : sql`true`})
           AND (${!query.cityBranchId && query.countryBranchId ? sql`po.country_branch_id = ${query.countryBranchId}::uuid` : sql`true`})

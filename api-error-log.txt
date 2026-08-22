@@ -36125,3 +36125,713 @@ Error: Cannot coerce the result to a single JSON object
     at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
 2026-08-22T12:31:35.053Z - SERVER_ERROR - Cannot coerce the result to a single JSON object - {}
 2026-08-22T12:31:35.088Z - SERVER_ERROR - Cannot coerce the result to a single JSON object - {}
+
+[2026-08-22T17:40:41.769Z] PostgresError: duplicate key value violates unique constraint "roznamcha_entries_source_unique_idx"
+PostgresError: duplicate key value violates unique constraint "roznamcha_entries_source_unique_idx"
+    at ErrorResponse (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:830:70)
+    at handle (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:504:6)
+    at Socket.data (webpack-internal:///(rsc)/./node_modules/postgres/src/connection.js:339:9)
+    at Socket.emit (node:events:509:28)
+    at addChunk (node:internal/streams/readable:563:12)
+    at readableAddChunkPushByteMode (node:internal/streams/readable:514:3)
+    at Readable.push (node:internal/streams/readable:394:5)
+    at TCP.onStreamRead (node:internal/stream_base_commons:189:23)
+    at TCP.callbackTrampoline (node:internal/async_hooks:130:17)
+    at cachedError (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:175:23)
+    at new Query (webpack-internal:///(rsc)/./node_modules/postgres/src/query.js:41:24)
+    at sql (webpack-internal:///(rsc)/./node_modules/postgres/src/index.js:110:11)
+    at eval (webpack-internal:///(rsc)/./app/api/erp/purchases/orders/[id]/payments/route.ts:305:37)
+2026-08-22T17:40:42.438Z - SERVER_ERROR - duplicate key value violates unique constraint "roznamcha_entries_source_unique_idx" - {}
+
+[2026-08-22T18:08:19.706Z] Error: This purchase order has no remaining payable balance. Duplicate posting is not allowed.
+Error: This purchase order has no remaining payable balance. Duplicate posting is not allowed.
+    at POST (webpack-internal:///(rsc)/./app/api/erp/purchases/orders/[id]/payments/route.ts:295:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute&page=%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute&page=%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute&page=%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-22T18:08:20.434Z - SERVER_ERROR - This purchase order has no remaining payable balance. Duplicate posting is not allowed. - {}
+
+[2026-08-22T18:08:54.976Z] Error: Payment amount cannot exceed remaining payable balance (366000.00 USD).
+Error: Payment amount cannot exceed remaining payable balance (366000.00 USD).
+    at POST (webpack-internal:///(rsc)/./app/api/erp/purchases/orders/[id]/payments/route.ts:298:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute&page=%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute&page=%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute&page=%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-22T18:08:55.779Z - SERVER_ERROR - Payment amount cannot exceed remaining payable balance (366000.00 USD). - {}
+
+[2026-08-22T18:20:57.108Z] Error: Debit and credit ledgers must be different for purchase payment posting.
+Error: Debit and credit ledgers must be different for purchase payment posting.
+    at POST (webpack-internal:///(rsc)/./app/api/erp/purchases/orders/[id]/payments/route.ts:270:19)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute&page=%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute&page=%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute&page=%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Fpurchases%2Forders%2F%5Bid%5D%2Fpayments%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-22T18:20:57.572Z - SERVER_ERROR - Debit and credit ledgers must be different for purchase payment posting. - {}
+
+[2026-08-22T18:40:54.394Z] ZodError: [
+  {
+    "received": "ledger-report",
+    "code": "invalid_enum_value",
+    "options": [
+      "purchase",
+      "sales",
+      "loading",
+      "transfer",
+      "payment",
+      "remaining",
+      "ledger",
+      "roznamcha",
+      "journal",
+      "cash",
+      "inventory",
+      "daily-comprehensive",
+      "purchase-booking",
+      "user-activity",
+      "exchange-rate",
+      "exchange-rates",
+      "cash-entry",
+      "receipts",
+      "payments",
+      "customer-accounts",
+      "customer-companies",
+      "branch-transactions",
+      "audit-logs",
+      "approval-workflows",
+      "expenses",
+      "financial-summaries",
+      "purchase-booking-register"
+    ],
+    "path": [
+      "reportType"
+    ],
+    "message": "Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report'"
+  }
+]
+ZodError: [
+  {
+    "received": "ledger-report",
+    "code": "invalid_enum_value",
+    "options": [
+      "purchase",
+      "sales",
+      "loading",
+      "transfer",
+      "payment",
+      "remaining",
+      "ledger",
+      "roznamcha",
+      "journal",
+      "cash",
+      "inventory",
+      "daily-comprehensive",
+      "purchase-booking",
+      "user-activity",
+      "exchange-rate",
+      "exchange-rates",
+      "cash-entry",
+      "receipts",
+      "payments",
+      "customer-accounts",
+      "customer-companies",
+      "branch-transactions",
+      "audit-logs",
+      "approval-workflows",
+      "expenses",
+      "financial-summaries",
+      "purchase-booking-register"
+    ],
+    "path": [
+      "reportType"
+    ],
+    "message": "Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report'"
+  }
+]
+    at get error (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:134:31)
+    at ZodObject.parse (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:209:22)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/reports/scoped/route.ts:94:42)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&page=%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Freports%2Fscoped%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&page=%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Freports%2Fscoped%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&page=%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Freports%2Fscoped%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+
+[2026-08-22T18:40:54.530Z] ZodError: [
+  {
+    "received": "ledger-report",
+    "code": "invalid_enum_value",
+    "options": [
+      "purchase",
+      "sales",
+      "loading",
+      "transfer",
+      "payment",
+      "remaining",
+      "ledger",
+      "roznamcha",
+      "journal",
+      "cash",
+      "inventory",
+      "daily-comprehensive",
+      "purchase-booking",
+      "user-activity",
+      "exchange-rate",
+      "exchange-rates",
+      "cash-entry",
+      "receipts",
+      "payments",
+      "customer-accounts",
+      "customer-companies",
+      "branch-transactions",
+      "audit-logs",
+      "approval-workflows",
+      "expenses",
+      "financial-summaries",
+      "purchase-booking-register"
+    ],
+    "path": [
+      "reportType"
+    ],
+    "message": "Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report'"
+  }
+]
+ZodError: [
+  {
+    "received": "ledger-report",
+    "code": "invalid_enum_value",
+    "options": [
+      "purchase",
+      "sales",
+      "loading",
+      "transfer",
+      "payment",
+      "remaining",
+      "ledger",
+      "roznamcha",
+      "journal",
+      "cash",
+      "inventory",
+      "daily-comprehensive",
+      "purchase-booking",
+      "user-activity",
+      "exchange-rate",
+      "exchange-rates",
+      "cash-entry",
+      "receipts",
+      "payments",
+      "customer-accounts",
+      "customer-companies",
+      "branch-transactions",
+      "audit-logs",
+      "approval-workflows",
+      "expenses",
+      "financial-summaries",
+      "purchase-booking-register"
+    ],
+    "path": [
+      "reportType"
+    ],
+    "message": "Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report'"
+  }
+]
+    at get error (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:134:31)
+    at ZodObject.parse (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:209:22)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/reports/scoped/route.ts:94:42)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&page=%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Freports%2Fscoped%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&page=%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Freports%2Fscoped%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&page=%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Freports%2Fscoped%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-22T18:40:55.121Z - VALIDATION_ERROR - Request validation failed: Report Type format is invalid: Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report' - {"formErrors":[],"fieldErrors":{"reportType":["Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report'"]}}
+2026-08-22T18:40:55.212Z - VALIDATION_ERROR - Request validation failed: Report Type format is invalid: Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report' - {"formErrors":[],"fieldErrors":{"reportType":["Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report'"]}}
+
+[2026-08-22T18:40:59.381Z] ZodError: [
+  {
+    "received": "ledger-report",
+    "code": "invalid_enum_value",
+    "options": [
+      "purchase",
+      "sales",
+      "loading",
+      "transfer",
+      "payment",
+      "remaining",
+      "ledger",
+      "roznamcha",
+      "journal",
+      "cash",
+      "inventory",
+      "daily-comprehensive",
+      "purchase-booking",
+      "user-activity",
+      "exchange-rate",
+      "exchange-rates",
+      "cash-entry",
+      "receipts",
+      "payments",
+      "customer-accounts",
+      "customer-companies",
+      "branch-transactions",
+      "audit-logs",
+      "approval-workflows",
+      "expenses",
+      "financial-summaries",
+      "purchase-booking-register"
+    ],
+    "path": [
+      "reportType"
+    ],
+    "message": "Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report'"
+  }
+]
+ZodError: [
+  {
+    "received": "ledger-report",
+    "code": "invalid_enum_value",
+    "options": [
+      "purchase",
+      "sales",
+      "loading",
+      "transfer",
+      "payment",
+      "remaining",
+      "ledger",
+      "roznamcha",
+      "journal",
+      "cash",
+      "inventory",
+      "daily-comprehensive",
+      "purchase-booking",
+      "user-activity",
+      "exchange-rate",
+      "exchange-rates",
+      "cash-entry",
+      "receipts",
+      "payments",
+      "customer-accounts",
+      "customer-companies",
+      "branch-transactions",
+      "audit-logs",
+      "approval-workflows",
+      "expenses",
+      "financial-summaries",
+      "purchase-booking-register"
+    ],
+    "path": [
+      "reportType"
+    ],
+    "message": "Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report'"
+  }
+]
+    at get error (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:134:31)
+    at ZodObject.parse (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:209:22)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/reports/scoped/route.ts:94:42)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&page=%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Freports%2Fscoped%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&page=%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Freports%2Fscoped%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&page=%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Freports%2Fscoped%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-22T18:40:59.819Z - VALIDATION_ERROR - Request validation failed: Report Type format is invalid: Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report' - {"formErrors":[],"fieldErrors":{"reportType":["Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report'"]}}
+
+[2026-08-22T18:42:45.432Z] ZodError: [
+  {
+    "received": "ledger-report",
+    "code": "invalid_enum_value",
+    "options": [
+      "purchase",
+      "sales",
+      "loading",
+      "transfer",
+      "payment",
+      "remaining",
+      "ledger",
+      "roznamcha",
+      "journal",
+      "cash",
+      "inventory",
+      "daily-comprehensive",
+      "purchase-booking",
+      "user-activity",
+      "exchange-rate",
+      "exchange-rates",
+      "cash-entry",
+      "receipts",
+      "payments",
+      "customer-accounts",
+      "customer-companies",
+      "branch-transactions",
+      "audit-logs",
+      "approval-workflows",
+      "expenses",
+      "financial-summaries",
+      "purchase-booking-register"
+    ],
+    "path": [
+      "reportType"
+    ],
+    "message": "Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report'"
+  }
+]
+ZodError: [
+  {
+    "received": "ledger-report",
+    "code": "invalid_enum_value",
+    "options": [
+      "purchase",
+      "sales",
+      "loading",
+      "transfer",
+      "payment",
+      "remaining",
+      "ledger",
+      "roznamcha",
+      "journal",
+      "cash",
+      "inventory",
+      "daily-comprehensive",
+      "purchase-booking",
+      "user-activity",
+      "exchange-rate",
+      "exchange-rates",
+      "cash-entry",
+      "receipts",
+      "payments",
+      "customer-accounts",
+      "customer-companies",
+      "branch-transactions",
+      "audit-logs",
+      "approval-workflows",
+      "expenses",
+      "financial-summaries",
+      "purchase-booking-register"
+    ],
+    "path": [
+      "reportType"
+    ],
+    "message": "Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report'"
+  }
+]
+    at get error (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:134:31)
+    at ZodObject.parse (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:209:22)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/reports/scoped/route.ts:94:42)
+    at runNextTicks (node:internal/process/task_queues:65:5)
+    at listOnTimeout (node:internal/timers:567:9)
+    at process.processTimers (node:internal/timers:541:7)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&page=%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Freports%2Fscoped%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&page=%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Freports%2Fscoped%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&page=%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Freports%2Fscoped%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+
+[2026-08-22T18:42:45.778Z] ZodError: [
+  {
+    "received": "ledger-report",
+    "code": "invalid_enum_value",
+    "options": [
+      "purchase",
+      "sales",
+      "loading",
+      "transfer",
+      "payment",
+      "remaining",
+      "ledger",
+      "roznamcha",
+      "journal",
+      "cash",
+      "inventory",
+      "daily-comprehensive",
+      "purchase-booking",
+      "user-activity",
+      "exchange-rate",
+      "exchange-rates",
+      "cash-entry",
+      "receipts",
+      "payments",
+      "customer-accounts",
+      "customer-companies",
+      "branch-transactions",
+      "audit-logs",
+      "approval-workflows",
+      "expenses",
+      "financial-summaries",
+      "purchase-booking-register"
+    ],
+    "path": [
+      "reportType"
+    ],
+    "message": "Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report'"
+  }
+]
+ZodError: [
+  {
+    "received": "ledger-report",
+    "code": "invalid_enum_value",
+    "options": [
+      "purchase",
+      "sales",
+      "loading",
+      "transfer",
+      "payment",
+      "remaining",
+      "ledger",
+      "roznamcha",
+      "journal",
+      "cash",
+      "inventory",
+      "daily-comprehensive",
+      "purchase-booking",
+      "user-activity",
+      "exchange-rate",
+      "exchange-rates",
+      "cash-entry",
+      "receipts",
+      "payments",
+      "customer-accounts",
+      "customer-companies",
+      "branch-transactions",
+      "audit-logs",
+      "approval-workflows",
+      "expenses",
+      "financial-summaries",
+      "purchase-booking-register"
+    ],
+    "path": [
+      "reportType"
+    ],
+    "message": "Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report'"
+  }
+]
+    at get error (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:134:31)
+    at ZodObject.parse (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:209:22)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/reports/scoped/route.ts:94:42)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&page=%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Freports%2Fscoped%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&page=%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Freports%2Fscoped%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&page=%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Freports%2Fscoped%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-22T18:42:47.391Z - VALIDATION_ERROR - Request validation failed: Report Type format is invalid: Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report' - {"formErrors":[],"fieldErrors":{"reportType":["Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report'"]}}
+2026-08-22T18:42:47.397Z - VALIDATION_ERROR - Request validation failed: Report Type format is invalid: Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report' - {"formErrors":[],"fieldErrors":{"reportType":["Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report'"]}}
+
+[2026-08-22T18:42:54.585Z] ZodError: [
+  {
+    "received": "ledger-report",
+    "code": "invalid_enum_value",
+    "options": [
+      "purchase",
+      "sales",
+      "loading",
+      "transfer",
+      "payment",
+      "remaining",
+      "ledger",
+      "roznamcha",
+      "journal",
+      "cash",
+      "inventory",
+      "daily-comprehensive",
+      "purchase-booking",
+      "user-activity",
+      "exchange-rate",
+      "exchange-rates",
+      "cash-entry",
+      "receipts",
+      "payments",
+      "customer-accounts",
+      "customer-companies",
+      "branch-transactions",
+      "audit-logs",
+      "approval-workflows",
+      "expenses",
+      "financial-summaries",
+      "purchase-booking-register"
+    ],
+    "path": [
+      "reportType"
+    ],
+    "message": "Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report'"
+  }
+]
+ZodError: [
+  {
+    "received": "ledger-report",
+    "code": "invalid_enum_value",
+    "options": [
+      "purchase",
+      "sales",
+      "loading",
+      "transfer",
+      "payment",
+      "remaining",
+      "ledger",
+      "roznamcha",
+      "journal",
+      "cash",
+      "inventory",
+      "daily-comprehensive",
+      "purchase-booking",
+      "user-activity",
+      "exchange-rate",
+      "exchange-rates",
+      "cash-entry",
+      "receipts",
+      "payments",
+      "customer-accounts",
+      "customer-companies",
+      "branch-transactions",
+      "audit-logs",
+      "approval-workflows",
+      "expenses",
+      "financial-summaries",
+      "purchase-booking-register"
+    ],
+    "path": [
+      "reportType"
+    ],
+    "message": "Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report'"
+  }
+]
+    at get error (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:134:31)
+    at ZodObject.parse (webpack-internal:///(rsc)/./node_modules/zod/v3/types.js:209:22)
+    at GET (webpack-internal:///(rsc)/./app/api/erp/reports/scoped/route.ts:94:42)
+    at async AppRouteRouteModule.do (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:38696)
+    at async AppRouteRouteModule.handle (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:5:45978)
+    at async responseGenerator (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&page=%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Freports%2Fscoped%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:203:38)
+    at async AppRouteRouteModule.handleResponse (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\compiled\next-server\app-route.runtime.dev.js:1:195304)
+    at async handleResponse (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&page=%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Freports%2Fscoped%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:265:32)
+    at async handler (webpack-internal:///(rsc)/./node_modules/next/dist/build/webpack/loaders/next-app-loader/index.js?name=app%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&page=%2Fapi%2Ferp%2Freports%2Fscoped%2Froute&appPaths=&pagePath=private-next-app-dir%2Fapi%2Ferp%2Freports%2Fscoped%2Froute.ts&appDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC%5Capp&pageExtensions=tsx&pageExtensions=ts&pageExtensions=jsx&pageExtensions=js&rootDir=B%3A%5Caccounts.dgt.llc.code_project%5CACCOUNTS.DGT.LLC&isDev=true&tsconfigPath=tsconfig.json&basePath=&assetPrefix=&nextConfigOutput=&preferredRegion=&middlewareConfig=e30%3D&isGlobalNotFoundEnabled=!:317:13)
+    at async DevServer.renderToResponseWithComponentsImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1430:9)
+    at async DevServer.renderPageComponent (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1482:24)
+    at async DevServer.renderToResponseImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1522:32)
+    at async DevServer.pipeImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:1026:25)
+    at async NextNodeServer.handleCatchallRenderRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\next-server.js:394:17)
+    at async DevServer.handleRequestImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\base-server.js:917:17)
+    at async B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:400:20
+    at async Span.traceAsyncFn (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\trace\trace.js:157:20)
+    at async DevServer.handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\dev\next-dev-server.js:396:24)
+    at async invokeRender (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:240:21)
+    at async handleRequest (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:437:24)
+    at async requestHandlerImpl (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\router-server.js:485:13)
+    at async Server.requestListener (B:\accounts.dgt.llc.code_project\ACCOUNTS.DGT.LLC\node_modules\next\dist\server\lib\start-server.js:226:13)
+2026-08-22T18:42:54.990Z - VALIDATION_ERROR - Request validation failed: Report Type format is invalid: Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report' - {"formErrors":[],"fieldErrors":{"reportType":["Invalid enum value. Expected 'purchase' | 'sales' | 'loading' | 'transfer' | 'payment' | 'remaining' | 'ledger' | 'roznamcha' | 'journal' | 'cash' | 'inventory' | 'daily-comprehensive' | 'purchase-booking' | 'user-activity' | 'exchange-rate' | 'exchange-rates' | 'cash-entry' | 'receipts' | 'payments' | 'customer-accounts' | 'customer-companies' | 'branch-transactions' | 'audit-logs' | 'approval-workflows' | 'expenses' | 'financial-summaries' | 'purchase-booking-register', received 'ledger-report'"]}}
