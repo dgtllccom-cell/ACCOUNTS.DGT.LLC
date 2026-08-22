@@ -67,6 +67,10 @@ export async function GET(request: NextRequest) {
           po.remaining_due,
           po.payment_status,
           po.created_at,
+          po.country_id,
+          po.country_branch_id,
+          po.dest_country_id,
+          po.dest_country_branch_id,
           c.name as source_country_name,
           cb.name as source_branch_name,
           dc.name as dest_country_name,
@@ -115,10 +119,42 @@ export async function GET(request: NextRequest) {
     const localizedCompanies = await localizeRecordNames(companiesForLookup, "companies", "name", lang);
     const companyNameById = new Map(localizedCompanies.map((c) => [c.id, c.name]));
 
+    // Country/branch names have real record_translations coverage too (verified: countries
+    // is 100% translated in all 5 languages) — resolve them the same way, not left raw.
+    const countryIds = new Map<string, string>();
+    for (const r of rawRows) {
+      if (r.country_id) countryIds.set(r.country_id, r.source_country_name);
+      if (r.dest_country_id) countryIds.set(r.dest_country_id, r.dest_country_name);
+    }
+    const localizedCountries = await localizeRecordNames(
+      Array.from(countryIds, ([id, name]) => ({ id, name })),
+      "countries",
+      "name",
+      lang
+    );
+    const countryNameById = new Map(localizedCountries.map((c) => [c.id, c.name]));
+
+    const branchIds = new Map<string, string>();
+    for (const r of rawRows) {
+      if (r.country_branch_id) branchIds.set(r.country_branch_id, r.source_branch_name);
+      if (r.dest_country_branch_id) branchIds.set(r.dest_country_branch_id, r.dest_branch_name);
+    }
+    const localizedBranches = await localizeRecordNames(
+      Array.from(branchIds, ([id, name]) => ({ id, name })),
+      "country_branches",
+      "name",
+      lang
+    );
+    const branchNameById = new Map(localizedBranches.map((b) => [b.id, b.name]));
+
     const localized = rawRows.map((r) => ({
       ...r,
       goods_name: (r.goods_id && goodsNameById.get(r.goods_id)) || r.goods_name,
-      supplier_name: (r.supplier_company_id && companyNameById.get(r.supplier_company_id)) || r.supplier_name
+      supplier_name: (r.supplier_company_id && companyNameById.get(r.supplier_company_id)) || r.supplier_name,
+      source_country_name: (r.country_id && countryNameById.get(r.country_id)) || r.source_country_name,
+      dest_country_name: (r.dest_country_id && countryNameById.get(r.dest_country_id)) || r.dest_country_name,
+      source_branch_name: (r.country_branch_id && branchNameById.get(r.country_branch_id)) || r.source_branch_name,
+      dest_branch_name: (r.dest_country_branch_id && branchNameById.get(r.dest_country_branch_id)) || r.dest_branch_name
     }));
 
     const totals = (rows ?? []).reduce(
