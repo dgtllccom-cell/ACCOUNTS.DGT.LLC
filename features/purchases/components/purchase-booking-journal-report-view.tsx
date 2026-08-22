@@ -2424,9 +2424,9 @@ export function PurchaseBookingJournalReportView({
                         <span className="font-semibold">{trField(report, "countryName", countryName)}</span>
                       </Td>
                       <Td className={cn("font-semibold text-[10px] whitespace-nowrap", rowTextColor)}>{trField(report, "branchName", branchName)}</Td>
-                      <Td className={cn("font-bold text-[10px] whitespace-nowrap", rowTextColor)}>{trField(report, "supplierName", supplierName)}</Td>
-                      <Td className={cn("font-mono text-[10px] whitespace-nowrap", rowTextColor)}>{trField(report, "purchaseAccountName", purchaseAcc)}</Td>
-                      <Td className={cn("font-mono text-[10px] whitespace-nowrap", rowTextColor)}>{trField(report, "salesAccountName", salesAcc)}</Td>
+                      <Td className={cn("font-bold text-[10px] whitespace-nowrap", rowTextColor)}>{supplierName}</Td>
+                      <Td className={cn("font-mono text-[10px] whitespace-nowrap", rowTextColor)}>{purchaseAcc}</Td>
+                      <Td className={cn("font-mono text-[10px] whitespace-nowrap", rowTextColor)}>{salesAcc}</Td>
                       <Td center className={cn("font-semibold whitespace-nowrap text-[10px]", rowTextColor)}>{bookingDateStr}</Td>
                       <Td right className={cn("font-mono font-bold text-[10px]", isAccepted ? "text-red-600 font-black" : "text-slate-900")}>{formatMoney(totalAmountNum)}</Td>
                       <Td center>
@@ -2694,7 +2694,7 @@ export function PurchaseBookingJournalReportView({
             <DarkTable
               lang={activeLang}
               tableGroups={[
-                { label: "General Information", span: 11, cls: "bg-[#0f2942] text-white border-b border-slate-800 border-r border-slate-700" },
+                { label: "General Information", span: 10, cls: "bg-[#0f2942] text-white border-b border-slate-800 border-r border-slate-700" },
                 { label: "Product Information", span: 7, cls: "bg-[#143657] text-white border-b border-slate-800 border-r border-slate-700" },
                 { label: "Financial Information", span: 10, cls: "bg-[#0f2942] text-white border-b border-slate-800 border-r border-slate-700" },
                 { label: "Route & Loading", span: 7, cls: "bg-[#143657] text-white border-b border-slate-800 border-r border-slate-700" },
@@ -2702,7 +2702,7 @@ export function PurchaseBookingJournalReportView({
                 { label: "Actions", span: 1, cls: "bg-[#143657] text-white border-b border-slate-800" },
               ]}
               headers={[
-                "", "SR.", "SUPER S/N", "CTY S/N", "BR. S/N", "PURCHASE ACC.", "SALES ACC.", "COUNTRY", "CITY BRANCH", "DATE", "USER",
+                "SR.", "SUPER S/N", "CTY S/N", "BR. S/N", "PURCHASE ACC.", "SALES ACC.", "COUNTRY", "CITY BRANCH", "DATE", "USER",
                 "GOODS NAME", "BRAND", "ORIGIN", "QTY", "UNIT", "GROSS WT (KG)", "NET WT (KG)",
                 "PURCH. CURR", "PURCH. PRICE", "TOTAL AMT", "ADVANCE (FC)", "EX. RATE", "FINAL CURR", "FINAL AMT", "ADVANCE (LC)", "INV. %", "PAY. CONDITION",
                 "ROUTE", "LOAD. COUNTRY", "LOAD. PORT", "LOAD. DATE", "RCV. COUNTRY", "RCV. PORT", "RCV. DATE",
@@ -2746,6 +2746,27 @@ export function PurchaseBookingJournalReportView({
                   : "bg-white text-slate-900 font-bold hover:bg-slate-100";
                 const rowTextColor = isAccepted ? "text-red-600 font-bold" : "text-slate-900 font-bold";
 
+                const f = report.form_data?.form || {};
+                const exRate = Number(report.exchange_rate || f.exchangeRate || g0?.exchangeRate || 1);
+                const finalCur = report.finalCurrency || f.secondaryCurrency?.split(" ")[0] || "AED";
+                const totalAmtFc = Number(report.totalPurchaseAmount || report.purchaseAmount || 0);
+                const totalAmtLc = Number(report.finalAmount || (totalAmtFc * exRate) || 0);
+                const advFc = Number(f.advanceAmountFc || (report as any).advance_paid || 0);
+                const advLc = Number(f.advanceAmountLc || (advFc * exRate) || 0);
+                const invPercent = f.advancePercent ? `${f.advancePercent}%` : f.invoicePercent ? `${f.invoicePercent}%` : "10%";
+                const payCondition = f.paymentType || (report as any).paymentStatus || "Advance Payment";
+                const routeMode = f.shippingMode || "By Sea";
+                const loadCountry = f.loadingCountry || f.originCountry || report.countryName || ctyName;
+                const loadPort = f.loadingPort || f.loadingCountryPort || "Main Seaport";
+                const loadDate = formatShortDate(f.loadingDate || report.purchaseDate || report.bookingDate);
+                const rcvCountry = f.receivedCountry || f.destinationCountry || report.countryName || ctyName;
+                const rcvPort = f.receivedPort || f.receivedCountryPort || "Central Port";
+                const rcvDate = formatShortDate(f.receivedDate || report.purchaseDate || report.bookingDate);
+
+                const invStatus = (report as any).inventoryStatus || report.form_data?.workflow?.inventoryStatus || (isAccepted ? "In Transit" : "Completed");
+                const payStatus = (report as any).paymentStatus || report.form_data?.workflow?.paymentStatus || (advFc > 0 ? "Advance Paid" : "Pending");
+                const loadStatus = (report as any).containerStatus || report.form_data?.workflow?.containerStatus || (isAccepted ? "Loaded" : "Dispatched");
+
                 return (
                   <tr key={report.id} onClick={() => { setSelectedId(report.id); setIsDrawerOpen(true); }} className={cn("cursor-pointer border-b border-slate-200 transition-colors", rowBgClass)}>
                     <Td center className={cn("font-bold text-[10px]", rowTextColor)}>{srNo}</Td>
@@ -2754,38 +2775,38 @@ export function PurchaseBookingJournalReportView({
                     <Td center className={cn("font-mono text-[10px]", rowTextColor)}>{branchSerialNo}</Td>
                     <Td className={cn("text-[10px]", rowTextColor)}>{purchaseAccCode}</Td>
                     <Td className={cn("text-[10px]", rowTextColor)}>{salesAccCode}</Td>
-                    <Td className={cn("text-[10px] font-semibold", rowTextColor)}>{trField(report, "countryName", ctyName)}</Td>
-                    <Td className={cn("text-[10px] font-semibold", rowTextColor)}>{trField(report, "branchName", brName)}</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>{dateStr}</Td>
-                    <Td className={cn("text-[10px] font-semibold", rowTextColor)}>{report.audit?.userName || "ADMIN"}</Td>
-                    <Td className={cn("text-[10px]", rowTextColor)}>{trField(report, "productName", goodsName)}</Td>
+                    <Td className={cn("text-[10px] font-semibold whitespace-nowrap", rowTextColor)}>{trField(report, "countryName", ctyName)}</Td>
+                    <Td className={cn("text-[10px] font-semibold whitespace-nowrap", rowTextColor)}>{trField(report, "branchName", brName)}</Td>
+                    <Td center className={cn("text-[10px] whitespace-nowrap", rowTextColor)}>{dateStr}</Td>
+                    <Td className={cn("text-[10px] font-semibold whitespace-nowrap", rowTextColor)}>{report.audit?.userName || "ADMIN"}</Td>
+                    <Td className={cn("text-[10px] max-w-[200px] truncate", rowTextColor)} title={goodsName}>{goodsName}</Td>
                     <Td center className={cn("text-[10px]", rowTextColor)}>{trField(report, "items.0.brand", g0?.brand || "Standard")}</Td>
                     <Td center className={cn("text-[10px]", rowTextColor)}>{trField(report, "items.0.origin", g0?.origin || ctyName)}</Td>
                     <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatNumber(report.quantity || 0)}</Td>
                     <Td center className={cn("text-[10px]", rowTextColor)}>{report.unit || "KG"}</Td>
                     <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatNumber(report.totalGrossWeight || 0)}</Td>
                     <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatNumber(report.totalNetWeight || 0)}</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>{report.currency || "AED"}</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>{report.currency || "USD"}</Td>
                     <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatMoney(report.purchaseRate || 0)}</Td>
-                    <Td right className={cn("font-mono font-bold text-[10px]", rowTextColor)}>{formatMoney(report.totalPurchaseAmount || 0)}</Td>
-                    <Td right className={cn("font-mono text-[10px]", rowTextColor)}>0.00</Td>
-                    <Td right className={cn("font-mono text-[10px]", rowTextColor)}>1.00</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>AED</Td>
-                    <Td right className={cn("font-mono font-bold text-[10px]", rowTextColor)}>{formatMoney(report.totalPurchaseAmount || 0)}</Td>
-                    <Td right className={cn("font-mono text-[10px]", rowTextColor)}>0.00</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>100%</Td>
-                    <Td className={cn("text-[10px]", rowTextColor)}>{trUi("Normal")}</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>{t(activeLang, "purchase.opt_by_road", "By Road")}</Td>
-                    <Td className={cn("text-[10px]", rowTextColor)}>{trField(report, "countryName", ctyName)}</Td>
-                    <Td className={cn("text-[10px]", rowTextColor)}>{trUi("Port")}</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>{dateStr}</Td>
-                    <Td className={cn("text-[10px]", rowTextColor)}>{trField(report, "countryName", ctyName)}</Td>
-                    <Td className={cn("text-[10px]", rowTextColor)}>{trUi("Port")}</Td>
-                    <Td center className={cn("text-[10px]", rowTextColor)}>{dateStr}</Td>
-                    <Td center><span className={cn("rounded px-2 py-0.5 text-[8px] font-bold", isAccepted ? "bg-red-100 text-red-700 border border-red-300" : "bg-emerald-50 text-emerald-700")}>{trUi(isAccepted ? "NO (PENDING)" : "YES")}</span></Td>
-                    <Td center><span className={cn("rounded px-2 py-0.5 text-[8px] font-semibold", isAccepted ? "bg-red-100 text-red-800" : "bg-slate-50 text-slate-700")}>{isAccepted ? t(activeLang, "pb_register.status_accepted", "Accepted") : trUi("Confirmed")}</span></Td>
-                    <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">{trUi("Paid")}</span></Td>
-                    <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">{trUi("Loaded")}</span></Td>
+                    <Td right className={cn("font-mono font-bold text-[10px]", rowTextColor)}>{formatMoney(totalAmtFc)}</Td>
+                    <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatMoney(advFc)}</Td>
+                    <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatMoney(exRate)}</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>{finalCur}</Td>
+                    <Td right className={cn("font-mono font-bold text-[10px]", rowTextColor)}>{formatMoney(totalAmtLc)}</Td>
+                    <Td right className={cn("font-mono text-[10px]", rowTextColor)}>{formatMoney(advLc)}</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>{invPercent}</Td>
+                    <Td className={cn("text-[10px]", rowTextColor)}>{payCondition}</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>{routeMode}</Td>
+                    <Td className={cn("text-[10px]", rowTextColor)}>{trField(report, "loadingCountry", loadCountry)}</Td>
+                    <Td className={cn("text-[10px]", rowTextColor)}>{loadPort}</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>{loadDate}</Td>
+                    <Td className={cn("text-[10px]", rowTextColor)}>{trField(report, "receivedCountry", rcvCountry)}</Td>
+                    <Td className={cn("text-[10px]", rowTextColor)}>{rcvPort}</Td>
+                    <Td center className={cn("text-[10px]", rowTextColor)}>{rcvDate}</Td>
+                    <Td center><span className={cn("rounded px-2 py-0.5 text-[8px] font-bold", isAccepted ? "bg-red-100 text-red-700 border border-red-300" : "bg-emerald-50 text-emerald-700")}>{isAccepted ? "NO (PENDING)" : "YES"}</span></Td>
+                    <Td center><span className={cn("rounded px-2 py-0.5 text-[8px] font-semibold", isAccepted ? "bg-red-100 text-red-800" : "bg-slate-50 text-slate-700")}>{isAccepted ? t(activeLang, "pb_register.status_accepted", "Accepted") : "Confirmed"}</span></Td>
+                    <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">{payStatus}</span></Td>
+                    <Td center><span className="rounded bg-slate-50 text-slate-700 px-2 py-0.5 text-[8px]">{loadStatus}</span></Td>
                     <Td center onClick={(e) => e.stopPropagation()}>
                       <UnifiedActionMenu
                         align="right"

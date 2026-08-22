@@ -65,7 +65,13 @@ async function withTimeout<T>(query: PromiseLike<QueryResult<T>>, label: string,
 }
 
 function normalizeOrder(row: any) {
-  const data = row.form_data ?? {};
+  let rawData = row.form_data ?? {};
+  if (typeof rawData === "string") {
+    try {
+      rawData = JSON.parse(rawData);
+    } catch (_) {}
+  }
+  const data = typeof rawData === "object" && rawData !== null ? rawData : {};
   const form = data.form ?? {};
   const totals = data.totals ?? {};
   const goods = Array.isArray(data.goodsEntries) && data.goodsEntries.length ? data.goodsEntries : form.goodsName ? [form] : [];

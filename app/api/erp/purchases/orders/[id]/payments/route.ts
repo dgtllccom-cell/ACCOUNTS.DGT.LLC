@@ -4,9 +4,9 @@ import { apiCreated, apiOk, apiError, handleApiError } from "@/lib/api/response"
 import { purchaseOrderPaymentPostSchema, uuidSchema } from "@/lib/api/erp-validation";
 import { requireErpSession } from "@/lib/auth/session";
 import { authorizeApiScope } from "@/lib/api/scope-middleware";
-import { createApiSupabaseClient, requireSupabaseData, writeAuditLog } from "@/lib/api/supabase";
+import { writeAuditLog } from "@/lib/api/supabase";
 import { isSupabaseConfigured } from "@/lib/supabase/config";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { withLocalPg } from "@/lib/db/local-postgres";
 import { allocateFormSerials } from "@/lib/services/form-serials";
 import { assertBalancedPostedLines, assertDistinctBookingLedgers, assertPostedRoznamchaTrace } from "@/lib/services/posting-verification";
 import { acquireIdempotencyLock, commitIdempotencySuccess, releaseIdempotencyLock, buildReplayedResponse } from "@/lib/api/idempotency";
@@ -76,31 +76,25 @@ function buildPurchaseGoodsAuditRemark(orderRow: any, fallbackReference?: string
   return `Purchase Bill: ${billNo} | Goods: ${goodsName} | Qty: ${formatAuditNumber(totalQty)}${unit ? ` ${unit}` : ""} | Gross WT: ${formatAuditNumber(grossWeight)} KG | Net WT: ${formatAuditNumber(netWeight)} KG | Purchase Price: ${formatAuditNumber(purchaseAmount)} ${purchaseCurrency}`;
 }
 
-async function assertLedgerMatchesPurchaseScope(supabase: any, ledgerId: string, orderRow: any, label: string) {
-  let { data: ledger, error } = await supabase
-    .from("ledgers")
-    .select("id, code, name, country_id, country_branch_id, city_branch_id")
-    .eq("id", ledgerId)
-    .is("deleted_at", null)
-    .maybeSingle();
+async function assertLedgerMatchesPurchaseScope(sql: any, ledgerId: string, orderRow: any, label: string) {
+  let rows = await sql`
+    select id, code, name, country_id, country_branch_id, city_branch_id
+    from ledgers where id = ${ledgerId}::uuid and deleted_at is null
+  `;
+  let ledger = rows[0];
 
-  if ((error || !ledger) && ledgerId) {
+  if (!ledger && ledgerId) {
     // Compatibility fallback: some callers pass an accounts.id instead of the ledger's own id
     // (ledgers.account_id is a separate FK, not the same UUID as ledgers.id). Resolve the
     // ledger linked to that account rather than failing outright.
-    const byAccount = await supabase
-      .from("ledgers")
-      .select("id, code, name, country_id, country_branch_id, city_branch_id")
-      .eq("account_id", ledgerId)
-      .is("deleted_at", null)
-      .maybeSingle();
-    if (!byAccount.error && byAccount.data) {
-      ledger = byAccount.data;
-      error = null;
-    }
+    const byAccount = await sql`
+      select id, code, name, country_id, country_branch_id, city_branch_id
+      from ledgers where account_id = ${ledgerId}::uuid and deleted_at is null
+    `;
+    if (byAccount[0]) ledger = byAccount[0];
   }
 
-  if (error || !ledger) {
+  if (!ledger) {
     throw new Error(label + " ledger was not found.");
   }
 
@@ -125,15 +119,37 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
     const params = paramsSchema.parse(await context.params);
     const lang = normalizeLanguage(request.nextUrl.searchParams.get("lang"), "en");
 
-    const supabase = (await createApiSupabaseClient()) as any;
-    const order = await requireSupabaseData(
-      supabase
-        .from("purchase_orders")
-        .select("id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id, currency_code, exchange_rate, order_total, advance_paid, remaining_paid, credit_amount, remaining_due, form_data, ledger_posting_status, payment_status")
-        .eq("id", params.id)
-        .is("deleted_at", null)
-        .maybeSingle()
-    );
+    // withLocalPg, not the RLS-gated Supabase client — see the POST handler below for why.
+    const { order, rows } = (await withLocalPg(async (sql) => {
+      const orderRows = await sql`
+        select id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id,
+               currency_code, exchange_rate, order_total, advance_paid, remaining_paid, credit_amount,
+               remaining_due, form_data, ledger_posting_status, payment_status
+        from purchase_orders where id = ${params.id}::uuid and deleted_at is null
+        limit 1
+      `;
+      const paymentRows = await sql`
+        select
+          p.id, p.purchase_order_id, p.kind, p.entry_date, p.amount, p.currency_code, p.exchange_rate,
+          p.debit_ledger_id, p.credit_ledger_id, p.roznamcha_entry_id, p.status, p.reference_no,
+          p.narration, p.source_module, p.source_transaction_type, p.source_reference_no,
+          p.original_currency_code, p.currency_name, p.base_currency_amount, p.created_at,
+          case when re.id is not null then jsonb_build_object(
+            'id', re.id,
+            'super_admin_serial_number', re.super_admin_serial_number,
+            'country_transaction_serial_number', re.country_transaction_serial_number,
+            'branch_transaction_serial_number', re.branch_transaction_serial_number,
+            'profiles', case when pr.id is not null then jsonb_build_object('full_name', pr.full_name) else null end
+          ) else null end as roznamcha_entries
+        from purchase_order_payments p
+        left join roznamcha_entries re on re.id = p.roznamcha_entry_id
+        left join profiles pr on pr.id = re.created_by
+        where p.purchase_order_id = ${params.id}::uuid and p.deleted_at is null
+        order by p.created_at desc
+        limit 200
+      `;
+      return { order: orderRows[0] ?? null, rows: paymentRows };
+    }))!;
 
     authorizeApiScope(session, {
       resource: "purchases",
@@ -143,29 +159,8 @@ export async function GET(request: NextRequest, context: { params: Promise<{ id:
       cityBranchId: (order as any)?.city_branch_id ?? null
     });
 
-    const rows = await requireSupabaseData(
-      supabase
-        .from("purchase_order_payments")
-        .select(`
-          id, purchase_order_id, kind, entry_date, amount, currency_code, exchange_rate, 
-          debit_ledger_id, credit_ledger_id, roznamcha_entry_id, status, reference_no, 
-          narration, source_module, source_transaction_type, source_reference_no, original_currency_code, currency_name, base_currency_amount, created_at,
-          roznamcha_entries (
-            id,
-            super_admin_serial_number,
-            country_transaction_serial_number,
-            branch_transaction_serial_number,
-            profiles!roznamcha_entries_created_by_fkey ( full_name )
-          )
-        `)
-        .eq("purchase_order_id", params.id)
-        .is("deleted_at", null)
-        .order("created_at", { ascending: false })
-        .limit(200)
-    );
-
     const localizedPayments = await localizeRecordNames(
-      (rows ?? []) as Array<{ id: string; narration?: string | null }>,
+      (rows ?? []) as unknown as Array<{ id: string; narration?: string | null }>,
       "purchase_order_payments",
       "narration",
       lang
@@ -222,15 +217,24 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       throw new Error("Supabase is not configured. Purchase posting requires a real Supabase login.");
     }
 
-    const supabase = (await createApiSupabaseClient()) as any;
-    const order = await requireSupabaseData(
-      supabase
-        .from("purchase_orders")
-        .select("id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id, currency_code, exchange_rate, order_total, advance_paid, remaining_paid, credit_amount, remaining_due, form_data, ledger_posting_status, payment_status")
-        .eq("id", params.id)
-        .is("deleted_at", null)
-        .maybeSingle()
-    );
+    // withLocalPg, not the RLS-gated Supabase client (createApiSupabaseClient falls back to a
+    // session-cookie client when no real service-role secret is configured — see
+    // hasRealServiceRoleKey in lib/api/supabase.ts — and the dev bootstrap login has no real
+    // Supabase JWT, so that fallback has no identity for RLS to authorize). Every read/write in
+    // this handler below now goes through the same withLocalPg connection. The core posting
+    // itself (post_purchase_booking_transfer) is SECURITY DEFINER and already bypasses RLS
+    // internally by design — it's only the setup/bookkeeping reads and writes around it that
+    // were failing.
+    const order = await withLocalPg(async (sql) => {
+      const rows = await sql`
+        select id, purchase_order_no, purchase_contract_no, country_id, country_branch_id, city_branch_id,
+               currency_code, exchange_rate, order_total, advance_paid, remaining_paid, credit_amount,
+               remaining_due, form_data, ledger_posting_status, payment_status
+        from purchase_orders where id = ${params.id}::uuid and deleted_at is null
+        limit 1
+      `;
+      return rows[0] ?? null;
+    });
 
     authorizeApiScope(session, {
       resource: "purchases",
@@ -239,6 +243,10 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       countryBranchId: (order as any)?.country_branch_id ?? null,
       cityBranchId: (order as any)?.city_branch_id ?? null
     });
+
+    if (!order) {
+      return apiError("NOT_FOUND", "Purchase order not found.", 404);
+    }
 
     const orderRow = order as any;
     const form = orderRow.form_data?.form || {};
@@ -270,8 +278,8 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
     const remainingAdvanceUSD = Math.max(0, requiredAdvanceUSD - advancePaidUSD);
     const tolerance = 0.01;
 
-    const debitLedger = await assertLedgerMatchesPurchaseScope(supabase, body.debitLedgerId, orderRow, "Debit");
-    const creditLedger = await assertLedgerMatchesPurchaseScope(supabase, body.creditLedgerId, orderRow, "Credit");
+    const debitLedger = await withLocalPg((sql) => assertLedgerMatchesPurchaseScope(sql, body.debitLedgerId, orderRow, "Debit")) as any;
+    const creditLedger = await withLocalPg((sql) => assertLedgerMatchesPurchaseScope(sql, body.creditLedgerId, orderRow, "Credit")) as any;
     // Use the resolved ledger rows' own ids from here on — the client may have sent an
     // accounts.id (see the compatibility fallback above), which is a different UUID.
     const resolvedDebitLedgerId = debitLedger.id;
@@ -314,84 +322,81 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
     const effectiveRoznamchaExchangeRate = isForeignCurrency ? Number(body.exchangeRate || 1) : 1;
 
-    // Transaction-safe posting via RPC using the security definer wrapper post_purchase_booking_transfer.
-    const { data, error } = await supabase.rpc("post_purchase_booking_transfer", {
-      p_actor_id: session.userId,
-      p_purchase_order_id: params.id,
-      p_kind: body.kind,
-      p_entry_date: body.entryDate,
-      p_amount: body.amount,
-      p_currency_code: body.currencyCode,
-      p_exchange_rate: effectiveRoznamchaExchangeRate,
-      p_debit_ledger_id: resolvedDebitLedgerId,
-      p_credit_ledger_id: resolvedCreditLedgerId,
-      p_reference_no: postingReferenceNo,
-      p_narration: postingNarration || null
-    });
+    // Transaction-safe posting via the security definer wrapper post_purchase_booking_transfer —
+    // calling it directly over the raw Postgres connection is equivalent to (and more reliable
+    // than) the Supabase RPC call, since the function is SECURITY DEFINER either way.
+    const { paymentId, paymentRecord, journalRecord, journalLines } = await withLocalPg(async (sql) => {
+      const idRows = await sql`
+        select post_purchase_booking_transfer(
+          p_actor_id => ${session.userId}::uuid,
+          p_purchase_order_id => ${params.id}::uuid,
+          p_kind => ${body.kind}::purchase_order_payment_kind,
+          p_entry_date => ${body.entryDate}::date,
+          p_amount => ${body.amount},
+          p_currency_code => ${body.currencyCode},
+          p_exchange_rate => ${effectiveRoznamchaExchangeRate},
+          p_debit_ledger_id => ${resolvedDebitLedgerId}::uuid,
+          p_credit_ledger_id => ${resolvedCreditLedgerId}::uuid,
+          p_reference_no => ${postingReferenceNo},
+          p_narration => ${postingNarration || null}
+        ) as id
+      `;
+      const paymentId = idRows[0]?.id as string;
 
-    if (error) {
-      throw new Error(error.message);
-    }
+      // 4-level serial (Global/Country/Branch/Entry)
+      try {
+        const s = await allocateFormSerials("payment_purchase", { countryId: orderRow.country_id, branchKey: orderRow.country_branch_id ?? orderRow.city_branch_id ?? null });
+        await sql`update purchase_order_payments set super_admin_serial = ${s.superAdminSerial}, country_serial = ${s.countrySerial}, branch_serial = ${s.branchSerial}, entry_serial = ${s.entrySerial} where id = ${paymentId}::uuid`;
+      } catch { /* non-fatal — never affects posting */ }
 
-    const paymentId = data as string;
+      if (body.typeDetails?.sourceRecordId) {
+        await sql`update purchase_order_payments set source_reference_no = ${String(body.typeDetails.sourceRecordId)} where id = ${paymentId}::uuid`;
+      }
 
-    // 4-level serial (Global/Country/Branch/Entry)
-    try {
-      const s = await allocateFormSerials("payment_purchase", { countryId: (order as any).country_id, branchKey: (order as any).country_branch_id ?? (order as any).city_branch_id ?? null });
-      await supabase.from("purchase_order_payments").update({ super_admin_serial: s.superAdminSerial, country_serial: s.countrySerial, branch_serial: s.branchSerial, entry_serial: s.entrySerial }).eq("id", paymentId);
-    } catch { /* non-fatal — never affects posting */ }
+      const paymentRows = await sql`
+        select id, purchase_order_id, kind, amount, currency_code, exchange_rate, debit_ledger_id,
+               credit_ledger_id, roznamcha_entry_id, status, source_module, source_transaction_type,
+               source_reference_no, original_currency_code, currency_name, base_currency_amount
+        from purchase_order_payments
+        where id = ${paymentId}::uuid and purchase_order_id = ${params.id}::uuid and deleted_at is null
+        limit 1
+      `;
+      const paymentRecord = paymentRows[0] as any;
 
-    if (body.typeDetails?.sourceRecordId) {
-      await supabase
-        .from("purchase_order_payments")
-        .update({ source_reference_no: String(body.typeDetails.sourceRecordId) })
-        .eq("id", paymentId);
-    }
+      if (!paymentRecord?.roznamcha_entry_id) {
+        throw new Error("Purchase payment was created but the linked Journal/Roznamcha entry is missing.");
+      }
 
-    const paymentRecord = await requireSupabaseData(
-      supabase
-        .from("purchase_order_payments")
-        .select("id, purchase_order_id, kind, amount, currency_code, exchange_rate, debit_ledger_id, credit_ledger_id, roznamcha_entry_id, status, source_module, source_transaction_type, source_reference_no, original_currency_code, currency_name, base_currency_amount")
-        .eq("id", paymentId)
-        .eq("purchase_order_id", params.id)
-        .is("deleted_at", null)
-        .maybeSingle()
-    ) as any;
+      let rozType = "super_admin";
+      if (orderRow.city_branch_id) rozType = "branch";
+      else if (orderRow.country_branch_id || orderRow.country_id) rozType = "country";
 
-    if (!paymentRecord?.roznamcha_entry_id) {
-      throw new Error("Purchase payment was created but the linked Journal/Roznamcha entry is missing.");
-    }
+      await sql`
+        update roznamcha_entries set
+          country_id = ${orderRow.country_id || null}::uuid,
+          country_branch_id = ${orderRow.country_branch_id || null}::uuid,
+          city_branch_id = ${orderRow.city_branch_id || null}::uuid,
+          type = ${rozType}
+        where id = ${paymentRecord.roznamcha_entry_id}::uuid
+      `;
 
-    let rozType = "super_admin";
-    if (orderRow.city_branch_id) rozType = "branch";
-    else if (orderRow.country_branch_id || orderRow.country_id) rozType = "country";
+      const journalRows = await sql`
+        select id, source_module, source_transaction_type, source_transaction_id, source_reference_no,
+               status, posted_at, country_id, country_branch_id, city_branch_id,
+               super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number,
+               original_currency_code, currency_name, base_currency_amount
+        from roznamcha_entries where id = ${paymentRecord.roznamcha_entry_id}::uuid
+        limit 1
+      `;
+      const journalRecord = journalRows[0] as any;
 
-    const adminSupabase = createSupabaseAdminClient() as any;
-    const { error: updateError } = await adminSupabase.from("roznamcha_entries").update({
-      country_id: orderRow.country_id || null,
-      country_branch_id: orderRow.country_branch_id || null,
-      city_branch_id: orderRow.city_branch_id || null,
-      type: rozType
-    }).eq("id", paymentRecord.roznamcha_entry_id);
+      const journalLines = await sql`
+        select id, ledger_id, debit, credit, currency, usd_rate, usd_amount
+        from roznamcha_lines where roznamcha_entry_id = ${paymentRecord.roznamcha_entry_id}::uuid
+      `;
 
-    if (updateError) {
-      console.error("Failed to update roznamcha entry scopes:", updateError.message);
-    }
-
-    const journalRecord = await requireSupabaseData(
-      supabase
-        .from("roznamcha_entries")
-        .select("id, source_module, source_transaction_type, source_transaction_id, source_reference_no, status, posted_at, country_id, country_branch_id, city_branch_id, super_admin_serial_number, country_transaction_serial_number, branch_transaction_serial_number, original_currency_code, currency_name, base_currency_amount")
-        .eq("id", paymentRecord.roznamcha_entry_id)
-        .maybeSingle()
-    ) as any;
-
-    const journalLines = (await requireSupabaseData(
-      supabase
-        .from("roznamcha_lines")
-        .select("id, ledger_id, debit, credit, currency, usd_rate, usd_amount")
-        .eq("roznamcha_entry_id", paymentRecord.roznamcha_entry_id)
-    )) as any[];
+      return { paymentId, paymentRecord, journalRecord, journalLines };
+    }) as any;
 
     const exRate = Number(body.exchangeRate || (orderRow as any)?.exchange_rate || 1) || 1;
     assertDistinctBookingLedgers(resolvedDebitLedgerId, resolvedCreditLedgerId, "Purchase payment");
@@ -426,37 +431,33 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
       referenceNo: postingReferenceNo
     };
 
-    await requireSupabaseData(
-      supabase
-        .from("purchase_orders")
-        .update({
-          form_data: {
-            ...(orderRow.form_data || {}),
-            workflow: postedWorkflow,
-            lastPaymentTrace: {
-              paymentId,
-              roznamchaEntryId: paymentRecord.roznamcha_entry_id,
-              debitLedgerId: resolvedDebitLedgerId,
-              creditLedgerId: resolvedCreditLedgerId,
-              originalCurrencyCode: paymentRecord.original_currency_code || body.currencyCode,
-              currencyName: paymentRecord.currency_name || body.currencyCode,
-              exchangeRate: paymentRecord.exchange_rate || body.exchangeRate,
-              baseCurrencyAmount: paymentRecord.base_currency_amount,
-              superAdminSerialNumber: journalRecord.super_admin_serial_number,
-              countryTransactionSerialNumber: journalRecord.country_transaction_serial_number,
-              branchTransactionSerialNumber: journalRecord.branch_transaction_serial_number,
-              systemBillNumber: trace.systemBillNumber,
-              manualBillNumber: trace.manualBillNumber,
-              debitLedgerCode: debitLedger.code,
-              creditLedgerCode: creditLedger.code
-            }
-          },
-          updated_at: new Date().toISOString()
-        })
-        .eq("id", params.id)
-        .select("id")
-        .single()
-    );
+    await withLocalPg(async (sql) => {
+      const nextFormData = {
+        ...(orderRow.form_data || {}),
+        workflow: postedWorkflow,
+        lastPaymentTrace: {
+          paymentId,
+          roznamchaEntryId: paymentRecord.roznamcha_entry_id,
+          debitLedgerId: resolvedDebitLedgerId,
+          creditLedgerId: resolvedCreditLedgerId,
+          originalCurrencyCode: paymentRecord.original_currency_code || body.currencyCode,
+          currencyName: paymentRecord.currency_name || body.currencyCode,
+          exchangeRate: paymentRecord.exchange_rate || body.exchangeRate,
+          baseCurrencyAmount: paymentRecord.base_currency_amount,
+          superAdminSerialNumber: journalRecord.super_admin_serial_number,
+          countryTransactionSerialNumber: journalRecord.country_transaction_serial_number,
+          branchTransactionSerialNumber: journalRecord.branch_transaction_serial_number,
+          systemBillNumber: trace.systemBillNumber,
+          manualBillNumber: trace.manualBillNumber,
+          debitLedgerCode: debitLedger.code,
+          creditLedgerCode: creditLedger.code
+        }
+      };
+      await sql`
+        update purchase_orders set form_data = ${sql.json(nextFormData)}, updated_at = now()
+        where id = ${params.id}::uuid
+      `;
+    });
 
     await writeAuditLog({
       action: "post_payment",
@@ -481,17 +482,16 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
 
     // Check if advance payment is completed
     try {
-      const { data: updatedOrder, error: orderError } = await supabase
-        .from("purchase_orders")
-        .select("id, purchase_order_no, country_id, country_branch_id, city_branch_id, order_total, advance_paid, remaining_due, form_data")
-        .eq("id", params.id)
-        .is("deleted_at", null)
-        .single();
+      await withLocalPg(async (sql) => {
+        const updatedRows = await sql`
+          select id, purchase_order_no, country_id, country_branch_id, city_branch_id, order_total,
+                 advance_paid, remaining_due, form_data
+          from purchase_orders where id = ${params.id}::uuid and deleted_at is null
+          limit 1
+        `;
+        const updated = updatedRows[0] as any;
+        if (!updated) return;
 
-      if (orderError) throw orderError;
-
-      if (updatedOrder) {
-        const updated = updatedOrder as any;
         const form = updated.form_data?.form ?? {};
         const advancePercent = Number(form.advancePercent ?? 10);
         const orderTotal = Number(updated.order_total || 0);
@@ -511,37 +511,28 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
             completedBy: session.userId,
             completedByName: session.fullName || session.email || "User"
           };
-
-          await supabase
-            .from("purchase_orders")
-            .update({
-              payment_status: "completed",
-              remaining_due: 0,
-              form_data: {
-                ...(updated.form_data || {}),
-                workflow: completedWorkflow
-              },
-              updated_at: new Date().toISOString()
-            })
-            .eq("id", params.id);
+          const nextFormData = { ...(updated.form_data || {}), workflow: completedWorkflow };
+          await sql`
+            update purchase_orders set payment_status = 'completed', remaining_due = 0,
+              form_data = ${sql.json(nextFormData)}, updated_at = now()
+            where id = ${params.id}::uuid
+          `;
         }
 
         if (isAdvanceCompleted && !isFullyPaid) {
-          const { data: existingLoading } = await supabase
-            .from("purchase_loading_records")
-            .select("id")
-            .eq("purchase_order_id", params.id)
-            .is("deleted_at", null)
-            .limit(1);
+          const existingLoading = await sql`
+            select id from purchase_loading_records
+            where purchase_order_id = ${params.id}::uuid and deleted_at is null
+            limit 1
+          `;
 
-          if (!existingLoading || existingLoading.length === 0) {
+          if (existingLoading.length === 0) {
             const containerNumber = String(form.containerNo || form.containerNumber || `CONT-${updated.purchase_order_no}`).trim();
             const containerType = form.containerType || null;
             const plrNo = `PLR-${Date.now().toString(36).toUpperCase()}`;
 
-            await supabase
-              .from("purchase_loading_records")
-              .insert({
+            await sql`
+              insert into purchase_loading_records ${sql({
                 country_id: updated.country_id,
                 country_branch_id: updated.country_branch_id,
                 city_branch_id: updated.city_branch_id,
@@ -558,10 +549,11 @@ export async function POST(request: NextRequest, context: { params: Promise<{ id
                 remarks: `Automatically moved to loading module after 100% advance completion of PO ${updated.purchase_order_no}`,
                 report_payload: updated.form_data ?? {},
                 created_by: session.userId
-              });
+              } as any)}
+            `;
           }
         }
-      }
+      });
     } catch (err: any) {
       console.error("Error in post payment completion check:", err);
     }

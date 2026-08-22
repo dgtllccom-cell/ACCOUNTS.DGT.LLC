@@ -535,7 +535,7 @@ export async function POST(request: NextRequest) {
             workflow.lifecycleStatus = "Finalized Purchase Orders";
           }
 
-          await tx`update purchase_orders set form_data = ${JSON.stringify(formData)}::jsonb where id = ${purchaseOrderId}::uuid`;
+          await tx`update purchase_orders set form_data = ${tx.json(formData)} where id = ${purchaseOrderId}::uuid`;
 
           return {
             totalQuantity: summary.totalQuantity,
